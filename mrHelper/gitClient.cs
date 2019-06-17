@@ -16,7 +16,7 @@ namespace mrHelper
 
       static public void DiffTool(string leftCommit, string rightCommit)
       {
-         Process.Start("git", "difftool --dir-diff " + leftCommit + " " + rightCommit);
+         Process.Start("git", "difftool --dir-diff --tool=beyondcompare3dd " + leftCommit + " " + rightCommit);
       }
    }
 }
