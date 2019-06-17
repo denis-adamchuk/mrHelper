@@ -193,7 +193,10 @@ namespace mrHelper
          else
          {
             // TODO Add error handling etc
+            string currentDir = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(localDir);
             gitClient.Fetch();
+            Directory.SetCurrentDirectory(currentDir);
          }
 
          return localDir;
