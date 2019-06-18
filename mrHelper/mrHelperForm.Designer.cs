@@ -41,7 +41,6 @@
          this.buttonStartTimer = new System.Windows.Forms.Button();
          this.buttonConnect = new System.Windows.Forms.Button();
          this.textBoxMrURL = new System.Windows.Forms.TextBox();
-         this.labelURL = new System.Windows.Forms.Label();
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
          this.buttonBrowseLocalGitFolder = new System.Windows.Forms.Button();
          this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
@@ -58,6 +57,11 @@
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
+         this.radioButtonListMR = new System.Windows.Forms.RadioButton();
+         this.radioButtonURL = new System.Windows.Forms.RadioButton();
+         this.comboBoxMrByLabel = new System.Windows.Forms.ComboBox();
+         this.textBoxLabel = new System.Windows.Forms.TextBox();
+         this.buttonSearchByLabel = new System.Windows.Forms.Button();
          this.groupBoxAuthorization.SuspendLayout();
          this.groupBoxMergeRequest.SuspendLayout();
          this.groupBoxDiff.SuspendLayout();
@@ -111,15 +115,19 @@
          // 
          // groupBoxMergeRequest
          // 
+         this.groupBoxMergeRequest.Controls.Add(this.buttonSearchByLabel);
+         this.groupBoxMergeRequest.Controls.Add(this.textBoxLabel);
+         this.groupBoxMergeRequest.Controls.Add(this.comboBoxMrByLabel);
+         this.groupBoxMergeRequest.Controls.Add(this.radioButtonURL);
+         this.groupBoxMergeRequest.Controls.Add(this.radioButtonListMR);
          this.groupBoxMergeRequest.Controls.Add(this.labelSpentTime);
          this.groupBoxMergeRequest.Controls.Add(this.labelSpentTimeLabel);
          this.groupBoxMergeRequest.Controls.Add(this.buttonStartTimer);
          this.groupBoxMergeRequest.Controls.Add(this.buttonConnect);
          this.groupBoxMergeRequest.Controls.Add(this.textBoxMrURL);
-         this.groupBoxMergeRequest.Controls.Add(this.labelURL);
          this.groupBoxMergeRequest.Location = new System.Drawing.Point(12, 86);
          this.groupBoxMergeRequest.Name = "groupBoxMergeRequest";
-         this.groupBoxMergeRequest.Size = new System.Drawing.Size(428, 100);
+         this.groupBoxMergeRequest.Size = new System.Drawing.Size(428, 248);
          this.groupBoxMergeRequest.TabIndex = 1;
          this.groupBoxMergeRequest.TabStop = false;
          this.groupBoxMergeRequest.Text = "Merge Request";
@@ -127,7 +135,7 @@
          // labelSpentTime
          // 
          this.labelSpentTime.AutoSize = true;
-         this.labelSpentTime.Location = new System.Drawing.Point(367, 65);
+         this.labelSpentTime.Location = new System.Drawing.Point(367, 217);
          this.labelSpentTime.Name = "labelSpentTime";
          this.labelSpentTime.Size = new System.Drawing.Size(0, 13);
          this.labelSpentTime.TabIndex = 5;
@@ -135,7 +143,7 @@
          // labelSpentTimeLabel
          // 
          this.labelSpentTimeLabel.AutoSize = true;
-         this.labelSpentTimeLabel.Location = new System.Drawing.Point(308, 65);
+         this.labelSpentTimeLabel.Location = new System.Drawing.Point(308, 217);
          this.labelSpentTimeLabel.Name = "labelSpentTimeLabel";
          this.labelSpentTimeLabel.Size = new System.Drawing.Size(64, 13);
          this.labelSpentTimeLabel.TabIndex = 4;
@@ -144,7 +152,7 @@
          // buttonStartTimer
          // 
          this.buttonStartTimer.Enabled = false;
-         this.buttonStartTimer.Location = new System.Drawing.Point(219, 58);
+         this.buttonStartTimer.Location = new System.Drawing.Point(219, 210);
          this.buttonStartTimer.Name = "buttonStartTimer";
          this.buttonStartTimer.Size = new System.Drawing.Size(83, 27);
          this.buttonStartTimer.TabIndex = 4;
@@ -153,7 +161,7 @@
          // 
          // buttonConnect
          // 
-         this.buttonConnect.Location = new System.Drawing.Point(9, 58);
+         this.buttonConnect.Location = new System.Drawing.Point(9, 210);
          this.buttonConnect.Name = "buttonConnect";
          this.buttonConnect.Size = new System.Drawing.Size(83, 27);
          this.buttonConnect.TabIndex = 3;
@@ -163,19 +171,10 @@
          // 
          // textBoxMrURL
          // 
-         this.textBoxMrURL.Location = new System.Drawing.Point(6, 32);
+         this.textBoxMrURL.Location = new System.Drawing.Point(6, 170);
          this.textBoxMrURL.Name = "textBoxMrURL";
          this.textBoxMrURL.Size = new System.Drawing.Size(410, 20);
          this.textBoxMrURL.TabIndex = 2;
-         // 
-         // labelURL
-         // 
-         this.labelURL.AutoSize = true;
-         this.labelURL.Location = new System.Drawing.Point(6, 16);
-         this.labelURL.Name = "labelURL";
-         this.labelURL.Size = new System.Drawing.Size(29, 13);
-         this.labelURL.TabIndex = 0;
-         this.labelURL.Text = "URL";
          // 
          // groupBoxDiff
          // 
@@ -188,7 +187,7 @@
          this.groupBoxDiff.Controls.Add(this.comboBoxRightCommit);
          this.groupBoxDiff.Controls.Add(this.labeLeft);
          this.groupBoxDiff.Controls.Add(this.comboBoxLeftCommit);
-         this.groupBoxDiff.Location = new System.Drawing.Point(12, 192);
+         this.groupBoxDiff.Location = new System.Drawing.Point(12, 340);
          this.groupBoxDiff.Name = "groupBoxDiff";
          this.groupBoxDiff.Size = new System.Drawing.Size(428, 155);
          this.groupBoxDiff.TabIndex = 2;
@@ -318,11 +317,61 @@
          this.localGitFolderBrowser.Description = "Select a folder where git repository will be stored locally";
          this.localGitFolderBrowser.RootFolder = System.Environment.SpecialFolder.MyComputer;
          // 
+         // radioButtonListMR
+         // 
+         this.radioButtonListMR.AutoSize = true;
+         this.radioButtonListMR.Checked = true;
+         this.radioButtonListMR.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonListMR.Name = "radioButtonListMR";
+         this.radioButtonListMR.Size = new System.Drawing.Size(51, 17);
+         this.radioButtonListMR.TabIndex = 6;
+         this.radioButtonListMR.TabStop = true;
+         this.radioButtonListMR.Text = "Label";
+         this.radioButtonListMR.UseVisualStyleBackColor = true;
+         this.radioButtonListMR.CheckedChanged += new System.EventHandler(this.RadioButtonListMR_CheckedChanged);
+         // 
+         // radioButtonURL
+         // 
+         this.radioButtonURL.AutoSize = true;
+         this.radioButtonURL.Location = new System.Drawing.Point(6, 147);
+         this.radioButtonURL.Name = "radioButtonURL";
+         this.radioButtonURL.Size = new System.Drawing.Size(47, 17);
+         this.radioButtonURL.TabIndex = 7;
+         this.radioButtonURL.Text = "URL";
+         this.radioButtonURL.UseVisualStyleBackColor = true;
+         this.radioButtonURL.CheckedChanged += new System.EventHandler(this.RadioButtonURL_CheckedChanged);
+         // 
+         // comboBoxMrByLabel
+         // 
+         this.comboBoxMrByLabel.Enabled = false;
+         this.comboBoxMrByLabel.FormattingEnabled = true;
+         this.comboBoxMrByLabel.Location = new System.Drawing.Point(6, 47);
+         this.comboBoxMrByLabel.Name = "comboBoxMrByLabel";
+         this.comboBoxMrByLabel.Size = new System.Drawing.Size(410, 21);
+         this.comboBoxMrByLabel.TabIndex = 8;
+         // 
+         // textBoxLabel
+         // 
+         this.textBoxLabel.Location = new System.Drawing.Point(63, 18);
+         this.textBoxLabel.Name = "textBoxLabel";
+         this.textBoxLabel.Size = new System.Drawing.Size(140, 20);
+         this.textBoxLabel.TabIndex = 9;
+         // 
+         // buttonSearchByLabel
+         // 
+         this.buttonSearchByLabel.Location = new System.Drawing.Point(219, 14);
+         this.buttonSearchByLabel.Name = "buttonSearchByLabel";
+         this.buttonSearchByLabel.Size = new System.Drawing.Size(83, 27);
+         this.buttonSearchByLabel.TabIndex = 10;
+         this.buttonSearchByLabel.Text = "Search";
+         this.buttonSearchByLabel.UseVisualStyleBackColor = true;
+         this.buttonSearchByLabel.Click += new System.EventHandler(this.ButtonSearchByLabel_Click);
+         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(452, 359);
+         this.ClientSize = new System.Drawing.Size(452, 507);
          this.Controls.Add(this.groupBoxDiff);
          this.Controls.Add(this.groupBoxMergeRequest);
          this.Controls.Add(this.groupBoxAuthorization);
@@ -354,7 +403,6 @@
       private System.Windows.Forms.GroupBox groupBoxMergeRequest;
       private System.Windows.Forms.Button buttonConnect;
       private System.Windows.Forms.TextBox textBoxMrURL;
-      private System.Windows.Forms.Label labelURL;
       private System.Windows.Forms.GroupBox groupBoxDiff;
       private System.Windows.Forms.Button buttonDifftool;
       private System.Windows.Forms.Label labelRight;
@@ -374,6 +422,11 @@
       private System.Windows.Forms.FolderBrowserDialog localGitFolderBrowser;
       private System.Windows.Forms.Button buttonBrowseLocalGitFolder;
       private System.Windows.Forms.TextBox textBoxLocalGitFolder;
+      private System.Windows.Forms.Button buttonSearchByLabel;
+      private System.Windows.Forms.TextBox textBoxLabel;
+      private System.Windows.Forms.ComboBox comboBoxMrByLabel;
+      private System.Windows.Forms.RadioButton radioButtonURL;
+      private System.Windows.Forms.RadioButton radioButtonListMR;
    }
 }
 
