@@ -110,6 +110,25 @@ namespace mrHelper
          }
       }
 
+      private void RadioButtonURL_CheckedChanged(object sender, EventArgs e)
+      {
+         radioButtonListMR.Checked = false;
+         textBoxLabel.Enabled = false;
+         buttonSearchByLabel.Enabled = false;
+         comboBoxFilteredMergeRequests.Enabled = false;
+      }
+
+      private void RadioButtonListMR_CheckedChanged(object sender, EventArgs e)
+      {
+         radioButtonURL.Checked = false;
+         textBoxMrURL.Enabled = false;
+      }
+
+      private void ButtonSearchByLabel_Click(object sender, EventArgs e)
+      {
+         List<MergeRequest> mergeRequests = getMergeRequests();
+      }
+
       private void stopTimer(bool sendTrackedTime)
       {
          var timeSpan = DateTime.Now - _lastStartTimeStamp;
@@ -158,7 +177,7 @@ namespace mrHelper
          return textBoxMrURL.Text;
       }
 
-      ParsedMergeRequestUrl parseAndValidateUrl(string url)
+      private ParsedMergeRequestUrl parseAndValidateUrl(string url)
       {
          ParsedMergeRequestUrl parsed = new ParsedMergeRequestUrl();
          mrUrlParser parser = new mrUrlParser(url);
@@ -173,18 +192,25 @@ namespace mrHelper
          return parsed;
       }
 
-      MergeRequest getMergeRequest(ParsedMergeRequestUrl parsed)
+      private MergeRequest getMergeRequest(ParsedMergeRequestUrl parsed)
       {
          gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
          var mergeRequest = client.GetSingleMergeRequest(parsed.Project, parsed.Id);
          return mergeRequest;
       }
 
-      List<Commit> getCommits(ParsedMergeRequestUrl parsed)
+      private List<Commit> getCommits(ParsedMergeRequestUrl parsed)
       {
          gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
          var commits = client.GetMergeRequestCommits(parsed.Project, parsed.Id);
          return commits;
+      }
+
+      private List<MergeRequest> getMergeRequests(ParsedMergeRequestUrl parsed)
+      {
+         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
+         var mergeRequests = client.GetMergeRequestCommits(parsed.Project, parsed.Id);
+         return mergeRequests;
       }
 
       void sendTrackedTimeSpan(ParsedMergeRequestUrl parsed, TimeSpan span)
@@ -331,24 +357,5 @@ namespace mrHelper
       private bool _exiting = false;
 
       UserDefinedSettings _settings;
-
-      private void RadioButtonURL_CheckedChanged(object sender, EventArgs e)
-      {
-         radioButtonListMR.Checked = false;
-         textBoxLabel.Enabled = false;
-         buttonSearchByLabel.Enabled = false;
-         comboBoxMrByLabel.Enabled = false;
-      }
-
-      private void RadioButtonListMR_CheckedChanged(object sender, EventArgs e)
-      {
-         radioButtonURL.Checked = false;
-         textBoxMrURL.Enabled = false;
-      }
-
-      private void ButtonSearchByLabel_Click(object sender, EventArgs e)
-      {
-         getMergeRequests()
-      }
    }
 }

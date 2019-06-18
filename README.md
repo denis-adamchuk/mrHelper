@@ -16,6 +16,5 @@ In order of importance:
 3. Add support of multiple hosts
 
 ### Requirements
-1. Visual Studio 2019
-2. .NET Framework 4.7.2
-It is also quite possible to open solution in Visual Studio 2017 and automatically downgrade to .NET Framework 4.6.1.
+1. Visual Studio 2017/2019
+2. .NET Framework 4.6.1/4.7.2

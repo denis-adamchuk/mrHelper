@@ -10,6 +10,7 @@
       public MergeRequestState State;
       public string[] Labels;
       public string WebUrl;
+      public bool WorkInProgress;
    }
 
    struct Commit

@@ -13,7 +13,7 @@ namespace mrHelper
    class mrUrlParser
    {
       static Regex url_re = new Regex(
-         @"^(http[s]?:\/)\/([^:\/\s]+)\/(\w+\/\w+)\/merge_requests\/(\d)(\/.*)?",
+         @"^(http[s]?:\/)\/([^:\/\s]+)\/(\w+\/\w+)\/merge_requests\/(\d*)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       public mrUrlParser(string url)

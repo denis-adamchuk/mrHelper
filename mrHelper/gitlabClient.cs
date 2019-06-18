@@ -11,6 +11,21 @@ namespace mrHelper
       v4
    }
 
+   enum StateFilter
+   {
+      Open,
+      Closed,
+      Merged,
+      All
+   }
+
+   enum WorkInProgressFilter
+   {
+      Yes,
+      No,
+      All
+   }
+
    class gitlabClient
    {
       public gitlabClient(string host, string token, ApiVersion version = ApiVersion.v4)
@@ -38,9 +53,9 @@ namespace mrHelper
       }
 
 
-      public List<MergeRequest> GetAllMergeRequests(MergeRequestState[] states, string[] labels)
+      public List<MergeRequest> GetAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
       {
-         string url = makeUrlForAllMergeRequests(states, labels);
+         string url = makeUrlForAllMergeRequests(states, labels, author, wip);
          string response = get(url);
 
          dynamic s = deserializeJson(response);
@@ -87,6 +102,7 @@ namespace mrHelper
          Enum.TryParse(s["state"], true, out mr.State);
          mr.Labels = (string[])(s["labels"] as Array);
          mr.WebUrl = s["web_url"];
+         mr.WorkInProgress = s["work_in_progress"];
          return mr;
       }
 
@@ -116,18 +132,45 @@ namespace mrHelper
          return makeUrlForSingleProject(project, id) + "/merge_requests/" + id.ToString();
       }
 
-      private string makeUrlForAllMergeRequests(MergeRequestState[] states, string[] labels)
+      private string makeUrlForAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
       {
-         string url = "/merge_requests";
-         for (int i = 0; i < states.Length; ++i)
+         return "/merge_requests&scope=all"
+            + query("wip", workInProgressToString(wip))
+            + query("state", stateFilterToString(state))
+            + query("labels", labels)
+            + query("author", author);
+      }
+
+      private string stateFilterToString(StateFilter state)
+      {
+         switch (state)
          {
-            url += (i == 0 ? "?" : "&") + "state=" + states[i].ToString();
+            case StateFilter.All: return "";
+            case StateFilter.Closed: return "closed";
+            case StateFilter.Merged: return "merged";
+            case StateFilter.Open: return "opened";
          }
-         for (int i = 0; i < labels.Length; ++i)
+         return "";
+      }
+
+      private string workInProgressToString(WorkInProgressFilter wip)
+      {
+         switch (wip)
          {
-            url += ((i == 0 && states.Length == 0) ? "?" : "&") + "label=" + labels[i].ToString();
+            case WorkInProgressFilter.All: return "";
+            case WorkInProgressFilter.No: return "no";
+            case WorkInProgressFilter.Yes: return "yes";
          }
-         return url;
+         return "";         
+      }
+
+      private string query(string query, string value)
+      {
+         if (value.Length > 0)
+         {
+            return query + "=" + value;
+         }
+         return "";
       }
 
       private string makeUrlForMergeRequestCommits(string project, int id)
