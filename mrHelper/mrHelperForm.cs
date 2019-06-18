@@ -318,5 +318,24 @@ namespace mrHelper
       private bool _exiting = false;
 
       UserDefinedSettings _settings;
+
+      private void RadioButtonURL_CheckedChanged(object sender, EventArgs e)
+      {
+         radioButtonListMR.Checked = false;
+         textBoxLabel.Enabled = false;
+         buttonSearchByLabel.Enabled = false;
+         comboBoxMrByLabel.Enabled = false;
+      }
+
+      private void RadioButtonListMR_CheckedChanged(object sender, EventArgs e)
+      {
+         radioButtonURL.Checked = false;
+         textBoxMrURL.Enabled = false;
+      }
+
+      private void ButtonSearchByLabel_Click(object sender, EventArgs e)
+      {
+         getMergeRequests()
+      }
    }
 }
