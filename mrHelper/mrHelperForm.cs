@@ -19,11 +19,12 @@ namespace mrHelper
          buttonStartTimer.Text = buttonStartTimerDefaultText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
       }
+
       private void MrHelperForm_Load(object sender, EventArgs e)
       {
          loadConfiguration();
       }
-
+ 
       private void MrHelperForm_FormClosing(object sender, FormClosingEventArgs e)
       {
          if (!_exiting)
@@ -49,14 +50,13 @@ namespace mrHelper
 
          onConnecting();
 
-         string url = textBoxMrURL.Text;
-
          ParsedMergeRequestUrl parsed;
          MergeRequest mergeRequest;
          List<Commit> commits;
          string gitRepository;
          try
          {
+            string url = getSelectedMergeRequestUrl();
             parsed = parseAndValidateUrl(url);
             mergeRequest = getMergeRequest(parsed);
             commits = getCommits(parsed);
@@ -100,6 +100,7 @@ namespace mrHelper
       {
          exit();
       }
+
       private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
       {
          localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
@@ -145,6 +146,16 @@ namespace mrHelper
          // TODO Handle overflow
          var span = DateTime.Now - _lastStartTimeStamp;
          labelSpentTime.Text = span.ToString(@"hh\:mm\:ss");
+      }
+
+      private string getSelectedMergeRequestUrl()
+      {
+         if (false) // mode with multiple URL
+         {
+            // 1. get index of a selected row in the combo box
+            // 2. return _cachedMergeRequests[index].WebUrl;
+         }
+         return textBoxMrURL.Text;
       }
 
       ParsedMergeRequestUrl parseAndValidateUrl(string url)
@@ -306,6 +317,8 @@ namespace mrHelper
          _gitRepository = null;
          _connected = false;
       }
+
+      private List<MergeRequest> _cachedMergeRequests;
 
       private bool _connected;
       private ParsedMergeRequestUrl _parsedMergeRequestUrl;

@@ -30,22 +30,31 @@ namespace mrHelper
 
       public MergeRequest GetSingleMergeRequest(string project, int id)
       {
-         string url = makeRestApiUrl(project, id, RestApiUrlType.SingleMergeRequest);
+         string url = makeUrlForSingleMergeRequest(project, id);
          string response = get(url);
 
          dynamic s = deserializeJson(response);
-         MergeRequest mr = new MergeRequest();
-         mr.Id = s["id"];
-         mr.Title = s["title"];
-         mr.Description = s["description"];
-         mr.SourceBranch = s["source_branch"];
-         mr.TargetBranch = s["target_branch"];
-         return mr;
+         return readMergeRequest(s);
+      }
+
+
+      public List<MergeRequest> GetAllMergeRequests(MergeRequestState[] states, string[] labels)
+      {
+         string url = makeUrlForAllMergeRequests(states, labels);
+         string response = get(url);
+
+         dynamic s = deserializeJson(response);
+         List<MergeRequest> mergeRequests = new List<MergeRequest>();
+         foreach (dynamic item in (s as Array))
+         {
+            mergeRequests.Add(readMergeRequest(item));
+         }
+         return mergeRequests;
       }
 
       public List<Commit> GetMergeRequestCommits(string project, int id)
       {
-         string url = makeRestApiUrl(project, id, RestApiUrlType.MergeRequestCommits);
+         string url = makeUrlForMergeRequestCommits(project, id);
          string response = get(url);
 
          dynamic s = deserializeJson(response);
@@ -63,16 +72,22 @@ namespace mrHelper
 
       public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
       {
-         string url = makeRestApiUrl(project, id, RestApiUrlType.AddSpentTimeForMergeRequest, span);
+         string url = makeUrlForAddSpentTime(project, id, span);
          post(url);
       }
 
-      private enum RestApiUrlType
+      private static MergeRequest readMergeRequest(dynamic s)
       {
-         SingleProject,
-         SingleMergeRequest,
-         MergeRequestCommits,
-         AddSpentTimeForMergeRequest
+         MergeRequest mr;
+         mr.Id = s["id"];
+         mr.Title = s["title"];
+         mr.Description = s["description"];
+         mr.SourceBranch = s["source_branch"];
+         mr.TargetBranch = s["target_branch"];
+         Enum.TryParse(s["state"], true, out mr.State);
+         mr.Labels = (string[])(s["labels"] as Array);
+         mr.WebUrl = s["web_url"];
+         return mr;
       }
 
       private string post(string data)
@@ -85,28 +100,45 @@ namespace mrHelper
          return _client.DownloadString(request);
       }
 
-      private string makeRestApiUrl(string project, int id, RestApiUrlType type, params object[] parameters)
+      private string commonUrlPart()
       {
          string commonUrlPart = _host + "/api/" + _version.ToString();
+         return commonUrlPart;
+      }
 
-         switch (type)
+      private string makeUrlForSingleProject(string project, int id)
+      {
+         return commonUrlPart() + "/projects" + "/" + WebUtility.UrlEncode(project);
+      }
+
+      private string makeUrlForSingleMergeRequest(string project, int id)
+      {
+         return makeUrlForSingleProject(project, id) + "/merge_requests/" + id.ToString();
+      }
+
+      private string makeUrlForAllMergeRequests(MergeRequestState[] states, string[] labels)
+      {
+         string url = "/merge_requests";
+         for (int i = 0; i < states.Length; ++i)
          {
-            case RestApiUrlType.SingleProject:
-               return commonUrlPart + "/projects" + "/" + WebUtility.UrlEncode(project);
-
-            case RestApiUrlType.SingleMergeRequest:
-               return makeRestApiUrl(project, id, RestApiUrlType.SingleProject) + "/merge_requests/" + id.ToString();
-
-            case RestApiUrlType.MergeRequestCommits:
-               return makeRestApiUrl(project, id, RestApiUrlType.SingleMergeRequest) + "/commits";
-
-            case RestApiUrlType.AddSpentTimeForMergeRequest:
-               TimeSpan span = (TimeSpan)parameters[0];
-               string duration = convertTimeSpanToGitlabDuration(span);
-               return makeRestApiUrl(project, id, RestApiUrlType.SingleMergeRequest) + "/add_spent_time?duration=" + duration;
+            url += (i == 0 ? "?" : "&") + "state=" + states[i].ToString();
          }
+         for (int i = 0; i < labels.Length; ++i)
+         {
+            url += ((i == 0 && states.Length == 0) ? "?" : "&") + "label=" + labels[i].ToString();
+         }
+         return url;
+      }
 
-         throw new NotImplementedException();
+      private string makeUrlForMergeRequestCommits(string project, int id)
+      {
+         return makeUrlForSingleMergeRequest(project, id) + "/commits";
+      }
+
+      private string makeUrlForAddSpentTime(string project, int id, TimeSpan span)
+      {
+         string duration = convertTimeSpanToGitlabDuration(span);
+         return makeUrlForSingleMergeRequest(project, id) + "/add_spent_time?duration=" + duration;
       }
 
       private string convertTimeSpanToGitlabDuration(TimeSpan span)

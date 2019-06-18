@@ -7,6 +7,9 @@
       public string Description;
       public string SourceBranch;
       public string TargetBranch;
+      public MergeRequestState State;
+      public string[] Labels;
+      public string WebUrl;
    }
 
    struct Commit
@@ -14,5 +17,13 @@
       public string Id;
       public string ShortId;
       public string Title;
+   }
+
+   enum MergeRequestState
+   {
+      Opened,
+      Closed,
+      Locked,
+      Merged
    }
 }
