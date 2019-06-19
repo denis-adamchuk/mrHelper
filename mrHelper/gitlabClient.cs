@@ -55,12 +55,12 @@ namespace mrHelper
 
       public List<MergeRequest> GetAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
       {
-         string url = makeUrlForAllMergeRequests(states, labels, author, wip);
+         string url = makeUrlForAllMergeRequests(state, labels, author, wip);
          string response = get(url);
 
-         dynamic s = deserializeJson(response);
+         dynamic json = deserializeJson(response);
          List<MergeRequest> mergeRequests = new List<MergeRequest>();
-         foreach (dynamic item in (s as Array))
+         foreach (dynamic item in (json as Array))
          {
             mergeRequests.Add(readMergeRequest(item));
          }
@@ -72,38 +72,45 @@ namespace mrHelper
          string url = makeUrlForMergeRequestCommits(project, id);
          string response = get(url);
 
-         dynamic s = deserializeJson(response);
+         dynamic json = deserializeJson(response);
          List<Commit> commits = new List<Commit>();
-         foreach (dynamic item in (s as Array))
+         foreach (dynamic item in (json as Array))
          {
             Commit commit;
             commit.Id = item["id"];
             commit.ShortId = item["short_id"];
             commit.Title = item["title"];
+            commit.Message = item["message"];
+            commit.CommitedDate = DateTimeOffset.Parse(item["commited_date"]);
             commits.Add(commit);
          }
          return commits;
+      }
+
+      private static MergeRequest readMergeRequest(dynamic json)
+      {
+         MergeRequest mr;
+         mr.Id = json["id"];
+         mr.Title = json["title"];
+         mr.Description = json["description"];
+         mr.SourceBranch = json["source_branch"];
+         mr.TargetBranch = json["target_branch"];
+         Enum.TryParse(json["state"], true, out mr.State);
+         mr.Labels = (string[])(json["labels"] as Array);
+         mr.WebUrl = json["web_url"];
+         mr.WorkInProgress = json["work_in_progress"];
+
+         dynamic jsonAuthor = json["author"];
+         mr.Author.Id = jsonAuthor["id"];
+         mr.Author.Name = jsonAuthor["name"];
+         mr.Author.Username = jsonAuthor["username"];
+         return mr;
       }
 
       public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
       {
          string url = makeUrlForAddSpentTime(project, id, span);
          post(url);
-      }
-
-      private static MergeRequest readMergeRequest(dynamic s)
-      {
-         MergeRequest mr;
-         mr.Id = s["id"];
-         mr.Title = s["title"];
-         mr.Description = s["description"];
-         mr.SourceBranch = s["source_branch"];
-         mr.TargetBranch = s["target_branch"];
-         Enum.TryParse(s["state"], true, out mr.State);
-         mr.Labels = (string[])(s["labels"] as Array);
-         mr.WebUrl = s["web_url"];
-         mr.WorkInProgress = s["work_in_progress"];
-         return mr;
       }
 
       private string post(string data)

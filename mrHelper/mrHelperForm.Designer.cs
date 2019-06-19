@@ -35,14 +35,25 @@
          this.labelAccessToken = new System.Windows.Forms.Label();
          this.textBoxHost = new System.Windows.Forms.TextBox();
          this.labelHost = new System.Windows.Forms.Label();
-         this.groupBoxMergeRequest = new System.Windows.Forms.GroupBox();
+         this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
+         this.radioButtonSelectMR_Filter = new System.Windows.Forms.RadioButton();
+         this.radioButtonSelectMR_URL = new System.Windows.Forms.RadioButton();
          this.buttonSearchByLabel = new System.Windows.Forms.Button();
          this.comboBoxFilteredMergeRequests = new System.Windows.Forms.ComboBox();
          this.label1 = new System.Windows.Forms.Label();
          this.textBoxMrURL = new System.Windows.Forms.TextBox();
          this.textBoxAuthor = new System.Windows.Forms.TextBox();
-         this.textBoxLabel = new System.Windows.Forms.TextBox();
+         this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.labelLabel = new System.Windows.Forms.Label();
+         this.groupBoxState = new System.Windows.Forms.GroupBox();
+         this.radioButtonState_All = new System.Windows.Forms.RadioButton();
+         this.radioButtonState_Closed = new System.Windows.Forms.RadioButton();
+         this.radioButtonState_Merged = new System.Windows.Forms.RadioButton();
+         this.radioButtonState_Open = new System.Windows.Forms.RadioButton();
+         this.groupBoxWIP = new System.Windows.Forms.GroupBox();
+         this.radioButtonWIP_All = new System.Windows.Forms.RadioButton();
+         this.radioButtonWIP_No = new System.Windows.Forms.RadioButton();
+         this.radioButtonWIP_Yes = new System.Windows.Forms.RadioButton();
          this.labelSpentTimeLabel = new System.Windows.Forms.Label();
          this.buttonStartTimer = new System.Windows.Forms.Button();
          this.buttonConnect = new System.Windows.Forms.Button();
@@ -54,7 +65,7 @@
          this.comboBoxRightCommit = new System.Windows.Forms.ComboBox();
          this.labeLeft = new System.Windows.Forms.Label();
          this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
-         this.toolTipOnURL = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,26 +75,19 @@
          this.tabPageSettings = new System.Windows.Forms.TabPage();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
+         this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
+         this.labelCurrentStatus = new System.Windows.Forms.Label();
          this.tabPageDiff = new System.Windows.Forms.TabPage();
+         this.labelSpentTime = new System.Windows.Forms.Label();
          this.linkLabelSeeDescriptionRight = new System.Windows.Forms.LinkLabel();
          this.linkLabelSeeDescriptionLeft = new System.Windows.Forms.LinkLabel();
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
-         this.labelSpentTime = new System.Windows.Forms.Label();
-         this.groupBoxState = new System.Windows.Forms.GroupBox();
-         this.groupBoxWIP = new System.Windows.Forms.GroupBox();
-         this.radioButtonWIP_All = new System.Windows.Forms.RadioButton();
-         this.radioButtonWIP_No = new System.Windows.Forms.RadioButton();
-         this.radioButtonWIP_Yes = new System.Windows.Forms.RadioButton();
-         this.radioButtonState_All = new System.Windows.Forms.RadioButton();
-         this.radioButtonState_Closed = new System.Windows.Forms.RadioButton();
-         this.radioButtonState_Merged = new System.Windows.Forms.RadioButton();
-         this.radioButtonState_Open = new System.Windows.Forms.RadioButton();
-         this.radioButtonListMR = new System.Windows.Forms.RadioButton();
-         this.radioButtonURL = new System.Windows.Forms.RadioButton();
          this.groupBoxAuthorization.SuspendLayout();
-         this.groupBoxMergeRequest.SuspendLayout();
+         this.groupBoxSelectMergeRequest.SuspendLayout();
+         this.groupBoxState.SuspendLayout();
+         this.groupBoxWIP.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
          this.tabPageSettings.SuspendLayout();
@@ -91,8 +95,6 @@
          this.tabPageMR.SuspendLayout();
          this.tabPageDiff.SuspendLayout();
          this.groupBoxDescription.SuspendLayout();
-         this.groupBoxState.SuspendLayout();
-         this.groupBoxWIP.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxAuthorization
@@ -140,25 +142,47 @@
          this.labelHost.TabIndex = 1;
          this.labelHost.Text = "Host";
          // 
-         // groupBoxMergeRequest
+         // groupBoxSelectMergeRequest
          // 
-         this.groupBoxMergeRequest.Controls.Add(this.radioButtonListMR);
-         this.groupBoxMergeRequest.Controls.Add(this.radioButtonURL);
-         this.groupBoxMergeRequest.Controls.Add(this.buttonSearchByLabel);
-         this.groupBoxMergeRequest.Controls.Add(this.comboBoxFilteredMergeRequests);
-         this.groupBoxMergeRequest.Controls.Add(this.label1);
-         this.groupBoxMergeRequest.Controls.Add(this.textBoxMrURL);
-         this.groupBoxMergeRequest.Controls.Add(this.textBoxAuthor);
-         this.groupBoxMergeRequest.Controls.Add(this.textBoxLabel);
-         this.groupBoxMergeRequest.Controls.Add(this.labelLabel);
-         this.groupBoxMergeRequest.Controls.Add(this.groupBoxState);
-         this.groupBoxMergeRequest.Controls.Add(this.groupBoxWIP);
-         this.groupBoxMergeRequest.Location = new System.Drawing.Point(6, 6);
-         this.groupBoxMergeRequest.Name = "groupBoxMergeRequest";
-         this.groupBoxMergeRequest.Size = new System.Drawing.Size(456, 230);
-         this.groupBoxMergeRequest.TabIndex = 1;
-         this.groupBoxMergeRequest.TabStop = false;
-         this.groupBoxMergeRequest.Text = "Select Merge Request";
+         this.groupBoxSelectMergeRequest.Controls.Add(this.radioButtonSelectMR_Filter);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.radioButtonSelectMR_URL);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonSearchByLabel);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.comboBoxFilteredMergeRequests);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.label1);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxMrURL);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxAuthor);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxLabels);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.labelLabel);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.groupBoxState);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.groupBoxWIP);
+         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(6, 6);
+         this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(456, 230);
+         this.groupBoxSelectMergeRequest.TabIndex = 1;
+         this.groupBoxSelectMergeRequest.TabStop = false;
+         this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
+         // 
+         // radioButtonSelectMR_Filter
+         // 
+         this.radioButtonSelectMR_Filter.AutoSize = true;
+         this.radioButtonSelectMR_Filter.Checked = true;
+         this.radioButtonSelectMR_Filter.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonSelectMR_Filter.Name = "radioButtonSelectMR_Filter";
+         this.radioButtonSelectMR_Filter.Size = new System.Drawing.Size(98, 17);
+         this.radioButtonSelectMR_Filter.TabIndex = 25;
+         this.radioButtonSelectMR_Filter.TabStop = true;
+         this.radioButtonSelectMR_Filter.Text = "Search by Filter";
+         this.radioButtonSelectMR_Filter.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonSelectMR_URL
+         // 
+         this.radioButtonSelectMR_URL.AutoSize = true;
+         this.radioButtonSelectMR_URL.Location = new System.Drawing.Point(6, 181);
+         this.radioButtonSelectMR_URL.Name = "radioButtonSelectMR_URL";
+         this.radioButtonSelectMR_URL.Size = new System.Drawing.Size(78, 17);
+         this.radioButtonSelectMR_URL.TabIndex = 26;
+         this.radioButtonSelectMR_URL.Text = "Direct URL";
+         this.radioButtonSelectMR_URL.UseVisualStyleBackColor = true;
          // 
          // buttonSearchByLabel
          // 
@@ -167,12 +191,12 @@
          this.buttonSearchByLabel.Size = new System.Drawing.Size(83, 27);
          this.buttonSearchByLabel.TabIndex = 10;
          this.buttonSearchByLabel.Text = "Search";
+         this.toolTip.SetToolTip(this.buttonSearchByLabel, "Searches in all projects at the host specified at Settings tab");
          this.buttonSearchByLabel.UseVisualStyleBackColor = true;
          this.buttonSearchByLabel.Click += new System.EventHandler(this.ButtonSearchByLabel_Click);
          // 
          // comboBoxFilteredMergeRequests
          // 
-         this.comboBoxFilteredMergeRequests.Enabled = false;
          this.comboBoxFilteredMergeRequests.FormattingEnabled = true;
          this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 144);
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
@@ -195,20 +219,24 @@
          this.textBoxMrURL.Name = "textBoxMrURL";
          this.textBoxMrURL.Size = new System.Drawing.Size(444, 20);
          this.textBoxMrURL.TabIndex = 2;
+         this.toolTip.SetToolTip(this.textBoxMrURL, "Something like https://gitlab-server.com/group/project/merge_requests/2");
          // 
          // textBoxAuthor
          // 
+         this.textBoxAuthor.Enabled = false;
          this.textBoxAuthor.Location = new System.Drawing.Point(6, 102);
          this.textBoxAuthor.Name = "textBoxAuthor";
          this.textBoxAuthor.Size = new System.Drawing.Size(140, 20);
          this.textBoxAuthor.TabIndex = 11;
+         this.toolTip.SetToolTip(this.textBoxAuthor, "Not implemented yet");
          // 
-         // textBoxLabel
+         // textBoxLabels
          // 
-         this.textBoxLabel.Location = new System.Drawing.Point(6, 57);
-         this.textBoxLabel.Name = "textBoxLabel";
-         this.textBoxLabel.Size = new System.Drawing.Size(140, 20);
-         this.textBoxLabel.TabIndex = 9;
+         this.textBoxLabels.Location = new System.Drawing.Point(6, 57);
+         this.textBoxLabels.Name = "textBoxLabels";
+         this.textBoxLabels.Size = new System.Drawing.Size(140, 20);
+         this.textBoxLabels.TabIndex = 9;
+         this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests matching a comma separated list of labels");
          // 
          // labelLabel
          // 
@@ -218,6 +246,105 @@
          this.labelLabel.Size = new System.Drawing.Size(33, 13);
          this.labelLabel.TabIndex = 12;
          this.labelLabel.Text = "Label";
+         // 
+         // groupBoxState
+         // 
+         this.groupBoxState.Controls.Add(this.radioButtonState_All);
+         this.groupBoxState.Controls.Add(this.radioButtonState_Closed);
+         this.groupBoxState.Controls.Add(this.radioButtonState_Merged);
+         this.groupBoxState.Controls.Add(this.radioButtonState_Open);
+         this.groupBoxState.Location = new System.Drawing.Point(163, 39);
+         this.groupBoxState.Name = "groupBoxState";
+         this.groupBoxState.Size = new System.Drawing.Size(255, 45);
+         this.groupBoxState.TabIndex = 23;
+         this.groupBoxState.TabStop = false;
+         this.groupBoxState.Text = "State";
+         // 
+         // radioButtonState_All
+         // 
+         this.radioButtonState_All.AutoSize = true;
+         this.radioButtonState_All.Checked = true;
+         this.radioButtonState_All.Location = new System.Drawing.Point(206, 13);
+         this.radioButtonState_All.Name = "radioButtonState_All";
+         this.radioButtonState_All.Size = new System.Drawing.Size(36, 17);
+         this.radioButtonState_All.TabIndex = 22;
+         this.radioButtonState_All.TabStop = true;
+         this.radioButtonState_All.Text = "All";
+         this.radioButtonState_All.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonState_Closed
+         // 
+         this.radioButtonState_Closed.AutoSize = true;
+         this.radioButtonState_Closed.Location = new System.Drawing.Point(76, 13);
+         this.radioButtonState_Closed.Name = "radioButtonState_Closed";
+         this.radioButtonState_Closed.Size = new System.Drawing.Size(57, 17);
+         this.radioButtonState_Closed.TabIndex = 21;
+         this.radioButtonState_Closed.Text = "Closed";
+         this.radioButtonState_Closed.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonState_Merged
+         // 
+         this.radioButtonState_Merged.AutoSize = true;
+         this.radioButtonState_Merged.Location = new System.Drawing.Point(139, 13);
+         this.radioButtonState_Merged.Name = "radioButtonState_Merged";
+         this.radioButtonState_Merged.Size = new System.Drawing.Size(61, 17);
+         this.radioButtonState_Merged.TabIndex = 20;
+         this.radioButtonState_Merged.Text = "Merged";
+         this.radioButtonState_Merged.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonState_Open
+         // 
+         this.radioButtonState_Open.AutoSize = true;
+         this.radioButtonState_Open.Location = new System.Drawing.Point(13, 14);
+         this.radioButtonState_Open.Name = "radioButtonState_Open";
+         this.radioButtonState_Open.Size = new System.Drawing.Size(51, 17);
+         this.radioButtonState_Open.TabIndex = 19;
+         this.radioButtonState_Open.Text = "Open";
+         this.radioButtonState_Open.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxWIP
+         // 
+         this.groupBoxWIP.Controls.Add(this.radioButtonWIP_All);
+         this.groupBoxWIP.Controls.Add(this.radioButtonWIP_No);
+         this.groupBoxWIP.Controls.Add(this.radioButtonWIP_Yes);
+         this.groupBoxWIP.Location = new System.Drawing.Point(163, 87);
+         this.groupBoxWIP.Name = "groupBoxWIP";
+         this.groupBoxWIP.Size = new System.Drawing.Size(165, 47);
+         this.groupBoxWIP.TabIndex = 24;
+         this.groupBoxWIP.TabStop = false;
+         this.groupBoxWIP.Text = "WIP";
+         // 
+         // radioButtonWIP_All
+         // 
+         this.radioButtonWIP_All.AutoSize = true;
+         this.radioButtonWIP_All.Checked = true;
+         this.radioButtonWIP_All.Location = new System.Drawing.Point(111, 15);
+         this.radioButtonWIP_All.Name = "radioButtonWIP_All";
+         this.radioButtonWIP_All.Size = new System.Drawing.Size(36, 17);
+         this.radioButtonWIP_All.TabIndex = 25;
+         this.radioButtonWIP_All.TabStop = true;
+         this.radioButtonWIP_All.Text = "All";
+         this.radioButtonWIP_All.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonWIP_No
+         // 
+         this.radioButtonWIP_No.AutoSize = true;
+         this.radioButtonWIP_No.Location = new System.Drawing.Point(66, 15);
+         this.radioButtonWIP_No.Name = "radioButtonWIP_No";
+         this.radioButtonWIP_No.Size = new System.Drawing.Size(39, 17);
+         this.radioButtonWIP_No.TabIndex = 24;
+         this.radioButtonWIP_No.Text = "No";
+         this.radioButtonWIP_No.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonWIP_Yes
+         // 
+         this.radioButtonWIP_Yes.AutoSize = true;
+         this.radioButtonWIP_Yes.Location = new System.Drawing.Point(17, 15);
+         this.radioButtonWIP_Yes.Name = "radioButtonWIP_Yes";
+         this.radioButtonWIP_Yes.Size = new System.Drawing.Size(43, 17);
+         this.radioButtonWIP_Yes.TabIndex = 23;
+         this.radioButtonWIP_Yes.Text = "Yes";
+         this.radioButtonWIP_Yes.UseVisualStyleBackColor = true;
          // 
          // labelSpentTimeLabel
          // 
@@ -321,11 +448,11 @@
          this.comboBoxLeftCommit.Size = new System.Drawing.Size(223, 21);
          this.comboBoxLeftCommit.TabIndex = 6;
          // 
-         // toolTipOnURL
+         // toolTip
          // 
-         this.toolTipOnURL.AutoPopDelay = 10000;
-         this.toolTipOnURL.InitialDelay = 10;
-         this.toolTipOnURL.ReshowDelay = 10;
+         this.toolTip.AutoPopDelay = 10000;
+         this.toolTip.InitialDelay = 10;
+         this.toolTip.ReshowDelay = 10;
          // 
          // contextMenuStrip
          // 
@@ -372,6 +499,7 @@
          this.tabControl.SelectedIndex = 0;
          this.tabControl.Size = new System.Drawing.Size(476, 301);
          this.tabControl.TabIndex = 11;
+         this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.TabControl_Selecting);
          // 
          // tabPageSettings
          // 
@@ -399,8 +527,10 @@
          // 
          // tabPageMR
          // 
+         this.tabPageMR.Controls.Add(this.linkLabelConnectedTo);
+         this.tabPageMR.Controls.Add(this.labelCurrentStatus);
          this.tabPageMR.Controls.Add(this.buttonConnect);
-         this.tabPageMR.Controls.Add(this.groupBoxMergeRequest);
+         this.tabPageMR.Controls.Add(this.groupBoxSelectMergeRequest);
          this.tabPageMR.Location = new System.Drawing.Point(4, 22);
          this.tabPageMR.Name = "tabPageMR";
          this.tabPageMR.Padding = new System.Windows.Forms.Padding(3);
@@ -408,6 +538,25 @@
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
+         // 
+         // linkLabelConnectedTo
+         // 
+         this.linkLabelConnectedTo.AutoSize = true;
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(90, 249);
+         this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
+         this.linkLabelConnectedTo.Size = new System.Drawing.Size(42, 13);
+         this.linkLabelConnectedTo.TabIndex = 5;
+         this.linkLabelConnectedTo.TabStop = true;
+         this.linkLabelConnectedTo.Text = "url-here";
+         // 
+         // labelCurrentStatus
+         // 
+         this.labelCurrentStatus.AutoSize = true;
+         this.labelCurrentStatus.Location = new System.Drawing.Point(6, 249);
+         this.labelCurrentStatus.Name = "labelCurrentStatus";
+         this.labelCurrentStatus.Size = new System.Drawing.Size(78, 13);
+         this.labelCurrentStatus.TabIndex = 4;
+         this.labelCurrentStatus.Text = "Not connected";
          // 
          // tabPageDiff
          // 
@@ -429,6 +578,15 @@
          this.tabPageDiff.Text = "Diff";
          this.tabPageDiff.UseVisualStyleBackColor = true;
          // 
+         // labelSpentTime
+         // 
+         this.labelSpentTime.AutoSize = true;
+         this.labelSpentTime.Location = new System.Drawing.Point(401, 246);
+         this.labelSpentTime.Name = "labelSpentTime";
+         this.labelSpentTime.Size = new System.Drawing.Size(49, 13);
+         this.labelSpentTime.TabIndex = 14;
+         this.labelSpentTime.Text = "00:00:00";
+         // 
          // linkLabelSeeDescriptionRight
          // 
          this.linkLabelSeeDescriptionRight.AutoSize = true;
@@ -438,6 +596,7 @@
          this.linkLabelSeeDescriptionRight.TabIndex = 13;
          this.linkLabelSeeDescriptionRight.TabStop = true;
          this.linkLabelSeeDescriptionRight.Text = "See Description";
+         this.toolTip.SetToolTip(this.linkLabelSeeDescriptionRight, "Not implemented yet");
          // 
          // linkLabelSeeDescriptionLeft
          // 
@@ -448,6 +607,7 @@
          this.linkLabelSeeDescriptionLeft.TabIndex = 12;
          this.linkLabelSeeDescriptionLeft.TabStop = true;
          this.linkLabelSeeDescriptionLeft.Text = "See Description";
+         this.toolTip.SetToolTip(this.linkLabelSeeDescriptionLeft, "Not implemented yet");
          // 
          // groupBoxDescription
          // 
@@ -477,136 +637,6 @@
          this.textBoxMergeRequestName.Size = new System.Drawing.Size(450, 20);
          this.textBoxMergeRequestName.TabIndex = 10;
          // 
-         // labelSpentTime
-         // 
-         this.labelSpentTime.AutoSize = true;
-         this.labelSpentTime.Location = new System.Drawing.Point(401, 246);
-         this.labelSpentTime.Name = "labelSpentTime";
-         this.labelSpentTime.Size = new System.Drawing.Size(49, 13);
-         this.labelSpentTime.TabIndex = 14;
-         this.labelSpentTime.Text = "00:00:00";
-         // 
-         // groupBoxState
-         // 
-         this.groupBoxState.Controls.Add(this.radioButtonState_All);
-         this.groupBoxState.Controls.Add(this.radioButtonState_Closed);
-         this.groupBoxState.Controls.Add(this.radioButtonState_Merged);
-         this.groupBoxState.Controls.Add(this.radioButtonState_Open);
-         this.groupBoxState.Location = new System.Drawing.Point(163, 39);
-         this.groupBoxState.Name = "groupBoxState";
-         this.groupBoxState.Size = new System.Drawing.Size(255, 45);
-         this.groupBoxState.TabIndex = 23;
-         this.groupBoxState.TabStop = false;
-         this.groupBoxState.Text = "State";
-         // 
-         // groupBoxWIP
-         // 
-         this.groupBoxWIP.Controls.Add(this.radioButtonWIP_All);
-         this.groupBoxWIP.Controls.Add(this.radioButtonWIP_No);
-         this.groupBoxWIP.Controls.Add(this.radioButtonWIP_Yes);
-         this.groupBoxWIP.Location = new System.Drawing.Point(163, 87);
-         this.groupBoxWIP.Name = "groupBoxWIP";
-         this.groupBoxWIP.Size = new System.Drawing.Size(165, 47);
-         this.groupBoxWIP.TabIndex = 24;
-         this.groupBoxWIP.TabStop = false;
-         this.groupBoxWIP.Text = "WIP";
-         // 
-         // radioButtonWIP_All
-         // 
-         this.radioButtonWIP_All.AutoSize = true;
-         this.radioButtonWIP_All.Checked = true;
-         this.radioButtonWIP_All.Location = new System.Drawing.Point(111, 15);
-         this.radioButtonWIP_All.Name = "radioButtonWIP_All";
-         this.radioButtonWIP_All.Size = new System.Drawing.Size(36, 17);
-         this.radioButtonWIP_All.TabIndex = 25;
-         this.radioButtonWIP_All.TabStop = true;
-         this.radioButtonWIP_All.Text = "All";
-         this.radioButtonWIP_All.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonWIP_No
-         // 
-         this.radioButtonWIP_No.AutoSize = true;
-         this.radioButtonWIP_No.Location = new System.Drawing.Point(66, 15);
-         this.radioButtonWIP_No.Name = "radioButtonWIP_No";
-         this.radioButtonWIP_No.Size = new System.Drawing.Size(39, 17);
-         this.radioButtonWIP_No.TabIndex = 24;
-         this.radioButtonWIP_No.Text = "No";
-         this.radioButtonWIP_No.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonWIP_Yes
-         // 
-         this.radioButtonWIP_Yes.AutoSize = true;
-         this.radioButtonWIP_Yes.Location = new System.Drawing.Point(17, 15);
-         this.radioButtonWIP_Yes.Name = "radioButtonWIP_Yes";
-         this.radioButtonWIP_Yes.Size = new System.Drawing.Size(43, 17);
-         this.radioButtonWIP_Yes.TabIndex = 23;
-         this.radioButtonWIP_Yes.Text = "Yes";
-         this.radioButtonWIP_Yes.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonState_All
-         // 
-         this.radioButtonState_All.AutoSize = true;
-         this.radioButtonState_All.Checked = true;
-         this.radioButtonState_All.Location = new System.Drawing.Point(206, 13);
-         this.radioButtonState_All.Name = "radioButtonState_All";
-         this.radioButtonState_All.Size = new System.Drawing.Size(36, 17);
-         this.radioButtonState_All.TabIndex = 22;
-         this.radioButtonState_All.TabStop = true;
-         this.radioButtonState_All.Text = "All";
-         this.radioButtonState_All.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonState_Closed
-         // 
-         this.radioButtonState_Closed.AutoSize = true;
-         this.radioButtonState_Closed.Location = new System.Drawing.Point(76, 13);
-         this.radioButtonState_Closed.Name = "radioButtonState_Closed";
-         this.radioButtonState_Closed.Size = new System.Drawing.Size(57, 17);
-         this.radioButtonState_Closed.TabIndex = 21;
-         this.radioButtonState_Closed.Text = "Closed";
-         this.radioButtonState_Closed.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonState_Merged
-         // 
-         this.radioButtonState_Merged.AutoSize = true;
-         this.radioButtonState_Merged.Location = new System.Drawing.Point(139, 13);
-         this.radioButtonState_Merged.Name = "radioButtonState_Merged";
-         this.radioButtonState_Merged.Size = new System.Drawing.Size(61, 17);
-         this.radioButtonState_Merged.TabIndex = 20;
-         this.radioButtonState_Merged.Text = "Merged";
-         this.radioButtonState_Merged.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonState_Open
-         // 
-         this.radioButtonState_Open.AutoSize = true;
-         this.radioButtonState_Open.Location = new System.Drawing.Point(13, 14);
-         this.radioButtonState_Open.Name = "radioButtonState_Open";
-         this.radioButtonState_Open.Size = new System.Drawing.Size(51, 17);
-         this.radioButtonState_Open.TabIndex = 19;
-         this.radioButtonState_Open.Text = "Open";
-         this.radioButtonState_Open.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonListMR
-         // 
-         this.radioButtonListMR.AutoSize = true;
-         this.radioButtonListMR.Checked = true;
-         this.radioButtonListMR.Location = new System.Drawing.Point(6, 19);
-         this.radioButtonListMR.Name = "radioButtonListMR";
-         this.radioButtonListMR.Size = new System.Drawing.Size(98, 17);
-         this.radioButtonListMR.TabIndex = 25;
-         this.radioButtonListMR.TabStop = true;
-         this.radioButtonListMR.Text = "Search by Filter";
-         this.radioButtonListMR.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonURL
-         // 
-         this.radioButtonURL.AutoSize = true;
-         this.radioButtonURL.Location = new System.Drawing.Point(6, 181);
-         this.radioButtonURL.Name = "radioButtonURL";
-         this.radioButtonURL.Size = new System.Drawing.Size(78, 17);
-         this.radioButtonURL.TabIndex = 26;
-         this.radioButtonURL.Text = "Direct URL";
-         this.radioButtonURL.UseVisualStyleBackColor = true;
-         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -622,22 +652,23 @@
          this.Load += new System.EventHandler(this.MrHelperForm_Load);
          this.groupBoxAuthorization.ResumeLayout(false);
          this.groupBoxAuthorization.PerformLayout();
-         this.groupBoxMergeRequest.ResumeLayout(false);
-         this.groupBoxMergeRequest.PerformLayout();
+         this.groupBoxSelectMergeRequest.ResumeLayout(false);
+         this.groupBoxSelectMergeRequest.PerformLayout();
+         this.groupBoxState.ResumeLayout(false);
+         this.groupBoxState.PerformLayout();
+         this.groupBoxWIP.ResumeLayout(false);
+         this.groupBoxWIP.PerformLayout();
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);
          this.tabPageSettings.ResumeLayout(false);
          this.groupBoxGit.ResumeLayout(false);
          this.groupBoxGit.PerformLayout();
          this.tabPageMR.ResumeLayout(false);
+         this.tabPageMR.PerformLayout();
          this.tabPageDiff.ResumeLayout(false);
          this.tabPageDiff.PerformLayout();
          this.groupBoxDescription.ResumeLayout(false);
          this.groupBoxDescription.PerformLayout();
-         this.groupBoxState.ResumeLayout(false);
-         this.groupBoxState.PerformLayout();
-         this.groupBoxWIP.ResumeLayout(false);
-         this.groupBoxWIP.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -649,7 +680,7 @@
       private System.Windows.Forms.Label labelAccessToken;
       private System.Windows.Forms.Label labelHost;
       private System.Windows.Forms.TextBox textBoxHost;
-      private System.Windows.Forms.GroupBox groupBoxMergeRequest;
+      private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
       private System.Windows.Forms.Button buttonConnect;
       private System.Windows.Forms.TextBox textBoxMrURL;
       private System.Windows.Forms.Button buttonDifftool;
@@ -659,7 +690,7 @@
       private System.Windows.Forms.ComboBox comboBoxLeftCommit;
       private System.Windows.Forms.Button buttonStartTimer;
       private System.Windows.Forms.Label labelSpentTimeLabel;
-      private System.Windows.Forms.ToolTip toolTipOnURL;
+      private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
       private System.Windows.Forms.ToolStripMenuItem restoreToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
@@ -669,7 +700,7 @@
       private System.Windows.Forms.Button buttonBrowseLocalGitFolder;
       private System.Windows.Forms.TextBox textBoxLocalGitFolder;
       private System.Windows.Forms.Button buttonSearchByLabel;
-      private System.Windows.Forms.TextBox textBoxLabel;
+      private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.ComboBox comboBoxFilteredMergeRequests;
       private System.Windows.Forms.Label label1;
       private System.Windows.Forms.TextBox textBoxAuthor;
@@ -694,8 +725,10 @@
       private System.Windows.Forms.RadioButton radioButtonWIP_All;
       private System.Windows.Forms.RadioButton radioButtonWIP_No;
       private System.Windows.Forms.RadioButton radioButtonWIP_Yes;
-      private System.Windows.Forms.RadioButton radioButtonListMR;
-      private System.Windows.Forms.RadioButton radioButtonURL;
+      private System.Windows.Forms.RadioButton radioButtonSelectMR_Filter;
+      private System.Windows.Forms.RadioButton radioButtonSelectMR_URL;
+      private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
+      private System.Windows.Forms.Label labelCurrentStatus;
    }
 }
 

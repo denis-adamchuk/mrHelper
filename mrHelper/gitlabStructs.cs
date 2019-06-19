@@ -1,5 +1,12 @@
 ﻿namespace mrHelper
 {
+   struct Author
+   {
+      public int Id;
+      public string Name;
+      public string Username;
+   }
+
    struct MergeRequest
    {
       public int Id;
@@ -11,6 +18,7 @@
       public string[] Labels;
       public string WebUrl;
       public bool WorkInProgress;
+      public Author Author;
    }
 
    struct Commit
@@ -18,6 +26,8 @@
       public string Id;
       public string ShortId;
       public string Title;
+      public string Message;
+      public System.DateTime CommitedDate;
    }
 
    enum MergeRequestState
