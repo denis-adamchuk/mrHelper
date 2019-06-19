@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Windows.Forms;
 
@@ -16,145 +15,185 @@ namespace mrHelper
       public mrHelperForm()
       {
          InitializeComponent();
-         buttonStartTimer.Text = buttonStartTimerDefaultText;
+         buttonToggleTimer.Text = buttonStartTimerDefaultText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
       }
 
       private void MrHelperForm_Load(object sender, EventArgs e)
       {
-         loadConfiguration();
-
-         onApplicationStarted();
-
+         try
+         {
+            loadConfiguration();
+            onApplicationStarted();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void MrHelperForm_FormClosing(object sender, FormClosingEventArgs e)
       {
-         if (!_exiting)
+         try
          {
-            onHideToTray(e);
-            return;
+            if (!_exiting)
+            {
+               onHideToTray(e);
+               return;
+            }
+            saveConfiguration();
          }
-         saveConfiguration();
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
       {
-         onRestoreWindow();
+         try
+         {
+            onRestoreWindow();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void ButtonConnect_Click(object sender, EventArgs e)
       {
-         if (isConnected())
-         {
-            onDisconnected();
-            return;
-         }
-
-         onStartConnectionProcess();
-
-         ParsedMergeRequestUrl parsed;
-         MergeRequest mergeRequest;
-         List<Commit> commits;
-         string gitRepository;
          try
          {
-            string url = getSelectedMergeRequestUrl();
-            parsed = parseAndValidateUrl(url);
-            mergeRequest = getMergeRequest(parsed);
-            commits = getCommits(parsed);
-            gitRepository = initializeGitRepository(parsed);
+            if (isConnected())
+            {
+               onDisconnected();
+               return;
+            }
+
+            onConnected();
          }
          catch (Exception ex)
          {
             onDisconnected();
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
          }
-
-         onConnected(parsed, mergeRequest, commits, gitRepository);
       }
 
       private void ButtonDifftool_Click(object sender, EventArgs e)
       {
-         // TODO Add error handling and work with TEMP directory
-         Directory.SetCurrentDirectory(_gitRepository);
-         gitClient.DiffTool(getGitTag(true), getGitTag(false));
-         Directory.SetCurrentDirectory("..");
+         string currentDirectory = Directory.GetCurrentDirectory();
+         try
+         {
+            string repository = initializeGitRepository();
+            Directory.SetCurrentDirectory(repository);
+            gitClient.DiffTool(getGitTag(true /* left */), getGitTag(false /* right */));
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         finally
+         {
+            Directory.SetCurrentDirectory(currentDirectory);
+         }
       }
 
-      private string getGitTag(bool left)
+      private void ButtonToggleTimer_Click(object sender, EventArgs e)
       {
-         // TODO This is not very safe and not very maintainable
-         if (left)
+         try
          {
-            if (_cachedCommits.Count < comboBoxLeftCommit.SelectedIndex)
+            if (_isTrackingTime)
             {
-               return comboBoxLeftCommit.Text;
-            }
-            else;
-            {
-               return _cachedCommits[comboBoxLeftCommit.SelectedIndex].Id;
-            }
-         }
-         else
-         {
-            if (_cachedCommits.Count < comboBoxRightCommit.SelectedIndex)
-            {
-               return comboBoxRightCommit.Text;
+               onStopTimer(true /* send tracked time to server */);
             }
             else
             {
-               return _cachedCommits[comboBoxRightCommit.SelectedIndex].Id;
+               onStartTimer();
             }
          }
-      }
-
-      private void ButtonStartTimer_Click(object sender, EventArgs e)
-      {
-         if (_isTrackingTime)
+         catch (Exception ex)
          {
-            onStopTimer(true);
-         }
-         else
-         {
-            onStartTimer();
+            MessageBox.Show(ex.Message + " Tracked time was not sent to server", "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
       private void RestoreToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         onRestoreWindow();
+         try
+         {
+            onRestoreWindow();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         onExitingByUser();
+         try
+         {
+            onExitingByUser();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
       {
-         localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
-         if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
+         try
          {
-            textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
+            localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
+            if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
+            {
+               onSelectedGitFolder();
+            }
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
       private void RadioButtonURL_CheckedChanged(object sender, EventArgs e)
       {
-         onChangeMrSelectingType(MrSelectingType.SearchByFilter);
+         try
+         {
+            onChangeMrSelectingType(MrSelectingType.SearchByFilter);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void RadioButtonListMR_CheckedChanged(object sender, EventArgs e)
       {
-         onChangeMrSelectingType(MrSelectingType.DirectURL);
+         try
+         {
+            onChangeMrSelectingType(MrSelectingType.DirectURL);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void ButtonSearchByLabel_Click(object sender, EventArgs e)
       {
-         List<MergeRequest> mergeRequests = getMergeRequests();
-         onLoadedListOfMergeRequests(mergeRequests);
+         try
+         {
+            List<MergeRequest> mergeRequests = getAllMergeRequests();
+            onLoadedListOfMergeRequests(mergeRequests);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void TabControl_Selecting(object sender, TabControlCancelEventArgs e)
@@ -166,97 +205,141 @@ namespace mrHelper
          e.Cancel = !e.TabPage.Enabled;
       }
 
-      private void _oneSecondTimer_Tick(object sender, EventArgs e)
+      private void ComboBoxFilteredMergeRequests_Format(object sender, ListControlConvertEventArgs e)
       {
-         // TODO Handle overflow
-         var span = DateTime.Now - _lastStartTimeStamp;
-         labelSpentTime.Text = span.ToString(@"hh\:mm\:ss");
+         e.Value = ((MergeRequest)e.ListItem).Title + "    " + "[" + ((MergeRequest)e.ListItem).Author + "]";
+      }
+
+      private void ComboBoxLeftCommit_Format(object sender, ListControlConvertEventArgs e)
+      {
+         formatCommitComboboxItem(e);
+      }
+
+      private void ComboBoxRightCommit_Format(object sender, ListControlConvertEventArgs e)
+      {
+         formatCommitComboboxItem(e);
       }
 
       private string getSelectedMergeRequestUrl()
       {
-         if (radioButtonSelectMR_Filter.Checked) // mode with multiple URL
+         if (radioButtonSelectMR_Filter.Checked)
          {
-            return _cachedMergeRequests[comboBoxFilteredMergeRequests.SelectedIndex].WebUrl;
+            return ((MergeRequest)comboBoxFilteredMergeRequests.SelectedItem).WebUrl;
          }
          return textBoxMrURL.Text;
       }
 
       private ParsedMergeRequestUrl parseAndValidateUrl(string url)
       {
-         ParsedMergeRequestUrl parsed = new ParsedMergeRequestUrl();
-         mrUrlParser parser = new mrUrlParser(url);
-         parsed = parser.Parse();
+         MergeRequestUrlParser parser = new MergeRequestUrlParser(url);
+         return parser.Parse();
+      }
 
-         if (parsed.Host != textBoxHost.Text)
+      private List<MergeRequest> getAllMergeRequests()
+      {
+         StateFilter state;
+         if (!Enum.TryParse(getCheckedRadioButton(groupBoxState).Text, out state))
          {
-            // TODO Error handling
-            throw new NotImplementedException();
+            throw new NotImplementedException("Unsupported State value");
          }
 
-         return parsed;
-      }
-
-      private MergeRequest getMergeRequest(ParsedMergeRequestUrl parsed)
-      {
-         labelCurrentStatus.Text = "Loading merge request details...";
-
-         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
-         var mergeRequest = client.GetSingleMergeRequest(parsed.Project, parsed.Id);
-         return mergeRequest;
-      }
-
-      private List<Commit> getCommits(ParsedMergeRequestUrl parsed)
-      {
-         labelCurrentStatus.Text = "Loading list of commits...";
-
-         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
-         var commits = client.GetMergeRequestCommits(parsed.Project, parsed.Id);
-         _cachedCommits = commits;
-         return commits;
-      }
-
-      private List<MergeRequest> getMergeRequests()
-      {
-         // TODO Error handling
-         StateFilter state;
-         Enum.TryParse(getCheckedRadioButton(groupBoxState).Text, out state);
-
          WorkInProgressFilter wip;
-         Enum.TryParse(getCheckedRadioButton(groupBoxWIP).Text, out wip);
+         if (!Enum.TryParse(getCheckedRadioButton(groupBoxWIP).Text, out wip))
+         {
+            throw new NotImplementedException("Unsupported WIP value");
+         }
 
          gitlabClient client = new gitlabClient(textBoxHost.Text, textBoxAccessToken.Text);
-         var mergeRequests = client.GetAllMergeRequests(state, textBoxLabels.Text, textBoxAuthor.Text, wip);
-         return mergeRequests;
+         return client.GetAllMergeRequests(state, textBoxLabels.Text, textBoxAuthor.Text, wip);
       }
 
-      void sendTrackedTimeSpan(ParsedMergeRequestUrl parsed, TimeSpan span)
+      private MergeRequest getMergeRequest()
       {
+         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
+         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
+         return client.GetSingleMergeRequest(parsed.Project, parsed.Id);
+      }
+
+      private List<Commit> getCommits()
+      {
+         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
+         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
+         return client.GetMergeRequestCommits(parsed.Project, parsed.Id);
+      }
+
+      void sendTrackedTimeSpan(TimeSpan span)
+      {
+         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
          gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
          client.AddSpentTimeForMergeRequest(parsed.Project, parsed.Id, ref span);
       }
 
-      string initializeGitRepository(ParsedMergeRequestUrl parsed)
+      string initializeGitRepository()
       {
-         string localDir = textBoxLocalGitFolder.Text + "/" + parsed.Project.Split('/')[1];
-
-         if (!Directory.Exists(localDir))
+         string localGitFolder = textBoxLocalGitFolder.Text;
+         if (!Directory.Exists(localGitFolder))
          {
-            labelCurrentStatus.Text = "Cloning git repository...";
-            gitClient.CloneRepo(parsed.Host, parsed.Project, localDir);
+            if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
+               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+               Directory.CreateDirectory(localGitFolder);
+            }
+            else
+            {
+               throw new ApplicationException("Cannot launch difftool because there is no valid repository");
+            }
+         }
+
+         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
+         string project = parsed.Project.Split('/')[1];
+         string repository = localGitFolder + "/" + project;
+         if (!Directory.Exists(repository))
+         {
+            if (MessageBox.Show("There is no project " + project + " repository within folder " + localGitFolder +
+               ". Do you want to clone git repository?", "Information", MessageBoxButtons.YesNo,
+               MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+               gitClient.CloneRepo(parsed.Host, parsed.Project, repository);
+            }
+            else
+            {
+               throw new ApplicationException("Cannot launch difftool because there is no valid repository");
+            }
          }
          else
          {
-            labelCurrentStatus.Text = "Fetching changes...";
-
-            // TODO Add error handling etc
             string currentDir = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(localDir);
+            Directory.SetCurrentDirectory(repository);
             gitClient.Fetch();
             Directory.SetCurrentDirectory(currentDir);
          }
 
-         return localDir;
+         return repository;
+      }
+
+      private string getGitTag(bool left)
+      {
+         if (left)
+         {
+            if (comboBoxLeftCommit.SelectedItem != null)
+            {
+               return ((CommitComboBoxItem)comboBoxLeftCommit.SelectedItem).Text;
+            }
+            return "";
+         }
+         else
+         {
+            if (comboBoxRightCommit.SelectedItem != null)
+            {
+               return ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).Text;
+            }
+            return "";
+         }
+      }
+
+      private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
+      {
+         formatCommitComboboxItem(e);
       }
 
       private void loadConfiguration()
@@ -276,7 +359,7 @@ namespace mrHelper
 
       private bool isConnected()
       {
-         return _connected;
+         return buttonConnect.Text == "Disconnect";
       }
 
       private void onApplicationStarted()
@@ -301,15 +384,25 @@ namespace mrHelper
          switch (type)
          {
             case MrSelectingType.SearchByFilter:
-               radioButtonSelectMR_Filter.Checked = false;
-               textBoxLabels.Enabled = false;
-               buttonSearchByLabel.Enabled = false;
-               comboBoxFilteredMergeRequests.Enabled = false;
+               // Enable all elements except a text box for MR URL
+               foreach (Control item in groupBoxSelectMergeRequest.Controls)
+               {
+                  item.Enabled = true;
+               }
+               textBoxMrURL.Enabled = false;
                break;
 
             case MrSelectingType.DirectURL:
-               radioButtonSelectMR_URL.Checked = false;
+               // Disable all elements except a text box for MR URL
+               foreach (Control item in groupBoxSelectMergeRequest.Controls)
+               {
+                  item.Enabled = false;
+               }
                textBoxMrURL.Enabled = false;
+
+               // Radio-buttons should also be enabled
+               radioButtonSelectMR_Filter.Enabled = true;
+               radioButtonSelectMR_URL.Enabled = true;
                break;
          }
       }
@@ -319,93 +412,103 @@ namespace mrHelper
          comboBoxFilteredMergeRequests.Items.Clear();
          foreach (var mergeRequest in mergeRequests)
          {
-            comboBoxFilteredMergeRequests.Items.Add(
-               mergeRequest.Title + "      " + "(" + mergeRequest.Author.Username + ")");
+            comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
          }
          if (comboBoxFilteredMergeRequests.Items.Count > 0)
          {
-            comboBoxFilteredMergeRequests.SelectedItem = 0;
+            comboBoxFilteredMergeRequests.SelectedIndex = 0;
          }
-         _cachedMergeRequests = mergeRequests;
       }
 
-      private void onStartConnectionProcess()
+      private void onConnected()
       {
-         labelCurrentStatus.Text = "Connecting...";
-         buttonConnect.Enabled = false;
-      }
-
-      private void onConnected(ParsedMergeRequestUrl parsed, MergeRequest mergeRequest,
-         List<Commit> commits, string gitRepository)
-      {
-         _connected = true;
-         _gitRepository = gitRepository;
-         _parsedMergeRequestUrl = parsed;
-
-         labelCurrentStatus.Text = "Connected to:";
-         linkLabelConnectedTo.Visible = true;
-         linkLabelConnectedTo.Text = mergeRequest.WebUrl;
-         buttonConnect.Enabled = true;
-         buttonConnect.Text = "Disconnect";
-
+         // 1. Disable all UI elements that belong to Select Merge Requests groupbox
          foreach (Control item in groupBoxSelectMergeRequest.Controls)
          {
             item.Enabled = false;
          }
+
+         // 2. Update status, add merge request url
+         MergeRequest mergeRequest = getMergeRequest();
+         labelCurrentStatus.Text = "Connected to:";
+         linkLabelConnectedTo.Visible = true;
+         linkLabelConnectedTo.Text = mergeRequest.WebUrl;
+
+         // 3. Update text at Connect button
+         buttonConnect.Text = "Disconnect";
+
+         // 4. Enable Diff tab and switch to it
+         tabPageDiff.Enabled = true;
          tabPageDiff.Select();
 
+         // 5. Populate edit boxes with merge request details
          textBoxMergeRequestName.Text = mergeRequest.Title;
          richTextBoxMergeRequestDescription.Text = mergeRequest.Description;
 
-         foreach (var commit in commits)
+         // 6. Add commit information to combo boxes
+         foreach (var commit in getCommits())
          {
-            comboBoxLeftCommit.Items.Add(commit.ShortId + "   " + commit.CommitedDate.ToString("u"));
-            comboBoxRightCommit.Items.Add(commit.ShortId + "   " + commit.CommitedDate.ToString("u"));
+            CommitComboBoxItem item = new CommitComboBoxItem(commit.ShortId, commit.CommitedDate);
+            comboBoxLeftCommit.Items.Add(commit);
+            comboBoxRightCommit.Items.Add(commit);
          }
 
-         comboBoxLeftCommit.SelectedIndex = comboBoxLeftCommit.Items.Count - 1;
+         // 7. Add two special rows to each of combo-boxes
+         CommitComboBoxItem sourceBranch = new CommitComboBoxItem("origin/" + mergeRequest.SourceBranch, null);
+         comboBoxLeftCommit.Items.Add(sourceBranch);
+         comboBoxRightCommit.Items.Add(sourceBranch);
 
-         comboBoxLeftCommit.Items.Add("origin/" + mergeRequest.SourceBranch);
-         comboBoxRightCommit.Items.Add("origin/" + mergeRequest.SourceBranch);
+         CommitComboBoxItem targetBranch = new CommitComboBoxItem("origin/" + mergeRequest.TargetBranch, null);
+         comboBoxLeftCommit.Items.Add(targetBranch);
+         comboBoxRightCommit.Items.Add(targetBranch);
 
-         comboBoxLeftCommit.Items.Add("origin/" + mergeRequest.TargetBranch);
-         comboBoxRightCommit.Items.Add("origin/" + mergeRequest.TargetBranch);
-
+         comboBoxLeftCommit.SelectedIndex = 0;
          comboBoxRightCommit.SelectedIndex = comboBoxRightCommit.Items.Count - 1;
 
-         buttonStartTimer.Enabled = true;
+         // 8. Toggle state of rest buttons
+         buttonToggleTimer.Enabled = true;
          buttonDifftool.Enabled = true;
       }
 
       private void onDisconnected()
       {
+         // 1. Stop timer
          if (_isTrackingTime)
          {
-            onStopTimer(false);
+            onStopTimer(false /* don't send time to server */);
          }
 
+         // 2. Toggle state of buttons
          buttonDifftool.Enabled = false;
-         buttonStartTimer.Enabled = false;
+         buttonToggleTimer.Enabled = false;
 
+         // 3. Clean-up lists of commits
          comboBoxRightCommit.Items.Clear();
-         comboBoxRightCommit.Text = null;
          comboBoxLeftCommit.Items.Clear();
-         comboBoxLeftCommit.Text = null;
 
+         // 4. Clean-up textboxes with merge request details
+         textBoxMergeRequestName.Text = null;
+         richTextBoxMergeRequestDescription.Text = null;
+
+         // 6. Disable Diff tab
+         tabPageDiff.Enabled = false;
+
+         // 7. Switch to Merge Requests tab, just for consistency with onConnected()
+         tabPageMR.Select();
+
+         // 8. Change Connect button text
+         buttonConnect.Text = "Connect";
+
+         // 9. Update status
+         labelCurrentStatus.Text = "Not connected";
+         linkLabelConnectedTo.Visible = false;
+         linkLabelConnectedTo.Text = null;
+
+         // 10. Enable all UI elements that belong to Select Merge Requests groupbox
          foreach (Control item in groupBoxSelectMergeRequest.Controls)
          {
             item.Enabled = true;
          }
-         tabPageDiff.Enabled = false;
-
-         labelCurrentStatus.Text = "Not connected";
-         linkLabelConnectedTo.Visible = false;
-         linkLabelConnectedTo.Text = "";
-         buttonConnect.Text = "Connect";
-
-         _parsedMergeRequestUrl = new ParsedMergeRequestUrl();
-         _gitRepository = null;
-         _connected = false;
       }
 
       private void onStartTimer()
@@ -415,11 +518,11 @@ namespace mrHelper
             _timeTrackingTimer = new Timer();
          }
 
-         buttonStartTimer.Text = buttonStartTimerTrackingText;
+         buttonToggleTimer.Text = buttonStartTimerTrackingText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
          _lastStartTimeStamp = DateTime.Now;
          _timeTrackingTimer.Interval = timeTrackingTimerInterval;
-         _timeTrackingTimer.Tick += new System.EventHandler(_oneSecondTimer_Tick);
+         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
          _timeTrackingTimer.Start();
          _isTrackingTime = true;
       }
@@ -427,7 +530,7 @@ namespace mrHelper
       private void onStopTimer(bool sendTrackedTime)
       {
          var timeSpan = DateTime.Now - _lastStartTimeStamp;
-         buttonStartTimer.Text = buttonStartTimerDefaultText;
+         buttonToggleTimer.Text = buttonStartTimerDefaultText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
          _lastStartTimeStamp = DateTime.MinValue;
          _timeTrackingTimer.Stop();
@@ -435,8 +538,15 @@ namespace mrHelper
 
          if (sendTrackedTime)
          {
-            sendTrackedTimeSpan(_parsedMergeRequestUrl, timeSpan);
+            sendTrackedTimeSpan(timeSpan);
          }
+      }
+
+      private void onTimer(object sender, EventArgs e)
+      {
+         // TODO Handle overflow
+         var span = DateTime.Now - _lastStartTimeStamp;
+         labelSpentTime.Text = span.ToString(@"hh\:mm\:ss");
       }
 
       private void onConfigurationLoaded()
@@ -465,6 +575,11 @@ namespace mrHelper
          Show();
       }
 
+      private void onSelectedGitFolder()
+      {
+         textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
+      }
+
       private RadioButton getCheckedRadioButton(Control container)
       {
          foreach (var control in container.Controls)
@@ -479,13 +594,6 @@ namespace mrHelper
          return null;
       }
 
-      private List<MergeRequest> _cachedMergeRequests;
-
-      private bool _connected;
-      private ParsedMergeRequestUrl _parsedMergeRequestUrl;
-      private string _gitRepository;
-      private List<Commit> _cachedCommits;
-
       private bool _isTrackingTime;
       private DateTime _lastStartTimeStamp;
       private Timer _timeTrackingTimer;
@@ -499,5 +607,17 @@ namespace mrHelper
    {
       SearchByFilter,
       DirectURL
+   }
+
+   struct CommitComboBoxItem
+   {
+      public string Text;
+      public DateTime? TimeStamp;
+
+      public CommitComboBoxItem(string text, DateTime? timeStamp)
+      {
+         Text = text;
+         TimeStamp = timeStamp;
+      }
    }
 }

@@ -6,6 +6,7 @@ namespace mrHelper
    {
       static public void CloneRepo(string host, string project, string localDir)
       {
+         // TODO Use shallow clone
          Process.Start("git", "clone " + "https://" + host + "/" + project + " " + localDir);
       }
 

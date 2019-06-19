@@ -7,9 +7,18 @@
       public string Username;
    }
 
+   enum MergeRequestState
+   {
+      Opened,
+      Closed,
+      Locked,
+      Merged
+   }
+
    struct MergeRequest
    {
       public int Id;
+      public int ProjectId;
       public string Title;
       public string Description;
       public string SourceBranch;
@@ -28,13 +37,5 @@
       public string Title;
       public string Message;
       public System.DateTime CommitedDate;
-   }
-
-   enum MergeRequestState
-   {
-      Opened,
-      Closed,
-      Locked,
-      Merged
    }
 }

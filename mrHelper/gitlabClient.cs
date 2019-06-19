@@ -52,7 +52,6 @@ namespace mrHelper
          return readMergeRequest(s);
       }
 
-
       public List<MergeRequest> GetAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
       {
          string url = makeUrlForAllMergeRequests(state, labels, author, wip);
@@ -123,7 +122,7 @@ namespace mrHelper
          return _client.DownloadString(request);
       }
 
-      private string commonUrlPart()
+      private string makeCommonUrl()
       {
          string commonUrlPart = _host + "/api/" + _version.ToString();
          return commonUrlPart;
@@ -131,7 +130,7 @@ namespace mrHelper
 
       private string makeUrlForSingleProject(string project, int id)
       {
-         return commonUrlPart() + "/projects" + "/" + WebUtility.UrlEncode(project);
+         return makeCommonUrl() + "/projects" + "/" + WebUtility.UrlEncode(project);
       }
 
       private string makeUrlForSingleMergeRequest(string project, int id)
@@ -141,11 +140,28 @@ namespace mrHelper
 
       private string makeUrlForAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
       {
-         return "/merge_requests&scope=all"
+         return makeCommonUrl()
+            + "/merge_requests&scope=all"
             + query("wip", workInProgressToString(wip))
             + query("state", stateFilterToString(state))
             + query("labels", labels)
             + query("author", author);
+      }
+
+      private string makeUrlForMergeRequestCommits(string project, int id)
+      {
+         return makeUrlForSingleMergeRequest(project, id) + "/commits";
+      }
+
+      private string makeUrlForAddSpentTime(string project, int id, TimeSpan span)
+      {
+         string duration = convertTimeSpanToGitlabDuration(span);
+         return makeUrlForSingleMergeRequest(project, id) + "/add_spent_time?duration=" + duration;
+      }
+
+      private string convertTimeSpanToGitlabDuration(TimeSpan span)
+      {
+         return span.ToString("hh") + "h" + span.ToString("mm") + "m" + span.ToString("ss") + "s";
       }
 
       private string stateFilterToString(StateFilter state)
@@ -178,22 +194,6 @@ namespace mrHelper
             return query + "=" + value;
          }
          return "";
-      }
-
-      private string makeUrlForMergeRequestCommits(string project, int id)
-      {
-         return makeUrlForSingleMergeRequest(project, id) + "/commits";
-      }
-
-      private string makeUrlForAddSpentTime(string project, int id, TimeSpan span)
-      {
-         string duration = convertTimeSpanToGitlabDuration(span);
-         return makeUrlForSingleMergeRequest(project, id) + "/add_spent_time?duration=" + duration;
-      }
-
-      private string convertTimeSpanToGitlabDuration(TimeSpan span)
-      {
-         return span.ToString("hh") + "h" + span.ToString("mm") + "m" + span.ToString("ss") + "s";
       }
 
       private static object deserializeJson(string Json)

@@ -10,13 +10,13 @@ namespace mrHelper
       public int Id;
    }
 
-   class mrUrlParser
+   class MergeRequestUrlParser
    {
       static Regex url_re = new Regex(
          @"^(http[s]?:\/)\/([^:\/\s]+)\/(\w+\/\w+)\/merge_requests\/(\d*)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-      public mrUrlParser(string url)
+      public MergeRequestUrlParser(string url)
       {
          _url = url;
       }
@@ -31,14 +31,12 @@ namespace mrHelper
          Match m = url_re.Match(_url);
          if (!m.Success)
          {
-            // TODO - Error handling
-            throw new NotImplementedException("Failed");
+            throw new UriFormatException("Failed");
          }
 
          if (m.Groups.Count < 5)
          {
-            // TODO - Error handling
-            throw new NotImplementedException("Unsupported merge requests URL format");
+            throw new UriFormatException("Unsupported merge requests URL format");
          }
 
          ParsedMergeRequestUrl result = new ParsedMergeRequestUrl();

@@ -55,7 +55,7 @@
          this.radioButtonWIP_No = new System.Windows.Forms.RadioButton();
          this.radioButtonWIP_Yes = new System.Windows.Forms.RadioButton();
          this.labelSpentTimeLabel = new System.Windows.Forms.Label();
-         this.buttonStartTimer = new System.Windows.Forms.Button();
+         this.buttonToggleTimer = new System.Windows.Forms.Button();
          this.buttonConnect = new System.Windows.Forms.Button();
          this.buttonBrowseLocalGitFolder = new System.Windows.Forms.Button();
          this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
@@ -66,6 +66,8 @@
          this.labeLeft = new System.Windows.Forms.Label();
          this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.linkLabelSeeDescriptionRight = new System.Windows.Forms.LinkLabel();
+         this.linkLabelSeeDescriptionLeft = new System.Windows.Forms.LinkLabel();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -79,8 +81,6 @@
          this.labelCurrentStatus = new System.Windows.Forms.Label();
          this.tabPageDiff = new System.Windows.Forms.TabPage();
          this.labelSpentTime = new System.Windows.Forms.Label();
-         this.linkLabelSeeDescriptionRight = new System.Windows.Forms.LinkLabel();
-         this.linkLabelSeeDescriptionLeft = new System.Windows.Forms.LinkLabel();
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
@@ -202,6 +202,7 @@
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
          this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(444, 21);
          this.comboBoxFilteredMergeRequests.TabIndex = 8;
+         this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
          // 
          // label1
          // 
@@ -355,15 +356,15 @@
          this.labelSpentTimeLabel.TabIndex = 4;
          this.labelSpentTimeLabel.Text = "Spent Time:";
          // 
-         // buttonStartTimer
+         // buttonToggleTimer
          // 
-         this.buttonStartTimer.Enabled = false;
-         this.buttonStartTimer.Location = new System.Drawing.Point(242, 239);
-         this.buttonStartTimer.Name = "buttonStartTimer";
-         this.buttonStartTimer.Size = new System.Drawing.Size(83, 27);
-         this.buttonStartTimer.TabIndex = 4;
-         this.buttonStartTimer.UseVisualStyleBackColor = true;
-         this.buttonStartTimer.Click += new System.EventHandler(this.ButtonStartTimer_Click);
+         this.buttonToggleTimer.Enabled = false;
+         this.buttonToggleTimer.Location = new System.Drawing.Point(242, 239);
+         this.buttonToggleTimer.Name = "buttonToggleTimer";
+         this.buttonToggleTimer.Size = new System.Drawing.Size(83, 27);
+         this.buttonToggleTimer.TabIndex = 4;
+         this.buttonToggleTimer.UseVisualStyleBackColor = true;
+         this.buttonToggleTimer.Click += new System.EventHandler(this.ButtonToggleTimer_Click);
          // 
          // buttonConnect
          // 
@@ -430,6 +431,7 @@
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
          this.comboBoxRightCommit.Size = new System.Drawing.Size(223, 21);
          this.comboBoxRightCommit.TabIndex = 7;
+         this.comboBoxRightCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxRightCommit_Format);
          // 
          // labeLeft
          // 
@@ -447,12 +449,35 @@
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
          this.comboBoxLeftCommit.Size = new System.Drawing.Size(223, 21);
          this.comboBoxLeftCommit.TabIndex = 6;
+         this.comboBoxLeftCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxLeftCommit_Format);
          // 
          // toolTip
          // 
          this.toolTip.AutoPopDelay = 10000;
          this.toolTip.InitialDelay = 10;
          this.toolTip.ReshowDelay = 10;
+         // 
+         // linkLabelSeeDescriptionRight
+         // 
+         this.linkLabelSeeDescriptionRight.AutoSize = true;
+         this.linkLabelSeeDescriptionRight.Location = new System.Drawing.Point(377, 210);
+         this.linkLabelSeeDescriptionRight.Name = "linkLabelSeeDescriptionRight";
+         this.linkLabelSeeDescriptionRight.Size = new System.Drawing.Size(82, 13);
+         this.linkLabelSeeDescriptionRight.TabIndex = 13;
+         this.linkLabelSeeDescriptionRight.TabStop = true;
+         this.linkLabelSeeDescriptionRight.Text = "See Description";
+         this.toolTip.SetToolTip(this.linkLabelSeeDescriptionRight, "Not implemented yet");
+         // 
+         // linkLabelSeeDescriptionLeft
+         // 
+         this.linkLabelSeeDescriptionLeft.AutoSize = true;
+         this.linkLabelSeeDescriptionLeft.Location = new System.Drawing.Point(124, 210);
+         this.linkLabelSeeDescriptionLeft.Name = "linkLabelSeeDescriptionLeft";
+         this.linkLabelSeeDescriptionLeft.Size = new System.Drawing.Size(82, 13);
+         this.linkLabelSeeDescriptionLeft.TabIndex = 12;
+         this.linkLabelSeeDescriptionLeft.TabStop = true;
+         this.linkLabelSeeDescriptionLeft.Text = "See Description";
+         this.toolTip.SetToolTip(this.linkLabelSeeDescriptionLeft, "Not implemented yet");
          // 
          // contextMenuStrip
          // 
@@ -565,7 +590,7 @@
          this.tabPageDiff.Controls.Add(this.linkLabelSeeDescriptionRight);
          this.tabPageDiff.Controls.Add(this.linkLabelSeeDescriptionLeft);
          this.tabPageDiff.Controls.Add(this.groupBoxDescription);
-         this.tabPageDiff.Controls.Add(this.buttonStartTimer);
+         this.tabPageDiff.Controls.Add(this.buttonToggleTimer);
          this.tabPageDiff.Controls.Add(this.comboBoxLeftCommit);
          this.tabPageDiff.Controls.Add(this.comboBoxRightCommit);
          this.tabPageDiff.Controls.Add(this.labelRight);
@@ -586,28 +611,6 @@
          this.labelSpentTime.Size = new System.Drawing.Size(49, 13);
          this.labelSpentTime.TabIndex = 14;
          this.labelSpentTime.Text = "00:00:00";
-         // 
-         // linkLabelSeeDescriptionRight
-         // 
-         this.linkLabelSeeDescriptionRight.AutoSize = true;
-         this.linkLabelSeeDescriptionRight.Location = new System.Drawing.Point(377, 210);
-         this.linkLabelSeeDescriptionRight.Name = "linkLabelSeeDescriptionRight";
-         this.linkLabelSeeDescriptionRight.Size = new System.Drawing.Size(82, 13);
-         this.linkLabelSeeDescriptionRight.TabIndex = 13;
-         this.linkLabelSeeDescriptionRight.TabStop = true;
-         this.linkLabelSeeDescriptionRight.Text = "See Description";
-         this.toolTip.SetToolTip(this.linkLabelSeeDescriptionRight, "Not implemented yet");
-         // 
-         // linkLabelSeeDescriptionLeft
-         // 
-         this.linkLabelSeeDescriptionLeft.AutoSize = true;
-         this.linkLabelSeeDescriptionLeft.Location = new System.Drawing.Point(124, 210);
-         this.linkLabelSeeDescriptionLeft.Name = "linkLabelSeeDescriptionLeft";
-         this.linkLabelSeeDescriptionLeft.Size = new System.Drawing.Size(82, 13);
-         this.linkLabelSeeDescriptionLeft.TabIndex = 12;
-         this.linkLabelSeeDescriptionLeft.TabStop = true;
-         this.linkLabelSeeDescriptionLeft.Text = "See Description";
-         this.toolTip.SetToolTip(this.linkLabelSeeDescriptionLeft, "Not implemented yet");
          // 
          // groupBoxDescription
          // 
@@ -688,7 +691,7 @@
       private System.Windows.Forms.ComboBox comboBoxRightCommit;
       private System.Windows.Forms.Label labeLeft;
       private System.Windows.Forms.ComboBox comboBoxLeftCommit;
-      private System.Windows.Forms.Button buttonStartTimer;
+      private System.Windows.Forms.Button buttonToggleTimer;
       private System.Windows.Forms.Label labelSpentTimeLabel;
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
