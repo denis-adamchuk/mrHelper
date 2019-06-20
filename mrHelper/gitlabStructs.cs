@@ -1,4 +1,6 @@
-﻿namespace mrHelper
+﻿using System.Collections.Generic;
+
+namespace mrHelper
 {
    struct Author
    {
@@ -18,13 +20,12 @@
    struct MergeRequest
    {
       public int Id;
-      public int ProjectId;
       public string Title;
       public string Description;
       public string SourceBranch;
       public string TargetBranch;
       public MergeRequestState State;
-      public string[] Labels;
+      public List<string> Labels;
       public string WebUrl;
       public bool WorkInProgress;
       public Author Author;

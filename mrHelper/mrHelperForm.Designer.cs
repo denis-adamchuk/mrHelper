@@ -40,7 +40,7 @@
          this.radioButtonSelectMR_URL = new System.Windows.Forms.RadioButton();
          this.buttonSearchByLabel = new System.Windows.Forms.Button();
          this.comboBoxFilteredMergeRequests = new System.Windows.Forms.ComboBox();
-         this.label1 = new System.Windows.Forms.Label();
+         this.labelAuthor = new System.Windows.Forms.Label();
          this.textBoxMrURL = new System.Windows.Forms.TextBox();
          this.textBoxAuthor = new System.Windows.Forms.TextBox();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
@@ -148,7 +148,7 @@
          this.groupBoxSelectMergeRequest.Controls.Add(this.radioButtonSelectMR_URL);
          this.groupBoxSelectMergeRequest.Controls.Add(this.buttonSearchByLabel);
          this.groupBoxSelectMergeRequest.Controls.Add(this.comboBoxFilteredMergeRequests);
-         this.groupBoxSelectMergeRequest.Controls.Add(this.label1);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.labelAuthor);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxMrURL);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxAuthor);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxLabels);
@@ -197,6 +197,7 @@
          // 
          // comboBoxFilteredMergeRequests
          // 
+         this.comboBoxFilteredMergeRequests.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxFilteredMergeRequests.FormattingEnabled = true;
          this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 144);
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
@@ -204,14 +205,14 @@
          this.comboBoxFilteredMergeRequests.TabIndex = 8;
          this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
          // 
-         // label1
+         // labelAuthor
          // 
-         this.label1.AutoSize = true;
-         this.label1.Location = new System.Drawing.Point(6, 86);
-         this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(38, 13);
-         this.label1.TabIndex = 13;
-         this.label1.Text = "Author";
+         this.labelAuthor.AutoSize = true;
+         this.labelAuthor.Location = new System.Drawing.Point(6, 86);
+         this.labelAuthor.Name = "labelAuthor";
+         this.labelAuthor.Size = new System.Drawing.Size(38, 13);
+         this.labelAuthor.TabIndex = 13;
+         this.labelAuthor.Text = "Author";
          // 
          // textBoxMrURL
          // 
@@ -224,9 +225,9 @@
          // 
          // textBoxAuthor
          // 
-         this.textBoxAuthor.Enabled = false;
          this.textBoxAuthor.Location = new System.Drawing.Point(6, 102);
          this.textBoxAuthor.Name = "textBoxAuthor";
+         this.textBoxAuthor.ReadOnly = true;
          this.textBoxAuthor.Size = new System.Drawing.Size(140, 20);
          this.textBoxAuthor.TabIndex = 11;
          this.toolTip.SetToolTip(this.textBoxAuthor, "Not implemented yet");
@@ -418,7 +419,7 @@
          // labelRight
          // 
          this.labelRight.AutoSize = true;
-         this.labelRight.Location = new System.Drawing.Point(259, 170);
+         this.labelRight.Location = new System.Drawing.Point(239, 170);
          this.labelRight.Name = "labelRight";
          this.labelRight.Size = new System.Drawing.Size(32, 13);
          this.labelRight.TabIndex = 3;
@@ -426,6 +427,7 @@
          // 
          // comboBoxRightCommit
          // 
+         this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxRightCommit.FormattingEnabled = true;
          this.comboBoxRightCommit.Location = new System.Drawing.Point(242, 186);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
@@ -444,6 +446,7 @@
          // 
          // comboBoxLeftCommit
          // 
+         this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxLeftCommit.FormattingEnabled = true;
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(9, 186);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
@@ -522,9 +525,8 @@
          this.tabControl.Location = new System.Drawing.Point(9, 12);
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
-         this.tabControl.Size = new System.Drawing.Size(476, 301);
+         this.tabControl.Size = new System.Drawing.Size(476, 325);
          this.tabControl.TabIndex = 11;
-         this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.TabControl_Selecting);
          // 
          // tabPageSettings
          // 
@@ -533,7 +535,7 @@
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
          this.tabPageSettings.Name = "tabPageSettings";
          this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSettings.Size = new System.Drawing.Size(468, 275);
+         this.tabPageSettings.Size = new System.Drawing.Size(468, 299);
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
@@ -559,7 +561,7 @@
          this.tabPageMR.Location = new System.Drawing.Point(4, 22);
          this.tabPageMR.Name = "tabPageMR";
          this.tabPageMR.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageMR.Size = new System.Drawing.Size(468, 275);
+         this.tabPageMR.Size = new System.Drawing.Size(468, 299);
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
@@ -567,17 +569,18 @@
          // linkLabelConnectedTo
          // 
          this.linkLabelConnectedTo.AutoSize = true;
-         this.linkLabelConnectedTo.Location = new System.Drawing.Point(90, 249);
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(6, 273);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
          this.linkLabelConnectedTo.Size = new System.Drawing.Size(42, 13);
          this.linkLabelConnectedTo.TabIndex = 5;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "url-here";
+         this.linkLabelConnectedTo.Visible = false;
          // 
          // labelCurrentStatus
          // 
          this.labelCurrentStatus.AutoSize = true;
-         this.labelCurrentStatus.Location = new System.Drawing.Point(6, 249);
+         this.labelCurrentStatus.Location = new System.Drawing.Point(3, 249);
          this.labelCurrentStatus.Name = "labelCurrentStatus";
          this.labelCurrentStatus.Size = new System.Drawing.Size(78, 13);
          this.labelCurrentStatus.TabIndex = 4;
@@ -598,7 +601,7 @@
          this.tabPageDiff.Controls.Add(this.labeLeft);
          this.tabPageDiff.Location = new System.Drawing.Point(4, 22);
          this.tabPageDiff.Name = "tabPageDiff";
-         this.tabPageDiff.Size = new System.Drawing.Size(468, 275);
+         this.tabPageDiff.Size = new System.Drawing.Size(468, 299);
          this.tabPageDiff.TabIndex = 2;
          this.tabPageDiff.Text = "Diff";
          this.tabPageDiff.UseVisualStyleBackColor = true;
@@ -644,7 +647,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(495, 325);
+         this.ClientSize = new System.Drawing.Size(495, 349);
          this.Controls.Add(this.tabControl);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MaximizeBox = false;
@@ -705,7 +708,7 @@
       private System.Windows.Forms.Button buttonSearchByLabel;
       private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.ComboBox comboBoxFilteredMergeRequests;
-      private System.Windows.Forms.Label label1;
+      private System.Windows.Forms.Label labelAuthor;
       private System.Windows.Forms.TextBox textBoxAuthor;
       private System.Windows.Forms.Label labelLabel;
       private System.Windows.Forms.TabControl tabControl;

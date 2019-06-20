@@ -80,7 +80,7 @@ namespace mrHelper
             commit.ShortId = item["short_id"];
             commit.Title = item["title"];
             commit.Message = item["message"];
-            commit.CommitedDate = DateTimeOffset.Parse(item["commited_date"]);
+            commit.CommitedDate = DateTimeOffset.Parse(item["committed_date"]).DateTime;
             commits.Add(commit);
          }
          return commits;
@@ -95,7 +95,12 @@ namespace mrHelper
          mr.SourceBranch = json["source_branch"];
          mr.TargetBranch = json["target_branch"];
          Enum.TryParse(json["state"], true, out mr.State);
-         mr.Labels = (string[])(json["labels"] as Array);
+         dynamic jsonLables = json["labels"];
+         mr.Labels = new List<string>();
+         foreach (dynamic item in (jsonLables as Array))
+         {
+            mr.Labels.Add(item);
+         }
          mr.WebUrl = json["web_url"];
          mr.WorkInProgress = json["work_in_progress"];
 
@@ -141,11 +146,11 @@ namespace mrHelper
       private string makeUrlForAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
       {
          return makeCommonUrl()
-            + "/merge_requests&scope=all"
-            + query("wip", workInProgressToString(wip))
-            + query("state", stateFilterToString(state))
-            + query("labels", labels)
-            + query("author", author);
+            + "/merge_requests?scope=all"
+            + query("&wip", workInProgressToString(wip))
+            + query("&state", stateFilterToString(state))
+            + query("&labels", labels)
+            + query("&author", author);
       }
 
       private string makeUrlForMergeRequestCommits(string project, int id)

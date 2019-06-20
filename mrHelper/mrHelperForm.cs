@@ -7,10 +7,29 @@ namespace mrHelper
 {
    public partial class mrHelperForm : Form
    {
+      // TODO Move to resources
+      // {
       static private string buttonStartTimerDefaultText = "Start Timer";
       static private string buttonStartTimerTrackingText = "Send Spent";
       static private string labelSpentTimeDefaultText = "00:00:00";
       static private int timeTrackingTimerInterval = 1000; // ms
+
+      static private string buttonConnectText = "Connect";
+      static private string buttonDisconnectText = "Disconnect";
+      static private string statusConnectedText = "Connected to:";
+      static private string statusNotConnectedText = "Not connected";
+
+      static private string errorMessageBoxText = "Error";
+      static private string warningMessageBoxText = "Warning";
+      static private string informationMessageBoxText = "Information";
+
+      static private string remoteRepositoryDefaultName = "origin";
+
+      static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
+      static private string errorUnsupportedState = "Unsupported State value";
+      static private string errorUnsupportedWip = "Unsupported WIP value";
+      static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
+      // }
 
       public mrHelperForm()
       {
@@ -28,7 +47,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -45,7 +64,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -57,7 +76,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -76,7 +95,7 @@ namespace mrHelper
          catch (Exception ex)
          {
             onDisconnected();
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -91,7 +110,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          finally
          {
@@ -103,7 +122,7 @@ namespace mrHelper
       {
          try
          {
-            if (_isTrackingTime)
+            if (_timeTrackingTimer.Enabled)
             {
                onStopTimer(true /* send tracked time to server */);
             }
@@ -114,7 +133,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message + " Tracked time was not sent to server", "Error",
+            MessageBox.Show(ex.Message + " " + errorTrackedTimeNotSet, errorMessageBoxText,
                MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
@@ -127,7 +146,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -139,7 +158,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -155,31 +174,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
-      private void RadioButtonURL_CheckedChanged(object sender, EventArgs e)
-      {
-         try
-         {
-            onChangeMrSelectingType(MrSelectingType.SearchByFilter);
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
-      private void RadioButtonListMR_CheckedChanged(object sender, EventArgs e)
-      {
-         try
-         {
-            onChangeMrSelectingType(MrSelectingType.DirectURL);
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -192,22 +187,13 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-      }
-
-      private void TabControl_Selecting(object sender, TabControlCancelEventArgs e)
-      {
-         if (e.TabPageIndex < 0)
-         {
-            return;
-         }
-         e.Cancel = !e.TabPage.Enabled;
       }
 
       private void ComboBoxFilteredMergeRequests_Format(object sender, ListControlConvertEventArgs e)
       {
-         e.Value = ((MergeRequest)e.ListItem).Title + "    " + "[" + ((MergeRequest)e.ListItem).Author + "]";
+         formatMergeRequestListItem(e);
       }
 
       private void ComboBoxLeftCommit_Format(object sender, ListControlConvertEventArgs e)
@@ -224,6 +210,10 @@ namespace mrHelper
       {
          if (radioButtonSelectMR_Filter.Checked)
          {
+            if (comboBoxFilteredMergeRequests.SelectedItem == null)
+            {
+               throw new ApplicationException("Merge request is not selected");
+            }
             return ((MergeRequest)comboBoxFilteredMergeRequests.SelectedItem).WebUrl;
          }
          return textBoxMrURL.Text;
@@ -240,13 +230,13 @@ namespace mrHelper
          StateFilter state;
          if (!Enum.TryParse(getCheckedRadioButton(groupBoxState).Text, out state))
          {
-            throw new NotImplementedException("Unsupported State value");
+            throw new NotImplementedException(errorUnsupportedState);
          }
 
          WorkInProgressFilter wip;
          if (!Enum.TryParse(getCheckedRadioButton(groupBoxWIP).Text, out wip))
          {
-            throw new NotImplementedException("Unsupported WIP value");
+            throw new NotImplementedException(errorUnsupportedWip);
          }
 
          gitlabClient client = new gitlabClient(textBoxHost.Text, textBoxAccessToken.Text);
@@ -280,13 +270,13 @@ namespace mrHelper
          if (!Directory.Exists(localGitFolder))
          {
             if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
-               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+               warningMessageBoxText, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                Directory.CreateDirectory(localGitFolder);
             }
             else
             {
-               throw new ApplicationException("Cannot launch difftool because there is no valid repository");
+               throw new ApplicationException(errorNoValidRepository);
             }
          }
 
@@ -296,14 +286,14 @@ namespace mrHelper
          if (!Directory.Exists(repository))
          {
             if (MessageBox.Show("There is no project " + project + " repository within folder " + localGitFolder +
-               ". Do you want to clone git repository?", "Information", MessageBoxButtons.YesNo,
+               ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.Yes)
             {
                gitClient.CloneRepo(parsed.Host, parsed.Project, repository);
             }
             else
             {
-               throw new ApplicationException("Cannot launch difftool because there is no valid repository");
+               throw new ApplicationException(errorNoValidRepository);
             }
          }
          else
@@ -321,32 +311,34 @@ namespace mrHelper
       {
          if (left)
          {
-            if (comboBoxLeftCommit.SelectedItem != null)
-            {
-               return ((CommitComboBoxItem)comboBoxLeftCommit.SelectedItem).Text;
-            }
-            return "";
+            return comboBoxLeftCommit.SelectedItem != null ? ((CommitComboBoxItem)comboBoxLeftCommit.SelectedItem).Text : "";
          }
          else
          {
-            if (comboBoxRightCommit.SelectedItem != null)
-            {
-               return ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).Text;
-            }
-            return "";
+            return comboBoxRightCommit.SelectedItem != null ? ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).Text : "";
          }
+      }
+
+      private static void formatMergeRequestListItem(ListControlConvertEventArgs e)
+      {
+         MergeRequest item = ((MergeRequest)e.ListItem);
+         e.Value = item.Title + "    " + "[" + item.Author.Username + "]";
       }
 
       private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
       {
-         formatCommitComboboxItem(e);
+         CommitComboBoxItem item = (CommitComboBoxItem)(e.ListItem);
+         e.Value = item.Text;
+         if (item.TimeStamp.HasValue)
+         {
+            e.Value += " (" + item.TimeStamp.Value.ToString("u") + ")";
+         }
       }
 
       private void loadConfiguration()
       {
          _settings = new UserDefinedSettings();
          onConfigurationLoaded();
-
       }
 
       private void saveConfiguration()
@@ -359,7 +351,7 @@ namespace mrHelper
 
       private bool isConnected()
       {
-         return buttonConnect.Text == "Disconnect";
+         return buttonConnect.Text == buttonDisconnectText;
       }
 
       private void onApplicationStarted()
@@ -374,36 +366,6 @@ namespace mrHelper
          else
          {
             tabPageSettings.Select();
-         }
-         tabPageDiff.Enabled = false;
-         tabPageDiff.ToolTipText = "You need to select a merge request first";
-      }
-
-      private void onChangeMrSelectingType(MrSelectingType type)
-      {
-         switch (type)
-         {
-            case MrSelectingType.SearchByFilter:
-               // Enable all elements except a text box for MR URL
-               foreach (Control item in groupBoxSelectMergeRequest.Controls)
-               {
-                  item.Enabled = true;
-               }
-               textBoxMrURL.Enabled = false;
-               break;
-
-            case MrSelectingType.DirectURL:
-               // Disable all elements except a text box for MR URL
-               foreach (Control item in groupBoxSelectMergeRequest.Controls)
-               {
-                  item.Enabled = false;
-               }
-               textBoxMrURL.Enabled = false;
-
-               // Radio-buttons should also be enabled
-               radioButtonSelectMR_Filter.Enabled = true;
-               radioButtonSelectMR_URL.Enabled = true;
-               break;
          }
       }
 
@@ -422,6 +384,8 @@ namespace mrHelper
 
       private void onConnected()
       {
+         MergeRequest mergeRequest = getMergeRequest();
+
          // 1. Disable all UI elements that belong to Select Merge Requests groupbox
          foreach (Control item in groupBoxSelectMergeRequest.Controls)
          {
@@ -429,16 +393,14 @@ namespace mrHelper
          }
 
          // 2. Update status, add merge request url
-         MergeRequest mergeRequest = getMergeRequest();
-         labelCurrentStatus.Text = "Connected to:";
+         labelCurrentStatus.Text = statusConnectedText;
          linkLabelConnectedTo.Visible = true;
          linkLabelConnectedTo.Text = mergeRequest.WebUrl;
 
          // 3. Update text at Connect button
-         buttonConnect.Text = "Disconnect";
+         buttonConnect.Text = buttonDisconnectText;
 
-         // 4. Enable Diff tab and switch to it
-         tabPageDiff.Enabled = true;
+         // 4. Switch to Diff tab
          tabPageDiff.Select();
 
          // 5. Populate edit boxes with merge request details
@@ -449,16 +411,18 @@ namespace mrHelper
          foreach (var commit in getCommits())
          {
             CommitComboBoxItem item = new CommitComboBoxItem(commit.ShortId, commit.CommitedDate);
-            comboBoxLeftCommit.Items.Add(commit);
-            comboBoxRightCommit.Items.Add(commit);
+            comboBoxLeftCommit.Items.Add(item);
+            comboBoxRightCommit.Items.Add(item);
          }
 
          // 7. Add two special rows to each of combo-boxes
-         CommitComboBoxItem sourceBranch = new CommitComboBoxItem("origin/" + mergeRequest.SourceBranch, null);
+         CommitComboBoxItem sourceBranch = new CommitComboBoxItem(
+            remoteRepositoryDefaultName + "/" + mergeRequest.SourceBranch, null);
          comboBoxLeftCommit.Items.Add(sourceBranch);
          comboBoxRightCommit.Items.Add(sourceBranch);
 
-         CommitComboBoxItem targetBranch = new CommitComboBoxItem("origin/" + mergeRequest.TargetBranch, null);
+         CommitComboBoxItem targetBranch = new CommitComboBoxItem(
+            remoteRepositoryDefaultName + "/" + mergeRequest.TargetBranch, null);
          comboBoxLeftCommit.Items.Add(targetBranch);
          comboBoxRightCommit.Items.Add(targetBranch);
 
@@ -473,7 +437,7 @@ namespace mrHelper
       private void onDisconnected()
       {
          // 1. Stop timer
-         if (_isTrackingTime)
+         if (_timeTrackingTimer != null && _timeTrackingTimer.Enabled)
          {
             onStopTimer(false /* don't send time to server */);
          }
@@ -490,21 +454,18 @@ namespace mrHelper
          textBoxMergeRequestName.Text = null;
          richTextBoxMergeRequestDescription.Text = null;
 
-         // 6. Disable Diff tab
-         tabPageDiff.Enabled = false;
-
-         // 7. Switch to Merge Requests tab, just for consistency with onConnected()
+         // 6. Switch to Merge Requests tab, just for consistency with onConnected()
          tabPageMR.Select();
 
-         // 8. Change Connect button text
-         buttonConnect.Text = "Connect";
+         // 7. Change Connect button text
+         buttonConnect.Text = buttonConnectText;
 
-         // 9. Update status
-         labelCurrentStatus.Text = "Not connected";
+         // 8. Update status
+         labelCurrentStatus.Text = statusNotConnectedText;
          linkLabelConnectedTo.Visible = false;
          linkLabelConnectedTo.Text = null;
 
-         // 10. Enable all UI elements that belong to Select Merge Requests groupbox
+         // 9. Enable all UI elements that belong to Select Merge Requests groupbox
          foreach (Control item in groupBoxSelectMergeRequest.Controls)
          {
             item.Enabled = true;
@@ -513,32 +474,42 @@ namespace mrHelper
 
       private void onStartTimer()
       {
+         // 1. Create and initialize timer if does not exist
          if (_timeTrackingTimer == null)
          {
             _timeTrackingTimer = new Timer();
+            _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+            _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
          }
 
+         // 2. Update button text
          buttonToggleTimer.Text = buttonStartTimerTrackingText;
+         
+         // 3. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
+
+         // 4. Store current time
          _lastStartTimeStamp = DateTime.Now;
-         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
-         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+
+         // 5. Start timer
          _timeTrackingTimer.Start();
-         _isTrackingTime = true;
       }
 
       private void onStopTimer(bool sendTrackedTime)
       {
-         var timeSpan = DateTime.Now - _lastStartTimeStamp;
-         buttonToggleTimer.Text = buttonStartTimerDefaultText;
-         labelSpentTime.Text = labelSpentTimeDefaultText;
-         _lastStartTimeStamp = DateTime.MinValue;
+         // 1. Stop timer
          _timeTrackingTimer.Stop();
-         _isTrackingTime = false;
 
+         // 2. Set default text to tracked time label
+         labelSpentTime.Text = labelSpentTimeDefaultText;
+
+         // 3. Update button text
+         buttonToggleTimer.Text = buttonStartTimerDefaultText;
+
+         // 4. Send tracked time to server
          if (sendTrackedTime)
          {
-            sendTrackedTimeSpan(timeSpan);
+            sendTrackedTimeSpan(DateTime.Now - _lastStartTimeStamp);
          }
       }
 
@@ -594,19 +565,12 @@ namespace mrHelper
          return null;
       }
 
-      private bool _isTrackingTime;
       private DateTime _lastStartTimeStamp;
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
 
       UserDefinedSettings _settings;
-   }
-
-   enum MrSelectingType
-   {
-      SearchByFilter,
-      DirectURL
    }
 
    struct CommitComboBoxItem
