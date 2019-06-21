@@ -182,11 +182,15 @@ namespace mrHelper
       {
          try
          {
+            labelSearchStatus.Visible = true;
+            labelSearchStatus.Text = "Search in progress";
             List<MergeRequest> mergeRequests = getAllMergeRequests();
+            labelSearchStatus.Text = "Found " + mergeRequests.Count.ToString() + " result(s)";
             onLoadedListOfMergeRequests(mergeRequests);
          }
          catch (Exception ex)
          {
+            labelSearchStatus.Visible = false;
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
@@ -426,8 +430,8 @@ namespace mrHelper
          comboBoxLeftCommit.Items.Add(targetBranch);
          comboBoxRightCommit.Items.Add(targetBranch);
 
-         comboBoxLeftCommit.SelectedIndex = 0;
-         comboBoxRightCommit.SelectedIndex = comboBoxRightCommit.Items.Count - 1;
+         comboBoxLeftCommit.SelectedIndex = comboBoxLeftCommit.Items.Count - 1;
+         comboBoxRightCommit.SelectedIndex = 0;
 
          // 8. Toggle state of rest buttons
          buttonToggleTimer.Enabled = true;

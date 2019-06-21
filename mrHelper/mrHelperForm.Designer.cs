@@ -84,6 +84,7 @@
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
+         this.labelSearchStatus = new System.Windows.Forms.Label();
          this.groupBoxAuthorization.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.groupBoxState.SuspendLayout();
@@ -144,6 +145,7 @@
          // 
          // groupBoxSelectMergeRequest
          // 
+         this.groupBoxSelectMergeRequest.Controls.Add(this.labelSearchStatus);
          this.groupBoxSelectMergeRequest.Controls.Add(this.radioButtonSelectMR_Filter);
          this.groupBoxSelectMergeRequest.Controls.Add(this.radioButtonSelectMR_URL);
          this.groupBoxSelectMergeRequest.Controls.Add(this.buttonSearchByLabel);
@@ -186,7 +188,7 @@
          // 
          // buttonSearchByLabel
          // 
-         this.buttonSearchByLabel.Location = new System.Drawing.Point(367, 98);
+         this.buttonSearchByLabel.Location = new System.Drawing.Point(356, 95);
          this.buttonSearchByLabel.Name = "buttonSearchByLabel";
          this.buttonSearchByLabel.Size = new System.Drawing.Size(83, 27);
          this.buttonSearchByLabel.TabIndex = 10;
@@ -369,7 +371,7 @@
          // 
          // buttonConnect
          // 
-         this.buttonConnect.Location = new System.Drawing.Point(373, 242);
+         this.buttonConnect.Location = new System.Drawing.Point(362, 242);
          this.buttonConnect.Name = "buttonConnect";
          this.buttonConnect.Size = new System.Drawing.Size(83, 27);
          this.buttonConnect.TabIndex = 3;
@@ -643,6 +645,15 @@
          this.textBoxMergeRequestName.Size = new System.Drawing.Size(450, 20);
          this.textBoxMergeRequestName.TabIndex = 10;
          // 
+         // labelSearchStatus
+         // 
+         this.labelSearchStatus.AutoSize = true;
+         this.labelSearchStatus.Location = new System.Drawing.Point(353, 125);
+         this.labelSearchStatus.Name = "labelSearchStatus";
+         this.labelSearchStatus.Size = new System.Drawing.Size(74, 13);
+         this.labelSearchStatus.TabIndex = 27;
+         this.labelSearchStatus.Text = "Search results";
+         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -735,6 +746,7 @@
       private System.Windows.Forms.RadioButton radioButtonSelectMR_URL;
       private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
       private System.Windows.Forms.Label labelCurrentStatus;
+      private System.Windows.Forms.Label labelSearchStatus;
    }
 }
 
