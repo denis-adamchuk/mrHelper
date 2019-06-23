@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace mrHelper
 {
@@ -15,9 +16,34 @@ namespace mrHelper
          Process.Start("git", "fetch");
       }
 
-      static public void DiffTool(string leftCommit, string rightCommit)
+      static public Process DiffTool(string leftCommit, string rightCommit)
       {
-         Process.Start("git", "difftool --dir-diff --tool=beyondcompare3dd " + leftCommit + " " + rightCommit);
+         return Process.Start("git", "difftool --dir-diff --tool=beyondcompare3dd " + leftCommit + " " + rightCommit);
+      }
+
+      static public List<string> Diff(string leftCommit, string rightCommit, string filename)
+      {
+         List<string> result = new List<string>();
+
+         var proc = new Process
+         {
+            StartInfo = new ProcessStartInfo
+            {
+               FileName = "git",
+               Arguments = "diff -U0 " + leftCommit + " " + rightCommit + " " + filename,
+               UseShellExecute = false,
+               RedirectStandardOutput = true,
+               CreateNoWindow = true
+            }
+         };
+
+         proc.Start();
+         while (!proc.StandardOutput.EndOfStream)
+         {
+            result.Add(proc.StandardOutput.ReadLine());
+         }
+
+         return result;
       }
    }
 }

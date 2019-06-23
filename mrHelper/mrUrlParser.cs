@@ -13,7 +13,7 @@ namespace mrHelper
    class MergeRequestUrlParser
    {
       static Regex url_re = new Regex(
-         @"^(http[s]?:\/)\/([^:\/\s]+)\/(\w+\/\w+)\/merge_requests\/(\d*)",
+         @"^(http[s]?):\/\/([^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       public MergeRequestUrlParser(string url)
@@ -41,8 +41,8 @@ namespace mrHelper
 
          ParsedMergeRequestUrl result = new ParsedMergeRequestUrl();
          result.Host = m.Groups[2].Value;
-         result.Project = m.Groups[3].Value;
-         result.Id = int.Parse(m.Groups[4].Value);
+         result.Project = m.Groups[4].Value;
+         result.Id = int.Parse(m.Groups[5].Value);
          return result;
       }
 

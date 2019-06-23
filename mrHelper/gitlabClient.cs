@@ -26,6 +26,25 @@ namespace mrHelper
       All
    }
 
+   struct DiscussionParameters
+   {
+      public string Body;
+
+      public struct PositionDetails
+      {
+         public string OldPath;
+         public string NewPath;
+         public string OldLine;
+         public string NewLine;
+         public string BaseSHA;
+         public string HeadSHA;
+         public string StartSHA;
+      }
+
+      public PositionDetails? Position;
+   }
+
+
    class gitlabClient
    {
       public gitlabClient(string host, string token, ApiVersion version = ApiVersion.v4)
@@ -52,7 +71,8 @@ namespace mrHelper
          return readMergeRequest(s);
       }
 
-      public List<MergeRequest> GetAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
+      public List<MergeRequest> GetAllMergeRequests(StateFilter state, string labels, string author,
+         WorkInProgressFilter wip)
       {
          string url = makeUrlForAllMergeRequests(state, labels, author, wip);
          string response = get(url);
@@ -86,6 +106,48 @@ namespace mrHelper
          return commits;
       }
 
+      public List<Version> GetMergeRequestVersions(string project, int id)
+      {
+         string url = makeUrlForMergeRequestVersions(project, id);
+         string response = get(url);
+
+         dynamic json = deserializeJson(response);
+         List<Version> commits = new List<Version>();
+         foreach (dynamic item in (json as Array))
+         {
+            Version version;
+            version.Id = item["id"];
+            version.HeadSHA = item["head_commit_sha"];
+            version.BaseSHA = item["base_commit_sha"];
+            version.StartSHA = item["start_commit_sha"];
+            version.CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime;
+            commits.Add(version);
+         }
+         return commits;
+      }
+
+
+      public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
+      {
+         // TODO Add handling of responses
+         string url = makeUrlForAddSpentTime(project, id, span);
+         post(url);
+      }
+
+      public bool CreateNewMergeRequestDiscussion(string project, int id, DiscussionParameters parameters)
+      {
+         string url = makeUrlForNewDiscussion(project, id, parameters);
+         string response = post(url);
+
+         dynamic json = deserializeJson(response);
+         if (json.ContainsKey("message"))
+         {
+            // TODO Anything else?
+            return false;
+         }
+         return true;
+      }
+
       private static MergeRequest readMergeRequest(dynamic json)
       {
          MergeRequest mr;
@@ -108,13 +170,13 @@ namespace mrHelper
          mr.Author.Id = jsonAuthor["id"];
          mr.Author.Name = jsonAuthor["name"];
          mr.Author.Username = jsonAuthor["username"];
-         return mr;
-      }
 
-      public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
-      {
-         string url = makeUrlForAddSpentTime(project, id, span);
-         post(url);
+         dynamic jsonDiffRefs = json["diff_refs"];
+         mr.BaseSHA = jsonDiffRefs["base_sha"];
+         mr.HeadSHA = jsonDiffRefs["head_sha"];
+         mr.StartSHA = jsonDiffRefs["start_sha"];
+
+         return mr;
       }
 
       private string post(string data)
@@ -158,10 +220,43 @@ namespace mrHelper
          return makeUrlForSingleMergeRequest(project, id) + "/commits";
       }
 
+      private string makeUrlForMergeRequestVersions(string project, int id)
+      {
+         return makeUrlForSingleMergeRequest(project, id) + "/versions";
+      }
+
       private string makeUrlForAddSpentTime(string project, int id, TimeSpan span)
       {
          string duration = convertTimeSpanToGitlabDuration(span);
          return makeUrlForSingleMergeRequest(project, id) + "/add_spent_time?duration=" + duration;
+      }
+
+      private string makeUrlForNewDiscussion(string project, int id, DiscussionParameters parameters)
+      {
+         string url = makeUrlForSingleMergeRequest(project, id)
+            + "/discussions"
+            + "?" + WebUtility.UrlEncode("body") + "=" + WebUtility.UrlEncode(parameters.Body);
+
+         var pos = parameters.Position;
+         if (pos.HasValue)
+         {
+            url += "&" + WebUtility.UrlEncode("position[position_type]") + "=text";
+            url += "&" + WebUtility.UrlEncode("position[old_path]") + "=" + WebUtility.UrlEncode(pos.Value.OldPath);
+            url += "&" + WebUtility.UrlEncode("position[new_path]") + "=" + WebUtility.UrlEncode(pos.Value.NewPath);
+            url += "&" + WebUtility.UrlEncode("position[base_sha]") + "=" + pos.Value.BaseSHA;
+            url += "&" + WebUtility.UrlEncode("position[start_sha]") + "=" + pos.Value.StartSHA;
+            url += "&" + WebUtility.UrlEncode("position[head_sha]") + "=" + pos.Value.HeadSHA;
+            if (pos.Value.OldLine != null)
+            {
+               url += "&" + WebUtility.UrlEncode("position[old_line]") + "=" + pos.Value.OldLine;
+            }
+            if (pos.Value.NewLine != null)
+            {
+               url += "&" + WebUtility.UrlEncode("position[new_line]") + "=" + pos.Value.NewLine;
+            }
+         }
+
+         return url;
       }
 
       private string convertTimeSpanToGitlabDuration(TimeSpan span)
@@ -203,8 +298,8 @@ namespace mrHelper
 
       private static object deserializeJson(string Json)
       {
-         JavaScriptSerializer JavaScriptSerializer = new JavaScriptSerializer();
-         return JavaScriptSerializer.DeserializeObject(Json);
+         JavaScriptSerializer serializer = new JavaScriptSerializer();
+         return serializer.DeserializeObject(Json);
       }
 
       private readonly string _host;

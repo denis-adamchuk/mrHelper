@@ -59,11 +59,20 @@
     <Compile Include="mrHelperForm.Designer.cs">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="NewDiscussionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NewDiscussionForm.Designer.cs">
+      <DependentUpon>NewDiscussionForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="mrUrlParser.cs" />
     <EmbeddedResource Include="mrHelperForm.resx">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NewDiscussionForm.resx">
+      <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

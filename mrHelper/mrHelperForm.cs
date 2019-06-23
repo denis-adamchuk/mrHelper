@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace mrHelper
 {
    public partial class mrHelperForm : Form
    {
+      static private string timeTrackingMutexGuid = "{f0b3cbf0-e022-468b-aeb6-db0417a12379}";
+      static System.Threading.Mutex timeTrackingMutex =
+          new System.Threading.Mutex(false, timeTrackingMutexGuid);
+
       // TODO Move to resources
       // {
       static private string buttonStartTimerDefaultText = "Start Timer";
@@ -31,11 +37,11 @@ namespace mrHelper
       static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
       // }
 
+      public const string InterprocessSnapshotFilename = "details.json";
+
       public mrHelperForm()
       {
          InitializeComponent();
-         buttonToggleTimer.Text = buttonStartTimerDefaultText;
-         labelSpentTime.Text = labelSpentTimeDefaultText;
       }
 
       private void MrHelperForm_Load(object sender, EventArgs e)
@@ -106,10 +112,12 @@ namespace mrHelper
          {
             string repository = initializeGitRepository();
             Directory.SetCurrentDirectory(repository);
-            gitClient.DiffTool(getGitTag(true /* left */), getGitTag(false /* right */));
+            _difftool = gitClient.DiffTool(getGitTag(true /* left */), getGitTag(false /* right */));
+            updateDetailsSnapshot(currentDirectory);
          }
          catch (Exception ex)
          {
+            _difftool = null;
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          finally
@@ -133,6 +141,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
+            onStopTimer(false);
             MessageBox.Show(ex.Message + " " + errorTrackedTimeNotSet, errorMessageBoxText,
                MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
@@ -200,14 +209,74 @@ namespace mrHelper
          formatMergeRequestListItem(e);
       }
 
-      private void ComboBoxLeftCommit_Format(object sender, ListControlConvertEventArgs e)
+      private void ComboBoxLeftVersion_Format(object sender, ListControlConvertEventArgs e)
       {
-         formatCommitComboboxItem(e);
+         formatVersionComboboxItem(e);
       }
 
-      private void ComboBoxRightCommit_Format(object sender, ListControlConvertEventArgs e)
+      private void ComboBoxRightVersion_Format(object sender, ListControlConvertEventArgs e)
       {
-         formatCommitComboboxItem(e);
+         formatVersionComboboxItem(e);
+      }
+
+      private void ComboBoxLeftVersion_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         try
+         {
+            checkComboboxVersionsOrder(true /* I'm left one */);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void ComboBoxRightVersion_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         try
+         {
+            checkComboboxVersionsOrder(false /* because I'm the right one */);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
+      {
+         if (comboBoxLeftVersion.SelectedItem == null || comboBoxRightVersion.SelectedItem == null)
+         {
+            return;
+         }
+
+         // Left combobox cannot select a version older than in right combobox (gitlab web ui)
+         VersionComboBoxItem leftItem = (VersionComboBoxItem)(comboBoxLeftVersion.SelectedItem);
+         VersionComboBoxItem rightItem = (VersionComboBoxItem)(comboBoxRightVersion.SelectedItem);
+         if (!leftItem.TimeStamp.HasValue)
+         {
+            throw new NotImplementedException("Left combobox cannot have an item w/o timestamp");
+         }
+
+         if (rightItem.TimeStamp.HasValue)
+         {
+            // Check if order is broken
+            if (leftItem.TimeStamp.Value < rightItem.TimeStamp.Value)
+            {
+               if (shouldReorderRightCombobox)
+               {
+                  comboBoxRightVersion.SelectedIndex = comboBoxLeftVersion.SelectedIndex;
+               }
+               else
+               {
+                  comboBoxLeftVersion.SelectedIndex = comboBoxRightVersion.SelectedIndex;
+               }
+            }
+         }
+         else
+         {
+            // It is ok because a version w/o timestamp is the oldest one
+         }
       }
 
       private string getSelectedMergeRequestUrl()
@@ -254,11 +323,11 @@ namespace mrHelper
          return client.GetSingleMergeRequest(parsed.Project, parsed.Id);
       }
 
-      private List<Commit> getCommits()
+      private List<Version> getVersions()
       {
          ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
          gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
-         return client.GetMergeRequestCommits(parsed.Project, parsed.Id);
+         return client.GetMergeRequestVersions(parsed.Project, parsed.Id);
       }
 
       void sendTrackedTimeSpan(TimeSpan span)
@@ -313,13 +382,16 @@ namespace mrHelper
 
       private string getGitTag(bool left)
       {
-         if (left)
+         // swap sides to be consistent with gitlab web ui
+         if (!left)
          {
-            return comboBoxLeftCommit.SelectedItem != null ? ((CommitComboBoxItem)comboBoxLeftCommit.SelectedItem).Text : "";
+            return comboBoxLeftVersion.SelectedItem != null ?
+               ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).Text : "";
          }
          else
          {
-            return comboBoxRightCommit.SelectedItem != null ? ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).Text : "";
+            return comboBoxRightVersion.SelectedItem != null ?
+               ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).Text : "";
          }
       }
 
@@ -329,9 +401,9 @@ namespace mrHelper
          e.Value = item.Title + "    " + "[" + item.Author.Username + "]";
       }
 
-      private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
+      private static void formatVersionComboboxItem(ListControlConvertEventArgs e)
       {
-         CommitComboBoxItem item = (CommitComboBoxItem)(e.ListItem);
+         VersionComboBoxItem item = (VersionComboBoxItem)(e.ListItem);
          e.Value = item.Text;
          if (item.TimeStamp.HasValue)
          {
@@ -358,8 +430,58 @@ namespace mrHelper
          return buttonConnect.Text == buttonDisconnectText;
       }
 
+      private void updateDetailsSnapshot(string snapshotPath)
+      {
+         if (/*_timeTrackingTimer.Enabled && */_difftool != null && !_difftool.HasExited)
+         {
+            string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
+            if (diffArgs.Length < 2)
+            {
+               return;
+            }
+
+            string headSHA = trimRemoteRepositoryName(diffArgs[diffArgs.Length - 1]);
+            string startSHA = trimRemoteRepositoryName(diffArgs[diffArgs.Length - 2]);
+
+            ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
+            MergeRequest mergeRequest = getMergeRequest();
+
+            MergeRequestDetails details;
+            details.AccessToken = textBoxAccessToken.Text;
+            details.BaseSHA = mergeRequest.BaseSHA;    // Base commit SHA in the source branch
+            details.HeadSHA = headSHA;                 // SHA referencing HEAD of this merge request
+            details.StartSHA = startSHA;               // SHA referencing commit in target branch
+            details.Host = parsed.Host;
+            details.Id = parsed.Id;
+            details.Project = parsed.Project;
+            details.TempFolder = textBoxLocalGitFolder.Text;
+
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            string json = serializer.Serialize(details);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFilename), json);
+         }
+         else
+         {
+            System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFilename));
+         }
+      }
+
+      private static string trimRemoteRepositoryName(string sha)
+      {
+         if (sha.StartsWith(remoteRepositoryDefaultName))
+         {
+            sha = sha.Substring(remoteRepositoryDefaultName.Length + 1,
+               sha.Length - remoteRepositoryDefaultName.Length - 1);
+         }
+
+         return sha;
+      }
+
       private void onApplicationStarted()
       {
+         buttonToggleTimer.Text = buttonStartTimerDefaultText;
+         labelSpentTime.Text = labelSpentTimeDefaultText;
+
          bool configured = _settings.Host.Length > 0
                         && _settings.AccessToken.Length > 0
                         && _settings.LocalGitFolder.Length > 0;
@@ -411,31 +533,29 @@ namespace mrHelper
          textBoxMergeRequestName.Text = mergeRequest.Title;
          richTextBoxMergeRequestDescription.Text = mergeRequest.Description;
 
-         // 6. Add commit information to combo boxes
-         foreach (var commit in getCommits())
+         // 6. Add version information to combo boxes
+         foreach (var version in getVersions())
          {
-            CommitComboBoxItem item = new CommitComboBoxItem(commit.ShortId, commit.CommitedDate);
-            comboBoxLeftCommit.Items.Add(item);
-            comboBoxRightCommit.Items.Add(item);
+            VersionComboBoxItem item =
+               new VersionComboBoxItem(version.HeadSHA.Substring(0, 10), version.CreatedAt);
+            comboBoxLeftVersion.Items.Add(item);
+            comboBoxRightVersion.Items.Add(item);
          }
 
-         // 7. Add two special rows to each of combo-boxes
-         CommitComboBoxItem sourceBranch = new CommitComboBoxItem(
-            remoteRepositoryDefaultName + "/" + mergeRequest.SourceBranch, null);
-         comboBoxLeftCommit.Items.Add(sourceBranch);
-         comboBoxRightCommit.Items.Add(sourceBranch);
-
-         CommitComboBoxItem targetBranch = new CommitComboBoxItem(
+         // 7. Add target branch to the right combo-box
+         VersionComboBoxItem targetBranch = new VersionComboBoxItem(
             remoteRepositoryDefaultName + "/" + mergeRequest.TargetBranch, null);
-         comboBoxLeftCommit.Items.Add(targetBranch);
-         comboBoxRightCommit.Items.Add(targetBranch);
+         comboBoxRightVersion.Items.Add(targetBranch);
 
-         comboBoxLeftCommit.SelectedIndex = comboBoxLeftCommit.Items.Count - 1;
-         comboBoxRightCommit.SelectedIndex = 0;
+         comboBoxLeftVersion.SelectedIndex = 0;
+         comboBoxRightVersion.SelectedIndex = 0;
 
          // 8. Toggle state of rest buttons
          buttonToggleTimer.Enabled = true;
          buttonDifftool.Enabled = true;
+
+         // 9. Good moment to update settings
+         saveConfiguration();
       }
 
       private void onDisconnected()
@@ -450,9 +570,9 @@ namespace mrHelper
          buttonDifftool.Enabled = false;
          buttonToggleTimer.Enabled = false;
 
-         // 3. Clean-up lists of commits
-         comboBoxRightCommit.Items.Clear();
-         comboBoxLeftCommit.Items.Clear();
+         // 3. Clean-up lists of versions
+         comboBoxRightVersion.Items.Clear();
+         comboBoxLeftVersion.Items.Clear();
 
          // 4. Clean-up textboxes with merge request details
          textBoxMergeRequestName.Text = null;
@@ -478,6 +598,13 @@ namespace mrHelper
 
       private void onStartTimer()
       {
+         // Try to lock a mutex so that another instance cannot track time simultaneously with this one
+         if (!timeTrackingMutex.WaitOne(TimeSpan.Zero))
+         {
+            // Another instance is currently tracking time
+            throw new ApplicationException("Another instance is tracking time");
+         }
+         
          // 1. Create and initialize timer if does not exist
          if (_timeTrackingTimer == null)
          {
@@ -497,6 +624,9 @@ namespace mrHelper
 
          // 5. Start timer
          _timeTrackingTimer.Start();
+
+         // 6. Update information available to other instances
+         updateDetailsSnapshot(Directory.GetCurrentDirectory());
       }
 
       private void onStopTimer(bool sendTrackedTime)
@@ -504,17 +634,23 @@ namespace mrHelper
          // 1. Stop timer
          _timeTrackingTimer.Stop();
 
-         // 2. Set default text to tracked time label
+         // 2. Update information available to other instances
+         updateDetailsSnapshot(Directory.GetCurrentDirectory());
+
+         // 3. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
-         // 3. Update button text
+         // 4. Update button text
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
 
-         // 4. Send tracked time to server
+         // 5. Send tracked time to server
          if (sendTrackedTime)
          {
             sendTrackedTimeSpan(DateTime.Now - _lastStartTimeStamp);
          }
+
+         // 6. Allow others to track time
+         timeTrackingMutex.ReleaseMutex();
       }
 
       private void onTimer(object sender, EventArgs e)
@@ -575,14 +711,17 @@ namespace mrHelper
       private bool _exiting = false;
 
       UserDefinedSettings _settings;
+
+      // Last launched instance of a diff tool
+      Process _difftool;
    }
 
-   struct CommitComboBoxItem
+   struct VersionComboBoxItem
    {
       public string Text;
       public DateTime? TimeStamp;
 
-      public CommitComboBoxItem(string text, DateTime? timeStamp)
+      public VersionComboBoxItem(string text, DateTime? timeStamp)
       {
          Text = text;
          TimeStamp = timeStamp;

@@ -29,6 +29,9 @@ namespace mrHelper
       public string WebUrl;
       public bool WorkInProgress;
       public Author Author;
+      public string BaseSHA;
+      public string HeadSHA;
+      public string StartSHA;
    }
 
    struct Commit
@@ -38,5 +41,14 @@ namespace mrHelper
       public string Title;
       public string Message;
       public System.DateTime CommitedDate;
+   }
+
+   struct Version
+   {
+      public int Id;
+      public string HeadSHA;
+      public string BaseSHA;
+      public string StartSHA;
+      public System.DateTime CreatedAt;
    }
 }

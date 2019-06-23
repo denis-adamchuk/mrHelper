@@ -36,6 +36,7 @@
          this.textBoxHost = new System.Windows.Forms.TextBox();
          this.labelHost = new System.Windows.Forms.Label();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
+         this.labelSearchStatus = new System.Windows.Forms.Label();
          this.radioButtonSelectMR_Filter = new System.Windows.Forms.RadioButton();
          this.radioButtonSelectMR_URL = new System.Windows.Forms.RadioButton();
          this.buttonSearchByLabel = new System.Windows.Forms.Button();
@@ -62,9 +63,9 @@
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
          this.buttonDifftool = new System.Windows.Forms.Button();
          this.labelRight = new System.Windows.Forms.Label();
-         this.comboBoxRightCommit = new System.Windows.Forms.ComboBox();
+         this.comboBoxRightVersion = new System.Windows.Forms.ComboBox();
          this.labeLeft = new System.Windows.Forms.Label();
-         this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
+         this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.linkLabelSeeDescriptionRight = new System.Windows.Forms.LinkLabel();
          this.linkLabelSeeDescriptionLeft = new System.Windows.Forms.LinkLabel();
@@ -84,7 +85,6 @@
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
-         this.labelSearchStatus = new System.Windows.Forms.Label();
          this.groupBoxAuthorization.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.groupBoxState.SuspendLayout();
@@ -164,6 +164,15 @@
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
+         // labelSearchStatus
+         // 
+         this.labelSearchStatus.AutoSize = true;
+         this.labelSearchStatus.Location = new System.Drawing.Point(353, 125);
+         this.labelSearchStatus.Name = "labelSearchStatus";
+         this.labelSearchStatus.Size = new System.Drawing.Size(74, 13);
+         this.labelSearchStatus.TabIndex = 27;
+         this.labelSearchStatus.Text = "Search results";
+         // 
          // radioButtonSelectMR_Filter
          // 
          this.radioButtonSelectMR_Filter.AutoSize = true;
@@ -171,7 +180,7 @@
          this.radioButtonSelectMR_Filter.Location = new System.Drawing.Point(6, 19);
          this.radioButtonSelectMR_Filter.Name = "radioButtonSelectMR_Filter";
          this.radioButtonSelectMR_Filter.Size = new System.Drawing.Size(98, 17);
-         this.radioButtonSelectMR_Filter.TabIndex = 25;
+         this.radioButtonSelectMR_Filter.TabIndex = 0;
          this.radioButtonSelectMR_Filter.TabStop = true;
          this.radioButtonSelectMR_Filter.Text = "Search by Filter";
          this.radioButtonSelectMR_Filter.UseVisualStyleBackColor = true;
@@ -182,7 +191,7 @@
          this.radioButtonSelectMR_URL.Location = new System.Drawing.Point(6, 181);
          this.radioButtonSelectMR_URL.Name = "radioButtonSelectMR_URL";
          this.radioButtonSelectMR_URL.Size = new System.Drawing.Size(78, 17);
-         this.radioButtonSelectMR_URL.TabIndex = 26;
+         this.radioButtonSelectMR_URL.TabIndex = 12;
          this.radioButtonSelectMR_URL.Text = "Direct URL";
          this.radioButtonSelectMR_URL.UseVisualStyleBackColor = true;
          // 
@@ -204,7 +213,7 @@
          this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 144);
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
          this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(444, 21);
-         this.comboBoxFilteredMergeRequests.TabIndex = 8;
+         this.comboBoxFilteredMergeRequests.TabIndex = 11;
          this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
          // 
          // labelAuthor
@@ -222,7 +231,7 @@
          this.textBoxMrURL.Location = new System.Drawing.Point(6, 204);
          this.textBoxMrURL.Name = "textBoxMrURL";
          this.textBoxMrURL.Size = new System.Drawing.Size(444, 20);
-         this.textBoxMrURL.TabIndex = 2;
+         this.textBoxMrURL.TabIndex = 13;
          this.toolTip.SetToolTip(this.textBoxMrURL, "Something like https://gitlab-server.com/group/project/merge_requests/2");
          // 
          // textBoxAuthor
@@ -231,7 +240,7 @@
          this.textBoxAuthor.Name = "textBoxAuthor";
          this.textBoxAuthor.ReadOnly = true;
          this.textBoxAuthor.Size = new System.Drawing.Size(140, 20);
-         this.textBoxAuthor.TabIndex = 11;
+         this.textBoxAuthor.TabIndex = 2;
          this.toolTip.SetToolTip(this.textBoxAuthor, "Not implemented yet");
          // 
          // textBoxLabels
@@ -239,7 +248,7 @@
          this.textBoxLabels.Location = new System.Drawing.Point(6, 57);
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(140, 20);
-         this.textBoxLabels.TabIndex = 9;
+         this.textBoxLabels.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests matching a comma separated list of labels");
          // 
          // labelLabel
@@ -271,7 +280,7 @@
          this.radioButtonState_All.Location = new System.Drawing.Point(206, 13);
          this.radioButtonState_All.Name = "radioButtonState_All";
          this.radioButtonState_All.Size = new System.Drawing.Size(36, 17);
-         this.radioButtonState_All.TabIndex = 22;
+         this.radioButtonState_All.TabIndex = 6;
          this.radioButtonState_All.TabStop = true;
          this.radioButtonState_All.Text = "All";
          this.radioButtonState_All.UseVisualStyleBackColor = true;
@@ -282,7 +291,7 @@
          this.radioButtonState_Closed.Location = new System.Drawing.Point(76, 13);
          this.radioButtonState_Closed.Name = "radioButtonState_Closed";
          this.radioButtonState_Closed.Size = new System.Drawing.Size(57, 17);
-         this.radioButtonState_Closed.TabIndex = 21;
+         this.radioButtonState_Closed.TabIndex = 4;
          this.radioButtonState_Closed.Text = "Closed";
          this.radioButtonState_Closed.UseVisualStyleBackColor = true;
          // 
@@ -292,7 +301,7 @@
          this.radioButtonState_Merged.Location = new System.Drawing.Point(139, 13);
          this.radioButtonState_Merged.Name = "radioButtonState_Merged";
          this.radioButtonState_Merged.Size = new System.Drawing.Size(61, 17);
-         this.radioButtonState_Merged.TabIndex = 20;
+         this.radioButtonState_Merged.TabIndex = 5;
          this.radioButtonState_Merged.Text = "Merged";
          this.radioButtonState_Merged.UseVisualStyleBackColor = true;
          // 
@@ -302,7 +311,7 @@
          this.radioButtonState_Open.Location = new System.Drawing.Point(13, 14);
          this.radioButtonState_Open.Name = "radioButtonState_Open";
          this.radioButtonState_Open.Size = new System.Drawing.Size(51, 17);
-         this.radioButtonState_Open.TabIndex = 19;
+         this.radioButtonState_Open.TabIndex = 3;
          this.radioButtonState_Open.Text = "Open";
          this.radioButtonState_Open.UseVisualStyleBackColor = true;
          // 
@@ -325,7 +334,7 @@
          this.radioButtonWIP_All.Location = new System.Drawing.Point(111, 15);
          this.radioButtonWIP_All.Name = "radioButtonWIP_All";
          this.radioButtonWIP_All.Size = new System.Drawing.Size(36, 17);
-         this.radioButtonWIP_All.TabIndex = 25;
+         this.radioButtonWIP_All.TabIndex = 9;
          this.radioButtonWIP_All.TabStop = true;
          this.radioButtonWIP_All.Text = "All";
          this.radioButtonWIP_All.UseVisualStyleBackColor = true;
@@ -336,7 +345,7 @@
          this.radioButtonWIP_No.Location = new System.Drawing.Point(66, 15);
          this.radioButtonWIP_No.Name = "radioButtonWIP_No";
          this.radioButtonWIP_No.Size = new System.Drawing.Size(39, 17);
-         this.radioButtonWIP_No.TabIndex = 24;
+         this.radioButtonWIP_No.TabIndex = 8;
          this.radioButtonWIP_No.Text = "No";
          this.radioButtonWIP_No.UseVisualStyleBackColor = true;
          // 
@@ -346,7 +355,7 @@
          this.radioButtonWIP_Yes.Location = new System.Drawing.Point(17, 15);
          this.radioButtonWIP_Yes.Name = "radioButtonWIP_Yes";
          this.radioButtonWIP_Yes.Size = new System.Drawing.Size(43, 17);
-         this.radioButtonWIP_Yes.TabIndex = 23;
+         this.radioButtonWIP_Yes.TabIndex = 7;
          this.radioButtonWIP_Yes.Text = "Yes";
          this.radioButtonWIP_Yes.UseVisualStyleBackColor = true;
          // 
@@ -365,7 +374,7 @@
          this.buttonToggleTimer.Location = new System.Drawing.Point(242, 239);
          this.buttonToggleTimer.Name = "buttonToggleTimer";
          this.buttonToggleTimer.Size = new System.Drawing.Size(83, 27);
-         this.buttonToggleTimer.TabIndex = 4;
+         this.buttonToggleTimer.TabIndex = 5;
          this.buttonToggleTimer.UseVisualStyleBackColor = true;
          this.buttonToggleTimer.Click += new System.EventHandler(this.ButtonToggleTimer_Click);
          // 
@@ -374,7 +383,7 @@
          this.buttonConnect.Location = new System.Drawing.Point(362, 242);
          this.buttonConnect.Name = "buttonConnect";
          this.buttonConnect.Size = new System.Drawing.Size(83, 27);
-         this.buttonConnect.TabIndex = 3;
+         this.buttonConnect.TabIndex = 14;
          this.buttonConnect.Text = "Connect";
          this.buttonConnect.UseVisualStyleBackColor = true;
          this.buttonConnect.Click += new System.EventHandler(this.ButtonConnect_Click);
@@ -384,7 +393,7 @@
          this.buttonBrowseLocalGitFolder.Location = new System.Drawing.Point(367, 31);
          this.buttonBrowseLocalGitFolder.Name = "buttonBrowseLocalGitFolder";
          this.buttonBrowseLocalGitFolder.Size = new System.Drawing.Size(83, 27);
-         this.buttonBrowseLocalGitFolder.TabIndex = 5;
+         this.buttonBrowseLocalGitFolder.TabIndex = 2;
          this.buttonBrowseLocalGitFolder.Text = "Browse...";
          this.buttonBrowseLocalGitFolder.UseVisualStyleBackColor = true;
          this.buttonBrowseLocalGitFolder.Click += new System.EventHandler(this.ButtonBrowseLocalGitFolder_Click);
@@ -395,7 +404,7 @@
          this.textBoxLocalGitFolder.Name = "textBoxLocalGitFolder";
          this.textBoxLocalGitFolder.ReadOnly = true;
          this.textBoxLocalGitFolder.Size = new System.Drawing.Size(341, 20);
-         this.textBoxLocalGitFolder.TabIndex = 9;
+         this.textBoxLocalGitFolder.TabIndex = 1;
          this.textBoxLocalGitFolder.TabStop = false;
          // 
          // labelLocalGitFolder
@@ -413,7 +422,7 @@
          this.buttonDifftool.Location = new System.Drawing.Point(9, 239);
          this.buttonDifftool.Name = "buttonDifftool";
          this.buttonDifftool.Size = new System.Drawing.Size(83, 27);
-         this.buttonDifftool.TabIndex = 8;
+         this.buttonDifftool.TabIndex = 4;
          this.buttonDifftool.Text = "Diff Tool";
          this.buttonDifftool.UseVisualStyleBackColor = true;
          this.buttonDifftool.Click += new System.EventHandler(this.ButtonDifftool_Click);
@@ -427,15 +436,16 @@
          this.labelRight.TabIndex = 3;
          this.labelRight.Text = "Right";
          // 
-         // comboBoxRightCommit
+         // comboBoxRightVersion
          // 
-         this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxRightCommit.FormattingEnabled = true;
-         this.comboBoxRightCommit.Location = new System.Drawing.Point(242, 186);
-         this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(223, 21);
-         this.comboBoxRightCommit.TabIndex = 7;
-         this.comboBoxRightCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxRightCommit_Format);
+         this.comboBoxRightVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxRightVersion.FormattingEnabled = true;
+         this.comboBoxRightVersion.Location = new System.Drawing.Point(242, 186);
+         this.comboBoxRightVersion.Name = "comboBoxRightVersion";
+         this.comboBoxRightVersion.Size = new System.Drawing.Size(223, 21);
+         this.comboBoxRightVersion.TabIndex = 3;
+         this.comboBoxRightVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightVersion_SelectedIndexChanged);
+         this.comboBoxRightVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxRightVersion_Format);
          // 
          // labeLeft
          // 
@@ -446,15 +456,16 @@
          this.labeLeft.TabIndex = 1;
          this.labeLeft.Text = "Left";
          // 
-         // comboBoxLeftCommit
+         // comboBoxLeftVersion
          // 
-         this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLeftCommit.FormattingEnabled = true;
-         this.comboBoxLeftCommit.Location = new System.Drawing.Point(9, 186);
-         this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(223, 21);
-         this.comboBoxLeftCommit.TabIndex = 6;
-         this.comboBoxLeftCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxLeftCommit_Format);
+         this.comboBoxLeftVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxLeftVersion.FormattingEnabled = true;
+         this.comboBoxLeftVersion.Location = new System.Drawing.Point(9, 186);
+         this.comboBoxLeftVersion.Name = "comboBoxLeftVersion";
+         this.comboBoxLeftVersion.Size = new System.Drawing.Size(223, 21);
+         this.comboBoxLeftVersion.TabIndex = 2;
+         this.comboBoxLeftVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftVersion_SelectedIndexChanged);
+         this.comboBoxLeftVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxLeftVersion_Format);
          // 
          // toolTip
          // 
@@ -596,8 +607,8 @@
          this.tabPageDiff.Controls.Add(this.linkLabelSeeDescriptionLeft);
          this.tabPageDiff.Controls.Add(this.groupBoxDescription);
          this.tabPageDiff.Controls.Add(this.buttonToggleTimer);
-         this.tabPageDiff.Controls.Add(this.comboBoxLeftCommit);
-         this.tabPageDiff.Controls.Add(this.comboBoxRightCommit);
+         this.tabPageDiff.Controls.Add(this.comboBoxLeftVersion);
+         this.tabPageDiff.Controls.Add(this.comboBoxRightVersion);
          this.tabPageDiff.Controls.Add(this.labelRight);
          this.tabPageDiff.Controls.Add(this.buttonDifftool);
          this.tabPageDiff.Controls.Add(this.labeLeft);
@@ -634,7 +645,7 @@
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.ReadOnly = true;
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(450, 110);
-         this.richTextBoxMergeRequestDescription.TabIndex = 12;
+         this.richTextBoxMergeRequestDescription.TabIndex = 1;
          this.richTextBoxMergeRequestDescription.Text = "";
          // 
          // textBoxMergeRequestName
@@ -643,16 +654,7 @@
          this.textBoxMergeRequestName.Name = "textBoxMergeRequestName";
          this.textBoxMergeRequestName.ReadOnly = true;
          this.textBoxMergeRequestName.Size = new System.Drawing.Size(450, 20);
-         this.textBoxMergeRequestName.TabIndex = 10;
-         // 
-         // labelSearchStatus
-         // 
-         this.labelSearchStatus.AutoSize = true;
-         this.labelSearchStatus.Location = new System.Drawing.Point(353, 125);
-         this.labelSearchStatus.Name = "labelSearchStatus";
-         this.labelSearchStatus.Size = new System.Drawing.Size(74, 13);
-         this.labelSearchStatus.TabIndex = 27;
-         this.labelSearchStatus.Text = "Search results";
+         this.textBoxMergeRequestName.TabIndex = 0;
          // 
          // mrHelperForm
          // 
@@ -702,9 +704,9 @@
       private System.Windows.Forms.TextBox textBoxMrURL;
       private System.Windows.Forms.Button buttonDifftool;
       private System.Windows.Forms.Label labelRight;
-      private System.Windows.Forms.ComboBox comboBoxRightCommit;
+      private System.Windows.Forms.ComboBox comboBoxRightVersion;
       private System.Windows.Forms.Label labeLeft;
-      private System.Windows.Forms.ComboBox comboBoxLeftCommit;
+      private System.Windows.Forms.ComboBox comboBoxLeftVersion;
       private System.Windows.Forms.Button buttonToggleTimer;
       private System.Windows.Forms.Label labelSpentTimeLabel;
       private System.Windows.Forms.ToolTip toolTip;
