@@ -27,23 +27,35 @@ namespace mrHelper
 
    public struct DiffDetails
    {
-      public string FilenameLeft;
-      public string FilenameRight;
-      public string LineNumberLeft;
-      public string LineNumberRight;
+      public string FilenameCurrentPane;
+      public string FilenameNextPane;
+      public string LineNumberCurrentPane;
+      public string LineNumberNextPane;
    }
 
-   enum LineState
+   public struct PositionDetails
    {
-      eDeleted,
-      eAddedOrModified,
-      eUnchanged
+      public string OldFilename;
+      public string OldLineNumber;
+      public string NewFilename;
+      public string NewLineNumber;
+      public bool Ambiguous;
+
+      public PositionDetails(string oldFilename, string oldLineNumber, string newFilename, string newLineNumber,
+         bool ambiguous)
+      {
+         OldFilename = oldFilename;
+         OldLineNumber = oldLineNumber;
+         NewFilename = newFilename;
+         NewLineNumber = newLineNumber;
+         Ambiguous = ambiguous;
+      }
    }
 
    public partial class NewDiscussionForm : Form
    {
       static Regex trimmedFilenameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
-      static Regex diffSectionRe = new Regex(@"@@\s-(\d*),(\d*)\s\+(\d*),(\d*)\s@@", RegexOptions.Compiled);
+      static Regex diffSectionRe = new Regex(@"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@", RegexOptions.Compiled);
 
       public NewDiscussionForm(MergeRequestDetails mrDetails, DiffDetails diffDetails)
       {
@@ -56,8 +68,8 @@ namespace mrHelper
 
       private void onApplicationStarted()
       {
-         textBoxFileName.Text = _diffDetails.FilenameRight;
-         textBoxLineNumber.Text = _diffDetails.LineNumberRight;
+         //textBoxFileName.Text = _diffDetails.FilenameRight;
+         //textBoxLineNumber.Text = _diffDetails.LineNumberRight;
          textBoxContext.Text = getDiscussionContext();
       }
 
@@ -100,36 +112,26 @@ namespace mrHelper
          details.BaseSHA = _mergeRequestDetails.BaseSHA;
          details.HeadSHA = _mergeRequestDetails.HeadSHA;
          details.StartSHA = _mergeRequestDetails.StartSHA;
-         details.OldPath = convertToGitlabFilename(_diffDetails.FilenameLeft);
-         details.NewPath = convertToGitlabFilename(_diffDetails.FilenameRight);
 
-         LineState lineState = getLineState(details.NewPath,
-            int.Parse(_diffDetails.LineNumberLeft), int.Parse(_diffDetails.LineNumberRight));
-         switch (lineState)
-         {
-            case LineState.eAddedOrModified:
-               details.OldLine = null;
-               details.NewLine = _diffDetails.LineNumberRight;
-               break;
-            case LineState.eDeleted:
-               details.OldLine = _diffDetails.LineNumberLeft;
-               details.NewLine = null;
-               break;
-            case LineState.eUnchanged:
-               details.OldLine = _diffDetails.LineNumberLeft;
-               details.NewLine = _diffDetails.LineNumberRight;
-               break;
-         }
+         string path = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
+         PositionDetails positionDetails = getPositionDetails(
+            convertToGitlabFilename(_diffDetails.FilenameCurrentPane), int.Parse(_diffDetails.LineNumberCurrentPane),
+            convertToGitlabFilename(_diffDetails.FilenameNextPane), int.Parse(_diffDetails.LineNumberNextPane));
 
+         details.OldPath = positionDetails.OldFilename;
+         details.OldLine = positionDetails.OldLineNumber;
+         details.NewPath = positionDetails.NewFilename;
+         details.NewLine = positionDetails.NewLineNumber;
          parameters.Position = details;
+
          return parameters;
       }
 
       private string convertToGitlabFilename(string fullFilename)
       {
          string trimmedFilename = fullFilename
-            .Substring(_mergeRequestDetails.TempFolder.Length,
-               _diffDetails.FilenameLeft.Length - _mergeRequestDetails.TempFolder.Length)
+            .Substring(_mergeRequestDetails.TempFolder.Length, // TODO does it work?
+               _diffDetails.FilenameCurrentPane.Length - _mergeRequestDetails.TempFolder.Length)
             .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
          Match m = trimmedFilenameRe.Match(trimmedFilename);
@@ -153,9 +155,11 @@ namespace mrHelper
          return "";
       }
 
-      private LineState getLineState(string filename, int leftLineNumber, int rightLineNumber)
+      private PositionDetails getPositionDetails(string filenameCurrentPane, int lineNumberCurrentPane,
+         string filenameNextPane, int lineNumberNextPane)
       {
-         List<string> diff = gitClient.Diff(_mergeRequestDetails.StartSHA, _mergeRequestDetails.HeadSHA, filename);
+         List<string> diff = gitClient.Diff(_mergeRequestDetails.StartSHA, _mergeRequestDetails.HeadSHA,
+            filenameCurrentPane); // TODO - It is always current, is it ok?
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);
@@ -164,26 +168,61 @@ namespace mrHelper
                continue;
             }
 
-            int leftSectionStart = int.Parse(m.Groups[1].Value);
-            int leftSectionLength = int.Parse(m.Groups[2].Value);
-            int rightSectionStart = int.Parse(m.Groups[3].Value);
-            int rightSectionLength = int.Parse(m.Groups[4].Value);
-
-            if (rightSectionLength == 0)
+            if (!m.Groups["left_start"].Success || !m.Groups["right_start"].Success)
             {
-               if (leftLineNumber >= leftSectionStart && leftLineNumber < leftSectionStart + leftSectionLength)
-               {
-                  return LineState.eDeleted;
-               }
+               continue;
             }
 
-            if (rightLineNumber >= rightSectionStart && rightLineNumber < rightSectionStart + rightSectionLength)
+            int leftSectionStart = int.Parse(m.Groups["left_start"].Value);
+            int leftSectionLength = !m.Groups["left_len"].Success ? int.Parse(m.Groups["left_len"].Value) : 1;
+            int leftSectionEnd = leftSectionStart + leftSectionLength;
+            int rightSectionStart = int.Parse(m.Groups["right_start"].Value);
+            int rightSectionLength = !m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
+            int rightSectionEnd = rightSectionStart + rightSectionLength;
+
+            bool currentAtLeft = lineNumberCurrentPane >= leftSectionStart && lineNumberCurrentPane < leftSectionEnd;
+            bool currentAtRight = lineNumberCurrentPane >= rightSectionStart && lineNumberCurrentPane < rightSectionEnd;
+            bool nextAtLeft = lineNumberNextPane >= leftSectionStart && lineNumberNextPane < leftSectionEnd;
+            bool nextAtRight = lineNumberNextPane >= rightSectionStart && lineNumberNextPane < rightSectionEnd;
+
+            if (currentAtLeft)
             {
-               return LineState.eAddedOrModified;
+               if (nextAtRight)
+               {
+                  return new PositionDetails(null, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
+               }
+               else
+               {
+                  return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), null, null, false);
+               }
+            }
+            else if (currentAtRight)
+            {
+               if (nextAtLeft)
+               {
+                  return new PositionDetails(null, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
+               }
+               else
+               {
+                  return new PositionDetails(null, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
+               }
+            }
+            else if (nextAtLeft) // current not found
+            {
+               return new PositionDetails(filenameNextPane, lineNumberNextPane.ToString(), null, null, false);
+            }
+            else if (nextAtRight) // current not found
+            {
+               return new PositionDetails(null, null, filenameNextPane, lineNumberNextPane.ToString(), false);
+            }
+            else
+            {
+               continue; // check next diff section
             }
          }
 
-         return LineState.eUnchanged;
+         return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(),
+            filenameNextPane, lineNumberNextPane.ToString(), true);
       }
 
       private readonly MergeRequestDetails _mergeRequestDetails;
