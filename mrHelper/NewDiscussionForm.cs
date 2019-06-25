@@ -57,6 +57,8 @@ namespace mrHelper
       static Regex trimmedFilenameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
       static Regex diffSectionRe = new Regex(@"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@", RegexOptions.Compiled);
 
+      static int contextLineCount = 6;
+ 
       public NewDiscussionForm(MergeRequestDetails mrDetails, DiffDetails diffDetails)
       {
          _mergeRequestDetails = mrDetails;
@@ -68,9 +70,9 @@ namespace mrHelper
 
       private void onApplicationStarted()
       {
-         textBoxFileName.Text = _diffDetails.FilenameCurrentPane;
+         textBoxFileName.Text = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
          textBoxLineNumber.Text = _diffDetails.LineNumberCurrentPane;
-         textBoxContext.Text = getDiscussionContext();
+         showDiscussionContext();
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
@@ -118,9 +120,9 @@ namespace mrHelper
 
          DiscussionParameters.PositionDetails details =
             new DiscussionParameters.PositionDetails();
-         details.BaseSHA = _mergeRequestDetails.BaseSHA;
-         details.HeadSHA = _mergeRequestDetails.HeadSHA;
-         details.StartSHA = _mergeRequestDetails.StartSHA;
+         details.BaseSHA = trimRemoteRepositoryName(_mergeRequestDetails.BaseSHA);
+         details.HeadSHA = trimRemoteRepositoryName(_mergeRequestDetails.HeadSHA);
+         details.StartSHA = trimRemoteRepositoryName(_mergeRequestDetails.StartSHA);
 
          PositionDetails positionDetails = getPositionDetails(
             convertToGitlabFilename(_diffDetails.FilenameCurrentPane), int.Parse(_diffDetails.LineNumberCurrentPane),
@@ -139,8 +141,8 @@ namespace mrHelper
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
          string trimmedFilename = fullFilename
-            .Substring(tempFolder.Length, _diffDetails.FilenameCurrentPane.Length - tempFolder.Length)
-            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            .Substring(tempFolder.Length, fullFilename.Length - tempFolder.Length)
+            .Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
          Match m = trimmedFilenameRe.Match(trimmedFilename);
          if (!m.Success || m.Groups.Count < 3 || !m.Groups[2].Success)
@@ -151,11 +153,28 @@ namespace mrHelper
          return m.Groups[2].Value;
       }
 
-      private string getDiscussionContext()
+      private void showDiscussionContext()
       {
-         return string.Join("\n", File.ReadLines(_diffDetails.FilenameCurrentPane).
-            Skip(Math.Max(0, int.Parse(_diffDetails.LineNumberCurrentPane) - 3)).Take(6));
-      }
+         string filename = _diffDetails.FilenameCurrentPane;
+         int currentLineNumber = int.Parse(_diffDetails.LineNumberCurrentPane) - 1; // convert to zero-based index
+         int contextFirstLineNumber = Math.Max(0, currentLineNumber - 3);
+         var lines = File.ReadLines(filename).Skip(contextFirstLineNumber).Take(contextLineCount);
+
+         textBoxContext.SelectionFont = new Font(textBoxContext.Font, FontStyle.Regular);
+         for (int index = contextFirstLineNumber; index < currentLineNumber; ++index)
+         {
+            textBoxContext.AppendText(lines.ElementAt(index - contextFirstLineNumber) + "\r\n");
+         }
+
+         textBoxContext.SelectionFont = new Font(textBoxContext.Font, FontStyle.Bold);
+         textBoxContext.AppendText(lines.ElementAt(currentLineNumber - contextFirstLineNumber) + "\r\n");
+
+         textBoxContext.SelectionFont = new Font(textBoxContext.Font, FontStyle.Regular);
+         for (int index = currentLineNumber + 1; index < lines.Count() + contextFirstLineNumber; ++index)
+         {
+            textBoxContext.AppendText(lines.ElementAt(index - contextFirstLineNumber) + "\r\n");
+         }
+     }
 
       private PositionDetails getPositionDetails(string filenameCurrentPane, int lineNumberCurrentPane,
          string filenameNextPane, int lineNumberNextPane)
@@ -176,10 +195,10 @@ namespace mrHelper
             }
 
             int leftSectionStart = int.Parse(m.Groups["left_start"].Value);
-            int leftSectionLength = !m.Groups["left_len"].Success ? int.Parse(m.Groups["left_len"].Value) : 1;
+            int leftSectionLength = m.Groups["left_len"].Success ? int.Parse(m.Groups["left_len"].Value) : 1;
             int leftSectionEnd = leftSectionStart + leftSectionLength;
             int rightSectionStart = int.Parse(m.Groups["right_start"].Value);
-            int rightSectionLength = !m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
+            int rightSectionLength = m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
             int rightSectionEnd = rightSectionStart + rightSectionLength;
 
             bool currentAtLeft = lineNumberCurrentPane >= leftSectionStart && lineNumberCurrentPane < leftSectionEnd;
@@ -226,7 +245,18 @@ namespace mrHelper
          return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(),
             filenameNextPane, lineNumberNextPane.ToString(), true);
       }
-
+  
+      private static string trimRemoteRepositoryName(string sha)
+      {
+         string remoteRepositoryDefaultName = "origin/";
+         if (sha.StartsWith(remoteRepositoryDefaultName))
+         {
+            sha = sha.Substring(remoteRepositoryDefaultName.Length + 1,
+               sha.Length - remoteRepositoryDefaultName.Length - 1);
+         }
+         return sha;
+      }
+ 
       private readonly MergeRequestDetails _mergeRequestDetails;
       private readonly DiffDetails _diffDetails;
    }

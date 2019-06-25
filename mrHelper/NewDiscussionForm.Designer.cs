@@ -36,10 +36,10 @@
          this.textBoxLineNumber = new System.Windows.Forms.TextBox();
          this.labelFileName = new System.Windows.Forms.Label();
          this.labelLineNumber = new System.Windows.Forms.Label();
-         this.textBoxContext = new System.Windows.Forms.TextBox();
          this.labelContext = new System.Windows.Forms.Label();
          this.labelDiscussionBody = new System.Windows.Forms.Label();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
+         this.textBoxContext = new System.Windows.Forms.RichTextBox();
          this.SuspendLayout();
          // 
          // textBoxDiscussionBody
@@ -104,15 +104,6 @@
          this.labelLineNumber.TabIndex = 6;
          this.labelLineNumber.Text = "Line Number";
          // 
-         // textBoxContext
-         // 
-         this.textBoxContext.Location = new System.Drawing.Point(12, 73);
-         this.textBoxContext.Multiline = true;
-         this.textBoxContext.Name = "textBoxContext";
-         this.textBoxContext.ReadOnly = true;
-         this.textBoxContext.Size = new System.Drawing.Size(578, 92);
-         this.textBoxContext.TabIndex = 2;
-         // 
          // labelContext
          // 
          this.labelContext.AutoSize = true;
@@ -143,15 +134,25 @@
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
+         // textBoxContext
+         // 
+         this.textBoxContext.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+         this.textBoxContext.Location = new System.Drawing.Point(12, 73);
+         this.textBoxContext.Name = "textBoxContext";
+         this.textBoxContext.ReadOnly = true;
+         this.textBoxContext.Size = new System.Drawing.Size(578, 96);
+         this.textBoxContext.TabIndex = 11;
+         this.textBoxContext.Text = "";
+         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(602, 353);
+         this.Controls.Add(this.textBoxContext);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.labelDiscussionBody);
          this.Controls.Add(this.labelContext);
-         this.Controls.Add(this.textBoxContext);
          this.Controls.Add(this.labelLineNumber);
          this.Controls.Add(this.labelFileName);
          this.Controls.Add(this.textBoxLineNumber);
@@ -178,9 +179,9 @@
       private System.Windows.Forms.TextBox textBoxLineNumber;
       private System.Windows.Forms.Label labelFileName;
       private System.Windows.Forms.Label labelLineNumber;
-      private System.Windows.Forms.TextBox textBoxContext;
       private System.Windows.Forms.Label labelContext;
       private System.Windows.Forms.Label labelDiscussionBody;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
+      private System.Windows.Forms.RichTextBox textBoxContext;
    }
 }

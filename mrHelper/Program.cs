@@ -29,7 +29,6 @@ namespace mrHelper
             }
             else if (arguments[1] == "diff" && arguments.Length == 6)
             {
-               Thread.Sleep(10000);
                // Launch from diff tool
                DiffDetails diffDetails;
                diffDetails.FilenameCurrentPane = arguments[2];   // %F1
@@ -58,7 +57,7 @@ namespace mrHelper
       static MergeRequestDetails? getMergeRequestDetails()
       {
          string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
-         string fullSnapshotName = snapshotPath + mrHelperForm.InterprocessSnapshotFilename;
+         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, mrHelperForm.InterprocessSnapshotFilename);
          if (!System.IO.File.Exists(fullSnapshotName))
          {
             return null;

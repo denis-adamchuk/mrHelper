@@ -150,7 +150,7 @@ namespace mrHelper
 
       private static MergeRequest readMergeRequest(dynamic json)
       {
-         MergeRequest mr;
+         MergeRequest mr = new MergeRequest();
          mr.Id = json["id"];
          mr.Title = json["title"];
          mr.Description = json["description"];
@@ -171,11 +171,13 @@ namespace mrHelper
          mr.Author.Name = jsonAuthor["name"];
          mr.Author.Username = jsonAuthor["username"];
 
-         dynamic jsonDiffRefs = json["diff_refs"];
-         mr.BaseSHA = jsonDiffRefs["base_sha"];
-         mr.HeadSHA = jsonDiffRefs["head_sha"];
-         mr.StartSHA = jsonDiffRefs["start_sha"];
-
+         if (json.ContainsKey("diff_refs"))
+         {
+            dynamic jsonDiffRefs = json["diff_refs"];
+            mr.BaseSHA = jsonDiffRefs["base_sha"];
+            mr.HeadSHA = jsonDiffRefs["head_sha"];
+            mr.StartSHA = jsonDiffRefs["start_sha"];
+         }
          return mr;
       }
 

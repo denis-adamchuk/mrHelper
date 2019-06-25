@@ -29,8 +29,6 @@ namespace mrHelper
       static private string warningMessageBoxText = "Warning";
       static private string informationMessageBoxText = "Information";
 
-      static private string remoteRepositoryDefaultName = "origin";
-
       static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
       static private string errorUnsupportedState = "Unsupported State value";
       static private string errorUnsupportedWip = "Unsupported WIP value";
@@ -442,8 +440,8 @@ namespace mrHelper
                return;
             }
 
-            string headSHA = trimRemoteRepositoryName(diffArgs[diffArgs.Length - 1]);
-            string startSHA = trimRemoteRepositoryName(diffArgs[diffArgs.Length - 2]);
+            string headSHA = diffArgs[diffArgs.Length - 1];
+            string startSHA = diffArgs[diffArgs.Length - 2];
 
             ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
             MergeRequest mergeRequest = getMergeRequest();
@@ -468,18 +466,7 @@ namespace mrHelper
          }
       }
 
-      private static string trimRemoteRepositoryName(string sha)
-      {
-         if (sha.StartsWith(remoteRepositoryDefaultName))
-         {
-            sha = sha.Substring(remoteRepositoryDefaultName.Length + 1,
-               sha.Length - remoteRepositoryDefaultName.Length - 1);
-         }
-
-         return sha;
-      }
-
-      private void onApplicationStarted()
+     private void onApplicationStarted()
       {
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
@@ -545,8 +532,9 @@ namespace mrHelper
          }
 
          // 7. Add target branch to the right combo-box
+         string remoteRepositoryDefaultName = "origin/";
          VersionComboBoxItem targetBranch = new VersionComboBoxItem(
-            remoteRepositoryDefaultName + "/" + mergeRequest.TargetBranch, null);
+            remoteRepositoryDefaultName + mergeRequest.TargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
          comboBoxLeftVersion.SelectedIndex = 0;
