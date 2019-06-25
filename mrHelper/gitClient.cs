@@ -30,7 +30,7 @@ namespace mrHelper
             StartInfo = new ProcessStartInfo
             {
                FileName = "git",
-               Arguments = "diff -U0 " + leftCommit + " " + rightCommit + " " + filename,
+               Arguments = "diff -U0 " + leftCommit + " " + rightCommit + " -- " + filename,
                UseShellExecute = false,
                RedirectStandardOutput = true,
                CreateNoWindow = true

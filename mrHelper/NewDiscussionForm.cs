@@ -68,8 +68,8 @@ namespace mrHelper
 
       private void onApplicationStarted()
       {
-         //textBoxFileName.Text = _diffDetails.FilenameRight;
-         //textBoxLineNumber.Text = _diffDetails.LineNumberRight;
+         textBoxFileName.Text = _diffDetails.FilenameCurrentPane;
+         textBoxLineNumber.Text = _diffDetails.LineNumberCurrentPane;
          textBoxContext.Text = getDiscussionContext();
       }
 
@@ -85,6 +85,10 @@ namespace mrHelper
          gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          DiscussionParameters parameters = getDiscussionParameters();
 
+         textBoxContext.Text = "Old line = " + parameters.Position.Value.OldLine + " "
+                             + "New line = " + parameters.Position.Value.NewLine;
+
+         /*
          try
          {
             client.CreateNewMergeRequestDiscussion(
@@ -96,6 +100,11 @@ namespace mrHelper
                "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+         */
+      }
+      private void ButtonCancel_Click(object sender, EventArgs e)
+      {
+         Close();
       }
 
       private DiscussionParameters getDiscussionParameters()
@@ -113,7 +122,6 @@ namespace mrHelper
          details.HeadSHA = _mergeRequestDetails.HeadSHA;
          details.StartSHA = _mergeRequestDetails.StartSHA;
 
-         string path = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
          PositionDetails positionDetails = getPositionDetails(
             convertToGitlabFilename(_diffDetails.FilenameCurrentPane), int.Parse(_diffDetails.LineNumberCurrentPane),
             convertToGitlabFilename(_diffDetails.FilenameNextPane), int.Parse(_diffDetails.LineNumberNextPane));
@@ -129,13 +137,13 @@ namespace mrHelper
 
       private string convertToGitlabFilename(string fullFilename)
       {
+         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
          string trimmedFilename = fullFilename
-            .Substring(_mergeRequestDetails.TempFolder.Length, // TODO does it work?
-               _diffDetails.FilenameCurrentPane.Length - _mergeRequestDetails.TempFolder.Length)
+            .Substring(tempFolder.Length, _diffDetails.FilenameCurrentPane.Length - tempFolder.Length)
             .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
          Match m = trimmedFilenameRe.Match(trimmedFilename);
-         if (!m.Success)
+         if (!m.Success || m.Groups.Count < 3 || !m.Groups[2].Success)
          {
             throw new ApplicationException("Cannot parse a path obtained from difftool");
          }
@@ -143,27 +151,21 @@ namespace mrHelper
          return m.Groups[2].Value;
       }
 
-      private void ButtonCancel_Click(object sender, EventArgs e)
-      {
-         Close();
-      }
-
       private string getDiscussionContext()
       {
-         // TODO
-         //   return File.ReadLines(filename).Skip(lineNumber - 1).Take(1).First();
-         return "";
+         return string.Join("\n", File.ReadLines(_diffDetails.FilenameCurrentPane).
+            Skip(Math.Max(0, int.Parse(_diffDetails.LineNumberCurrentPane) - 3)).Take(6));
       }
 
       private PositionDetails getPositionDetails(string filenameCurrentPane, int lineNumberCurrentPane,
          string filenameNextPane, int lineNumberNextPane)
       {
          List<string> diff = gitClient.Diff(_mergeRequestDetails.StartSHA, _mergeRequestDetails.HeadSHA,
-            filenameCurrentPane); // TODO - It is always current, is it ok?
+            filenameCurrentPane);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);
-            if (!m.Success)
+            if (!m.Success || m.Groups.Count < 3)
             {
                continue;
             }

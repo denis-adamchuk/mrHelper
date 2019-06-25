@@ -32,10 +32,10 @@ namespace mrHelper
                Thread.Sleep(10000);
                // Launch from diff tool
                DiffDetails diffDetails;
-               diffDetails.FilenameLeft = arguments[2];
-               diffDetails.FilenameRight = arguments[3];
-               diffDetails.LineNumberLeft = arguments[4];
-               diffDetails.LineNumberRight = arguments[5];
+               diffDetails.FilenameCurrentPane = arguments[2];   // %F1
+               diffDetails.LineNumberCurrentPane = arguments[3]; // %l1
+               diffDetails.FilenameNextPane = arguments[4];      // %F2
+               diffDetails.LineNumberNextPane = arguments[5];    // %l2
 
                var connectedMergeRequestDetails = getMergeRequestDetails();
                if (!connectedMergeRequestDetails.HasValue)
