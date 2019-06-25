@@ -57,7 +57,8 @@ namespace mrHelper
 
       static MergeRequestDetails? getMergeRequestDetails()
       {
-         string fullSnapshotName = getSnapshotPath() + mrHelperForm.InterprocessSnapshotFilename;
+         string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
+         string fullSnapshotName = snapshotPath + mrHelperForm.InterprocessSnapshotFilename;
          if (!System.IO.File.Exists(fullSnapshotName))
          {
             return null;
@@ -78,22 +79,6 @@ namespace mrHelper
          details.HeadSHA = json["HeadSHA"];
          details.TempFolder = json["TempFolder"];
          return details;
-      }
-
-      private static string getSnapshotPath()
-      {
-         Process[] processList = Process.GetProcesses();
-         foreach (Process process in processList)
-         {
-            if (process.ProcessName.StartsWith(Process.GetCurrentProcess().ProcessName) &&
-                process.Id != Process.GetCurrentProcess().Id)
-            {
-               return process.MainModule.FileName.Substring(
-                  0, process.MainModule.FileName.Length - process.ProcessName.Length - 4 /* ".exe" */);
-            }
-         }
-
-         return "";
       }
    }
 }

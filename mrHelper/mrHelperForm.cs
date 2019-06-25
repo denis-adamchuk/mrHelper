@@ -113,7 +113,7 @@ namespace mrHelper
             string repository = initializeGitRepository();
             Directory.SetCurrentDirectory(repository);
             _difftool = gitClient.DiffTool(getGitTag(true /* left */), getGitTag(false /* right */));
-            updateDetailsSnapshot(currentDirectory);
+            updateDetailsSnapshot();
          }
          catch (Exception ex)
          {
@@ -430,8 +430,10 @@ namespace mrHelper
          return buttonConnect.Text == buttonDisconnectText;
       }
 
-      private void updateDetailsSnapshot(string snapshotPath)
+      private void updateDetailsSnapshot()
       {
+         string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
+
          if (/*_timeTrackingTimer.Enabled && */_difftool != null && !_difftool.HasExited)
          {
             string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
@@ -626,7 +628,7 @@ namespace mrHelper
          _timeTrackingTimer.Start();
 
          // 6. Update information available to other instances
-         updateDetailsSnapshot(Directory.GetCurrentDirectory());
+         updateDetailsSnapshot();
       }
 
       private void onStopTimer(bool sendTrackedTime)
@@ -635,7 +637,7 @@ namespace mrHelper
          _timeTrackingTimer.Stop();
 
          // 2. Update information available to other instances
-         updateDetailsSnapshot(Directory.GetCurrentDirectory());
+         updateDetailsSnapshot();
 
          // 3. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
