@@ -55,7 +55,7 @@
          this.buttonCancel.Location = new System.Drawing.Point(515, 319);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-         this.buttonCancel.TabIndex = 5;
+         this.buttonCancel.TabIndex = 6;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          this.buttonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
@@ -65,7 +65,7 @@
          this.buttonOK.Location = new System.Drawing.Point(434, 319);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
-         this.buttonOK.TabIndex = 4;
+         this.buttonOK.TabIndex = 5;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          this.buttonOK.Click += new System.EventHandler(this.ButtonOK_Click);
@@ -130,7 +130,7 @@
          this.checkBoxIncludeContext.Location = new System.Drawing.Point(17, 323);
          this.checkBoxIncludeContext.Name = "checkBoxIncludeContext";
          this.checkBoxIncludeContext.Size = new System.Drawing.Size(197, 17);
-         this.checkBoxIncludeContext.TabIndex = 10;
+         this.checkBoxIncludeContext.TabIndex = 4;
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
@@ -141,7 +141,7 @@
          this.textBoxContext.Name = "textBoxContext";
          this.textBoxContext.ReadOnly = true;
          this.textBoxContext.Size = new System.Drawing.Size(578, 96);
-         this.textBoxContext.TabIndex = 11;
+         this.textBoxContext.TabIndex = 2;
          this.textBoxContext.Text = "";
          // 
          // NewDiscussionForm

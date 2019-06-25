@@ -241,6 +241,14 @@ namespace mrHelper
          }
       }
 
+      private void TextBoxMrURL_TextChanged(object sender, EventArgs e)
+      {
+         if (!radioButtonSelectMR_URL.Checked)
+         {
+            radioButtonSelectMR_URL.Checked = true;
+         }
+      }
+ 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
       {
          if (comboBoxLeftVersion.SelectedItem == null || comboBoxRightVersion.SelectedItem == null)

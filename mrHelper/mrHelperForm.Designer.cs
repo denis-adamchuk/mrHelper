@@ -233,6 +233,7 @@
          this.textBoxMrURL.Size = new System.Drawing.Size(444, 20);
          this.textBoxMrURL.TabIndex = 13;
          this.toolTip.SetToolTip(this.textBoxMrURL, "Something like https://gitlab-server.com/group/project/merge_requests/2");
+         this.textBoxMrURL.TextChanged += new System.EventHandler(this.TextBoxMrURL_TextChanged);
          // 
          // textBoxAuthor
          // 
