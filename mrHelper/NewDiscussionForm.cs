@@ -73,6 +73,7 @@ namespace mrHelper
          textBoxFileName.Text = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
          textBoxLineNumber.Text = _diffDetails.LineNumberCurrentPane;
          showDiscussionContext();
+         this.ActiveControl = textBoxDiscussionBody;
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
@@ -109,12 +110,21 @@ namespace mrHelper
 
       private DiscussionParameters getDiscussionParameters()
       {
+         string formattedBody = textBoxDiscussionBody.Text.Replace("\r\n", "<br>").Replace("\n", "<br>");
+
          DiscussionParameters parameters = new DiscussionParameters();
-         parameters.Body = textBoxDiscussionBody.Text;
+         string filenameCurrent = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
+         string lineNumberCurrent = _diffDetails.LineNumberCurrentPane;
+         string filenameNext = convertToGitlabFilename(_diffDetails.FilenameNextPane);
+         string lineNumberNext = _diffDetails.LineNumberNextPane;
          if (!checkBoxIncludeContext.Checked)
          {
+            parameters.Body = getDiscussionHeader(filenameCurrent, lineNumberCurrent, filenameNext, lineNumberNext) +
+               "<br>" + formattedBody;
             return parameters;
          }
+
+         parameters.Body = formattedBody;
 
          DiscussionParameters.PositionDetails details =
             new DiscussionParameters.PositionDetails();
@@ -123,8 +133,8 @@ namespace mrHelper
          details.StartSHA = trimRemoteRepositoryName(_mergeRequestDetails.StartSHA);
 
          PositionDetails positionDetails = getPositionDetails(
-            convertToGitlabFilename(_diffDetails.FilenameCurrentPane), int.Parse(_diffDetails.LineNumberCurrentPane),
-            convertToGitlabFilename(_diffDetails.FilenameNextPane), int.Parse(_diffDetails.LineNumberNextPane));
+            filenameCurrent, int.Parse(lineNumberCurrent),
+            filenameNext, int.Parse(lineNumberNext));
 
          details.OldPath = positionDetails.OldFilename;
          details.OldLine = positionDetails.OldLineNumber;
@@ -133,6 +143,13 @@ namespace mrHelper
          parameters.Position = details;
 
          return parameters;
+      }
+
+      private string getDiscussionHeader(string filenameCurrent, string lineNumberCurrent,
+         string filenameNext, string lineNumberNext)
+      {
+         return "<b>" + filenameCurrent + "</b> (line " + lineNumberCurrent + ") <i>vs</i> "
+              + "<b>" + filenameNext + "</b> (line " + lineNumberNext + ")";
       }
 
       private string convertToGitlabFilename(string fullFilename)
