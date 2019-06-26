@@ -15,54 +15,66 @@ namespace mrHelper
 {
    public struct MergeRequestDetails
    {
+      public int Id;
       public string Host;
       public string AccessToken;
       public string Project;
-      public int Id;
       public string BaseSHA;
       public string StartSHA;
       public string HeadSHA;
       public string TempFolder;
    }
 
-   public struct DiffDetails
+   public struct DiffToolInfo
    {
-      public string FilenameCurrentPane;
-      public string FilenameNextPane;
-      public string LineNumberCurrentPane;
-      public string LineNumberNextPane;
+      public string CurrentFileName;
+      public string CurrentFileNameBrief;
+      public string CurrentLineNumber;
+      public string NextFileName;
+      public string NextFileNameBrief;
+      public string NextLineNumber;
    }
 
-   public struct PositionDetails
+   struct GitDiffSection
    {
-      public string OldFilename;
-      public string OldLineNumber;
-      public string NewFilename;
-      public string NewLineNumber;
-      public bool Ambiguous;
+      public int LeftSectionStart;
+      public int LeftSectionEnd;
+      public int RightSectionStart;
+      public int RightSectionEnd;
+   }
 
-      public PositionDetails(string oldFilename, string oldLineNumber, string newFilename, string newLineNumber,
-         bool ambiguous)
-      {
-         OldFilename = oldFilename;
-         OldLineNumber = oldLineNumber;
-         NewFilename = newFilename;
-         NewLineNumber = newLineNumber;
-         Ambiguous = ambiguous;
-      }
+   struct DiscussionContext
+   {
+      public IEnumerable<string> lines;
+      public int highlightedIndex;
+   }
+
+   enum DiffToolLineState
+   {
+      Ambigiuos,
+      AddedOrModified,
+      Deleted,
+      Unaffected
+   }
+
+   enum FinalLineState
+   {
+      AddedOrModified,
+      Deleted,
+      Unaffected
    }
 
    public partial class NewDiscussionForm : Form
    {
-      static Regex trimmedFilenameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
       static Regex diffSectionRe = new Regex(@"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@", RegexOptions.Compiled);
 
-      static int contextLineCount = 6;
+      static int contextLineCount = 4;
  
-      public NewDiscussionForm(MergeRequestDetails mrDetails, DiffDetails diffDetails)
+      public NewDiscussionForm(MergeRequestDetails mrDetails, DiffToolInfo difftoolInfo)
       {
          _mergeRequestDetails = mrDetails;
-         _diffDetails = diffDetails;
+         _difftoolInfo = difftoolInfo;
+         _lineState = getCurrentLineState();
 
          InitializeComponent();
          onApplicationStarted();
@@ -70,10 +82,43 @@ namespace mrHelper
 
       private void onApplicationStarted()
       {
-         textBoxFileName.Text = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
-         textBoxLineNumber.Text = _diffDetails.LineNumberCurrentPane;
-         showDiscussionContext();
          this.ActiveControl = textBoxDiscussionBody;
+
+         int linenumber = int.Parse(_difftoolInfo.CurrentLineNumber);
+         var context = getDiscussionContext(_difftoolInfo.CurrentFileName, linenumber - 1);
+         showDiscussionContext(textBoxContext1, context);
+         showDiscussionContextDetails(textBoxFileName1, textBoxLineNumber1, _difftoolInfo.CurrentFileNameBrief, linenumber);
+
+         if (_lineState == DiffToolLineState.Ambigiuos)
+         {
+            int linenumber2 = int.Parse(_difftoolInfo.NextLineNumber);
+            var context2 = getDiscussionContext(_difftoolInfo.NextFileName, linenumber2 - 1);
+            showDiscussionContext(textBoxContext2, context2);
+            showDiscussionContextDetails(textBoxFileName2, textBoxLineNumber2, _difftoolInfo.NextFileNameBrief, linenumber2);
+         }
+         else
+         {
+            hideSecondContext();
+         }
+      }
+
+      private void hideSecondContext()
+      {
+         radioContext1.Hide();
+         radionContext2.Hide();
+         int extraHeight = textBoxContext2.Height + textBoxFileName2.Height + textBoxLineNumber2.Height;
+         foreach (Control control in this.Controls)
+         {
+            if (control.Top > groupBoxContext.Bottom)
+            {
+               control.Location = new Point(control.Location.X, control.Location.Y - extraHeight);
+            }
+         }
+         groupBoxContext.Size = new Size(groupBoxContext.Width, groupBoxContext.Height - extraHeight);
+         this.Size = new Size(this.Width, this.Height - extraHeight);
+         textBoxContext2.Hide();
+         textBoxFileName2.Hide();
+         textBoxLineNumber2.Hide();
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
@@ -85,11 +130,12 @@ namespace mrHelper
             return;
          }
 
-         gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         DiscussionParameters parameters = getDiscussionParameters();
+         bool needPosition = checkBoxIncludeContext.Checked;
+         DiscussionParameters parameters = getDiscussionParameters(getFinalLineState(), needPosition);
 
          try
          {
+            gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
             client.CreateNewMergeRequestDiscussion(
                _mergeRequestDetails.Project, _mergeRequestDetails.Id, parameters);
          }
@@ -108,96 +154,101 @@ namespace mrHelper
          Close();
       }
 
-      private DiscussionParameters getDiscussionParameters()
+      private DiscussionParameters getDiscussionParameters(FinalLineState state, bool needPosition)
       {
-         string formattedBody = textBoxDiscussionBody.Text.Replace("\r\n", "<br>").Replace("\n", "<br>");
-
          DiscussionParameters parameters = new DiscussionParameters();
-         string filenameCurrent = convertToGitlabFilename(_diffDetails.FilenameCurrentPane);
-         string lineNumberCurrent = _diffDetails.LineNumberCurrentPane;
-         string filenameNext = convertToGitlabFilename(_diffDetails.FilenameNextPane);
-         string lineNumberNext = _diffDetails.LineNumberNextPane;
-         if (!checkBoxIncludeContext.Checked)
-         {
-            parameters.Body = getDiscussionHeader(filenameCurrent, lineNumberCurrent, filenameNext, lineNumberNext) +
-               "<br>" + formattedBody;
-            return parameters;
-         }
+         parameters.Body = getDiscussionBody(!needPosition);
+         parameters.Position = createPositionDetails(state);
+         return parameters;
+      }
 
-         parameters.Body = formattedBody;
+      private string getDiscussionBody(bool addHeader)
+      {
+         string header = addHeader ? (getDiscussionHeader() + "<br>") : "";
+         string body = textBoxDiscussionBody.Text.Replace("\r\n", "<br>").Replace("\n", "<br>");
+         return header + body;
+      }
 
-         DiscussionParameters.PositionDetails details =
-            new DiscussionParameters.PositionDetails();
+      private DiscussionParameters.PositionDetails createPositionDetails(FinalLineState state)
+      {
+         DiscussionParameters.PositionDetails details = new DiscussionParameters.PositionDetails();
          details.BaseSHA = _mergeRequestDetails.BaseSHA;
          details.HeadSHA = _mergeRequestDetails.HeadSHA;
          details.StartSHA = _mergeRequestDetails.StartSHA;
 
-         PositionDetails positionDetails = getPositionDetails(
-            filenameCurrent, int.Parse(lineNumberCurrent),
-            filenameNext, int.Parse(lineNumberNext));
-
-         details.OldPath = positionDetails.OldFilename;
-         details.OldLine = positionDetails.OldLineNumber;
-         details.NewPath = positionDetails.NewFilename;
-         details.NewLine = positionDetails.NewLineNumber;
-         parameters.Position = details;
-
-         return parameters;
-      }
-
-      private string getDiscussionHeader(string filenameCurrent, string lineNumberCurrent,
-         string filenameNext, string lineNumberNext)
-      {
-         return "<b>" + filenameCurrent + "</b> (line " + lineNumberCurrent + ") <i>vs</i> "
-              + "<b>" + filenameNext + "</b> (line " + lineNumberNext + ")";
-      }
-
-      private string convertToGitlabFilename(string fullFilename)
-      {
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-         string trimmedFilename = fullFilename
-            .Substring(tempFolder.Length, fullFilename.Length - tempFolder.Length)
-            .Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-         Match m = trimmedFilenameRe.Match(trimmedFilename);
-         if (!m.Success || m.Groups.Count < 3 || !m.Groups[2].Success)
+         switch (state)
          {
-            throw new ApplicationException("Cannot parse a path obtained from difftool");
+            case FinalLineState.AddedOrModified:
+               details.OldPath = _difftoolInfo.NextFileName;
+               details.OldLine = null;
+               details.NewPath = _difftoolInfo.CurrentFileNameBrief;
+               details.NewLine = _difftoolInfo.CurrentLineNumber;
+               break;
+
+            case FinalLineState.Deleted:
+               details.OldPath = _difftoolInfo.CurrentFileNameBrief;
+               details.OldLine = _difftoolInfo.CurrentLineNumber;
+               details.NewPath = _difftoolInfo.NextFileName;
+               details.NewLine = null;
+               break;
+
+            case FinalLineState.Unaffected:
+               details.OldPath = _difftoolInfo.NextFileName;
+               details.OldLine = _difftoolInfo.NextLineNumber;
+               details.NewPath = _difftoolInfo.CurrentFileNameBrief;
+               details.NewLine = _difftoolInfo.CurrentLineNumber;
+               break;
          }
 
-         return m.Groups[2].Value;
+         return details;
       }
 
-      private void showDiscussionContext()
+      private string getDiscussionHeader()
       {
-         string filename = _diffDetails.FilenameCurrentPane;
-         int currentLineNumber = int.Parse(_diffDetails.LineNumberCurrentPane) - 1; // convert to zero-based index
-         int contextFirstLineNumber = Math.Max(0, currentLineNumber - 3);
-         var lines = File.ReadLines(filename).Skip(contextFirstLineNumber).Take(contextLineCount);
+         return "<b>" + _difftoolInfo.CurrentFileNameBrief + "</b>"
+              + " (line " + _difftoolInfo.CurrentLineNumber + ") <i>vs</i> "
+              + "<b>" + _difftoolInfo.NextFileNameBrief + "</b>"
+              + " (line " + _difftoolInfo.NextLineNumber + ")";
+      }
 
-         textBoxContext.SelectionFont = new Font(textBoxContext.Font, FontStyle.Regular);
-         for (int index = contextFirstLineNumber; index < currentLineNumber; ++index)
+      static private DiscussionContext getDiscussionContext(string filename, int zeroBasedLinenumber)
+      {
+         DiscussionContext context;
+         context.lines = File.ReadLines(filename).Skip(zeroBasedLinenumber).Take(contextLineCount);
+         context.highlightedIndex = 0;
+         return context;
+      }
+
+      static private void showDiscussionContext(RichTextBox textbox, DiscussionContext context)
+      {
+         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Regular);
+         for (int index = 0; index < context.highlightedIndex; ++index)
          {
-            textBoxContext.AppendText(lines.ElementAt(index - contextFirstLineNumber) + "\r\n");
+            textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
          }
 
-         textBoxContext.SelectionFont = new Font(textBoxContext.Font, FontStyle.Bold);
-         textBoxContext.AppendText(lines.ElementAt(currentLineNumber - contextFirstLineNumber) + "\r\n");
+         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Bold);
+         textbox.AppendText(context.lines.ElementAt(context.highlightedIndex) + "\r\n");
 
-         textBoxContext.SelectionFont = new Font(textBoxContext.Font, FontStyle.Regular);
-         for (int index = currentLineNumber + 1; index < lines.Count() + contextFirstLineNumber; ++index)
+         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Regular);
+         for (int index = context.highlightedIndex + 1; index < context.lines.Count(); ++index)
          {
-            textBoxContext.AppendText(lines.ElementAt(index - contextFirstLineNumber) + "\r\n");
+            textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
          }
      }
 
-      private List<Tuple<int, int, int, int>> getDiffSections(string filenameCurrentPane, int lineNumberCurrentPane,
-         string filenameNextPane, int lineNumberNextPane)
+      private void showDiscussionContextDetails(TextBox tbFilename, TextBox tbLineNumber,
+         string filename, int linenumber)
       {
-         List<Tuple<int, int, int, int>> sections = new List<Tuple<int, int, int, int>>();
+         tbFilename.Text = filename;
+         tbLineNumber.Text = linenumber.ToString();
+      }
 
-         List<string> diff = gitClient.Diff(_mergeRequestDetails.BaseSHA, _mergeRequestDetails.HeadSHA,
-            filenameCurrentPane);
+      private List<GitDiffSection> getDiffSections(string filename)
+      {
+         List<GitDiffSection> sections = new List<GitDiffSection>();
+
+         List<string> diff = gitClient.Diff(_mergeRequestDetails.BaseSHA, _mergeRequestDetails.HeadSHA, filename);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);
@@ -211,158 +262,81 @@ namespace mrHelper
                continue;
             }
 
-            int leftSectionStart = int.Parse(m.Groups["left_start"].Value);
+            // @@ -1 +1 @@ is essentially the same as @@ -1,1 +1,1 @@
             int leftSectionLength = m.Groups["left_len"].Success ? int.Parse(m.Groups["left_len"].Value) : 1;
-            int leftSectionEnd = leftSectionStart + leftSectionLength;
-            int rightSectionStart = int.Parse(m.Groups["right_start"].Value);
             int rightSectionLength = m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
-            int rightSectionEnd = rightSectionStart + rightSectionLength;
 
-            Tuple<int, int, int, int> section =
-               new Tuple<int, int, int, int>(leftSectionStart, leftSectionEnd, rightSectionStart, rightSectionEnd);
+            GitDiffSection section;
+            section.LeftSectionStart = int.Parse(m.Groups["left_start"].Value);
+            section.LeftSectionEnd = section.LeftSectionStart + leftSectionLength;
+            section.RightSectionStart = int.Parse(m.Groups["right_start"].Value);
+            section.RightSectionEnd = section.RightSectionStart + rightSectionLength;
             sections.Add(section);
          }
 
          return sections;
       }
 
-      enum LineState
+      FinalLineState getFinalLineState()
       {
-         eFound,
-         eFoundZero,
-         eNotFound
+         switch (_lineState)
+         {
+            case DiffToolLineState.Ambigiuos:
+               return radioContext1.Checked ? FinalLineState.Deleted : FinalLineState.AddedOrModified;
+            case DiffToolLineState.AddedOrModified:
+               return FinalLineState.AddedOrModified;
+            case DiffToolLineState.Deleted:
+               return FinalLineState.Deleted;
+            case DiffToolLineState.Unaffected:
+               return FinalLineState.Unaffected;
+         }
+         return FinalLineState.Unaffected;
       }
 
-      struct TwoLinesMatch
+      private DiffToolLineState getCurrentLineState()
       {
-         public LineState Line1AtLeft;
-         public LineState Line1AtRight;
-         public LineState Line2AtLeft;
-         public LineState Line2AtRight;
-      }
+         string filename = _difftoolInfo.CurrentFileNameBrief;
+         int currentLineNumber = int.Parse(_difftoolInfo.CurrentLineNumber);
+         var sections = getDiffSections(filename);
 
-      TwoLinesMatch matchLines(Tuple<int, int, int, int> section, int line1Number, int line2Number)
-      {
-         int leftSectionStart = section.Item1;
-         int leftSectionEnd = section.Item2;
-         int rightSectionStart = section.Item3;
-         int rightSectionEnd = section.Item4;
-
-         TwoLinesMatch match = new TwoLinesMatch();
-         match.Line1AtLeft = match.Line1AtRight = match.Line2AtLeft = match.Line2AtRight = LineState.eNotFound;
-
-         if (leftSectionStart != leftSectionEnd)
-         {
-            if (line1Number >= leftSectionStart && line1Number < leftSectionEnd)
-            {
-               match.Line1AtLeft = LineState.eFound;
-            }
-            if (line2Number >= leftSectionStart && line2Number < leftSectionEnd)
-            {
-               match.Line2AtLeft = LineState.eFound;
-            }
-         }
-         else // if zero-size
-         {
-            if (line1Number == leftSectionStart)
-            {
-               match.Line1AtLeft = LineState.eFoundZero;
-            }
-            if (line2Number == leftSectionStart)
-            {
-               match.Line2AtLeft = LineState.eFoundZero;
-            }
-         }
-
-         if (rightSectionStart != rightSectionEnd)
-         {
-            if (line1Number >= rightSectionStart && line1Number < rightSectionEnd)
-            {
-               match.Line1AtRight = LineState.eFound;
-            }
-            if (line2Number >= rightSectionStart && line2Number < rightSectionEnd)
-            {
-               match.Line2AtRight = LineState.eFound;
-            }
-         }
-         else // if zero-size
-         {
-            if (line1Number == rightSectionStart)
-            {
-               match.Line1AtRight = LineState.eFoundZero;
-            }
-            if (line2Number == rightSectionStart)
-            {
-               match.Line2AtRight = LineState.eFoundZero;
-            }
-         }
-
-         return match;
-      }
-
-      private PositionDetails getPositionDetails(string filenameCurrentPane, int lineNumberCurrentPane,
-         string filenameNextPane, int lineNumberNextPane)
-      {
-         var sections = getDiffSections(filenameCurrentPane, lineNumberCurrentPane, filenameNextPane, lineNumberNextPane);
-
-         // Best matches
+         bool addedOrModified = false;
          foreach (var section in sections)
          {
-            TwoLinesMatch match = matchLines(section, lineNumberCurrentPane, lineNumberNextPane);
-
-            if (match.Line1AtLeft == LineState.eFound && match.Line1AtRight == LineState.eFound
-             && match.Line2AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFound)
+            if (currentLineNumber >= section.RightSectionStart && currentLineNumber < section.RightSectionEnd)
             {
-               // It is a truly ambiguous case, but let's resolve it as 'add context with right-side code'
-               return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
-            }
-
-            if (match.Line1AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFound)
-            {
-               // 'add context with old (left) code snippet'
-               return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), filenameNextPane, null, false);
-            }
-            else if (match.Line1AtRight == LineState.eFound && match.Line2AtLeft == LineState.eFound)
-            {
-               // 'add context with new (right) code snippet'
-               return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
+               addedOrModified = true;
+               break;
             }
          }
 
-         // Rest matches
+         bool deleted = false;
          foreach (var section in sections)
          {
-            TwoLinesMatch match = matchLines(section, lineNumberCurrentPane, lineNumberNextPane);
-
-            if (match.Line1AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFoundZero)
+            if (currentLineNumber >= section.LeftSectionStart && currentLineNumber < section.LeftSectionEnd)
             {
-               // 'add context with old (left) code snippet'
-               return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), filenameNextPane, null, false);
-            }
-            else if (match.Line1AtLeft == LineState.eFoundZero && match.Line2AtRight == LineState.eFound)
-            {
-               // 'add context with old (left) code snippet'
-               return new PositionDetails(filenameNextPane, lineNumberNextPane.ToString(), filenameCurrentPane, null, false);
-            }
-            else if (match.Line1AtRight == LineState.eFound && match.Line2AtLeft == LineState.eFoundZero)
-            {
-               // 'add context with new (right) code snippet'
-               return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
-            }
-            else if (match.Line1AtRight == LineState.eFoundZero && match.Line2AtLeft == LineState.eFound)
-            {
-               // 'add context with new (right) code snippet'
-               return new PositionDetails(filenameCurrentPane, null, filenameNextPane, lineNumberNextPane.ToString(), false);
+               deleted = true;
+               break;
             }
          }
 
-         // No match, 'add context with unchanged code snippet'
-         return new PositionDetails(
-            filenameNextPane, lineNumberNextPane.ToString(),
-            filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
+         if (addedOrModified && deleted)
+         {
+            return DiffToolLineState.Ambigiuos;
+         }
+         else if (addedOrModified)
+         {
+            return DiffToolLineState.AddedOrModified;
+         }
+         else if (deleted)
+         {
+            return DiffToolLineState.Deleted;
+         }
+
+         return DiffToolLineState.Unaffected;
       }
  
       private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly DiffDetails _diffDetails;
+      private readonly DiffToolInfo _difftoolInfo;
+      private readonly DiffToolLineState _lineState;
    }
 }

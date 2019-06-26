@@ -31,7 +31,8 @@ namespace mrHelper
             {
                FileName = "git",
                // U0 gives no context, which means to not have unchanged lines in diff snippets.
-               // This is needed to unambiguously treat unchanged lines and send both old and new lines to gitlab.
+               // This is needed to unambiguously treat lines missing in diff as unchanged lines to
+               // send both old and new lines to gitlab.
                Arguments = "diff -U0 " + leftCommit + " " + rightCommit + " -- " + filename,
                UseShellExecute = false,
                RedirectStandardOutput = true,
