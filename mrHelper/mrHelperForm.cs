@@ -9,7 +9,7 @@ namespace mrHelper
 {
    public partial class mrHelperForm : Form
    {
-      static private string timeTrackingMutexGuid = "{f0b3cbf0-e022-468b-aeb6-db0417a12379}";
+      static private string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
       static System.Threading.Mutex timeTrackingMutex =
           new System.Threading.Mutex(false, timeTrackingMutexGuid);
 
@@ -128,6 +128,13 @@ namespace mrHelper
       {
          try
          {
+            if (_timeTrackingTimer == null)
+            {
+               _timeTrackingTimer = new Timer();
+               _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+               _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+            }
+
             if (_timeTrackingTimer.Enabled)
             {
                onStopTimer(true /* send tracked time to server */);
@@ -603,27 +610,19 @@ namespace mrHelper
             throw new ApplicationException("Another instance is tracking time");
          }
          
-         // 1. Create and initialize timer if does not exist
-         if (_timeTrackingTimer == null)
-         {
-            _timeTrackingTimer = new Timer();
-            _timeTrackingTimer.Interval = timeTrackingTimerInterval;
-            _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
-         }
-
-         // 2. Update button text
+         // 1. Update button text
          buttonToggleTimer.Text = buttonStartTimerTrackingText;
          
-         // 3. Set default text to tracked time label
+         // 2. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
-         // 4. Store current time
+         // 3. Store current time
          _lastStartTimeStamp = DateTime.Now;
 
-         // 5. Start timer
+         // 4. Start timer
          _timeTrackingTimer.Start();
 
-         // 6. Update information available to other instances
+         // 5. Update information available to other instances
          updateDetailsSnapshot();
       }
 

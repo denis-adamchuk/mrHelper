@@ -87,10 +87,6 @@ namespace mrHelper
          gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          DiscussionParameters parameters = getDiscussionParameters();
 
-         textBoxContext.Text = "Old line = " + parameters.Position.Value.OldLine + " "
-                             + "New line = " + parameters.Position.Value.NewLine;
-
-         /*
          try
          {
             client.CreateNewMergeRequestDiscussion(
@@ -102,7 +98,6 @@ namespace mrHelper
                "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-         */
       }
       private void ButtonCancel_Click(object sender, EventArgs e)
       {
@@ -176,9 +171,11 @@ namespace mrHelper
          }
      }
 
-      private PositionDetails getPositionDetails(string filenameCurrentPane, int lineNumberCurrentPane,
+      private List<Tuple<int, int, int, int>> getDiffSections(string filenameCurrentPane, int lineNumberCurrentPane,
          string filenameNextPane, int lineNumberNextPane)
       {
+         List<Tuple<int, int, int, int>> sections = new List<Tuple<int, int, int, int>>();
+
          List<string> diff = gitClient.Diff(_mergeRequestDetails.StartSHA, _mergeRequestDetails.HeadSHA,
             filenameCurrentPane);
          foreach (string line in diff)
@@ -201,49 +198,135 @@ namespace mrHelper
             int rightSectionLength = m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
             int rightSectionEnd = rightSectionStart + rightSectionLength;
 
-            bool currentAtLeft = lineNumberCurrentPane >= leftSectionStart && lineNumberCurrentPane < leftSectionEnd;
-            bool currentAtRight = lineNumberCurrentPane >= rightSectionStart && lineNumberCurrentPane < rightSectionEnd;
-            bool nextAtLeft = lineNumberNextPane >= leftSectionStart && lineNumberNextPane < leftSectionEnd;
-            bool nextAtRight = lineNumberNextPane >= rightSectionStart && lineNumberNextPane < rightSectionEnd;
+            Tuple<int, int, int, int> section =
+               new Tuple<int, int, int, int>(leftSectionStart, leftSectionEnd, rightSectionStart, rightSectionEnd);
+            sections.Add(section);
+         }
 
-            if (currentAtLeft)
+         return sections;
+      }
+
+      enum LineState
+      {
+         eFound,
+         eFoundZero,
+         eNotFound
+      }
+
+      struct TwoLinesMatch
+      {
+         public LineState Line1AtLeft;
+         public LineState Line1AtRight;
+         public LineState Line2AtLeft;
+         public LineState Line2AtRight;
+      }
+
+      TwoLinesMatch matchLines(Tuple<int, int, int, int> section, int line1Number, int line2Number)
+      {
+         int leftSectionStart = section.Item1;
+         int leftSectionEnd = section.Item2;
+         int rightSectionStart = section.Item3;
+         int rightSectionEnd = section.Item4;
+
+         TwoLinesMatch match = new TwoLinesMatch();
+         match.Line1AtLeft = match.Line1AtRight = match.Line2AtLeft = match.Line2AtRight = LineState.eNotFound;
+
+         if (leftSectionStart != leftSectionEnd)
+         {
+            if (line1Number >= leftSectionStart && line1Number < leftSectionEnd)
             {
-               if (nextAtRight)
-               {
-                  return new PositionDetails(null, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
-               }
-               else
-               {
-                  return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), null, null, false);
-               }
+               match.Line1AtLeft = LineState.eFound;
             }
-            else if (currentAtRight)
+            if (line2Number >= leftSectionStart && line2Number < leftSectionEnd)
             {
-               if (nextAtLeft)
-               {
-                  return new PositionDetails(null, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
-               }
-               else
-               {
-                  return new PositionDetails(null, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
-               }
+               match.Line2AtLeft = LineState.eFound;
             }
-            else if (nextAtLeft) // current not found
+         }
+         else // if zero-size
+         {
+            if (line1Number == leftSectionStart)
             {
-               return new PositionDetails(filenameNextPane, lineNumberNextPane.ToString(), null, null, false);
+               match.Line1AtLeft = LineState.eFoundZero;
             }
-            else if (nextAtRight) // current not found
+            if (line2Number == leftSectionStart)
             {
-               return new PositionDetails(null, null, filenameNextPane, lineNumberNextPane.ToString(), false);
-            }
-            else
-            {
-               continue; // check next diff section
+               match.Line2AtLeft = LineState.eFoundZero;
             }
          }
 
-         return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(),
-            filenameNextPane, lineNumberNextPane.ToString(), true);
+         if (rightSectionStart != rightSectionEnd)
+         {
+            if (line1Number >= rightSectionStart && line1Number < rightSectionEnd)
+            {
+               match.Line1AtRight = LineState.eFound;
+            }
+            if (line2Number >= rightSectionStart && line2Number < rightSectionEnd)
+            {
+               match.Line2AtRight = LineState.eFound;
+            }
+         }
+         else // if zero-size
+         {
+            if (line1Number == rightSectionStart)
+            {
+               match.Line1AtRight = LineState.eFoundZero;
+            }
+            if (line2Number == rightSectionStart)
+            {
+               match.Line2AtRight = LineState.eFoundZero;
+            }
+         }
+
+         return match;
+      }
+
+      private PositionDetails getPositionDetails(string filenameCurrentPane, int lineNumberCurrentPane,
+         string filenameNextPane, int lineNumberNextPane)
+      {
+         var sections = getDiffSections(filenameCurrentPane, lineNumberCurrentPane, filenameNextPane, lineNumberNextPane);
+
+         // Best matches
+         foreach (var section in sections)
+         {
+            TwoLinesMatch match = matchLines(section, lineNumberCurrentPane, lineNumberNextPane);
+
+            if (match.Line1AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFound)
+            {
+               return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), filenameNextPane, null, false);
+            }
+            else if (match.Line1AtRight == LineState.eFound && match.Line2AtLeft == LineState.eFound)
+            {
+               return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
+            }
+         }
+
+         // Rest matches
+         foreach (var section in sections)
+         {
+            TwoLinesMatch match = matchLines(section, lineNumberCurrentPane, lineNumberNextPane);
+
+            if (match.Line1AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFoundZero)
+            {
+               return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), filenameNextPane, null, false);
+            }
+            else if (match.Line1AtLeft == LineState.eFoundZero && match.Line2AtRight == LineState.eFound)
+            {
+               return new PositionDetails(filenameNextPane, lineNumberNextPane.ToString(), filenameCurrentPane, null, false);
+            }
+            else if (match.Line1AtRight == LineState.eFound && match.Line2AtLeft == LineState.eFoundZero)
+            {
+               return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
+            }
+            else if (match.Line1AtRight == LineState.eFoundZero && match.Line2AtLeft == LineState.eFound)
+            {
+               return new PositionDetails(filenameCurrentPane, null, filenameNextPane, lineNumberNextPane.ToString(), false);
+            }
+         }
+
+         // No match
+         return new PositionDetails(
+            filenameNextPane, lineNumberNextPane.ToString(),
+            filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
       }
   
       private static string trimRemoteRepositoryName(string sha)
@@ -251,8 +334,8 @@ namespace mrHelper
          string remoteRepositoryDefaultName = "origin/";
          if (sha.StartsWith(remoteRepositoryDefaultName))
          {
-            sha = sha.Substring(remoteRepositoryDefaultName.Length + 1,
-               sha.Length - remoteRepositoryDefaultName.Length - 1);
+            sha = sha.Substring(remoteRepositoryDefaultName.Length,
+               sha.Length - remoteRepositoryDefaultName.Length);
          }
          return sha;
       }
