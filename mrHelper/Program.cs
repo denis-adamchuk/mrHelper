@@ -50,7 +50,7 @@ namespace mrHelper
          }
          catch (Exception ex)
          {
-            Console.WriteLine(ex.Message);
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 

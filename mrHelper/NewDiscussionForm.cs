@@ -128,9 +128,9 @@ namespace mrHelper
 
          DiscussionParameters.PositionDetails details =
             new DiscussionParameters.PositionDetails();
-         details.BaseSHA = trimRemoteRepositoryName(_mergeRequestDetails.BaseSHA);
-         details.HeadSHA = trimRemoteRepositoryName(_mergeRequestDetails.HeadSHA);
-         details.StartSHA = trimRemoteRepositoryName(_mergeRequestDetails.StartSHA);
+         details.BaseSHA = _mergeRequestDetails.BaseSHA;
+         details.HeadSHA = _mergeRequestDetails.HeadSHA;
+         details.StartSHA = _mergeRequestDetails.StartSHA;
 
          PositionDetails positionDetails = getPositionDetails(
             filenameCurrent, int.Parse(lineNumberCurrent),
@@ -196,7 +196,7 @@ namespace mrHelper
       {
          List<Tuple<int, int, int, int>> sections = new List<Tuple<int, int, int, int>>();
 
-         List<string> diff = gitClient.Diff(_mergeRequestDetails.StartSHA, _mergeRequestDetails.HeadSHA,
+         List<string> diff = gitClient.Diff(_mergeRequestDetails.BaseSHA, _mergeRequestDetails.HeadSHA,
             filenameCurrentPane);
          foreach (string line in diff)
          {
@@ -310,12 +310,21 @@ namespace mrHelper
          {
             TwoLinesMatch match = matchLines(section, lineNumberCurrentPane, lineNumberNextPane);
 
+            if (match.Line1AtLeft == LineState.eFound && match.Line1AtRight == LineState.eFound
+             && match.Line2AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFound)
+            {
+               // It is a truly ambiguous case, but let's resolve it as 'add context with right-side code'
+               return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
+            }
+
             if (match.Line1AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFound)
             {
+               // 'add context with old (left) code snippet'
                return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), filenameNextPane, null, false);
             }
             else if (match.Line1AtRight == LineState.eFound && match.Line2AtLeft == LineState.eFound)
             {
+               // 'add context with new (right) code snippet'
                return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
             }
          }
@@ -327,37 +336,30 @@ namespace mrHelper
 
             if (match.Line1AtLeft == LineState.eFound && match.Line2AtRight == LineState.eFoundZero)
             {
+               // 'add context with old (left) code snippet'
                return new PositionDetails(filenameCurrentPane, lineNumberCurrentPane.ToString(), filenameNextPane, null, false);
             }
             else if (match.Line1AtLeft == LineState.eFoundZero && match.Line2AtRight == LineState.eFound)
             {
+               // 'add context with old (left) code snippet'
                return new PositionDetails(filenameNextPane, lineNumberNextPane.ToString(), filenameCurrentPane, null, false);
             }
             else if (match.Line1AtRight == LineState.eFound && match.Line2AtLeft == LineState.eFoundZero)
             {
+               // 'add context with new (right) code snippet'
                return new PositionDetails(filenameNextPane, null, filenameCurrentPane, lineNumberCurrentPane.ToString(), false);
             }
             else if (match.Line1AtRight == LineState.eFoundZero && match.Line2AtLeft == LineState.eFound)
             {
+               // 'add context with new (right) code snippet'
                return new PositionDetails(filenameCurrentPane, null, filenameNextPane, lineNumberNextPane.ToString(), false);
             }
          }
 
-         // No match
+         // No match, 'add context with unchanged code snippet'
          return new PositionDetails(
             filenameNextPane, lineNumberNextPane.ToString(),
             filenameCurrentPane, lineNumberCurrentPane.ToString(), true);
-      }
-  
-      private static string trimRemoteRepositoryName(string sha)
-      {
-         string remoteRepositoryDefaultName = "origin/";
-         if (sha.StartsWith(remoteRepositoryDefaultName))
-         {
-            sha = sha.Substring(remoteRepositoryDefaultName.Length,
-               sha.Length - remoteRepositoryDefaultName.Length);
-         }
-         return sha;
       }
  
       private readonly MergeRequestDetails _mergeRequestDetails;

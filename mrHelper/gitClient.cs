@@ -30,6 +30,8 @@ namespace mrHelper
             StartInfo = new ProcessStartInfo
             {
                FileName = "git",
+               // U0 gives no context, which means to not have unchanged lines in diff snippets.
+               // This is needed to unambiguously treat unchanged lines and send both old and new lines to gitlab.
                Arguments = "diff -U0 " + leftCommit + " " + rightCommit + " -- " + filename,
                UseShellExecute = false,
                RedirectStandardOutput = true,

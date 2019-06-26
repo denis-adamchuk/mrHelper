@@ -128,13 +128,6 @@ namespace mrHelper
       {
          try
          {
-            if (_timeTrackingTimer == null)
-            {
-               _timeTrackingTimer = new Timer();
-               _timeTrackingTimer.Interval = timeTrackingTimerInterval;
-               _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
-            }
-
             if (_timeTrackingTimer.Enabled)
             {
                onStopTimer(true /* send tracked time to server */);
@@ -399,12 +392,12 @@ namespace mrHelper
          if (!left)
          {
             return comboBoxLeftVersion.SelectedItem != null ?
-               ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).Text : "";
+               ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).SHA : "";
          }
          else
          {
             return comboBoxRightVersion.SelectedItem != null ?
-               ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).Text : "";
+               ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).SHA : "";
          }
       }
 
@@ -447,7 +440,7 @@ namespace mrHelper
       {
          string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
 
-         if (/*_timeTrackingTimer.Enabled && */_difftool != null && !_difftool.HasExited)
+         if (_timeTrackingTimer.Enabled && _difftool != null && !_difftool.HasExited)
          {
             string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
             if (diffArgs.Length < 2)
@@ -456,16 +449,16 @@ namespace mrHelper
             }
 
             string headSHA = diffArgs[diffArgs.Length - 1];
-            string startSHA = diffArgs[diffArgs.Length - 2];
+            string baseSHA = diffArgs[diffArgs.Length - 2];
 
             ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
             MergeRequest mergeRequest = getMergeRequest();
 
             MergeRequestDetails details;
             details.AccessToken = textBoxAccessToken.Text;
-            details.BaseSHA = mergeRequest.BaseSHA;    // Base commit SHA in the source branch
+            details.BaseSHA = baseSHA;                 // Base commit SHA in the source branch
             details.HeadSHA = headSHA;                 // SHA referencing HEAD of this merge request
-            details.StartSHA = startSHA;               // SHA referencing commit in target branch
+            details.StartSHA = mergeRequest.StartSHA;  // SHA referencing commit in target branch
             details.Host = parsed.Host;
             details.Id = parsed.Id;
             details.Project = parsed.Project;
@@ -481,8 +474,12 @@ namespace mrHelper
          }
       }
 
-     private void onApplicationStarted()
+      private void onApplicationStarted()
       {
+         _timeTrackingTimer = new Timer();
+         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
@@ -541,15 +538,14 @@ namespace mrHelper
          foreach (var version in getVersions())
          {
             VersionComboBoxItem item =
-               new VersionComboBoxItem(version.HeadSHA.Substring(0, 10), version.CreatedAt);
+               new VersionComboBoxItem(version.HeadSHA, version.HeadSHA.Substring(0, 10), version.CreatedAt);
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
 
          // 7. Add target branch to the right combo-box
-         string remoteRepositoryDefaultName = "origin/";
-         VersionComboBoxItem targetBranch = new VersionComboBoxItem(
-            remoteRepositoryDefaultName + mergeRequest.TargetBranch, null);
+         VersionComboBoxItem targetBranch =
+            new VersionComboBoxItem(mergeRequest.BaseSHA, mergeRequest.TargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
          comboBoxLeftVersion.SelectedIndex = 0;
@@ -715,11 +711,13 @@ namespace mrHelper
 
    struct VersionComboBoxItem
    {
+      public string SHA;
       public string Text;
       public DateTime? TimeStamp;
 
-      public VersionComboBoxItem(string text, DateTime? timeStamp)
+      public VersionComboBoxItem(string sha, string text, DateTime? timeStamp)
       {
+         SHA = sha;
          Text = text;
          TimeStamp = timeStamp;
       }
