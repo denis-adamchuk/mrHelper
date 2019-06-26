@@ -98,7 +98,10 @@ namespace mrHelper
                "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+
+         Close();
       }
+
       private void ButtonCancel_Click(object sender, EventArgs e)
       {
          Close();
