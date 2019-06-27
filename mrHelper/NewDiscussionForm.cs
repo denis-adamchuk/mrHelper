@@ -49,19 +49,23 @@ namespace mrHelper
       public int highlightedIndex;
    }
 
-   enum DiffToolLineState
+   // How a line number can be treated when analyzing 'git diff' output
+   enum GitDiffLineState
    {
-      Ambigiuos,
-      AddedOrModified,
-      Deleted,
-      Unaffected
+      Ambigiuos,        // eg Line #1 in @@ -1,2 +1,2 @@
+      AddedOrModified,  // eg Line #1 in @@ -1,0 +1,15 @@
+      Deleted,          // eg Line #1 in @@ -1,2 +3,3 @@
+      PointsAtZero,     // eg Line #1 in @@ -1,0 +5,10 @@
+      Unaffected        // eg Lines #1 and #100 in @@ -10,10 +50,2 @@
    }
 
-   enum FinalLineState
+   // What lines need to be included into Merge Request Discussion Position details
+   enum PositionState
    {
-      AddedOrModified,
-      Deleted,
-      Unaffected
+      OldLineOnly,
+      NewLineOnly,
+      Both,
+      BothSwapped
    }
 
    public partial class NewDiscussionForm : Form
@@ -74,9 +78,9 @@ namespace mrHelper
       {
          _mergeRequestDetails = mrDetails;
          _difftoolInfo = difftoolInfo;
-         _lineState = getCurrentLineState();
-
+         initializeLineState();
          InitializeComponent();
+
          onApplicationStarted();
       }
 
@@ -89,7 +93,7 @@ namespace mrHelper
          showDiscussionContext(textBoxContext1, context);
          showDiscussionContextDetails(textBoxFileName1, textBoxLineNumber1, _difftoolInfo.CurrentFileNameBrief, linenumber);
 
-         if (_lineState == DiffToolLineState.Ambigiuos)
+         if (_lineState == GitDiffLineState.Ambigiuos)
          {
             int linenumber2 = int.Parse(_difftoolInfo.NextLineNumber);
             var context2 = getDiscussionContext(_difftoolInfo.NextFileName, linenumber2 - 1);
@@ -130,8 +134,24 @@ namespace mrHelper
             return;
          }
 
-         bool needPosition = checkBoxIncludeContext.Checked;
-         DiscussionParameters parameters = getDiscussionParameters(getFinalLineState(), needPosition);
+         DiscussionParameters parameters = new DiscussionParameters();
+         parameters.Body = formatDiscussionBody(textBoxDiscussionBody.Text, !checkBoxIncludeContext.Checked);
+         if (checkBoxIncludeContext.Checked)
+         {
+            try
+            {
+               parameters.Position = createPositionDetails(getPositionState(radioContext1.Checked));
+            }
+            catch (Exception ex)
+            {
+               Debug.Assert(false);
+
+               // Fallback case 
+               parameters.Body = formatDiscussionBody(textBoxDiscussionBody.Text, true);
+
+               MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+         }
 
          try
          {
@@ -141,6 +161,8 @@ namespace mrHelper
          }
          catch (System.Net.WebException ex)
          {
+            Debug.Assert(false);
+
             MessageBox.Show(ex.Message +
                "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -152,71 +174,6 @@ namespace mrHelper
       private void ButtonCancel_Click(object sender, EventArgs e)
       {
          Close();
-      }
-
-      private DiscussionParameters getDiscussionParameters(FinalLineState state, bool needPosition)
-      {
-         DiscussionParameters parameters = new DiscussionParameters();
-         parameters.Body = getDiscussionBody(!needPosition);
-         parameters.Position = createPositionDetails(state);
-         return parameters;
-      }
-
-      private string getDiscussionBody(bool addHeader)
-      {
-         string header = addHeader ? (getDiscussionHeader() + "<br>") : "";
-         string body = textBoxDiscussionBody.Text.Replace("\r\n", "<br>").Replace("\n", "<br>");
-         return header + body;
-      }
-
-      private DiscussionParameters.PositionDetails createPositionDetails(FinalLineState state)
-      {
-         DiscussionParameters.PositionDetails details = new DiscussionParameters.PositionDetails();
-         details.BaseSHA = _mergeRequestDetails.BaseSHA;
-         details.HeadSHA = _mergeRequestDetails.HeadSHA;
-         details.StartSHA = _mergeRequestDetails.StartSHA;
-
-         switch (state)
-         {
-            case FinalLineState.AddedOrModified:
-               details.OldPath = _difftoolInfo.NextFileName;
-               details.OldLine = null;
-               details.NewPath = _difftoolInfo.CurrentFileNameBrief;
-               details.NewLine = _difftoolInfo.CurrentLineNumber;
-               break;
-
-            case FinalLineState.Deleted:
-               details.OldPath = _difftoolInfo.CurrentFileNameBrief;
-               details.OldLine = _difftoolInfo.CurrentLineNumber;
-               details.NewPath = _difftoolInfo.NextFileName;
-               details.NewLine = null;
-               break;
-
-            case FinalLineState.Unaffected:
-               details.OldPath = _difftoolInfo.NextFileName;
-               details.OldLine = _difftoolInfo.NextLineNumber;
-               details.NewPath = _difftoolInfo.CurrentFileNameBrief;
-               details.NewLine = _difftoolInfo.CurrentLineNumber;
-               break;
-         }
-
-         return details;
-      }
-
-      private string getDiscussionHeader()
-      {
-         return "<b>" + _difftoolInfo.CurrentFileNameBrief + "</b>"
-              + " (line " + _difftoolInfo.CurrentLineNumber + ") <i>vs</i> "
-              + "<b>" + _difftoolInfo.NextFileNameBrief + "</b>"
-              + " (line " + _difftoolInfo.NextLineNumber + ")";
-      }
-
-      static private DiscussionContext getDiscussionContext(string filename, int zeroBasedLinenumber)
-      {
-         DiscussionContext context;
-         context.lines = File.ReadLines(filename).Skip(zeroBasedLinenumber).Take(contextLineCount);
-         context.highlightedIndex = 0;
-         return context;
       }
 
       static private void showDiscussionContext(RichTextBox textbox, DiscussionContext context)
@@ -235,13 +192,154 @@ namespace mrHelper
          {
             textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
          }
-     }
+      }
 
       private void showDiscussionContextDetails(TextBox tbFilename, TextBox tbLineNumber,
          string filename, int linenumber)
       {
          tbFilename.Text = filename;
          tbLineNumber.Text = linenumber.ToString();
+      }
+
+      // TODO All below move to a separate class(-es)
+
+      private string getDiscussionHeader()
+      {
+         return "<b>" + _difftoolInfo.CurrentFileNameBrief + "</b>"
+              + " (line " + _difftoolInfo.CurrentLineNumber + ") <i>vs</i> "
+              + "<b>" + _difftoolInfo.NextFileNameBrief + "</b>"
+              + " (line " + _difftoolInfo.NextLineNumber + ")";
+      }
+
+      static private DiscussionContext getDiscussionContext(string filename, int zeroBasedLinenumber)
+      {
+         DiscussionContext context;
+         context.lines = File.ReadLines(filename).Skip(zeroBasedLinenumber).Take(contextLineCount);
+         context.highlightedIndex = 0;
+         return context;
+      }
+
+      private string formatDiscussionBody(string userDefinedBody, bool addHeader)
+      {
+         string header = addHeader ? (getDiscussionHeader() + "<br>") : "";
+         string body = userDefinedBody.Replace("\r\n", "<br>").Replace("\n", "<br>");
+         return header + body;
+      }
+
+      private void initializeLineState()
+      {
+         var lineState = matchLineToGitDiff(_difftoolInfo.CurrentFileNameBrief, int.Parse(_difftoolInfo.CurrentLineNumber));
+         if (lineState == GitDiffLineState.PointsAtZero)
+         {
+            lineState = matchLineToGitDiff(_difftoolInfo.NextFileNameBrief, int.Parse(_difftoolInfo.NextLineNumber));
+            if (lineState == GitDiffLineState.PointsAtZero)
+            {
+               // TODO Test this case, is it ever possible?
+               Debug.Assert(false);
+            }
+            else
+            {
+               // TODO Is it correct fallback?
+               Debug.Assert(lineState != GitDiffLineState.Unaffected);
+
+               // let's swap 'current' and 'next' and lineState will be ok for it
+               swapSidesInDiffToolInfo();
+            }
+         }
+         _lineState = lineState;
+      }
+
+      private void swapSidesInDiffToolInfo()
+      {
+         var tempString = _difftoolInfo.CurrentFileName;
+         _difftoolInfo.CurrentFileName = _difftoolInfo.NextFileName;
+         _difftoolInfo.NextFileName = tempString;
+
+         tempString = _difftoolInfo.CurrentFileNameBrief;
+         _difftoolInfo.CurrentFileNameBrief = _difftoolInfo.NextFileNameBrief;
+         _difftoolInfo.NextFileNameBrief = tempString;
+
+         tempString = _difftoolInfo.CurrentLineNumber;
+         _difftoolInfo.CurrentLineNumber = _difftoolInfo.NextLineNumber;
+         _difftoolInfo.NextLineNumber = tempString;
+      }
+
+      private DiscussionParameters.PositionDetails createPositionDetails(PositionState state)
+      {
+         DiscussionParameters.PositionDetails details = new DiscussionParameters.PositionDetails();
+         details.BaseSHA = _mergeRequestDetails.BaseSHA;
+         details.HeadSHA = _mergeRequestDetails.HeadSHA;
+         details.StartSHA = _mergeRequestDetails.StartSHA;
+
+         switch (state)
+         {
+            case PositionState.NewLineOnly:
+               details.OldPath = _difftoolInfo.NextFileNameBrief;
+               details.OldLine = null;
+               details.NewPath = _difftoolInfo.CurrentFileNameBrief;
+               details.NewLine = _difftoolInfo.CurrentLineNumber;
+               break;
+
+            case PositionState.OldLineOnly:
+               details.OldPath = _difftoolInfo.CurrentFileNameBrief;
+               details.OldLine = _difftoolInfo.CurrentLineNumber;
+               details.NewPath = _difftoolInfo.NextFileNameBrief;
+               details.NewLine = null;
+               break;
+
+            case PositionState.Both:
+               details.OldPath = _difftoolInfo.CurrentFileNameBrief;
+               details.OldLine = _difftoolInfo.CurrentLineNumber;
+               details.NewPath = _difftoolInfo.NextFileNameBrief;
+               details.NewLine = _difftoolInfo.NextLineNumber;
+               break;
+
+            case PositionState.BothSwapped:
+               details.OldPath = _difftoolInfo.NextFileNameBrief;
+               details.OldLine = _difftoolInfo.NextLineNumber;
+               details.NewPath = _difftoolInfo.CurrentFileNameBrief;
+               details.NewLine = _difftoolInfo.CurrentLineNumber;
+               break;
+         }
+
+         return details;
+      }
+
+      PositionState getPositionState(bool resolveAmbigiutyToOld)
+      {
+         switch (_lineState)
+         {
+            case GitDiffLineState.Ambigiuos:
+               return resolveAmbigiutyToOld ? PositionState.OldLineOnly : PositionState.NewLineOnly;
+            case GitDiffLineState.AddedOrModified:
+               return PositionState.NewLineOnly;
+            case GitDiffLineState.Deleted:
+               return PositionState.OldLineOnly;
+            case GitDiffLineState.Unaffected:
+               {
+                  // When a line is not changed, we need to pass two line numbers to gitlab,
+                  // but first we need to understand which one of them points to old/new file
+
+                  if (matchDiffToolInfoToFile(_difftoolInfo))
+                  {
+                     return PositionState.Both;
+                  }
+
+                  var difftoolInfo = _difftoolInfo;
+                  var tempString = difftoolInfo.CurrentLineNumber;
+                  difftoolInfo.CurrentLineNumber = _difftoolInfo.NextLineNumber;
+                  difftoolInfo.NextLineNumber = tempString;
+
+                  if (matchDiffToolInfoToFile(difftoolInfo))
+                  {
+                     return PositionState.BothSwapped;
+                  }
+
+                  throw new ApplicationException("Cannot match line numbers to files");
+               }
+         }
+         Debug.Assert(false);
+         return PositionState.Both;
       }
 
       private List<GitDiffSection> getDiffSections(string filename)
@@ -277,32 +375,14 @@ namespace mrHelper
          return sections;
       }
 
-      FinalLineState getFinalLineState()
+      private GitDiffLineState matchLineToGitDiff(string filename, int linenumber)
       {
-         switch (_lineState)
-         {
-            case DiffToolLineState.Ambigiuos:
-               return radioContext1.Checked ? FinalLineState.Deleted : FinalLineState.AddedOrModified;
-            case DiffToolLineState.AddedOrModified:
-               return FinalLineState.AddedOrModified;
-            case DiffToolLineState.Deleted:
-               return FinalLineState.Deleted;
-            case DiffToolLineState.Unaffected:
-               return FinalLineState.Unaffected;
-         }
-         return FinalLineState.Unaffected;
-      }
-
-      private DiffToolLineState getCurrentLineState()
-      {
-         string filename = _difftoolInfo.CurrentFileNameBrief;
-         int currentLineNumber = int.Parse(_difftoolInfo.CurrentLineNumber);
          var sections = getDiffSections(filename);
 
          bool addedOrModified = false;
          foreach (var section in sections)
          {
-            if (currentLineNumber >= section.RightSectionStart && currentLineNumber < section.RightSectionEnd)
+            if (linenumber >= section.RightSectionStart && linenumber < section.RightSectionEnd)
             {
                addedOrModified = true;
                break;
@@ -312,7 +392,7 @@ namespace mrHelper
          bool deleted = false;
          foreach (var section in sections)
          {
-            if (currentLineNumber >= section.LeftSectionStart && currentLineNumber < section.LeftSectionEnd)
+            if (linenumber >= section.LeftSectionStart && linenumber < section.LeftSectionEnd)
             {
                deleted = true;
                break;
@@ -321,22 +401,45 @@ namespace mrHelper
 
          if (addedOrModified && deleted)
          {
-            return DiffToolLineState.Ambigiuos;
+            return GitDiffLineState.Ambigiuos;
          }
          else if (addedOrModified)
          {
-            return DiffToolLineState.AddedOrModified;
+            return GitDiffLineState.AddedOrModified;
          }
          else if (deleted)
          {
-            return DiffToolLineState.Deleted;
+            return GitDiffLineState.Deleted;
          }
 
-         return DiffToolLineState.Unaffected;
+         bool pointsAtZero = false;
+         foreach (var section in sections)
+         {
+            if ((linenumber == section.RightSectionStart && linenumber == section.RightSectionEnd)
+             || (linenumber == section.LeftSectionStart  && linenumber == section.LeftSectionEnd))
+            {
+               pointsAtZero = true;
+               break;
+            }
+         }
+
+         if (pointsAtZero)
+         {
+            return GitDiffLineState.PointsAtZero;
+         }
+
+         return GitDiffLineState.Unaffected;
       }
- 
+
+      private bool matchDiffToolInfoToFile(DiffToolInfo info)
+      {
+         string current = File.ReadLines(info.CurrentFileName).Skip(int.Parse(info.CurrentLineNumber)).Take(1).First();
+         string next = File.ReadLines(info.NextFileName).Skip(int.Parse(info.NextLineNumber)).Take(1).First();
+         return current == next;
+      }
+
       private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly DiffToolInfo _difftoolInfo;
-      private readonly DiffToolLineState _lineState;
+      private DiffToolInfo _difftoolInfo;
+      private GitDiffLineState _lineState;
    }
 }
