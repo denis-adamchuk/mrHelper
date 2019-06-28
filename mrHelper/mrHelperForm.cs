@@ -145,18 +145,6 @@ namespace mrHelper
          }
       }
 
-      private void RestoreToolStripMenuItem_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            onRestoreWindow();
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
       private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
       {
          try
@@ -207,12 +195,7 @@ namespace mrHelper
          formatMergeRequestListItem(e);
       }
 
-      private void ComboBoxLeftVersion_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatVersionComboboxItem(e);
-      }
-
-      private void ComboBoxRightVersion_Format(object sender, ListControlConvertEventArgs e)
+      private void ComboBoxVersion_Format(object sender, ListControlConvertEventArgs e)
       {
          formatVersionComboboxItem(e);
       }
@@ -440,7 +423,7 @@ namespace mrHelper
       {
          string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
 
-         if (_timeTrackingTimer.Enabled && _difftool != null && !_difftool.HasExited)
+         if (/*_timeTrackingTimer.Enabled &&*/ _difftool != null && !_difftool.HasExited)
          {
             string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
             if (diffArgs.Length < 2)

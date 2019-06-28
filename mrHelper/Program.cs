@@ -13,8 +13,6 @@ namespace mrHelper
 {
    static class Program
    {
-      static Regex trimmedFilenameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
-
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
@@ -34,13 +32,8 @@ namespace mrHelper
             else if (arguments[1] == "diff" && arguments.Length == 6)
             {
                // Launch from diff tool
-               DiffToolInfo diffToolInfo;
-               diffToolInfo.CurrentFileName = arguments[2];   // %F1
-               diffToolInfo.CurrentFileNameBrief = convertToGitlabFilename(diffToolInfo.CurrentFileName);
-               diffToolInfo.CurrentLineNumber = arguments[3]; // %l1
-               diffToolInfo.NextFileName = arguments[4];      // %F2
-               diffToolInfo.NextFileNameBrief = convertToGitlabFilename(diffToolInfo.NextFileName);
-               diffToolInfo.NextLineNumber = arguments[5];    // %l2
+               DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
+               DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
                var connectedMergeRequestDetails = getMergeRequestDetails();
                if (!connectedMergeRequestDetails.HasValue)
@@ -84,22 +77,6 @@ namespace mrHelper
          details.HeadSHA = json["HeadSHA"];
          details.TempFolder = json["TempFolder"];
          return details;
-      }
-
-      static private string convertToGitlabFilename(string fullFilename)
-      {
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-         string trimmedFilename = fullFilename
-            .Substring(tempFolder.Length, fullFilename.Length - tempFolder.Length)
-            .Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-         Match m = trimmedFilenameRe.Match(trimmedFilename);
-         if (!m.Success || m.Groups.Count < 3 || !m.Groups[2].Success)
-         {
-            throw new ApplicationException("Cannot parse a path obtained from difftool");
-         }
-
-         return m.Groups[2].Value;
       }
    }
 }

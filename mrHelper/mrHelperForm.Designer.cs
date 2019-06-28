@@ -13,6 +13,11 @@
       /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
       protected override void Dispose(bool disposing)
       {
+         if (_difftool != null)
+         {
+            _difftool.Dispose();
+         }
+
          if (disposing && (components != null))
          {
             components.Dispose();
@@ -446,7 +451,7 @@
          this.comboBoxRightVersion.Size = new System.Drawing.Size(223, 21);
          this.comboBoxRightVersion.TabIndex = 3;
          this.comboBoxRightVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightVersion_SelectedIndexChanged);
-         this.comboBoxRightVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxRightVersion_Format);
+         this.comboBoxRightVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
          // 
          // labeLeft
          // 
@@ -466,7 +471,7 @@
          this.comboBoxLeftVersion.Size = new System.Drawing.Size(223, 21);
          this.comboBoxLeftVersion.TabIndex = 2;
          this.comboBoxLeftVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftVersion_SelectedIndexChanged);
-         this.comboBoxLeftVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxLeftVersion_Format);
+         this.comboBoxLeftVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
          // 
          // toolTip
          // 
@@ -509,7 +514,7 @@
          this.restoreToolStripMenuItem.Name = "restoreToolStripMenuItem";
          this.restoreToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
          this.restoreToolStripMenuItem.Text = "Restore";
-         this.restoreToolStripMenuItem.Click += new System.EventHandler(this.RestoreToolStripMenuItem_Click);
+         this.restoreToolStripMenuItem.Click += new System.EventHandler(this.NotifyIcon_DoubleClick);
          // 
          // exitToolStripMenuItem
          // 

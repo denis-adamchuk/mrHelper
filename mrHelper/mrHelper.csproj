@@ -50,6 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration.cs" />
+    <Compile Include="DiffArgumentsParser.cs" />
+    <Compile Include="DiscussionBuilder.cs" />
     <Compile Include="gitClient.cs" />
     <Compile Include="gitlabClient.cs" />
     <Compile Include="gitlabStructs.cs" />
