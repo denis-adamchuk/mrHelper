@@ -30,10 +30,12 @@ namespace mrHelper
       private struct DiscussionContext
       {
          public IEnumerable<string> lines;
+         public string filename;
+         public string linenumber;
          public int highlightedIndex;
       }
 
-      static int contextLineCount = 4;
+      static int contextLinesToShow = 4;
  
       public NewDiscussionForm(MergeRequestDetails mrDetails, DiffToolInfo difftoolInfo)
       {
@@ -48,17 +50,16 @@ namespace mrHelper
       {
          this.ActiveControl = textBoxDiscussionBody;
 
-         string currentFileNameFull =
-            diffToolInfo.IsLeftSideCurrent ? diffToolInfo.LeftSideFileNameFull : diffToolInfo.RightSideFileNameFull;
-         string currentFileName =
-            diffToolInfo.IsLeftSideCurrent ? diffToolInfo.LeftSideFileNameBrief : diffToolInfo.RightSideFileNameBrief;
-         int currentLineNumber =
-            diffToolInfo.IsLeftSideCurrent ? diffToolInfo.LeftSideLineNumber : diffToolInfo.RightSideLineNumber;
-
-         // convert one-based line number to a zero-based number
-         var context = loadDiscussionContext(currentFileNameFull, currentLineNumber - 1);
+         var positionState = _discussionBuilder.GetPositionState();
+         var context = loadDiscussionContext(diffToolInfo, positionState);
          showDiscussionContext(textBoxContext, context);
-         showDiscussionContextDetails(textBoxFileName, textBoxLineNumber, currentFileName, currentLineNumber);
+         showDiscussionContextDetails(textBoxFileName, textBoxLineNumber, context);
+
+         if (positionState == DiscussionBuilder.PositionState.Undefined)
+         {
+            checkBoxIncludeContext.Checked = false;
+            checkBoxIncludeContext.Enabled = false;
+         }
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
@@ -69,8 +70,6 @@ namespace mrHelper
                MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             return;
          }
-
-         bool includeDiffToolContext = checkBoxIncludeContext.Checked;
 
          try
          {
@@ -127,17 +126,40 @@ namespace mrHelper
          }
       }
 
-      private void showDiscussionContextDetails(TextBox tbFilename, TextBox tbLineNumber,
-         string filename, int linenumber)
+      private void showDiscussionContextDetails(TextBox tbFilename, TextBox tbLineNumber, DiscussionContext context)
       {
-         tbFilename.Text = filename;
-         tbLineNumber.Text = linenumber.ToString();
+         tbFilename.Text = context.filename;
+         tbLineNumber.Text = context.linenumber.ToString();
       }
 
-      static private DiscussionContext loadDiscussionContext(string filename, int zeroBasedLinenumber)
+      static private DiscussionContext loadDiscussionContext(DiffToolInfo diffToolInfo, DiscussionBuilder.PositionState positionState)
       {
-         DiscussionContext context;
-         context.lines = File.ReadLines(filename).Skip(zeroBasedLinenumber).Take(contextLineCount);
+         DiscussionContext context = new DiscussionContext();
+         switch (positionState)
+         {
+            case DiscussionBuilder.PositionState.OldLineOnly:
+               context.lines = File.ReadLines(diffToolInfo.LeftSideFileNameFull).
+                  Skip(diffToolInfo.LeftSideLineNumber - 1).Take(contextLinesToShow);
+               context.filename = diffToolInfo.LeftSideFileNameBrief;
+               context.linenumber = diffToolInfo.LeftSideLineNumber.ToString();
+               break;
+
+            case DiscussionBuilder.PositionState.NewLineOnly:
+            case DiscussionBuilder.PositionState.Both:
+               context.lines = File.ReadLines(diffToolInfo.RightSideFileNameFull).
+                  Skip(diffToolInfo.RightSideLineNumber - 1).Take(contextLinesToShow);
+               context.filename = diffToolInfo.RightSideFileNameBrief;
+               context.linenumber = diffToolInfo.RightSideLineNumber.ToString();
+               break;
+
+            case DiscussionBuilder.PositionState.Undefined:
+               List<string> strings = new List<string>();
+               strings.Add("N/A");
+               context.lines = strings;
+               context.filename = "N/A";
+               context.linenumber = "N/A";
+               break;
+         }
          context.highlightedIndex = 0;
          return context;
       }
