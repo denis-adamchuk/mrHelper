@@ -36,6 +36,7 @@ namespace mrHelper
       // }
 
       public const string InterprocessSnapshotFilename = "details.json";
+      public const string GitDiffToolName = "mrhelperdiff";
 
       public mrHelperForm()
       {
@@ -110,7 +111,7 @@ namespace mrHelper
          {
             string repository = initializeGitRepository();
             Directory.SetCurrentDirectory(repository);
-            _difftool = gitClient.DiffTool(getGitTag(true /* left */), getGitTag(false /* right */));
+            _difftool = gitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
             updateDetailsSnapshot();
          }
          catch (Exception ex)
@@ -232,6 +233,12 @@ namespace mrHelper
          }
       }
  
+      private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         var url = linkLabelConnectedTo.Text;
+         Process.Start(url);
+      }
+
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
       {
          if (comboBoxLeftVersion.SelectedItem == null || comboBoxRightVersion.SelectedItem == null)
@@ -423,7 +430,7 @@ namespace mrHelper
       {
          string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
 
-         if (/*_timeTrackingTimer.Enabled &&*/ _difftool != null && !_difftool.HasExited)
+         if (_timeTrackingTimer.Enabled && _difftool != null && !_difftool.HasExited)
          {
             string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
             if (diffArgs.Length < 2)
@@ -463,8 +470,8 @@ namespace mrHelper
          _timeTrackingTimer.Interval = timeTrackingTimerInterval;
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
-         buttonToggleTimer.Text = buttonStartTimerDefaultText;
          labelSpentTime.Text = labelSpentTimeDefaultText;
+         buttonToggleTimer.Text = buttonStartTimerDefaultText;
 
          bool configured = _settings.Host.Length > 0
                         && _settings.AccessToken.Length > 0
@@ -477,6 +484,10 @@ namespace mrHelper
          {
             tabPageSettings.Select();
          }
+
+         DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
+         integration.RegisterInGit(GitDiffToolName);
+         integration.RegisterInTool();
       }
 
       private void onLoadedListOfMergeRequests(List<MergeRequest> mergeRequests)

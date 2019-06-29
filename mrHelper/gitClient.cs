@@ -16,9 +16,14 @@ namespace mrHelper
          Process.Start("git", "fetch");
       }
 
-      static public Process DiffTool(string leftCommit, string rightCommit)
+      static public Process DiffTool(string name, string leftCommit, string rightCommit)
       {
-         return Process.Start("git", "difftool --dir-diff --tool=beyondcompare3dd " + leftCommit + " " + rightCommit);
+         return Process.Start("git", "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit);
+      }
+
+      static public void SetDiffTool(string name, string command)
+      {
+         Process.Start("git", "config --global difftool." + name + "" + ".cmd " + command);
       }
 
       static public List<string> Diff(string leftCommit, string rightCommit, string filename)

@@ -67,8 +67,6 @@ namespace mrHelper
       private string formatDiscussionBody(string userDefinedBody, bool addHeader)
       {
          string header = addHeader ? (getDiscussionHeader() + "<br>") : "";
-         // TODO This should not affect code snippets (fragments with ```)
-         //string body = userDefinedBody.Replace("\r\n", "<br>").Replace("\n", "<br>"); 
          string body = userDefinedBody;
          return header + body;
       }

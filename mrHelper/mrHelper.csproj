@@ -49,12 +49,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BC3Tool.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="DiffArgumentsParser.cs" />
+    <Compile Include="DiffToolIntegration.cs" />
     <Compile Include="DiscussionBuilder.cs" />
     <Compile Include="gitClient.cs" />
     <Compile Include="gitlabClient.cs" />
     <Compile Include="gitlabStructs.cs" />
+    <Compile Include="IntegratedDiffTool.cs" />
     <Compile Include="mrHelperForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -71,28 +71,26 @@ namespace mrHelper
             return;
          }
 
+         gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          try
          {
-            gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
             client.CreateNewMergeRequestDiscussion(
                _mergeRequestDetails.Project, _mergeRequestDetails.Id,
                _discussionBuilder.GetDiscussionParameters(textBoxDiscussionBody.Text, checkBoxIncludeContext.Checked));
          }
          catch (System.Net.WebException ex)
          {
+            Debug.Assert(false);
             if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
-               // TODO Implement a fallback here (need to send a discussion body only)
-               Debug.Assert(false);
+               // Fallback (need to send a discussion body only)
+               client.CreateNewMergeRequestDiscussion(
+                  _mergeRequestDetails.Project, _mergeRequestDetails.Id,
+                  _discussionBuilder.GetDiscussionParameters(textBoxDiscussionBody.Text, false));
             }
             else if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.InternalServerError)
             { 
                // TODO Implement a fallback here (need to revert a commited discussion) 
-               Debug.Assert(false);
-            }
-            else
-            {
-               Debug.Assert(false);
             }
 
             MessageBox.Show(ex.Message +

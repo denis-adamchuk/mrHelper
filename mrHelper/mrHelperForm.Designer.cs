@@ -430,6 +430,7 @@
          this.buttonDifftool.Size = new System.Drawing.Size(83, 27);
          this.buttonDifftool.TabIndex = 4;
          this.buttonDifftool.Text = "Diff Tool";
+         this.toolTip.SetToolTip(this.buttonDifftool, "Press Alt-K to create a new discussion");
          this.buttonDifftool.UseVisualStyleBackColor = true;
          this.buttonDifftool.Click += new System.EventHandler(this.ButtonDifftool_Click);
          // 
@@ -595,6 +596,7 @@
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "url-here";
          this.linkLabelConnectedTo.Visible = false;
+         this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
          // 
          // labelCurrentStatus
          // 

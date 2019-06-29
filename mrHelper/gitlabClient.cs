@@ -47,10 +47,11 @@ namespace mrHelper
 
    class gitlabClient
    {
+      private string protocol = "https://";
+
       public gitlabClient(string host, string token, ApiVersion version = ApiVersion.v4)
       {
-         // TODO Should not add it manually
-         _host = "https://" + host;
+         _host = protocol + host;
          _token = token;
          _version = version;
 
@@ -129,23 +130,14 @@ namespace mrHelper
 
       public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
       {
-         // TODO Add handling of responses
          string url = makeUrlForAddSpentTime(project, id, span);
          post(url);
       }
 
-      public bool CreateNewMergeRequestDiscussion(string project, int id, DiscussionParameters parameters)
+      public void CreateNewMergeRequestDiscussion(string project, int id, DiscussionParameters parameters)
       {
          string url = makeUrlForNewDiscussion(project, id, parameters);
-         string response = post(url);
-
-         dynamic json = deserializeJson(response);
-         if (json.ContainsKey("message"))
-         {
-            // TODO Anything else?
-            return false;
-         }
-         return true;
+         post(url);
       }
 
       private static MergeRequest readMergeRequest(dynamic json)
