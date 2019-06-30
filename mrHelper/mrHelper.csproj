@@ -56,7 +56,10 @@
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </Compile>
     <Compile Include="BC3Tool.cs" />
+    <Compile Include="CommandItf.cs" />
+    <Compile Include="CommandCallbackItf.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="CustomCommandLoader.cs" />
     <Compile Include="DetailedSnapshotSerializer.cs" />
     <Compile Include="DiffArgumentsParser.cs" />
     <Compile Include="DiffToolIntegration.cs" />
@@ -80,6 +83,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="mrUrlParser.cs" />
+    <Compile Include="SendCommentCommand.cs" />
     <EmbeddedResource Include="AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </EmbeddedResource>

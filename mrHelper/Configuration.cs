@@ -31,6 +31,9 @@ namespace mrHelper
       private static string LastSelectedHostKeyName = "LastSelectedHost";
       private static string LastSelectedHostDefaultValue = "";
 
+      private static string ShowPublicOnlyKeyName = "ShowPublicOnly";
+      private static string ShowPublicOnlyDefaultValue = "true";
+
       public UserDefinedSettings()
       {
          _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -89,6 +92,12 @@ namespace mrHelper
       {
          get { return getValue(LastSelectedHostKeyName, LastSelectedHostDefaultValue); }
          set { setValue(LastSelectedHostKeyName, value); }
+      }
+
+      public string ShowPublicOnly
+      {
+         get { return getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue); }
+         set { setValue(ShowPublicOnlyKeyName, value); }
       }
 
       private string getValue(string key, string defaultValue)

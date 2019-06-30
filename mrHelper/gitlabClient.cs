@@ -63,9 +63,9 @@ namespace mrHelper
          _client.Headers["Private-Token"] = _token;
       }
 
-      public List<Project> GetAllProjects()
+      public List<Project> GetAllProjects(bool publicOnly)
       {
-         string url = makeUrlForAllProjects();
+         string url = makeUrlForAllProjects(publicOnly);
          string response = get(url);
 
          dynamic s = deserializeJson(response);
@@ -79,7 +79,6 @@ namespace mrHelper
          }
          return projects;
       }
-
 
       public MergeRequest GetSingleMergeRequest(string project, int id)
       {
@@ -107,7 +106,7 @@ namespace mrHelper
 
       public List<MergeRequest> GetAllProjectMergeRequests(string project)
       {
-         string url = makeUrlForAllProjectMergeRequests(project);
+         string url = makeUrlForAllProjectMergeRequests(project, StateFilter.Open, WorkInProgressFilter.Yes);
          string response = get(url);
 
          dynamic json = deserializeJson(response);
@@ -220,11 +219,14 @@ namespace mrHelper
          return commonUrlPart;
       }
 
-      private string makeUrlForAllProjects()
+      private string makeUrlForAllProjects(bool publicOnly)
       {
          return makeCommonUrl()
             + "/projects"
-            + query("?with_merge_requests_enabled", "true");
+            + query("?with_merge_requests_enabled", "true")
+            + query("&per_page", "100")
+            + query("&simple", "true")
+            + (publicOnly ? query("&visibility", "public") : "");
       }
         
       private string makeUrlForSingleProject(string project, int id)
@@ -237,11 +239,15 @@ namespace mrHelper
          return makeUrlForSingleProject(project, id) + "/merge_requests/" + id.ToString();
       }
 
-      private string makeUrlForAllProjectMergeRequests(string project)
+      private string makeUrlForAllProjectMergeRequests(string project, StateFilter state, WorkInProgressFilter wip)
       {
          return makeCommonUrl()
             + "/projects/" + WebUtility.UrlEncode(project)
-            + "/merge_requests";
+            + "/merge_requests"
+            + query("?per_page", "100")
+            + query("&order_by", "updated_at")
+            + query("&wip", workInProgressToString(wip))
+            + query("&state", stateFilterToString(state)); 
       }
 
       private string makeUrlForAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)
@@ -251,7 +257,8 @@ namespace mrHelper
             + query("&wip", workInProgressToString(wip))
             + query("&state", stateFilterToString(state))
             + query("&labels", labels)
-            + query("&author", author);
+            + query("&author", author)
+            + query("&per_page", "100");
       }
 
       private string makeUrlForMergeRequestCommits(string project, int id)

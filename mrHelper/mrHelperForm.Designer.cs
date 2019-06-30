@@ -51,8 +51,6 @@
          this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-         this.linkLabel2 = new System.Windows.Forms.LinkLabel();
          this.buttonDiffTool = new System.Windows.Forms.Button();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -62,6 +60,7 @@
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
@@ -199,7 +198,6 @@
          this.checkBoxLabels.TabIndex = 14;
          this.checkBoxLabels.Text = "Labels";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
-         this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.CheckBoxLabels_CheckedChanged);
          // 
          // linkLabelConnectedTo
          // 
@@ -258,28 +256,6 @@
          this.toolTip.InitialDelay = 10;
          this.toolTip.ReshowDelay = 10;
          // 
-         // linkLabel1
-         // 
-         this.linkLabel1.AutoSize = true;
-         this.linkLabel1.Location = new System.Drawing.Point(429, 56);
-         this.linkLabel1.Name = "linkLabel1";
-         this.linkLabel1.Size = new System.Drawing.Size(82, 13);
-         this.linkLabel1.TabIndex = 23;
-         this.linkLabel1.TabStop = true;
-         this.linkLabel1.Text = "See Description";
-         this.toolTip.SetToolTip(this.linkLabel1, "Not implemented yet");
-         // 
-         // linkLabel2
-         // 
-         this.linkLabel2.AutoSize = true;
-         this.linkLabel2.Location = new System.Drawing.Point(171, 56);
-         this.linkLabel2.Name = "linkLabel2";
-         this.linkLabel2.Size = new System.Drawing.Size(82, 13);
-         this.linkLabel2.TabIndex = 22;
-         this.linkLabel2.TabStop = true;
-         this.linkLabel2.Text = "See Description";
-         this.toolTip.SetToolTip(this.linkLabel2, "Not implemented yet");
-         // 
          // buttonDiffTool
          // 
          this.buttonDiffTool.Enabled = false;
@@ -334,7 +310,7 @@
          this.tabControl.Location = new System.Drawing.Point(9, 12);
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
-         this.tabControl.Size = new System.Drawing.Size(533, 567);
+         this.tabControl.Size = new System.Drawing.Size(533, 554);
          this.tabControl.TabIndex = 11;
          // 
          // tabPageSettings
@@ -352,13 +328,25 @@
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxShowPublicOnly);
          this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(513, 56);
+         this.groupBoxOther.Size = new System.Drawing.Size(513, 70);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // checkBoxShowPublicOnly
+         // 
+         this.checkBoxShowPublicOnly.AutoSize = true;
+         this.checkBoxShowPublicOnly.Location = new System.Drawing.Point(6, 42);
+         this.checkBoxShowPublicOnly.Name = "checkBoxShowPublicOnly";
+         this.checkBoxShowPublicOnly.Size = new System.Drawing.Size(206, 17);
+         this.checkBoxShowPublicOnly.TabIndex = 1;
+         this.checkBoxShowPublicOnly.Text = "Show projects with public visibility only";
+         this.checkBoxShowPublicOnly.UseVisualStyleBackColor = true;
+         this.checkBoxShowPublicOnly.CheckedChanged += new System.EventHandler(this.CheckBoxShowPublicOnly_CheckedChanged);
          // 
          // checkBoxRequireTimer
          // 
@@ -369,7 +357,6 @@
          this.checkBoxRequireTimer.TabIndex = 0;
          this.checkBoxRequireTimer.Text = "Require started timer for creating new discussions";
          this.checkBoxRequireTimer.UseVisualStyleBackColor = true;
-         this.checkBoxRequireTimer.CheckedChanged += new System.EventHandler(this.CheckBoxRequireTimer_CheckedChanged);
          // 
          // groupBoxGit
          // 
@@ -396,7 +383,7 @@
          this.tabPageMR.Location = new System.Drawing.Point(4, 22);
          this.tabPageMR.Name = "tabPageMR";
          this.tabPageMR.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageMR.Size = new System.Drawing.Size(525, 541);
+         this.tabPageMR.Size = new System.Drawing.Size(525, 528);
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
@@ -418,14 +405,15 @@
          this.comboBoxProjects.Location = new System.Drawing.Point(6, 15);
          this.comboBoxProjects.Name = "comboBoxProjects";
          this.comboBoxProjects.Size = new System.Drawing.Size(272, 21);
+         this.comboBoxProjects.Sorted = true;
          this.comboBoxProjects.TabIndex = 33;
          this.comboBoxProjects.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProjects_SelectedIndexChanged);
          // 
          // groupBoxActions
          // 
-         this.groupBoxActions.Location = new System.Drawing.Point(6, 473);
+         this.groupBoxActions.Location = new System.Drawing.Point(6, 460);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(516, 62);
+         this.groupBoxActions.Size = new System.Drawing.Size(516, 55);
          this.groupBoxActions.TabIndex = 22;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
@@ -433,7 +421,7 @@
          // groupBoxDiffTool
          // 
          this.groupBoxDiffTool.Controls.Add(this.buttonDiffTool);
-         this.groupBoxDiffTool.Location = new System.Drawing.Point(275, 412);
+         this.groupBoxDiffTool.Location = new System.Drawing.Point(276, 399);
          this.groupBoxDiffTool.Name = "groupBoxDiffTool";
          this.groupBoxDiffTool.Size = new System.Drawing.Size(247, 55);
          this.groupBoxDiffTool.TabIndex = 21;
@@ -445,7 +433,7 @@
          this.groupBoxTimeTracking.Controls.Add(this.labelSpentTime);
          this.groupBoxTimeTracking.Controls.Add(this.buttonToggleTimer);
          this.groupBoxTimeTracking.Controls.Add(this.labelSpentTimeLabel);
-         this.groupBoxTimeTracking.Location = new System.Drawing.Point(6, 412);
+         this.groupBoxTimeTracking.Location = new System.Drawing.Point(6, 399);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
          this.groupBoxTimeTracking.Size = new System.Drawing.Size(253, 55);
          this.groupBoxTimeTracking.TabIndex = 18;
@@ -531,15 +519,13 @@
          // 
          // groupBoxDiff
          // 
-         this.groupBoxDiff.Controls.Add(this.linkLabel1);
-         this.groupBoxDiff.Controls.Add(this.linkLabel2);
          this.groupBoxDiff.Controls.Add(this.comboBoxRightVersion);
          this.groupBoxDiff.Controls.Add(this.comboBoxLeftVersion);
          this.groupBoxDiff.Controls.Add(this.label3);
          this.groupBoxDiff.Controls.Add(this.label4);
          this.groupBoxDiff.Location = new System.Drawing.Point(6, 326);
          this.groupBoxDiff.Name = "groupBoxDiff";
-         this.groupBoxDiff.Size = new System.Drawing.Size(516, 80);
+         this.groupBoxDiff.Size = new System.Drawing.Size(516, 67);
          this.groupBoxDiff.TabIndex = 16;
          this.groupBoxDiff.TabStop = false;
          this.groupBoxDiff.Text = "Select Versions";
@@ -588,7 +574,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(548, 591);
+         this.ClientSize = new System.Drawing.Size(548, 575);
          this.Controls.Add(this.tabControl);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MaximizeBox = false;
@@ -648,8 +634,6 @@
       private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.Label labelSpentTime;
       private System.Windows.Forms.Label labelSpentTimeLabel;
-      private System.Windows.Forms.LinkLabel linkLabel1;
-      private System.Windows.Forms.LinkLabel linkLabel2;
       private System.Windows.Forms.Button buttonToggleTimer;
       private System.Windows.Forms.ComboBox comboBoxLeftVersion;
       private System.Windows.Forms.ComboBox comboBoxRightVersion;
@@ -671,6 +655,7 @@
       private System.Windows.Forms.Button buttonApplyLabels;
       private System.Windows.Forms.GroupBox groupBoxSelectProject;
       private System.Windows.Forms.ComboBox comboBoxProjects;
+      private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;
    }
 }
 

@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace mrHelper
 {
-   public partial class mrHelperForm : Form
+   public partial class mrHelperForm : Form, ICommandCallback
    {
       static private string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
       static System.Threading.Mutex timeTrackingMutex =
@@ -32,13 +32,32 @@ namespace mrHelper
       public mrHelperForm()
       {
          InitializeComponent();
+         CustomCommandLoader loader = new CustomCommandLoader(this);
+         List<ICommand> commands = loader.LoadCommands("CustomActions.xml");
+         int id = 0;
+         System.Drawing.Point location = new System.Drawing.Point();
+         location.X = groupBoxActions.Location.X + 10;
+         location.Y = groupBoxActions.Location.Y + 10;
+         System.Drawing.Size typicalSize = new System.Drawing.Size(83, 27);
+         foreach (var command in commands)
+         {
+            string name = command.GetName();
+            var button = new System.Windows.Forms.Button();
+            button.Name = "customAction" + id;
+            button.Location = location;
+            button.Size = typicalSize;
+            button.Text = name;
+            button.UseVisualStyleBackColor = true;
+            button.Click += new System.EventHandler(command.Run);
+            location.X += typicalSize.Width + 10;
+            id++;
+         }
       }
 
       private void MrHelperForm_Load(object sender, EventArgs e)
       {
          try
          {
-            loadConfiguration();
             onApplicationStarted();
          }
          catch (Exception ex)
@@ -244,7 +263,11 @@ namespace mrHelper
             AddKnownHostForm form = new AddKnownHostForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
-               onAddKnownHost(form.Host, form.AccessToken);
+               if (!onAddKnownHost(form.Host, form.AccessToken))
+               {
+                  MessageBox.Show("Such host is already in the list", "Host will not be added",
+                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               }
             }
          }
          catch (Exception ex)
@@ -265,14 +288,16 @@ namespace mrHelper
          }
       }
 
-      private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
       {
-         saveConfiguration();
-      }
-
-      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
-      {
-         saveConfiguration();
+         try
+         {
+            updateProjectsDropdownList(getAllProjects());
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
@@ -329,7 +354,7 @@ namespace mrHelper
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
-         return client.GetAllProjects();
+         return client.GetAllProjects(checkBoxShowPublicOnly.Checked);
       }
 
       private List<MergeRequest> getAllProjectMergeRequests(string project)
@@ -494,12 +519,36 @@ namespace mrHelper
 
       private void loadConfiguration()
       {
-         _settings = new UserDefinedSettings();
-         onConfigurationLoaded();
+         _loadingConfiguration = true;
+
+         Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
+         // Remove all items except header
+         for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
+         {
+            listViewKnownHosts.Items.RemoveAt(iListViewItem);
+         }
+         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         {
+            string host = _settings.KnownHosts[iKnownHost];
+            string accessToken = _settings.KnownAccessTokens[iKnownHost];
+            addKnownHost(host, accessToken);
+         }
+         textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
+         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking == "true";
+         checkBoxLabels.Checked = _settings.CheckedLabelsFilter == "true";
+         textBoxLabels.Text = _settings.LastUsedLabels;
+         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly == "true";
+
+         _loadingConfiguration = false;
       }
 
       private void saveConfiguration()
       {
+         if (_loadingConfiguration)
+         {
+            return;
+         }
+
          List<string> hosts = new List<string>();
          List<string> accessTokens = new List<string>();
          foreach (ListViewItem hostListViewItem in listViewKnownHosts.Items)
@@ -514,6 +563,8 @@ namespace mrHelper
          _settings.CheckedLabelsFilter = checkBoxLabels.Checked ? "true" : "false";
          _settings.LastUsedLabels = textBoxLabels.Text;
          _settings.LastSelectedHost = comboBoxHost.Text;
+         _settings.LastSelectedProject = comboBoxProjects.Text;
+         _settings.ShowPublicOnly = checkBoxShowPublicOnly.Checked ? "true" : "false";
          _settings.Update();
       }
 
@@ -562,6 +613,9 @@ namespace mrHelper
 
       private void onApplicationStarted()
       {
+         _settings = new UserDefinedSettings();
+         loadConfiguration();
+         
          _timeTrackingTimer = new Timer();
          _timeTrackingTimer.Interval = timeTrackingTimerInterval;
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
@@ -618,19 +672,20 @@ namespace mrHelper
 
       private void updateProjectsDropdownList(List<Project> projects)
       {
-         int? lastSelectedProjectIndex = new Nullable<int>();
+         // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
+         string lastSelectedProjectName = null;
          comboBoxProjects.Items.Clear();
          foreach (var project in projects)
          {
             comboBoxProjects.Items.Add(project.NameWithNamespace);
             if (project.NameWithNamespace == _settings.LastSelectedProject)
             {
-               lastSelectedProjectIndex = comboBoxProjects.Items.Count - 1;
+               lastSelectedProjectName = project.NameWithNamespace;
             }
          }
-         if (lastSelectedProjectIndex.HasValue)
+         if (lastSelectedProjectName != null)
          {
-            comboBoxProjects.SelectedIndex = lastSelectedProjectIndex.Value;
+            comboBoxProjects.SelectedItem = lastSelectedProjectName;
          }
          else if (comboBoxProjects.Items.Count > 0)
          {
@@ -801,26 +856,6 @@ namespace mrHelper
          labelSpentTime.Text = span.ToString(@"hh\:mm\:ss");
       }
 
-      private void onConfigurationLoaded()
-      {
-         Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
-         // Remove all items except header
-         for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
-         {
-            listViewKnownHosts.Items.RemoveAt(iListViewItem);
-         }
-         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
-         {
-            string host = _settings.KnownHosts[iKnownHost];
-            string accessToken = _settings.KnownAccessTokens[iKnownHost];
-            addKnownHost(host, accessToken);
-         }
-         textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
-         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking == "true";
-         checkBoxLabels.Checked = _settings.CheckedLabelsFilter == "true";
-         textBoxLabels.Text = _settings.LastUsedLabels;
-      }
-
       private void onExitingByUser()
       {
          _exiting = true;
@@ -843,21 +878,33 @@ namespace mrHelper
       private void onGitFolderSelected()
       {
          textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
-         saveConfiguration();
       }
 
-      private void addKnownHost(string host, string accessToken)
+      private bool addKnownHost(string host, string accessToken)
       {
+         foreach (ListViewItem listItem in listViewKnownHosts.Items)
+         {
+            if (listItem.Text == host)
+            {
+               return false;
+            }
+         }
+
          var item = new ListViewItem(host);
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
+         return true;
       }
 
-      private void onAddKnownHost(string host, string accessToken)
+      private bool onAddKnownHost(string host, string accessToken)
       {
-         addKnownHost(host, accessToken);
+         if (!addKnownHost(host, accessToken))
+         {
+            return false;
+         }
+
          updateHostsDropdownList();
-         saveConfiguration();
+         return true;
       }
 
       private void onRemoveKnownHost()
@@ -867,13 +914,49 @@ namespace mrHelper
             listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
          }
          updateHostsDropdownList();
-         saveConfiguration();
+      }
+
+      public string GetCurrentHostName()
+      {
+         if (comboBoxHost.SelectedItem != null)
+         {
+            return ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
+         }
+         return null;
+      }
+
+      public string GetCurrentAccessToken()
+      {
+         if (comboBoxHost.SelectedItem != null)
+         {
+            return ((HostComboBoxItem)(comboBoxHost.SelectedItem)).AccessToken;
+         }
+         return null;
+      }
+
+      public string GetCurrentProjectName()
+      {
+         if (comboBoxProjects.SelectedItem != null)
+         {
+            return comboBoxProjects.SelectedItem.ToString();
+         }
+         return null;
+      }
+
+      public int GetCurrentMergeRequestId()
+      {
+         if (comboBoxFilteredMergeRequests.SelectedItem != null)
+         {
+            return ((MergeRequest)(comboBoxFilteredMergeRequests.SelectedItem)).Id;
+         }
+         return 0;
       }
 
       private DateTime _lastStartTimeStamp;
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
+      private bool _loadingConfiguration = false;
 
       UserDefinedSettings _settings;
 
