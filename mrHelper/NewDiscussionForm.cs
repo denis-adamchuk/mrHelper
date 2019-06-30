@@ -13,18 +13,6 @@ using System.Windows.Forms;
 
 namespace mrHelper
 {
-   public struct MergeRequestDetails
-   {
-      public int Id;
-      public string Host;
-      public string AccessToken;
-      public string Project;
-      public string BaseSHA;
-      public string StartSHA;
-      public string HeadSHA;
-      public string TempFolder;
-   }
-
    public partial class NewDiscussionForm : Form
    {
       private struct DiscussionContext

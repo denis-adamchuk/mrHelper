@@ -8,12 +8,14 @@ namespace mrHelper
       static public void CloneRepo(string host, string project, string localDir)
       {
          // TODO Use shallow clone
-         Process.Start("git", "clone " + "https://" + host + "/" + project + " " + localDir);
+         var process = Process.Start("git", "clone " + "https://" + host + "/" + project + " " + localDir);
+         process.WaitForExit();
       }
 
       static public void Fetch()
       {
-         Process.Start("git", "fetch");
+         var process = Process.Start("git", "fetch");
+         process.WaitForExit();
       }
 
       static public Process DiffTool(string name, string leftCommit, string rightCommit)

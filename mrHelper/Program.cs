@@ -1,13 +1,5 @@
-﻿using System.Threading;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
-using System.Web.Script.Serialization;
+﻿using System;
 using System.Windows.Forms;
-using System.Diagnostics;
-using System.IO;
 
 namespace mrHelper
 {
@@ -35,10 +27,11 @@ namespace mrHelper
                DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
                DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
-               var connectedMergeRequestDetails = getMergeRequestDetails();
+               DetailedSnapshotSerializer serializer = new DetailedSnapshotSerializer();
+               var connectedMergeRequestDetails = serializer.DeserializeFromDisk();
                if (!connectedMergeRequestDetails.HasValue)
                {
-                  throw new ArgumentException("To create a discussion you need to start tracking time");
+                  throw new ArgumentException("To create a discussion you need to start tracking time and have a running diff tool");
                }
                Application.Run(new NewDiscussionForm(connectedMergeRequestDetails.Value, diffToolInfo));
             }
@@ -51,32 +44,6 @@ namespace mrHelper
          {
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-      }
-
-      static MergeRequestDetails? getMergeRequestDetails()
-      {
-         string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
-         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, mrHelperForm.InterprocessSnapshotFilename);
-         if (!System.IO.File.Exists(fullSnapshotName))
-         {
-            return null;
-         }
-
-         string jsonStr = System.IO.File.ReadAllText(fullSnapshotName);
-
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-         dynamic json = serializer.DeserializeObject(jsonStr);
-
-         MergeRequestDetails details;
-         details.Host = json["Host"];
-         details.AccessToken = json["AccessToken"];
-         details.Project = json["Project"];
-         details.Id = json["Id"];
-         details.BaseSHA = json["BaseSHA"];
-         details.StartSHA = json["StartSHA"];
-         details.HeadSHA = json["HeadSHA"];
-         details.TempFolder = json["TempFolder"];
-         return details;
       }
    }
 }

@@ -63,6 +63,24 @@ namespace mrHelper
          _client.Headers["Private-Token"] = _token;
       }
 
+      public List<Project> GetAllProjects()
+      {
+         string url = makeUrlForAllProjects();
+         string response = get(url);
+
+         dynamic s = deserializeJson(response);
+         List<Project> projects = new List<Project>();
+         foreach (dynamic item in (s as Array))
+         {
+            Project project = new Project();
+            project.Id = item["id"];
+            project.NameWithNamespace = item["path_with_namespace"];
+            projects.Add(project);
+         }
+         return projects;
+      }
+
+
       public MergeRequest GetSingleMergeRequest(string project, int id)
       {
          string url = makeUrlForSingleMergeRequest(project, id);
@@ -76,6 +94,20 @@ namespace mrHelper
          WorkInProgressFilter wip)
       {
          string url = makeUrlForAllMergeRequests(state, labels, author, wip);
+         string response = get(url);
+
+         dynamic json = deserializeJson(response);
+         List<MergeRequest> mergeRequests = new List<MergeRequest>();
+         foreach (dynamic item in (json as Array))
+         {
+            mergeRequests.Add(readMergeRequest(item));
+         }
+         return mergeRequests;
+      }
+
+      public List<MergeRequest> GetAllProjectMergeRequests(string project)
+      {
+         string url = makeUrlForAllProjectMergeRequests(project);
          string response = get(url);
 
          dynamic json = deserializeJson(response);
@@ -113,20 +145,19 @@ namespace mrHelper
          string response = get(url);
 
          dynamic json = deserializeJson(response);
-         List<Version> commits = new List<Version>();
+         List<Version> versions = new List<Version>();
          foreach (dynamic item in (json as Array))
          {
-            Version version;
+            Version version = new Version();
             version.Id = item["id"];
             version.HeadSHA = item["head_commit_sha"];
             version.BaseSHA = item["base_commit_sha"];
             version.StartSHA = item["start_commit_sha"];
             version.CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime;
-            commits.Add(version);
+            versions.Add(version);
          }
-         return commits;
+         return versions;
       }
-
 
       public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
       {
@@ -143,7 +174,7 @@ namespace mrHelper
       private static MergeRequest readMergeRequest(dynamic json)
       {
          MergeRequest mr = new MergeRequest();
-         mr.Id = json["id"];
+         mr.Id = json["iid"];
          mr.Title = json["title"];
          mr.Description = json["description"];
          mr.SourceBranch = json["source_branch"];
@@ -189,6 +220,13 @@ namespace mrHelper
          return commonUrlPart;
       }
 
+      private string makeUrlForAllProjects()
+      {
+         return makeCommonUrl()
+            + "/projects"
+            + query("?with_merge_requests_enabled", "true");
+      }
+        
       private string makeUrlForSingleProject(string project, int id)
       {
          return makeCommonUrl() + "/projects" + "/" + WebUtility.UrlEncode(project);
@@ -197,6 +235,13 @@ namespace mrHelper
       private string makeUrlForSingleMergeRequest(string project, int id)
       {
          return makeUrlForSingleProject(project, id) + "/merge_requests/" + id.ToString();
+      }
+
+      private string makeUrlForAllProjectMergeRequests(string project)
+      {
+         return makeCommonUrl()
+            + "/projects/" + WebUtility.UrlEncode(project)
+            + "/merge_requests";
       }
 
       private string makeUrlForAllMergeRequests(StateFilter state, string labels, string author, WorkInProgressFilter wip)

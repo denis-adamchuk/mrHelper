@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace mrHelper
@@ -20,22 +19,14 @@ namespace mrHelper
       static private string labelSpentTimeDefaultText = "00:00:00";
       static private int timeTrackingTimerInterval = 1000; // ms
 
-      static private string buttonConnectText = "Connect";
-      static private string buttonDisconnectText = "Disconnect";
-      static private string statusConnectedText = "Connected to:";
-      static private string statusNotConnectedText = "Not connected";
-
       static private string errorMessageBoxText = "Error";
       static private string warningMessageBoxText = "Warning";
       static private string informationMessageBoxText = "Information";
 
       static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
-      static private string errorUnsupportedState = "Unsupported State value";
-      static private string errorUnsupportedWip = "Unsupported WIP value";
       static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
       // }
 
-      public const string InterprocessSnapshotFilename = "details.json";
       public const string GitDiffToolName = "mrhelperdiff";
 
       public mrHelperForm()
@@ -85,43 +76,15 @@ namespace mrHelper
          }
       }
 
-      private void ButtonConnect_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            if (isConnected())
-            {
-               onDisconnected();
-               return;
-            }
-
-            onConnected();
-         }
-         catch (Exception ex)
-         {
-            onDisconnected();
-            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
       private void ButtonDifftool_Click(object sender, EventArgs e)
       {
-         string currentDirectory = Directory.GetCurrentDirectory();
          try
          {
-            string repository = initializeGitRepository();
-            Directory.SetCurrentDirectory(repository);
-            _difftool = gitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
-            updateDetailsSnapshot();
+            onLaunchDiffTool();
          }
          catch (Exception ex)
          {
-            _difftool = null;
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         finally
-         {
-            Directory.SetCurrentDirectory(currentDirectory);
          }
       }
 
@@ -165,7 +128,7 @@ namespace mrHelper
             localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
             if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
             {
-               onSelectedGitFolder();
+               onGitFolderSelected();
             }
          }
          catch (Exception ex)
@@ -174,31 +137,52 @@ namespace mrHelper
          }
       }
 
-      private void ButtonSearchByLabel_Click(object sender, EventArgs e)
+      private void ComboBoxHost_SelectedIndexChanged(object sender, EventArgs e)
       {
          try
          {
-            labelSearchStatus.Visible = true;
-            labelSearchStatus.Text = "Search in progress";
-            List<MergeRequest> mergeRequests = getAllMergeRequests();
-            labelSearchStatus.Text = "Found " + mergeRequests.Count.ToString() + " result(s)";
-            onLoadedListOfMergeRequests(mergeRequests);
+            updateProjectsDropdownList(getAllProjects());
          }
          catch (Exception ex)
          {
-            labelSearchStatus.Visible = false;
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
-      private void ComboBoxFilteredMergeRequests_Format(object sender, ListControlConvertEventArgs e)
+      private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
       {
-         formatMergeRequestListItem(e);
+         try
+         {
+            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
-      private void ComboBoxVersion_Format(object sender, ListControlConvertEventArgs e)
+      private void ComboBoxFilteredMergeRequests_SelectedIndexChanged(object sender, EventArgs e)
       {
-         formatVersionComboboxItem(e);
+         try
+         {
+            onMergeRequestSelected();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void ButtonApplyLabels_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private void ComboBoxLeftVersion_SelectedIndexChanged(object sender, EventArgs e)
@@ -225,18 +209,70 @@ namespace mrHelper
          }
       }
 
-      private void TextBoxMrURL_TextChanged(object sender, EventArgs e)
+      private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
       {
-         if (!radioButtonSelectMR_URL.Checked)
-         {
-            radioButtonSelectMR_URL.Checked = true;
-         }
+         formatHostListItem(e);
       }
- 
+
+      private void ComboBoxFilteredMergeRequests_Format(object sender, ListControlConvertEventArgs e)
+      {
+         formatMergeRequestListItem(e);
+      }
+
+      private void ComboBoxVersion_Format(object sender, ListControlConvertEventArgs e)
+      {
+         formatVersionComboboxItem(e);
+      }
+
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         var url = linkLabelConnectedTo.Text;
-         Process.Start(url);
+         try
+         {
+            // this should open a browser
+            Process.Start(linkLabelConnectedTo.Text);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void ButtonAddKnownHost_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            AddKnownHostForm form = new AddKnownHostForm();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               onAddKnownHost(form.Host, form.AccessToken);
+            }
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            onRemoveKnownHost();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
+      {
+         saveConfiguration();
+      }
+
+      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      {
+         saveConfiguration();
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
@@ -246,7 +282,7 @@ namespace mrHelper
             return;
          }
 
-         // Left combobox cannot select a version older than in right combobox (gitlab web ui)
+         // Left combobox cannot select a version older than in right combobox (replicating gitlab web ui behavior)
          VersionComboBoxItem leftItem = (VersionComboBoxItem)(comboBoxLeftVersion.SelectedItem);
          VersionComboBoxItem rightItem = (VersionComboBoxItem)(comboBoxRightVersion.SelectedItem);
          if (!leftItem.TimeStamp.HasValue)
@@ -275,67 +311,111 @@ namespace mrHelper
          }
       }
 
-      private string getSelectedMergeRequestUrl()
+      private MergeRequest? getSelectedMergeRequest()
       {
-         if (radioButtonSelectMR_Filter.Checked)
+         if (comboBoxFilteredMergeRequests.SelectedItem == null)
          {
-            if (comboBoxFilteredMergeRequests.SelectedItem == null)
-            {
-               throw new ApplicationException("Merge request is not selected");
-            }
-            return ((MergeRequest)comboBoxFilteredMergeRequests.SelectedItem).WebUrl;
+            return new Nullable<MergeRequest>();
          }
-         return textBoxMrURL.Text;
+         return ((MergeRequest)comboBoxFilteredMergeRequests.SelectedItem);
       }
 
-      private ParsedMergeRequestUrl parseAndValidateUrl(string url)
+      private List<Project> getAllProjects()
       {
-         MergeRequestUrlParser parser = new MergeRequestUrlParser(url);
-         return parser.Parse();
+         if (comboBoxHost.SelectedItem == null)
+         {
+            return new List<Project>();
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         return client.GetAllProjects();
       }
 
-      private List<MergeRequest> getAllMergeRequests()
+      private List<MergeRequest> getAllProjectMergeRequests(string project)
       {
-         StateFilter state;
-         if (!Enum.TryParse(getCheckedRadioButton(groupBoxState).Text, out state))
+         if (comboBoxHost.SelectedItem == null)
          {
-            throw new NotImplementedException(errorUnsupportedState);
+            return new List<MergeRequest>();
          }
 
-         WorkInProgressFilter wip;
-         if (!Enum.TryParse(getCheckedRadioButton(groupBoxWIP).Text, out wip))
-         {
-            throw new NotImplementedException(errorUnsupportedWip);
-         }
-
-         gitlabClient client = new gitlabClient(textBoxHost.Text, textBoxAccessToken.Text);
-         return client.GetAllMergeRequests(state, textBoxLabels.Text, textBoxAuthor.Text, wip);
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         return client.GetAllProjectMergeRequests(project);
       }
 
       private MergeRequest getMergeRequest()
       {
-         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
-         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
-         return client.GetSingleMergeRequest(parsed.Project, parsed.Id);
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         {
+            return new MergeRequest();
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         return client.GetSingleMergeRequest(comboBoxProjects.Text, mergeRequest.Value.Id);
       }
 
       private List<Version> getVersions()
       {
-         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
-         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
-         return client.GetMergeRequestVersions(parsed.Project, parsed.Id);
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         {
+            return new List<Version>();
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         return client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
       }
 
       void sendTrackedTimeSpan(TimeSpan span)
       {
-         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
-         gitlabClient client = new gitlabClient(parsed.Host, textBoxAccessToken.Text);
-         client.AddSpentTimeForMergeRequest(parsed.Project, parsed.Id, ref span);
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         {
+            return;
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         client.AddSpentTimeForMergeRequest(comboBoxProjects.Text, mergeRequest.Value.Id, ref span);
       }
 
-      string initializeGitRepository()
+      private void onLaunchDiffTool()
       {
-         string localGitFolder = textBoxLocalGitFolder.Text;
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         {
+            return;
+         }
+
+         string currentDirectory = Directory.GetCurrentDirectory();
+         try
+         {
+            string project = comboBoxProjects.Text;
+            string localGitFolder = textBoxLocalGitFolder.Text;
+            HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+            string repository = initializeGitRepository(localGitFolder, item.Host, project);
+
+            Directory.SetCurrentDirectory(repository);
+            _difftool = gitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
+         }
+         catch (Exception ex)
+         {
+            _difftool = null;
+            throw ex;
+         }
+         finally
+         {
+            Directory.SetCurrentDirectory(currentDirectory);
+         }
+
+         updateDetailsSnapshot();
+      }
+
+      string initializeGitRepository(string localGitFolder, string host, string projectWithNamespace)
+      {
          if (!Directory.Exists(localGitFolder))
          {
             if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
@@ -349,8 +429,7 @@ namespace mrHelper
             }
          }
 
-         ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
-         string project = parsed.Project.Split('/')[1];
+         string project = projectWithNamespace.Split('/')[1];
          string repository = localGitFolder + "/" + project;
          if (!Directory.Exists(repository))
          {
@@ -358,7 +437,7 @@ namespace mrHelper
                ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.Yes)
             {
-               gitClient.CloneRepo(parsed.Host, parsed.Project, repository);
+               gitClient.CloneRepo(host, projectWithNamespace, repository);
             }
             else
             {
@@ -407,6 +486,12 @@ namespace mrHelper
          }
       }
 
+      private static void formatHostListItem(ListControlConvertEventArgs e)
+      {
+         HostComboBoxItem item = (HostComboBoxItem)(e.ListItem);
+         e.Value = item.Host;
+      }
+
       private void loadConfiguration()
       {
          _settings = new UserDefinedSettings();
@@ -415,53 +500,64 @@ namespace mrHelper
 
       private void saveConfiguration()
       {
-         _settings.Host = textBoxHost.Text;
-         _settings.AccessToken = textBoxAccessToken.Text;
+         List<string> hosts = new List<string>();
+         List<string> accessTokens = new List<string>();
+         foreach (ListViewItem hostListViewItem in listViewKnownHosts.Items)
+         {
+            hosts.Add(hostListViewItem.Text);
+            accessTokens.Add(hostListViewItem.SubItems[1].Text);
+         }
+         _settings.KnownHosts = hosts;
+         _settings.KnownAccessTokens = accessTokens;
          _settings.LocalGitFolder = textBoxLocalGitFolder.Text;
+         _settings.RequireTimeTracking = checkBoxRequireTimer.Checked ? "true" : "false";
+         _settings.CheckedLabelsFilter = checkBoxLabels.Checked ? "true" : "false";
+         _settings.LastUsedLabels = textBoxLabels.Text;
+         _settings.LastSelectedHost = comboBoxHost.Text;
          _settings.Update();
-      }
-
-      private bool isConnected()
-      {
-         return buttonConnect.Text == buttonDisconnectText;
       }
 
       private void updateDetailsSnapshot()
       {
-         string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
+         // delete old snapshot first
+         DetailedSnapshotSerializer serializer = new DetailedSnapshotSerializer();
+         serializer.PurgeSerialized();
 
-         if (_timeTrackingTimer.Enabled && _difftool != null && !_difftool.HasExited)
+         bool diffToolIsRunning = _difftool != null && !_difftool.HasExited;
+         bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
+         if (!allowReportingIssues && !diffToolIsRunning)
          {
-            string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
-            if (diffArgs.Length < 2)
-            {
-               return;
-            }
-
-            string headSHA = diffArgs[diffArgs.Length - 1];
-            string baseSHA = diffArgs[diffArgs.Length - 2];
-
-            ParsedMergeRequestUrl parsed = parseAndValidateUrl(getSelectedMergeRequestUrl());
-            MergeRequest mergeRequest = getMergeRequest();
-
-            MergeRequestDetails details;
-            details.AccessToken = textBoxAccessToken.Text;
-            details.BaseSHA = baseSHA;                 // Base commit SHA in the source branch
-            details.HeadSHA = headSHA;                 // SHA referencing HEAD of this merge request
-            details.StartSHA = mergeRequest.StartSHA;  // SHA referencing commit in target branch
-            details.Host = parsed.Host;
-            details.Id = parsed.Id;
-            details.Project = parsed.Project;
-            details.TempFolder = textBoxLocalGitFolder.Text;
-
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            string json = serializer.Serialize(details);
-            System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFilename), json);
+            return;
          }
-         else
+
+         string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
+         if (diffArgs.Length < 2)
          {
-            System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFilename));
+            return;
          }
+         
+         string headSHA = diffArgs[diffArgs.Length - 1];
+         string baseSHA = diffArgs[diffArgs.Length - 2];
+
+         MergeRequest mergeRequest = getMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         {
+            return;
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+
+         MergeRequestDetails details;
+         details.AccessToken = item.AccessToken;
+         details.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
+         details.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
+         details.StartSHA = mergeRequest.StartSHA;  // SHA referencing commit in target branch
+         details.Host = item.Host;
+         details.Id = mergeRequest.Id;
+         details.Project = comboBoxProjects.Text;
+         details.TempFolder = textBoxLocalGitFolder.Text;
+         
+         serializer.SerializeToDisk(details);
       }
 
       private void onApplicationStarted()
@@ -473,9 +569,8 @@ namespace mrHelper
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
 
-         bool configured = _settings.Host.Length > 0
-                        && _settings.AccessToken.Length > 0
-                        && _settings.LocalGitFolder.Length > 0;
+         bool configured = listViewKnownHosts.Items.Count > 0
+                        && textBoxLocalGitFolder.Text.Length > 0;
          if (configured)
          {
             tabPageMR.Select();
@@ -488,47 +583,147 @@ namespace mrHelper
          DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
          integration.RegisterInGit(GitDiffToolName);
          integration.RegisterInTool();
+
+         updateHostsDropdownList();
       }
 
-      private void onLoadedListOfMergeRequests(List<MergeRequest> mergeRequests)
+      private void updateHostsDropdownList()
       {
+         int? lastSelectedHostIndex = new Nullable<int>();
+         comboBoxHost.Items.Clear();
+         foreach (ListViewItem item in listViewKnownHosts.Items)
+         {
+            HostComboBoxItem hostItem = new HostComboBoxItem();
+            hostItem.Host = item.Text;
+            hostItem.AccessToken = item.SubItems[1].Text;
+            comboBoxHost.Items.Add(hostItem);
+            if (hostItem.Host == _settings.LastSelectedHost)
+            {
+               lastSelectedHostIndex = comboBoxHost.Items.Count - 1;
+            }
+         }
+         if (lastSelectedHostIndex.HasValue)
+         {
+            comboBoxHost.SelectedIndex = lastSelectedHostIndex.Value;
+         }
+         else if (comboBoxHost.Items.Count > 0)
+         {
+            comboBoxHost.SelectedIndex = 0;
+         }
+         else
+         {
+            comboBoxHost.SelectedIndex = -1;
+         }
+      }
+
+      private void updateProjectsDropdownList(List<Project> projects)
+      {
+         int? lastSelectedProjectIndex = new Nullable<int>();
+         comboBoxProjects.Items.Clear();
+         foreach (var project in projects)
+         {
+            comboBoxProjects.Items.Add(project.NameWithNamespace);
+            if (project.NameWithNamespace == _settings.LastSelectedProject)
+            {
+               lastSelectedProjectIndex = comboBoxProjects.Items.Count - 1;
+            }
+         }
+         if (lastSelectedProjectIndex.HasValue)
+         {
+            comboBoxProjects.SelectedIndex = lastSelectedProjectIndex.Value;
+         }
+         else if (comboBoxProjects.Items.Count > 0)
+         {
+            comboBoxProjects.SelectedIndex = 0;
+         }
+         else
+         {
+            comboBoxProjects.SelectedIndex = -1;
+         }
+      }
+
+      private void updateMergeRequestsDropdownList(List<MergeRequest> mergeRequests)
+      {
+         List<string> labelsRequested = new List<string>();
+         if (checkBoxLabels.Checked && textBoxLabels.Text != null)
+         {
+            foreach (var item in textBoxLabels.Text.Split(' '))
+            {
+               labelsRequested.Add(item);
+            }
+         }
          comboBoxFilteredMergeRequests.Items.Clear();
          foreach (var mergeRequest in mergeRequests)
          {
-            comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
+            if (labelsRequested.Count > 0)
+            {
+               foreach (var label in labelsRequested)
+               {
+                  if (mergeRequest.Labels.Contains(label))
+                  {
+                     comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
+                  }
+               }
+            }
+            else
+            {
+               comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
+            }
          }
          if (comboBoxFilteredMergeRequests.Items.Count > 0)
          {
             comboBoxFilteredMergeRequests.SelectedIndex = 0;
          }
+         else
+         {
+            comboBoxFilteredMergeRequests.SelectedIndex = -1;
+            onMergeRequestSelected();
+         }
       }
 
-      private void onConnected()
+      private void onMergeRequestSelected()
       {
-         MergeRequest mergeRequest = getMergeRequest();
-
-         // 1. Disable all UI elements that belong to Select Merge Requests groupbox
-         foreach (Control item in groupBoxSelectMergeRequest.Controls)
+         if (_timeTrackingTimer != null && _timeTrackingTimer.Enabled)
          {
-            item.Enabled = false;
+            bool sendTrackedTime =
+               MessageBox.Show("Send tracked time?", "Selecting another merge request",
+                  MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+            onStopTimer(sendTrackedTime);
          }
 
-         // 2. Update status, add merge request url
-         labelCurrentStatus.Text = statusConnectedText;
+         if (comboBoxFilteredMergeRequests.SelectedIndex == -1)
+         {
+            // 1. Update status
+            linkLabelConnectedTo.Visible = false;
+
+            // 2. Clean-up textboxes with merge request details
+            textBoxMergeRequestName.Text = null;
+            richTextBoxMergeRequestDescription.Text = null;
+
+            // 3. Clean-up lists of versions
+            comboBoxRightVersion.Items.Clear();
+            comboBoxLeftVersion.Items.Clear();
+
+            // 4. Toggle state of buttons
+            buttonDiffTool.Enabled = false;
+            buttonToggleTimer.Enabled = false;
+            return;
+         }
+         
+         MergeRequest mergeRequest = getMergeRequest();
+
+         // 1. Update status, add merge request url
          linkLabelConnectedTo.Visible = true;
          linkLabelConnectedTo.Text = mergeRequest.WebUrl;
 
-         // 3. Update text at Connect button
-         buttonConnect.Text = buttonDisconnectText;
-
-         // 4. Switch to Diff tab
-         tabPageDiff.Select();
-
-         // 5. Populate edit boxes with merge request details
+         // 2. Populate edit boxes with merge request details
          textBoxMergeRequestName.Text = mergeRequest.Title;
          richTextBoxMergeRequestDescription.Text = mergeRequest.Description;
 
-         // 6. Add version information to combo boxes
+         // 3. Add version information to combo boxes
+         comboBoxLeftVersion.Items.Clear();
+         comboBoxRightVersion.Items.Clear();
+
          foreach (var version in getVersions())
          {
             VersionComboBoxItem item =
@@ -537,7 +732,7 @@ namespace mrHelper
             comboBoxRightVersion.Items.Add(item);
          }
 
-         // 7. Add target branch to the right combo-box
+         // Add target branch to the right combo-box
          VersionComboBoxItem targetBranch =
             new VersionComboBoxItem(mergeRequest.BaseSHA, mergeRequest.TargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
@@ -545,50 +740,9 @@ namespace mrHelper
          comboBoxLeftVersion.SelectedIndex = 0;
          comboBoxRightVersion.SelectedIndex = 0;
 
-         // 8. Toggle state of rest buttons
+         // 6. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
-         buttonDifftool.Enabled = true;
-
-         // 9. Good moment to update settings
-         saveConfiguration();
-      }
-
-      private void onDisconnected()
-      {
-         // 1. Stop timer
-         if (_timeTrackingTimer != null && _timeTrackingTimer.Enabled)
-         {
-            onStopTimer(false /* don't send time to server */);
-         }
-
-         // 2. Toggle state of buttons
-         buttonDifftool.Enabled = false;
-         buttonToggleTimer.Enabled = false;
-
-         // 3. Clean-up lists of versions
-         comboBoxRightVersion.Items.Clear();
-         comboBoxLeftVersion.Items.Clear();
-
-         // 4. Clean-up textboxes with merge request details
-         textBoxMergeRequestName.Text = null;
-         richTextBoxMergeRequestDescription.Text = null;
-
-         // 6. Switch to Merge Requests tab, just for consistency with onConnected()
-         tabPageMR.Select();
-
-         // 7. Change Connect button text
-         buttonConnect.Text = buttonConnectText;
-
-         // 8. Update status
-         labelCurrentStatus.Text = statusNotConnectedText;
-         linkLabelConnectedTo.Visible = false;
-         linkLabelConnectedTo.Text = null;
-
-         // 9. Enable all UI elements that belong to Select Merge Requests groupbox
-         foreach (Control item in groupBoxSelectMergeRequest.Controls)
-         {
-            item.Enabled = true;
-         }
+         buttonDiffTool.Enabled = true;
       }
 
       private void onStartTimer()
@@ -599,10 +753,10 @@ namespace mrHelper
             // Another instance is currently tracking time
             throw new ApplicationException("Another instance is tracking time");
          }
-         
+
          // 1. Update button text
          buttonToggleTimer.Text = buttonStartTimerTrackingText;
-         
+
          // 2. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
@@ -649,9 +803,22 @@ namespace mrHelper
 
       private void onConfigurationLoaded()
       {
-         textBoxHost.Text = _settings.Host;
-         textBoxAccessToken.Text = _settings.AccessToken;
+         Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
+         // Remove all items except header
+         for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
+         {
+            listViewKnownHosts.Items.RemoveAt(iListViewItem);
+         }
+         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         {
+            string host = _settings.KnownHosts[iKnownHost];
+            string accessToken = _settings.KnownAccessTokens[iKnownHost];
+            addKnownHost(host, accessToken);
+         }
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
+         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking == "true";
+         checkBoxLabels.Checked = _settings.CheckedLabelsFilter == "true";
+         textBoxLabels.Text = _settings.LastUsedLabels;
       }
 
       private void onExitingByUser()
@@ -673,23 +840,34 @@ namespace mrHelper
          Show();
       }
 
-      private void onSelectedGitFolder()
+      private void onGitFolderSelected()
       {
          textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
+         saveConfiguration();
       }
 
-      private RadioButton getCheckedRadioButton(Control container)
+      private void addKnownHost(string host, string accessToken)
       {
-         foreach (var control in container.Controls)
-         {
-            var radioButton = control as RadioButton;
-            if (radioButton != null && radioButton.Checked)
-            {
-               return radioButton;
-            }
-         }
+         var item = new ListViewItem(host);
+         item.SubItems.Add(accessToken);
+         listViewKnownHosts.Items.Add(item);
+      }
 
-         return null;
+      private void onAddKnownHost(string host, string accessToken)
+      {
+         addKnownHost(host, accessToken);
+         updateHostsDropdownList();
+         saveConfiguration();
+      }
+
+      private void onRemoveKnownHost()
+      {
+         if (listViewKnownHosts.SelectedItems.Count > 0)
+         {
+            listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
+         }
+         updateHostsDropdownList();
+         saveConfiguration();
       }
 
       private DateTime _lastStartTimeStamp;
@@ -701,19 +879,25 @@ namespace mrHelper
 
       // Last launched instance of a diff tool
       Process _difftool;
-   }
 
-   struct VersionComboBoxItem
-   {
-      public string SHA;
-      public string Text;
-      public DateTime? TimeStamp;
-
-      public VersionComboBoxItem(string sha, string text, DateTime? timeStamp)
+      struct HostComboBoxItem
       {
-         SHA = sha;
-         Text = text;
-         TimeStamp = timeStamp;
+         public string Host;
+         public string AccessToken;
+      }
+        
+      struct VersionComboBoxItem
+      {
+         public string SHA;
+         public string Text;
+         public DateTime? TimeStamp;
+
+         public VersionComboBoxItem(string sha, string text, DateTime? timeStamp)
+         {
+            SHA = sha;
+            Text = text;
+            TimeStamp = timeStamp;
+         }
       }
    }
 }

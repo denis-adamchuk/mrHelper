@@ -17,6 +17,12 @@ namespace mrHelper
       Merged
    }
 
+   struct Project
+   {
+      public int Id;
+      public string NameWithNamespace;
+   }
+
    struct MergeRequest
    {
       public int Id;
