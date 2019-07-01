@@ -20,7 +20,7 @@ namespace mrHelper
          return _name;
       }
 
-      public void Run(object sender, System.EventArgs e)
+      public void Run()
       {
          gitlabClient client = new gitlabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
          client.CreateNewMergeRequestNote(

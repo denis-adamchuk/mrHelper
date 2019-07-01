@@ -10,6 +10,6 @@ namespace mrHelper
    {
       string GetName();
 
-      void Run(object sender, System.EventArgs e);
+      void Run();
    }
 }

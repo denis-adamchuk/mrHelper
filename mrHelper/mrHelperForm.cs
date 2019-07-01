@@ -54,7 +54,18 @@ namespace mrHelper
             button.Size = typicalSize;
             button.Text = name;
             button.UseVisualStyleBackColor = true;
-            button.Click += new System.EventHandler(command.Run);
+            button.Enabled = false;
+            button.Click += (x, y) => 
+            {
+               try
+               {
+                  command.Run();
+               }
+               catch (Exception ex)
+               {
+                  MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
+            };
             groupBoxActions.Controls.Add(button);
             offSetFromGroupBoxTopLeft.X += typicalSize.Width + 10;
             id++;
@@ -741,6 +752,8 @@ namespace mrHelper
          else
          {
             comboBoxFilteredMergeRequests.SelectedIndex = -1;
+
+            // call it manually because an event is not called on -1
             onMergeRequestSelected();
          }
       }
@@ -771,6 +784,10 @@ namespace mrHelper
             // 4. Toggle state of buttons
             buttonDiffTool.Enabled = false;
             buttonToggleTimer.Enabled = false;
+            foreach (Control control in groupBoxActions.Controls)
+            {
+               control.Enabled = false;
+            }
             return;
          }
          
@@ -804,9 +821,13 @@ namespace mrHelper
          comboBoxLeftVersion.SelectedIndex = 0;
          comboBoxRightVersion.SelectedIndex = 0;
 
-         // 6. Toggle state of  buttons
+         // 5. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
          buttonDiffTool.Enabled = true;
+         foreach (Control control in groupBoxActions.Controls)
+         {
+            control.Enabled = true;
+         }
       }
 
       private void onStartTimer()
