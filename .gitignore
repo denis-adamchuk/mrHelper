@@ -2,3 +2,4 @@
 /mrHelper/bin
 /mrHelper/obj
 *.csproj.user
+/build.bat

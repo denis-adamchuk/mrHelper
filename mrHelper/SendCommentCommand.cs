@@ -22,12 +22,20 @@ namespace mrHelper
 
       public void Run(object sender, System.EventArgs e)
       {
-         gitlabClient client = new gitlabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
+         string host = _callback.GetCurrentHostName();
+         string accessToken = _callback.GetCurrentAccessToken();
+         string project = _callback.GetCurrentProjectName();
+         int mrId = _callback.GetCurrentMergeRequestId();
+         if (host == null || accessToken == null || project == null || mrId == 0)
+         {
+            return;
+         }
+
+         gitlabClient client = new gitlabClient(host, accessToken);
          DiscussionParameters parameters;
          parameters.Body = _comment;
          parameters.Position = null;
-         client.CreateNewMergeRequestDiscussion(
-            _callback.GetCurrentProjectName(), _callback.GetCurrentMergeRequestId(), parameters); 
+         client.CreateNewMergeRequestDiscussion(project, mrId, parameters); 
       }
 
       ICommandCallback _callback;

@@ -6,6 +6,7 @@ using System.Windows.Forms;
 
 namespace mrHelper
 {
+
    public partial class mrHelperForm : Form, ICommandCallback
    {
       static private string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
@@ -28,28 +29,34 @@ namespace mrHelper
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
+      private const string CustomActionsFilename = "CustomActions.xml";
 
       public mrHelperForm()
       {
          InitializeComponent();
+      }
+
+      private void addCustomActions()
+      {
          CustomCommandLoader loader = new CustomCommandLoader(this);
-         List<ICommand> commands = loader.LoadCommands("CustomActions.xml");
+         List<ICommand> commands = loader.LoadCommands(CustomActionsFilename);
          int id = 0;
-         System.Drawing.Point location = new System.Drawing.Point();
-         location.X = groupBoxActions.Location.X + 10;
-         location.Y = groupBoxActions.Location.Y + 10;
+         System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point();
+         offSetFromGroupBoxTopLeft.X = 10;
+         offSetFromGroupBoxTopLeft.Y = 17;
          System.Drawing.Size typicalSize = new System.Drawing.Size(83, 27);
          foreach (var command in commands)
          {
             string name = command.GetName();
             var button = new System.Windows.Forms.Button();
             button.Name = "customAction" + id;
-            button.Location = location;
+            button.Location = offSetFromGroupBoxTopLeft;
             button.Size = typicalSize;
             button.Text = name;
             button.UseVisualStyleBackColor = true;
             button.Click += new System.EventHandler(command.Run);
-            location.X += typicalSize.Width + 10;
+            groupBoxActions.Controls.Add(button);
+            offSetFromGroupBoxTopLeft.X += typicalSize.Width + 10;
             id++;
          }
       }
@@ -58,6 +65,7 @@ namespace mrHelper
       {
          try
          {
+            addCustomActions();
             onApplicationStarted();
          }
          catch (Exception ex)
@@ -702,9 +710,9 @@ namespace mrHelper
          List<string> labelsRequested = new List<string>();
          if (checkBoxLabels.Checked && textBoxLabels.Text != null)
          {
-            foreach (var item in textBoxLabels.Text.Split(' '))
+            foreach (var item in textBoxLabels.Text.Split(','))
             {
-               labelsRequested.Add(item);
+               labelsRequested.Add(item.Trim(' '));
             }
          }
          comboBoxFilteredMergeRequests.Items.Clear();
