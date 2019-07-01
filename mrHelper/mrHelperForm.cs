@@ -584,7 +584,7 @@ namespace mrHelper
 
          bool diffToolIsRunning = _difftool != null && !_difftool.HasExited;
          bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
-         if (!allowReportingIssues && !diffToolIsRunning)
+         if (!allowReportingIssues || !diffToolIsRunning)
          {
             return;
          }
