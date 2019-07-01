@@ -30,7 +30,7 @@ namespace mrHelper
 
       public const string GitDiffToolName = "mrhelperdiff";
       private const string CustomActionsFilename = "CustomActions.xml";
-
+      
       public mrHelperForm()
       {
          InitializeComponent();
@@ -630,6 +630,7 @@ namespace mrHelper
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
+         this.Text += " (" + Application.ProductVersion + ")";
 
          bool configured = listViewKnownHosts.Items.Count > 0
                         && textBoxLocalGitFolder.Text.Length > 0;

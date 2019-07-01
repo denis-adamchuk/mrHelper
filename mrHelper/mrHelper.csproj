@@ -83,7 +83,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="mrUrlParser.cs" />
-    <Compile Include="SendCommentCommand.cs" />
+    <Compile Include="SendNoteCommand.cs" />
     <EmbeddedResource Include="AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </EmbeddedResource>

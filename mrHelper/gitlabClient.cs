@@ -170,6 +170,12 @@ namespace mrHelper
          post(url);
       }
 
+      public void CreateNewMergeRequestNote(string project, int id, string body)
+      {
+         string url = makeUrlForNewNote(project, id, body);
+         post(url);
+      }
+
       private static MergeRequest readMergeRequest(dynamic json)
       {
          MergeRequest mr = new MergeRequest();
@@ -281,7 +287,7 @@ namespace mrHelper
       {
          string url = makeUrlForSingleMergeRequest(project, id)
             + "/discussions"
-            + "?" + WebUtility.UrlEncode("body") + "=" + WebUtility.UrlEncode(parameters.Body);
+            + "?body=" + WebUtility.UrlEncode(parameters.Body);
 
          var pos = parameters.Position;
          if (pos.HasValue)
@@ -302,6 +308,14 @@ namespace mrHelper
             }
          }
 
+         return url;
+      }
+
+      private string makeUrlForNewNote(string project, int id, string body)
+      {
+         string url = makeUrlForSingleMergeRequest(project, id)
+            + "/notes"
+            + "?body=" + WebUtility.UrlEncode(body);
          return url;
       }
 
