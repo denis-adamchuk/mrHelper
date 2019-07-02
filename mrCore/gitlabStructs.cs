@@ -57,4 +57,18 @@ namespace mrCore
       public string StartSHA;
       public System.DateTime CreatedAt;
    }
+
+   public struct DiscussionNote
+   {
+      public int Id;
+      public string Body;
+      public System.DateTime CreatedAt;
+      public Author Author;
+   }
+
+   public struct Discussion
+   {
+      public string Id;
+      public List<DiscussionNote> Notes;
+   }
 }

@@ -323,6 +323,18 @@ namespace mrHelperUI
          }
       }
 
+      private void ButtonDiscussions_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            //var form = new DiscussionsForm();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
       {
          if (comboBoxLeftVersion.SelectedItem == null || comboBoxRightVersion.SelectedItem == null)
@@ -788,6 +800,7 @@ namespace mrHelperUI
             // 4. Toggle state of buttons
             buttonDiffTool.Enabled = false;
             buttonToggleTimer.Enabled = false;
+            buttonDiscussions.Enabled = false;
             foreach (Control control in groupBoxActions.Controls)
             {
                control.Enabled = false;
@@ -828,6 +841,7 @@ namespace mrHelperUI
          // 5. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
          buttonDiffTool.Enabled = true;
+         buttonDiscussions.Enabled = true;
          foreach (Control control in groupBoxActions.Controls)
          {
             control.Enabled = true;

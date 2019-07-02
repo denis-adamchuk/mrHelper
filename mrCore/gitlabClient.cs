@@ -158,6 +158,30 @@ namespace mrCore
          return versions;
       }
 
+      public List<Discussion> GetMergeRequestDiscussions(string project, int id)
+      {
+         // evaluate total number of items
+         get(makeUrlForMergeRequestDiscussions(project, id, 1, 1));
+         int total = int.Parse(_client.ResponseHeaders["X-Total"]);
+         int perPage = 100;
+         int pages = total / perPage + (total % perPage > 0 ? 1 : 0);
+
+         // load all discussions page by page
+         List<Discussion> discussions = new List<Discussion>();
+         for (int iPage = 0; iPage < pages; ++iPage)
+         {
+            string url = makeUrlForMergeRequestDiscussions(project, id, iPage + 1, perPage);
+            string response = get(url);
+
+            dynamic json = deserializeJson(response);
+            foreach (dynamic item in (json as Array))
+            {
+               discussions.Add(readDiscussion(item));
+            }
+         }
+         return discussions;
+      }
+
       public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
       {
          string url = makeUrlForAddSpentTime(project, id, span);
@@ -207,6 +231,28 @@ namespace mrCore
             mr.StartSHA = jsonDiffRefs["start_sha"];
          }
          return mr;
+      }
+
+      private static Discussion readDiscussion(dynamic json)
+      {
+         Discussion discussion = new Discussion();
+         discussion.Id = json["id"];
+         dynamic jsonNotes = json["notes"];
+         discussion.Notes = new List<DiscussionNote>();
+         foreach (dynamic item in (jsonNotes as Array))
+         {
+            DiscussionNote discussionNote = new DiscussionNote();
+            discussionNote.Id = item["id"];
+            discussionNote.Body = item["body"];
+
+            dynamic jsonAuthor = json["author"];
+            discussionNote.Author.Id = jsonAuthor["id"];
+            discussionNote.Author.Name = jsonAuthor["name"];
+            discussionNote.Author.Username = jsonAuthor["username"];
+
+            discussion.Notes.Add(discussionNote);
+         }
+         return discussion;
       }
 
       private string post(string data)
@@ -308,6 +354,15 @@ namespace mrCore
             }
          }
 
+         return url;
+      }
+
+      private string makeUrlForMergeRequestDiscussions(string project, int id, int pageNumber, int perPage)
+      {
+         string url = makeUrlForSingleMergeRequest(project, id)
+            + "/discussions"
+            + query("?page", pageNumber.ToString())
+            + query("&per_page", perPage.ToString());
          return url;
       }
 
