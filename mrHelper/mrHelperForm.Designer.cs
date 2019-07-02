@@ -165,7 +165,7 @@
          this.groupBoxSelectMergeRequest.Controls.Add(this.comboBoxFilteredMergeRequests);
          this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(6, 57);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
-         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(516, 94);
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(511, 94);
          this.groupBoxSelectMergeRequest.TabIndex = 1;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
@@ -217,7 +217,7 @@
          this.comboBoxFilteredMergeRequests.FormattingEnabled = true;
          this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 46);
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
-         this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(504, 21);
+         this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(498, 21);
          this.comboBoxFilteredMergeRequests.TabIndex = 11;
          this.comboBoxFilteredMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectedIndexChanged);
          this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
@@ -321,7 +321,7 @@
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
          this.tabPageSettings.Name = "tabPageSettings";
          this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSettings.Size = new System.Drawing.Size(525, 541);
+         this.tabPageSettings.Size = new System.Drawing.Size(525, 528);
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
@@ -413,7 +413,7 @@
          // 
          this.groupBoxActions.Location = new System.Drawing.Point(6, 460);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(516, 55);
+         this.groupBoxActions.Size = new System.Drawing.Size(513, 55);
          this.groupBoxActions.TabIndex = 22;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
@@ -423,7 +423,7 @@
          this.groupBoxDiffTool.Controls.Add(this.buttonDiffTool);
          this.groupBoxDiffTool.Location = new System.Drawing.Point(276, 399);
          this.groupBoxDiffTool.Name = "groupBoxDiffTool";
-         this.groupBoxDiffTool.Size = new System.Drawing.Size(247, 55);
+         this.groupBoxDiffTool.Size = new System.Drawing.Size(243, 55);
          this.groupBoxDiffTool.TabIndex = 21;
          this.groupBoxDiffTool.TabStop = false;
          this.groupBoxDiffTool.Text = "Diff Tool";
@@ -474,7 +474,7 @@
          this.groupBoxDescription.Controls.Add(this.richTextBoxMergeRequestDescription);
          this.groupBoxDescription.Location = new System.Drawing.Point(4, 157);
          this.groupBoxDescription.Name = "groupBoxDescription";
-         this.groupBoxDescription.Size = new System.Drawing.Size(519, 163);
+         this.groupBoxDescription.Size = new System.Drawing.Size(512, 163);
          this.groupBoxDescription.TabIndex = 15;
          this.groupBoxDescription.TabStop = false;
          this.groupBoxDescription.Text = "Merge Request";
@@ -484,7 +484,7 @@
          this.textBoxMergeRequestName.Location = new System.Drawing.Point(6, 19);
          this.textBoxMergeRequestName.Name = "textBoxMergeRequestName";
          this.textBoxMergeRequestName.ReadOnly = true;
-         this.textBoxMergeRequestName.Size = new System.Drawing.Size(507, 20);
+         this.textBoxMergeRequestName.Size = new System.Drawing.Size(500, 20);
          this.textBoxMergeRequestName.TabIndex = 0;
          // 
          // richTextBoxMergeRequestDescription
@@ -492,7 +492,7 @@
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(6, 45);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.ReadOnly = true;
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(507, 110);
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(500, 110);
          this.richTextBoxMergeRequestDescription.TabIndex = 1;
          this.richTextBoxMergeRequestDescription.Text = "";
          // 
@@ -525,7 +525,7 @@
          this.groupBoxDiff.Controls.Add(this.label4);
          this.groupBoxDiff.Location = new System.Drawing.Point(6, 326);
          this.groupBoxDiff.Name = "groupBoxDiff";
-         this.groupBoxDiff.Size = new System.Drawing.Size(516, 67);
+         this.groupBoxDiff.Size = new System.Drawing.Size(511, 67);
          this.groupBoxDiff.TabIndex = 16;
          this.groupBoxDiff.TabStop = false;
          this.groupBoxDiff.Text = "Select Versions";
@@ -536,7 +536,7 @@
          this.comboBoxRightVersion.FormattingEnabled = true;
          this.comboBoxRightVersion.Location = new System.Drawing.Point(269, 32);
          this.comboBoxRightVersion.Name = "comboBoxRightVersion";
-         this.comboBoxRightVersion.Size = new System.Drawing.Size(241, 21);
+         this.comboBoxRightVersion.Size = new System.Drawing.Size(236, 21);
          this.comboBoxRightVersion.TabIndex = 17;
          this.comboBoxRightVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightVersion_SelectedIndexChanged);
          this.comboBoxRightVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
