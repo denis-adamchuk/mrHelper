@@ -1,14 +1,10 @@
 ﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
+using mrCore;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace mrHelper
+namespace mrDiffTool
 {
-   class DiffToolIntegration
+   public class DiffToolIntegration
    {
       public DiffToolIntegration(IntegratedDiffTool diffTool)
       {
@@ -37,7 +33,7 @@ namespace mrHelper
             return;
          }
 
-         gitClient.SetDiffTool(name, getGitCommand());
+         GitClient.SetDiffTool(name, getGitCommand());
       }
 
       static private string getInstallPath(string applicationName)

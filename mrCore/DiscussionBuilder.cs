@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace mrHelper
+namespace mrCore
 {
-   class DiscussionBuilder
+   public class DiscussionBuilder
    {
       static Regex diffSectionRe = new Regex(
          @"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@",
@@ -158,7 +156,7 @@ namespace mrHelper
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
-         List<string> diff = gitClient.Diff(_mergeRequestDetails.BaseSHA, _mergeRequestDetails.HeadSHA, filename);
+         List<string> diff = GitClient.Diff(_mergeRequestDetails.BaseSHA, _mergeRequestDetails.HeadSHA, filename);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);

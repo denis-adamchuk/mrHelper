@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Net;
 using System.Web.Script.Serialization;
 
-namespace mrHelper
+namespace mrCore
 {
-   enum ApiVersion
+   public enum ApiVersion
    {
       v3,
       v4
    }
 
-   enum StateFilter
+   public enum StateFilter
    {
       Open,
       Closed,
@@ -19,14 +19,14 @@ namespace mrHelper
       All
    }
 
-   enum WorkInProgressFilter
+   public enum WorkInProgressFilter
    {
       Yes,
       No,
       All
    }
 
-   struct DiscussionParameters
+   public struct DiscussionParameters
    {
       public string Body;
 
@@ -45,11 +45,11 @@ namespace mrHelper
    }
 
 
-   class gitlabClient
+   public class GitLabClient
    {
       private string protocol = "https://";
 
-      public gitlabClient(string host, string token, ApiVersion version = ApiVersion.v4)
+      public GitLabClient(string host, string token, ApiVersion version = ApiVersion.v4)
       {
          _host = protocol + host;
          _token = token;

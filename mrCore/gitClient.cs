@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace mrHelper
+namespace mrCore
 {
-   class gitClient
+   public class GitClient
    {
       static public void CloneRepo(string host, string project, string localDir)
       {

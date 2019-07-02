@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 
-namespace mrHelper
+namespace mrDiffTool
 {
-   class BC3Tool : IntegratedDiffTool
+   public class BC3Tool : IntegratedDiffTool
    {
       public string GetToolCommand()
       {

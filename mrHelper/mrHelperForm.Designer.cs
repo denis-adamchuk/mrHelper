@@ -1,4 +1,4 @@
-﻿namespace mrHelper
+﻿namespace mrHelperUI
 {
    partial class mrHelperForm
    {

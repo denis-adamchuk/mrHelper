@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace mrHelper
+﻿namespace mrCustomActions
 {
-   class SendNoteCommand : ICommand
+   public class SendNoteCommand : ICommand
    {
       public SendNoteCommand(ICommandCallback callback, string name, string body)
       {
@@ -22,7 +16,7 @@ namespace mrHelper
 
       public void Run()
       {
-         gitlabClient client = new gitlabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
+         mrCore.GitLabClient client = new mrCore.GitLabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
          client.CreateNewMergeRequestNote(
             _callback.GetCurrentProjectName(), _callback.GetCurrentMergeRequestId(), _body); 
       }

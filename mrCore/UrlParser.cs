@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace mrHelper
+namespace mrCore
 {
    public struct ParsedMergeRequestUrl
    {

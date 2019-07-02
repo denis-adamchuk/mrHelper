@@ -1,4 +1,4 @@
-﻿namespace mrHelper
+﻿namespace mrDiffTool
 {
 
    public interface IntegratedDiffTool

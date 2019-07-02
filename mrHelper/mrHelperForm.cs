@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using mrCore;
+using mrCustomActions;
+using mrDiffTool;
 
-namespace mrHelper
+namespace mrHelperUI
 {
 
    public partial class mrHelperForm : Form, ICommandCallback
@@ -373,7 +376,7 @@ namespace mrHelper
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
          return client.GetAllProjects(checkBoxShowPublicOnly.Checked);
       }
 
@@ -385,7 +388,7 @@ namespace mrHelper
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
          return client.GetAllProjectMergeRequests(project);
       }
 
@@ -398,20 +401,20 @@ namespace mrHelper
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
          return client.GetSingleMergeRequest(comboBoxProjects.Text, mergeRequest.Value.Id);
       }
 
-      private List<Version> getVersions()
+      private List<mrCore.Version> getVersions()
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
          {
-            return new List<Version>();
+            return new List<mrCore.Version>();
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
          return client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
       }
 
@@ -424,7 +427,7 @@ namespace mrHelper
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         gitlabClient client = new gitlabClient(item.Host, item.AccessToken);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
          client.AddSpentTimeForMergeRequest(comboBoxProjects.Text, mergeRequest.Value.Id, ref span);
       }
 
@@ -444,7 +447,7 @@ namespace mrHelper
             string repository = initializeGitRepository(localGitFolder, item.Host, project);
 
             Directory.SetCurrentDirectory(repository);
-            _difftool = gitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
+            _difftool = GitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
          }
          catch (Exception ex)
          {
@@ -482,7 +485,7 @@ namespace mrHelper
                ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.Yes)
             {
-               gitClient.CloneRepo(host, projectWithNamespace, repository);
+               GitClient.CloneRepo(host, projectWithNamespace, repository);
             }
             else
             {
@@ -493,7 +496,7 @@ namespace mrHelper
          {
             string currentDir = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(repository);
-            gitClient.Fetch();
+            GitClient.Fetch();
             Directory.SetCurrentDirectory(currentDir);
          }
 

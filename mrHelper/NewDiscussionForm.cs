@@ -1,17 +1,13 @@
-﻿using System;
+﻿using mrCore;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper
+namespace mrHelperUI
 {
    public partial class NewDiscussionForm : Form
    {
@@ -59,7 +55,7 @@ namespace mrHelper
             return;
          }
 
-         gitlabClient client = new gitlabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         GitLabClient client = new GitLabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          try
          {
             client.CreateNewMergeRequestDiscussion(

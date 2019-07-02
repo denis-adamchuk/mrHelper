@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 
-namespace mrHelper
+namespace mrCore
 {
-   struct Author
+   public struct Author
    {
       public int Id;
       public string Name;
       public string Username;
    }
 
-   enum MergeRequestState
+   public enum MergeRequestState
    {
       Opened,
       Closed,
@@ -17,13 +17,13 @@ namespace mrHelper
       Merged
    }
 
-   struct Project
+   public struct Project
    {
       public int Id;
       public string NameWithNamespace;
    }
 
-   struct MergeRequest
+   public struct MergeRequest
    {
       public int Id;
       public string Title;
@@ -40,7 +40,7 @@ namespace mrHelper
       public string StartSHA;
    }
 
-   struct Commit
+   public struct Commit
    {
       public string Id;
       public string ShortId;
@@ -49,7 +49,7 @@ namespace mrHelper
       public System.DateTime CommitedDate;
    }
 
-   struct Version
+   public struct Version
    {
       public int Id;
       public string HeadSHA;

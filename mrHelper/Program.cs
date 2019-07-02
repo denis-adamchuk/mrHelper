@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
+using mrCore;
 
-namespace mrHelper
+namespace mrHelperUI
 {
    static class Program
    {

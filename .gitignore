@@ -1,5 +1,5 @@
 /.vs
-/mrHelper/bin
-/mrHelper/obj
+/*/bin
+/*/obj
 *.csproj.user
 /build.bat

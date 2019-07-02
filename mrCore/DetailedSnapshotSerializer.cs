@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Web.Script.Serialization;
 
-namespace mrHelper
+namespace mrCore
 {
    public struct MergeRequestDetails
    {
@@ -15,7 +15,7 @@ namespace mrHelper
       public string TempFolder;
    }
 
-   class DetailedSnapshotSerializer
+   public class DetailedSnapshotSerializer
    {
       private static string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
       private static string InterprocessSnapshotFilename = "details.json";
