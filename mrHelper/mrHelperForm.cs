@@ -29,11 +29,16 @@ namespace mrHelperUI
 
       static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
       static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
+
+      /// <summary>
+      /// Tooltip timeout in seconds
+      /// </summary>
+      private const int notifyTooltipTimeout = 10;
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
       private const string CustomActionsFilename = "CustomActions.xml";
-      
+
       public mrHelperForm()
       {
          InitializeComponent();
@@ -59,7 +64,7 @@ namespace mrHelperUI
             button.UseVisualStyleBackColor = true;
             button.Enabled = false;
             button.TabStop = false;
-            button.Click += (x, y) => 
+            button.Click += (x, y) =>
             {
                try
                {
@@ -81,11 +86,14 @@ namespace mrHelperUI
          try
          {
             addCustomActions();
-            onApplicationStarted();
          }
          catch (Exception ex)
          {
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         finally
+         {
+            onApplicationStarted();
          }
       }
 
@@ -609,7 +617,7 @@ namespace mrHelperUI
          {
             return;
          }
-         
+
          string headSHA = diffArgs[diffArgs.Length - 1];
          string baseSHA = diffArgs[diffArgs.Length - 2];
 
@@ -630,7 +638,7 @@ namespace mrHelperUI
          details.Id = mergeRequest.Id;
          details.Project = comboBoxProjects.Text;
          details.TempFolder = textBoxLocalGitFolder.Text;
-         
+
          serializer.SerializeToDisk(details);
       }
 
@@ -638,7 +646,7 @@ namespace mrHelperUI
       {
          _settings = new UserDefinedSettings();
          loadConfiguration();
-         
+
          _timeTrackingTimer = new Timer();
          _timeTrackingTimer.Interval = timeTrackingTimerInterval;
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
@@ -794,7 +802,7 @@ namespace mrHelperUI
             }
             return;
          }
-         
+
          MergeRequest mergeRequest = getMergeRequest();
 
          // 1. Update status, add merge request url
@@ -899,8 +907,20 @@ namespace mrHelperUI
       private void onHideToTray(FormClosingEventArgs e)
       {
          e.Cancel = true;
+         if (_requireShowingTooltip)
+         {
+            showTooltipBalloon();
+         }
          Hide();
          ShowInTaskbar = false;
+      }
+
+      private void showTooltipBalloon()
+      {
+         // TODO: Maybe it's a good idea to save the requireShowingTooltip state
+         // so it's only shown once in a lifetime
+         notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
+         _requireShowingTooltip = false;
       }
 
       private void onRestoreWindow()
@@ -991,6 +1011,7 @@ namespace mrHelperUI
 
       private bool _exiting = false;
       private bool _loadingConfiguration = false;
+      private bool _requireShowingTooltip = true;
 
       UserDefinedSettings _settings;
 
@@ -1002,7 +1023,7 @@ namespace mrHelperUI
          public string Host;
          public string AccessToken;
       }
-        
+
       struct VersionComboBoxItem
       {
          public string SHA;

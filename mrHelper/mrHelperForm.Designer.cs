@@ -292,6 +292,7 @@
          // 
          // notifyIcon
          // 
+         this.notifyIcon.BalloonTipText = "I will now live in your tray";
          this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
          this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
          this.notifyIcon.Text = "Merge Request Helper";
