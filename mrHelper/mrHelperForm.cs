@@ -55,6 +55,7 @@ namespace mrHelper
             button.Text = name;
             button.UseVisualStyleBackColor = true;
             button.Enabled = false;
+            button.TabStop = false;
             button.Click += (x, y) => 
             {
                try

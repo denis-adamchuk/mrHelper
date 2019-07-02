@@ -115,7 +115,7 @@
          this.buttonRemoveKnownHost.Location = new System.Drawing.Point(409, 72);
          this.buttonRemoveKnownHost.Name = "buttonRemoveKnownHost";
          this.buttonRemoveKnownHost.Size = new System.Drawing.Size(83, 27);
-         this.buttonRemoveKnownHost.TabIndex = 10;
+         this.buttonRemoveKnownHost.TabIndex = 3;
          this.buttonRemoveKnownHost.Text = "Remove";
          this.buttonRemoveKnownHost.UseVisualStyleBackColor = true;
          this.buttonRemoveKnownHost.Click += new System.EventHandler(this.ButtonRemoveKnownHost_Click);
@@ -125,7 +125,7 @@
          this.buttonAddKnownHost.Location = new System.Drawing.Point(409, 39);
          this.buttonAddKnownHost.Name = "buttonAddKnownHost";
          this.buttonAddKnownHost.Size = new System.Drawing.Size(83, 27);
-         this.buttonAddKnownHost.TabIndex = 9;
+         this.buttonAddKnownHost.TabIndex = 2;
          this.buttonAddKnownHost.Text = "Add...";
          this.buttonAddKnownHost.UseVisualStyleBackColor = true;
          this.buttonAddKnownHost.Click += new System.EventHandler(this.ButtonAddKnownHost_Click);
@@ -142,7 +142,7 @@
          this.listViewKnownHosts.MultiSelect = false;
          this.listViewKnownHosts.Name = "listViewKnownHosts";
          this.listViewKnownHosts.Size = new System.Drawing.Size(366, 110);
-         this.listViewKnownHosts.TabIndex = 3;
+         this.listViewKnownHosts.TabIndex = 1;
          this.listViewKnownHosts.UseCompatibleStateImageBehavior = false;
          this.listViewKnownHosts.View = System.Windows.Forms.View.Details;
          // 
@@ -166,7 +166,7 @@
          this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(6, 57);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
          this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(511, 94);
-         this.groupBoxSelectMergeRequest.TabIndex = 1;
+         this.groupBoxSelectMergeRequest.TabIndex = 3;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
@@ -175,7 +175,7 @@
          this.buttonApplyLabels.Location = new System.Drawing.Point(307, 14);
          this.buttonApplyLabels.Name = "buttonApplyLabels";
          this.buttonApplyLabels.Size = new System.Drawing.Size(83, 27);
-         this.buttonApplyLabels.TabIndex = 21;
+         this.buttonApplyLabels.TabIndex = 5;
          this.buttonApplyLabels.Text = "Apply";
          this.toolTip.SetToolTip(this.buttonApplyLabels, "Press Alt-K to create a new discussion");
          this.buttonApplyLabels.UseVisualStyleBackColor = true;
@@ -186,7 +186,7 @@
          this.textBoxLabels.Location = new System.Drawing.Point(69, 18);
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(232, 20);
-         this.textBoxLabels.TabIndex = 13;
+         this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests that contain any of these labels");
          // 
          // checkBoxLabels
@@ -195,7 +195,7 @@
          this.checkBoxLabels.Location = new System.Drawing.Point(6, 20);
          this.checkBoxLabels.Name = "checkBoxLabels";
          this.checkBoxLabels.Size = new System.Drawing.Size(57, 17);
-         this.checkBoxLabels.TabIndex = 14;
+         this.checkBoxLabels.TabIndex = 3;
          this.checkBoxLabels.Text = "Labels";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
          // 
@@ -205,7 +205,7 @@
          this.linkLabelConnectedTo.Location = new System.Drawing.Point(6, 70);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
          this.linkLabelConnectedTo.Size = new System.Drawing.Size(42, 13);
-         this.linkLabelConnectedTo.TabIndex = 5;
+         this.linkLabelConnectedTo.TabIndex = 7;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "url-here";
          this.linkLabelConnectedTo.Visible = false;
@@ -218,7 +218,7 @@
          this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 46);
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
          this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(498, 21);
-         this.comboBoxFilteredMergeRequests.TabIndex = 11;
+         this.comboBoxFilteredMergeRequests.TabIndex = 6;
          this.comboBoxFilteredMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectedIndexChanged);
          this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
          // 
@@ -227,7 +227,7 @@
          this.buttonBrowseLocalGitFolder.Location = new System.Drawing.Point(409, 31);
          this.buttonBrowseLocalGitFolder.Name = "buttonBrowseLocalGitFolder";
          this.buttonBrowseLocalGitFolder.Size = new System.Drawing.Size(83, 27);
-         this.buttonBrowseLocalGitFolder.TabIndex = 2;
+         this.buttonBrowseLocalGitFolder.TabIndex = 4;
          this.buttonBrowseLocalGitFolder.Text = "Browse...";
          this.buttonBrowseLocalGitFolder.UseVisualStyleBackColor = true;
          this.buttonBrowseLocalGitFolder.Click += new System.EventHandler(this.ButtonBrowseLocalGitFolder_Click);
@@ -262,7 +262,7 @@
          this.buttonDiffTool.Location = new System.Drawing.Point(6, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(83, 27);
-         this.buttonDiffTool.TabIndex = 20;
+         this.buttonDiffTool.TabIndex = 11;
          this.buttonDiffTool.Text = "Launch";
          this.toolTip.SetToolTip(this.buttonDiffTool, "Press Alt-K to create a new discussion");
          this.buttonDiffTool.UseVisualStyleBackColor = true;
@@ -311,7 +311,7 @@
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
          this.tabControl.Size = new System.Drawing.Size(533, 554);
-         this.tabControl.TabIndex = 11;
+         this.tabControl.TabIndex = 0;
          // 
          // tabPageSettings
          // 
@@ -343,7 +343,7 @@
          this.checkBoxShowPublicOnly.Location = new System.Drawing.Point(6, 42);
          this.checkBoxShowPublicOnly.Name = "checkBoxShowPublicOnly";
          this.checkBoxShowPublicOnly.Size = new System.Drawing.Size(206, 17);
-         this.checkBoxShowPublicOnly.TabIndex = 1;
+         this.checkBoxShowPublicOnly.TabIndex = 6;
          this.checkBoxShowPublicOnly.Text = "Show projects with public visibility only";
          this.checkBoxShowPublicOnly.UseVisualStyleBackColor = true;
          this.checkBoxShowPublicOnly.CheckedChanged += new System.EventHandler(this.CheckBoxShowPublicOnly_CheckedChanged);
@@ -354,7 +354,7 @@
          this.checkBoxRequireTimer.Location = new System.Drawing.Point(6, 19);
          this.checkBoxRequireTimer.Name = "checkBoxRequireTimer";
          this.checkBoxRequireTimer.Size = new System.Drawing.Size(259, 17);
-         this.checkBoxRequireTimer.TabIndex = 0;
+         this.checkBoxRequireTimer.TabIndex = 5;
          this.checkBoxRequireTimer.Text = "Require started timer for creating new discussions";
          this.checkBoxRequireTimer.UseVisualStyleBackColor = true;
          // 
@@ -394,7 +394,7 @@
          this.groupBoxSelectProject.Location = new System.Drawing.Point(232, 6);
          this.groupBoxSelectProject.Name = "groupBoxSelectProject";
          this.groupBoxSelectProject.Size = new System.Drawing.Size(284, 45);
-         this.groupBoxSelectProject.TabIndex = 23;
+         this.groupBoxSelectProject.TabIndex = 2;
          this.groupBoxSelectProject.TabStop = false;
          this.groupBoxSelectProject.Text = "Select Project";
          // 
@@ -406,7 +406,7 @@
          this.comboBoxProjects.Name = "comboBoxProjects";
          this.comboBoxProjects.Size = new System.Drawing.Size(272, 21);
          this.comboBoxProjects.Sorted = true;
-         this.comboBoxProjects.TabIndex = 33;
+         this.comboBoxProjects.TabIndex = 2;
          this.comboBoxProjects.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProjects_SelectedIndexChanged);
          // 
          // groupBoxActions
@@ -424,7 +424,7 @@
          this.groupBoxDiffTool.Location = new System.Drawing.Point(276, 399);
          this.groupBoxDiffTool.Name = "groupBoxDiffTool";
          this.groupBoxDiffTool.Size = new System.Drawing.Size(243, 55);
-         this.groupBoxDiffTool.TabIndex = 21;
+         this.groupBoxDiffTool.TabIndex = 11;
          this.groupBoxDiffTool.TabStop = false;
          this.groupBoxDiffTool.Text = "Diff Tool";
          // 
@@ -436,7 +436,7 @@
          this.groupBoxTimeTracking.Location = new System.Drawing.Point(6, 399);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
          this.groupBoxTimeTracking.Size = new System.Drawing.Size(253, 55);
-         this.groupBoxTimeTracking.TabIndex = 18;
+         this.groupBoxTimeTracking.TabIndex = 10;
          this.groupBoxTimeTracking.TabStop = false;
          this.groupBoxTimeTracking.Text = "Time Tracking";
          // 
@@ -455,7 +455,7 @@
          this.buttonToggleTimer.Location = new System.Drawing.Point(4, 19);
          this.buttonToggleTimer.Name = "buttonToggleTimer";
          this.buttonToggleTimer.Size = new System.Drawing.Size(83, 27);
-         this.buttonToggleTimer.TabIndex = 21;
+         this.buttonToggleTimer.TabIndex = 10;
          this.buttonToggleTimer.UseVisualStyleBackColor = true;
          this.buttonToggleTimer.Click += new System.EventHandler(this.ButtonToggleTimer_Click);
          // 
@@ -486,6 +486,7 @@
          this.textBoxMergeRequestName.ReadOnly = true;
          this.textBoxMergeRequestName.Size = new System.Drawing.Size(500, 20);
          this.textBoxMergeRequestName.TabIndex = 0;
+         this.textBoxMergeRequestName.TabStop = false;
          // 
          // richTextBoxMergeRequestDescription
          // 
@@ -494,6 +495,7 @@
          this.richTextBoxMergeRequestDescription.ReadOnly = true;
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(500, 110);
          this.richTextBoxMergeRequestDescription.TabIndex = 1;
+         this.richTextBoxMergeRequestDescription.TabStop = false;
          this.richTextBoxMergeRequestDescription.Text = "";
          // 
          // groupBoxHost
@@ -502,7 +504,7 @@
          this.groupBoxHost.Location = new System.Drawing.Point(6, 6);
          this.groupBoxHost.Name = "groupBoxHost";
          this.groupBoxHost.Size = new System.Drawing.Size(220, 45);
-         this.groupBoxHost.TabIndex = 17;
+         this.groupBoxHost.TabIndex = 1;
          this.groupBoxHost.TabStop = false;
          this.groupBoxHost.Text = "Select Host";
          // 
@@ -513,7 +515,7 @@
          this.comboBoxHost.Location = new System.Drawing.Point(9, 15);
          this.comboBoxHost.Name = "comboBoxHost";
          this.comboBoxHost.Size = new System.Drawing.Size(205, 21);
-         this.comboBoxHost.TabIndex = 28;
+         this.comboBoxHost.TabIndex = 1;
          this.comboBoxHost.SelectedIndexChanged += new System.EventHandler(this.ComboBoxHost_SelectedIndexChanged);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
@@ -526,7 +528,7 @@
          this.groupBoxDiff.Location = new System.Drawing.Point(6, 326);
          this.groupBoxDiff.Name = "groupBoxDiff";
          this.groupBoxDiff.Size = new System.Drawing.Size(511, 67);
-         this.groupBoxDiff.TabIndex = 16;
+         this.groupBoxDiff.TabIndex = 8;
          this.groupBoxDiff.TabStop = false;
          this.groupBoxDiff.Text = "Select Versions";
          // 
@@ -537,7 +539,7 @@
          this.comboBoxRightVersion.Location = new System.Drawing.Point(269, 32);
          this.comboBoxRightVersion.Name = "comboBoxRightVersion";
          this.comboBoxRightVersion.Size = new System.Drawing.Size(236, 21);
-         this.comboBoxRightVersion.TabIndex = 17;
+         this.comboBoxRightVersion.TabIndex = 9;
          this.comboBoxRightVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightVersion_SelectedIndexChanged);
          this.comboBoxRightVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
          // 
@@ -548,7 +550,7 @@
          this.comboBoxLeftVersion.Location = new System.Drawing.Point(4, 32);
          this.comboBoxLeftVersion.Name = "comboBoxLeftVersion";
          this.comboBoxLeftVersion.Size = new System.Drawing.Size(249, 21);
-         this.comboBoxLeftVersion.TabIndex = 16;
+         this.comboBoxLeftVersion.TabIndex = 8;
          this.comboBoxLeftVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftVersion_SelectedIndexChanged);
          this.comboBoxLeftVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
          // 
