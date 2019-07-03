@@ -63,6 +63,14 @@ namespace mrCore
          _client.Headers["Private-Token"] = _token;
       }
 
+      public User GetCurrentUser()
+      {
+         string url = makeCommonUrl() + "/user";
+         string response = get(url);
+         dynamic json = deserializeJson(response);
+         return readUser(json);
+      }
+
       public List<Project> GetAllProjects(bool publicOnly)
       {
          string url = makeUrlForAllProjects(publicOnly);
@@ -217,11 +225,7 @@ namespace mrCore
          }
          mr.WebUrl = json["web_url"];
          mr.WorkInProgress = json["work_in_progress"];
-
-         dynamic jsonAuthor = json["author"];
-         mr.Author.Id = jsonAuthor["id"];
-         mr.Author.Name = jsonAuthor["name"];
-         mr.Author.Username = jsonAuthor["username"];
+         mr.Author = readUser(json["author"]);
 
          if (json.ContainsKey("diff_refs"))
          {
@@ -233,10 +237,20 @@ namespace mrCore
          return mr;
       }
 
+      private static User readUser(dynamic jsonUser)
+      {
+         User user = new User();
+         user.Id = jsonUser["id"];
+         user.Name = jsonUser["name"];
+         user.Username = jsonUser["username"];
+         return user;
+      }
+
       private static Discussion readDiscussion(dynamic json)
       {
          Discussion discussion = new Discussion();
          discussion.Id = json["id"];
+         discussion.IndividualNote = json["individual_note"] == "true";
          dynamic jsonNotes = json["notes"];
          discussion.Notes = new List<DiscussionNote>();
          foreach (dynamic item in (jsonNotes as Array))
@@ -244,12 +258,9 @@ namespace mrCore
             DiscussionNote discussionNote = new DiscussionNote();
             discussionNote.Id = item["id"];
             discussionNote.Body = item["body"];
-
-            dynamic jsonAuthor = json["author"];
-            discussionNote.Author.Id = jsonAuthor["id"];
-            discussionNote.Author.Name = jsonAuthor["name"];
-            discussionNote.Author.Username = jsonAuthor["username"];
-
+            discussionNote.Author = readUser(json["author"]);
+            discussionNote.Type = convertDiscussionNoteTypeFromJson(item["type"]);
+            discussionNote.System = item["system"] == "true";
             discussion.Notes.Add(discussionNote);
          }
          return discussion;
@@ -377,6 +388,12 @@ namespace mrCore
       private string convertTimeSpanToGitlabDuration(TimeSpan span)
       {
          return span.ToString("hh") + "h" + span.ToString("mm") + "m" + span.ToString("ss") + "s";
+      }
+
+      private static DiscussionNoteType convertDiscussionNoteTypeFromJson(string type)
+      {
+         // TODO Not implemented
+         return DiscussionNoteType.Default;
       }
 
       private string stateFilterToString(StateFilter state)

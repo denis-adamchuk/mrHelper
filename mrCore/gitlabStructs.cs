@@ -58,17 +58,27 @@ namespace mrCore
       public System.DateTime CreatedAt;
    }
 
+   public enum DiscussionNoteType
+   {
+      Default,
+      DiffNote,
+      DiscussionNote
+   }
+   
    public struct DiscussionNote
    {
       public int Id;
       public string Body;
       public System.DateTime CreatedAt;
       public User Author;
+      public DiscussionNoteType Type;
+      public bool System;
    }
 
    public struct Discussion
    {
       public string Id;
       public List<DiscussionNote> Notes;
+      public bool IndividualNote;
    }
 }

@@ -19,6 +19,7 @@ namespace mrHelperUI
          _accessToken = accessToken;
          _projectId = projectId;
          _mergeRequestId = mergeRequestId;
+         _currentUser = getUser();
 
          InitializeComponent();
       }
@@ -41,14 +42,19 @@ namespace mrHelperUI
          return client.GetMergeRequestDiscussions(_projectId, _mergeRequestId);
       }
 
+      private User getUser()
+      {
+         GitLabClient client = new GitLabClient(_host, _accessToken);
+         return client.GetCurrentUser();
+      }
+
       private void renderDiscussions(List<Discussion> discussions)
       {
-         int listViewMarginX = 20;
-         int listViewMarginY = 20;
-         int listViewHeight = 50; // Width is determined by Form width minus left and right margins
-         Size listViewSize = new Size(this.Width - listViewMarginX * 2, listViewHeight);
+         int groupBoxMarginLeft = 20;
+         int groupBoxMarginTop = 20;
 
-         int offsetY = listViewMarginY;
+         Point previousBoxLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Size previousBoxSize = new Size();
          foreach (var discussion in discussions)
          {
             if (discussion.Notes.Count == 0)
@@ -56,36 +62,53 @@ namespace mrHelperUI
                continue;
             }
 
-            var firstNote = discussion.Notes[0];
-            Label label = new Label();
-            label.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
-            
-            ListView listView = new ListView();
-            listView.HeaderStyle = ColumnHeaderStyle.None;
-            listView.View = View.Details;
-            listView.Location = new Point(listViewMarginX, offsetY);
-            listView.Size = listViewSize;
-
-            ListViewItem listViewItem = new ListViewItem();
-            foreach (var note in discussion.Notes)
-            {
-               listViewItem.SubItems.Add(note.Body);
-            }
-            listView.Items.Add(listViewItem);
-
-            foreach (ColumnHeader column in listView.Columns)
-            {
-               column.AutoResize(ColumnHeaderAutoResizeStyle.None);
-               column.Width = 100;
-            }
-
-            offsetY += listViewMarginY;
+            Point location = new Point();
+            location.X = groupBoxMarginLeft;
+            location.Y = previousBoxLocation.Y + previousBoxSize.Height;
+            previousBoxSize = createDiscussionBox(discussion, location);
          }
+      }
+
+      private Size createDiscussionBox(Discussion discussion, Point location)
+      {
+         int discussionLabelMarginLeft = 10;
+         int discussionLabelMarginTop = 10;
+
+         int filenameTextBoxMarginLeft = 10;
+         int filenameTextBoxMarginTop = 10;
+         int noteTextBoxMarginLeft = 10;
+         int noteTextBoxMarginTop = 10;
+         int noteTextBoxOffsetTop = 20;
+
+         var filenameTextBoxSize = new Size(300, 20);
+         var noteTextBoxSize = new Size(300, 100);
+         GroupBox groupBox = new GroupBox();
+         groupBox.Location = location;
+
+         var firstNote = discussion.Notes[0];
+         Label label = new Label();
+         label.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
+
+         TextBox filenameTextBox = new TextBox();
+         filenameTextBox.Size = filenameTextBoxSize;
+         // TODO Add file name if note type is DiffNote
+
+         foreach (var note in discussion.Notes)
+         {
+            TextBox textBox = new TextBox();
+            textBox.ReadOnly = note.Author.Id != _currentUser.Id;
+            //textBox.Site = noteTextBoxSize;
+            //textBox.Location = 
+            //groupBox.Size increment
+         }
+
+         return groupBox.Size;
       }
 
       private readonly string _host;
       private readonly string _accessToken;
       private readonly string _projectId;
       private readonly int _mergeRequestId;
+      private readonly User _currentUser;
    }
 }
