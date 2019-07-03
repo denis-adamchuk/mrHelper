@@ -2,7 +2,7 @@
 
 namespace mrCore
 {
-   public struct Author
+   public struct User
    {
       public int Id;
       public string Name;
@@ -34,7 +34,7 @@ namespace mrCore
       public List<string> Labels;
       public string WebUrl;
       public bool WorkInProgress;
-      public Author Author;
+      public User Author;
       public string BaseSHA;
       public string HeadSHA;
       public string StartSHA;
@@ -63,7 +63,7 @@ namespace mrCore
       public int Id;
       public string Body;
       public System.DateTime CreatedAt;
-      public Author Author;
+      public User Author;
    }
 
    public struct Discussion
