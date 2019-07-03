@@ -33,7 +33,7 @@ namespace mrHelperUI
       /// <summary>
       /// Tooltip timeout in seconds
       /// </summary>
-      private const int notifyTooltipTimeout = 10;
+      private const int notifyTooltipTimeout = 5;
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
@@ -46,6 +46,12 @@ namespace mrHelperUI
 
       private void addCustomActions()
       {
+         if (!File.Exists(CustomActionsFilename))
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state
+            // Do not try to load custom actions if they don't exist
+            return;
+         }
          CustomCommandLoader loader = new CustomCommandLoader(this);
          List<ICommand> commands = loader.LoadCommands(CustomActionsFilename);
          int id = 0;
