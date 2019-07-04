@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -65,43 +66,96 @@ namespace mrHelperUI
             Point location = new Point();
             location.X = groupBoxMarginLeft;
             location.Y = previousBoxLocation.Y + previousBoxSize.Height;
-            previousBoxSize = createDiscussionBox(discussion, location);
+            var discussionBoxSize = createDiscussionBox(discussion, location);
+            if (discussionBoxSize.HasValue)
+            {
+               previousBoxSize = discussionBoxSize.Value;
+            }
          }
       }
 
-      private Size createDiscussionBox(Discussion discussion, Point location)
+      private Size? createDiscussionBox(Discussion discussion, Point location)
       {
+         Debug.Assert(discussion.Notes.Count > 0);
+
+         var firstNote = discussion.Notes[0];
+         if (firstNote.System)
+         {
+            return null;
+         }
+
+         // @{ Margins for each control within Discussion Box
          int discussionLabelMarginLeft = 10;
          int discussionLabelMarginTop = 10;
-
          int filenameTextBoxMarginLeft = 10;
          int filenameTextBoxMarginTop = 10;
          int noteTextBoxMarginLeft = 10;
          int noteTextBoxMarginTop = 10;
-         int noteTextBoxOffsetTop = 20;
+         int noteTextBoxMarginBottom = 10;
+         int noteTextBoxMarginRight = 10;
+         // @}
 
+         // @{ Sizes of controls
          var filenameTextBoxSize = new Size(300, 20);
          var noteTextBoxSize = new Size(300, 100);
+         // @}
+
+         // Create a discussion box, which is a container of other controls
          GroupBox groupBox = new GroupBox();
-         groupBox.Location = location;
 
-         var firstNote = discussion.Notes[0];
-         Label label = new Label();
-         label.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
+         // Create a label that shows discussion creation data and author
+         Label discussionLabel = new Label();
+         groupBox.Controls.Add(discussionLabel);
+         discussionLabel.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
+         discussionLabel.Location = new Point(discussionLabelMarginLeft, discussionLabelMarginTop);
 
+         // Create a text box with filename
+         // TODO This can be replaced with a rendered diff snippet later
          TextBox filenameTextBox = new TextBox();
+         groupBox.Controls.Add(filenameTextBox);
+         filenameTextBox.Location = new Point(filenameTextBoxMarginLeft,
+            discussionLabel.Location.Y + discussionLabel.Size.Height + filenameTextBoxMarginTop);
          filenameTextBox.Size = filenameTextBoxSize;
-         // TODO Add file name if note type is DiffNote
+         if (firstNote.Type == DiscussionNoteType.DiffNote)
+         {
+            filenameTextBox.Text = firstNote.Position.NewPath + " (" + firstNote.Position.NewLine + ")";
+         }
 
+         // Create a series of boxes which represent notes
+         Point previousBoxLocation = new Point(noteTextBoxMarginLeft,
+            filenameTextBox.Location.Y + filenameTextBox.Size.Height + noteTextBoxMarginTop);
          foreach (var note in discussion.Notes)
          {
             TextBox textBox = new TextBox();
+            groupBox.Controls.Add(textBox);
+            toolTip.SetToolTip(textBox, "Created at " + note.CreatedAt.ToString() + " by " + note.Author.Name);
             textBox.ReadOnly = note.Author.Id != _currentUser.Id;
-            //textBox.Site = noteTextBoxSize;
-            //textBox.Location = 
-            //groupBox.Size increment
+            textBox.Size = noteTextBoxSize;
+
+            Point textBoxLocation = new Point();
+            textBoxLocation.X = previousBoxLocation.X + noteTextBoxMarginLeft;
+            textBoxLocation.Y = previousBoxLocation.Y;
+            textBox.Location = textBoxLocation;
+            previousBoxLocation = textBoxLocation;
          }
 
+         // Calculate discussion box location and size
+         int groupBoxHeight =
+            discussionLabelMarginTop
+          + discussionLabel.Height
+          + filenameTextBoxMarginTop
+          + filenameTextBox.Height
+          + noteTextBoxMarginTop
+          + noteTextBoxSize.Height
+          + noteTextBoxMarginBottom;
+
+         int groupBoxWidth =
+            noteTextBoxMarginLeft * discussion.Notes.Count
+          + noteTextBoxSize.Width * discussion.Notes.Count
+          + noteTextBoxMarginRight;
+
+         groupBox.Location = location;
+         groupBox.Size = new Size(groupBoxHeight, groupBoxWidth);
          return groupBox.Size;
       }
 
@@ -112,3 +166,4 @@ namespace mrHelperUI
       private readonly User _currentUser;
    }
 }
+

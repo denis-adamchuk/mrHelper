@@ -327,12 +327,26 @@ namespace mrHelperUI
       {
          try
          {
-            //var form = new DiscussionsForm();
+            onShowDiscussionsForm();
+            return;
          }
          catch (Exception ex)
          {
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+      }
+
+      private void onShowDiscussionsForm()
+      {
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         {
+            return;
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id);
+         form.Show(this);
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)

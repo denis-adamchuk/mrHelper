@@ -58,6 +58,17 @@ namespace mrCore
       public System.DateTime CreatedAt;
    }
 
+   public struct PositionDetails
+   {
+      public string OldPath;
+      public string NewPath;
+      public string OldLine;
+      public string NewLine;
+      public string BaseSHA;
+      public string HeadSHA;
+      public string StartSHA;
+   }
+
    public enum DiscussionNoteType
    {
       Default,
@@ -73,6 +84,9 @@ namespace mrCore
       public User Author;
       public DiscussionNoteType Type;
       public bool System;
+      public bool Resolvable;
+      public bool Resolved;
+      public PositionDetails Position;
    }
 
    public struct Discussion
@@ -80,5 +94,11 @@ namespace mrCore
       public string Id;
       public List<DiscussionNote> Notes;
       public bool IndividualNote;
+   }
+
+   public struct DiscussionParameters
+   {
+      public string Body;
+      public PositionDetails? Position;
    }
 }

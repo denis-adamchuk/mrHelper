@@ -50,7 +50,7 @@ namespace mrCore
          DiscussionParameters parameters = new DiscussionParameters();
          parameters.Body = formatDiscussionBody(discussionBody, !includeDiffToolContext);
          parameters.Position = (includeDiffToolContext && _positionState != PositionState.Undefined)
-            ? createPositionDetails(_positionState) : new Nullable<DiscussionParameters.PositionDetails>();
+            ? createPositionDetails(_positionState) : new Nullable<PositionDetails>();
          return parameters;
       }
 
@@ -69,9 +69,9 @@ namespace mrCore
          return header + body;
       }
 
-      private DiscussionParameters.PositionDetails createPositionDetails(PositionState state)
+      private PositionDetails createPositionDetails(PositionState state)
       {
-         DiscussionParameters.PositionDetails details = new DiscussionParameters.PositionDetails();
+         PositionDetails details = new PositionDetails();
          details.BaseSHA = _mergeRequestDetails.BaseSHA;
          details.HeadSHA = _mergeRequestDetails.HeadSHA;
          details.StartSHA = _mergeRequestDetails.StartSHA;

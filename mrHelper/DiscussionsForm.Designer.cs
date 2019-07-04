@@ -28,14 +28,23 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
+         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
          // 
-         // Discussions
+         // toolTip
+         // 
+         this.toolTip.AutoPopDelay = 5000;
+         this.toolTip.InitialDelay = 10;
+         this.toolTip.ReshowDelay = 10;
+         // 
+         // DiscussionsForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(1058, 512);
-         this.Name = "Discussions";
+         this.AutoScroll = true;
+         this.ClientSize = new System.Drawing.Size(1075, 607);
+         this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.Load += new System.EventHandler(this.Discussions_Load);
          this.ResumeLayout(false);
@@ -43,5 +52,7 @@
       }
 
       #endregion
+
+      private System.Windows.Forms.ToolTip toolTip;
    }
 }

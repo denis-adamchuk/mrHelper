@@ -26,25 +26,6 @@ namespace mrCore
       All
    }
 
-   public struct DiscussionParameters
-   {
-      public string Body;
-
-      public struct PositionDetails
-      {
-         public string OldPath;
-         public string NewPath;
-         public string OldLine;
-         public string NewLine;
-         public string BaseSHA;
-         public string HeadSHA;
-         public string StartSHA;
-      }
-
-      public PositionDetails? Position;
-   }
-
-
    public class GitLabClient
    {
       private string protocol = "https://";
@@ -261,7 +242,10 @@ namespace mrCore
             discussionNote.Author = readUser(json["author"]);
             discussionNote.Type = convertDiscussionNoteTypeFromJson(item["type"]);
             discussionNote.System = item["system"] == "true";
+            discussionNote.Resolvable = item["resolvable"] == "true";
+            discussionNote.Resolved = item["resolved"] == "true";
             discussion.Notes.Add(discussionNote);
+            // TODO Read Position Details !
          }
          return discussion;
       }
