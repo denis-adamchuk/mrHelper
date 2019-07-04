@@ -23,6 +23,13 @@ namespace mrCore
       public string NameWithNamespace;
    }
 
+   public struct DiffRefs
+   {
+      public string BaseSHA;
+      public string HeadSHA;
+      public string StartSHA;
+   }
+
    public struct MergeRequest
    {
       public int Id;
@@ -35,9 +42,7 @@ namespace mrCore
       public string WebUrl;
       public bool WorkInProgress;
       public User Author;
-      public string BaseSHA;
-      public string HeadSHA;
-      public string StartSHA;
+      public DiffRefs Refs;
    }
 
    public struct Commit
@@ -52,9 +57,7 @@ namespace mrCore
    public struct Version
    {
       public int Id;
-      public string HeadSHA;
-      public string BaseSHA;
-      public string StartSHA;
+      public DiffRefs Refs;
       public System.DateTime CreatedAt;
    }
 
@@ -64,9 +67,7 @@ namespace mrCore
       public string NewPath;
       public string OldLine;
       public string NewLine;
-      public string BaseSHA;
-      public string HeadSHA;
-      public string StartSHA;
+      public DiffRefs Refs;
    }
 
    public enum DiscussionNoteType
@@ -86,7 +87,7 @@ namespace mrCore
       public bool System;
       public bool Resolvable;
       public bool? Resolved;
-      public PositionDetails? Position;
+      public PositionDetails? Position; // notes with type DiffNote must have them (others must not)
    }
 
    public struct Discussion

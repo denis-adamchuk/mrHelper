@@ -11,6 +11,7 @@ namespace mrHelperUI
 {
    public partial class NewDiscussionForm : Form
    {
+      // TODO This should be replaced with DiffContext
       private struct DiscussionContext
       {
          public IEnumerable<string> lines;
@@ -24,7 +25,7 @@ namespace mrHelperUI
       public NewDiscussionForm(MergeRequestDetails mrDetails, DiffToolInfo difftoolInfo)
       {
          _mergeRequestDetails = mrDetails;
-         _discussionBuilder = new DiscussionBuilder(mrDetails, difftoolInfo);
+         _discussionBuilder = new DiscussionBuilder(mrDetails.Refs, difftoolInfo);
          InitializeComponent();
 
          onApplicationStarted(ref difftoolInfo);

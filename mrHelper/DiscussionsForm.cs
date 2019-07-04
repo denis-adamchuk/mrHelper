@@ -21,7 +21,6 @@ namespace mrHelperUI
          _projectId = projectId;
          _mergeRequestId = mergeRequestId;
          _currentUser = getUser();
-         _fileCache = new Dictionary<string, List<string>>();
 
          InitializeComponent();
       }

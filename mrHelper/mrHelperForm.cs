@@ -649,9 +649,9 @@ namespace mrHelperUI
 
          MergeRequestDetails details;
          details.AccessToken = item.AccessToken;
-         details.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
-         details.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
-         details.StartSHA = mergeRequest.StartSHA;  // SHA referencing commit in target branch
+         details.Refs.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
+         details.Refs.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
+         details.Refs.StartSHA = baseSHA; 
          details.Host = item.Host;
          details.Id = mergeRequest.Id;
          details.Project = comboBoxProjects.Text;
@@ -839,14 +839,14 @@ namespace mrHelperUI
          foreach (var version in getVersions())
          {
             VersionComboBoxItem item =
-               new VersionComboBoxItem(version.HeadSHA, version.HeadSHA.Substring(0, 10), version.CreatedAt);
+               new VersionComboBoxItem(version.Refs.HeadSHA, version.Refs.HeadSHA.Substring(0, 10), version.CreatedAt);
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
 
          // Add target branch to the right combo-box
          VersionComboBoxItem targetBranch =
-            new VersionComboBoxItem(mergeRequest.BaseSHA, mergeRequest.TargetBranch, null);
+            new VersionComboBoxItem(mergeRequest.Refs.BaseSHA, mergeRequest.TargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
          comboBoxLeftVersion.SelectedIndex = 0;

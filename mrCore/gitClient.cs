@@ -1,10 +1,37 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace mrCore
 {
    public class GitClient
    {
+      static public bool IsGitRepository(string dir)
+      {
+         var cwd = Directory.GetCurrentDirectory();
+         List<string> output = null;
+
+         try
+         {
+            Directory.SetCurrentDirectory(dir);
+            var arguments = "rev-parse --is-inside-work-tree";
+            output = gatherStdOutputLines(arguments);
+         }
+         catch (System.Exception)
+         {
+            // something went wrong
+            return false;
+         }
+         finally
+         {
+            // revert anyway
+            Directory.SetCurrentDirectory(cwd);
+         }
+
+         // success path
+         return output != null && output.Count > 0 && output[0] == "true";
+      }
+
       static public void CloneRepo(string host, string project, string localDir)
       {
          // TODO Use shallow clone

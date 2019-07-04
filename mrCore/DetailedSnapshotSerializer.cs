@@ -9,9 +9,7 @@ namespace mrCore
       public string Host;
       public string AccessToken;
       public string Project;
-      public string BaseSHA;
-      public string StartSHA;
-      public string HeadSHA;
+      public DiffRefs Refs;
       public string TempFolder;
    }
 
@@ -45,9 +43,9 @@ namespace mrCore
          details.AccessToken = json["AccessToken"];
          details.Project = json["Project"];
          details.Id = json["Id"];
-         details.BaseSHA = json["BaseSHA"];
-         details.StartSHA = json["StartSHA"];
-         details.HeadSHA = json["HeadSHA"];
+         details.Refs.BaseSHA = json["BaseSHA"];
+         details.Refs.StartSHA = json["StartSHA"];
+         details.Refs.HeadSHA = json["HeadSHA"];
          details.TempFolder = json["TempFolder"];
          return details;
       }

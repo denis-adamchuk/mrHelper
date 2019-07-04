@@ -138,9 +138,9 @@ namespace mrCore
          {
             Version version = new Version();
             version.Id = item["id"];
-            version.HeadSHA = item["head_commit_sha"];
-            version.BaseSHA = item["base_commit_sha"];
-            version.StartSHA = item["start_commit_sha"];
+            version.Refs.HeadSHA = item["head_commit_sha"];
+            version.Refs.BaseSHA = item["base_commit_sha"];
+            version.Refs.StartSHA = item["start_commit_sha"];
             version.CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime;
             versions.Add(version);
          }
@@ -211,9 +211,9 @@ namespace mrCore
          if (json.ContainsKey("diff_refs"))
          {
             dynamic jsonDiffRefs = json["diff_refs"];
-            mr.BaseSHA = jsonDiffRefs["base_sha"];
-            mr.HeadSHA = jsonDiffRefs["head_sha"];
-            mr.StartSHA = jsonDiffRefs["start_sha"];
+            mr.Refs.BaseSHA = jsonDiffRefs["base_sha"];
+            mr.Refs.HeadSHA = jsonDiffRefs["head_sha"];
+            mr.Refs.StartSHA = jsonDiffRefs["start_sha"];
          }
          return mr;
       }
@@ -260,9 +260,9 @@ namespace mrCore
       private static PositionDetails readPositionDetails(dynamic json)
       {
          PositionDetails positionDetails;
-         positionDetails.HeadSHA = json["head_sha"];
-         positionDetails.BaseSHA = json["base_sha"];
-         positionDetails.StartSHA = json["start_sha"];
+         positionDetails.Refs.HeadSHA = json["head_sha"];
+         positionDetails.Refs.BaseSHA = json["base_sha"];
+         positionDetails.Refs.StartSHA = json["start_sha"];
          positionDetails.OldLine = json["old_line"] != null ? json["old_line"].ToString() : null;
          positionDetails.OldPath = json["old_path"];
          positionDetails.NewLine = json["new_line"] != null ? json["new_line"].ToString() : null;
@@ -356,9 +356,9 @@ namespace mrCore
             url += "&" + WebUtility.UrlEncode("position[position_type]") + "=text";
             url += "&" + WebUtility.UrlEncode("position[old_path]") + "=" + WebUtility.UrlEncode(pos.Value.OldPath);
             url += "&" + WebUtility.UrlEncode("position[new_path]") + "=" + WebUtility.UrlEncode(pos.Value.NewPath);
-            url += "&" + WebUtility.UrlEncode("position[base_sha]") + "=" + pos.Value.BaseSHA;
-            url += "&" + WebUtility.UrlEncode("position[start_sha]") + "=" + pos.Value.StartSHA;
-            url += "&" + WebUtility.UrlEncode("position[head_sha]") + "=" + pos.Value.HeadSHA;
+            url += "&" + WebUtility.UrlEncode("position[base_sha]") + "=" + pos.Value.Refs.BaseSHA;
+            url += "&" + WebUtility.UrlEncode("position[start_sha]") + "=" + pos.Value.Refs.StartSHA;
+            url += "&" + WebUtility.UrlEncode("position[head_sha]") + "=" + pos.Value.Refs.HeadSHA;
             if (pos.Value.OldLine != null)
             {
                url += "&" + WebUtility.UrlEncode("position[old_line]") + "=" + pos.Value.OldLine;

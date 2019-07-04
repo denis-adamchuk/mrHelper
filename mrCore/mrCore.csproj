@@ -39,8 +39,10 @@
   <ItemGroup>
     <Compile Include="DetailedSnapshotSerializer.cs" />
     <Compile Include="DiffArgumentsParser.cs" />
+    <Compile Include="DiffContextBuilder.cs" />
     <Compile Include="DiscussionBuilder.cs" />
     <Compile Include="GitClient.cs" />
+    <Compile Include="GitDiffAnalyzer.cs" />
     <Compile Include="GitLabClient.cs" />
     <Compile Include="GitLabStructs.cs" />
     <Compile Include="UrlParser.cs" />

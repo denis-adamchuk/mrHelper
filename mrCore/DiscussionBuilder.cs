@@ -1,25 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace mrCore
 {
+   // TODO - This should be PositionDetailsBuilder and not DiscussionBuilder, let's get rid of 'body' mess here
    public class DiscussionBuilder
    {
-      static Regex diffSectionRe = new Regex(
-         @"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@",
-         RegexOptions.Compiled);
-      struct GitDiffSection
-      {
-         public int LeftSectionStart;
-         public int LeftSectionEnd;
-         public int RightSectionStart;
-         public int RightSectionEnd;
-      }
-
       // What lines need to be included into Merge Request Discussion Position details
       public enum PositionState
       {
@@ -29,9 +17,9 @@ namespace mrCore
          Undefined
       }
 
-      public DiscussionBuilder(MergeRequestDetails mrDetails, DiffToolInfo difftoolInfo)
+      public DiscussionBuilder(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
-         _mergeRequestDetails = mrDetails;
+         _diffRefs = diffRefs;
          _difftoolInfo = difftoolInfo;
          _positionState = getPositionState();
          if (_positionState == PositionState.Undefined)
@@ -72,9 +60,7 @@ namespace mrCore
       private PositionDetails createPositionDetails(PositionState state)
       {
          PositionDetails details = new PositionDetails();
-         details.BaseSHA = _mergeRequestDetails.BaseSHA;
-         details.HeadSHA = _mergeRequestDetails.HeadSHA;
-         details.StartSHA = _mergeRequestDetails.StartSHA;
+         details.Refs = _diffRefs;
 
          details.OldPath = _difftoolInfo.LeftSideFileNameBrief;
          details.NewPath = _difftoolInfo.RightSideFileNameBrief;
@@ -103,19 +89,20 @@ namespace mrCore
       PositionState getPositionState()
       {
          // Obtain git diff -U0 sections
-         var sections = getDiffSections(_difftoolInfo.RightSideFileNameBrief);
+         GitDiffAnalyzer gitDiffAnalyzer = new GitDiffAnalyzer(
+            _diffRefs.BaseSHA, _diffRefs.HeadSHA, _difftoolInfo.RightSideFileNameBrief);
         
          // First, check if we're at the right side
          if (!_difftoolInfo.IsLeftSideCurrent)
          {
             // If we are at the right side, check if a selected line was added/modified
-            if (isAddedOrModified(sections, _difftoolInfo.RightSideLineNumber))
+            if (gitDiffAnalyzer.IsLineAddedOrModified(_difftoolInfo.RightSideLineNumber))
             {
                return PositionState.NewLineOnly;
             }
             // If selected line is not added/modified, we need to send a deleted line to Gitlab
             // Make sure that a line selected at the left side was deleted
-            else if (isDeleted(sections, _difftoolInfo.LeftSideLineNumber))
+            else if (gitDiffAnalyzer.IsLineDeleted(_difftoolInfo.LeftSideLineNumber))
             {
                return PositionState.OldLineOnly;
             }
@@ -123,13 +110,13 @@ namespace mrCore
          else
          {
             // If we are the left side, let's check first if the selected line was deleted
-            if (isDeleted(sections, _difftoolInfo.LeftSideLineNumber))
+            if (gitDiffAnalyzer.IsLineDeleted(_difftoolInfo.LeftSideLineNumber))
             {
                return PositionState.OldLineOnly;
             }
             // If selected line was not deleted, check a right-side line number
             // Make sure that it was added/modified
-            else if (isAddedOrModified(sections, _difftoolInfo.RightSideLineNumber))
+            else if (gitDiffAnalyzer.IsLineAddedOrModified(_difftoolInfo.RightSideLineNumber))
             {
                return PositionState.NewLineOnly;
             }
@@ -152,65 +139,8 @@ namespace mrCore
          return left == right;
       }
 
-      private List<GitDiffSection> getDiffSections(string filename)
-      {
-         List<GitDiffSection> sections = new List<GitDiffSection>();
-
-         List<string> diff = GitClient.Diff(_mergeRequestDetails.BaseSHA, _mergeRequestDetails.HeadSHA, filename);
-         foreach (string line in diff)
-         {
-            Match m = diffSectionRe.Match(line);
-            if (!m.Success || m.Groups.Count < 3)
-            {
-               continue;
-            }
-
-            if (!m.Groups["left_start"].Success || !m.Groups["right_start"].Success)
-            {
-               continue;
-            }
-
-            // @@ -1 +1 @@ is essentially the same as @@ -1,1 +1,1 @@
-            int leftSectionLength = m.Groups["left_len"].Success ? int.Parse(m.Groups["left_len"].Value) : 1;
-            int rightSectionLength = m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
-
-            GitDiffSection section;
-            section.LeftSectionStart = int.Parse(m.Groups["left_start"].Value);
-            section.LeftSectionEnd = section.LeftSectionStart + leftSectionLength;
-            section.RightSectionStart = int.Parse(m.Groups["right_start"].Value);
-            section.RightSectionEnd = section.RightSectionStart + rightSectionLength;
-            sections.Add(section);
-         }
-
-         return sections;
-      }
-
-      private bool isAddedOrModified(List<GitDiffSection> sections, int linenumber)
-      {
-         foreach (var section in sections)
-         {
-            if (linenumber >= section.RightSectionStart && linenumber < section.RightSectionEnd)
-            {
-               return true;
-            }
-         }
-         return false;
-      }
-
-      private bool isDeleted(List<GitDiffSection> sections, int linenumber)
-      {
-         foreach (var section in sections)
-         {
-            if (linenumber >= section.LeftSectionStart && linenumber < section.LeftSectionEnd)
-            {
-               return true;
-            }
-         }
-         return false;
-      }
-
       private readonly PositionState _positionState;
-      private readonly MergeRequestDetails _mergeRequestDetails;
+      private readonly DiffRefs _diffRefs;
       private readonly DiffToolInfo _difftoolInfo;
    }
 }
