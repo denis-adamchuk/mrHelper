@@ -85,8 +85,8 @@ namespace mrCore
       public DiscussionNoteType Type;
       public bool System;
       public bool Resolvable;
-      public bool Resolved;
-      public PositionDetails Position;
+      public bool? Resolved;
+      public PositionDetails? Position;
    }
 
    public struct Discussion

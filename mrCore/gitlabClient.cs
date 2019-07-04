@@ -95,7 +95,7 @@ namespace mrCore
 
       public List<MergeRequest> GetAllProjectMergeRequests(string project)
       {
-         string url = makeUrlForAllProjectMergeRequests(project, StateFilter.Open, WorkInProgressFilter.Yes);
+         string url = makeUrlForAllProjectMergeRequests(project, StateFilter.Open, WorkInProgressFilter.Yes, 100);
          string response = get(url);
 
          dynamic json = deserializeJson(response);
@@ -231,7 +231,7 @@ namespace mrCore
       {
          Discussion discussion = new Discussion();
          discussion.Id = json["id"];
-         discussion.IndividualNote = json["individual_note"] == "true";
+         discussion.IndividualNote = json["individual_note"];
          dynamic jsonNotes = json["notes"];
          discussion.Notes = new List<DiscussionNote>();
          foreach (dynamic item in (jsonNotes as Array))
@@ -239,15 +239,35 @@ namespace mrCore
             DiscussionNote discussionNote = new DiscussionNote();
             discussionNote.Id = item["id"];
             discussionNote.Body = item["body"];
-            discussionNote.Author = readUser(json["author"]);
+            discussionNote.Author = readUser(item["author"]);
             discussionNote.Type = convertDiscussionNoteTypeFromJson(item["type"]);
-            discussionNote.System = item["system"] == "true";
-            discussionNote.Resolvable = item["resolvable"] == "true";
-            discussionNote.Resolved = item["resolved"] == "true";
+            discussionNote.System = item["system"];
+            discussionNote.Resolvable = item["resolvable"];
+            discussionNote.CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime;
+            if (item.ContainsKey("resolved"))
+            {
+               discussionNote.Resolved = item["resolved"];
+            }
+            if (item.ContainsKey("position"))
+            {
+               discussionNote.Position = readPositionDetails(item["position"]);
+            }
             discussion.Notes.Add(discussionNote);
-            // TODO Read Position Details !
          }
          return discussion;
+      }
+
+      private static PositionDetails readPositionDetails(dynamic json)
+      {
+         PositionDetails positionDetails;
+         positionDetails.HeadSHA = json["head_sha"];
+         positionDetails.BaseSHA = json["base_sha"];
+         positionDetails.StartSHA = json["start_sha"];
+         positionDetails.OldLine = json["old_line"] != null ? json["old_line"].ToString() : null;
+         positionDetails.OldPath = json["old_path"];
+         positionDetails.NewLine = json["new_line"] != null ? json["new_line"].ToString() : null;
+         positionDetails.NewPath = json["new_path"];
+         return positionDetails;
       }
 
       private string post(string data)
@@ -286,12 +306,13 @@ namespace mrCore
          return makeUrlForSingleProject(project, id) + "/merge_requests/" + id.ToString();
       }
 
-      private string makeUrlForAllProjectMergeRequests(string project, StateFilter state, WorkInProgressFilter wip)
+      private string makeUrlForAllProjectMergeRequests(string project, StateFilter state, WorkInProgressFilter wip,
+         int perPage)
       {
          return makeCommonUrl()
             + "/projects/" + WebUtility.UrlEncode(project)
             + "/merge_requests"
-            + query("?per_page", "100")
+            + query("?per_page", perPage.ToString())
             + query("&order_by", "updated_at")
             + query("&wip", workInProgressToString(wip))
             + query("&state", stateFilterToString(state)); 
@@ -304,8 +325,7 @@ namespace mrCore
             + query("&wip", workInProgressToString(wip))
             + query("&state", stateFilterToString(state))
             + query("&labels", labels)
-            + query("&author", author)
-            + query("&per_page", "100");
+            + query("&author", author);
       }
 
       private string makeUrlForMergeRequestCommits(string project, int id)
@@ -376,7 +396,14 @@ namespace mrCore
 
       private static DiscussionNoteType convertDiscussionNoteTypeFromJson(string type)
       {
-         // TODO Not implemented
+         if (type == "DiffNote")
+         {
+            return DiscussionNoteType.DiffNote;
+         }
+         else if (type == "DiscussionNote")
+         {
+            return DiscussionNoteType.DiscussionNote;
+         } 
          return DiscussionNoteType.Default;
       }
 
@@ -387,8 +414,7 @@ namespace mrCore
             case StateFilter.All: return "";
             case StateFilter.Closed: return "closed";
             case StateFilter.Merged: return "merged";
-            case StateFilter.Open: return "opened";
-         }
+            case StateFilter.Open: return "opened"; }
          return "";
       }
 

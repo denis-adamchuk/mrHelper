@@ -30,6 +30,17 @@ namespace mrCore
 
       static public List<string> Diff(string leftCommit, string rightCommit, string filename)
       {
+         var arguments = "diff -U0 " + leftCommit + " " + rightCommit + " -- " + filename;
+         return gatherStdOutputLines(arguments);
+      }
+
+      static public List<string> ShowFileByRevision(string filename, string sha)
+      {
+         return gatherStdOutputLines("show " + sha + ":" + filename);
+      }
+
+      static private List<string> gatherStdOutputLines(string arguments)
+      {
          List<string> result = new List<string>();
 
          var proc = new Process
@@ -37,10 +48,7 @@ namespace mrCore
             StartInfo = new ProcessStartInfo
             {
                FileName = "git",
-               // U0 gives no context, which means to not have unchanged lines in diff snippets.
-               // This is needed to unambiguously treat lines missing in diff as unchanged lines to
-               // send both old and new lines to gitlab.
-               Arguments = "diff -U0 " + leftCommit + " " + rightCommit + " -- " + filename,
+               Arguments = arguments,
                UseShellExecute = false,
                RedirectStandardOutput = true,
                CreateNoWindow = true

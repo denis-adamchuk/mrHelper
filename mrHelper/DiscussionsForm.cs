@@ -21,6 +21,7 @@ namespace mrHelperUI
          _projectId = projectId;
          _mergeRequestId = mergeRequestId;
          _currentUser = getUser();
+         _fileCache = new Dictionary<string, List<string>>();
 
          InitializeComponent();
       }
@@ -51,8 +52,8 @@ namespace mrHelperUI
 
       private void renderDiscussions(List<Discussion> discussions)
       {
-         int groupBoxMarginLeft = 20;
-         int groupBoxMarginTop = 20;
+         int groupBoxMarginLeft = 10;
+         int groupBoxMarginTop = 10;
 
          Point previousBoxLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Size previousBoxSize = new Size();
@@ -66,15 +67,17 @@ namespace mrHelperUI
             Point location = new Point();
             location.X = groupBoxMarginLeft;
             location.Y = previousBoxLocation.Y + previousBoxSize.Height;
-            var discussionBoxSize = createDiscussionBox(discussion, location);
-            if (discussionBoxSize.HasValue)
+            var discussionBox = createDiscussionBox(discussion, location);
+            if (discussionBox != null)
             {
-               previousBoxSize = discussionBoxSize.Value;
+               previousBoxLocation = discussionBox.Location;
+               previousBoxSize = discussionBox.Size;
             }
+            Controls.Add(discussionBox);
          }
       }
 
-      private Size? createDiscussionBox(Discussion discussion, Point location)
+      private GroupBox createDiscussionBox(Discussion discussion, Point location)
       {
          Debug.Assert(discussion.Notes.Count > 0);
 
@@ -85,19 +88,19 @@ namespace mrHelperUI
          }
 
          // @{ Margins for each control within Discussion Box
-         int discussionLabelMarginLeft = 10;
-         int discussionLabelMarginTop = 10;
-         int filenameTextBoxMarginLeft = 10;
-         int filenameTextBoxMarginTop = 10;
-         int noteTextBoxMarginLeft = 10;
-         int noteTextBoxMarginTop = 10;
-         int noteTextBoxMarginBottom = 10;
-         int noteTextBoxMarginRight = 10;
+         int discussionLabelMarginLeft = 7;
+         int discussionLabelMarginTop = 5;
+         int filenameTextBoxMarginLeft = 7;
+         int filenameTextBoxMarginTop = 5;
+         int noteTextBoxMarginLeft = 7;
+         int noteTextBoxMarginTop = 5;
+         int noteTextBoxMarginBottom = 5;
+         int noteTextBoxMarginRight = 7;
          // @}
 
          // @{ Sizes of controls
-         var filenameTextBoxSize = new Size(300, 20);
-         var noteTextBoxSize = new Size(300, 100);
+         var filenameTextBoxSize = new Size(400, 20);
+         var noteTextBoxSize = new Size(500, 20);
          // @}
 
          // Create a discussion box, which is a container of other controls
@@ -108,6 +111,7 @@ namespace mrHelperUI
          groupBox.Controls.Add(discussionLabel);
          discussionLabel.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
          discussionLabel.Location = new Point(discussionLabelMarginLeft, discussionLabelMarginTop);
+         discussionLabel.AutoSize = true;
 
          // Create a text box with filename
          // TODO This can be replaced with a rendered diff snippet later
@@ -118,25 +122,43 @@ namespace mrHelperUI
          filenameTextBox.Size = filenameTextBoxSize;
          if (firstNote.Type == DiscussionNoteType.DiffNote)
          {
-            filenameTextBox.Text = firstNote.Position.NewPath + " (" + firstNote.Position.NewLine + ")";
+            Debug.Assert(firstNote.Position.HasValue);
+            filenameTextBox.Text = convertPositionToText(firstNote.Position.Value);
          }
 
          // Create a series of boxes which represent notes
-         Point previousBoxLocation = new Point(noteTextBoxMarginLeft,
+         Point previousBoxLocation = new Point(0,
             filenameTextBox.Location.Y + filenameTextBox.Size.Height + noteTextBoxMarginTop);
+         Size previousBoxSize = new Size(0, 0);
+         int shownCount = 0;
          foreach (var note in discussion.Notes)
          {
+            if (note.System)
+            {
+               // skip spam
+               continue;
+            }
+
             TextBox textBox = new TextBox();
             groupBox.Controls.Add(textBox);
             toolTip.SetToolTip(textBox, "Created at " + note.CreatedAt.ToString() + " by " + note.Author.Name);
             textBox.ReadOnly = note.Author.Id != _currentUser.Id;
             textBox.Size = noteTextBoxSize;
+            textBox.Text = note.Body;
+            textBox.Multiline = true;
+            if (note.Resolvable && note.Resolved.HasValue && note.Resolved.Value)
+            {
+               textBox.BackColor = Color.LightGreen;
+            }
 
             Point textBoxLocation = new Point();
-            textBoxLocation.X = previousBoxLocation.X + noteTextBoxMarginLeft;
+            textBoxLocation.X = previousBoxLocation.X + previousBoxSize.Width + noteTextBoxMarginLeft;
             textBoxLocation.Y = previousBoxLocation.Y;
             textBox.Location = textBoxLocation;
             previousBoxLocation = textBoxLocation;
+            previousBoxSize = textBox.Size;
+
+            ++shownCount;
          }
 
          // Calculate discussion box location and size
@@ -150,13 +172,40 @@ namespace mrHelperUI
           + noteTextBoxMarginBottom;
 
          int groupBoxWidth =
-            noteTextBoxMarginLeft * discussion.Notes.Count
-          + noteTextBoxSize.Width * discussion.Notes.Count
+            noteTextBoxMarginLeft * shownCount
+          + noteTextBoxSize.Width * shownCount
           + noteTextBoxMarginRight;
 
          groupBox.Location = location;
-         groupBox.Size = new Size(groupBoxHeight, groupBoxWidth);
-         return groupBox.Size;
+         groupBox.Size = new Size(groupBoxWidth, groupBoxHeight);
+         return groupBox;
+      }
+
+      private static string convertPositionToText(PositionDetails positionDetails)
+      {
+         string result = "Before: ";
+
+         if (positionDetails.OldLine != null)
+         {
+            result += positionDetails.OldPath + " (line " + positionDetails.OldLine + ")";
+         }
+         else
+         {
+            result += "-";
+         }
+
+         result += "   After: ";
+
+         if (positionDetails.NewLine != null)
+         {
+            result += positionDetails.NewPath + " (line " + positionDetails.NewLine + ")";
+         }
+         else
+         {
+            result += "-";
+         }
+
+         return result;
       }
 
       private readonly string _host;
