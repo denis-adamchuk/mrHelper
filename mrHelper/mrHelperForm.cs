@@ -89,17 +89,15 @@ namespace mrHelperUI
 
       private void MrHelperForm_Load(object sender, EventArgs e)
       {
+         loadSettings();
          try
          {
             addCustomActions();
+            onApplicationStarted();
          }
          catch (Exception ex)
          {
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         finally
-         {
-            onApplicationStarted();
          }
       }
 
@@ -648,14 +646,10 @@ namespace mrHelperUI
          serializer.SerializeToDisk(details);
       }
 
-      private void onApplicationStarted()
+      private void loadSettings()
       {
          _settings = new UserDefinedSettings();
          loadConfiguration();
-
-         _timeTrackingTimer = new Timer();
-         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
-         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
@@ -671,6 +665,14 @@ namespace mrHelperUI
          {
             tabPageSettings.Select();
          }
+      }
+
+      private void onApplicationStarted()
+      {
+
+         _timeTrackingTimer = new Timer();
+         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
          integration.RegisterInGit(GitDiffToolName);
