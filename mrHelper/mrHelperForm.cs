@@ -625,7 +625,7 @@ namespace mrHelperUI
          details.AccessToken = item.AccessToken;
          details.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
          details.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
-         details.StartSHA = mergeRequest.StartSHA;  // SHA referencing commit in target branch
+         details.StartSHA = baseSHA;
          details.Host = item.Host;
          details.Id = mergeRequest.Id;
          details.Project = comboBoxProjects.Text;
