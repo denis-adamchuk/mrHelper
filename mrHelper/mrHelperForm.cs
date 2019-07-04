@@ -29,11 +29,16 @@ namespace mrHelperUI
 
       static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
       static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
+
+      /// <summary>
+      /// Tooltip timeout in seconds
+      /// </summary>
+      private const int notifyTooltipTimeout = 5;
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
       private const string CustomActionsFilename = "CustomActions.xml";
-      
+
       public mrHelperForm()
       {
          InitializeComponent();
@@ -41,6 +46,12 @@ namespace mrHelperUI
 
       private void addCustomActions()
       {
+         if (!File.Exists(CustomActionsFilename))
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state
+            // Do not try to load custom actions if they don't exist
+            return;
+         }
          CustomCommandLoader loader = new CustomCommandLoader(this);
          List<ICommand> commands = loader.LoadCommands(CustomActionsFilename);
          int id = 0;
@@ -59,7 +70,7 @@ namespace mrHelperUI
             button.UseVisualStyleBackColor = true;
             button.Enabled = false;
             button.TabStop = false;
-            button.Click += (x, y) => 
+            button.Click += (x, y) =>
             {
                try
                {
@@ -78,6 +89,7 @@ namespace mrHelperUI
 
       private void MrHelperForm_Load(object sender, EventArgs e)
       {
+         loadSettings();
          try
          {
             addCustomActions();
@@ -609,7 +621,7 @@ namespace mrHelperUI
          {
             return;
          }
-         
+
          string headSHA = diffArgs[diffArgs.Length - 1];
          string baseSHA = diffArgs[diffArgs.Length - 2];
 
@@ -630,18 +642,14 @@ namespace mrHelperUI
          details.Id = mergeRequest.Id;
          details.Project = comboBoxProjects.Text;
          details.TempFolder = textBoxLocalGitFolder.Text;
-         
+
          serializer.SerializeToDisk(details);
       }
 
-      private void onApplicationStarted()
+      private void loadSettings()
       {
          _settings = new UserDefinedSettings();
          loadConfiguration();
-         
-         _timeTrackingTimer = new Timer();
-         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
-         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
@@ -657,6 +665,14 @@ namespace mrHelperUI
          {
             tabPageSettings.Select();
          }
+      }
+
+      private void onApplicationStarted()
+      {
+
+         _timeTrackingTimer = new Timer();
+         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
          integration.RegisterInGit(GitDiffToolName);
@@ -794,7 +810,7 @@ namespace mrHelperUI
             }
             return;
          }
-         
+
          MergeRequest mergeRequest = getMergeRequest();
 
          // 1. Update status, add merge request url
@@ -899,8 +915,20 @@ namespace mrHelperUI
       private void onHideToTray(FormClosingEventArgs e)
       {
          e.Cancel = true;
+         if (_requireShowingTooltip)
+         {
+            showTooltipBalloon();
+         }
          Hide();
          ShowInTaskbar = false;
+      }
+
+      private void showTooltipBalloon()
+      {
+         // TODO: Maybe it's a good idea to save the requireShowingTooltip state
+         // so it's only shown once in a lifetime
+         notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
+         _requireShowingTooltip = false;
       }
 
       private void onRestoreWindow()
@@ -991,6 +1019,7 @@ namespace mrHelperUI
 
       private bool _exiting = false;
       private bool _loadingConfiguration = false;
+      private bool _requireShowingTooltip = true;
 
       UserDefinedSettings _settings;
 
@@ -1002,7 +1031,7 @@ namespace mrHelperUI
          public string Host;
          public string AccessToken;
       }
-        
+
       struct VersionComboBoxItem
       {
          public string SHA;
