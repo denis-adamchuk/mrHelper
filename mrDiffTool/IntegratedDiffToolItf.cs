@@ -5,7 +5,7 @@
    {
       string GetToolCommandArguments();
 
-      string GetToolName();
+      string[] GetToolNames();
 
       string GetToolCommand();
 
