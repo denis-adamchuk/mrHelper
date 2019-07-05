@@ -871,39 +871,44 @@ namespace mrHelperUI
          // 4. Start timer
          _timeTrackingTimer.Start();
 
-         // 5. Update information available to other instances
+         // 5. Reset and start stopwatch
+         _stopWatch.Reset();
+         _stopWatch.Start();
+
+         // 6. Update information available to other instances
          updateDetailsSnapshot();
       }
 
       private void onStopTimer(bool sendTrackedTime)
       {
-         // 1. Stop timer
+         // 1. Stop stopwatch
+         _stopWatch.Stop();
+
+         // 2. Stop timer
          _timeTrackingTimer.Stop();
 
-         // 2. Update information available to other instances
+         // 3. Update information available to other instances
          updateDetailsSnapshot();
 
-         // 3. Set default text to tracked time label
+         // 4. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
-         // 4. Update button text
+         // 5. Update button text
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
 
-         // 5. Send tracked time to server
+         // 6. Send tracked time to server
          if (sendTrackedTime)
          {
-            sendTrackedTimeSpan(DateTime.Now - _lastStartTimeStamp);
+            sendTrackedTimeSpan(_stopWatch.Elapsed);
          }
 
-         // 6. Allow others to track time
+         // 7. Allow others to track time
          timeTrackingMutex.ReleaseMutex();
       }
 
       private void onTimer(object sender, EventArgs e)
       {
-         // TODO Handle overflow
-         var span = DateTime.Now - _lastStartTimeStamp;
-         labelSpentTime.Text = span.ToString(@"hh\:mm\:ss");
+         labelSpentTime.Text = _stopWatch.Elapsed.ToString(@"hh\:mm\:ss");
       }
 
       private void onExitingByUser()
@@ -1022,6 +1027,9 @@ namespace mrHelperUI
       private bool _requireShowingTooltip = true;
 
       UserDefinedSettings _settings;
+
+      // For accurate time tracking
+      Stopwatch _stopWatch = new Stopwatch();
 
       // Last launched instance of a diff tool
       Process _difftool;
