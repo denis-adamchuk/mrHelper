@@ -33,9 +33,7 @@
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
          this.textBoxFileName = new System.Windows.Forms.TextBox();
-         this.textBoxLineNumber = new System.Windows.Forms.TextBox();
          this.labelFileName = new System.Windows.Forms.Label();
-         this.labelLineNumber = new System.Windows.Forms.Label();
          this.labelContext = new System.Windows.Forms.Label();
          this.labelDiscussionBody = new System.Windows.Forms.Label();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
@@ -75,16 +73,8 @@
          this.textBoxFileName.Location = new System.Drawing.Point(12, 25);
          this.textBoxFileName.Name = "textBoxFileName";
          this.textBoxFileName.ReadOnly = true;
-         this.textBoxFileName.Size = new System.Drawing.Size(497, 20);
+         this.textBoxFileName.Size = new System.Drawing.Size(578, 20);
          this.textBoxFileName.TabIndex = 0;
-         // 
-         // textBoxLineNumber
-         // 
-         this.textBoxLineNumber.Location = new System.Drawing.Point(515, 25);
-         this.textBoxLineNumber.Name = "textBoxLineNumber";
-         this.textBoxLineNumber.ReadOnly = true;
-         this.textBoxLineNumber.Size = new System.Drawing.Size(75, 20);
-         this.textBoxLineNumber.TabIndex = 1;
          // 
          // labelFileName
          // 
@@ -94,15 +84,6 @@
          this.labelFileName.Size = new System.Drawing.Size(54, 13);
          this.labelFileName.TabIndex = 5;
          this.labelFileName.Text = "File Name";
-         // 
-         // labelLineNumber
-         // 
-         this.labelLineNumber.AutoSize = true;
-         this.labelLineNumber.Location = new System.Drawing.Point(512, 9);
-         this.labelLineNumber.Name = "labelLineNumber";
-         this.labelLineNumber.Size = new System.Drawing.Size(67, 13);
-         this.labelLineNumber.TabIndex = 6;
-         this.labelLineNumber.Text = "Line Number";
          // 
          // labelContext
          // 
@@ -153,9 +134,7 @@
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.labelDiscussionBody);
          this.Controls.Add(this.labelContext);
-         this.Controls.Add(this.labelLineNumber);
          this.Controls.Add(this.labelFileName);
-         this.Controls.Add(this.textBoxLineNumber);
          this.Controls.Add(this.textBoxFileName);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
@@ -165,6 +144,7 @@
          this.MinimizeBox = false;
          this.Name = "NewDiscussionForm";
          this.Text = "New Discussion";
+         this.Load += new System.EventHandler(this.NewDiscussionForm_Load);
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -176,9 +156,7 @@
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.TextBox textBoxFileName;
-      private System.Windows.Forms.TextBox textBoxLineNumber;
       private System.Windows.Forms.Label labelFileName;
-      private System.Windows.Forms.Label labelLineNumber;
       private System.Windows.Forms.Label labelContext;
       private System.Windows.Forms.Label labelDiscussionBody;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;

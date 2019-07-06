@@ -1,0 +1,72 @@
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+
+namespace mrCore
+{
+   // This 'maker' creates a list of lines for either left or right side.
+   // The list starts from a line that is passed to GetContext() method and contains 'size' lines from the same side as
+   // the first line. If the first line is 'unmodified' then resulting list contains 'size' lines from the right side.
+   //
+   // Cost: one 'git show' command for each GetContext() call.
+   public class TextContextMaker : ContextMaker
+   {
+      public TextContextMaker(GitRepository gitRepository)
+      {
+         _gitRepository = gitRepository;
+      }
+
+      public DiffContext GetContext(Position position, int size)
+      {
+         Debug.Assert(position.OldLine != null || position.NewLine != null);
+
+         bool isRightSideContext = position.NewLine != null;
+         int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
+         string filename = isRightSideContext ? position.NewPath : position.OldPath;
+         string sha = isRightSideContext ? position.Refs.HeadSHA : position.Refs.BaseSHA;
+
+         return createDiffContext(linenumber, filename, sha, isRightSideContext, size);
+      }
+
+      // isRightSideContext is true when linenumber and sha correspond to the right side
+      private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext, int size)
+      {
+         DiffContext diffContext = new DiffContext();
+         diffContext.Lines = new List<DiffContext.Line>();
+
+         List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
+         Debug.Assert(linenumber > 0 && linenumber <= contents.Count);
+
+         IEnumerable<string> shiftedContents = contents.Skip(linenumber - 1);
+         foreach (string text in shiftedContents)
+         {
+            diffContext.Lines.Add(getContextLine(linenumber + diffContext.Lines.Count, isRightSideContext, text));
+            if (diffContext.Lines.Count == size + 1)
+            {
+               break;
+            }
+         }
+
+         return diffContext;
+      }
+
+      private static DiffContext.Line getContextLine(int linenumber, bool isRightSideContext, string text)
+      {
+         DiffContext.Line line = new DiffContext.Line();
+         line.Text = text;
+         line.Sides = new List<DiffContext.Line.Side>();
+
+         DiffContext.Line.Side side = new DiffContext.Line.Side();
+         side.Number = linenumber;
+         side.Right = isRightSideContext;
+         // this 'maker' makes no difference between modifieda and unmodified lines
+         side.State = isRightSideContext ? DiffContext.Line.State.Added : DiffContext.Line.State.Removed;
+
+         line.Sides.Add(side);
+         return line;
+      }
+
+      private readonly GitRepository _gitRepository;
+   }
+}
+

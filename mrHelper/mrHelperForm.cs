@@ -32,7 +32,7 @@ namespace mrHelperUI
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
-      private const string CustomActionsFilename = "CustomActions.xml";
+      private const string CustomActionsFileName = "CustomActions.xml";
       
       public mrHelperForm()
       {
@@ -42,7 +42,7 @@ namespace mrHelperUI
       private void addCustomActions()
       {
          CustomCommandLoader loader = new CustomCommandLoader(this);
-         List<ICommand> commands = loader.LoadCommands(CustomActionsFilename);
+         List<ICommand> commands = loader.LoadCommands(CustomActionsFileName);
          int id = 0;
          System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point();
          offSetFromGroupBoxTopLeft.X = 10;
@@ -196,6 +196,7 @@ namespace mrHelperUI
          try
          {
             updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+            _gitRepository = initializeGitRepository();
          }
          catch (Exception ex)
          {
@@ -459,37 +460,22 @@ namespace mrHelperUI
 
       private void onLaunchDiffTool()
       {
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
-         {
-            return;
-         }
-
-         string currentDirectory = Directory.GetCurrentDirectory();
-         try
-         {
-            string project = comboBoxProjects.Text;
-            string localGitFolder = textBoxLocalGitFolder.Text;
-            HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-            string repository = initializeGitRepository(localGitFolder, item.Host, project);
-
-            Directory.SetCurrentDirectory(repository);
-            _difftool = GitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
-         }
-         catch (Exception ex)
-         {
-            _difftool = null;
-            throw ex;
-         }
-         finally
-         {
-            Directory.SetCurrentDirectory(currentDirectory);
-         }
-
-         updateDetailsSnapshot();
+         _difftool = null; // in case the next line throws
+         _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
+         updateInterprocessSnapshot();
       }
 
-      string initializeGitRepository(string localGitFolder, string host, string projectWithNamespace)
+      GitRepository initializeGitRepository()
       {
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         {
+            return null;
+         }
+
+         string projectWithNamespace = comboBoxProjects.Text;
+         string localGitFolder = textBoxLocalGitFolder.Text;
+         string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
+
          if (!Directory.Exists(localGitFolder))
          {
             if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
@@ -504,29 +490,25 @@ namespace mrHelperUI
          }
 
          string project = projectWithNamespace.Split('/')[1];
-         string repository = localGitFolder + "/" + project;
-         if (!Directory.Exists(repository))
+         string path = localGitFolder + "/" + project;
+         if (!Directory.Exists(path))
          {
             if (MessageBox.Show("There is no project " + project + " repository within folder " + localGitFolder +
                ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.Yes)
             {
-               GitClient.CloneRepo(host, projectWithNamespace, repository);
+               return GitRepository.CreateByClone(host, projectWithNamespace, localGitFolder);
             }
             else
             {
                throw new ApplicationException(errorNoValidRepository);
             }
          }
-         else
-         {
-            string currentDir = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(repository);
-            GitClient.Fetch();
-            Directory.SetCurrentDirectory(currentDir);
-         }
 
-         return repository;
+         GitRepository gitRepository = new GitRepository(path);
+         gitRepository.Fetch();
+
+         return gitRepository;
       }
 
       private string getGitTag(bool left)
@@ -617,10 +599,10 @@ namespace mrHelperUI
          _settings.Update();
       }
 
-      private void updateDetailsSnapshot()
+      private void updateInterprocessSnapshot()
       {
          // delete old snapshot first
-         DetailedSnapshotSerializer serializer = new DetailedSnapshotSerializer();
+         InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
          serializer.PurgeSerialized();
 
          bool diffToolIsRunning = _difftool != null && !_difftool.HasExited;
@@ -647,17 +629,17 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
 
-         MergeRequestDetails details;
-         details.AccessToken = item.AccessToken;
-         details.Refs.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
-         details.Refs.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
-         details.Refs.StartSHA = baseSHA; 
-         details.Host = item.Host;
-         details.Id = mergeRequest.Id;
-         details.Project = comboBoxProjects.Text;
-         details.TempFolder = textBoxLocalGitFolder.Text;
+         InterprocessSnapshot snapshot;
+         snapshot.AccessToken = item.AccessToken;
+         snapshot.Refs.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
+         snapshot.Refs.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
+         snapshot.Refs.StartSHA = baseSHA; 
+         snapshot.Host = item.Host;
+         snapshot.Id = mergeRequest.Id;
+         snapshot.Project = comboBoxProjects.Text;
+         snapshot.TempFolder = textBoxLocalGitFolder.Text;
          
-         serializer.SerializeToDisk(details);
+         serializer.SerializeToDisk(snapshot);
       }
 
       private void onApplicationStarted()
@@ -884,7 +866,7 @@ namespace mrHelperUI
          _timeTrackingTimer.Start();
 
          // 5. Update information available to other instances
-         updateDetailsSnapshot();
+         updateInterprocessSnapshot();
       }
 
       private void onStopTimer(bool sendTrackedTime)
@@ -893,7 +875,7 @@ namespace mrHelperUI
          _timeTrackingTimer.Stop();
 
          // 2. Update information available to other instances
-         updateDetailsSnapshot();
+         updateInterprocessSnapshot();
 
          // 3. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
@@ -1021,6 +1003,7 @@ namespace mrHelperUI
       private bool _loadingConfiguration = false;
 
       UserDefinedSettings _settings;
+      GitRepository _gitRepository;
 
       // Last launched instance of a diff tool
       Process _difftool;

@@ -61,7 +61,7 @@ namespace mrCore
       public System.DateTime CreatedAt;
    }
 
-   public struct PositionDetails
+   public struct Position
    {
       public string OldPath;
       public string NewPath;
@@ -87,7 +87,7 @@ namespace mrCore
       public bool System;
       public bool Resolvable;
       public bool? Resolved;
-      public PositionDetails? Position; // notes with type DiffNote must have them (others must not)
+      public Position? Position; // notes with type DiffNote must have them (others must not)
    }
 
    public struct Discussion
@@ -100,6 +100,6 @@ namespace mrCore
    public struct DiscussionParameters
    {
       public string Body;
-      public PositionDetails? Position;
+      public Position? Position;
    }
 }

@@ -180,13 +180,13 @@ namespace mrHelperUI
          return groupBox;
       }
 
-      private static string convertPositionToText(PositionDetails positionDetails)
+      private static string convertPositionToText(Position position)
       {
          string result = "Before: ";
 
-         if (positionDetails.OldLine != null)
+         if (position.OldLine != null)
          {
-            result += positionDetails.OldPath + " (line " + positionDetails.OldLine + ")";
+            result += position.OldPath + " (line " + position.OldLine + ")";
          }
          else
          {
@@ -195,9 +195,9 @@ namespace mrHelperUI
 
          result += "   After: ";
 
-         if (positionDetails.NewLine != null)
+         if (position.NewLine != null)
          {
-            result += positionDetails.NewPath + " (line " + positionDetails.NewLine + ")";
+            result += position.NewPath + " (line " + position.NewLine + ")";
          }
          else
          {

@@ -11,40 +11,40 @@ namespace mrHelperUI
 {
    public partial class NewDiscussionForm : Form
    {
-      // TODO This should be replaced with DiffContext
-      private struct DiscussionContext
+      public NewDiscussionForm(InterprocessSnapshot snapshot, DiffToolInfo difftoolInfo)
       {
-         public IEnumerable<string> lines;
-         public string filename;
-         public string linenumber;
-         public int highlightedIndex;
-      }
+         _interprocessSnapshot = snapshot;
+         _difftoolInfo = difftoolInfo;
+         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project));
+         _matcher = new RefsToLinesMatcher(_gitRepository);
 
-      static int contextLinesToShow = 4;
- 
-      public NewDiscussionForm(MergeRequestDetails mrDetails, DiffToolInfo difftoolInfo)
-      {
-         _mergeRequestDetails = mrDetails;
-         _discussionBuilder = new DiscussionBuilder(mrDetails.Refs, difftoolInfo);
          InitializeComponent();
-
-         onApplicationStarted(ref difftoolInfo);
       }
 
-      private void onApplicationStarted(ref DiffToolInfo diffToolInfo)
+      private void NewDiscussionForm_Load(object sender, EventArgs e)
+      {
+         onApplicationStarted();
+      }
+
+      private void onApplicationStarted()
       {
          this.ActiveControl = textBoxDiscussionBody;
 
-         var positionState = _discussionBuilder.GetPositionState();
-         var context = loadDiscussionContext(diffToolInfo, positionState);
-         showDiscussionContext(textBoxContext, context);
-         showDiscussionContextDetails(textBoxFileName, textBoxLineNumber, context);
-
-         if (positionState == DiscussionBuilder.PositionState.Undefined)
+         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
+         if (_position.HasValue)
          {
+            Debug.Assert(false); // matching failed
+
             checkBoxIncludeContext.Checked = false;
             checkBoxIncludeContext.Enabled = false;
+            textBoxContext.Text = "N/A";
+            textBoxFileName.Text = "N/A";
+            return;
          }
+
+         TextContextMaker textContextMaker = new TextContextMaker(_gitRepository);
+         DiffContext context = textContextMaker.GetContext(_position.Value, 4);
+         showDiscussionContext(textBoxContext, textBoxFileName, context);
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
@@ -56,22 +56,27 @@ namespace mrHelperUI
             return;
          }
 
-         GitLabClient client = new GitLabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         DiscussionParameters parameters = new DiscussionParameters();
+         parameters.Body = textBoxDiscussionBody.Text;
+         parameters.Position = checkBoxIncludeContext.Checked ? _position : null;
+
+         GitLabClient client = new GitLabClient(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
          try
          {
             client.CreateNewMergeRequestDiscussion(
-               _mergeRequestDetails.Project, _mergeRequestDetails.Id,
-               _discussionBuilder.GetDiscussionParameters(textBoxDiscussionBody.Text, checkBoxIncludeContext.Checked));
+               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
          }
          catch (System.Net.WebException ex)
          {
             Debug.Assert(false);
+
             if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
-               // Fallback (need to send a discussion body only)
+               Debug.Assert(checkBoxIncludeContext.Checked); // otherwise we could not get an error...
+               parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
+               parameters.Position = null;
                client.CreateNewMergeRequestDiscussion(
-                  _mergeRequestDetails.Project, _mergeRequestDetails.Id,
-                  _discussionBuilder.GetDiscussionParameters(textBoxDiscussionBody.Text, false));
+                  _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
             }
             else if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.InternalServerError)
             { 
@@ -91,63 +96,42 @@ namespace mrHelperUI
          Close();
       }
 
-      static private void showDiscussionContext(RichTextBox textbox, DiscussionContext context)
+      private string getFallbackInfo()
       {
-         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Regular);
-         for (int index = 0; index < context.highlightedIndex; ++index)
-         {
-            textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
-         }
-
-         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Bold);
-         textbox.AppendText(context.lines.ElementAt(context.highlightedIndex) + "\r\n");
-
-         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Regular);
-         for (int index = context.highlightedIndex + 1; index < context.lines.Count(); ++index)
-         {
-            textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
-         }
+         return "<b>" + _difftoolInfo.LeftSideFileNameBrief + "</b>"
+            + " (line " + _difftoolInfo.LeftSideLineNumber.ToString() + ") <i>vs</i> "
+            + "<b>" + _difftoolInfo.RightSideFileNameBrief + "</b>"
+            + " (line " + _difftoolInfo.RightSideLineNumber.ToString() + ")";
       }
 
-      private void showDiscussionContextDetails(TextBox tbFilename, TextBox tbLineNumber, DiscussionContext context)
+      static private void showDiscussionContext(RichTextBox textbox, TextBox tbFileName, DiffContext context)
       {
-         tbFilename.Text = context.filename;
-         tbLineNumber.Text = context.linenumber.ToString();
+         //foreach (var line in context.Lines)
+         //{
+         //   string text;
+         //   if (line.NumberLeft.HasValue && line.NumberRight.HasValue)
+         //   {
+         //      text = line.NumberLeft.Value.ToString() + "(" + line.NumberRight.Value.ToString() + ") " + line.Text;
+         //   }
+         //   else if (line.NumberLeft.HasValue)
+         //   {
+         //      text = line.NumberLeft.Value.ToString() + " - " + line.Text;
+         //   }
+         //   else if (line.NumberRight.HasValue)
+         //   {
+         //      text = line.NumberRight.Value.ToString() + " + " + line.Text;
+         //   }
+         //   textbox.AppendText(line.Text + "\r\n");
+         //}
+
+         tbFileName.Text = context.FileName;
       }
 
-      static private DiscussionContext loadDiscussionContext(DiffToolInfo diffToolInfo, DiscussionBuilder.PositionState positionState)
-      {
-         DiscussionContext context = new DiscussionContext();
-         switch (positionState)
-         {
-            case DiscussionBuilder.PositionState.OldLineOnly:
-               context.lines = File.ReadLines(diffToolInfo.LeftSideFileNameFull).
-                  Skip(diffToolInfo.LeftSideLineNumber - 1).Take(contextLinesToShow);
-               context.filename = diffToolInfo.LeftSideFileNameBrief;
-               context.linenumber = diffToolInfo.LeftSideLineNumber.ToString();
-               break;
+      private readonly InterprocessSnapshot _interprocessSnapshot;
+      private readonly DiffToolInfo _difftoolInfo;
+      private readonly RefsToLinesMatcher _matcher;
 
-            case DiscussionBuilder.PositionState.NewLineOnly:
-            case DiscussionBuilder.PositionState.Both:
-               context.lines = File.ReadLines(diffToolInfo.RightSideFileNameFull).
-                  Skip(diffToolInfo.RightSideLineNumber - 1).Take(contextLinesToShow);
-               context.filename = diffToolInfo.RightSideFileNameBrief;
-               context.linenumber = diffToolInfo.RightSideLineNumber.ToString();
-               break;
-
-            case DiscussionBuilder.PositionState.Undefined:
-               List<string> strings = new List<string>();
-               strings.Add("N/A");
-               context.lines = strings;
-               context.filename = "N/A";
-               context.linenumber = "N/A";
-               break;
-         }
-         context.highlightedIndex = 0;
-         return context;
-      }
-
-      private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly DiscussionBuilder _discussionBuilder;
+      private Position? _position;
+      private GitRepository _gitRepository;
    }
 }

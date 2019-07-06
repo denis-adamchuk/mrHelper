@@ -250,24 +250,24 @@ namespace mrCore
             }
             if (item.ContainsKey("position"))
             {
-               discussionNote.Position = readPositionDetails(item["position"]);
+               discussionNote.Position = readposition(item["position"]);
             }
             discussion.Notes.Add(discussionNote);
          }
          return discussion;
       }
 
-      private static PositionDetails readPositionDetails(dynamic json)
+      private static Position readposition(dynamic json)
       {
-         PositionDetails positionDetails;
-         positionDetails.Refs.HeadSHA = json["head_sha"];
-         positionDetails.Refs.BaseSHA = json["base_sha"];
-         positionDetails.Refs.StartSHA = json["start_sha"];
-         positionDetails.OldLine = json["old_line"] != null ? json["old_line"].ToString() : null;
-         positionDetails.OldPath = json["old_path"];
-         positionDetails.NewLine = json["new_line"] != null ? json["new_line"].ToString() : null;
-         positionDetails.NewPath = json["new_path"];
-         return positionDetails;
+         Position position;
+         position.Refs.HeadSHA = json["head_sha"];
+         position.Refs.BaseSHA = json["base_sha"];
+         position.Refs.StartSHA = json["start_sha"];
+         position.OldLine = json["old_line"] != null ? json["old_line"].ToString() : null;
+         position.OldPath = json["old_path"];
+         position.NewLine = json["new_line"] != null ? json["new_line"].ToString() : null;
+         position.NewPath = json["new_path"];
+         return position;
       }
 
       private string post(string data)

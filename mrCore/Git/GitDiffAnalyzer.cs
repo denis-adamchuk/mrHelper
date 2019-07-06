@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
+   // This class is able to check whether a line number belongs to added/modified or deleted (or none of them)
    public class GitDiffAnalyzer
    {
       static Regex diffSectionRe = new Regex(
@@ -20,9 +21,9 @@ namespace mrCore
          public int RightSectionEnd;
       }
 
-      public GitDiffAnalyzer(string sha1, string sha2, string filename)
+      public GitDiffAnalyzer(GitRepository gitRepository, string sha1, string sha2, string filename)
       {
-         _sections = getDiffSections(sha1, sha2, filename);
+         _sections = getDiffSections(gitRepository, sha1, sha2, filename);
       }
 
       public bool IsLineAddedOrModified(int linenumber)
@@ -49,11 +50,12 @@ namespace mrCore
          return false;
       }
 
-      static private List<GitDiffSection> getDiffSections(string sha1, string sha2, string filename)
+      static private List<GitDiffSection> getDiffSections(GitRepository gitRepository,
+         string sha1, string sha2, string filename)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
-         List<string> diff = GitClient.Diff(sha1, sha2, filename);
+         List<string> diff = gitRepository.Diff(sha1, sha2, filename, 0);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);
@@ -85,3 +87,4 @@ namespace mrCore
       private readonly List<GitDiffSection> _sections;
    }
 }
+
