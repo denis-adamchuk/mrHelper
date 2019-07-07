@@ -47,8 +47,8 @@
     <Compile Include="Git\GitDiffAnalyzer.cs" />
     <Compile Include="GitLab\GitLabClient.cs" />
     <Compile Include="GitLab\GitLabStructs.cs" />
-    <Compile Include="Context\SimpleContextMaker.cs" />
-    <Compile Include="Context\TextContextMaker.cs" />
+    <Compile Include="Context\EnhancedContextMaker.cs" />
+    <Compile Include="Context\PlainContextMaker.cs" />
     <Compile Include="GitLab\UrlParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

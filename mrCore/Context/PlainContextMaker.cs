@@ -9,9 +9,9 @@ namespace mrCore
    // the first line. If the first line is 'unmodified' then resulting list contains 'size' lines from the right side.
    //
    // Cost: one 'git show' command for each GetContext() call.
-   public class TextContextMaker : ContextMaker
+   public class PlainContextMaker : ContextMaker
    {
-      public TextContextMaker(GitRepository gitRepository)
+      public PlainContextMaker(GitRepository gitRepository)
       {
          _gitRepository = gitRepository;
       }
@@ -35,13 +35,17 @@ namespace mrCore
          diffContext.Lines = new List<DiffContext.Line>();
 
          List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
-         Debug.Assert(linenumber > 0 && linenumber <= contents.Count);
+         if (linenumber <= 0 || linenumber > contents.Count)
+         {
+            Debug.Assert(false);
+            return new DiffContext();
+         }
 
          IEnumerable<string> shiftedContents = contents.Skip(linenumber - 1);
          foreach (string text in shiftedContents)
          {
             diffContext.Lines.Add(getContextLine(linenumber + diffContext.Lines.Count, isRightSideContext, text));
-            if (diffContext.Lines.Count == size + 1)
+            if (diffContext.Lines.Count == size)
             {
                break;
             }
@@ -59,7 +63,7 @@ namespace mrCore
          DiffContext.Line.Side side = new DiffContext.Line.Side();
          side.Number = linenumber;
          side.Right = isRightSideContext;
-         // this 'maker' makes no difference between modifieda and unmodified lines
+         // this 'maker' makes no difference between modified and unmodified lines
          side.State = isRightSideContext ? DiffContext.Line.State.Added : DiffContext.Line.State.Removed;
 
          line.Sides.Add(side);

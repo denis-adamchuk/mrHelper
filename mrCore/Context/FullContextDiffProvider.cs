@@ -9,8 +9,8 @@ namespace mrCore
    // Contains a diff between two revisions with all lines from each of revision including missing lines.
    public struct FullContextDiff
    {
-      public List<string> sha1context;
-      public List<string> sha2context;
+      public List<string> Left;
+      public List<string> Right;
    }
 
    // Provides two lists of the same size. First list contains lines from sha1 and null for missing lines. 
@@ -24,12 +24,12 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public FullContextDiff GetFullContextDiff(string sha1, string sha2, string filename)
+      public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA, string filename)
       {
          FullContextDiff fullContextDiff = new FullContextDiff();
-         fullContextDiff.sha1context = new List<string>();
-         fullContextDiff.sha2context = new List<string>();
-         List<string> fullDiff = _gitRepository.Diff(sha1, sha2, filename, maxDiffContext);
+         fullContextDiff.Left = new List<string>();
+         fullContextDiff.Right = new List<string>();
+         List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, filename, maxDiffContext);
          bool skip = true;
          foreach (string line in fullDiff)
          {
@@ -44,19 +44,20 @@ namespace mrCore
                }
                continue;
             }
+            var lineOrig = line.Substring(1, line.Length - 1);
             switch (sign)
             {
                case '-':
-                  fullContextDiff.sha1context.Add(line);
-                  fullContextDiff.sha2context.Add(null);
+                  fullContextDiff.Left.Add(lineOrig);
+                  fullContextDiff.Right.Add(null);
                   break;
                case '+':
-                  fullContextDiff.sha1context.Add(null);
-                  fullContextDiff.sha2context.Add(line);
+                  fullContextDiff.Left.Add(null);
+                  fullContextDiff.Right.Add(lineOrig);
                   break;
                case ' ':
-                  fullContextDiff.sha1context.Add(line);
-                  fullContextDiff.sha2context.Add(line);
+                  fullContextDiff.Left.Add(lineOrig);
+                  fullContextDiff.Right.Add(lineOrig);
                   break;
             }
          }

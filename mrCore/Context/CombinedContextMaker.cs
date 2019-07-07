@@ -30,76 +30,97 @@ namespace mrCore
          bool isRightSideContext = position.NewLine != null;
          int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
          string filename = isRightSideContext ? position.NewPath : position.OldPath;
-         string sha1 = position.Refs.BaseSHA;
-         string sha2 = position.Refs.HeadSHA;
+         string leftSHA = position.Refs.BaseSHA;
+         string rightSHA = position.Refs.HeadSHA;
 
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
-         return createDiffContext(linenumber, isRightSideContext, provider.GetFullContextDiff(sha1, sha2, filename), size);
+         FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, filename);
+         Debug.Assert(context.Left.Count == context.Right.Count);
+
+         return createDiffContext(linenumber, isRightSideContext, context, size);
       }
 
       // isRightSideContext is true when linenumber corresponds to the right side (sha2)
       private DiffContext createDiffContext(int linenumber, bool isRightSideContext, FullContextDiff context, int size)
       {
-         Debug.Assert(linenumber <= context.sha1context.Count);
-         Debug.Assert(context.sha1context.Count == context.sha2context.Count);
-
          int nullsAtLeft = 0;
          int nullsAtRight = 0;
          calculateNullLinesCount(linenumber, isRightSideContext, context, out nullsAtLeft, out nullsAtRight);
+         if (linenumber <= 0
+            || (isRightSideContext && linenumber + nullsAtRight > context.Right.Count)
+            || (!isRightSideContext && linenumber + nullsAtLeft > context.Left.Count))
+         {
+            Debug.Assert(false);
+            return new DiffContext();
+         }
 
          // counters of null-lines that we encounter within the loop below
-         int sha1Extra = 0;
-         int sha2Extra = 0;
+         int extraNullsAtLeft = 0;
+         int extraNullsAtRight = 0;
 
          DiffContext diffContext = new DiffContext();
          diffContext.Lines = new List<DiffContext.Line>();
          for (int iContextLine = 0; iContextLine < size; ++iContextLine)
          {
+            // one-base line number within a requested context
             int ctxLineNumber = linenumber + iContextLine;
 
             // zero-based line number in 'full context diff' lists
             int absLineNumber = ctxLineNumber - 1 + (isRightSideContext ? nullsAtRight : nullsAtLeft);
+            if (absLineNumber >= context.Left.Count)
+            {
+               // we've just reached the end
+               break;
+            }
 
             // one-based line number in sha1 file
-            int sha1LineNumber = ctxLineNumber - sha1Extra + (isRightSideContext ? nullsAtRight - nullsAtLeft : 0);
+            int leftLineNumber =
+               ctxLineNumber - extraNullsAtLeft + (isRightSideContext ? nullsAtRight - nullsAtLeft : 0);
 
             // one-based line number in sha2 file
-            int sha2LineNumber = ctxLineNumber - sha2Extra + (isRightSideContext ? 0 : nullsAtLeft - nullsAtRight);
+            int rightLineNumber =
+               ctxLineNumber - extraNullsAtRight + (isRightSideContext ? 0 : nullsAtLeft - nullsAtRight);
 
-            diffContext.Lines.Add(getLineContext(absLineNumber, sha1LineNumber, sha2LineNumber, context,
-               ref sha1Extra, ref sha2Extra));
+            DiffContext.Line line =
+               getLineContext(absLineNumber, leftLineNumber, rightLineNumber, context,
+                  ref extraNullsAtLeft, ref extraNullsAtRight);
+            diffContext.Lines.Add(line);
 
             if (iContextLine == 0)
             {
                // discard increments of extra null lines at the first iteration because these null lines
                // are included in nullsAtLeft and nullsAtRight
-               sha1Extra = 0;
-               sha2Extra = 0;
+               extraNullsAtLeft = 0;
+               extraNullsAtRight = 0;
             }
          }
          return diffContext;
       }
 
-      private static DiffContext.Line getLineContext(int absLineNumber, int sha1LineNumber, int sha2LineNumber,
-         FullContextDiff context, ref int sha1Extra, ref int sha2Extra)
+      private static DiffContext.Line getLineContext(int absLineNumber, int leftLineNumber, int rightLineNumber,
+         FullContextDiff context, ref int extraNullsAtLeft, ref int extraNullsAtRight)
       {
          DiffContext.Line line = new DiffContext.Line();
          line.Sides = new List<DiffContext.Line.Side>();
 
-         if (context.sha1context[absLineNumber] != null & context.sha2context[absLineNumber] != null)
+         if (context.Left[absLineNumber] != null & context.Right[absLineNumber] != null)
          {
-            line.Sides.Add(getSide(sha1LineNumber, false, DiffContext.Line.State.Unchanged));
-            line.Sides.Add(getSide(sha2LineNumber, true, DiffContext.Line.State.Unchanged));
+            Debug.Assert(context.Left[absLineNumber] == context.Right[absLineNumber]);
+            line.Sides.Add(getSide(leftLineNumber, false, DiffContext.Line.State.Unchanged));
+            line.Sides.Add(getSide(rightLineNumber, true, DiffContext.Line.State.Unchanged));
+            line.Text = context.Left[absLineNumber];
          }
-         else if (context.sha1context[absLineNumber] != null)
+         else if (context.Left[absLineNumber] != null)
          {
-            ++sha2Extra;
-            line.Sides.Add(getSide(sha1LineNumber, false, DiffContext.Line.State.Removed));
+            ++extraNullsAtRight;
+            line.Sides.Add(getSide(leftLineNumber, false, DiffContext.Line.State.Removed));
+            line.Text = context.Left[absLineNumber];
          }
-         else if (context.sha2context[absLineNumber] != null)
+         else if (context.Right[absLineNumber] != null)
          {
-            ++sha1Extra;
-            line.Sides.Add(getSide(sha2LineNumber, true, DiffContext.Line.State.Added));
+            ++extraNullsAtLeft;
+            line.Sides.Add(getSide(rightLineNumber, true, DiffContext.Line.State.Added));
+            line.Text = context.Right[absLineNumber];
          }
          else
          {
@@ -126,20 +147,20 @@ namespace mrCore
          nullsAtRight = 0;
 
          // calculate number of 'null' lines at each side
-         for (int iLine = 0; iLine < context.sha1context.Count; ++iLine)
+         for (int iLine = 0; iLine < context.Left.Count; ++iLine)
          {
-            if (context.sha1context[iLine] == null)
+            if (context.Left[iLine] == null)
             {
                nullsAtLeft++;
             }
 
-            if (context.sha2context[iLine] == null)
+            if (context.Right[iLine] == null)
             {
                nullsAtRight++;
             }
 
-            if ((isRightSideContext && context.sha2context[iLine] != null)
-            || (!isRightSideContext && context.sha1context[iLine] != null))
+            if ((isRightSideContext && context.Right[iLine] != null)
+            || (!isRightSideContext && context.Left[iLine] != null))
             {
                ++lineCount;
                if (lineCount == linenumber)

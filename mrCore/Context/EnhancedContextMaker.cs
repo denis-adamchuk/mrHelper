@@ -12,9 +12,9 @@ namespace mrCore
    // removed vs unchanged for left-side.
    //
    // Cost: one 'git show' and one 'git diff -U0' for each GetContext() call
-   public class SimpleContextMaker : ContextMaker
+   public class EnhancedContextMaker : ContextMaker
    {
-      public SimpleContextMaker(GitRepository gitRepository)
+      public EnhancedContextMaker(GitRepository gitRepository)
       {
          _gitRepository = gitRepository;
       }
@@ -45,12 +45,19 @@ namespace mrCore
          diffContext.Lines = new List<DiffContext.Line>();
 
          List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
+         if (linenumber <= 0 || linenumber > contents.Count)
+         {
+            Debug.Assert(false);
+            return new DiffContext();
+         }
+
          diffContext.Lines.Add(getLineContext(linenumber, isRightSideContext, analyzer, contents));
 
          for (int iContextLine = 1; iContextLine < size; ++iContextLine)
          {
             if (linenumber + iContextLine == contents.Count + 1)
             {
+               // we have just reached the end
                break;
             }
             diffContext.Lines.Add(getLineContext(linenumber + iContextLine, isRightSideContext, analyzer, contents));

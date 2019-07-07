@@ -42,7 +42,7 @@ namespace mrHelperUI
             return;
          }
 
-         TextContextMaker textContextMaker = new TextContextMaker(_gitRepository);
+         PlainContextMaker textContextMaker = new PlainContextMaker(_gitRepository);
          DiffContext context = textContextMaker.GetContext(_position.Value, 4);
          showDiscussionContext(textBoxContext, textBoxFileName, context);
       }
