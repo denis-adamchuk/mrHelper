@@ -37,7 +37,7 @@
          this.labelContext = new System.Windows.Forms.Label();
          this.labelDiscussionBody = new System.Windows.Forms.Label();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
-         this.textBoxContext = new System.Windows.Forms.RichTextBox();
+         this.webBrowserContext = new System.Windows.Forms.WebBrowser();
          this.SuspendLayout();
          // 
          // textBoxDiscussionBody
@@ -115,22 +115,22 @@
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
-         // textBoxContext
+         // webBrowserContext
          // 
-         this.textBoxContext.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-         this.textBoxContext.Location = new System.Drawing.Point(12, 73);
-         this.textBoxContext.Name = "textBoxContext";
-         this.textBoxContext.ReadOnly = true;
-         this.textBoxContext.Size = new System.Drawing.Size(578, 96);
-         this.textBoxContext.TabIndex = 2;
-         this.textBoxContext.Text = "";
+         this.webBrowserContext.AllowNavigation = false;
+         this.webBrowserContext.Location = new System.Drawing.Point(12, 73);
+         this.webBrowserContext.MinimumSize = new System.Drawing.Size(20, 20);
+         this.webBrowserContext.Name = "webBrowserContext";
+         this.webBrowserContext.Size = new System.Drawing.Size(578, 101);
+         this.webBrowserContext.TabIndex = 10;
+         this.webBrowserContext.WebBrowserShortcutsEnabled = false;
          // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(602, 353);
-         this.Controls.Add(this.textBoxContext);
+         this.Controls.Add(this.webBrowserContext);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.labelDiscussionBody);
          this.Controls.Add(this.labelContext);
@@ -160,6 +160,6 @@
       private System.Windows.Forms.Label labelContext;
       private System.Windows.Forms.Label labelDiscussionBody;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
-      private System.Windows.Forms.RichTextBox textBoxContext;
+      private System.Windows.Forms.WebBrowser webBrowserContext;
    }
 }

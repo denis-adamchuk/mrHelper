@@ -15,7 +15,7 @@ namespace mrHelperUI
       {
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
-         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project));
+         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]));
          _matcher = new RefsToLinesMatcher(_gitRepository);
 
          InitializeComponent();
@@ -30,21 +30,22 @@ namespace mrHelperUI
       {
          this.ActiveControl = textBoxDiscussionBody;
 
+         System.Threading.Thread.Sleep(10000);
          _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         if (_position.HasValue)
+         if (!_position.HasValue)
          {
             Debug.Assert(false); // matching failed
 
             checkBoxIncludeContext.Checked = false;
             checkBoxIncludeContext.Enabled = false;
-            textBoxContext.Text = "N/A";
+            webBrowserContext.DocumentText = "<html><body>N/A</body></html>";
             textBoxFileName.Text = "N/A";
             return;
          }
 
          PlainContextMaker textContextMaker = new PlainContextMaker(_gitRepository);
          DiffContext context = textContextMaker.GetContext(_position.Value, 4);
-         showDiscussionContext(textBoxContext, textBoxFileName, context);
+         showDiscussionContext(webBrowserContext, textBoxFileName, context);
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
@@ -104,26 +105,10 @@ namespace mrHelperUI
             + " (line " + _difftoolInfo.RightSideLineNumber.ToString() + ")";
       }
 
-      static private void showDiscussionContext(RichTextBox textbox, TextBox tbFileName, DiffContext context)
+      static private void showDiscussionContext(WebBrowser webBrowser, TextBox tbFileName, DiffContext context)
       {
-         //foreach (var line in context.Lines)
-         //{
-         //   string text;
-         //   if (line.NumberLeft.HasValue && line.NumberRight.HasValue)
-         //   {
-         //      text = line.NumberLeft.Value.ToString() + "(" + line.NumberRight.Value.ToString() + ") " + line.Text;
-         //   }
-         //   else if (line.NumberLeft.HasValue)
-         //   {
-         //      text = line.NumberLeft.Value.ToString() + " - " + line.Text;
-         //   }
-         //   else if (line.NumberRight.HasValue)
-         //   {
-         //      text = line.NumberRight.Value.ToString() + " + " + line.Text;
-         //   }
-         //   textbox.AppendText(line.Text + "\r\n");
-         //}
-
+         DiffContextFormatter formatter = new DiffContextFormatter();
+         webBrowser.DocumentText = formatter.FormatAsHTML(context);
          tbFileName.Text = context.FileName;
       }
 

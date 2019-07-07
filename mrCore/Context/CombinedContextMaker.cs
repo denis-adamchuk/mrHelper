@@ -101,25 +101,24 @@ namespace mrCore
          FullContextDiff context, ref int extraNullsAtLeft, ref int extraNullsAtRight)
       {
          DiffContext.Line line = new DiffContext.Line();
-         line.Sides = new List<DiffContext.Line.Side>();
 
          if (context.Left[absLineNumber] != null & context.Right[absLineNumber] != null)
          {
             Debug.Assert(context.Left[absLineNumber] == context.Right[absLineNumber]);
-            line.Sides.Add(getSide(leftLineNumber, false, DiffContext.Line.State.Unchanged));
-            line.Sides.Add(getSide(rightLineNumber, true, DiffContext.Line.State.Unchanged));
+            line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Unchanged);
+            line.Right = getSide(rightLineNumber, true, DiffContext.Line.State.Unchanged);
             line.Text = context.Left[absLineNumber];
          }
          else if (context.Left[absLineNumber] != null)
          {
             ++extraNullsAtRight;
-            line.Sides.Add(getSide(leftLineNumber, false, DiffContext.Line.State.Removed));
+            line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Removed);
             line.Text = context.Left[absLineNumber];
          }
          else if (context.Right[absLineNumber] != null)
          {
             ++extraNullsAtLeft;
-            line.Sides.Add(getSide(rightLineNumber, true, DiffContext.Line.State.Added));
+            line.Right = getSide(rightLineNumber, true, DiffContext.Line.State.Added);
             line.Text = context.Right[absLineNumber];
          }
          else
@@ -133,9 +132,8 @@ namespace mrCore
       private static DiffContext.Line.Side getSide(int lineNumber, bool right, DiffContext.Line.State state)
       {
          DiffContext.Line.Side side = new DiffContext.Line.Side();
-         side.State = state;
          side.Number = lineNumber;
-         side.Right = right;
+         side.State = state;
          return side;
       }
 

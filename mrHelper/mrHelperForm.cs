@@ -183,6 +183,7 @@ namespace mrHelperUI
       {
          try
          {
+            _gitRepository = null;
             updateProjectsDropdownList(getAllProjects());
          }
          catch (Exception ex)
@@ -195,8 +196,8 @@ namespace mrHelperUI
       {
          try
          {
+            _gitRepository = null;
             updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
-            _gitRepository = initializeGitRepository();
          }
          catch (Exception ex)
          {
@@ -345,8 +346,14 @@ namespace mrHelperUI
             return;
          }
 
+         if (_gitRepository == null)
+         {
+            _gitRepository = initializeGitRepository();
+         }
+
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id);
+         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id,
+            _gitRepository);
          form.Show(this);
       }
 
@@ -460,6 +467,11 @@ namespace mrHelperUI
 
       private void onLaunchDiffTool()
       {
+         if (_gitRepository == null)
+         {
+            _gitRepository = initializeGitRepository();
+         }
+
          _difftool = null; // in case the next line throws
          _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
          updateInterprocessSnapshot();
@@ -490,7 +502,7 @@ namespace mrHelperUI
          }
 
          string project = projectWithNamespace.Split('/')[1];
-         string path = localGitFolder + "/" + project;
+         string path = Path.Combine(localGitFolder, project);
          if (!Directory.Exists(path))
          {
             if (MessageBox.Show("There is no project " + project + " repository within folder " + localGitFolder +

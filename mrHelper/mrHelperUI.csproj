@@ -50,6 +50,7 @@
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Configuration.cs" />
+    <Compile Include="DiffContextFormatter.cs" />
     <Compile Include="DiscussionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -106,6 +107,7 @@
     <None Include="mrHelper.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\diff-context.css" />
     <None Include="Resources\TrayIcon.ico" />
   </ItemGroup>
   <ItemGroup>

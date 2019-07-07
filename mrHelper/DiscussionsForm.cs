@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,13 +15,20 @@ namespace mrHelperUI
 {
    public partial class DiscussionsForm : Form
    {
-      public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId)
+      private const int EM_GETLINECOUNT = 0xba;
+      [DllImport("user32", EntryPoint = "SendMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
+      private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam); 
+
+      public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId,
+         GitRepository gitRepository)
       {
          _host = host;
          _accessToken = accessToken;
          _projectId = projectId;
          _mergeRequestId = mergeRequestId;
          _currentUser = getUser();
+         _gitRepository = gitRepository;
+         _contextMaker = new CombinedContextMaker(_gitRepository);
 
          InitializeComponent();
       }
@@ -29,7 +37,10 @@ namespace mrHelperUI
       {
          try
          {
+            this.Hide();
             renderDiscussions(loadDiscussions());
+            this.Show();
+            this.Invalidate();
          }
          catch (Exception ex)
          {
@@ -52,9 +63,9 @@ namespace mrHelperUI
       private void renderDiscussions(List<Discussion> discussions)
       {
          int groupBoxMarginLeft = 10;
-         int groupBoxMarginTop = 10;
+         int groupBoxMarginTop = 15;
 
-         Point previousBoxLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point previousBoxLocation = new Point();
          Size previousBoxSize = new Size();
          foreach (var discussion in discussions)
          {
@@ -65,7 +76,7 @@ namespace mrHelperUI
 
             Point location = new Point();
             location.X = groupBoxMarginLeft;
-            location.Y = previousBoxLocation.Y + previousBoxSize.Height;
+            location.Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop;
             var discussionBox = createDiscussionBox(discussion, location);
             if (discussionBox != null)
             {
@@ -88,9 +99,10 @@ namespace mrHelperUI
 
          // @{ Margins for each control within Discussion Box
          int discussionLabelMarginLeft = 7;
-         int discussionLabelMarginTop = 5;
-         int filenameTextBoxMarginLeft = 7;
-         int filenameTextBoxMarginTop = 5;
+         int discussionLabelMarginTop = 9;
+         int webBrowserMarginLeft = 7;
+         int filenameTextBoxMarginRight = 7;
+         int webBrowserMarginTop = 5;
          int noteTextBoxMarginLeft = 7;
          int noteTextBoxMarginTop = 5;
          int noteTextBoxMarginBottom = 5;
@@ -98,8 +110,8 @@ namespace mrHelperUI
          // @}
 
          // @{ Sizes of controls
-         var filenameTextBoxSize = new Size(400, 20);
-         var noteTextBoxSize = new Size(500, 20);
+         var filenameTextBoxSize = new Size(1000, 60);
+         var noteTextBoxSize = new Size(500, 0 /* height is adjusted to line count */); 
          // @}
 
          // Create a discussion box, which is a container of other controls
@@ -112,23 +124,42 @@ namespace mrHelperUI
          discussionLabel.Location = new Point(discussionLabelMarginLeft, discussionLabelMarginTop);
          discussionLabel.AutoSize = true;
 
-         // Create a text box with filename
-         // TODO This can be replaced with a rendered diff snippet later
-         TextBox filenameTextBox = new TextBox();
-         groupBox.Controls.Add(filenameTextBox);
-         filenameTextBox.Location = new Point(filenameTextBoxMarginLeft,
-            discussionLabel.Location.Y + discussionLabel.Size.Height + filenameTextBoxMarginTop);
-         filenameTextBox.Size = filenameTextBoxSize;
+         // Create a box that shows diff context
+         Point webBrowserLocation = new Point(webBrowserMarginLeft,
+            discussionLabel.Location.Y + discussionLabel.Size.Height );
+         Size webBrowserSize = new Size();
          if (firstNote.Type == DiscussionNoteType.DiffNote)
          {
-            Debug.Assert(firstNote.Position.HasValue);
-            filenameTextBox.Text = convertPositionToText(firstNote.Position.Value);
+            WebBrowser webBrowser = new WebBrowser();
+            groupBox.Controls.Add(webBrowser);
+            webBrowser.Location = new Point(webBrowserLocation.X, webBrowserLocation.Y + webBrowserMarginTop);
+            webBrowser.Size = filenameTextBoxSize;
+            webBrowser.AllowNavigation = false;
+            webBrowser.WebBrowserShortcutsEnabled = false;
+            webBrowser.ScrollBarsEnabled = false;
+
+            try
+            {
+               DiffContextFormatter diffContextFormatter = new DiffContextFormatter();
+               Debug.Assert(firstNote.Position.HasValue);
+               DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, 4);
+               string text = diffContextFormatter.FormatAsHTML(context);
+               webBrowser.DocumentText = text;
+            }
+            catch (Exception)
+            {
+               webBrowser.DocumentText = "<html><body>Cannot show diff context</body></html>";
+            }
+
+            webBrowserLocation = webBrowser.Location;
+            webBrowserSize = webBrowser.Size;
          }
 
          // Create a series of boxes which represent notes
          Point previousBoxLocation = new Point(0,
-            filenameTextBox.Location.Y + filenameTextBox.Size.Height + noteTextBoxMarginTop);
+            webBrowserLocation.Y + webBrowserSize.Height + noteTextBoxMarginTop);
          Size previousBoxSize = new Size(0, 0);
+         int biggestTextBoxHeight = previousBoxSize.Height;
          int shownCount = 0;
          foreach (var note in discussion.Notes)
          {
@@ -145,6 +176,8 @@ namespace mrHelperUI
             textBox.Size = noteTextBoxSize;
             textBox.Text = note.Body;
             textBox.Multiline = true;
+            var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
+            textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
             if (note.Resolvable && note.Resolved.HasValue && note.Resolved.Value)
             {
                textBox.BackColor = Color.LightGreen;
@@ -158,53 +191,27 @@ namespace mrHelperUI
             previousBoxSize = textBox.Size;
 
             ++shownCount;
+
+            biggestTextBoxHeight = Math.Max(biggestTextBoxHeight, textBox.Height);
          }
 
          // Calculate discussion box location and size
          int groupBoxHeight =
             discussionLabelMarginTop
           + discussionLabel.Height
-          + filenameTextBoxMarginTop
-          + filenameTextBox.Height
+          + webBrowserMarginTop
+          + webBrowserSize.Height
           + noteTextBoxMarginTop
-          + noteTextBoxSize.Height
+          + biggestTextBoxHeight
           + noteTextBoxMarginBottom;
 
          int groupBoxWidth =
-            noteTextBoxMarginLeft * shownCount
-          + noteTextBoxSize.Width * shownCount
-          + noteTextBoxMarginRight;
+          + Math.Max(webBrowserMarginLeft + webBrowserSize.Width + filenameTextBoxMarginRight,
+                     (noteTextBoxMarginLeft + noteTextBoxSize.Width) * shownCount + noteTextBoxMarginRight);
 
          groupBox.Location = location;
          groupBox.Size = new Size(groupBoxWidth, groupBoxHeight);
          return groupBox;
-      }
-
-      private static string convertPositionToText(Position position)
-      {
-         string result = "Before: ";
-
-         if (position.OldLine != null)
-         {
-            result += position.OldPath + " (line " + position.OldLine + ")";
-         }
-         else
-         {
-            result += "-";
-         }
-
-         result += "   After: ";
-
-         if (position.NewLine != null)
-         {
-            result += position.NewPath + " (line " + position.NewLine + ")";
-         }
-         else
-         {
-            result += "-";
-         }
-
-         return result;
       }
 
       private readonly string _host;
@@ -212,6 +219,8 @@ namespace mrHelperUI
       private readonly string _projectId;
       private readonly int _mergeRequestId;
       private readonly User _currentUser;
+      private readonly GitRepository _gitRepository;
+      private readonly ContextMaker _contextMaker;
    }
 }
 

@@ -43,10 +43,11 @@ namespace mrCore
          snapshot.AccessToken = json["AccessToken"];
          snapshot.Project = json["Project"];
          snapshot.Id = json["Id"];
-         snapshot.Refs.BaseSHA = json["BaseSHA"];
-         snapshot.Refs.StartSHA = json["StartSHA"];
-         snapshot.Refs.HeadSHA = json["HeadSHA"];
          snapshot.TempFolder = json["TempFolder"];
+         dynamic refs = json["Refs"];
+         snapshot.Refs.BaseSHA = refs["BaseSHA"];
+         snapshot.Refs.StartSHA = refs["StartSHA"];
+         snapshot.Refs.HeadSHA = refs["HeadSHA"];
          return snapshot;
       }
 

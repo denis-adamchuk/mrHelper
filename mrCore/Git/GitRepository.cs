@@ -16,6 +16,8 @@ namespace mrCore
          }
 
          _path = path;
+         _cachedDiffs = new Dictionary<DiffCacheKey, List<string>>();
+         _cachedRevisions = new Dictionary<RevisionCacheKey, List<string>>();
       }
 
       // Creates a new git repository by cloning a passed project into a dir with the same name at the given path
@@ -85,19 +87,45 @@ namespace mrCore
 
       public List<string> Diff(string leftcommit, string rightcommit, string filename, int context)
       {
-         return (List<string>)exec(() =>
+         DiffCacheKey key = new DiffCacheKey();
+         key.sha1 = leftcommit;
+         key.sha2 = rightcommit;
+         key.filename = filename;
+         key.context = context;
+
+         if (_cachedDiffs.ContainsKey(key))
+         {
+            return _cachedDiffs[key];
+         }
+
+         List<string> result = (List<string>)exec(() =>
          {
             var arguments = "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit + " -- " + filename;
             return gatherStdOutputLines(arguments);
          });
+
+         _cachedDiffs[key] = result;
+         return result;
       }
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
-         return (List<string>)exec(() =>
+         RevisionCacheKey key = new RevisionCacheKey();
+         key.filename = filename;
+         key.sha = sha;
+
+         if (_cachedRevisions.ContainsKey(key))
+         {
+            return _cachedRevisions[key];
+         }
+
+         List<string> result = (List<string>)exec(() =>
          {
             return gatherStdOutputLines("show " + sha + ":" + filename);
          });
+
+         _cachedRevisions[key] = result;
+         return result;
       }
 
       static private List<string> gatherStdOutputLines(string arguments)
@@ -142,6 +170,24 @@ namespace mrCore
       }
 
       readonly string _path; // Path to repository
+
+      private struct DiffCacheKey
+      {
+         public string sha1;
+         public string sha2;
+         public string filename;
+         public int context;
+      }
+
+      private Dictionary<DiffCacheKey, List<string>> _cachedDiffs;
+
+      private struct RevisionCacheKey
+      {
+         public string sha;
+         public string filename;
+      }
+
+      private Dictionary<RevisionCacheKey, List<string>> _cachedRevisions;
    }
 }
 

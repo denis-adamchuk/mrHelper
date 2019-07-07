@@ -1,0 +1,75 @@
+table { 
+   font-family: Consolas, monospace;
+   font-size: 11px;
+   position: absolute;
+   top: 0;
+   bottom: 0;
+   left: 0;
+   right: 0;
+   height: 100%;
+   width: 100%;
+}
+
+.linenumbers {
+   width: 100px;
+}
+                  
+.text-diff {
+}
+
+.unchanged-linenumber-left {
+   color: rgb(175, 175, 175);
+   background-color: rgb(250, 250, 250);
+   float: left;
+   text-align: center;
+   width: 50%;
+}
+
+.unchanged-linenumber-right {
+   color: rgb(175, 175, 175);
+   background-color: rgb(250, 250, 250);
+   float: right;
+   text-align: center;
+   width: 50%;
+}
+
+.dummy-linenumber-left{
+   float: left;
+   width: 50%;
+}
+
+.dummy-linenumber-right {
+   float: right;
+   width: 50%;
+}
+
+.removed-linenumber{
+   color: rgb(175, 175, 175);
+   background-color: rgb(249, 215, 220);
+   text-align: center;
+   float: left;
+   width: 50%;
+}
+
+.added-linenumber{
+   color: rgb(175, 175, 175);
+   background-color: rgb(221, 251, 230);
+   text-align: center;
+   float: right;
+   width: 50%;
+}
+
+.unchanged-line {
+   color: rgb(46, 46, 46);
+   background-color: white;
+}
+
+.removed-line {
+   color: rgb(46, 46, 46);
+   background-color: rgb(251, 233, 235);
+}
+
+.added-line {
+   color: rgb(46, 46, 46);
+   background-color: rgb(236, 253, 240);
+}

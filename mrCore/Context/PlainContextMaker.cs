@@ -58,15 +58,22 @@ namespace mrCore
       {
          DiffContext.Line line = new DiffContext.Line();
          line.Text = text;
-         line.Sides = new List<DiffContext.Line.Side>();
 
          DiffContext.Line.Side side = new DiffContext.Line.Side();
          side.Number = linenumber;
-         side.Right = isRightSideContext;
-         // this 'maker' makes no difference between modified and unmodified lines
+         
+         // this 'maker' cannot distinguish between modified and unmodified lines
          side.State = isRightSideContext ? DiffContext.Line.State.Added : DiffContext.Line.State.Removed;
 
-         line.Sides.Add(side);
+         if (isRightSideContext)
+         {
+            line.Right = side;
+         }
+         else
+         {
+            line.Left = side;
+         }
+
          return line;
       }
 

@@ -73,14 +73,22 @@ namespace mrCore
 
          DiffContext.Line line = new DiffContext.Line();
          line.Text = contents[linenumber - 1];
-         line.Sides = new List<DiffContext.Line.Side>();
 
          DiffContext.Line.Side side = new DiffContext.Line.Side();
-         side.State = getLineState(analyzer, linenumber, isRightSideContext);
-         side.Right = isRightSideContext;
          side.Number = linenumber;
 
-         line.Sides.Add(side);
+         // this maker supports all three states
+         side.State = getLineState(analyzer, linenumber, isRightSideContext);
+
+         if (isRightSideContext)
+         {
+            line.Right = side;
+         }
+         else
+         {
+            line.Left = side;
+         }
+
          return line;
       }
 

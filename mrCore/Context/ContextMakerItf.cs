@@ -19,13 +19,13 @@ namespace mrCore
          
          public struct Side
          {
-            public bool Right; // false - Left, true - Right
             public int Number;
             public State State;
          }
          
          public string Text;
-         public List<Side> Sides;
+         public Side? Left;
+         public Side? Right;
       }
 
       public string FileName;
