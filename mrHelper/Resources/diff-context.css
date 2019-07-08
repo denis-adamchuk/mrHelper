@@ -12,6 +12,7 @@ table {
    left: 0;
    right: 0;
    width: 100%;
+   margin: 0;
    border-collapse: collapse;
 }
 
@@ -22,6 +23,7 @@ tr {
 td {
    border-right: solid 1px rgb(240, 240, 240);
    border-left: solid 1px rgb(240, 240, 240);
+   margin: 0;
 }
 
 td.linenumbers {

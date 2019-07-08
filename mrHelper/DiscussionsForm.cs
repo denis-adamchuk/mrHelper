@@ -97,6 +97,8 @@ namespace mrHelperUI
             return null;
          }
 
+         int contextSize = 4;
+
          // @{ Margins for each control within Discussion Box
          int discussionLabelMarginLeft = 7;
          int discussionLabelMarginTop = 9;
@@ -135,13 +137,13 @@ namespace mrHelperUI
             webBrowser.AllowNavigation = false;
             webBrowser.WebBrowserShortcutsEnabled = false;
             webBrowser.Location = new Point(webBrowserLocation.X, webBrowserLocation.Y + webBrowserMarginTop);
-            webBrowser.Size = new Size(noteTextBoxSize.Width * 2 + noteTextBoxMarginLeft, 80);
+            webBrowser.Size = new Size(noteTextBoxSize.Width * 2 + noteTextBoxMarginLeft, contextSize * 16);
 
             try
             {
                DiffContextFormatter diffContextFormatter = new DiffContextFormatter();
                Debug.Assert(firstNote.Position.HasValue);
-               DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, 4);
+               DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
                string text = diffContextFormatter.FormatAsHTML(context);
                webBrowser.DocumentText = text;
             }

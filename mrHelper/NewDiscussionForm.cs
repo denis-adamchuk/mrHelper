@@ -30,7 +30,6 @@ namespace mrHelperUI
       {
          this.ActiveControl = textBoxDiscussionBody;
 
-         System.Threading.Thread.Sleep(10000);
          _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
          if (!_position.HasValue)
          {
@@ -43,7 +42,7 @@ namespace mrHelperUI
             return;
          }
 
-         PlainContextMaker textContextMaker = new PlainContextMaker(_gitRepository);
+         ContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
          DiffContext context = textContextMaker.GetContext(_position.Value, 4);
          showDiscussionContext(webBrowserContext, textBoxFileName, context);
       }

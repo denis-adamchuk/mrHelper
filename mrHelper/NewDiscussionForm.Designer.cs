@@ -42,15 +42,15 @@
          // 
          // textBoxDiscussionBody
          // 
-         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 193);
+         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 161);
          this.textBoxDiscussionBody.Multiline = true;
          this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
-         this.textBoxDiscussionBody.Size = new System.Drawing.Size(578, 120);
+         this.textBoxDiscussionBody.Size = new System.Drawing.Size(730, 77);
          this.textBoxDiscussionBody.TabIndex = 3;
          // 
          // buttonCancel
          // 
-         this.buttonCancel.Location = new System.Drawing.Point(515, 319);
+         this.buttonCancel.Location = new System.Drawing.Point(778, 215);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 6;
@@ -60,7 +60,7 @@
          // 
          // buttonOK
          // 
-         this.buttonOK.Location = new System.Drawing.Point(434, 319);
+         this.buttonOK.Location = new System.Drawing.Point(778, 161);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 5;
@@ -73,7 +73,7 @@
          this.textBoxFileName.Location = new System.Drawing.Point(12, 25);
          this.textBoxFileName.Name = "textBoxFileName";
          this.textBoxFileName.ReadOnly = true;
-         this.textBoxFileName.Size = new System.Drawing.Size(578, 20);
+         this.textBoxFileName.Size = new System.Drawing.Size(643, 20);
          this.textBoxFileName.TabIndex = 0;
          // 
          // labelFileName
@@ -97,7 +97,7 @@
          // labelDiscussionBody
          // 
          this.labelDiscussionBody.AutoSize = true;
-         this.labelDiscussionBody.Location = new System.Drawing.Point(12, 177);
+         this.labelDiscussionBody.Location = new System.Drawing.Point(12, 145);
          this.labelDiscussionBody.Name = "labelDiscussionBody";
          this.labelDiscussionBody.Size = new System.Drawing.Size(85, 13);
          this.labelDiscussionBody.TabIndex = 9;
@@ -108,7 +108,7 @@
          this.checkBoxIncludeContext.AutoSize = true;
          this.checkBoxIncludeContext.Checked = true;
          this.checkBoxIncludeContext.CheckState = System.Windows.Forms.CheckState.Checked;
-         this.checkBoxIncludeContext.Location = new System.Drawing.Point(17, 323);
+         this.checkBoxIncludeContext.Location = new System.Drawing.Point(675, 27);
          this.checkBoxIncludeContext.Name = "checkBoxIncludeContext";
          this.checkBoxIncludeContext.Size = new System.Drawing.Size(197, 17);
          this.checkBoxIncludeContext.TabIndex = 4;
@@ -122,7 +122,7 @@
          this.webBrowserContext.MinimumSize = new System.Drawing.Size(20, 20);
          this.webBrowserContext.Name = "webBrowserContext";
          this.webBrowserContext.ScrollBarsEnabled = false;
-         this.webBrowserContext.Size = new System.Drawing.Size(578, 60);
+         this.webBrowserContext.Size = new System.Drawing.Size(860, 64);
          this.webBrowserContext.TabIndex = 10;
          this.webBrowserContext.WebBrowserShortcutsEnabled = false;
          // 
@@ -130,7 +130,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(602, 353);
+         this.ClientSize = new System.Drawing.Size(884, 255);
          this.Controls.Add(this.webBrowserContext);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.labelDiscussionBody);
@@ -140,6 +140,7 @@
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.textBoxDiscussionBody);
+         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MaximizeBox = false;
          this.MinimizeBox = false;
