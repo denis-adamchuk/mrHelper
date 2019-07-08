@@ -14,23 +14,26 @@ namespace mrHelperUI
    {
       public DiffContextFormatter()
       {
+         _css = loadStylesFromCSS();
       }
 
-      public string FormatAsHTML(DiffContext context)
+      public string FormatAsHTML(DiffContext context, int fontSizePx = 12, int rowsVPaddingPx = 2)
       {
-         return getContextHTML(context);
+         return getContextHTML(context, fontSizePx, rowsVPaddingPx);
       }
 
-      private string getContextHTML(DiffContext ctx)
+      private string getContextHTML(DiffContext ctx, int fontSizePx, int rowsVPaddingPx)
       {
+         string customStyle = getCustomStyle(fontSizePx, rowsVPaddingPx);
+
          string commonBegin = string.Format(@"
             <html>
                <head>
-                  <style>{0}</style>
+                  <style>{0}{1}</style>
                </head>
                <body>
                   <table>
-                      <tbody>", loadStylesFromCSS());
+                      <tbody>", _css, customStyle);
 
          string commonEnd = @"
                       </tbody>
@@ -46,37 +49,43 @@ namespace mrHelperUI
          return Properties.Resources.DiffContextCSS;
       }
 
+      private string getCustomStyle(int fontSizePx, int rowsVPaddingPx)
+      {
+         return string.Format(@"
+            table {
+               font-size: {0}px;
+            }
+            td {
+               padding: {1}px; 
+            }", fontSizePx, rowsVPaddingPx);
+      }
+
       private string getTableBody(DiffContext ctx)
       {
          string body = string.Empty;
          foreach (DiffContext.Line line in ctx.Lines)
          {
             body
-              += "<tr class=\"" + getRowClass(line) + "\">"
-               + getLeftLineNumberCol(line) 
-               + getRightLineNumberCol(line) 
-               + getTextDiffCol(line) 
+              += "<tr>"
+               + "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>" 
+               + "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>"
+               + "<td class=\"" + getDiffCellClass(line) + "\">" + getCode(line) + "</td>"
                + "</tr>";
          }
          return body;
       }
 
-      private string getLeftLineNumberCol(DiffContext.Line line)
+      private string getLeftLineNumber(DiffContext.Line line)
       {
-         return "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>";
+         return line.Left.HasValue ? line.Left.Value.Number.ToString() : "";
       }
 
-      private string getRightLineNumberCol(DiffContext.Line line)
+      private string getRightLineNumber(DiffContext.Line line)
       {
-         return "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>";
+         return line.Right.HasValue ? line.Right.Value.Number.ToString() : "";
       }
 
-      private string getTextDiffCol(DiffContext.Line line)
-      {
-         return "<td>" + getCode(line) + "</td>";
-      }
-
-      private string getRowClass(DiffContext.Line line)
+      private string getDiffCellClass(DiffContext.Line line)
       {
          if (line.Left.HasValue && line.Right.HasValue)
          {
@@ -87,33 +96,6 @@ namespace mrHelperUI
             return "removed";
          }
          return "added";
-      }
-
-      private string getLeftLineNumber(DiffContext.Line line)
-      {
-         if (line.Left.HasValue && line.Right.HasValue)
-         {
-            return line.Left.Value.Number.ToString();
-         }
-         else if (line.Left.HasValue)
-         {
-            return line.Left.Value.Number.ToString();
-
-         }
-         return "";
-      }
-
-      private string getRightLineNumber(DiffContext.Line line)
-      {
-         if (line.Left.HasValue && line.Right.HasValue)
-         {
-            return line.Right.Value.Number.ToString();
-         }
-         else if (line.Right.HasValue)
-         {
-            return line.Right.Value.Number.ToString();
-         }
-         return "";
       }
 
       private string getCode(DiffContext.Line line)
@@ -134,5 +116,7 @@ namespace mrHelperUI
 
          return spaces + trimmed;
       }
+
+      private readonly string _css;
    }
 }

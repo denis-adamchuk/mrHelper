@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using mrCore;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelperUI
 {
@@ -97,72 +98,74 @@ namespace mrHelperUI
             return null;
          }
 
-         int contextSize = 4;
-
-         // @{ Margins for each control within Discussion Box
-         int discussionLabelMarginLeft = 7;
-         int discussionLabelMarginTop = 9;
-         int webBrowserMarginLeft = 7;
-         int filenameTextBoxMarginRight = 7;
-         int webBrowserMarginTop = 5;
-         int noteTextBoxMarginLeft = 7;
-         int noteTextBoxMarginTop = 5;
-         int noteTextBoxMarginBottom = 5;
-         int noteTextBoxMarginRight = 7;
-         // @}
-
-         // @{ Sizes of controls
-         var noteTextBoxSize = new Size(500, 0 /* height is adjusted to line count */); 
-         // @}
-
          // Create a discussion box, which is a container of other controls
-         GroupBox groupBox = new GroupBox();
+         GroupBox groupBox = createDiscussionBox(discussion, 4 /* context size */);
+         updateDiscussionBoxLayout(groupBox);
 
-         // Create a label that shows discussion creation data and author
-         Label discussionLabel = new Label();
-         groupBox.Controls.Add(discussionLabel);
-         discussionLabel.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
-         discussionLabel.Location = new Point(discussionLabelMarginLeft, discussionLabelMarginTop);
-         discussionLabel.AutoSize = true;
+         return groupBox;
+      }
+
+      private void updateDiscussionBoxLayout(GroupBox groupBox)
+      {
+         //// @{ Margins for each control within Discussion Box
+         //int discussionLabelMarginLeft = 7;
+         //int discussionLabelMarginTop = 10;
+         //int htmlPanelMarginLeft = 7;
+         //int htmlPanelMarginTop = 5;
+         //int noteTextBoxMarginLeft = 7;
+         //int noteTextBoxMarginTop = 5;
+         //int noteTextBoxMarginBottom = 5;
+         //int noteTextBoxMarginRight = 7;
+         //// @}
+
+         //// Calculate discussion box location and size
+         //int groupBoxHeight =
+         //   discussionLabelMarginTop
+         // + discussionLabel.Height
+         // + htmlPanelMarginTop
+         // + htmlPanelSize.Height
+         // + noteTextBoxMarginTop
+         // + biggestTextBoxHeight
+         // + noteTextBoxMarginBottom;
+
+         //int groupBoxWidth =
+         // +Math.Max(htmlPanelMarginLeft + htmlPanelSize.Width,
+         //            (noteTextBoxMarginLeft + noteTextBoxSize.Width) * shownCount + noteTextBoxMarginRight);
+
+         //groupBox.Location = location;
+         //groupBox.Size = new Size(groupBoxWidth, groupBoxHeight);
+      }
+
+      private GroupBox createDiscussionBox(Discussion discussion, int contextSize)
+      {
+         var firstNote = discussion.Notes[0];
+
+         GroupBox groupBox = new GroupBox();
+         groupBox.Controls.Add(createDiscussionLabel(firstNote));
 
          // Create a box that shows diff context
-         Point webBrowserLocation = new Point(webBrowserMarginLeft,
-            discussionLabel.Location.Y + discussionLabel.Size.Height );
-         Size webBrowserSize = new Size();
-         if (firstNote.Type == DiscussionNoteType.DiffNote)
+         var html = createDiffContext(firstNote, contextSize);
+         if (html != null)
          {
-            WebBrowser webBrowser = new WebBrowser();
-            groupBox.Controls.Add(webBrowser);
-            webBrowser.ScrollBarsEnabled = false;
-            webBrowser.AllowNavigation = false;
-            webBrowser.WebBrowserShortcutsEnabled = false;
-            webBrowser.Location = new Point(webBrowserLocation.X, webBrowserLocation.Y + webBrowserMarginTop);
-            webBrowser.Size = new Size(noteTextBoxSize.Width * 2 + noteTextBoxMarginLeft, contextSize * 16);
-
-            try
-            {
-               DiffContextFormatter diffContextFormatter = new DiffContextFormatter();
-               Debug.Assert(firstNote.Position.HasValue);
-               DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
-               string text = diffContextFormatter.FormatAsHTML(context);
-               webBrowser.DocumentText = text;
-            }
-            catch (Exception)
-            {
-               webBrowser.DocumentText = "<html><body>Cannot show diff context</body></html>";
-            }
-
-            webBrowserLocation = webBrowser.Location;
-            webBrowserSize = webBrowser.Size;
+            groupBox.Controls.Add(html);
          }
 
          // Create a series of boxes which represent notes
-         Point previousBoxLocation = new Point(0,
-            webBrowserLocation.Y + webBrowserSize.Height + noteTextBoxMarginTop);
-         Size previousBoxSize = new Size(0, 0);
-         int biggestTextBoxHeight = previousBoxSize.Height;
-         int shownCount = 0;
-         foreach (var note in discussion.Notes)
+         List<TextBox> textBoxes = createTextBoxes(discussion.Notes);
+         foreach (var tb in textBoxes)
+         {
+            groupBox.Controls.Add(tb);
+         }
+
+         return groupBox;
+      }
+
+      private List<TextBox> createTextBoxes(List<DiscussionNote> notes)
+      {
+         Size singleTextBoxSize = new Size(500, 0 /* height is adjusted to line count */);
+
+         List<TextBox> boxes = new List<TextBox>();
+         foreach (var note in notes)
          {
             if (note.System)
             {
@@ -171,10 +174,9 @@ namespace mrHelperUI
             }
 
             TextBox textBox = new TextBox();
-            groupBox.Controls.Add(textBox);
             toolTip.SetToolTip(textBox, "Created at " + note.CreatedAt.ToString() + " by " + note.Author.Name);
             textBox.ReadOnly = note.Author.Id != _currentUser.Id;
-            textBox.Size = noteTextBoxSize;
+            textBox.Size = singleTextBoxSize;
             textBox.Text = note.Body;
             textBox.Multiline = true;
             var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
@@ -184,35 +186,48 @@ namespace mrHelperUI
                textBox.BackColor = Color.LightGreen;
             }
 
-            Point textBoxLocation = new Point();
-            textBoxLocation.X = previousBoxLocation.X + previousBoxSize.Width + noteTextBoxMarginLeft;
-            textBoxLocation.Y = previousBoxLocation.Y;
-            textBox.Location = textBoxLocation;
-            previousBoxLocation = textBoxLocation;
-            previousBoxSize = textBox.Size;
+            boxes.Add(textBox);
+         }
+         return boxes;
+      }
 
-            ++shownCount;
-
-            biggestTextBoxHeight = Math.Max(biggestTextBoxHeight, textBox.Height);
+      private HtmlPanel createDiffContext(DiscussionNote firstNote, int contextSize)
+      {
+         if (firstNote.Type != DiscussionNoteType.DiffNote)
+         {
+            return null;
          }
 
-         // Calculate discussion box location and size
-         int groupBoxHeight =
-            discussionLabelMarginTop
-          + discussionLabel.Height
-          + webBrowserMarginTop
-          + webBrowserSize.Height
-          + noteTextBoxMarginTop
-          + biggestTextBoxHeight
-          + noteTextBoxMarginBottom;
+         int fontSizePx = 12;
+         int rowsVPaddingPx = 2;
+         int height = contextSize * (fontSizePx + rowsVPaddingPx * 2);
 
-         int groupBoxWidth =
-          + Math.Max(webBrowserMarginLeft + webBrowserSize.Width + filenameTextBoxMarginRight,
-                     (noteTextBoxMarginLeft + noteTextBoxSize.Width) * shownCount + noteTextBoxMarginRight);
+         HtmlPanel htmlPanel = new HtmlPanel();
+         htmlPanel.Size = new Size(1000 /* big enough for wide lines */, height);
 
-         groupBox.Location = location;
-         groupBox.Size = new Size(groupBoxWidth, groupBoxHeight);
-         return groupBox;
+         try
+         {
+            DiffContextFormatter diffContextFormatter = new DiffContextFormatter();
+            Debug.Assert(firstNote.Position.HasValue);
+            DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
+            string text = diffContextFormatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+            htmlPanel.Text = text;
+         }
+         catch (Exception)
+         {
+            htmlPanel.Text = "<html><body>Cannot show diff context</body></html>";
+         }
+
+         return htmlPanel;
+      }
+
+      // Create a label that shows discussion creation date and author
+      private static Label createDiscussionLabel(DiscussionNote firstNote)
+      {
+         Label discussionLabel = new Label();
+         discussionLabel.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
+         discussionLabel.AutoSize = true;
+         return discussionLabel;
       }
 
       private readonly string _host;

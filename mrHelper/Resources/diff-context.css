@@ -5,7 +5,6 @@ body {
 
 table { 
    font-family: Consolas, monospace;
-   font-size: 12px;
    position: absolute;
    top: 0;
    bottom: 0;
@@ -14,6 +13,7 @@ table {
    width: 100%;
    margin: 0;
    border-collapse: collapse;
+   line-height: 1;
 }
 
 tr {
@@ -33,17 +33,17 @@ td.linenumbers {
    text-align: center;
 }
 
-tr.unchanged {
+td.unchanged {
    color: rgb(46, 46, 46);
    background-color: white;
 }
 
-tr.removed {
+td.removed {
    color: rgb(46, 46, 46);
    background-color: rgb(251, 233, 235);
 }
 
-tr.added {
+td.added {
    color: rgb(46, 46, 46);
    background-color: rgb(236, 253, 240);
 }
