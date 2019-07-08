@@ -110,7 +110,6 @@ namespace mrHelperUI
          // @}
 
          // @{ Sizes of controls
-         var filenameTextBoxSize = new Size(1000, 60);
          var noteTextBoxSize = new Size(500, 0 /* height is adjusted to line count */); 
          // @}
 
@@ -132,11 +131,11 @@ namespace mrHelperUI
          {
             WebBrowser webBrowser = new WebBrowser();
             groupBox.Controls.Add(webBrowser);
-            webBrowser.Location = new Point(webBrowserLocation.X, webBrowserLocation.Y + webBrowserMarginTop);
-            webBrowser.Size = filenameTextBoxSize;
+            webBrowser.ScrollBarsEnabled = false;
             webBrowser.AllowNavigation = false;
             webBrowser.WebBrowserShortcutsEnabled = false;
-            webBrowser.ScrollBarsEnabled = false;
+            webBrowser.Location = new Point(webBrowserLocation.X, webBrowserLocation.Y + webBrowserMarginTop);
+            webBrowser.Size = new Size(noteTextBoxSize.Width * 2 + noteTextBoxMarginLeft, 80);
 
             try
             {

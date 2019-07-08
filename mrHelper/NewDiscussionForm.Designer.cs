@@ -121,7 +121,8 @@
          this.webBrowserContext.Location = new System.Drawing.Point(12, 73);
          this.webBrowserContext.MinimumSize = new System.Drawing.Size(20, 20);
          this.webBrowserContext.Name = "webBrowserContext";
-         this.webBrowserContext.Size = new System.Drawing.Size(578, 101);
+         this.webBrowserContext.ScrollBarsEnabled = false;
+         this.webBrowserContext.Size = new System.Drawing.Size(578, 60);
          this.webBrowserContext.TabIndex = 10;
          this.webBrowserContext.WebBrowserShortcutsEnabled = false;
          // 

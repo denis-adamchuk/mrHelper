@@ -30,101 +30,109 @@ namespace mrHelperUI
                </head>
                <body>
                   <table>
-                      <tbody>
-                         <tr>", loadStylesFromCSS());
+                      <tbody>", loadStylesFromCSS());
 
          string commonEnd = @"
-                         </tr>
                       </tbody>
                    </table>
                 </body>
              </html>";
 
-         return commonBegin + getLineNumbersColumn(ctx) + getTextDiffColumn(ctx) + commonEnd;
+         return commonBegin + getTableBody(ctx) + commonEnd;
       }
 
       private string loadStylesFromCSS()
       {
-         return mrHelperUI.Properties.Resources.DiffContextCSS;
+         return Properties.Resources.DiffContextCSS;
       }
 
-      private string getLineNumbersColumn(DiffContext ctx)
+      private string getTableBody(DiffContext ctx)
       {
-         return "<td class=\"linenumbers\">" + enumerateLines(ctx.Lines, (x) => { return getSides(x); }) + "</td>";
+         string body = string.Empty;
+         foreach (DiffContext.Line line in ctx.Lines)
+         {
+            body
+              += "<tr class=\"" + getRowClass(line) + "\">"
+               + getLeftLineNumberCol(line) 
+               + getRightLineNumberCol(line) 
+               + getTextDiffCol(line) 
+               + "</tr>";
+         }
+         return body;
       }
 
-      private string getTextDiffColumn(DiffContext ctx)
+      private string getLeftLineNumberCol(DiffContext.Line line)
       {
-         return "<td class=\"text-diff\">" + enumerateLines(ctx.Lines, (x) => { return getCode(x); }) + "</td>";
+         return "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>";
       }
 
-      private string getSides(DiffContext.Line line)
+      private string getRightLineNumberCol(DiffContext.Line line)
+      {
+         return "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>";
+      }
+
+      private string getTextDiffCol(DiffContext.Line line)
+      {
+         return "<td>" + getCode(line) + "</td>";
+      }
+
+      private string getRowClass(DiffContext.Line line)
       {
          if (line.Left.HasValue && line.Right.HasValue)
          {
-            return "<div class=\"unchanged-linenumber-left\">" + line.Left.Value.Number.ToString() + "</div>" +
-                   "<div class=\"unchanged-linenumber-right\">" + line.Right.Value.Number.ToString() + "</div>";
+            return "unchanged";
          }
          else if (line.Left.HasValue)
          {
-            return "<div class=\"removed-linenumber\">" + line.Left.Value.Number.ToString() + "</div>" +
-                   "<div class=\"dummy-linenumber-right\"></div>";
+            return "removed";
+         }
+         return "added";
+      }
 
+      private string getLeftLineNumber(DiffContext.Line line)
+      {
+         if (line.Left.HasValue && line.Right.HasValue)
+         {
+            return line.Left.Value.Number.ToString();
+         }
+         else if (line.Left.HasValue)
+         {
+            return line.Left.Value.Number.ToString();
+
+         }
+         return "";
+      }
+
+      private string getRightLineNumber(DiffContext.Line line)
+      {
+         if (line.Left.HasValue && line.Right.HasValue)
+         {
+            return line.Right.Value.Number.ToString();
          }
          else if (line.Right.HasValue)
          {
-            return "<div class=\"dummy-linenumber-left\"></div>" +
-                   "<div class=\"added-linenumber\">" + line.Right.Value.Number.ToString() + "</div>";
+            return line.Right.Value.Number.ToString();
          }
-         Debug.Assert(false);
          return "";
       }
 
       private string getCode(DiffContext.Line line)
       {
-         string text = line.Text.Length == 0 ? "<br>" : line.Text;
-         if (line.Left.HasValue && line.Right.HasValue)
+         if (line.Text.Length == 0)
          {
-            return "<div class=\"unchanged-line\">" + text + "</div>";
+            return "<br";
          }
-         else if (line.Left.HasValue)
-         {
-            if (line.Left.Value.State == DiffContext.Line.State.Removed)
-            {
-               return "<div class=\"removed-line\">" + text + "</div>";
-            }
-            else
-            {
-               Debug.Assert(line.Left.Value.State == DiffContext.Line.State.Unchanged);
-               return "<div class=\"unchanged-line\">" + text + "</div>";
-            }
-         }
-         else if (line.Right.HasValue)
-         {
-            if (line.Right.Value.State == DiffContext.Line.State.Added)
-            {
-               return "<div class=\"added-line\">" + text + "</div>";
-            }
-            else
-            {
-               Debug.Assert(line.Right.Value.State == DiffContext.Line.State.Unchanged);
-               return "<div class=\"unchanged-line\">" + text + "</div>";
-            }
-         }
-         Debug.Assert(false);
-         return "";
-      }
 
-      private delegate string ActionOnLine(DiffContext.Line line);
+         string trimmed = line.Text.TrimStart();
+         int leadingSpaces = line.Text.Length - trimmed.Length;
 
-      private string enumerateLines(List<DiffContext.Line> lines, ActionOnLine action)
-      {
-         string result = string.Empty;
-         for (int iLine = 0; iLine < lines.Count; ++iLine)
+         string spaces = string.Empty;
+         for (int i = 0; i < leadingSpaces; ++i)
          {
-            result += action(lines[iLine]);
+            spaces += "&nbsp;";
          }
-         return result;
+
+         return spaces + trimmed;
       }
    }
 }
