@@ -18,7 +18,14 @@ namespace mrHelperUI
    {
       private const int EM_GETLINECOUNT = 0xba;
       [DllImport("user32", EntryPoint = "SendMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-      private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam); 
+      private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam);
+
+      private struct DiscussionBoxControls
+      {
+         public Control Label;
+         public Control Context;
+         public List<Control> Notes;
+      }
 
       public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId,
          GitRepository gitRepository)
@@ -30,6 +37,8 @@ namespace mrHelperUI
          _currentUser = getUser();
          _gitRepository = gitRepository;
          _contextMaker = new CombinedContextMaker(_gitRepository);
+         _discussions = loadDiscussions();
+         _formatter = new DiffContextFormatter();
 
          InitializeComponent();
       }
@@ -38,10 +47,7 @@ namespace mrHelperUI
       {
          try
          {
-            this.Hide();
-            renderDiscussions(loadDiscussions());
-            this.Show();
-            this.Invalidate();
+            renderDiscussions(_discussions);
          }
          catch (Exception ex)
          {
@@ -90,6 +96,58 @@ namespace mrHelperUI
 
       private GroupBox createDiscussionBox(Discussion discussion, Point location)
       {
+         DiscussionBoxControls? controls = createDiscussionBoxControls(discussion, 4 /* context size */);
+         return repositionAndBoxControls(controls, location);
+      }
+
+      private GroupBox repositionAndBoxControls(DiscussionBoxControls? controls, Point location)
+      {
+         if (!controls.HasValue)
+         {
+            return null;
+         }
+         var c = controls.Value;
+
+         int leftMargin = 7;
+         int interControlVertMargin = 10;
+         int interControlHorzMargin = 20;
+
+         // the Label is a top-left control
+         Point labelPos = new Point(leftMargin, 10);
+         c.Label.Location = labelPos;
+
+         // the Context is an optional control below the Label
+         Point ctxPos = new Point(leftMargin, labelPos.Y + c.Label.Height + interControlVertMargin);
+         if (c.Context != null)
+         {
+            c.Context.Location = ctxPos;
+         }
+
+         // a list of Notes is either below the Label or to the right of the Context
+         int nextNoteX = leftMargin + (c.Context == null ? 0 : c.Context.Width + interControlHorzMargin);
+         Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
+         foreach (var note in c.Notes)
+         {
+            note.Location = nextNotePos;
+            nextNotePos.Offset(0, note.Height + interControlVertMargin);
+         }
+
+         GroupBox box = new GroupBox();
+         box.Controls.Add(c.Label);
+         box.Controls.Add(c.Context);
+         foreach (var note in c.Notes)
+         {
+            box.Controls.Add(note);
+         }
+         box.Location = location;
+         box.Size = new Size(nextNoteX + c.Notes[0].Width + interControlHorzMargin,
+            Math.Max((c.Context == null ? 0 : ctxPos.Y + c.Context.Height),
+               c.Notes[c.Notes.Count - 1].Location.Y + c.Notes[c.Notes.Count - 1].Height) + interControlVertMargin);
+         return box;
+      }
+
+      private DiscussionBoxControls? createDiscussionBoxControls(Discussion discussion, int contextSize)
+      {
          Debug.Assert(discussion.Notes.Count > 0);
 
          var firstNote = discussion.Notes[0];
@@ -98,73 +156,18 @@ namespace mrHelperUI
             return null;
          }
 
-         // Create a discussion box, which is a container of other controls
-         GroupBox groupBox = createDiscussionBox(discussion, 4 /* context size */);
-         updateDiscussionBoxLayout(groupBox);
-
-         return groupBox;
+         DiscussionBoxControls controls = new DiscussionBoxControls();
+         controls.Label = createDiscussionLabel(firstNote);
+         controls.Context = createDiffContext(firstNote, contextSize);
+         controls.Notes = createTextBoxes(discussion.Notes);
+         return controls;
       }
 
-      private void updateDiscussionBoxLayout(GroupBox groupBox)
-      {
-         //// @{ Margins for each control within Discussion Box
-         //int discussionLabelMarginLeft = 7;
-         //int discussionLabelMarginTop = 10;
-         //int htmlPanelMarginLeft = 7;
-         //int htmlPanelMarginTop = 5;
-         //int noteTextBoxMarginLeft = 7;
-         //int noteTextBoxMarginTop = 5;
-         //int noteTextBoxMarginBottom = 5;
-         //int noteTextBoxMarginRight = 7;
-         //// @}
-
-         //// Calculate discussion box location and size
-         //int groupBoxHeight =
-         //   discussionLabelMarginTop
-         // + discussionLabel.Height
-         // + htmlPanelMarginTop
-         // + htmlPanelSize.Height
-         // + noteTextBoxMarginTop
-         // + biggestTextBoxHeight
-         // + noteTextBoxMarginBottom;
-
-         //int groupBoxWidth =
-         // +Math.Max(htmlPanelMarginLeft + htmlPanelSize.Width,
-         //            (noteTextBoxMarginLeft + noteTextBoxSize.Width) * shownCount + noteTextBoxMarginRight);
-
-         //groupBox.Location = location;
-         //groupBox.Size = new Size(groupBoxWidth, groupBoxHeight);
-      }
-
-      private GroupBox createDiscussionBox(Discussion discussion, int contextSize)
-      {
-         var firstNote = discussion.Notes[0];
-
-         GroupBox groupBox = new GroupBox();
-         groupBox.Controls.Add(createDiscussionLabel(firstNote));
-
-         // Create a box that shows diff context
-         var html = createDiffContext(firstNote, contextSize);
-         if (html != null)
-         {
-            groupBox.Controls.Add(html);
-         }
-
-         // Create a series of boxes which represent notes
-         List<TextBox> textBoxes = createTextBoxes(discussion.Notes);
-         foreach (var tb in textBoxes)
-         {
-            groupBox.Controls.Add(tb);
-         }
-
-         return groupBox;
-      }
-
-      private List<TextBox> createTextBoxes(List<DiscussionNote> notes)
+      private List<Control> createTextBoxes(List<DiscussionNote> notes)
       {
          Size singleTextBoxSize = new Size(500, 0 /* height is adjusted to line count */);
 
-         List<TextBox> boxes = new List<TextBox>();
+         List<Control> boxes = new List<Control>();
          foreach (var note in notes)
          {
             if (note.System)
@@ -181,9 +184,20 @@ namespace mrHelperUI
             textBox.Multiline = true;
             var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
             textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
-            if (note.Resolvable && note.Resolved.HasValue && note.Resolved.Value)
+            if (note.Resolvable)
             {
-               textBox.BackColor = Color.LightGreen;
+               if (note.Resolved.HasValue && note.Resolved.Value)
+               {
+                  textBox.BackColor = Color.FromArgb(174, 240, 216);
+               }
+               else
+               {
+                  textBox.BackColor = Color.FromArgb(239, 228, 176);
+               }
+            }
+            else
+            {
+               textBox.BackColor = Color.FromArgb(196, 219, 201);
             }
 
             boxes.Add(textBox);
@@ -207,10 +221,9 @@ namespace mrHelperUI
 
          try
          {
-            DiffContextFormatter diffContextFormatter = new DiffContextFormatter();
             Debug.Assert(firstNote.Position.HasValue);
             DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
-            string text = diffContextFormatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+            string text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
             htmlPanel.Text = text;
          }
          catch (Exception)
@@ -237,6 +250,8 @@ namespace mrHelperUI
       private readonly User _currentUser;
       private readonly GitRepository _gitRepository;
       private readonly ContextMaker _contextMaker;
+      private readonly List<Discussion> _discussions;
+      private readonly DiffContextFormatter _formatter;
    }
 }
 

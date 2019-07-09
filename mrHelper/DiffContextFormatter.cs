@@ -52,12 +52,12 @@ namespace mrHelperUI
       private string getCustomStyle(int fontSizePx, int rowsVPaddingPx)
       {
          return string.Format(@"
-            table {
+            table {{
                font-size: {0}px;
-            }
-            td {
+            }}
+            td {{
                padding: {1}px; 
-            }", fontSizePx, rowsVPaddingPx);
+            }}", fontSizePx, rowsVPaddingPx);
       }
 
       private string getTableBody(DiffContext ctx)
