@@ -93,8 +93,13 @@ namespace mrHelperUI
          }
          else if (line.Left.HasValue)
          {
-            return "removed";
+            return line.Left.Value.State == DiffContext.Line.State.Unchanged ? "unchanged" : "removed";
          }
+         else if (line.Right.HasValue)
+         {
+            return line.Right.Value.State == DiffContext.Line.State.Unchanged ? "unchanged" : "added";
+         }
+         Debug.Assert(false);
          return "added";
       }
 

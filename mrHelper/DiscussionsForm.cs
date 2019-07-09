@@ -12,6 +12,18 @@ using System.Windows.Forms;
 using mrCore;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
+// TODO:
+// 1. Move 'labels' to the left of 'discussion boxes'
+// 2. Decrease a margin between discussion boxes
+// 3. Consider removing frames of discussion boxes
+// 4. Introduce a four-color palette for notes: author/non-author + resolved/non-resolved
+// 5. Show configurable number of lines within diff contexts (default: 0 above, 3 below) and mark a selected line with bold
+// 6. Add info about resolved/non-resolved state of note to tooltips of notes
+// 7. Add filter for 'comments'
+// 8. Add a parameter to choose context diff making algorithm
+// 9. Add ability to edit/delete notes and change their resolved state 
+// 10. Avoid scroll bars in context boxes when possible
+
 namespace mrHelperUI
 {
    public partial class DiscussionsForm : Form

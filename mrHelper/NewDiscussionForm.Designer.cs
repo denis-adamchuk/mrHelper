@@ -50,6 +50,7 @@
          // 
          // buttonCancel
          // 
+         this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(778, 215);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
@@ -60,6 +61,7 @@
          // 
          // buttonOK
          // 
+         this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
          this.buttonOK.Location = new System.Drawing.Point(778, 161);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
@@ -130,6 +132,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(884, 255);
          this.Controls.Add(this.webBrowserContext);
          this.Controls.Add(this.checkBoxIncludeContext);
