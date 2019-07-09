@@ -13,12 +13,7 @@ using mrCore;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
 // TODO:
-// 1. Move 'labels' to the left of 'discussion boxes'
-// 2. Decrease a margin between discussion boxes
-// 3. Consider removing frames of discussion boxes
-// 4. Introduce a four-color palette for notes: author/non-author + resolved/non-resolved
 // 5. Show configurable number of lines within diff contexts (default: 0 above, 3 below) and mark a selected line with bold
-// 6. Add info about resolved/non-resolved state of note to tooltips of notes
 // 7. Add filter for 'comments'
 // 8. Add a parameter to choose context diff making algorithm
 // 9. Add ability to edit/delete notes and change their resolved state 
@@ -82,7 +77,7 @@ namespace mrHelperUI
       private void renderDiscussions(List<Discussion> discussions)
       {
          int groupBoxMarginLeft = 10;
-         int groupBoxMarginTop = 15;
+         int groupBoxMarginTop = 5;
 
          Point previousBoxLocation = new Point();
          Size previousBoxSize = new Size();
@@ -106,13 +101,13 @@ namespace mrHelperUI
          }
       }
 
-      private GroupBox createDiscussionBox(Discussion discussion, Point location)
+      private Control createDiscussionBox(Discussion discussion, Point location)
       {
          DiscussionBoxControls? controls = createDiscussionBoxControls(discussion, 4 /* context size */);
          return repositionAndBoxControls(controls, location);
       }
 
-      private GroupBox repositionAndBoxControls(DiscussionBoxControls? controls, Point location)
+      private Control repositionAndBoxControls(DiscussionBoxControls? controls, Point location)
       {
          if (!controls.HasValue)
          {
@@ -120,23 +115,32 @@ namespace mrHelperUI
          }
          var c = controls.Value;
 
-         int leftMargin = 7;
          int interControlVertMargin = 10;
-         int interControlHorzMargin = 20;
+         int interControlHorzMargin = 10;
 
-         // the Label is a top-left control
-         Point labelPos = new Point(leftMargin, 10);
+         // separator
+         Label label = new Label();
+         label.AutoSize = false;
+         label.Height = 1;
+         label.BorderStyle = BorderStyle.FixedSingle;
+         label.Text = null;
+         label.Location = new Point();
+         label.BackColor = Color.LightGray;
+         label.Width = this.Width - interControlVertMargin;
+
+         // the Label is placed to the left
+         Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
          c.Label.Location = labelPos;
 
-         // the Context is an optional control below the Label
-         Point ctxPos = new Point(leftMargin, labelPos.Y + c.Label.Height + interControlVertMargin);
+         // the Context is an optional control to the right of the Label
+         Point ctxPos = new Point(interControlHorzMargin + c.Label.Width + interControlHorzMargin, interControlVertMargin);
          if (c.Context != null)
          {
             c.Context.Location = ctxPos;
          }
 
-         // a list of Notes is either below the Label or to the right of the Context
-         int nextNoteX = leftMargin + (c.Context == null ? 0 : c.Context.Width + interControlHorzMargin);
+         // a list of Notes is to the right of Label and Context
+         int nextNoteX = ctxPos.X + (c.Context == null ? 0 : c.Context.Width + interControlHorzMargin);
          Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
          foreach (var note in c.Notes)
          {
@@ -144,7 +148,9 @@ namespace mrHelperUI
             nextNotePos.Offset(0, note.Height + interControlVertMargin);
          }
 
-         GroupBox box = new GroupBox();
+         //GroupBox box = new GroupBox();
+         Panel box = new Panel();
+         box.Controls.Add(label);
          box.Controls.Add(c.Label);
          box.Controls.Add(c.Context);
          foreach (var note in c.Notes)
@@ -152,9 +158,12 @@ namespace mrHelperUI
             box.Controls.Add(note);
          }
          box.Location = location;
+
+         int labelHeight = labelPos.Y + c.Label.Height;
+         int ctxHeight = (c.Context == null ? 0 : ctxPos.Y + c.Context.Height);
+         int notesHeight = c.Notes[c.Notes.Count - 1].Location.Y + c.Notes[c.Notes.Count - 1].Height;
          box.Size = new Size(nextNoteX + c.Notes[0].Width + interControlHorzMargin,
-            Math.Max((c.Context == null ? 0 : ctxPos.Y + c.Context.Height),
-               c.Notes[c.Notes.Count - 1].Location.Y + c.Notes[c.Notes.Count - 1].Height) + interControlVertMargin);
+            Math.Max(labelHeight, Math.Max(ctxHeight, notesHeight)) + interControlVertMargin);
          return box;
       }
 
@@ -189,32 +198,50 @@ namespace mrHelperUI
             }
 
             TextBox textBox = new TextBox();
-            toolTip.SetToolTip(textBox, "Created at " + note.CreatedAt.ToString() + " by " + note.Author.Name);
+            toolTip.SetToolTip(textBox, getNoteTooltipText(note));
             textBox.ReadOnly = note.Author.Id != _currentUser.Id;
             textBox.Size = singleTextBoxSize;
             textBox.Text = note.Body;
             textBox.Multiline = true;
             var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
             textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
-            if (note.Resolvable)
-            {
-               if (note.Resolved.HasValue && note.Resolved.Value)
-               {
-                  textBox.BackColor = Color.FromArgb(174, 240, 216);
-               }
-               else
-               {
-                  textBox.BackColor = Color.FromArgb(239, 228, 176);
-               }
-            }
-            else
-            {
-               textBox.BackColor = Color.FromArgb(196, 219, 201);
-            }
+            textBox.BackColor = getNoteColor(note);
 
             boxes.Add(textBox);
          }
          return boxes;
+      }
+
+      private string getNoteTooltipText(DiscussionNote note)
+      {
+         string result = string.Empty;
+         if (note.Resolvable)
+         {
+            result += note.Resolved.Value ? "Resolved." : "Not resolved.";
+         }
+         result += " Created by " + note.Author.Name + " at " + note.CreatedAt.ToLocalTime().ToString("g");
+         return result;
+      }
+
+      private Color getNoteColor(DiscussionNote note)
+      {
+         if (note.Resolvable)
+         {
+            Debug.Assert(note.Resolved.HasValue);
+
+            if (note.Author.Id == _currentUser.Id)
+            {
+               return note.Resolved.Value ? Color.FromArgb(225, 235, 242) : Color.FromArgb(136, 176, 204);
+            }
+            else
+            {
+               return note.Resolved.Value ? Color.FromArgb(247, 253, 204) : Color.FromArgb(231, 249, 100);
+            }
+         }
+         else
+         {
+            return Color.FromArgb(255, 236, 250);
+         }
       }
 
       private HtmlPanel createDiffContext(DiscussionNote firstNote, int contextSize)
@@ -224,24 +251,18 @@ namespace mrHelperUI
             return null;
          }
 
+         Debug.Assert(firstNote.Position.HasValue);
+
          int fontSizePx = 12;
          int rowsVPaddingPx = 2;
          int height = contextSize * (fontSizePx + rowsVPaddingPx * 2);
 
          HtmlPanel htmlPanel = new HtmlPanel();
-         htmlPanel.Size = new Size(1000 /* big enough for wide lines */, height);
+         htmlPanel.Size = new Size(1000 /* big enough for long lines */, height);
+         htmlPanel.AutoScroll = false;
 
-         try
-         {
-            Debug.Assert(firstNote.Position.HasValue);
-            DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
-            string text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
-            htmlPanel.Text = text;
-         }
-         catch (Exception)
-         {
-            htmlPanel.Text = "<html><body>Cannot show diff context</body></html>";
-         }
+         DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
+         htmlPanel.Text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
 
          return htmlPanel;
       }
@@ -250,7 +271,10 @@ namespace mrHelperUI
       private static Label createDiscussionLabel(DiscussionNote firstNote)
       {
          Label discussionLabel = new Label();
-         discussionLabel.Text = "Discussion started at " + firstNote.CreatedAt.ToString() + " by " + firstNote.Author.Name;
+         discussionLabel.Text =
+            "Discussion started\n" +
+            "by " + firstNote.Author.Name + "\n" +
+            "at " + firstNote.CreatedAt.ToLocalTime().ToString("g");
          discussionLabel.AutoSize = true;
          return discussionLabel;
       }

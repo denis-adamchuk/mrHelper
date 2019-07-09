@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -100,19 +101,24 @@ namespace mrCore
          // If neither left nor right lines are neither deleted nor added/modified,
          // then the only acceptable way is that they are unchanged. Check if they are equal.
          // If they are not, fallback.
-         if (checkIfLinesAreEqual(difftoolInfo))
+         if (checkIfLinesAreEqual(diffRefs, difftoolInfo))
          {
             return MatchResult.Both;
          }
          return MatchResult.Undefined;
       }
 
-      private bool checkIfLinesAreEqual(DiffToolInfo info)
+      private bool checkIfLinesAreEqual(DiffRefs diffRefs, DiffToolInfo info)
       {
-         // TODO Use Git
-         string left = File.ReadLines(info.LeftSideFileNameFull).Skip(info.LeftSideLineNumber - 1).Take(1).First();
-         string right = File.ReadLines(info.RightSideFileNameFull).Skip(info.RightSideLineNumber - 1).Take(1).First();
-         return left == right;
+         List<string> left = _gitRepository.ShowFileByRevision(info.LeftSideFileNameBrief, diffRefs.BaseSHA);
+         List<string> right = _gitRepository.ShowFileByRevision(info.RightSideFileNameBrief, diffRefs.HeadSHA);
+         if (info.LeftSideLineNumber >= left.Count && info.RightSideLineNumber >= right.Count)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
+         return left[info.LeftSideLineNumber] == right[info.RightSideLineNumber];
       }
 
       GitRepository _gitRepository;

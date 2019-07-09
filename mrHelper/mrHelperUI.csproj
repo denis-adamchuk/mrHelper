@@ -115,13 +115,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\diff-context.css" />
-    <None Include="Resources\TrayIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\notifyIcon.Icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\gitlab-282507.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\gitlab.ico" />

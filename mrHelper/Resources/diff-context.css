@@ -12,18 +12,8 @@ table {
    right: 0;
    width: 100%;
    margin: 0;
-   border-collapse: collapse;
    line-height: 1;
-}
-
-tr {
    border: none;
-}
-
-td {
-   border-right: solid 1px rgb(240, 240, 240);
-   border-left: solid 1px rgb(240, 240, 240);
-   margin: 0;
 }
 
 td.linenumbers {
@@ -31,6 +21,7 @@ td.linenumbers {
    color: rgb(175, 175, 175);
    background-color: rgb(250, 250, 250);
    text-align: center;
+   border-right: solid 1px rgb(240, 240, 240);
 }
 
 td.unchanged {

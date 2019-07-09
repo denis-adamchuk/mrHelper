@@ -32,7 +32,7 @@ namespace mrHelperUI
                   <style>{0}{1}</style>
                </head>
                <body>
-                  <table>
+                  <table cellspacing=""0"" cellpadding=""0"">
                       <tbody>", _css, customStyle);
 
          string commonEnd = @"
@@ -56,7 +56,8 @@ namespace mrHelperUI
                font-size: {0}px;
             }}
             td {{
-               padding: {1}px; 
+               padding-top: {1}px; 
+               padding-bottom: {1}px; 
             }}", fontSizePx, rowsVPaddingPx);
       }
 

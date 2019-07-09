@@ -26,27 +26,6 @@ namespace mrHelperUI
          onApplicationStarted();
       }
 
-      private void onApplicationStarted()
-      {
-         this.ActiveControl = textBoxDiscussionBody;
-
-         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         if (!_position.HasValue)
-         {
-            Debug.Assert(false); // matching failed
-
-            checkBoxIncludeContext.Checked = false;
-            checkBoxIncludeContext.Enabled = false;
-            webBrowserContext.DocumentText = "<html><body>N/A</body></html>";
-            textBoxFileName.Text = "N/A";
-            return;
-         }
-
-         ContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
-         DiffContext context = textContextMaker.GetContext(_position.Value, 4);
-         showDiscussionContext(webBrowserContext, textBoxFileName, context);
-      }
-
       private void ButtonOK_Click(object sender, EventArgs e)
       {
          if (textBoxDiscussionBody.Text.Length == 0)
@@ -56,37 +35,8 @@ namespace mrHelperUI
             return;
          }
 
-         DiscussionParameters parameters = new DiscussionParameters();
-         parameters.Body = textBoxDiscussionBody.Text;
-         parameters.Position = checkBoxIncludeContext.Checked ? _position : null;
-
-         GitLabClient client = new GitLabClient(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
-         try
-         {
-            client.CreateNewMergeRequestDiscussion(
-               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
-         }
-         catch (System.Net.WebException ex)
-         {
-            Debug.Assert(false);
-
-            if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-               Debug.Assert(checkBoxIncludeContext.Checked); // otherwise we could not get an error...
-               parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
-               parameters.Position = null;
-               client.CreateNewMergeRequestDiscussion(
-                  _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
-            }
-            else if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.InternalServerError)
-            { 
-               // TODO Implement a fallback here (need to revert a commited discussion) 
-            }
-
-            MessageBox.Show(ex.Message +
-               "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         DiscussionParameters parameters = prepareDiscussionParameters();
+         createDiscussionAtGitlab(parameters);
 
          Close();
       }
@@ -94,6 +44,35 @@ namespace mrHelperUI
       private void ButtonCancel_Click(object sender, EventArgs e)
       {
          Close();
+      }
+
+      private void onApplicationStarted()
+      {
+         this.ActiveControl = textBoxDiscussionBody;
+
+         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
+         if (!_position.HasValue)
+         {
+            handleMatchingError();
+            return;
+         }
+
+         showDiscussionContext(webBrowserContext, textBoxFileName);
+      }
+
+      private DiscussionParameters prepareDiscussionParameters()
+      {
+         DiscussionParameters parameters = new DiscussionParameters();
+         parameters.Body = textBoxDiscussionBody.Text;
+         if (!_position.HasValue)
+         {
+            parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
+         }
+         else
+         {
+            parameters.Position = checkBoxIncludeContext.Checked ? _position : null;
+         }
+         return parameters;
       }
 
       private string getFallbackInfo()
@@ -104,11 +83,64 @@ namespace mrHelperUI
             + " (line " + _difftoolInfo.RightSideLineNumber.ToString() + ")";
       }
 
-      static private void showDiscussionContext(WebBrowser webBrowser, TextBox tbFileName, DiffContext context)
+      private void showDiscussionContext(WebBrowser webBrowser, TextBox tbFileName)
       {
+         ContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
+         DiffContext context = textContextMaker.GetContext(_position.Value, 4);
+
          DiffContextFormatter formatter = new DiffContextFormatter();
          webBrowser.DocumentText = formatter.FormatAsHTML(context);
          tbFileName.Text = context.FileName;
+      }
+
+      private void createDiscussionAtGitlab(DiscussionParameters parameters)
+      {
+         GitLabClient client = new GitLabClient(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
+         try
+         {
+            client.CreateNewMergeRequestDiscussion(
+               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+         }
+         catch (System.Net.WebException ex)
+         {
+            handleGitlabError(parameters, client, ex);
+         }
+      }
+
+      private void handleMatchingError()
+      {
+         Debug.Assert(false); // matching failed
+         MessageBox.Show("Line numbers from diff tool do not match line numbers from git diff." +
+            "Context will not be included into the discussion.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+         checkBoxIncludeContext.Checked = false;
+         checkBoxIncludeContext.Enabled = false;
+         webBrowserContext.DocumentText = "<html><body>N/A</body></html>";
+         textBoxFileName.Text = "N/A";
+      }
+
+      private void handleGitlabError(DiscussionParameters parameters, GitLabClient client, System.Net.WebException ex)
+      {
+         var response = ((System.Net.HttpWebResponse)ex.Response);
+
+         if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+         {
+            Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
+
+            parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
+            parameters.Position = null;
+            client.CreateNewMergeRequestDiscussion(
+               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+         }
+         else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+         {
+            // TODO Implement a fallback here (need to revert a commited discussion) 
+            Debug.Assert(false);
+         }
+
+         MessageBox.Show(ex.Message +
+            "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
+            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
 
       private readonly InterprocessSnapshot _interprocessSnapshot;
@@ -119,3 +151,4 @@ namespace mrHelperUI
       private GitRepository _gitRepository;
    }
 }
+

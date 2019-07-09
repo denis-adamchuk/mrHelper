@@ -12,9 +12,7 @@ namespace mrCore
       {
          public enum State
          {
-            // TODO No need to have both Added and Removed because we cannot have Added for Left and Removed for Right
-            Added,
-            Removed,
+            Changed,
             Unchanged
          }
          

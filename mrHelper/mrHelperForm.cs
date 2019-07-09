@@ -550,7 +550,7 @@ namespace mrHelperUI
          e.Value = item.Text;
          if (item.TimeStamp.HasValue)
          {
-            e.Value += " (" + item.TimeStamp.Value.ToString("u") + ")";
+            e.Value += " (" + item.TimeStamp.Value.ToLocalTime().ToString("g") + ")";
          }
       }
 

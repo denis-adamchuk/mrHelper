@@ -63,7 +63,7 @@ namespace mrCore
          side.Number = linenumber;
          
          // this 'maker' cannot distinguish between modified and unmodified lines
-         side.State = isRightSideContext ? DiffContext.Line.State.Added : DiffContext.Line.State.Removed;
+         side.State = DiffContext.Line.State.Changed;
 
          if (isRightSideContext)
          {

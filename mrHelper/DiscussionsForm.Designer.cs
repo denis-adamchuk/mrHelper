@@ -29,6 +29,7 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DiscussionsForm));
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
          // 
@@ -43,9 +44,11 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
-         this.ClientSize = new System.Drawing.Size(1075, 607);
+         this.ClientSize = new System.Drawing.Size(263, 129);
+         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
+         this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
          this.Load += new System.EventHandler(this.Discussions_Load);
          this.ResumeLayout(false);
 

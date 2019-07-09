@@ -97,12 +97,12 @@ namespace mrCore
          if (isRightSideContext)
          {
             return analyzer.IsLineAddedOrModified(linenumber)
-               ? DiffContext.Line.State.Added : DiffContext.Line.State.Unchanged;
+               ? DiffContext.Line.State.Changed : DiffContext.Line.State.Unchanged;
          }
          else
          {
             return analyzer.IsLineDeleted(linenumber)
-               ? DiffContext.Line.State.Removed : DiffContext.Line.State.Unchanged;
+               ? DiffContext.Line.State.Changed : DiffContext.Line.State.Unchanged;
          }
       }
 

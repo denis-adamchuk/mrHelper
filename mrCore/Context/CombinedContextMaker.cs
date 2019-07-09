@@ -112,13 +112,13 @@ namespace mrCore
          else if (context.Left[absLineNumber] != null)
          {
             ++extraNullsAtRight;
-            line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Removed);
+            line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Changed);
             line.Text = context.Left[absLineNumber];
          }
          else if (context.Right[absLineNumber] != null)
          {
             ++extraNullsAtLeft;
-            line.Right = getSide(rightLineNumber, true, DiffContext.Line.State.Added);
+            line.Right = getSide(rightLineNumber, true, DiffContext.Line.State.Changed);
             line.Text = context.Right[absLineNumber];
          }
          else
