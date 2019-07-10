@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using mrCore;
 using mrCustomActions;
 using mrDiffTool;
+using System.Linq;
 
 namespace mrHelperUI
 {
@@ -825,10 +826,15 @@ namespace mrHelperUI
          comboBoxLeftVersion.Items.Clear();
          comboBoxRightVersion.Items.Clear();
 
-         foreach (var version in getVersions())
+         var versions = getVersions();
+         comboBoxLeftVersion.Items.Add(new VersionComboBoxItem(versions[0]));
+         for (int i=1; i < versions.Count; i++)
          {
-            VersionComboBoxItem item =
-               new VersionComboBoxItem(version.HeadSHA, version.HeadSHA.Substring(0, 10), version.CreatedAt);
+            VersionComboBoxItem item = new VersionComboBoxItem(versions[i]);
+            if (comboBoxLeftVersion.Items.Cast<VersionComboBoxItem>().Any(x => x.SHA == item.SHA))
+            {
+               continue;
+            }
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
@@ -1051,6 +1057,12 @@ namespace mrHelperUI
             SHA = sha;
             Text = text;
             TimeStamp = timeStamp;
+         }
+
+         public VersionComboBoxItem(mrCore.Version ver)
+            : this(ver.HeadSHA, ver.HeadSHA.Substring(0, 10), ver.CreatedAt)
+         {
+
          }
       }
    }
