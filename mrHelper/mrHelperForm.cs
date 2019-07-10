@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using mrCore;
 using mrCustomActions;
 using mrDiffTool;
+using System.Linq;
 
 namespace mrHelperUI
 {
@@ -105,7 +106,7 @@ namespace mrHelperUI
       {
          try
          {
-            if (!_exiting)
+            if (checkBoxMinimizeOnClose.Checked && !_exiting)
             {
                onHideToTray(e);
                return;
@@ -196,6 +197,7 @@ namespace mrHelperUI
          try
          {
             updateProjectsDropdownList(getAllProjects());
+            _settings.LastSelectedHost = (sender as ComboBox).Text;
          }
          catch (Exception ex)
          {
@@ -208,6 +210,7 @@ namespace mrHelperUI
          try
          {
             updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+            _settings.LastSelectedProject = (sender as ComboBox).Text;
          }
          catch (Exception ex)
          {
@@ -303,6 +306,9 @@ namespace mrHelperUI
                   MessageBox.Show("Such host is already in the list", "Host will not be added",
                      MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
+               _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+               _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+                  .Select(i => i.SubItems[1].Text).ToList();
             }
          }
          catch (Exception ex)
@@ -328,6 +334,7 @@ namespace mrHelperUI
          try
          {
             updateProjectsDropdownList(getAllProjects());
+            _settings.ShowPublicOnly = (sender as CheckBox).Checked;
          }
          catch (Exception ex)
          {
@@ -569,10 +576,11 @@ namespace mrHelperUI
             addKnownHost(host, accessToken);
          }
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
-         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking == "true";
-         checkBoxLabels.Checked = _settings.CheckedLabelsFilter == "true";
+         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking;
+         checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
-         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly == "true";
+         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
+         checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
 
          _loadingConfiguration = false;
       }
@@ -583,23 +591,6 @@ namespace mrHelperUI
          {
             return;
          }
-
-         List<string> hosts = new List<string>();
-         List<string> accessTokens = new List<string>();
-         foreach (ListViewItem hostListViewItem in listViewKnownHosts.Items)
-         {
-            hosts.Add(hostListViewItem.Text);
-            accessTokens.Add(hostListViewItem.SubItems[1].Text);
-         }
-         _settings.KnownHosts = hosts;
-         _settings.KnownAccessTokens = accessTokens;
-         _settings.LocalGitFolder = textBoxLocalGitFolder.Text;
-         _settings.RequireTimeTracking = checkBoxRequireTimer.Checked ? "true" : "false";
-         _settings.CheckedLabelsFilter = checkBoxLabels.Checked ? "true" : "false";
-         _settings.LastUsedLabels = textBoxLabels.Text;
-         _settings.LastSelectedHost = comboBoxHost.Text;
-         _settings.LastSelectedProject = comboBoxProjects.Text;
-         _settings.ShowPublicOnly = checkBoxShowPublicOnly.Checked ? "true" : "false";
          _settings.Update();
       }
 
@@ -650,6 +641,7 @@ namespace mrHelperUI
       {
          _settings = new UserDefinedSettings();
          loadConfiguration();
+         _settings.PropertyChanged += onSettingsPropertyChanged;
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
@@ -665,6 +657,11 @@ namespace mrHelperUI
          {
             tabPageSettings.Select();
          }
+      }
+
+      private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+      {
+         saveConfiguration();
       }
 
       private void onApplicationStarted()
@@ -945,6 +942,7 @@ namespace mrHelperUI
       private void onGitFolderSelected()
       {
          textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
+         _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -1052,6 +1050,26 @@ namespace mrHelperUI
             Text = text;
             TimeStamp = timeStamp;
          }
+      }
+
+      private void checkBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.RequireTimeTracking = (sender as CheckBox).Checked;
+      }
+
+      private void checkBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.MinimizeOnClose = (sender as CheckBox).Checked;
+      }
+
+      private void checkBoxLabels_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+      }
+
+      private void textBoxLabels_Leave(object sender, EventArgs e)
+      {
+         _settings.LastUsedLabels = textBoxLabels.Text;
       }
    }
 }

@@ -60,6 +60,7 @@
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
@@ -188,6 +189,7 @@
          this.textBoxLabels.Size = new System.Drawing.Size(232, 20);
          this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests that contain any of these labels");
+         this.textBoxLabels.Leave += new System.EventHandler(this.textBoxLabels_Leave);
          // 
          // checkBoxLabels
          // 
@@ -198,6 +200,7 @@
          this.checkBoxLabels.TabIndex = 3;
          this.checkBoxLabels.Text = "Labels";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
+         this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.checkBoxLabels_CheckedChanged);
          // 
          // linkLabelConnectedTo
          // 
@@ -329,14 +332,26 @@
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Controls.Add(this.checkBoxShowPublicOnly);
          this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(513, 70);
+         this.groupBoxOther.Size = new System.Drawing.Size(513, 90);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // checkBoxMinimizeOnClose
+         // 
+         this.checkBoxMinimizeOnClose.AutoSize = true;
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 65);
+         this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
+         this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
+         this.checkBoxMinimizeOnClose.TabIndex = 7;
+         this.checkBoxMinimizeOnClose.Text = "Minimize on close";
+         this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
+         this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.checkBoxMinimizeOnClose_CheckedChanged);
          // 
          // checkBoxShowPublicOnly
          // 
@@ -358,6 +373,7 @@
          this.checkBoxRequireTimer.TabIndex = 5;
          this.checkBoxRequireTimer.Text = "Require started timer for creating new discussions";
          this.checkBoxRequireTimer.UseVisualStyleBackColor = true;
+         this.checkBoxRequireTimer.CheckedChanged += new System.EventHandler(this.checkBoxRequireTimer_CheckedChanged);
          // 
          // groupBoxGit
          // 
@@ -660,6 +676,7 @@
       private System.Windows.Forms.GroupBox groupBoxSelectProject;
       private System.Windows.Forms.ComboBox comboBoxProjects;
       private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;
+      private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
    }
 }
 
