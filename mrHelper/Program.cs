@@ -12,24 +12,6 @@ namespace mrHelperUI
       [STAThread]
       static void Main()
       {
-         // TEST Code begin
-         //DiffContextBuilder build = new DiffContextBuilder("d://git_temp//test_project");
-         //position pd = new position();
-         //pd.Refs.HeadSHA = "b2115fe4f350e2568515888b202bf5096e46466b";
-         //pd.Refs.BaseSHA = pd.Refs.StartSHA = "84815eb18137bade6586016a0a67d727636afa1a";
-         //pd.NewPath = pd.OldPath = "btsrc.hpp";
-         //pd.OldLine = "19";
-         //pd.NewLine = "30";
-         //var context = build.GetContext(pd, 3);
-         //foreach (var line in context.lines)
-         //{
-         //   Console.WriteLine(line.State.ToString() + "    " + line.Text);
-         //}
-
-         // return;
-         // TEST Code end
-
-         
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);
          var arguments = Environment.GetCommandLineArgs();

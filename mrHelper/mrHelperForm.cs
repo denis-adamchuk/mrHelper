@@ -28,7 +28,7 @@ namespace mrHelperUI
       static private string informationMessageBoxText = "Information";
 
       static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
-      static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
+      static private string errorNoValidRepository = "There is no valid repository";
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
@@ -471,6 +471,10 @@ namespace mrHelperUI
          {
             _gitRepository = initializeGitRepository();
          }
+         if (_gitRepository == null)
+         {
+            throw new ApplicationException("Cannot launch a diff tool because of a problem with git repository");
+         }
 
          _difftool = null; // in case the next line throws
          _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
@@ -497,7 +501,7 @@ namespace mrHelperUI
             }
             else
             {
-               throw new ApplicationException(errorNoValidRepository);
+               return null;
             }
          }
 
@@ -505,15 +509,15 @@ namespace mrHelperUI
          string path = Path.Combine(localGitFolder, project);
          if (!Directory.Exists(path))
          {
-            if (MessageBox.Show("There is no project " + project + " repository within folder " + localGitFolder +
+            if (MessageBox.Show("There is no project \"" + project + "\" repository in " + localGitFolder +
                ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.Yes)
             {
-               return GitRepository.CreateByClone(host, projectWithNamespace, localGitFolder);
+               return GitRepository.CreateByClone(host, projectWithNamespace, path);
             }
             else
             {
-               throw new ApplicationException(errorNoValidRepository);
+               return null; 
             }
          }
 

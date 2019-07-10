@@ -42,8 +42,10 @@ namespace mrHelperUI
          _projectId = projectId;
          _mergeRequestId = mergeRequestId;
          _currentUser = getUser();
-         _gitRepository = gitRepository;
-         _contextMaker = new CombinedContextMaker(_gitRepository);
+         if (gitRepository != null)
+         {
+            _contextMaker = new CombinedContextMaker(gitRepository);
+         }
          _discussions = loadDiscussions();
          _formatter = new DiffContextFormatter();
 
@@ -261,8 +263,15 @@ namespace mrHelperUI
          htmlPanel.Size = new Size(1000 /* big enough for long lines */, height);
          htmlPanel.AutoScroll = false;
 
-         DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
-         htmlPanel.Text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+         if (_contextMaker != null)
+         {
+            DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
+            htmlPanel.Text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+         }
+         else
+         {
+            htmlPanel.Text = "<html><body>Cannot access git repository and render diff context</body></html>";
+         }
 
          return htmlPanel;
       }
@@ -284,7 +293,6 @@ namespace mrHelperUI
       private readonly string _projectId;
       private readonly int _mergeRequestId;
       private readonly User _currentUser;
-      private readonly GitRepository _gitRepository;
       private readonly ContextMaker _contextMaker;
       private readonly List<Discussion> _discussions;
       private readonly DiffContextFormatter _formatter;

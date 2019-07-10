@@ -12,7 +12,7 @@ namespace mrCore
       {
          if (!Directory.Exists(path) || !IsGitRepository(path))
          {
-            throw new ApplicationException("Not a repo");
+            throw new ApplicationException("There is no a valid repository at path " + path);
          }
 
          _path = path;
@@ -28,7 +28,7 @@ namespace mrCore
          process.WaitForExit();
          if (process.ExitCode == 0)
          {
-            return new GitRepository(Path.Combine(path, project));
+            return new GitRepository(path);
          }
          return null;
       }

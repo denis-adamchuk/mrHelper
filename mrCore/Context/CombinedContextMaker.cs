@@ -17,6 +17,7 @@ namespace mrCore
    {
       public CombinedContextMaker(GitRepository gitRepository)
       {
+         Debug.Assert(gitRepository != null);
          _gitRepository = gitRepository;
       }
 

@@ -13,6 +13,7 @@ namespace mrCore
    {
       public PlainContextMaker(GitRepository gitRepository)
       {
+         Debug.Assert(gitRepository != null);
          _gitRepository = gitRepository;
       }
 

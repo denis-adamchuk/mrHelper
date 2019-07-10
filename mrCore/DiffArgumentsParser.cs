@@ -92,7 +92,7 @@ namespace mrCore
          Match m = trimmedFileNameRe.Match(trimmed);
          if (!m.Success || m.Groups.Count < 3 || !m.Groups[1].Success || !m.Groups[2].Success)
          {
-            throw new ApplicationException("Cannot parse a path obtained from difftool");
+            throw new ApplicationException("Cannot parse a path obtained from diff tool");
          }
          return m.Groups;
       }
