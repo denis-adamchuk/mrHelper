@@ -29,6 +29,8 @@ namespace mrCore
 
       public string FileName;
       public List<Line> Lines;
+
+      public int SelectedIndex;
    }
 
    public interface ContextMaker

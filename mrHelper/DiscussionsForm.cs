@@ -15,9 +15,7 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 // TODO:
 // 5. Show configurable number of lines within diff contexts (default: 0 above, 3 below) and mark a selected line with bold
 // 7. Add filter for 'comments'
-// 8. Add a parameter to choose context diff making algorithm
 // 9. Add ability to edit/delete notes and change their resolved state 
-// 10. Avoid scroll bars in context boxes when possible
 
 namespace mrHelperUI
 {
@@ -35,17 +33,35 @@ namespace mrHelperUI
       }
 
       public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId,
-         GitRepository gitRepository)
+         User mrAuthor, GitRepository gitRepository, string diffContextAlgo, int diffContextDepth)
       {
          _host = host;
          _accessToken = accessToken;
          _projectId = projectId;
          _mergeRequestId = mergeRequestId;
+         _mrAuthor = mrAuthor;
          _currentUser = getUser();
          if (gitRepository != null)
          {
-            _contextMaker = new CombinedContextMaker(gitRepository);
+            if (diffContextAlgo == "Plain")
+            {
+               _contextMaker = new PlainContextMaker(gitRepository);
+            }
+            else if (diffContextAlgo == "Enhanced")
+            {
+               _contextMaker = new EnhancedContextMaker(gitRepository);
+            }
+            else if (diffContextAlgo == "Combined")
+            {
+               _contextMaker = new CombinedContextMaker(gitRepository);
+            }
+            else
+            {
+               Debug.Assert(false);
+               _contextMaker = new CombinedContextMaker(gitRepository);
+            }
          }
+         _diffContextDepth = diffContextDepth;
          _discussions = loadDiscussions();
          _formatter = new DiffContextFormatter();
 
@@ -105,7 +121,7 @@ namespace mrHelperUI
 
       private Control createDiscussionBox(Discussion discussion, Point location)
       {
-         DiscussionBoxControls? controls = createDiscussionBoxControls(discussion, 4 /* context size */);
+         DiscussionBoxControls? controls = createDiscussionBoxControls(discussion);
          return repositionAndBoxControls(controls, location);
       }
 
@@ -117,25 +133,26 @@ namespace mrHelperUI
          }
          var c = controls.Value;
 
-         int interControlVertMargin = 10;
+         int interControlVertMargin = 5;
          int interControlHorzMargin = 10;
 
          // separator
-         Label label = new Label();
-         label.AutoSize = false;
-         label.Height = 1;
-         label.BorderStyle = BorderStyle.FixedSingle;
-         label.Text = null;
-         label.Location = new Point();
-         label.BackColor = Color.LightGray;
-         label.Width = this.Width - interControlVertMargin;
+         Label horizontalLine = new Label();
+         horizontalLine.AutoSize = false;
+         horizontalLine.Height = 1;
+         horizontalLine.BorderStyle = BorderStyle.FixedSingle;
+         horizontalLine.Text = null;
+         horizontalLine.Location = new Point();
+         horizontalLine.BackColor = Color.LightGray;
+         horizontalLine.Width = this.Width - interControlVertMargin;
 
-         // the Label is placed to the left
+         // the Label is placed at the left side
          Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
          c.Label.Location = labelPos;
 
          // the Context is an optional control to the right of the Label
-         Point ctxPos = new Point(interControlHorzMargin + c.Label.Width + interControlHorzMargin, interControlVertMargin);
+         Point ctxPos = new Point(
+            interControlHorzMargin + c.Label.PreferredSize.Width + interControlHorzMargin, interControlVertMargin);
          if (c.Context != null)
          {
             c.Context.Location = ctxPos;
@@ -150,9 +167,8 @@ namespace mrHelperUI
             nextNotePos.Offset(0, note.Height + interControlVertMargin);
          }
 
-         //GroupBox box = new GroupBox();
          Panel box = new Panel();
-         box.Controls.Add(label);
+         //box.Controls.Add(horizontalLine);
          box.Controls.Add(c.Label);
          box.Controls.Add(c.Context);
          foreach (var note in c.Notes)
@@ -161,7 +177,7 @@ namespace mrHelperUI
          }
          box.Location = location;
 
-         int labelHeight = labelPos.Y + c.Label.Height;
+         int labelHeight = labelPos.Y + c.Label.PreferredSize.Height;
          int ctxHeight = (c.Context == null ? 0 : ctxPos.Y + c.Context.Height);
          int notesHeight = c.Notes[c.Notes.Count - 1].Location.Y + c.Notes[c.Notes.Count - 1].Height;
          box.Size = new Size(nextNoteX + c.Notes[0].Width + interControlHorzMargin,
@@ -169,7 +185,7 @@ namespace mrHelperUI
          return box;
       }
 
-      private DiscussionBoxControls? createDiscussionBoxControls(Discussion discussion, int contextSize)
+      private DiscussionBoxControls? createDiscussionBoxControls(Discussion discussion)
       {
          Debug.Assert(discussion.Notes.Count > 0);
 
@@ -181,7 +197,7 @@ namespace mrHelperUI
 
          DiscussionBoxControls controls = new DiscussionBoxControls();
          controls.Label = createDiscussionLabel(firstNote);
-         controls.Context = createDiffContext(firstNote, contextSize);
+         controls.Context = createDiffContext(firstNote);
          controls.Notes = createTextBoxes(discussion.Notes);
          return controls;
       }
@@ -208,10 +224,65 @@ namespace mrHelperUI
             var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
             textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
             textBox.BackColor = getNoteColor(note);
+            textBox.LostFocus += DiscussionNoteTextBox_LostFocus;
+            textBox.Tag = note;
+
+            textBox.ContextMenu = new ContextMenu();
+            MenuItem menuItemToggleResolve = new MenuItem();
+            menuItemToggleResolve.Tag = note;
+            menuItemToggleResolve.Text =
+               note.Resolvable && note.Resolved.HasValue && note.Resolved.Value ? "Unresolve" : "Resolve";
+            menuItemToggleResolve.Click += MenuItemToggleResolve_Click;
+            textBox.ContextMenu.MenuItems.Add(menuItemToggleResolve);
+            MenuItem menuItemDeleteNote = new MenuItem();
+            menuItemDeleteNote.Tag = note;
+            menuItemDeleteNote.Text = "Delete Note";
+            menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
+            textBox.ContextMenu.MenuItems.Add(menuItemDeleteNote);
 
             boxes.Add(textBox);
          }
          return boxes;
+      }
+
+      private void DiscussionNoteTextBox_LostFocus(object sender, EventArgs e)
+      {
+         TextBox textBox = (TextBox)(sender);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         // TODO Send modification request to GitLab
+      }
+
+      private void MenuItemDeleteNote_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         DiscussionNote note = (DiscussionNote)(menuItem.Tag);
+         if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+         {
+            // TODO Send deletion request to GitLab
+            // TODO Re-render current discussion box only
+         }
+      }
+
+      private void MenuItemToggleResolve_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         DiscussionNote note = (DiscussionNote)(menuItem.Tag);
+         if (note.Resolvable && note.Resolved.HasValue)
+         {
+            // TODO Send modification request to GitLab
+
+            if (note.Resolved.Value)
+            {
+               // this note is going to become unresolved, so change text to resolve it back
+               menuItem.Text = "Resolved";
+            }
+            else
+            {
+               // this note is going to become resolved, so change text to unresolve it back
+               menuItem.Text = "Unresolved";
+            }
+         }
       }
 
       private string getNoteTooltipText(DiscussionNote note)
@@ -231,7 +302,7 @@ namespace mrHelperUI
          {
             Debug.Assert(note.Resolved.HasValue);
 
-            if (note.Author.Id == _currentUser.Id)
+            if (note.Author.Id == _mrAuthor.Id)
             {
                return note.Resolved.Value ? Color.FromArgb(225, 235, 242) : Color.FromArgb(136, 176, 204);
             }
@@ -246,7 +317,7 @@ namespace mrHelperUI
          }
       }
 
-      private HtmlPanel createDiffContext(DiscussionNote firstNote, int contextSize)
+      private HtmlPanel createDiffContext(DiscussionNote firstNote)
       {
          if (firstNote.Type != DiscussionNoteType.DiffNote)
          {
@@ -257,15 +328,17 @@ namespace mrHelperUI
 
          int fontSizePx = 12;
          int rowsVPaddingPx = 2;
-         int height = contextSize * (fontSizePx + rowsVPaddingPx * 2);
+         int height = _diffContextDepth * (fontSizePx + rowsVPaddingPx * 2 + 2);
+         // we're adding 2 extra pixels for each row because HtmlRenderer does not support CSS line-height property
+         // this value was found experimentally
 
          HtmlPanel htmlPanel = new HtmlPanel();
          htmlPanel.Size = new Size(1000 /* big enough for long lines */, height);
-         htmlPanel.AutoScroll = false;
+         toolTip.SetToolTip(htmlPanel, firstNote.Position.Value.NewPath);
 
          if (_contextMaker != null)
          {
-            DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, contextSize);
+            DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, _diffContextDepth);
             htmlPanel.Text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
          }
          else
@@ -291,7 +364,9 @@ namespace mrHelperUI
       private readonly string _host;
       private readonly string _accessToken;
       private readonly string _projectId;
+      private readonly User _mrAuthor;
       private readonly int _mergeRequestId;
+      private readonly int _diffContextDepth;
       private readonly User _currentUser;
       private readonly ContextMaker _contextMaker;
       private readonly List<Discussion> _discussions;

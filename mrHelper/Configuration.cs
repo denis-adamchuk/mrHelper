@@ -34,6 +34,12 @@ namespace mrHelperUI
       private static string ShowPublicOnlyKeyName = "ShowPublicOnly";
       private static string ShowPublicOnlyDefaultValue = "true";
 
+      private static string DiffContextAlgoKeyName = "DiffContextAlgo";
+      private static string DiffContextAlgoDefaultValue = "Combined";
+
+      private static string DiffContextDepthKeyName = "DiffContextDepth";
+      private static string DiffContextDepthDefaultValue = "3";
+
       public UserDefinedSettings()
       {
          _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -98,6 +104,18 @@ namespace mrHelperUI
       {
          get { return getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue); }
          set { setValue(ShowPublicOnlyKeyName, value); }
+      }
+
+      public string DiffContextAlgo
+      {
+         get { return getValue(DiffContextAlgoKeyName, DiffContextAlgoDefaultValue); }
+         set { setValue(DiffContextAlgoKeyName, value); }
+      }
+
+      public string DiffContextDepth
+      {
+         get { return getValue(DiffContextDepthKeyName, DiffContextDepthDefaultValue); }
+         set { setValue(DiffContextDepthKeyName, value); }
       }
 
       private string getValue(string key, string defaultValue)

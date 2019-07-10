@@ -29,7 +29,6 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DiscussionsForm));
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
          // 

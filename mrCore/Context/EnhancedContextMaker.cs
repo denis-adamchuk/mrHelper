@@ -64,6 +64,8 @@ namespace mrCore
             diffContext.Lines.Add(getLineContext(linenumber + iContextLine, isRightSideContext, analyzer, contents));
          }
 
+         diffContext.SelectedIndex = 0;
+
          return diffContext;
       }
 

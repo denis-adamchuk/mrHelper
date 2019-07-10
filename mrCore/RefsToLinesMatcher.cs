@@ -112,13 +112,13 @@ namespace mrCore
       {
          List<string> left = _gitRepository.ShowFileByRevision(info.LeftSideFileNameBrief, diffRefs.BaseSHA);
          List<string> right = _gitRepository.ShowFileByRevision(info.RightSideFileNameBrief, diffRefs.HeadSHA);
-         if (info.LeftSideLineNumber >= left.Count && info.RightSideLineNumber >= right.Count)
+         if (info.LeftSideLineNumber > left.Count && info.RightSideLineNumber > right.Count)
          {
             Debug.Assert(false);
             return false;
          }
 
-         return left[info.LeftSideLineNumber] == right[info.RightSideLineNumber];
+         return left[info.LeftSideLineNumber - 1] == right[info.RightSideLineNumber - 1];
       }
 
       GitRepository _gitRepository;

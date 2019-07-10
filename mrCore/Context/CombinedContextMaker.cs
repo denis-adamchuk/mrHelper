@@ -95,6 +95,7 @@ namespace mrCore
                extraNullsAtRight = 0;
             }
          }
+         diffContext.SelectedIndex = 0;
          return diffContext;
       }
 

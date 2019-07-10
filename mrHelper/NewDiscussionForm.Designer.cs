@@ -42,7 +42,7 @@
          // 
          // textBoxDiscussionBody
          // 
-         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 161);
+         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 164);
          this.textBoxDiscussionBody.Multiline = true;
          this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
          this.textBoxDiscussionBody.Size = new System.Drawing.Size(730, 77);
@@ -51,7 +51,7 @@
          // buttonCancel
          // 
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(778, 215);
+         this.buttonCancel.Location = new System.Drawing.Point(775, 218);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 6;
@@ -62,7 +62,7 @@
          // buttonOK
          // 
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(778, 161);
+         this.buttonOK.Location = new System.Drawing.Point(775, 164);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 5;
@@ -90,7 +90,7 @@
          // labelContext
          // 
          this.labelContext.AutoSize = true;
-         this.labelContext.Location = new System.Drawing.Point(12, 57);
+         this.labelContext.Location = new System.Drawing.Point(9, 57);
          this.labelContext.Name = "labelContext";
          this.labelContext.Size = new System.Drawing.Size(43, 13);
          this.labelContext.TabIndex = 8;
@@ -99,7 +99,7 @@
          // labelDiscussionBody
          // 
          this.labelDiscussionBody.AutoSize = true;
-         this.labelDiscussionBody.Location = new System.Drawing.Point(12, 145);
+         this.labelDiscussionBody.Location = new System.Drawing.Point(9, 148);
          this.labelDiscussionBody.Name = "labelDiscussionBody";
          this.labelDiscussionBody.Size = new System.Drawing.Size(85, 13);
          this.labelDiscussionBody.TabIndex = 9;
@@ -124,7 +124,7 @@
          this.webBrowserContext.MinimumSize = new System.Drawing.Size(20, 20);
          this.webBrowserContext.Name = "webBrowserContext";
          this.webBrowserContext.ScrollBarsEnabled = false;
-         this.webBrowserContext.Size = new System.Drawing.Size(860, 64);
+         this.webBrowserContext.Size = new System.Drawing.Size(860, 72);
          this.webBrowserContext.TabIndex = 10;
          this.webBrowserContext.WebBrowserShortcutsEnabled = false;
          // 
@@ -133,7 +133,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(884, 255);
+         this.ClientSize = new System.Drawing.Size(884, 257);
          this.Controls.Add(this.webBrowserContext);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.labelDiscussionBody);

@@ -8,10 +8,8 @@ namespace mrCore
    public struct DiffToolInfo
    {
       public string LeftSideFileNameBrief;
-      public string LeftSideFileNameFull;
       public int LeftSideLineNumber;
       public string RightSideFileNameBrief;
-      public string RightSideFileNameFull;
       public int RightSideLineNumber;
       public bool IsLeftSideCurrent;
    }
@@ -46,20 +44,16 @@ namespace mrCore
          if (checkIfLeftSideFile(tempFolder, currentFilePath))
          {
             toolInfo.IsLeftSideCurrent = true;
-            toolInfo.LeftSideFileNameFull = currentFilePath;
             toolInfo.LeftSideFileNameBrief = convertToGitlabFileName(tempFolder, currentFilePath);
             toolInfo.LeftSideLineNumber = int.Parse(_arguments[1]);
-            toolInfo.RightSideFileNameFull = nextFilePath;
             toolInfo.RightSideFileNameBrief = convertToGitlabFileName(tempFolder, nextFilePath);
             toolInfo.RightSideLineNumber = int.Parse(_arguments[3]);
          }
          else
          {
             toolInfo.IsLeftSideCurrent = false;
-            toolInfo.LeftSideFileNameFull = nextFilePath;
             toolInfo.LeftSideFileNameBrief = convertToGitlabFileName(tempFolder, nextFilePath);
             toolInfo.LeftSideLineNumber = int.Parse(_arguments[3]);
-            toolInfo.RightSideFileNameFull = currentFilePath;
             toolInfo.RightSideFileNameBrief = convertToGitlabFileName(tempFolder, currentFilePath);
             toolInfo.RightSideLineNumber = int.Parse(_arguments[1]);
          }

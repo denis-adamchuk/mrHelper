@@ -90,7 +90,7 @@ namespace mrHelperUI
       private void showDiscussionContext(WebBrowser webBrowser, TextBox tbFileName)
       {
          ContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
-         DiffContext context = textContextMaker.GetContext(_position.Value, 4);
+         DiffContext context = textContextMaker.GetContext(_position.Value, 4 /* context size */);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
          webBrowser.DocumentText = formatter.FormatAsHTML(context);

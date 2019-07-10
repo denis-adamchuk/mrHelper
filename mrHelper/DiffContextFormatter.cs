@@ -64,10 +64,12 @@ namespace mrHelperUI
       private string getTableBody(DiffContext ctx)
       {
          string body = string.Empty;
-         foreach (DiffContext.Line line in ctx.Lines)
+         for (int iLine = 0; iLine < ctx.Lines.Count; ++iLine)
          {
+            var line = ctx.Lines[iLine];
+
             body
-              += "<tr>"
+              += "<tr" + (iLine == ctx.SelectedIndex ? " class=\"selected\"" : "") + ">"
                + "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>" 
                + "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>"
                + "<td class=\"" + getDiffCellClass(line) + "\">" + getCode(line) + "</td>"

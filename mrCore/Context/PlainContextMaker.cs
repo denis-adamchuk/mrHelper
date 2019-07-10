@@ -52,6 +52,8 @@ namespace mrCore
             }
          }
 
+         diffContext.SelectedIndex = 0;
+
          return diffContext;
       }
 
