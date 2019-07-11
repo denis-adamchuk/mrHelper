@@ -63,13 +63,15 @@ namespace mrHelperUI
 
       private string getTableBody(DiffContext ctx)
       {
+         bool highlightSelected = ctx.Lines.Count > 1;
          string body = string.Empty;
+
          for (int iLine = 0; iLine < ctx.Lines.Count; ++iLine)
          {
             var line = ctx.Lines[iLine];
 
             body
-              += "<tr" + (iLine == ctx.SelectedIndex ? " class=\"selected\"" : "") + ">"
+              += "<tr" + (iLine == ctx.SelectedIndex && highlightSelected ? " class=\"selected\"" : "") + ">"
                + "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>" 
                + "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>"
                + "<td class=\"" + getDiffCellClass(line) + "\">" + getCode(line) + "</td>"

@@ -60,6 +60,13 @@
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
+         this.groupBoxDiffContextAlgo = new System.Windows.Forms.GroupBox();
+         this.labelDepth = new System.Windows.Forms.Label();
+         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
+         this.labelDCA = new System.Windows.Forms.Label();
+         this.radioButtonDCA_Combined = new System.Windows.Forms.RadioButton();
+         this.radioButtonDCA_Enhanced = new System.Windows.Forms.RadioButton();
+         this.radioButtonDCA_Simple = new System.Windows.Forms.RadioButton();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
@@ -83,18 +90,12 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
-         this.groupBoxDiffContextAlgo = new System.Windows.Forms.GroupBox();
-         this.radioButtonDCA_Plain = new System.Windows.Forms.RadioButton();
-         this.radioButtonDCA_Enhanced = new System.Windows.Forms.RadioButton();
-         this.radioButtonDCA_Combined = new System.Windows.Forms.RadioButton();
-         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
-         this.labelDCA = new System.Windows.Forms.Label();
-         this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
          this.tabPageSettings.SuspendLayout();
+         this.groupBoxDiffContextAlgo.SuspendLayout();
          this.groupBoxOther.SuspendLayout();
          this.groupBoxGit.SuspendLayout();
          this.tabPageMR.SuspendLayout();
@@ -104,7 +105,6 @@
          this.groupBoxDescription.SuspendLayout();
          this.groupBoxHost.SuspendLayout();
          this.groupBoxDiff.SuspendLayout();
-         this.groupBoxDiffContextAlgo.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxKnownHosts
@@ -261,9 +261,9 @@
          // 
          // toolTip
          // 
-         this.toolTip.AutoPopDelay = 10000;
-         this.toolTip.InitialDelay = 10;
-         this.toolTip.ReshowDelay = 10;
+         this.toolTip.AutoPopDelay = 5000;
+         this.toolTip.InitialDelay = 500;
+         this.toolTip.ReshowDelay = 100;
          // 
          // buttonDiffTool
          // 
@@ -347,6 +347,92 @@
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxDiffContextAlgo
+         // 
+         this.groupBoxDiffContextAlgo.Controls.Add(this.labelDepth);
+         this.groupBoxDiffContextAlgo.Controls.Add(this.comboBoxDCDepth);
+         this.groupBoxDiffContextAlgo.Controls.Add(this.labelDCA);
+         this.groupBoxDiffContextAlgo.Controls.Add(this.radioButtonDCA_Combined);
+         this.groupBoxDiffContextAlgo.Controls.Add(this.radioButtonDCA_Enhanced);
+         this.groupBoxDiffContextAlgo.Controls.Add(this.radioButtonDCA_Simple);
+         this.groupBoxDiffContextAlgo.Location = new System.Drawing.Point(338, 298);
+         this.groupBoxDiffContextAlgo.Name = "groupBoxDiffContextAlgo";
+         this.groupBoxDiffContextAlgo.Size = new System.Drawing.Size(181, 110);
+         this.groupBoxDiffContextAlgo.TabIndex = 3;
+         this.groupBoxDiffContextAlgo.TabStop = false;
+         this.groupBoxDiffContextAlgo.Text = "Diff Context";
+         // 
+         // labelDepth
+         // 
+         this.labelDepth.AutoSize = true;
+         this.labelDepth.Location = new System.Drawing.Point(106, 16);
+         this.labelDepth.Name = "labelDepth";
+         this.labelDepth.Size = new System.Drawing.Size(36, 13);
+         this.labelDepth.TabIndex = 5;
+         this.labelDepth.Text = "Depth";
+         // 
+         // comboBoxDCDepth
+         // 
+         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxDCDepth.FormattingEnabled = true;
+         this.comboBoxDCDepth.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"});
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(109, 32);
+         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
+         this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
+         this.comboBoxDCDepth.TabIndex = 4;
+         this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines to show in a context including a line the discussion was created " +
+        "for.");
+         // 
+         // labelDCA
+         // 
+         this.labelDCA.AutoSize = true;
+         this.labelDCA.Location = new System.Drawing.Point(6, 16);
+         this.labelDCA.Name = "labelDCA";
+         this.labelDCA.Size = new System.Drawing.Size(50, 13);
+         this.labelDCA.TabIndex = 4;
+         this.labelDCA.Text = "Algorithm";
+         // 
+         // radioButtonDCA_Combined
+         // 
+         this.radioButtonDCA_Combined.AutoSize = true;
+         this.radioButtonDCA_Combined.Checked = true;
+         this.radioButtonDCA_Combined.Location = new System.Drawing.Point(6, 78);
+         this.radioButtonDCA_Combined.Name = "radioButtonDCA_Combined";
+         this.radioButtonDCA_Combined.Size = new System.Drawing.Size(72, 17);
+         this.radioButtonDCA_Combined.TabIndex = 3;
+         this.radioButtonDCA_Combined.TabStop = true;
+         this.radioButtonDCA_Combined.Text = "Combined";
+         this.toolTip.SetToolTip(this.radioButtonDCA_Combined, "The most accurate choice. Shows context from both left and right sides.");
+         this.radioButtonDCA_Combined.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonDCA_Enhanced
+         // 
+         this.radioButtonDCA_Enhanced.AutoSize = true;
+         this.radioButtonDCA_Enhanced.Location = new System.Drawing.Point(6, 55);
+         this.radioButtonDCA_Enhanced.Name = "radioButtonDCA_Enhanced";
+         this.radioButtonDCA_Enhanced.Size = new System.Drawing.Size(74, 17);
+         this.radioButtonDCA_Enhanced.TabIndex = 2;
+         this.radioButtonDCA_Enhanced.Text = "Enhanced";
+         this.toolTip.SetToolTip(this.radioButtonDCA_Enhanced, "Fast and accurate. Shows context from one side only (left/right) but distincts mo" +
+        "dified from unmodified lines. ");
+         this.radioButtonDCA_Enhanced.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonDCA_Simple
+         // 
+         this.radioButtonDCA_Simple.AutoSize = true;
+         this.radioButtonDCA_Simple.Location = new System.Drawing.Point(6, 32);
+         this.radioButtonDCA_Simple.Name = "radioButtonDCA_Simple";
+         this.radioButtonDCA_Simple.Size = new System.Drawing.Size(56, 17);
+         this.radioButtonDCA_Simple.TabIndex = 1;
+         this.radioButtonDCA_Simple.Text = "Simple";
+         this.toolTip.SetToolTip(this.radioButtonDCA_Simple, resources.GetString("radioButtonDCA_Simple.ToolTip"));
+         this.radioButtonDCA_Simple.UseVisualStyleBackColor = true;
          // 
          // groupBoxOther
          // 
@@ -582,98 +668,18 @@
          this.label3.AutoSize = true;
          this.label3.Location = new System.Drawing.Point(269, 16);
          this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(32, 13);
+         this.label3.Size = new System.Drawing.Size(25, 13);
          this.label3.TabIndex = 18;
-         this.label3.Text = "Right";
+         this.label3.Text = "and";
          // 
          // label4
          // 
          this.label4.AutoSize = true;
          this.label4.Location = new System.Drawing.Point(3, 16);
          this.label4.Name = "label4";
-         this.label4.Size = new System.Drawing.Size(25, 13);
+         this.label4.Size = new System.Drawing.Size(93, 13);
          this.label4.TabIndex = 15;
-         this.label4.Text = "Left";
-         // 
-         // groupBoxDiffContextAlgo
-         // 
-         this.groupBoxDiffContextAlgo.Controls.Add(this.labelDepth);
-         this.groupBoxDiffContextAlgo.Controls.Add(this.comboBoxDCDepth);
-         this.groupBoxDiffContextAlgo.Controls.Add(this.labelDCA);
-         this.groupBoxDiffContextAlgo.Controls.Add(this.radioButtonDCA_Combined);
-         this.groupBoxDiffContextAlgo.Controls.Add(this.radioButtonDCA_Enhanced);
-         this.groupBoxDiffContextAlgo.Controls.Add(this.radioButtonDCA_Plain);
-         this.groupBoxDiffContextAlgo.Location = new System.Drawing.Point(338, 298);
-         this.groupBoxDiffContextAlgo.Name = "groupBoxDiffContextAlgo";
-         this.groupBoxDiffContextAlgo.Size = new System.Drawing.Size(181, 110);
-         this.groupBoxDiffContextAlgo.TabIndex = 3;
-         this.groupBoxDiffContextAlgo.TabStop = false;
-         this.groupBoxDiffContextAlgo.Text = "Diff Context";
-         // 
-         // radioButtonDCA_Plain
-         // 
-         this.radioButtonDCA_Plain.AutoSize = true;
-         this.radioButtonDCA_Plain.Location = new System.Drawing.Point(6, 32);
-         this.radioButtonDCA_Plain.Name = "radioButtonDCA_Plain";
-         this.radioButtonDCA_Plain.Size = new System.Drawing.Size(48, 17);
-         this.radioButtonDCA_Plain.TabIndex = 1;
-         this.radioButtonDCA_Plain.Text = "Plain";
-         this.radioButtonDCA_Plain.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonDCA_Enhanced
-         // 
-         this.radioButtonDCA_Enhanced.AutoSize = true;
-         this.radioButtonDCA_Enhanced.Location = new System.Drawing.Point(6, 55);
-         this.radioButtonDCA_Enhanced.Name = "radioButtonDCA_Enhanced";
-         this.radioButtonDCA_Enhanced.Size = new System.Drawing.Size(74, 17);
-         this.radioButtonDCA_Enhanced.TabIndex = 2;
-         this.radioButtonDCA_Enhanced.Text = "Enhanced";
-         this.radioButtonDCA_Enhanced.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonDCA_Combined
-         // 
-         this.radioButtonDCA_Combined.AutoSize = true;
-         this.radioButtonDCA_Combined.Checked = true;
-         this.radioButtonDCA_Combined.Location = new System.Drawing.Point(6, 78);
-         this.radioButtonDCA_Combined.Name = "radioButtonDCA_Combined";
-         this.radioButtonDCA_Combined.Size = new System.Drawing.Size(72, 17);
-         this.radioButtonDCA_Combined.TabIndex = 3;
-         this.radioButtonDCA_Combined.TabStop = true;
-         this.radioButtonDCA_Combined.Text = "Combined";
-         this.radioButtonDCA_Combined.UseVisualStyleBackColor = true;
-         // 
-         // comboBoxDCDepth
-         // 
-         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxDCDepth.FormattingEnabled = true;
-         this.comboBoxDCDepth.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "3",
-            "4",
-            "5"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(109, 32);
-         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
-         this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
-         this.comboBoxDCDepth.TabIndex = 4;
-         // 
-         // labelDCA
-         // 
-         this.labelDCA.AutoSize = true;
-         this.labelDCA.Location = new System.Drawing.Point(6, 16);
-         this.labelDCA.Name = "labelDCA";
-         this.labelDCA.Size = new System.Drawing.Size(50, 13);
-         this.labelDCA.TabIndex = 4;
-         this.labelDCA.Text = "Algorithm";
-         // 
-         // labelDepth
-         // 
-         this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(106, 16);
-         this.labelDepth.Name = "labelDepth";
-         this.labelDepth.Size = new System.Drawing.Size(36, 13);
-         this.labelDepth.TabIndex = 5;
-         this.labelDepth.Text = "Depth";
+         this.label4.Text = "Changes between";
          // 
          // mrHelperForm
          // 
@@ -695,6 +701,8 @@
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);
          this.tabPageSettings.ResumeLayout(false);
+         this.groupBoxDiffContextAlgo.ResumeLayout(false);
+         this.groupBoxDiffContextAlgo.PerformLayout();
          this.groupBoxOther.ResumeLayout(false);
          this.groupBoxOther.PerformLayout();
          this.groupBoxGit.ResumeLayout(false);
@@ -709,8 +717,6 @@
          this.groupBoxHost.ResumeLayout(false);
          this.groupBoxDiff.ResumeLayout(false);
          this.groupBoxDiff.PerformLayout();
-         this.groupBoxDiffContextAlgo.ResumeLayout(false);
-         this.groupBoxDiffContextAlgo.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -771,7 +777,7 @@
       private System.Windows.Forms.Label labelDCA;
       private System.Windows.Forms.RadioButton radioButtonDCA_Combined;
       private System.Windows.Forms.RadioButton radioButtonDCA_Enhanced;
-      private System.Windows.Forms.RadioButton radioButtonDCA_Plain;
+      private System.Windows.Forms.RadioButton radioButtonDCA_Simple;
    }
 }
 

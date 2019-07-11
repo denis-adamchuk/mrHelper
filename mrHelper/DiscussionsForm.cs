@@ -43,9 +43,9 @@ namespace mrHelperUI
          _currentUser = getUser();
          if (gitRepository != null)
          {
-            if (diffContextAlgo == "Plain")
+            if (diffContextAlgo == "Simple")
             {
-               _contextMaker = new PlainContextMaker(gitRepository);
+               _contextMaker = new SimpleContextMaker(gitRepository);
             }
             else if (diffContextAlgo == "Enhanced")
             {
@@ -136,16 +136,6 @@ namespace mrHelperUI
          int interControlVertMargin = 5;
          int interControlHorzMargin = 10;
 
-         // separator
-         Label horizontalLine = new Label();
-         horizontalLine.AutoSize = false;
-         horizontalLine.Height = 1;
-         horizontalLine.BorderStyle = BorderStyle.FixedSingle;
-         horizontalLine.Text = null;
-         horizontalLine.Location = new Point();
-         horizontalLine.BackColor = Color.LightGray;
-         horizontalLine.Width = this.Width - interControlVertMargin;
-
          // the Label is placed at the left side
          Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
          c.Label.Location = labelPos;
@@ -168,7 +158,6 @@ namespace mrHelperUI
          }
 
          Panel box = new Panel();
-         //box.Controls.Add(horizontalLine);
          box.Controls.Add(c.Label);
          box.Controls.Add(c.Context);
          foreach (var note in c.Notes)
@@ -249,7 +238,11 @@ namespace mrHelperUI
       {
          TextBox textBox = (TextBox)(sender);
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         // TODO Send modification request to GitLab
+         if (textBox.Text != note.Body)
+         {
+            GitLabClient client = new GitLabClient(_host, _accessToken);
+            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, textBox.Text, null);
+         }
       }
 
       private void MenuItemDeleteNote_Click(object sender, EventArgs e)
@@ -259,7 +252,9 @@ namespace mrHelperUI
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
          {
-            // TODO Send deletion request to GitLab
+            GitLabClient client = new GitLabClient(_host, _accessToken);
+            client.DeleteDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id);
+
             // TODO Re-render current discussion box only
          }
       }
@@ -270,18 +265,23 @@ namespace mrHelperUI
          DiscussionNote note = (DiscussionNote)(menuItem.Tag);
          if (note.Resolvable && note.Resolved.HasValue)
          {
-            // TODO Send modification request to GitLab
+            bool resolved = !note.Resolved.Value; // new state
 
-            if (note.Resolved.Value)
+            GitLabClient client = new GitLabClient(_host, _accessToken);
+            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, null, resolved);
+
+            if (!resolved)
             {
-               // this note is going to become unresolved, so change text to resolve it back
-               menuItem.Text = "Resolved";
+               // this note is going to become unresolved, so change text back to Resolve
+               menuItem.Text = "Resolve";
             }
             else
             {
-               // this note is going to become resolved, so change text to unresolve it back
-               menuItem.Text = "Unresolved";
+               // this note is going to become resolved, so change text back to Unresolve
+               menuItem.Text = "Unresolve";
             }
+
+            // TODO Toggle textbox color
          }
       }
 
@@ -328,13 +328,14 @@ namespace mrHelperUI
 
          int fontSizePx = 12;
          int rowsVPaddingPx = 2;
-         int height = _diffContextDepth * (fontSizePx + rowsVPaddingPx * 2 + 2);
+         int height = _diffContextDepth * (fontSizePx + rowsVPaddingPx * 2 + 1 /* border of control */ + 2);
          // we're adding 2 extra pixels for each row because HtmlRenderer does not support CSS line-height property
          // this value was found experimentally
 
          HtmlPanel htmlPanel = new HtmlPanel();
          htmlPanel.Size = new Size(1000 /* big enough for long lines */, height);
          toolTip.SetToolTip(htmlPanel, firstNote.Position.Value.NewPath);
+         htmlPanel.BorderStyle = BorderStyle.FixedSingle;
 
          if (_contextMaker != null)
          {

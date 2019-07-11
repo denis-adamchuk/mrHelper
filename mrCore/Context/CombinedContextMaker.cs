@@ -104,7 +104,7 @@ namespace mrCore
       {
          DiffContext.Line line = new DiffContext.Line();
 
-         if (context.Left[absLineNumber] != null & context.Right[absLineNumber] != null)
+         if (context.Left[absLineNumber] != null && context.Right[absLineNumber] != null)
          {
             Debug.Assert(context.Left[absLineNumber] == context.Right[absLineNumber]);
             line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Unchanged);

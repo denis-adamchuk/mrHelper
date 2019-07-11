@@ -35,8 +35,8 @@
          // toolTip
          // 
          this.toolTip.AutoPopDelay = 5000;
-         this.toolTip.InitialDelay = 10;
-         this.toolTip.ReshowDelay = 10;
+         this.toolTip.InitialDelay = 500;
+         this.toolTip.ReshowDelay = 100;
          // 
          // DiscussionsForm
          // 

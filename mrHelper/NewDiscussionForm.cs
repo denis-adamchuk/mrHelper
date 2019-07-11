@@ -16,10 +16,6 @@ namespace mrHelperUI
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
          _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]));
-         if (_gitRepository == null)
-         {
-            throw new ApplicationException("Cannot create a discussion. There is a problem with git repository.");
-         }
          _matcher = new RefsToLinesMatcher(_gitRepository);
 
          InitializeComponent();

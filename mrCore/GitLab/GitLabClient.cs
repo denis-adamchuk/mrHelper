@@ -189,6 +189,25 @@ namespace mrCore
          post(url);
       }
 
+      public void ModifyDiscussionNote(string project, int mergeRequestId, string discussionId, int noteId,
+         string body, bool? resolved)
+      {
+         if (body != null && resolved.HasValue)
+         {
+            // (exactly one of body or resolved must be set)
+            return;
+         }
+
+         string url = makeUrlForNoteModification(project, mergeRequestId, discussionId, noteId, body, resolved);
+         put(url);
+      }
+
+      public void DeleteDiscussionNote(string project, int mergeRequestId, string discussionId, int noteId)
+      {
+         string url = makeUrlForNoteDeletion(project, mergeRequestId, discussionId, noteId);
+         delete(url);
+      }
+
       private static MergeRequest readMergeRequest(dynamic json)
       {
          MergeRequest mr = new MergeRequest();
@@ -252,6 +271,7 @@ namespace mrCore
             {
                discussionNote.Position = readposition(item["position"]);
             }
+            discussionNote.DiscussionId = discussion.Id;
             discussion.Notes.Add(discussionNote);
          }
          return discussion;
@@ -273,6 +293,16 @@ namespace mrCore
       private string post(string data)
       {
          return _client.UploadString(data, "");
+      }
+
+      private string put(string data)
+      {
+         return _client.UploadString(data, "PUT", "");
+      }
+
+      private string delete(string data)
+      {
+         return _client.UploadString(data, "DELETE", "");
       }
 
       private string get(string request)
@@ -385,7 +415,35 @@ namespace mrCore
       {
          string url = makeUrlForSingleMergeRequest(project, id)
             + "/notes"
-            + "?body=" + WebUtility.UrlEncode(body);
+            + query("?body", WebUtility.UrlEncode(body));
+         return url;
+      }
+
+      private string makeUrlForNoteModification(string project, int mergeRequestId, string discussionId, int noteId,
+         string body, bool? resolved)
+      {
+         string modQuery = String.Empty;
+         if (body != null)
+         {
+            modQuery += query("?body", WebUtility.UrlEncode(body));
+         }
+         else if (resolved.HasValue)
+         {
+            modQuery += query("?resolved", resolved.Value ? "true" : "false");
+         }
+
+         string url = makeUrlForSingleMergeRequest(project, mergeRequestId)
+            + "/discussions/" + discussionId
+            + "/notes/" + noteId.ToString()
+            + modQuery;
+         return url;
+      }
+
+      private string makeUrlForNoteDeletion(string project, int mergeRequestId, string discussionId, int noteId)
+      {
+         string url = makeUrlForSingleMergeRequest(project, mergeRequestId)
+            + "/discussions/" + discussionId
+            + "/notes/" + noteId.ToString();
          return url;
       }
 

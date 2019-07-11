@@ -565,9 +565,9 @@ namespace mrHelperUI
 
       private void setSelectedDiffContextAlgo()
       {
-         if (_settings.DiffContextAlgo == "Plain")
+         if (_settings.DiffContextAlgo == "Simple")
          {
-            radioButtonDCA_Plain.Checked = true;
+            radioButtonDCA_Simple.Checked = true;
          }
          else if (_settings.DiffContextAlgo == "Enhanced")
          {
@@ -586,9 +586,9 @@ namespace mrHelperUI
 
       private string getSelectedDiffContextAlgo()
       {
-         if (radioButtonDCA_Plain.Checked)
+         if (radioButtonDCA_Simple.Checked)
          {
-            return "Plain";
+            return "Simple";
          }
          else if (radioButtonDCA_Enhanced.Checked)
          {

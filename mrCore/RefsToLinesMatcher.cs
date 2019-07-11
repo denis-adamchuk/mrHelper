@@ -57,6 +57,10 @@ namespace mrCore
                position.OldLine = difftoolInfo.LeftSideLineNumber.ToString();
                position.NewLine = difftoolInfo.RightSideLineNumber.ToString();
                break;
+
+            case MatchResult.Undefined:
+               Debug.Assert(false);
+               break;
          }
 
          return position;

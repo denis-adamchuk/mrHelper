@@ -88,6 +88,7 @@ namespace mrCore
       public bool Resolvable;
       public bool? Resolved;
       public Position? Position; // notes with type DiffNote must have them (others must not)
+      public string DiscussionId; // parent id
    }
 
    public struct Discussion
