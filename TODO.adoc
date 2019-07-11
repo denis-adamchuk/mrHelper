@@ -1,0 +1,11 @@
+.p1.5
+. reposition controls on delete. change color on resolve/unresolve. tooltip on edit.
+. git repository should fetch in case a new version appears (or always)
+. support renamed files
+
+.p2
+. tooltip with extended context
+
+.p3
+. add filter for 'comments'
+

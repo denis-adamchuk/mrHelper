@@ -12,11 +12,6 @@ using System.Windows.Forms;
 using mrCore;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
-// TODO:
-// 5. Show configurable number of lines within diff contexts (default: 0 above, 3 below) and mark a selected line with bold
-// 7. Add filter for 'comments'
-// 9. Add ability to edit/delete notes and change their resolved state 
-
 namespace mrHelperUI
 {
    public partial class DiscussionsForm : Form
@@ -25,7 +20,7 @@ namespace mrHelperUI
       [DllImport("user32", EntryPoint = "SendMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
       private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam);
 
-      private struct DiscussionBoxControls
+      private class DiscussionBox : Panel
       {
          public Control Label;
          public Control Context;
@@ -62,22 +57,82 @@ namespace mrHelperUI
             }
          }
          _diffContextDepth = diffContextDepth;
-         _discussions = loadDiscussions();
          _formatter = new DiffContextFormatter();
 
          InitializeComponent();
+         createControls(loadDiscussions());
+         repositionAll();
       }
 
-      private void Discussions_Load(object sender, EventArgs e)
+      private void DiscussionNoteTextBox_LostFocus(object sender, EventArgs e)
       {
-         try
+         TextBox textBox = (TextBox)(sender);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         if (textBox.Text != note.Body)
          {
-            renderDiscussions(_discussions);
+            GitLabClient client = new GitLabClient(_host, _accessToken);
+            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, textBox.Text, null);
+
+            toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
+
+            TextBox newTextBox = createTextBox(note);
+            int oldNumberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
+            int newNumberOfLines = SendMessage(newTextBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
+            replaceControlInParent(textBox, newTextBox);
+            if (oldNumberOfLines != newNumberOfLines)
+            {
+               repositionAll();
+            }
+            else
+            {
+               repositionBoxContent(newTextBox.Parent as DiscussionBox);
+            }
          }
-         catch (Exception ex)
+      }
+
+      private void MenuItemDeleteNote_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            GitLabClient client = new GitLabClient(_host, _accessToken);
+            client.DeleteDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id);
+
+            Discussion discussion = client.GetSingleDiscussion(_projectId, _mergeRequestId, note.DiscussionId);
+            DiscussionBox discussionBox = createDiscussionBox(discussion);
+            replaceControlInParent(textBox.Parent as DiscussionBox, discussionBox);
+            repositionAll();
          }
+      }
+
+      private void MenuItemToggleResolve_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         if (note.Resolvable && note.Resolved.HasValue)
+         {
+            note.Resolved = !note.Resolved.Value;
+
+            GitLabClient client = new GitLabClient(_host, _accessToken);
+            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, null, note.Resolved.Value);
+
+            TextBox newTextBox = createTextBox(note);
+            replaceControlInParent(textBox, newTextBox);
+            repositionBoxContent(newTextBox.Parent as DiscussionBox);
+         }
+      }
+
+      private void replaceControlInParent(Control oldControl, Control newControl)
+      {
+         var index = oldControl.Parent.Controls.IndexOf(oldControl);
+         var parent = oldControl.Parent;
+         oldControl.Parent.Controls.Remove(oldControl);
+         parent.Controls.Add(newControl);
+         parent.Controls.SetChildIndex(newControl, index);
       }
 
       private List<Discussion> loadDiscussions()
@@ -92,109 +147,94 @@ namespace mrHelperUI
          return client.GetCurrentUser();
       }
 
-      private void renderDiscussions(List<Discussion> discussions)
+      private void createControls(List<Discussion> discussions)
+      {
+         foreach (var discussion in discussions)
+         {
+            if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
+            {
+               continue;
+            }
+
+            Controls.Add(createDiscussionBox(discussion));
+         }
+      }
+
+      private void repositionAll()
       {
          int groupBoxMarginLeft = 10;
          int groupBoxMarginTop = 5;
 
          Point previousBoxLocation = new Point();
          Size previousBoxSize = new Size();
-         foreach (var discussion in discussions)
+         foreach (Control control in Controls)
          {
-            if (discussion.Notes.Count == 0)
-            {
-               continue;
-            }
+            Debug.Assert(control is DiscussionBox);
 
             Point location = new Point();
             location.X = groupBoxMarginLeft;
             location.Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop;
-            var discussionBox = createDiscussionBox(discussion, location);
-            if (discussionBox != null)
-            {
-               previousBoxLocation = discussionBox.Location;
-               previousBoxSize = discussionBox.Size;
-            }
-            Controls.Add(discussionBox);
+            repositionBoxContent(control as DiscussionBox);
+            control.Location = location;
+            previousBoxLocation = control.Location;
+            previousBoxSize = control.Size;
          }
       }
 
-      private Control createDiscussionBox(Discussion discussion, Point location)
+      private void repositionBoxContent(DiscussionBox box)
       {
-         DiscussionBoxControls? controls = createDiscussionBoxControls(discussion);
-         return repositionAndBoxControls(controls, location);
-      }
-
-      private Control repositionAndBoxControls(DiscussionBoxControls? controls, Point location)
-      {
-         if (!controls.HasValue)
-         {
-            return null;
-         }
-         var c = controls.Value;
-
          int interControlVertMargin = 5;
          int interControlHorzMargin = 10;
 
          // the Label is placed at the left side
          Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
-         c.Label.Location = labelPos;
+         box.Label.Location = labelPos;
 
          // the Context is an optional control to the right of the Label
-         Point ctxPos = new Point(
-            interControlHorzMargin + c.Label.PreferredSize.Width + interControlHorzMargin, interControlVertMargin);
-         if (c.Context != null)
+         Point ctxPos = new Point(180 /* hard-coded to have a better alignment */, interControlVertMargin);
+         if (box.Context != null)
          {
-            c.Context.Location = ctxPos;
+            box.Context.Location = ctxPos;
          }
 
          // a list of Notes is to the right of Label and Context
-         int nextNoteX = ctxPos.X + (c.Context == null ? 0 : c.Context.Width + interControlHorzMargin);
+         int nextNoteX = ctxPos.X + (box.Context == null ? 0 : box.Context.Width + interControlHorzMargin);
          Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
-         foreach (var note in c.Notes)
+         foreach (var note in box.Notes)
          {
             note.Location = nextNotePos;
             nextNotePos.Offset(0, note.Height + interControlVertMargin);
          }
 
-         Panel box = new Panel();
-         box.Controls.Add(c.Label);
-         box.Controls.Add(c.Context);
-         foreach (var note in c.Notes)
-         {
-            box.Controls.Add(note);
-         }
-         box.Location = location;
-
-         int labelHeight = labelPos.Y + c.Label.PreferredSize.Height;
-         int ctxHeight = (c.Context == null ? 0 : ctxPos.Y + c.Context.Height);
-         int notesHeight = c.Notes[c.Notes.Count - 1].Location.Y + c.Notes[c.Notes.Count - 1].Height;
-         box.Size = new Size(nextNoteX + c.Notes[0].Width + interControlHorzMargin,
+         int labelHeight = labelPos.Y + box.Label.PreferredSize.Height;
+         int ctxHeight = (box.Context == null ? 0 : ctxPos.Y + box.Context.Height);
+         int notesHeight = box.Notes[box.Notes.Count - 1].Location.Y + box.Notes[box.Notes.Count - 1].Height;
+         box.Size = new Size(nextNoteX + box.Notes[0].Width + interControlHorzMargin,
             Math.Max(labelHeight, Math.Max(ctxHeight, notesHeight)) + interControlVertMargin);
-         return box;
       }
 
-      private DiscussionBoxControls? createDiscussionBoxControls(Discussion discussion)
+      private DiscussionBox createDiscussionBox(Discussion discussion)
       {
          Debug.Assert(discussion.Notes.Count > 0);
 
          var firstNote = discussion.Notes[0];
-         if (firstNote.System)
-         {
-            return null;
-         }
+         Debug.Assert(!firstNote.System);
 
-         DiscussionBoxControls controls = new DiscussionBoxControls();
+         DiscussionBox controls = new DiscussionBox();
          controls.Label = createDiscussionLabel(firstNote);
          controls.Context = createDiffContext(firstNote);
          controls.Notes = createTextBoxes(discussion.Notes);
+         controls.Controls.Add(controls.Label);
+         controls.Controls.Add(controls.Context);
+         foreach (var note in controls.Notes)
+         {
+            controls.Controls.Add(note);
+         }
          return controls;
       }
 
       private List<Control> createTextBoxes(List<DiscussionNote> notes)
       {
-         Size singleTextBoxSize = new Size(500, 0 /* height is adjusted to line count */);
-
          List<Control> boxes = new List<Control>();
          foreach (var note in notes)
          {
@@ -204,85 +244,45 @@ namespace mrHelperUI
                continue;
             }
 
-            TextBox textBox = new TextBox();
-            toolTip.SetToolTip(textBox, getNoteTooltipText(note));
-            textBox.ReadOnly = note.Author.Id != _currentUser.Id;
-            textBox.Size = singleTextBoxSize;
-            textBox.Text = note.Body;
-            textBox.Multiline = true;
-            var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
-            textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
-            textBox.BackColor = getNoteColor(note);
-            textBox.LostFocus += DiscussionNoteTextBox_LostFocus;
-            textBox.Tag = note;
-
-            textBox.ContextMenu = new ContextMenu();
-            MenuItem menuItemToggleResolve = new MenuItem();
-            menuItemToggleResolve.Tag = note;
-            menuItemToggleResolve.Text =
-               note.Resolvable && note.Resolved.HasValue && note.Resolved.Value ? "Unresolve" : "Resolve";
-            menuItemToggleResolve.Click += MenuItemToggleResolve_Click;
-            textBox.ContextMenu.MenuItems.Add(menuItemToggleResolve);
-            MenuItem menuItemDeleteNote = new MenuItem();
-            menuItemDeleteNote.Tag = note;
-            menuItemDeleteNote.Text = "Delete Note";
-            menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
-            textBox.ContextMenu.MenuItems.Add(menuItemDeleteNote);
-
+            TextBox textBox = createTextBox(note);
             boxes.Add(textBox);
          }
          return boxes;
       }
 
-      private void DiscussionNoteTextBox_LostFocus(object sender, EventArgs e)
+      private TextBox createTextBox(DiscussionNote note)
       {
-         TextBox textBox = (TextBox)(sender);
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         if (textBox.Text != note.Body)
-         {
-            GitLabClient client = new GitLabClient(_host, _accessToken);
-            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, textBox.Text, null);
-         }
-      }
+         Size singleTextBoxSize = new Size(500, 0 /* height is adjusted to line count */);
+         bool canBeModified = note.Author.Id == _currentUser.Id;
 
-      private void MenuItemDeleteNote_Click(object sender, EventArgs e)
-      {
-         MenuItem menuItem = (MenuItem)(sender);
-         DiscussionNote note = (DiscussionNote)(menuItem.Tag);
-         if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-         {
-            GitLabClient client = new GitLabClient(_host, _accessToken);
-            client.DeleteDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id);
+         TextBox textBox = new TextBox();
+         toolTip.SetToolTip(textBox, getNoteTooltipText(note));
+         textBox.ReadOnly = !canBeModified;
+         textBox.Size = singleTextBoxSize;
+         textBox.Text = note.Body;
+         textBox.Multiline = true;
+         var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
+         textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
+         textBox.BackColor = getNoteColor(note);
+         textBox.LostFocus += DiscussionNoteTextBox_LostFocus;
+         textBox.Tag = note;
 
-            // TODO Re-render current discussion box only
-         }
-      }
+         textBox.ContextMenu = new ContextMenu();
 
-      private void MenuItemToggleResolve_Click(object sender, EventArgs e)
-      {
-         MenuItem menuItem = (MenuItem)(sender);
-         DiscussionNote note = (DiscussionNote)(menuItem.Tag);
-         if (note.Resolvable && note.Resolved.HasValue)
-         {
-            bool resolved = !note.Resolved.Value; // new state
+         MenuItem menuItemToggleResolve = new MenuItem();
+         menuItemToggleResolve.Tag = textBox;
+         menuItemToggleResolve.Text =
+            note.Resolvable && note.Resolved.HasValue && note.Resolved.Value ? "Unresolve" : "Resolve";
+         menuItemToggleResolve.Click += MenuItemToggleResolve_Click;
+         textBox.ContextMenu.MenuItems.Add(menuItemToggleResolve);
 
-            GitLabClient client = new GitLabClient(_host, _accessToken);
-            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, null, resolved);
-
-            if (!resolved)
-            {
-               // this note is going to become unresolved, so change text back to Resolve
-               menuItem.Text = "Resolve";
-            }
-            else
-            {
-               // this note is going to become resolved, so change text back to Unresolve
-               menuItem.Text = "Unresolve";
-            }
-
-            // TODO Toggle textbox color
-         }
+         MenuItem menuItemDeleteNote = new MenuItem();
+         menuItemDeleteNote.Tag = textBox;
+         menuItemDeleteNote.Enabled = canBeModified;
+         menuItemDeleteNote.Text = "Delete Note";
+         menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
+         textBox.ContextMenu.MenuItems.Add(menuItemDeleteNote);
+         return textBox;
       }
 
       private string getNoteTooltipText(DiscussionNote note)
@@ -304,16 +304,16 @@ namespace mrHelperUI
 
             if (note.Author.Id == _mrAuthor.Id)
             {
-               return note.Resolved.Value ? Color.FromArgb(225, 235, 242) : Color.FromArgb(136, 176, 204);
+               return note.Resolved.Value ? Color.FromArgb(181, 180, 149) : Color.FromArgb(154, 157, 141);
             }
             else
             {
-               return note.Resolved.Value ? Color.FromArgb(247, 253, 204) : Color.FromArgb(231, 249, 100);
+               return note.Resolved.Value ? Color.FromArgb(237, 217, 184) : Color.FromArgb(214, 192, 155);
             }
          }
          else
          {
-            return Color.FromArgb(255, 236, 250);
+            return Color.FromArgb(236, 124, 127);
          }
       }
 
@@ -350,14 +350,13 @@ namespace mrHelperUI
          return htmlPanel;
       }
 
-      // Create a label that shows discussion creation date and author
+      // Create a label that shows discussion creation date and author255, 236, 250)
       private static Label createDiscussionLabel(DiscussionNote firstNote)
       {
+         string path = firstNote.Position.HasValue && firstNote.Position.Value.NewPath != null
+            ? firstNote.Position.Value.NewPath : "";
          Label discussionLabel = new Label();
-         discussionLabel.Text =
-            "Discussion started\n" +
-            "by " + firstNote.Author.Name + "\n" +
-            "at " + firstNote.CreatedAt.ToLocalTime().ToString("g");
+         discussionLabel.Text = firstNote.Author.Name + "\n" + path;
          discussionLabel.AutoSize = true;
          return discussionLabel;
       }
@@ -370,7 +369,6 @@ namespace mrHelperUI
       private readonly int _diffContextDepth;
       private readonly User _currentUser;
       private readonly ContextMaker _contextMaker;
-      private readonly List<Discussion> _discussions;
       private readonly DiffContextFormatter _formatter;
    }
 }

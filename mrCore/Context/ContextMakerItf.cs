@@ -27,7 +27,6 @@ namespace mrCore
          public Side? Right;
       }
 
-      public string FileName;
       public List<Line> Lines;
 
       public int SelectedIndex;

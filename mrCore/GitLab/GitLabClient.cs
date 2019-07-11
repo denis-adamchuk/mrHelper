@@ -147,6 +147,15 @@ namespace mrCore
          return versions;
       }
 
+      public Discussion GetSingleDiscussion(string project, int mergeRequestId, string discussionId)
+      {
+         string url = makeUrlForSingleDiscussion(project, mergeRequestId, discussionId);
+         string response = get(url);
+
+         dynamic json = deserializeJson(response);
+         return readDiscussion(json);
+      }
+
       public List<Discussion> GetMergeRequestDiscussions(string project, int id)
       {
          // evaluate total number of items
@@ -399,6 +408,13 @@ namespace mrCore
             }
          }
 
+         return url;
+      }
+
+      private string makeUrlForSingleDiscussion(string project, int mergeRequestId, string discussionId)
+      {
+         string url = makeUrlForSingleMergeRequest(project, mergeRequestId)
+            + "/discussions/" + discussionId;
          return url;
       }
 

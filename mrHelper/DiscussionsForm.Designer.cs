@@ -30,6 +30,7 @@
       {
          this.components = new System.ComponentModel.Container();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTipNotifier = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
          // 
          // toolTip
@@ -48,7 +49,6 @@
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-         this.Load += new System.EventHandler(this.Discussions_Load);
          this.ResumeLayout(false);
 
       }
@@ -56,5 +56,6 @@
       #endregion
 
       private System.Windows.Forms.ToolTip toolTip;
+      private System.Windows.Forms.ToolTip toolTipNotifier;
    }
 }

@@ -28,22 +28,28 @@ namespace mrHelperUI
 
       private void ButtonOK_Click(object sender, EventArgs e)
       {
-         if (textBoxDiscussionBody.Text.Length == 0)
+         if (submitDiscussion())
          {
-            MessageBox.Show("Discussion body cannot be empty", "Warning",
-               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            return;
+            Close();
          }
-
-         DiscussionParameters parameters = prepareDiscussionParameters();
-         createDiscussionAtGitlab(parameters);
-
-         Close();
       }
 
       private void ButtonCancel_Click(object sender, EventArgs e)
       {
          Close();
+      }
+
+      private void TextBoxDiscussionBody_KeyDown(object sender, KeyEventArgs e)
+      {
+         if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
+         {
+            e.Handled = false;
+
+            if (submitDiscussion())
+            {
+               Close();
+            }
+         }
       }
 
       private void onApplicationStarted()
@@ -58,6 +64,20 @@ namespace mrHelperUI
          }
 
          showDiscussionContext(webBrowserContext, textBoxFileName);
+      }
+
+      private bool submitDiscussion()
+      {
+         if (textBoxDiscussionBody.Text.Length == 0)
+         {
+            MessageBox.Show("Discussion body cannot be empty", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return false;
+         }
+
+         DiscussionParameters parameters = prepareDiscussionParameters();
+         createDiscussionAtGitlab(parameters);
+         return true;
       }
 
       private DiscussionParameters prepareDiscussionParameters()
@@ -90,7 +110,7 @@ namespace mrHelperUI
 
          DiffContextFormatter formatter = new DiffContextFormatter();
          webBrowser.DocumentText = formatter.FormatAsHTML(context);
-         tbFileName.Text = context.FileName;
+         tbFileName.Text = _difftoolInfo.LeftSideFileNameBrief + " vs " + _difftoolInfo.RightSideFileNameBrief;
       }
 
       private void createDiscussionAtGitlab(DiscussionParameters parameters)

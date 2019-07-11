@@ -46,7 +46,8 @@
          this.textBoxDiscussionBody.Multiline = true;
          this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
          this.textBoxDiscussionBody.Size = new System.Drawing.Size(730, 77);
-         this.textBoxDiscussionBody.TabIndex = 3;
+         this.textBoxDiscussionBody.TabIndex = 1;
+         this.textBoxDiscussionBody.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxDiscussionBody_KeyDown);
          // 
          // buttonCancel
          // 
@@ -54,7 +55,7 @@
          this.buttonCancel.Location = new System.Drawing.Point(775, 218);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-         this.buttonCancel.TabIndex = 6;
+         this.buttonCancel.TabIndex = 4;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          this.buttonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
@@ -65,7 +66,7 @@
          this.buttonOK.Location = new System.Drawing.Point(775, 164);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
-         this.buttonOK.TabIndex = 5;
+         this.buttonOK.TabIndex = 3;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          this.buttonOK.Click += new System.EventHandler(this.ButtonOK_Click);
@@ -113,7 +114,7 @@
          this.checkBoxIncludeContext.Location = new System.Drawing.Point(675, 27);
          this.checkBoxIncludeContext.Name = "checkBoxIncludeContext";
          this.checkBoxIncludeContext.Size = new System.Drawing.Size(197, 17);
-         this.checkBoxIncludeContext.TabIndex = 4;
+         this.checkBoxIncludeContext.TabIndex = 2;
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
@@ -126,6 +127,7 @@
          this.webBrowserContext.ScrollBarsEnabled = false;
          this.webBrowserContext.Size = new System.Drawing.Size(860, 72);
          this.webBrowserContext.TabIndex = 10;
+         this.webBrowserContext.TabStop = false;
          this.webBrowserContext.WebBrowserShortcutsEnabled = false;
          // 
          // NewDiscussionForm
