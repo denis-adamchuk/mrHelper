@@ -25,6 +25,29 @@ namespace mrHelperUI
          public Control Label;
          public Control Context;
          public List<Control> Notes;
+
+         public void ReplaceControl(Control oldControl, Control newControl)
+         {
+            if (Label == oldControl)
+            {
+               Label = newControl;
+            }
+            else if (Context == oldControl)
+            {
+               Context = newControl;
+            }
+            else
+            {
+               for (int iNote = 0; iNote < Notes.Count; ++iNote)
+               {
+                  if (Notes[iNote] == oldControl)
+                  {
+                     Notes[iNote] = newControl;
+                     break;
+                  }
+               }
+            }
+         }
       }
 
       public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId,
@@ -66,27 +89,13 @@ namespace mrHelperUI
 
       private void DiscussionNoteTextBox_LostFocus(object sender, EventArgs e)
       {
-         TextBox textBox = (TextBox)(sender);
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         if (textBox.Text != note.Body)
+         try
          {
-            GitLabClient client = new GitLabClient(_host, _accessToken);
-            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, textBox.Text, null);
-
-            toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
-
-            TextBox newTextBox = createTextBox(note);
-            int oldNumberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
-            int newNumberOfLines = SendMessage(newTextBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
-            replaceControlInParent(textBox, newTextBox);
-            if (oldNumberOfLines != newNumberOfLines)
-            {
-               repositionAll();
-            }
-            else
-            {
-               repositionBoxContent(newTextBox.Parent as DiscussionBox);
-            }
+            onEditNote((TextBox)(sender));
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -96,15 +105,18 @@ namespace mrHelperUI
          TextBox textBox = (TextBox)(menuItem.Tag);
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
          {
-            GitLabClient client = new GitLabClient(_host, _accessToken);
-            client.DeleteDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id);
+            return;
+         }
 
-            Discussion discussion = client.GetSingleDiscussion(_projectId, _mergeRequestId, note.DiscussionId);
-            DiscussionBox discussionBox = createDiscussionBox(discussion);
-            replaceControlInParent(textBox.Parent as DiscussionBox, discussionBox);
-            repositionAll();
+         try
+         {
+            onDeleteNote(textBox);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -113,26 +125,119 @@ namespace mrHelperUI
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         if (note.Resolvable && note.Resolved.HasValue)
+         if (!note.Resolvable || !note.Resolved.HasValue)
          {
-            note.Resolved = !note.Resolved.Value;
+            return;
+         }
 
-            GitLabClient client = new GitLabClient(_host, _accessToken);
-            client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, null, note.Resolved.Value);
-
-            TextBox newTextBox = createTextBox(note);
-            replaceControlInParent(textBox, newTextBox);
-            repositionBoxContent(newTextBox.Parent as DiscussionBox);
+         try
+         {
+            onToggleResolveNote(textBox);
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
-      private void replaceControlInParent(Control oldControl, Control newControl)
+      private void onDeleteNote(TextBox textBox)
+      {
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+
+         GitLabClient client = new GitLabClient(_host, _accessToken);
+         client.DeleteDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id);
+
+         // When a text box is deleted, we recreate a whole discussion box
+         DiscussionBox newDiscussionBox = null;
+         try
+         {
+            Discussion discussion = client.GetSingleDiscussion(_projectId, _mergeRequestId, note.DiscussionId);
+            newDiscussionBox = createDiscussionBox(discussion);
+         }
+         catch (System.Net.WebException ex)
+         {
+            // Seems it was the only note in the discussion
+            var response = ((System.Net.HttpWebResponse)ex.Response);
+            Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+         }
+
+         // Replace discussion box among Form Controls
+         replaceControlInParent(textBox.Parent as DiscussionBox, newDiscussionBox);
+
+         // Let's shift everything
+         repositionAll();
+      }
+
+      private void onEditNote(TextBox textBox)
+      {
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         if (textBox.Text == note.Body)
+         {
+            return;
+         }
+
+         note.Body = textBox.Text;
+
+         GitLabClient client = new GitLabClient(_host, _accessToken);
+         client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, note.Body, null);
+
+         toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
+
+         // Create a new text box
+         TextBox newTextBox = createTextBox(note);
+
+         // By default place a new textbox at the same place as the old one. It may be changed if height changed.
+         // It is better to change Location right now to avoid flickering during repositionAll(). 
+         newTextBox.Location = textBox.Location;
+
+         // Measure heights
+         int oldHeight = textBox.Height;
+         int newHeight = getTextBoxPreferredHeight(newTextBox);
+
+         // Replace text box in Discussion Box
+         replaceControlInParent(textBox, newTextBox);
+
+         if (oldHeight != newHeight)
+         {
+            // Line number changed, let's shift everything.
+            repositionAll();
+         }
+      }
+
+      private void onToggleResolveNote(TextBox textBox)
+      {
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         note.Resolved = !note.Resolved.Value;
+
+         GitLabClient client = new GitLabClient(_host, _accessToken);
+         client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, null, note.Resolved.Value);
+
+         // Create a new text box
+         TextBox newTextBox = createTextBox(note);
+
+         // New textbox is placed at the same place as the old one
+         newTextBox.Location = textBox.Location;
+         newTextBox.Size = textBox.Size;
+         
+         // Replace text box in Discussion Box
+         replaceControlInParent(textBox, newTextBox);
+      }
+
+      private static void replaceControlInParent(Control oldControl, Control newControl)
       {
          var index = oldControl.Parent.Controls.IndexOf(oldControl);
          var parent = oldControl.Parent;
          oldControl.Parent.Controls.Remove(oldControl);
-         parent.Controls.Add(newControl);
-         parent.Controls.SetChildIndex(newControl, index);
+         if (newControl != null)
+         {
+            parent.Controls.Add(newControl);
+            parent.Controls.SetChildIndex(newControl, index);
+         }
+
+         if (parent is DiscussionBox)
+         {
+            (parent as DiscussionBox).ReplaceControl(oldControl, newControl);
+         }
       }
 
       private List<Discussion> loadDiscussions()
@@ -261,8 +366,7 @@ namespace mrHelperUI
          textBox.Size = singleTextBoxSize;
          textBox.Text = note.Body;
          textBox.Multiline = true;
-         var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
-         textBox.Height = (textBox.Font.Height + 4) * numberOfLines;
+         textBox.Height = getTextBoxPreferredHeight(textBox);
          textBox.BackColor = getNoteColor(note);
          textBox.LostFocus += DiscussionNoteTextBox_LostFocus;
          textBox.Tag = note;
@@ -283,6 +387,12 @@ namespace mrHelperUI
          menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
          textBox.ContextMenu.MenuItems.Add(menuItemDeleteNote);
          return textBox;
+      }
+
+      private static int getTextBoxPreferredHeight(TextBox textBox)
+      {
+         var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
+         return textBox.Font.Height * (numberOfLines + 1);
       }
 
       private string getNoteTooltipText(DiscussionNote note)
@@ -350,7 +460,7 @@ namespace mrHelperUI
          return htmlPanel;
       }
 
-      // Create a label that shows discussion creation date and author255, 236, 250)
+      // Create a label that shows discussion creation date and author
       private static Label createDiscussionLabel(DiscussionNote firstNote)
       {
          string path = firstNote.Position.HasValue && firstNote.Position.Value.NewPath != null
