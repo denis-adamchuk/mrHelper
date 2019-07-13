@@ -22,15 +22,20 @@ namespace mrHelperUI
 
       private class DiscussionBox : Panel
       {
-         public Control Label;
+         public Control LabelAuthor;
+         public Control LabelFilename;
          public Control Context;
          public List<Control> Notes;
 
          public void ReplaceControl(Control oldControl, Control newControl)
          {
-            if (Label == oldControl)
+            if (LabelAuthor == oldControl)
             {
-               Label = newControl;
+               LabelAuthor = newControl;
+            }
+            else if (LabelFilename == oldControl)
+            {
+               LabelFilename = newControl;
             }
             else if (Context == oldControl)
             {
@@ -284,31 +289,43 @@ namespace mrHelperUI
          int interControlVertMargin = 5;
          int interControlHorzMargin = 10;
 
-         // the Label is placed at the left side
+         // the LabelAuthor is placed at the left side
          Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
-         box.Label.Location = labelPos;
+         box.LabelAuthor.Location = labelPos;
 
          // the Context is an optional control to the right of the Label
-         Point ctxPos = new Point(180 /* hard-coded to have a better alignment */, interControlVertMargin);
+         Point ctxPos = new Point(140 /* hard-coded to have a better alignment */, interControlVertMargin);
          if (box.Context != null)
          {
             box.Context.Location = ctxPos;
          }
 
-         // a list of Notes is to the right of Label and Context
+         // prepare initial position for controls that places to the right of the Context
          int nextNoteX = ctxPos.X + (box.Context == null ? 0 : box.Context.Width + interControlHorzMargin);
          Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
+
+         // the LabelFilename is placed to the right of the Context and vertically aligned with Notes
+         if (box.LabelFilename != null)
+         {
+            box.LabelFilename.Location = nextNotePos;
+            nextNotePos.Offset(0, box.LabelFilename.Height + interControlVertMargin);
+         }
+
+         // a list of Notes is to the right of the Context
          foreach (var note in box.Notes)
          {
             note.Location = nextNotePos;
             nextNotePos.Offset(0, note.Height + interControlVertMargin);
          }
 
-         int labelHeight = labelPos.Y + box.Label.PreferredSize.Height;
-         int ctxHeight = (box.Context == null ? 0 : ctxPos.Y + box.Context.Height);
+         int lblAuthorHeight = box.LabelAuthor.Location.Y + box.LabelAuthor.PreferredSize.Height;
+         int lblFNameHeight = (box.LabelFilename == null ? 0 : box.LabelFilename.Location.Y + box.LabelFilename.Height);
+         int ctxHeight = (box.Context == null ? 0 : box.Context.Location.Y + box.Context.Height);
          int notesHeight = box.Notes[box.Notes.Count - 1].Location.Y + box.Notes[box.Notes.Count - 1].Height;
-         box.Size = new Size(nextNoteX + box.Notes[0].Width + interControlHorzMargin,
-            Math.Max(labelHeight, Math.Max(ctxHeight, notesHeight)) + interControlVertMargin);
+
+         int boxContentWidth = nextNoteX + box.Notes[0].Width;
+         int boxContentHeight = new[] { lblAuthorHeight, lblFNameHeight, ctxHeight, notesHeight }.Max();
+         box.Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
       }
 
       private DiscussionBox createDiscussionBox(Discussion discussion)
@@ -319,10 +336,12 @@ namespace mrHelperUI
          Debug.Assert(!firstNote.System);
 
          DiscussionBox controls = new DiscussionBox();
-         controls.Label = createDiscussionLabel(firstNote);
+         controls.LabelAuthor = createLabelAuthor(firstNote);
+         controls.LabelFilename = createLabelFilename(firstNote);
          controls.Context = createDiffContext(firstNote);
          controls.Notes = createTextBoxes(discussion.Notes);
-         controls.Controls.Add(controls.Label);
+         controls.Controls.Add(controls.LabelAuthor);
+         controls.Controls.Add(controls.LabelFilename);
          controls.Controls.Add(controls.Context);
          foreach (var note in controls.Notes)
          {
@@ -463,15 +482,32 @@ namespace mrHelperUI
          return htmlPanel;
       }
 
-      // Create a label that shows discussion creation date and author
-      private static Label createDiscussionLabel(DiscussionNote firstNote)
+      // Create a label that shows discussion author
+      private static Label createLabelAuthor(DiscussionNote firstNote)
       {
-         string path = firstNote.Position.HasValue && firstNote.Position.Value.NewPath != null
-            ? firstNote.Position.Value.NewPath : "";
-         Label discussionLabel = new Label();
-         discussionLabel.Text = firstNote.Author.Name + "\n" + path;
-         discussionLabel.AutoSize = true;
-         return discussionLabel;
+         Label labelAuthor = new Label();
+         labelAuthor.Text = firstNote.Author.Name;
+         labelAuthor.AutoSize = true;
+         return labelAuthor;
+      }
+
+      // Create a label that shows filename
+      private static Label createLabelFilename(DiscussionNote firstNote)
+      {
+         string path = String.Empty;
+         if (firstNote.Position.HasValue && firstNote.Position.Value.NewPath != null)
+         {
+            path = firstNote.Position.Value.NewPath;
+         }
+         else if (firstNote.Position.HasValue && firstNote.Position.Value.OldPath != null)
+         {
+            path = firstNote.Position.Value.OldPath;
+         }
+
+         Label labelFilename = new Label();
+         labelFilename.Text = path;
+         labelFilename.AutoSize = true;
+         return labelFilename;
       }
 
       private readonly string _host;
