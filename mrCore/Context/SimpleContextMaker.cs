@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -17,46 +18,52 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public DiffContext GetContext(Position position, int size)
+      public DiffContext GetContext(Position position, ContextDepth depth)
       {
-         Debug.Assert(position.OldLine != null || position.NewLine != null);
+         if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
+         {
+            return new DiffContext();
+         }
 
          bool isRightSideContext = position.NewLine != null;
          int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
          string filename = isRightSideContext ? position.NewPath : position.OldPath;
          string sha = isRightSideContext ? position.Refs.HeadSHA : position.Refs.BaseSHA;
 
-         return createDiffContext(linenumber, filename, sha, isRightSideContext, size);
+         return createDiffContext(linenumber, filename, sha, isRightSideContext, depth);
       }
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
-      private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext, int size)
+      // linenumber is one-based
+      private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext,
+         ContextDepth depth)
       {
          DiffContext diffContext = new DiffContext();
          diffContext.Lines = new List<DiffContext.Line>();
 
          List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
-         if (linenumber <= 0 || linenumber > contents.Count)
+         if (linenumber > contents.Count)
          {
-            Debug.Assert(false);
             return new DiffContext();
          }
 
-         IEnumerable<string> shiftedContents = contents.Skip(linenumber - 1);
+         int startLineNumber = Math.Max(1, linenumber - depth.Up);
+         IEnumerable<string> shiftedContents = contents.Skip(startLineNumber - 1);
          foreach (string text in shiftedContents)
          {
-            diffContext.Lines.Add(getContextLine(linenumber + diffContext.Lines.Count, isRightSideContext, text));
-            if (diffContext.Lines.Count == size)
+            diffContext.Lines.Add(getContextLine(startLineNumber + diffContext.Lines.Count, isRightSideContext, text));
+            if (diffContext.Lines.Count == depth.Size + 1)
             {
                break;
             }
          }
 
-         diffContext.SelectedIndex = 0;
-
+         // zero-based index of a selected line in DiffContext.Lines
+         diffContext.SelectedIndex = linenumber - startLineNumber;
          return diffContext;
       }
 
+      // linenumber is one-based
       private static DiffContext.Line getContextLine(int linenumber, bool isRightSideContext, string text)
       {
          DiffContext.Line line = new DiffContext.Line();

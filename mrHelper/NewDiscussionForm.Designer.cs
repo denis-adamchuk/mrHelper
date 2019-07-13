@@ -37,12 +37,11 @@
          this.labelContext = new System.Windows.Forms.Label();
          this.labelDiscussionBody = new System.Windows.Forms.Label();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
-         this.webBrowserContext = new System.Windows.Forms.WebBrowser();
          this.SuspendLayout();
          // 
          // textBoxDiscussionBody
          // 
-         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 164);
+         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 175);
          this.textBoxDiscussionBody.Multiline = true;
          this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
          this.textBoxDiscussionBody.Size = new System.Drawing.Size(730, 77);
@@ -52,7 +51,7 @@
          // buttonCancel
          // 
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(775, 218);
+         this.buttonCancel.Location = new System.Drawing.Point(775, 229);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 4;
@@ -63,7 +62,7 @@
          // buttonOK
          // 
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(775, 164);
+         this.buttonOK.Location = new System.Drawing.Point(775, 175);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 3;
@@ -100,7 +99,7 @@
          // labelDiscussionBody
          // 
          this.labelDiscussionBody.AutoSize = true;
-         this.labelDiscussionBody.Location = new System.Drawing.Point(9, 148);
+         this.labelDiscussionBody.Location = new System.Drawing.Point(9, 159);
          this.labelDiscussionBody.Name = "labelDiscussionBody";
          this.labelDiscussionBody.Size = new System.Drawing.Size(85, 13);
          this.labelDiscussionBody.TabIndex = 9;
@@ -118,25 +117,12 @@
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
-         // webBrowserContext
-         // 
-         this.webBrowserContext.AllowNavigation = false;
-         this.webBrowserContext.Location = new System.Drawing.Point(12, 73);
-         this.webBrowserContext.MinimumSize = new System.Drawing.Size(20, 20);
-         this.webBrowserContext.Name = "webBrowserContext";
-         this.webBrowserContext.ScrollBarsEnabled = false;
-         this.webBrowserContext.Size = new System.Drawing.Size(860, 72);
-         this.webBrowserContext.TabIndex = 10;
-         this.webBrowserContext.TabStop = false;
-         this.webBrowserContext.WebBrowserShortcutsEnabled = false;
-         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(884, 257);
-         this.Controls.Add(this.webBrowserContext);
+         this.ClientSize = new System.Drawing.Size(884, 264);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.labelDiscussionBody);
          this.Controls.Add(this.labelContext);
@@ -167,6 +153,6 @@
       private System.Windows.Forms.Label labelContext;
       private System.Windows.Forms.Label labelDiscussionBody;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
-      private System.Windows.Forms.WebBrowser webBrowserContext;
+      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanel = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
    }
 }

@@ -20,11 +20,15 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public DiffContext GetContext(Position position, int size)
+      public DiffContext GetContext(Position position, ContextDepth depth)
       {
+         if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
+         {
+            return new DiffContext();
+         }
+
          // TODO Is it ok that we cannot handle different filenames?
          Debug.Assert(position.NewPath == position.OldPath);
-         Debug.Assert(position.NewLine != null || position.OldLine != null);
 
          GitDiffAnalyzer analyzer =
             new GitDiffAnalyzer(_gitRepository, position.Refs.BaseSHA, position.Refs.HeadSHA, position.NewPath);
@@ -35,40 +39,40 @@ namespace mrCore
          string filename = isRightSideContext ? position.NewPath : position.OldPath;
          string sha = isRightSideContext ? position.Refs.HeadSHA : position.Refs.BaseSHA;
 
-         return createDiffContext(linenumber, filename, sha, isRightSideContext, analyzer, size);
+         return createDiffContext(linenumber, filename, sha, isRightSideContext, analyzer, depth);
       }
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
+      // linenumber is one-based
       private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext,
-         GitDiffAnalyzer analyzer, int size)
+         GitDiffAnalyzer analyzer, ContextDepth depth)
       {
          DiffContext diffContext = new DiffContext();
          diffContext.Lines = new List<DiffContext.Line>();
 
          List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
-         if (linenumber <= 0 || linenumber > contents.Count)
+         if (linenumber > contents.Count)
          {
-            Debug.Assert(false);
             return new DiffContext();
          }
 
-         diffContext.Lines.Add(getLineContext(linenumber, isRightSideContext, analyzer, contents));
-
-         for (int iContextLine = 1; iContextLine < size; ++iContextLine)
+         int startLineNumber = Math.Max(1, linenumber - depth.Up);
+         for (int iContextLine = 0; iContextLine < depth.Size + 1; ++iContextLine)
          {
-            if (linenumber + iContextLine == contents.Count + 1)
+            if (startLineNumber + iContextLine == contents.Count + 1)
             {
                // we have just reached the end
                break;
             }
-            diffContext.Lines.Add(getLineContext(linenumber + iContextLine, isRightSideContext, analyzer, contents));
+            diffContext.Lines.Add(getLineContext(startLineNumber + iContextLine, isRightSideContext, analyzer, contents));
          }
 
-         diffContext.SelectedIndex = 0;
-
+         // zero-based index of a selected line in DiffContext.Lines
+         diffContext.SelectedIndex = linenumber - startLineNumber;
          return diffContext;
       }
 
+      // linenumber is one-based
       private DiffContext.Line getLineContext(int linenumber, bool isRightSideContext,
          GitDiffAnalyzer analyzer, List<string> contents)
       {
@@ -95,6 +99,7 @@ namespace mrCore
          return line;
       }
 
+      // linenumber is one-based
       private DiffContext.Line.State getLineState(GitDiffAnalyzer analyzer, int linenumber, bool isRightSideContext)
       {
          if (isRightSideContext)

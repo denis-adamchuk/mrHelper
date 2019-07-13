@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Context\ContextMakerItf.cs" />
+    <Compile Include="Context\ContextMakingHelpers.cs" />
     <Compile Include="DetailedSnapshotSerializer.cs" />
     <Compile Include="DiffArgumentsParser.cs" />
     <Compile Include="Context\CombinedContextMaker.cs" />

@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelperUI
 {
@@ -19,6 +20,10 @@ namespace mrHelperUI
          _matcher = new RefsToLinesMatcher(_gitRepository);
 
          InitializeComponent();
+         htmlPanel.BorderStyle = BorderStyle.FixedSingle;
+         htmlPanel.Location = new Point(12, 73);
+         htmlPanel.Size = new Size(860, 76);
+         Controls.Add(htmlPanel);
       }
 
       private void NewDiscussionForm_Load(object sender, EventArgs e)
@@ -63,7 +68,7 @@ namespace mrHelperUI
             return;
          }
 
-         showDiscussionContext(webBrowserContext, textBoxFileName);
+         showDiscussionContext(htmlPanel, textBoxFileName);
       }
 
       private bool submitDiscussion()
@@ -103,13 +108,15 @@ namespace mrHelperUI
             + " (line " + _difftoolInfo.RightSideLineNumber.ToString() + ")";
       }
 
-      private void showDiscussionContext(WebBrowser webBrowser, TextBox tbFileName)
+      private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
       {
+         ContextDepth depth = new ContextDepth(0, 3);
          ContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
-         DiffContext context = textContextMaker.GetContext(_position.Value, 4 /* context size */);
+         DiffContext context = textContextMaker.GetContext(_position.Value, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
-         webBrowser.DocumentText = formatter.FormatAsHTML(context);
+         htmlPanel.Text = formatter.FormatAsHTML(context);
+
          tbFileName.Text = _difftoolInfo.LeftSideFileNameBrief + " vs " + _difftoolInfo.RightSideFileNameBrief;
       }
 
@@ -135,7 +142,7 @@ namespace mrHelperUI
 
          checkBoxIncludeContext.Checked = false;
          checkBoxIncludeContext.Enabled = false;
-         webBrowserContext.DocumentText = "<html><body>N/A</body></html>";
+         htmlPanel.Text = "<html><body>N/A</body></html>";
          textBoxFileName.Text = "N/A";
       }
 

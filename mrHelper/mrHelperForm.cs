@@ -352,7 +352,7 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id,
-            mergeRequest.Value.Author, _gitRepository, getSelectedDiffContextAlgo(), int.Parse(comboBoxDCDepth.Text));
+            mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text));
          form.Show(this);
       }
 
@@ -563,46 +563,6 @@ namespace mrHelperUI
          e.Value = item.Host;
       }
 
-      private void setSelectedDiffContextAlgo()
-      {
-         if (_settings.DiffContextAlgo == "Simple")
-         {
-            radioButtonDCA_Simple.Checked = true;
-         }
-         else if (_settings.DiffContextAlgo == "Enhanced")
-         {
-            radioButtonDCA_Enhanced.Checked = true;
-         }
-         else if (_settings.DiffContextAlgo == "Combined")
-         {
-            radioButtonDCA_Combined.Checked = true;
-         }
-         else
-         {
-            Debug.Assert(false);
-            radioButtonDCA_Combined.Checked = true;
-         }
-      }
-
-      private string getSelectedDiffContextAlgo()
-      {
-         if (radioButtonDCA_Simple.Checked)
-         {
-            return "Simple";
-         }
-         else if (radioButtonDCA_Enhanced.Checked)
-         {
-             return "Enhanced";
-         }
-         else if (radioButtonDCA_Combined.Checked)
-         {
-            return "Combined";
-         }
-
-         Debug.Assert(false);
-         return "Combined";
-      }
-
       private void loadConfiguration()
       {
          _loadingConfiguration = true;
@@ -624,8 +584,14 @@ namespace mrHelperUI
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter == "true";
          textBoxLabels.Text = _settings.LastUsedLabels;
          checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly == "true";
-         setSelectedDiffContextAlgo();
-         comboBoxDCDepth.Text = _settings.DiffContextDepth;
+         if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
+         {
+            comboBoxDCDepth.Text = _settings.DiffContextDepth;
+         }
+         else
+         {
+            comboBoxDCDepth.SelectedIndex = 0;
+         }
 
          _loadingConfiguration = false;
       }
@@ -653,7 +619,6 @@ namespace mrHelperUI
          _settings.LastSelectedHost = comboBoxHost.Text;
          _settings.LastSelectedProject = comboBoxProjects.Text;
          _settings.ShowPublicOnly = checkBoxShowPublicOnly.Checked ? "true" : "false";
-         _settings.DiffContextAlgo = getSelectedDiffContextAlgo();
          _settings.DiffContextDepth = comboBoxDCDepth.Text;
          _settings.Update();
       }

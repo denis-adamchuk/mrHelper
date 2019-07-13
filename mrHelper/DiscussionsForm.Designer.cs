@@ -57,5 +57,6 @@
 
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.ToolTip toolTipNotifier;
+      private TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip htmlToolTip = new TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip();
    }
 }

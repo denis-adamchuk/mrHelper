@@ -51,7 +51,7 @@ namespace mrHelperUI
       }
 
       public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId,
-         User mrAuthor, GitRepository gitRepository, string diffContextAlgo, int diffContextDepth)
+         User mrAuthor, GitRepository gitRepository, int diffContextDepth)
       {
          _host = host;
          _accessToken = accessToken;
@@ -61,28 +61,18 @@ namespace mrHelperUI
          _currentUser = getUser();
          if (gitRepository != null)
          {
-            if (diffContextAlgo == "Simple")
-            {
-               _contextMaker = new SimpleContextMaker(gitRepository);
-            }
-            else if (diffContextAlgo == "Enhanced")
-            {
-               _contextMaker = new EnhancedContextMaker(gitRepository);
-            }
-            else if (diffContextAlgo == "Combined")
-            {
-               _contextMaker = new CombinedContextMaker(gitRepository);
-            }
-            else
-            {
-               Debug.Assert(false);
-               _contextMaker = new CombinedContextMaker(gitRepository);
-            }
+            _panelContextMaker = new EnhancedContextMaker(gitRepository);
+            _tooltipContextMaker = new CombinedContextMaker(gitRepository);
          }
-         _diffContextDepth = diffContextDepth;
+
+         _diffContextDepth = new ContextDepth(0, diffContextDepth);
+         _tooltipContextDepth = new ContextDepth(5, 5);
          _formatter = new DiffContextFormatter();
 
          InitializeComponent();
+         htmlToolTip.AutoPopDelay = 10000; // 10s
+         htmlToolTip.BaseStylesheet = ".htmltooltip { padding: 1px; }";
+
          createControls(loadDiscussions());
          repositionAll();
       }
@@ -152,7 +142,10 @@ namespace mrHelperUI
          try
          {
             Discussion discussion = client.GetSingleDiscussion(_projectId, _mergeRequestId, note.DiscussionId);
-            newDiscussionBox = createDiscussionBox(discussion);
+            if (!discussion.Notes[0].System)
+            {
+               newDiscussionBox = createDiscussionBox(discussion);
+            }
          }
          catch (System.Net.WebException ex)
          {
@@ -438,23 +431,33 @@ namespace mrHelperUI
 
          int fontSizePx = 12;
          int rowsVPaddingPx = 2;
-         int height = _diffContextDepth * (fontSizePx + rowsVPaddingPx * 2 + 1 /* border of control */ + 2);
+         int rowHeight = (fontSizePx + rowsVPaddingPx * 2 + 1 /* border of control */ + 2);
          // we're adding 2 extra pixels for each row because HtmlRenderer does not support CSS line-height property
          // this value was found experimentally
 
+         int panelHeight = (_diffContextDepth.Size + 1) * rowHeight;
+
          HtmlPanel htmlPanel = new HtmlPanel();
-         htmlPanel.Size = new Size(1000 /* big enough for long lines */, height);
-         toolTip.SetToolTip(htmlPanel, firstNote.Position.Value.NewPath);
+         htmlPanel.Size = new Size(1000 /* big enough for long lines */, panelHeight);
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
 
-         if (_contextMaker != null)
+         if (_panelContextMaker != null && _formatter != null)
          {
-            DiffContext context = _contextMaker.GetContext(firstNote.Position.Value, _diffContextDepth);
-            htmlPanel.Text = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+            DiffContext briefContext = _panelContextMaker.GetContext(firstNote.Position.Value, _diffContextDepth);
+            string briefContextText = _formatter.FormatAsHTML(briefContext, fontSizePx, rowsVPaddingPx);
+            htmlPanel.Text = briefContextText;
          }
          else
          {
             htmlPanel.Text = "<html><body>Cannot access git repository and render diff context</body></html>";
+         }
+
+         if (_tooltipContextMaker != null && _formatter != null)
+         {
+            DiffContext fullContext = _tooltipContextMaker.GetContext(firstNote.Position.Value, _tooltipContextDepth);
+            string fullContextText = _formatter.FormatAsHTML(fullContext, fontSizePx, rowsVPaddingPx);
+            htmlToolTip.MaximumSize = new Size(htmlPanel.Width, 0 /* auto-height */);
+            htmlToolTip.SetToolTip(htmlPanel, fullContextText);
          }
 
          return htmlPanel;
@@ -476,9 +479,11 @@ namespace mrHelperUI
       private readonly string _projectId;
       private readonly User _mrAuthor;
       private readonly int _mergeRequestId;
-      private readonly int _diffContextDepth;
+      private readonly ContextDepth _diffContextDepth;
+      private readonly ContextDepth _tooltipContextDepth;
       private readonly User _currentUser;
-      private readonly ContextMaker _contextMaker;
+      private readonly ContextMaker _panelContextMaker;
+      private readonly ContextMaker _tooltipContextMaker;
       private readonly DiffContextFormatter _formatter;
    }
 }

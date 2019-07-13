@@ -21,11 +21,15 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public DiffContext GetContext(Position position, int size)
+      public DiffContext GetContext(Position position, ContextDepth depth)
       {
+         if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
+         {
+            return new DiffContext();
+         }
+
          // TODO Is it ok that we cannot handle different filenames?
          Debug.Assert(position.NewPath == position.OldPath);
-         Debug.Assert(position.NewLine != null || position.OldLine != null);
 
          // If NewLine is valid, then it points to either added/modified or unchanged line, handle them the same way
          bool isRightSideContext = position.NewLine != null;
@@ -37,19 +41,27 @@ namespace mrCore
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
          FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, filename);
          Debug.Assert(context.Left.Count == context.Right.Count);
+         if (linenumber > context.Left.Count)
+         {
+            return new DiffContext();
+         }
 
-         return createDiffContext(linenumber, isRightSideContext, context, size);
+         return createDiffContext(linenumber, isRightSideContext, context, depth);
       }
 
-      // isRightSideContext is true when linenumber corresponds to the right side (sha2)
-      private DiffContext createDiffContext(int linenumber, bool isRightSideContext, FullContextDiff context, int size)
+      // isRightSideContext is true when linenumber corresponds to the right side (sha2).
+      // linenumber is one-based
+      private DiffContext createDiffContext(int linenumber, bool isRightSideContext, FullContextDiff context,
+         ContextDepth depth)
       {
+         int startLineNumber = Math.Max(1, linenumber - depth.Up);
+         int endLineNumber = linenumber + depth.Down;
+
          int nullsAtLeft = 0;
          int nullsAtRight = 0;
-         calculateNullLinesCount(linenumber, isRightSideContext, context, out nullsAtLeft, out nullsAtRight);
-         if (linenumber <= 0
-            || (isRightSideContext && linenumber + nullsAtRight > context.Right.Count)
-            || (!isRightSideContext && linenumber + nullsAtLeft > context.Left.Count))
+         calculateNullLinesCount(startLineNumber, isRightSideContext, context, out nullsAtLeft, out nullsAtRight);
+         if ((isRightSideContext && startLineNumber + nullsAtRight > context.Right.Count)
+         || (!isRightSideContext && startLineNumber + nullsAtLeft > context.Left.Count))
          {
             Debug.Assert(false);
             return new DiffContext();
@@ -61,10 +73,12 @@ namespace mrCore
 
          DiffContext diffContext = new DiffContext();
          diffContext.Lines = new List<DiffContext.Line>();
-         for (int iContextLine = 0; iContextLine < size; ++iContextLine)
+
+         int iContextLine = 0;
+         while (true)
          {
             // one-base line number within a requested context
-            int ctxLineNumber = linenumber + iContextLine;
+            int ctxLineNumber = startLineNumber + iContextLine;
 
             // zero-based line number in 'full context diff' lists
             int absLineNumber = ctxLineNumber - 1 + (isRightSideContext ? nullsAtRight : nullsAtLeft);
@@ -82,6 +96,13 @@ namespace mrCore
             int rightLineNumber =
                ctxLineNumber - extraNullsAtRight + (isRightSideContext ? 0 : nullsAtLeft - nullsAtRight);
 
+            if ((isRightSideContext && rightLineNumber > endLineNumber)
+            || (!isRightSideContext && leftLineNumber > endLineNumber))
+            {
+               // we've just reached a line that should not be included in the context
+               break;
+            }
+
             DiffContext.Line line =
                getLineContext(absLineNumber, leftLineNumber, rightLineNumber, context,
                   ref extraNullsAtLeft, ref extraNullsAtRight);
@@ -94,11 +115,22 @@ namespace mrCore
                extraNullsAtLeft = 0;
                extraNullsAtRight = 0;
             }
+
+            if ((isRightSideContext && rightLineNumber == linenumber)
+            || (!isRightSideContext && leftLineNumber == linenumber))
+            {
+               // zero-based index of a selected line in DiffContext.Lines
+               diffContext.SelectedIndex = iContextLine;
+            }
+
+            ++iContextLine;
          }
-         diffContext.SelectedIndex = 0;
+
          return diffContext;
       }
 
+      // absLineNumber is zero-based
+      // leftLineNumber and rightLineNumber are one-based
       private static DiffContext.Line getLineContext(int absLineNumber, int leftLineNumber, int rightLineNumber,
          FullContextDiff context, ref int extraNullsAtLeft, ref int extraNullsAtRight)
       {
@@ -139,6 +171,7 @@ namespace mrCore
          return side;
       }
 
+      // linenumber is one-based
       private static void calculateNullLinesCount(int linenumber, bool isRightSideContext, FullContextDiff context,
          out int nullsAtLeft, out int nullsAtRight)
       {

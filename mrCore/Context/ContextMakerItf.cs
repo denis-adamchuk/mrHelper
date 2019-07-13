@@ -32,8 +32,25 @@ namespace mrCore
       public int SelectedIndex;
    }
 
+   public struct ContextDepth
+   {
+      public int Up;
+      public int Down;
+
+      public int Size
+      {
+         get { return Up + Down; }
+      }
+
+      public ContextDepth(int up, int down)
+      {
+         Up = up;
+         Down = down;
+      }
+   }
+
    public interface ContextMaker
    {
-      DiffContext GetContext(Position position, int size);
+      DiffContext GetContext(Position position, ContextDepth depth);
    }
 }

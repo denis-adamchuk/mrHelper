@@ -3,5 +3,4 @@ Prioritized list of TODO for dev_report branch:
 . git repository should fetch in case a new version appears (or always)
 . support renamed files
 . support new files
-. tooltip with extended context
 
