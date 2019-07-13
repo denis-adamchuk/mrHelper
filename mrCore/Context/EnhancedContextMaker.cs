@@ -27,11 +27,8 @@ namespace mrCore
             return new DiffContext();
          }
 
-         // TODO Is it ok that we cannot handle different filenames?
-         Debug.Assert(position.NewPath == position.OldPath);
-
-         GitDiffAnalyzer analyzer =
-            new GitDiffAnalyzer(_gitRepository, position.Refs.BaseSHA, position.Refs.HeadSHA, position.NewPath);
+         GitDiffAnalyzer analyzer = new GitDiffAnalyzer(_gitRepository,
+            position.Refs.BaseSHA, position.Refs.HeadSHA, position.OldPath, position.NewPath);
 
          // If NewLine is valid, then it points to either added/modified or unchanged line, handle them the same way
          bool isRightSideContext = position.NewLine != null;

@@ -494,18 +494,12 @@ namespace mrHelperUI
       // Create a label that shows filename
       private static Label createLabelFilename(DiscussionNote firstNote)
       {
-         string path = String.Empty;
-         if (firstNote.Position.HasValue && firstNote.Position.Value.NewPath != null)
-         {
-            path = firstNote.Position.Value.NewPath;
-         }
-         else if (firstNote.Position.HasValue && firstNote.Position.Value.OldPath != null)
-         {
-            path = firstNote.Position.Value.OldPath;
-         }
+         string oldPath = firstNote.Position?.OldPath ?? String.Empty;
+         string newPath = firstNote.Position?.NewPath ?? String.Empty;
+         string result = oldPath == newPath ? oldPath : (newPath + "\n(was " + oldPath + ")");
 
          Label labelFilename = new Label();
-         labelFilename.Text = path;
+         labelFilename.Text = result;
          labelFilename.AutoSize = true;
          return labelFilename;
       }

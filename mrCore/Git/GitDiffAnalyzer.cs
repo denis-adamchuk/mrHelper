@@ -21,9 +21,11 @@ namespace mrCore
          public int RightSectionEnd;
       }
 
-      public GitDiffAnalyzer(GitRepository gitRepository, string sha1, string sha2, string filename)
+      // no problem if any of passed filename strings is 'null'
+      public GitDiffAnalyzer(GitRepository gitRepository,
+         string sha1, string sha2, string filename1, string filename2)
       {
-         _sections = getDiffSections(gitRepository, sha1, sha2, filename);
+         _sections = getDiffSections(gitRepository, sha1, sha2, filename1, filename2);
       }
 
       public bool IsLineAddedOrModified(int linenumber)
@@ -51,11 +53,11 @@ namespace mrCore
       }
 
       static private List<GitDiffSection> getDiffSections(GitRepository gitRepository,
-         string sha1, string sha2, string filename)
+         string sha1, string sha2, string filename1, string filename2)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
-         List<string> diff = gitRepository.Diff(sha1, sha2, filename, 0);
+         List<string> diff = gitRepository.Diff(sha1, sha2, filename1, filename2, 0);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);

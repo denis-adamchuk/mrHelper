@@ -28,18 +28,16 @@ namespace mrCore
             return new DiffContext();
          }
 
-         // TODO Is it ok that we cannot handle different filenames?
-         Debug.Assert(position.NewPath == position.OldPath);
-
          // If NewLine is valid, then it points to either added/modified or unchanged line, handle them the same way
          bool isRightSideContext = position.NewLine != null;
          int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
-         string filename = isRightSideContext ? position.NewPath : position.OldPath;
+         string leftFilename = position.OldPath;
+         string rightFilename = position.NewPath;
          string leftSHA = position.Refs.BaseSHA;
          string rightSHA = position.Refs.HeadSHA;
 
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
-         FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, filename);
+         FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, leftFilename, rightFilename);
          Debug.Assert(context.Left.Count == context.Right.Count);
          if (linenumber > context.Left.Count)
          {

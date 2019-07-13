@@ -24,12 +24,13 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA, string filename)
+      public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
+         string leftFileName, string rightFileName)
       {
          FullContextDiff fullContextDiff = new FullContextDiff();
          fullContextDiff.Left = new List<string>();
          fullContextDiff.Right = new List<string>();
-         List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, filename, maxDiffContext);
+         List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName, maxDiffContext);
          bool skip = true;
          foreach (string line in fullDiff)
          {

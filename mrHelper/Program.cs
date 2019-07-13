@@ -22,12 +22,9 @@ namespace mrHelperUI
                // Ordinary launch
                Application.Run(new mrHelperForm());
             }
-            else if (arguments[1] == "diff" && arguments.Length == 6)
+            else if (arguments[1] == "diff")
             {
-               // Launch from diff tool. Trim two first arguments and pass exactly four to the parser.
-               string[] diffArgs = new string[4];
-               Array.Copy(arguments, 2, diffArgs, 0, 4);
-               DiffArgumentsParser argumentsParser = new DiffArgumentsParser(diffArgs);
+               DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
                DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
                InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();

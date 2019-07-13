@@ -7,27 +7,66 @@ namespace mrCore
 {
    public struct DiffToolInfo
    {
-      public string LeftSideFileNameBrief;
-      public int LeftSideLineNumber;
-      public string RightSideFileNameBrief;
-      public int RightSideLineNumber;
+      public struct Side
+      {
+         public string FileName;
+         public int LineNumber;
+
+         public Side(string filename, int linenumber)
+         {
+            FileName = filename;
+            LineNumber = linenumber;
+         }
+      }
+
+      public bool IsValid()
+      {
+         if (!Left.HasValue && !Right.HasValue)
+         {
+            return false;
+         }
+         if (Left.HasValue && Left.Value.FileName == null)
+         {
+            return false;
+         }
+         if (Right.HasValue && Right.Value.FileName == null)
+         {
+            return false;
+         }
+         return true;
+      }
+
+      public Side? Left;
+      public Side? Right;
       public bool IsLeftSideCurrent;
    }
 
-   // This class expects 4 arguments obtained from a two-pane diff tool:
-   // (0) Current-pane file name with path 
-   // (1) Current-pane line number 
-   // (2) Next-pane file name with path 
-   // (3) Next-pane line number
-   // It also expected that one of paths has word 'right' and another one 'left' (git difftool --dir-diff makes them)
+   // It expected that one of paths has word 'right' and another one 'left' (git difftool --dir-diff makes them)
    public class DiffArgumentsParser
    {
       static Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
 
       public DiffArgumentsParser(string[] arguments)
       {
-         _arguments = arguments;
-         if (_arguments.Length != 4)
+         if (arguments.Length == 6)
+         {
+            // Expected arguments (when comparing two files):
+            // (0) Current-pane file name with path 
+            // (1) Current-pane line number 
+            // (2) Next-pane file name with path 
+            // (3) Next-pane line number
+            _arguments = new string[4];
+            Array.Copy(arguments, 2, _arguments, 0, 4);
+         }
+         else if (arguments.Length == 5)
+         {
+            // Expected arguments (when a single file is opened in a diff tool):
+            // (0) Current-pane file name with path 
+            // (1) Current-pane line number 
+            _arguments = new string[2];
+            Array.Copy(arguments, 2, _arguments, 0, 2);
+         }
+         else
          {
             throw new ApplicationException("Bad number of arguments");
          }
@@ -37,25 +76,28 @@ namespace mrCore
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
 
+         string currentFilePath = convertToGitlabFileName(tempFolder, _arguments[0]);
+
+         DiffToolInfo.Side? current = new DiffToolInfo.Side(
+            currentFilePath, int.Parse(_arguments[1]));
+
+         DiffToolInfo.Side? next = _arguments.Length > 2
+            ? new DiffToolInfo.Side(convertToGitlabFileName(tempFolder, _arguments[2]), int.Parse(_arguments[3]))
+            : new Nullable<DiffToolInfo.Side>();
+
          DiffToolInfo toolInfo;
-         string currentFilePath = _arguments[0];
-         string nextFilePath = _arguments[2];
 
          if (checkIfLeftSideFile(tempFolder, currentFilePath))
          {
             toolInfo.IsLeftSideCurrent = true;
-            toolInfo.LeftSideFileNameBrief = convertToGitlabFileName(tempFolder, currentFilePath);
-            toolInfo.LeftSideLineNumber = int.Parse(_arguments[1]);
-            toolInfo.RightSideFileNameBrief = convertToGitlabFileName(tempFolder, nextFilePath);
-            toolInfo.RightSideLineNumber = int.Parse(_arguments[3]);
+            toolInfo.Left = current;
+            toolInfo.Right = next;
          }
          else
          {
             toolInfo.IsLeftSideCurrent = false;
-            toolInfo.LeftSideFileNameBrief = convertToGitlabFileName(tempFolder, nextFilePath);
-            toolInfo.LeftSideLineNumber = int.Parse(_arguments[3]);
-            toolInfo.RightSideFileNameBrief = convertToGitlabFileName(tempFolder, currentFilePath);
-            toolInfo.RightSideLineNumber = int.Parse(_arguments[1]);
+            toolInfo.Left = next;
+            toolInfo.Right = current;
          }
 
          return toolInfo;

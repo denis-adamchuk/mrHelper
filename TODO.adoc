@@ -3,3 +3,40 @@ Prioritized list of TODO for dev_report branch:
 . support renamed files
 . support new files
 
+==== Testing
+Create discussions for:
+
+* new file being on right side
+* new file being on left side
+
+* removed file being on left side
+* removed file being on right side
+
+* _unmatched_ renamed file being on right side -- expected error 500
+* _unmatched_ renamed file begin on left side -- expected error 500
+
+* renamed file being on right side
+* renamed file begin on left side
+
+View discussions for:
+
+* new file being on right side
+** tooltip
+* new file being on left side
+** tooltip
+
+* removed file being on left side
+** tooltip
+* removed file being on right side
+** tooltip
+
+* _unmatched_ renamed file being on right side -- check how fallback works
+** tooltip
+* _unmatched_ renamed file begin on left side -- check how fallback works 
+** tooltip
+
+* renamed file being on right side
+** tooltip
+* renamed file begin on left side
+** tooltip
+

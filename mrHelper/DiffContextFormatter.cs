@@ -82,12 +82,12 @@ namespace mrHelperUI
 
       private string getLeftLineNumber(DiffContext.Line line)
       {
-         return line.Left.HasValue ? line.Left.Value.Number.ToString() : "";
+         return line.Left?.Number.ToString() ?? "";
       }
 
       private string getRightLineNumber(DiffContext.Line line)
       {
-         return line.Right.HasValue ? line.Right.Value.Number.ToString() : "";
+         return line.Right?.Number.ToString() ?? "";
       }
 
       private string getDiffCellClass(DiffContext.Line line)

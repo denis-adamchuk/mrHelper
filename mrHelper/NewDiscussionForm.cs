@@ -102,10 +102,10 @@ namespace mrHelperUI
 
       private string getFallbackInfo()
       {
-         return "<b>" + _difftoolInfo.LeftSideFileNameBrief + "</b>"
-            + " (line " + _difftoolInfo.LeftSideLineNumber.ToString() + ") <i>vs</i> "
-            + "<b>" + _difftoolInfo.RightSideFileNameBrief + "</b>"
-            + " (line " + _difftoolInfo.RightSideLineNumber.ToString() + ")";
+         return "<b>" + (_difftoolInfo.Left?.FileName ?? "N/A") + "</b>"
+            + " (line " + (_difftoolInfo.Left?.LineNumber.ToString() ?? "N/A") + ") <i>vs</i> "
+            + "<b>" + (_difftoolInfo.Right?.FileName ?? "N/A") + "</b>"
+            + " (line " + (_difftoolInfo.Right?.LineNumber.ToString() ?? "N/A") + ")";
       }
 
       private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
@@ -117,7 +117,8 @@ namespace mrHelperUI
          DiffContextFormatter formatter = new DiffContextFormatter();
          htmlPanel.Text = formatter.FormatAsHTML(context);
 
-         tbFileName.Text = _difftoolInfo.LeftSideFileNameBrief + " vs " + _difftoolInfo.RightSideFileNameBrief;
+         tbFileName.Text = "Left: " + (_difftoolInfo.Left?.FileName ?? "N/A")
+            + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
       }
 
       private void createDiscussionAtGitlab(DiscussionParameters parameters)
@@ -153,21 +154,47 @@ namespace mrHelperUI
          if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
          {
             Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
-
-            parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
-            parameters.Position = null;
-            client.CreateNewMergeRequestDiscussion(
-               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+            createMergeRequestWithoutPosition(parameters, client);
          }
          else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
          {
-            // TODO Implement a fallback here (need to revert a commited discussion) 
             Debug.Assert(false);
+            revertLatestDiscussionNote(client);
+            createMergeRequestWithoutPosition(parameters, client);
          }
 
          MessageBox.Show(ex.Message +
             "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
             "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+      }
+
+      private void createMergeRequestWithoutPosition(DiscussionParameters parameters, GitLabClient client)
+      {
+         parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
+         parameters.Position = null;
+         client.CreateNewMergeRequestDiscussion(
+            _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+      }
+
+      private void revertLatestDiscussionNote(GitLabClient client)
+      {
+         List<Discussion> discussions = client.GetMergeRequestDiscussions(
+            _interprocessSnapshot.Project, _interprocessSnapshot.Id);
+         int maxNoteId = 0;
+         string discussionIdForMaxNoteId = String.Empty;
+         foreach (Discussion discussion in discussions)
+         {
+            foreach (DiscussionNote note in discussion.Notes)
+            {
+               if (note.Id > maxNoteId)
+               {
+                  maxNoteId = note.Id;
+                  discussionIdForMaxNoteId = discussion.Id;
+               }
+            }
+         }
+         client.DeleteDiscussionNote(_interprocessSnapshot.Project, _interprocessSnapshot.Id,
+            discussionIdForMaxNoteId, maxNoteId);
       }
 
       private readonly InterprocessSnapshot _interprocessSnapshot;

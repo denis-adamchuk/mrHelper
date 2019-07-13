@@ -18,7 +18,7 @@ namespace mrCore
          _path = path;
          _cachedDiffs = new Dictionary<DiffCacheKey, List<string>>();
          _cachedRevisions = new Dictionary<RevisionCacheKey, List<string>>();
-         _lastUpdateTime = lastUpdateTime.HasValue ? lastUpdateTime.Value : new DateTime();
+         _lastUpdateTime = lastUpdateTime ?? new DateTime();
       }
 
       public DateTime LastUpdateTime
@@ -97,12 +97,14 @@ namespace mrCore
          return process.ExitCode == 0;
       }
 
-      public List<string> Diff(string leftcommit, string rightcommit, string filename, int context)
+      // 'null' filename strings will be replaced with empty strings
+      public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
          DiffCacheKey key = new DiffCacheKey();
          key.sha1 = leftcommit;
          key.sha2 = rightcommit;
-         key.filename = filename;
+         key.filename1 = filename1;
+         key.filename2 = filename2;
          key.context = context;
 
          if (_cachedDiffs.ContainsKey(key))
@@ -112,7 +114,8 @@ namespace mrCore
 
          List<string> result = (List<string>)exec(() =>
          {
-            var arguments = "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit + " -- " + filename;
+            var arguments = "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
+            + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
             return gatherStdOutputLines(arguments);
          });
 
@@ -188,7 +191,8 @@ namespace mrCore
       {
          public string sha1;
          public string sha2;
-         public string filename;
+         public string filename1;
+         public string filename2;
          public int context;
       }
 
