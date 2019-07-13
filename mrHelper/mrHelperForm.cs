@@ -350,6 +350,8 @@ namespace mrHelperUI
             _gitRepository = initializeGitRepository();
          }
 
+         checkForUpdates();
+
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id,
             mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text));
@@ -470,14 +472,41 @@ namespace mrHelperUI
          {
             _gitRepository = initializeGitRepository();
          }
+
          if (_gitRepository == null)
          {
             throw new ApplicationException("Cannot launch a diff tool because of a problem with git repository");
          }
 
+         checkForUpdates();
+
          _difftool = null; // in case the next line throws
          _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
          updateInterprocessSnapshot();
+      }
+
+      // git repository may be not up-to-date. Check if there is a version in GitLab which is newer than latest update.
+      private void checkForUpdates()
+      {
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         {
+            return;
+         }
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
+         List<mrCore.Version> versions = client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
+         if (versions.Count == 0)
+         {
+            return;
+         }
+
+         mrCore.Version latestVersion = versions[0];
+         if (latestVersion.CreatedAt.ToLocalTime() > _gitRepository.LastUpdateTime)
+         {
+            _gitRepository.Fetch();
+         }
       }
 
       GitRepository initializeGitRepository()
@@ -531,13 +560,13 @@ namespace mrHelperUI
          // swap sides to be consistent with gitlab web ui
          if (!left)
          {
-            return comboBoxLeftVersion.SelectedItem != null ?
-               ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).SHA : "";
+            Debug.Assert(comboBoxLeftVersion.SelectedItem != null);
+            return ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).SHA;
          }
          else
          {
-            return comboBoxRightVersion.SelectedItem != null ?
-               ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).SHA : "";
+            Debug.Assert(comboBoxRightVersion.SelectedItem != null);
+            return ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).SHA;
          }
       }
 

@@ -8,7 +8,7 @@ namespace mrCore
    public class GitRepository
    {
       // Constructor expects a valid git repository as input argument
-      public GitRepository(string path)
+      public GitRepository(string path, DateTime? lastUpdateTime = null)
       {
          if (!Directory.Exists(path) || !IsGitRepository(path))
          {
@@ -18,6 +18,12 @@ namespace mrCore
          _path = path;
          _cachedDiffs = new Dictionary<DiffCacheKey, List<string>>();
          _cachedRevisions = new Dictionary<RevisionCacheKey, List<string>>();
+         _lastUpdateTime = lastUpdateTime.HasValue ? lastUpdateTime.Value : new DateTime();
+      }
+
+      public DateTime LastUpdateTime
+      {
+         get { return _lastUpdateTime; }
       }
 
       // Creates a new git repository by cloning a passed project into a dir with the same name at the given path
@@ -28,7 +34,7 @@ namespace mrCore
          process.WaitForExit();
          if (process.ExitCode == 0)
          {
-            return new GitRepository(path);
+            return new GitRepository(path, DateTime.Now);
          }
          return null;
       }
@@ -61,12 +67,18 @@ namespace mrCore
 
       public bool Fetch()
       {
-         return (bool)exec(() =>
+         bool success = (bool)exec(() =>
          {
             var process = Process.Start("git", "fetch");
             process.WaitForExit();
             return process.ExitCode == 0;
          });
+
+         if (success)
+         {
+            _lastUpdateTime = DateTime.Now;
+         }
+         return success;
       }
 
       public Process DiffTool(string name, string leftCommit, string rightCommit)
@@ -170,6 +182,7 @@ namespace mrCore
       }
 
       readonly string _path; // Path to repository
+      DateTime _lastUpdateTime;
 
       private struct DiffCacheKey
       {
