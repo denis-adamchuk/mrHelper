@@ -36,24 +36,24 @@ namespace mrDiffTool
          GitRepository.SetGlobalDiffTool(name, getGitCommand());
       }
 
-      static private string getInstallPath(string applicationName)
+      static private string getInstallPath(string[] applicationNames)
       {
-         if (applicationName == null)
+         if (applicationNames == null)
          {
             return null;
          }
 
          var installPath = findApplicationPath(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-            applicationName);
+            applicationNames);
          if (installPath == null)
          {
             installPath = findApplicationPath(@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-               applicationName);
+               applicationNames);
          }
          return installPath;
       }
 
-      static private string findApplicationPath(string keyPath, string applicationName)
+      static private string findApplicationPath(string keyPath, string[] applicationNames)
       {
          var hklm = Registry.LocalMachine;
          var uninstall = hklm.OpenSubKey(keyPath);
@@ -61,9 +61,12 @@ namespace mrDiffTool
          {
             var product = uninstall.OpenSubKey(productSubKey);
             var displayName = product.GetValue("DisplayName");
-            if (displayName != null && displayName.ToString().Contains(applicationName))
+            foreach (var appName in applicationNames)
             {
-               return product.GetValue("InstallLocation").ToString();
+               if (displayName != null && displayName.ToString().Contains(appName))
+               {
+                  return product.GetValue("InstallLocation").ToString();
+               }
             }
          }
          return null;
@@ -79,7 +82,7 @@ namespace mrDiffTool
 
       private string getToolPath()
       {
-         return getInstallPath(_diffTool.GetToolName());
+         return getInstallPath(_diffTool.GetToolNames());
       }
 
       private IntegratedDiffTool _diffTool;

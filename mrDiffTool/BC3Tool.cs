@@ -17,9 +17,10 @@ namespace mrDiffTool
          return " //solo //expandall \\\"$LOCAL\\\" \\\"$REMOTE\\\"";
       }
 
-      public string GetToolName()
+      public string[] GetToolNames()
       {
-         return "Beyond Compare 3"; 
+         string[] names = { "Beyond Compare 3", "Beyond Compare Version 3"};
+         return names;
       }
 
       public void PatchToolConfig(string launchCommand)
