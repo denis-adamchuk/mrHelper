@@ -45,7 +45,7 @@ namespace mrHelperUI
 
       private void addCustomActions()
       {
-         if (!File.Exists(CustomActionsFilename))
+         if (!File.Exists(CustomActionsFileName))
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state
             // Do not try to load custom actions if they don't exist
