@@ -34,11 +34,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlRenderer, Version=1.5.0.5, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlRenderer.Core.1.5.0.5\lib\net45\HtmlRenderer.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlRenderer.WinForms, Version=1.5.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlRenderer.WinForms.1.5.0.6\lib\net45\HtmlRenderer.WinForms.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddKnownHostForm.cs">
@@ -48,6 +56,13 @@
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Configuration.cs" />
+    <Compile Include="DiffContextFormatter.cs" />
+    <Compile Include="DiscussionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DiscussionsForm.Designer.cs">
+      <DependentUpon>DiscussionsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="mrHelperForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -65,6 +80,9 @@
     <EmbeddedResource Include="AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DiscussionsForm.resx">
+      <DependentUpon>DiscussionsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="mrHelperForm.resx">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -81,6 +99,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -95,13 +114,7 @@
     <None Include="mrHelper.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\TrayIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\notifyIcon.Icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\gitlab-282507.png" />
+    <None Include="Resources\diff-context.css" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\gitlab.ico" />

@@ -33,7 +33,7 @@ namespace mrDiffTool
             return;
          }
 
-         GitClient.SetDiffTool(name, getGitCommand());
+         GitRepository.SetGlobalDiffTool(name, getGitCommand());
       }
 
       static private string getInstallPath(string[] applicationNames)
@@ -85,6 +85,6 @@ namespace mrDiffTool
          return getInstallPath(_diffTool.GetToolNames());
       }
 
-      private IntegratedDiffTool _diffTool;
+      private readonly IntegratedDiffTool _diffTool;
    }
 }

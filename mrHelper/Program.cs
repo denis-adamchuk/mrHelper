@@ -4,13 +4,13 @@ using mrCore;
 
 namespace mrHelperUI
 {
-   static class Program
+   internal static class Program
    {
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
       [STAThread]
-      static void Main()
+      private static void Main()
       {
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);
@@ -22,19 +22,18 @@ namespace mrHelperUI
                // Ordinary launch
                Application.Run(new mrHelperForm());
             }
-            else if (arguments[1] == "diff" && arguments.Length == 6)
+            else if (arguments[1] == "diff")
             {
-               // Launch from diff tool
                DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
                DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
-               DetailedSnapshotSerializer serializer = new DetailedSnapshotSerializer();
-               var connectedMergeRequestDetails = serializer.DeserializeFromDisk();
-               if (!connectedMergeRequestDetails.HasValue)
+               InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
+               var snapshot = serializer.DeserializeFromDisk();
+               if (!snapshot.HasValue)
                {
                   throw new ArgumentException("To create a discussion you need to start tracking time and have a running diff tool");
                }
-               Application.Run(new NewDiscussionForm(connectedMergeRequestDetails.Value, diffToolInfo));
+               Application.Run(new NewDiscussionForm(snapshot.Value, diffToolInfo));
             }
             else
             {
