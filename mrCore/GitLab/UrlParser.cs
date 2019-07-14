@@ -10,9 +10,9 @@ namespace mrCore
       public int Id;
    }
 
-   class MergeRequestUrlParser
+   internal class MergeRequestUrlParser
    {
-      static readonly Regex url_re = new Regex(
+      private static readonly Regex url_re = new Regex(
          @"^(http[s]?):\/\/([^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 

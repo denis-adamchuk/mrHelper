@@ -84,7 +84,7 @@ namespace mrCore
          return position;
       }
 
-      MatchResult match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      private MatchResult match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
          // Obtain git diff -U0 sections
          GitDiffAnalyzer gitDiffAnalyzer = new GitDiffAnalyzer(_gitRepository,
@@ -161,7 +161,7 @@ namespace mrCore
          return left[info.Left.Value.LineNumber - 1] == right[info.Right.Value.LineNumber - 1];
       }
 
-      readonly GitRepository _gitRepository;
+      private readonly GitRepository _gitRepository;
    }
 }
 

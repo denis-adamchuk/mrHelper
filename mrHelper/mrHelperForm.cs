@@ -13,7 +13,7 @@ namespace mrHelperUI
    public partial class mrHelperForm : Form, ICommandCallback
    {
       private static readonly string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
-      static readonly System.Threading.Mutex timeTrackingMutex =
+      private static readonly System.Threading.Mutex timeTrackingMutex =
           new System.Threading.Mutex(false, timeTrackingMutexGuid);
 
       // TODO Move to resources
@@ -469,7 +469,7 @@ namespace mrHelperUI
          return client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
       }
 
-      void sendTrackedTimeSpan(TimeSpan span)
+      private void sendTrackedTimeSpan(TimeSpan span)
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
@@ -525,7 +525,7 @@ namespace mrHelperUI
          }
       }
 
-      GitRepository initializeGitRepository()
+      private GitRepository initializeGitRepository()
       {
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
          {
@@ -1092,23 +1092,22 @@ namespace mrHelperUI
       private bool _exiting = false;
       private bool _loadingConfiguration = false;
       private bool _requireShowingTooltip = true;
-
-      UserDefinedSettings _settings;
-      GitRepository _gitRepository;
+      private UserDefinedSettings _settings;
+      private GitRepository _gitRepository;
 
       // For accurate time tracking
-      readonly Stopwatch _stopWatch = new Stopwatch();
+      private readonly Stopwatch _stopWatch = new Stopwatch();
 
       // Last launched instance of a diff tool
-      Process _difftool;
+      private Process _difftool;
 
-      struct HostComboBoxItem
+      private struct HostComboBoxItem
       {
          public string Host;
          public string AccessToken;
       }
 
-      struct VersionComboBoxItem
+      private struct VersionComboBoxItem
       {
          public string SHA;
          public string Text;

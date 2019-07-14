@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace mrHelperUI
 {
-   class UserDefinedSettings
+   internal class UserDefinedSettings
    {
       private static readonly string KnownHostsKeyName = "KnownHosts";
       private static readonly List<string> KnownHostsDefaultValue = new List<string>();

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace mrCore.Context
 {
-   class Helpers
+   internal class Helpers
    {
       public static bool IsValidPosition(Position position)
       {

@@ -18,13 +18,10 @@ namespace mrCore
          _path = path;
          _cachedDiffs = new Dictionary<DiffCacheKey, List<string>>();
          _cachedRevisions = new Dictionary<RevisionCacheKey, List<string>>();
-         _lastUpdateTime = lastUpdateTime ?? new DateTime();
+         LastUpdateTime = lastUpdateTime ?? new DateTime();
       }
 
-      public DateTime LastUpdateTime
-      {
-         get { return _lastUpdateTime; }
-      }
+      public DateTime LastUpdateTime { get; private set; }
 
       // Creates a new git repository by cloning a passed project into a dir with the same name at the given path
       static public GitRepository CreateByClone(string host, string project, string path)
@@ -76,7 +73,7 @@ namespace mrCore
 
          if (success)
          {
-            _lastUpdateTime = DateTime.Now;
+            LastUpdateTime = DateTime.Now;
          }
          return success;
       }
@@ -197,8 +194,7 @@ namespace mrCore
          }
       }
 
-      readonly string _path; // Path to repository
-      DateTime _lastUpdateTime;
+      private readonly string _path; // Path to repository
 
       private struct DiffCacheKey
       {

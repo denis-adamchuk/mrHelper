@@ -67,7 +67,7 @@ namespace mrCore
          return fullContextDiff;
       }
 
-      readonly GitRepository _gitRepository;
+      private readonly GitRepository _gitRepository;
    }
 }
 

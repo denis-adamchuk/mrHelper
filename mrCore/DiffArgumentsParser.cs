@@ -44,7 +44,7 @@ namespace mrCore
    // It expected that one of paths has word 'right' and another one 'left' (git difftool --dir-diff makes them)
    public class DiffArgumentsParser
    {
-      static readonly Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
+      private static readonly Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
 
       public DiffArgumentsParser(string[] arguments)
       {
