@@ -43,6 +43,8 @@ namespace mrCore
 
       private Position createPosition(MatchResult state, DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
+         Debug.Assert(difftoolInfo.Left.HasValue || difftoolInfo.Right.HasValue);
+
          Position position = new Position
          {
             Refs = diffRefs,
@@ -101,10 +103,14 @@ namespace mrCore
             {
                return MatchResult.NewLineOnly;
             }
+            // Bad line number, a line belongs to the right side but it is not added
+            else if (!difftoolInfo.Left.HasValue)
+            {
+               return MatchResult.Undefined;
+            }
             // If selected line is not added/modified, we need to send a deleted line to Gitlab
             // Make sure that a line selected at the left side was deleted
-            else if (difftoolInfo.Left.HasValue
-               && gitDiffAnalyzer.IsLineDeleted(difftoolInfo.Left.Value.LineNumber))
+            else if (gitDiffAnalyzer.IsLineDeleted(difftoolInfo.Left.Value.LineNumber))
             {
                return MatchResult.OldLineOnly;
             }
@@ -118,20 +124,17 @@ namespace mrCore
             {
                return MatchResult.OldLineOnly;
             }
+            // Bad line number, a line belongs to the left side but it is not removed
+            else if (!difftoolInfo.Right.HasValue)
+            {
+               return MatchResult.Undefined;
+            }
             // If selected line was not deleted, check a right-side line number
             // Make sure that it was added/modified
-            else if (difftoolInfo.Right.HasValue
-               && gitDiffAnalyzer.IsLineAddedOrModified(difftoolInfo.Right.Value.LineNumber))
+            else if (gitDiffAnalyzer.IsLineAddedOrModified(difftoolInfo.Right.Value.LineNumber))
             {
                return MatchResult.NewLineOnly;
             }
-         }
-
-         if (!difftoolInfo.Left.HasValue || !difftoolInfo.Right.HasValue)
-         {
-            // If we are here, difftool info is invalid and cannot be matched with SHAs
-            Debug.Assert(false);
-            return MatchResult.Undefined;
          }
 
          // If neither left nor right lines are neither deleted nor added/modified,

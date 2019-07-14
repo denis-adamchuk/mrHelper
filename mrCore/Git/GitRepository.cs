@@ -59,7 +59,7 @@ namespace mrCore
          }
 
          // success path
-         return output != null && output.Count > 0 && output[0] == "true";
+         return output.Count > 0 && output[0] == "true";
       }
 
       public bool Fetch()
