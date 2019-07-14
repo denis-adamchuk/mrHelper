@@ -42,6 +42,7 @@
     <Compile Include="DetailedSnapshotSerializer.cs" />
     <Compile Include="DiffArgumentsParser.cs" />
     <Compile Include="Context\CombinedContextMaker.cs" />
+    <Compile Include="Git\GitRenameDetector.cs" />
     <Compile Include="RefsToLinesMatcher.cs" />
     <Compile Include="Context\FullContextDiffProvider.cs" />
     <Compile Include="Git\GitRepository.cs" />

@@ -25,11 +25,11 @@ namespace mrCore
          {
             return false;
          }
-         if (Left.HasValue && Left.Value.FileName == null)
+         if (IsLeftSideCurrent && (!Left.HasValue || Left.Value.FileName == null))
          {
             return false;
          }
-         if (Right.HasValue && Right.Value.FileName == null)
+         if (!IsLeftSideCurrent && (!Right.HasValue || Right.Value.FileName == null))
          {
             return false;
          }
@@ -76,18 +76,28 @@ namespace mrCore
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
 
-         string currentFilePath = convertToGitlabFileName(tempFolder, _arguments[0]);
+         int currentLineNumber = 0;
+         if (!int.TryParse(_arguments[1], out currentLineNumber))
+         {
+            throw new ApplicationException("Bad argument \"" + _arguments[1] + "\" at position 1");
+         }
+
+         int nextLineNumber = 0;
+         if (_arguments.Length > 2 && !int.TryParse(_arguments[3], out nextLineNumber))
+         {
+            throw new ApplicationException("Bad argument \"" + _arguments[3] + "\" at position 3");
+         }
 
          DiffToolInfo.Side? current = new DiffToolInfo.Side(
-            currentFilePath, int.Parse(_arguments[1]));
+            convertToGitlabFileName(tempFolder, _arguments[0]), currentLineNumber);
 
          DiffToolInfo.Side? next = _arguments.Length > 2
-            ? new DiffToolInfo.Side(convertToGitlabFileName(tempFolder, _arguments[2]), int.Parse(_arguments[3]))
+            ? new DiffToolInfo.Side(convertToGitlabFileName(tempFolder, _arguments[2]), nextLineNumber)
             : new Nullable<DiffToolInfo.Side>();
 
          DiffToolInfo toolInfo;
 
-         if (checkIfLeftSideFile(tempFolder, currentFilePath))
+         if (checkIfLeftSideFile(tempFolder, _arguments[0]))
          {
             toolInfo.IsLeftSideCurrent = true;
             toolInfo.Left = current;
@@ -133,6 +143,6 @@ namespace mrCore
          return m.Groups;
       }
 
-      string[] _arguments;
+      private readonly string[] _arguments;
    }
 }

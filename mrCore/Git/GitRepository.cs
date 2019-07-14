@@ -123,6 +123,15 @@ namespace mrCore
          return result;
       }
 
+      public List<string> GetListOfRenames(string leftcommit, string rightcommit)
+      {
+         return (List<string>)exec(() =>
+         {
+            var arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
+            return gatherStdOutputLines(arguments);
+         });
+      }
+
       public List<string> ShowFileByRevision(string filename, string sha)
       {
          RevisionCacheKey key = new RevisionCacheKey();

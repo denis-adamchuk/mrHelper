@@ -17,6 +17,7 @@ namespace mrHelperUI
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
          _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]));
+         _renameChecker = new GitRenameDetector(_gitRepository);
          _matcher = new RefsToLinesMatcher(_gitRepository);
 
          InitializeComponent();
@@ -61,6 +62,12 @@ namespace mrHelperUI
       {
          this.ActiveControl = textBoxDiscussionBody;
 
+         if (checkForRenamedFile())
+         {
+            Close();
+            return;
+         }
+
          _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
          if (!_position.HasValue)
          {
@@ -69,6 +76,47 @@ namespace mrHelperUI
          }
 
          showDiscussionContext(htmlPanel, textBoxFileName);
+      }
+
+      private bool checkForRenamedFile()
+      {
+         if (_difftoolInfo.Left.HasValue && _difftoolInfo.Right.HasValue)
+         {
+            // two file names are provided, nothing to check
+            return false;
+         }
+
+         string anotherName = String.Empty;
+         if (!_difftoolInfo.Left.HasValue)
+         {
+            Debug.Assert(_difftoolInfo.Right.HasValue);
+            anotherName = _renameChecker.IsRenamed(
+               _interprocessSnapshot.Refs.BaseSHA, _interprocessSnapshot.Refs.HeadSHA, _difftoolInfo.Right?.FileName, false);
+            if (anotherName == _difftoolInfo.Right?.FileName)
+            {
+               // it is not a renamed but removed file
+               return false;
+            }
+         }
+         if (!_difftoolInfo.Right.HasValue)
+         {
+            Debug.Assert(_difftoolInfo.Left.HasValue);
+            anotherName = _renameChecker.IsRenamed(
+               _interprocessSnapshot.Refs.BaseSHA, _interprocessSnapshot.Refs.HeadSHA, _difftoolInfo.Left?.FileName, true);
+            if (anotherName == _difftoolInfo.Left?.FileName)
+            {
+               // it is not a renamed but added file
+               return false;
+            }
+         }
+
+         MessageBox.Show(
+            "We detected that this file is a renamed version of "
+            + "\"" + anotherName + "\"" 
+            + ". GitLab will not accept such input. Please match files manually in the diff tool and try again.",
+            "Cannot create a discussion",
+            MessageBoxButtons.OK, MessageBoxIcon.Information);
+         return true;
       }
 
       private bool submitDiscussion()
@@ -158,14 +206,10 @@ namespace mrHelperUI
          }
          else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
          {
-            Debug.Assert(false);
-            revertLatestDiscussionNote(client);
+            Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
+            cleanupBadNotes(parameters, client);
             createMergeRequestWithoutPosition(parameters, client);
          }
-
-         MessageBox.Show(ex.Message +
-            "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
-            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
 
       private void createMergeRequestWithoutPosition(DiscussionParameters parameters, GitLabClient client)
@@ -176,30 +220,31 @@ namespace mrHelperUI
             _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
       }
 
-      private void revertLatestDiscussionNote(GitLabClient client)
+      // Instead of searching for a latest discussion note with some heuristically prepared parameters,
+      // let's clean up all similar notes, including a recently added one
+      private void cleanupBadNotes(DiscussionParameters parameters, GitLabClient client)
       {
+         Debug.Assert(parameters.Position.HasValue);
+
          List<Discussion> discussions = client.GetMergeRequestDiscussions(
             _interprocessSnapshot.Project, _interprocessSnapshot.Id);
-         int maxNoteId = 0;
-         string discussionIdForMaxNoteId = String.Empty;
          foreach (Discussion discussion in discussions)
          {
             foreach (DiscussionNote note in discussion.Notes)
             {
-               if (note.Id > maxNoteId)
+               if (note.Position.HasValue && note.Position.Value.Equals(parameters.Position.Value))
                {
-                  maxNoteId = note.Id;
-                  discussionIdForMaxNoteId = discussion.Id;
+                  client.DeleteDiscussionNote(
+                     _interprocessSnapshot.Project, _interprocessSnapshot.Id, discussion.Id, note.Id);
                }
             }
          }
-         client.DeleteDiscussionNote(_interprocessSnapshot.Project, _interprocessSnapshot.Id,
-            discussionIdForMaxNoteId, maxNoteId);
       }
 
       private readonly InterprocessSnapshot _interprocessSnapshot;
       private readonly DiffToolInfo _difftoolInfo;
       private readonly RefsToLinesMatcher _matcher;
+      private readonly GitRenameDetector _renameChecker;
 
       private Position? _position;
       private GitRepository _gitRepository;
