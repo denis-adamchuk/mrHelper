@@ -10,7 +10,7 @@ namespace mrCore
    // This class is able to check whether a line number belongs to added/modified or deleted (or none of them)
    public class GitDiffAnalyzer
    {
-      static Regex diffSectionRe = new Regex(
+      static readonly Regex diffSectionRe = new Regex(
          @"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@",
          RegexOptions.Compiled);
       struct GitDiffSection

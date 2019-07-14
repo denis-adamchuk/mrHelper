@@ -135,8 +135,10 @@ namespace mrHelperUI
 
       private DiscussionParameters prepareDiscussionParameters()
       {
-         DiscussionParameters parameters = new DiscussionParameters();
-         parameters.Body = textBoxDiscussionBody.Text;
+         DiscussionParameters parameters = new DiscussionParameters
+         {
+            Body = textBoxDiscussionBody.Text
+         };
          if (!_position.HasValue)
          {
             parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
@@ -159,7 +161,7 @@ namespace mrHelperUI
       private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
       {
          ContextDepth depth = new ContextDepth(0, 3);
-         ContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
+         IContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
          DiffContext context = textContextMaker.GetContext(_position.Value, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
@@ -247,7 +249,7 @@ namespace mrHelperUI
       private readonly GitRenameDetector _renameChecker;
 
       private Position? _position;
-      private GitRepository _gitRepository;
+      private readonly GitRepository _gitRepository;
    }
 }
 

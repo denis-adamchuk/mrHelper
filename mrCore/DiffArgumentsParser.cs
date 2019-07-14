@@ -44,7 +44,7 @@ namespace mrCore
    // It expected that one of paths has word 'right' and another one 'left' (git difftool --dir-diff makes them)
    public class DiffArgumentsParser
    {
-      static Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
+      static readonly Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
 
       public DiffArgumentsParser(string[] arguments)
       {
@@ -76,8 +76,7 @@ namespace mrCore
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
 
-         int currentLineNumber = 0;
-         if (!int.TryParse(_arguments[1], out currentLineNumber))
+         if (!int.TryParse(_arguments[1], out int currentLineNumber))
          {
             throw new ApplicationException("Bad argument \"" + _arguments[1] + "\" at position 1");
          }

@@ -7,38 +7,38 @@ namespace mrHelperUI
 {
    class UserDefinedSettings
    {
-      private static string KnownHostsKeyName = "KnownHosts";
-      private static List<string> KnownHostsDefaultValue = new List<string>();
+      private static readonly string KnownHostsKeyName = "KnownHosts";
+      private static readonly List<string> KnownHostsDefaultValue = new List<string>();
 
-      private static string KnownAccessTokensKeyName = "KnownAccessTokens";
-      private static List<string> KnownAccessTokensDefaultValue = new List<string>();
+      private static readonly string KnownAccessTokensKeyName = "KnownAccessTokens";
+      private static readonly List<string> KnownAccessTokensDefaultValue = new List<string>();
 
-      private static string LocalGitFolderKeyName = "LocalGitFolder";
-      private static string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
+      private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
+      private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
-      private static string RequireTimeTrackingKeyName = "RequireTimeTracking";
-      private static string RequireTimeTrackingDefaultValue = "true";
+      private static readonly string RequireTimeTrackingKeyName = "RequireTimeTracking";
+      private static readonly string RequireTimeTrackingDefaultValue = "true";
 
-      private static string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
-      private static string CheckedLabelsFilterDefaultValue = "false";
+      private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
+      private static readonly string CheckedLabelsFilterDefaultValue = "false";
 
-      private static string LastUsedLabelsKeyName = "LastUsedLabels";
-      private static string LastUsedLabelsDefaultValue = "";
+      private static readonly string LastUsedLabelsKeyName = "LastUsedLabels";
+      private static readonly string LastUsedLabelsDefaultValue = "";
 
-      private static string LastSelectedProjectKeyName = "LastSelectedProject";
-      private static string LastSelectedProjectDefaultValue = "";
+      private static readonly string LastSelectedProjectKeyName = "LastSelectedProject";
+      private static readonly string LastSelectedProjectDefaultValue = "";
 
-      private static string LastSelectedHostKeyName = "LastSelectedHost";
-      private static string LastSelectedHostDefaultValue = "";
+      private static readonly string LastSelectedHostKeyName = "LastSelectedHost";
+      private static readonly string LastSelectedHostDefaultValue = "";
 
-      private static string ShowPublicOnlyKeyName = "ShowPublicOnly";
-      private static string ShowPublicOnlyDefaultValue = "true";
+      private static readonly string ShowPublicOnlyKeyName = "ShowPublicOnly";
+      private static readonly string ShowPublicOnlyDefaultValue = "true";
 
-      private static string DiffContextAlgoKeyName = "DiffContextAlgo";
-      private static string DiffContextAlgoDefaultValue = "Combined";
+      private static readonly string DiffContextAlgoKeyName = "DiffContextAlgo";
+      private static readonly string DiffContextAlgoDefaultValue = "Combined";
 
-      private static string DiffContextDepthKeyName = "DiffContextDepth";
-      private static string DiffContextDepthDefaultValue = "3";
+      private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
+      private static readonly string DiffContextDepthDefaultValue = "3";
 
       public UserDefinedSettings()
       {
@@ -166,6 +166,6 @@ namespace mrHelperUI
          setValue(key, valuesString);
       }
 
-      private Configuration _config;
+      private readonly Configuration _config;
    }
 }

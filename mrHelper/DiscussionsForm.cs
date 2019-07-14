@@ -98,7 +98,6 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
          {
@@ -274,9 +273,11 @@ namespace mrHelperUI
          {
             Debug.Assert(control is DiscussionBox);
 
-            Point location = new Point();
-            location.X = groupBoxMarginLeft;
-            location.Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop;
+            Point location = new Point
+            {
+               X = groupBoxMarginLeft,
+               Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop
+            };
             repositionBoxContent(control as DiscussionBox);
             control.Location = location;
             previousBoxLocation = control.Location;
@@ -335,11 +336,13 @@ namespace mrHelperUI
          var firstNote = discussion.Notes[0];
          Debug.Assert(!firstNote.System);
 
-         DiscussionBox controls = new DiscussionBox();
-         controls.LabelAuthor = createLabelAuthor(firstNote);
-         controls.LabelFilename = createLabelFilename(firstNote);
-         controls.Context = createDiffContext(firstNote);
-         controls.Notes = createTextBoxes(discussion.Notes);
+         DiscussionBox controls = new DiscussionBox
+         {
+            LabelAuthor = createLabelAuthor(firstNote),
+            LabelFilename = createLabelFilename(firstNote),
+            Context = createDiffContext(firstNote),
+            Notes = createTextBoxes(discussion.Notes)
+         };
          controls.Controls.Add(controls.LabelAuthor);
          controls.Controls.Add(controls.LabelFilename);
          controls.Controls.Add(controls.Context);
@@ -385,17 +388,21 @@ namespace mrHelperUI
 
          textBox.ContextMenu = new ContextMenu();
 
-         MenuItem menuItemToggleResolve = new MenuItem();
-         menuItemToggleResolve.Tag = textBox;
-         menuItemToggleResolve.Text =
-            note.Resolvable && note.Resolved.HasValue && note.Resolved.Value ? "Unresolve" : "Resolve";
+         MenuItem menuItemToggleResolve = new MenuItem
+         {
+            Tag = textBox,
+            Text =
+            note.Resolvable && note.Resolved.HasValue && note.Resolved.Value ? "Unresolve" : "Resolve"
+         };
          menuItemToggleResolve.Click += MenuItemToggleResolve_Click;
          textBox.ContextMenu.MenuItems.Add(menuItemToggleResolve);
 
-         MenuItem menuItemDeleteNote = new MenuItem();
-         menuItemDeleteNote.Tag = textBox;
-         menuItemDeleteNote.Enabled = canBeModified;
-         menuItemDeleteNote.Text = "Delete Note";
+         MenuItem menuItemDeleteNote = new MenuItem
+         {
+            Tag = textBox,
+            Enabled = canBeModified,
+            Text = "Delete Note"
+         };
          menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
          textBox.ContextMenu.MenuItems.Add(menuItemDeleteNote);
          return textBox;
@@ -456,9 +463,11 @@ namespace mrHelperUI
 
          int panelHeight = (_diffContextDepth.Size + 1) * rowHeight;
 
-         HtmlPanel htmlPanel = new HtmlPanel();
-         htmlPanel.Size = new Size(1000 /* big enough for long lines */, panelHeight);
-         htmlPanel.BorderStyle = BorderStyle.FixedSingle;
+         HtmlPanel htmlPanel = new HtmlPanel
+         {
+            Size = new Size(1000 /* big enough for long lines */, panelHeight),
+            BorderStyle = BorderStyle.FixedSingle
+         };
 
          if (_panelContextMaker != null && _formatter != null)
          {
@@ -485,9 +494,11 @@ namespace mrHelperUI
       // Create a label that shows discussion author
       private static Label createLabelAuthor(DiscussionNote firstNote)
       {
-         Label labelAuthor = new Label();
-         labelAuthor.Text = firstNote.Author.Name;
-         labelAuthor.AutoSize = true;
+         Label labelAuthor = new Label
+         {
+            Text = firstNote.Author.Name,
+            AutoSize = true
+         };
          return labelAuthor;
       }
 
@@ -498,9 +509,11 @@ namespace mrHelperUI
          string newPath = firstNote.Position?.NewPath ?? String.Empty;
          string result = oldPath == newPath ? oldPath : (newPath + "\n(was " + oldPath + ")");
 
-         Label labelFilename = new Label();
-         labelFilename.Text = result;
-         labelFilename.AutoSize = true;
+         Label labelFilename = new Label
+         {
+            Text = result,
+            AutoSize = true
+         };
          return labelFilename;
       }
 
@@ -512,8 +525,8 @@ namespace mrHelperUI
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
       private readonly User _currentUser;
-      private readonly ContextMaker _panelContextMaker;
-      private readonly ContextMaker _tooltipContextMaker;
+      private readonly IContextMaker _panelContextMaker;
+      private readonly IContextMaker _tooltipContextMaker;
       private readonly DiffContextFormatter _formatter;
    }
 }

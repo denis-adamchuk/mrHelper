@@ -12,22 +12,22 @@ namespace mrHelperUI
 
    public partial class mrHelperForm : Form, ICommandCallback
    {
-      static private string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
-      static System.Threading.Mutex timeTrackingMutex =
+      private static readonly string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
+      static readonly System.Threading.Mutex timeTrackingMutex =
           new System.Threading.Mutex(false, timeTrackingMutexGuid);
 
       // TODO Move to resources
       // {
-      static private string buttonStartTimerDefaultText = "Start Timer";
-      static private string buttonStartTimerTrackingText = "Send Spent";
-      static private string labelSpentTimeDefaultText = "00:00:00";
-      static private int timeTrackingTimerInterval = 1000; // ms
+      private static readonly string buttonStartTimerDefaultText = "Start Timer";
+      private static readonly string buttonStartTimerTrackingText = "Send Spent";
+      private static readonly string labelSpentTimeDefaultText = "00:00:00";
+      private static readonly int timeTrackingTimerInterval = 1000; // ms
 
-      static private string errorMessageBoxText = "Error";
-      static private string warningMessageBoxText = "Warning";
-      static private string informationMessageBoxText = "Information";
+      private static readonly string errorMessageBoxText = "Error";
+      private static readonly string warningMessageBoxText = "Warning";
+      private static readonly string informationMessageBoxText = "Information";
 
-      static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
+      private static readonly string errorTrackedTimeNotSet = "Tracked time was not sent to server";
 
       /// <summary>
       /// Tooltip timeout in seconds
@@ -54,21 +54,25 @@ namespace mrHelperUI
          CustomCommandLoader loader = new CustomCommandLoader(this);
          List<ICommand> commands = loader.LoadCommands(CustomActionsFileName);
          int id = 0;
-         System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point();
-         offSetFromGroupBoxTopLeft.X = 10;
-         offSetFromGroupBoxTopLeft.Y = 17;
+         System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
+         {
+            X = 10,
+            Y = 17
+         };
          System.Drawing.Size typicalSize = new System.Drawing.Size(83, 27);
          foreach (var command in commands)
          {
             string name = command.GetName();
-            var button = new System.Windows.Forms.Button();
-            button.Name = "customAction" + id;
-            button.Location = offSetFromGroupBoxTopLeft;
-            button.Size = typicalSize;
-            button.Text = name;
-            button.UseVisualStyleBackColor = true;
-            button.Enabled = false;
-            button.TabStop = false;
+            var button = new System.Windows.Forms.Button
+            {
+               Name = "customAction" + id,
+               Location = offSetFromGroupBoxTopLeft,
+               Size = typicalSize,
+               Text = name,
+               UseVisualStyleBackColor = true,
+               Enabled = false,
+               TabStop = false
+            };
             button.Click += (x, y) =>
             {
                try
@@ -731,8 +735,10 @@ namespace mrHelperUI
       private void onApplicationStarted()
       {
 
-         _timeTrackingTimer = new Timer();
-         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+         _timeTrackingTimer = new Timer
+         {
+            Interval = timeTrackingTimerInterval
+         };
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
@@ -748,9 +754,11 @@ namespace mrHelperUI
          comboBoxHost.Items.Clear();
          foreach (ListViewItem item in listViewKnownHosts.Items)
          {
-            HostComboBoxItem hostItem = new HostComboBoxItem();
-            hostItem.Host = item.Text;
-            hostItem.AccessToken = item.SubItems[1].Text;
+            HostComboBoxItem hostItem = new HostComboBoxItem
+            {
+               Host = item.Text,
+               AccessToken = item.SubItems[1].Text
+            };
             comboBoxHost.Items.Add(hostItem);
             if (hostItem.Host == _settings.LastSelectedHost)
             {
@@ -928,17 +936,14 @@ namespace mrHelperUI
          // 2. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
-         // 3. Store current time
-         _lastStartTimeStamp = DateTime.Now;
-
-         // 4. Start timer
+         // 3. Start timer
          _timeTrackingTimer.Start();
 
-         // 5. Reset and start stopwatch
+         // 4. Reset and start stopwatch
          _stopWatch.Reset();
          _stopWatch.Start();
 
-         // 6. Update information available to other instances
+         // 5. Update information available to other instances
          updateInterprocessSnapshot();
       }
 
@@ -1082,7 +1087,6 @@ namespace mrHelperUI
          return 0;
       }
 
-      private DateTime _lastStartTimeStamp;
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
@@ -1093,7 +1097,7 @@ namespace mrHelperUI
       GitRepository _gitRepository;
 
       // For accurate time tracking
-      Stopwatch _stopWatch = new Stopwatch();
+      readonly Stopwatch _stopWatch = new Stopwatch();
 
       // Last launched instance of a diff tool
       Process _difftool;

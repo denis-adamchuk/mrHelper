@@ -10,7 +10,7 @@ namespace mrCore
    // the first line. If the first line is 'unmodified' then resulting list contains 'size' lines from the right side.
    //
    // Cost: one 'git show' command for each GetContext() call.
-   public class SimpleContextMaker : ContextMaker
+   public class SimpleContextMaker : IContextMaker
    {
       public SimpleContextMaker(GitRepository gitRepository)
       {
@@ -38,8 +38,10 @@ namespace mrCore
       private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext,
          ContextDepth depth)
       {
-         DiffContext diffContext = new DiffContext();
-         diffContext.Lines = new List<DiffContext.Line>();
+         DiffContext diffContext = new DiffContext
+         {
+            Lines = new List<DiffContext.Line>()
+         };
 
          List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
          if (linenumber > contents.Count)
@@ -66,14 +68,18 @@ namespace mrCore
       // linenumber is one-based
       private static DiffContext.Line getContextLine(int linenumber, bool isRightSideContext, string text)
       {
-         DiffContext.Line line = new DiffContext.Line();
-         line.Text = text;
+         DiffContext.Line line = new DiffContext.Line
+         {
+            Text = text
+         };
 
-         DiffContext.Line.Side side = new DiffContext.Line.Side();
-         side.Number = linenumber;
-         
-         // this 'maker' cannot distinguish between modified and unmodified lines
-         side.State = DiffContext.Line.State.Changed;
+         DiffContext.Line.Side side = new DiffContext.Line.Side
+         {
+            Number = linenumber,
+
+            // this 'maker' cannot distinguish between modified and unmodified lines
+            State = DiffContext.Line.State.Changed
+         };
 
          if (isRightSideContext)
          {

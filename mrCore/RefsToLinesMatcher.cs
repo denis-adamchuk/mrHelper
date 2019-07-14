@@ -43,12 +43,14 @@ namespace mrCore
 
       private Position createPosition(MatchResult state, DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
-         Position position = new Position();
-         position.Refs = diffRefs;
+         Position position = new Position
+         {
+            Refs = diffRefs,
 
-         // GitLab expects two filenames in all cases and the only case when they are different is file rename.
-         position.OldPath = difftoolInfo.Left?.FileName ?? difftoolInfo.Right.Value.FileName;
-         position.NewPath = difftoolInfo.Right?.FileName ?? difftoolInfo.Left.Value.FileName;
+            // GitLab expects two filenames in all cases and the only case when they are different is file rename.
+            OldPath = difftoolInfo.Left?.FileName ?? difftoolInfo.Right.Value.FileName,
+            NewPath = difftoolInfo.Right?.FileName ?? difftoolInfo.Left.Value.FileName
+         };
 
          switch (state)
          {
@@ -159,7 +161,7 @@ namespace mrCore
          return left[info.Left.Value.LineNumber - 1] == right[info.Right.Value.LineNumber - 1];
       }
 
-      GitRepository _gitRepository;
+      readonly GitRepository _gitRepository;
    }
 }
 

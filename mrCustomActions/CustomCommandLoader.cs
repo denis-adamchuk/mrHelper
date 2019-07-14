@@ -33,6 +33,6 @@ namespace mrCustomActions
          return results;
       }
 
-      ICommandCallback _callback;
+      readonly ICommandCallback _callback;
    }
 }

@@ -100,12 +100,14 @@ namespace mrCore
       // 'null' filename strings will be replaced with empty strings
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
-         DiffCacheKey key = new DiffCacheKey();
-         key.sha1 = leftcommit;
-         key.sha2 = rightcommit;
-         key.filename1 = filename1;
-         key.filename2 = filename2;
-         key.context = context;
+         DiffCacheKey key = new DiffCacheKey
+         {
+            sha1 = leftcommit,
+            sha2 = rightcommit,
+            filename1 = filename1,
+            filename2 = filename2,
+            context = context
+         };
 
          if (_cachedDiffs.ContainsKey(key))
          {
@@ -134,9 +136,11 @@ namespace mrCore
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
-         RevisionCacheKey key = new RevisionCacheKey();
-         key.filename = filename;
-         key.sha = sha;
+         RevisionCacheKey key = new RevisionCacheKey
+         {
+            filename = filename,
+            sha = sha
+         };
 
          if (_cachedRevisions.ContainsKey(key))
          {
@@ -205,7 +209,7 @@ namespace mrCore
          public int context;
       }
 
-      private Dictionary<DiffCacheKey, List<string>> _cachedDiffs;
+      private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs;
 
       private struct RevisionCacheKey
       {
@@ -213,7 +217,7 @@ namespace mrCore
          public string filename;
       }
 
-      private Dictionary<RevisionCacheKey, List<string>> _cachedRevisions;
+      private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions;
    }
 }
 

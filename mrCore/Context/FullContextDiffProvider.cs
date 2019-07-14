@@ -17,7 +17,7 @@ namespace mrCore
    // Seconds list contains lines from sha2 and null for missing lines.
    public class FullContextDiffProvider
    {
-      static int maxDiffContext = 20000;
+      private static readonly int maxDiffContext = 20000;
 
       public FullContextDiffProvider(GitRepository gitRepository)
       {
@@ -27,9 +27,11 @@ namespace mrCore
       public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
       {
-         FullContextDiff fullContextDiff = new FullContextDiff();
-         fullContextDiff.Left = new List<string>();
-         fullContextDiff.Right = new List<string>();
+         FullContextDiff fullContextDiff = new FullContextDiff
+         {
+            Left = new List<string>(),
+            Right = new List<string>()
+         };
          List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName, maxDiffContext);
          bool skip = true;
          foreach (string line in fullDiff)
@@ -65,7 +67,7 @@ namespace mrCore
          return fullContextDiff;
       }
 
-      GitRepository _gitRepository;
+      readonly GitRepository _gitRepository;
    }
 }
 

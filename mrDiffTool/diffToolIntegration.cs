@@ -85,6 +85,6 @@ namespace mrDiffTool
          return getInstallPath(_diffTool.GetToolNames());
       }
 
-      private IntegratedDiffTool _diffTool;
+      private readonly IntegratedDiffTool _diffTool;
    }
 }

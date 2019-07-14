@@ -49,7 +49,7 @@ namespace mrCore
       }
    }
 
-   public interface ContextMaker
+   public interface IContextMaker
    {
       DiffContext GetContext(Position position, ContextDepth depth);
    }

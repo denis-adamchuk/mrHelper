@@ -28,7 +28,7 @@ namespace mrCore
 
    public class GitLabClient
    {
-      private string protocol = "https://";
+      private readonly string protocol = "https://";
 
       public GitLabClient(string host, string token, ApiVersion version = ApiVersion.v4)
       {
@@ -37,8 +37,10 @@ namespace mrCore
          _version = version;
 
          ServicePointManager.ServerCertificateValidationCallback += (o, c, ch, er) => true;
-         _client = new WebClient();
-         _client.BaseAddress = _host;
+         _client = new WebClient
+         {
+            BaseAddress = _host
+         };
          _client.Headers.Add("Content-Type:application/json");
          _client.Headers.Add("Accept:application/json");
          _client.Headers["Private-Token"] = _token;
@@ -61,9 +63,11 @@ namespace mrCore
          List<Project> projects = new List<Project>();
          foreach (dynamic item in (s as Array))
          {
-            Project project = new Project();
-            project.Id = item["id"];
-            project.NameWithNamespace = item["path_with_namespace"];
+            Project project = new Project
+            {
+               Id = item["id"],
+               NameWithNamespace = item["path_with_namespace"]
+            };
             projects.Add(project);
          }
          return projects;
@@ -136,8 +140,10 @@ namespace mrCore
          List<Version> versions = new List<Version>();
          foreach (dynamic item in (json as Array))
          {
-            Version version = new Version();
-            version.Id = item["id"];
+            Version version = new Version
+            {
+               Id = item["id"]
+            };
             version.Refs.HeadSHA = item["head_commit_sha"];
             version.Refs.BaseSHA = item["base_commit_sha"];
             version.Refs.StartSHA = item["start_commit_sha"];
@@ -219,12 +225,14 @@ namespace mrCore
 
       private static MergeRequest readMergeRequest(dynamic json)
       {
-         MergeRequest mr = new MergeRequest();
-         mr.Id = json["iid"];
-         mr.Title = json["title"];
-         mr.Description = json["description"];
-         mr.SourceBranch = json["source_branch"];
-         mr.TargetBranch = json["target_branch"];
+         MergeRequest mr = new MergeRequest
+         {
+            Id = json["iid"],
+            Title = json["title"],
+            Description = json["description"],
+            SourceBranch = json["source_branch"],
+            TargetBranch = json["target_branch"]
+         };
          Enum.TryParse(json["state"], true, out mr.State);
          dynamic jsonLables = json["labels"];
          mr.Labels = new List<string>();
@@ -248,30 +256,36 @@ namespace mrCore
 
       private static User readUser(dynamic jsonUser)
       {
-         User user = new User();
-         user.Id = jsonUser["id"];
-         user.Name = jsonUser["name"];
-         user.Username = jsonUser["username"];
+         User user = new User
+         {
+            Id = jsonUser["id"],
+            Name = jsonUser["name"],
+            Username = jsonUser["username"]
+         };
          return user;
       }
 
       private static Discussion readDiscussion(dynamic json)
       {
-         Discussion discussion = new Discussion();
-         discussion.Id = json["id"];
-         discussion.IndividualNote = json["individual_note"];
+         Discussion discussion = new Discussion
+         {
+            Id = json["id"],
+            IndividualNote = json["individual_note"]
+         };
          dynamic jsonNotes = json["notes"];
          discussion.Notes = new List<DiscussionNote>();
          foreach (dynamic item in (jsonNotes as Array))
          {
-            DiscussionNote discussionNote = new DiscussionNote();
-            discussionNote.Id = item["id"];
-            discussionNote.Body = item["body"];
-            discussionNote.Author = readUser(item["author"]);
-            discussionNote.Type = convertDiscussionNoteTypeFromJson(item["type"]);
-            discussionNote.System = item["system"];
-            discussionNote.Resolvable = item["resolvable"];
-            discussionNote.CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime;
+            DiscussionNote discussionNote = new DiscussionNote
+            {
+               Id = item["id"],
+               Body = item["body"],
+               Author = readUser(item["author"]),
+               Type = convertDiscussionNoteTypeFromJson(item["type"]),
+               System = item["system"],
+               Resolvable = item["resolvable"],
+               CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime
+            };
             if (item.ContainsKey("resolved"))
             {
                discussionNote.Resolved = item["resolved"];
@@ -521,6 +535,6 @@ namespace mrCore
       private readonly string _host;
       private readonly string _token;
       private readonly ApiVersion _version;
-      private WebClient _client;
+      private readonly WebClient _client;
    }
 }

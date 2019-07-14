@@ -13,7 +13,7 @@ namespace mrCore
    // removed, added and unmodified.
    //
    // Cost: one 'git diff -U20000' call for each GetContext() call.
-   public class CombinedContextMaker : ContextMaker
+   public class CombinedContextMaker : IContextMaker
    {
       public CombinedContextMaker(GitRepository gitRepository)
       {
@@ -55,9 +55,7 @@ namespace mrCore
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
          int endLineNumber = linenumber + depth.Down;
 
-         int nullsAtLeft = 0;
-         int nullsAtRight = 0;
-         calculateNullLinesCount(startLineNumber, isRightSideContext, context, out nullsAtLeft, out nullsAtRight);
+         calculateNullLinesCount(startLineNumber, isRightSideContext, context, out int nullsAtLeft, out int nullsAtRight);
          if ((isRightSideContext && startLineNumber + nullsAtRight > context.Right.Count)
          || (!isRightSideContext && startLineNumber + nullsAtLeft > context.Left.Count))
          {
@@ -69,8 +67,10 @@ namespace mrCore
          int extraNullsAtLeft = 0;
          int extraNullsAtRight = 0;
 
-         DiffContext diffContext = new DiffContext();
-         diffContext.Lines = new List<DiffContext.Line>();
+         DiffContext diffContext = new DiffContext
+         {
+            Lines = new List<DiffContext.Line>()
+         };
 
          int iContextLine = 0;
          while (true)
@@ -137,20 +137,20 @@ namespace mrCore
          if (context.Left[absLineNumber] != null && context.Right[absLineNumber] != null)
          {
             Debug.Assert(context.Left[absLineNumber] == context.Right[absLineNumber]);
-            line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Unchanged);
-            line.Right = getSide(rightLineNumber, true, DiffContext.Line.State.Unchanged);
+            line.Left = getSide(leftLineNumber, DiffContext.Line.State.Unchanged);
+            line.Right = getSide(rightLineNumber, DiffContext.Line.State.Unchanged);
             line.Text = context.Left[absLineNumber];
          }
          else if (context.Left[absLineNumber] != null)
          {
             ++extraNullsAtRight;
-            line.Left = getSide(leftLineNumber, false, DiffContext.Line.State.Changed);
+            line.Left = getSide(leftLineNumber, DiffContext.Line.State.Changed);
             line.Text = context.Left[absLineNumber];
          }
          else if (context.Right[absLineNumber] != null)
          {
             ++extraNullsAtLeft;
-            line.Right = getSide(rightLineNumber, true, DiffContext.Line.State.Changed);
+            line.Right = getSide(rightLineNumber, DiffContext.Line.State.Changed);
             line.Text = context.Right[absLineNumber];
          }
          else
@@ -161,11 +161,13 @@ namespace mrCore
          return line;
       }
 
-      private static DiffContext.Line.Side getSide(int lineNumber, bool right, DiffContext.Line.State state)
+      private static DiffContext.Line.Side getSide(int lineNumber, DiffContext.Line.State state)
       {
-         DiffContext.Line.Side side = new DiffContext.Line.Side();
-         side.Number = lineNumber;
-         side.State = state;
+         DiffContext.Line.Side side = new DiffContext.Line.Side
+         {
+            Number = lineNumber,
+            State = state
+         };
          return side;
       }
 
@@ -203,7 +205,7 @@ namespace mrCore
          }
       }
 
-      GitRepository _gitRepository;
+      private readonly GitRepository _gitRepository;
    }
 }
 

@@ -12,7 +12,7 @@ namespace mrCore
 
    class MergeRequestUrlParser
    {
-      static Regex url_re = new Regex(
+      static readonly Regex url_re = new Regex(
          @"^(http[s]?):\/\/([^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -39,10 +39,12 @@ namespace mrCore
             throw new UriFormatException("Unsupported merge requests URL format");
          }
 
-         ParsedMergeRequestUrl result = new ParsedMergeRequestUrl();
-         result.Host = m.Groups[2].Value;
-         result.Project = m.Groups[4].Value;
-         result.Id = int.Parse(m.Groups[5].Value);
+         ParsedMergeRequestUrl result = new ParsedMergeRequestUrl
+         {
+            Host = m.Groups[2].Value,
+            Project = m.Groups[4].Value,
+            Id = int.Parse(m.Groups[5].Value)
+         };
          return result;
       }
 

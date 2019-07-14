@@ -15,8 +15,8 @@ namespace mrCore
 
    public class InterprocessSnapshotSerializer
    {
-      private static string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
-      private static string InterprocessSnapshotFileName = "snapshot.json";
+      private static readonly string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
+      private static readonly string InterprocessSnapshotFileName = "snapshot.json";
 
       public void SerializeToDisk(InterprocessSnapshot snapshot)
       {

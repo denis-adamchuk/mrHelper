@@ -12,7 +12,7 @@ namespace mrCore
    // removed vs unchanged for left-side.
    //
    // Cost: one 'git show' and one 'git diff -U0' for each GetContext() call
-   public class EnhancedContextMaker : ContextMaker
+   public class EnhancedContextMaker : IContextMaker
    {
       public EnhancedContextMaker(GitRepository gitRepository)
       {
@@ -44,8 +44,10 @@ namespace mrCore
       private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext,
          GitDiffAnalyzer analyzer, ContextDepth depth)
       {
-         DiffContext diffContext = new DiffContext();
-         diffContext.Lines = new List<DiffContext.Line>();
+         DiffContext diffContext = new DiffContext
+         {
+            Lines = new List<DiffContext.Line>()
+         };
 
          List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
          if (linenumber > contents.Count)
@@ -75,14 +77,18 @@ namespace mrCore
       {
          Debug.Assert(linenumber > 0 && linenumber <= contents.Count);
 
-         DiffContext.Line line = new DiffContext.Line();
-         line.Text = contents[linenumber - 1];
+         DiffContext.Line line = new DiffContext.Line
+         {
+            Text = contents[linenumber - 1]
+         };
 
-         DiffContext.Line.Side side = new DiffContext.Line.Side();
-         side.Number = linenumber;
+         DiffContext.Line.Side side = new DiffContext.Line.Side
+         {
+            Number = linenumber,
 
-         // this maker supports all three states
-         side.State = getLineState(analyzer, linenumber, isRightSideContext);
+            // this maker supports all three states
+            State = getLineState(analyzer, linenumber, isRightSideContext)
+         };
 
          if (isRightSideContext)
          {

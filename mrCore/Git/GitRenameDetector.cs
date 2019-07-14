@@ -9,7 +9,7 @@ namespace mrCore
 {
    public class GitRenameDetector
    {
-      static Regex diffRenameRe = new Regex(
+      static readonly Regex diffRenameRe = new Regex(
          @"\d+\s+\d+\s+(?'left_name'.+)\s\=\>\s(?'right_name'.+)", RegexOptions.Compiled);
 
       public GitRenameDetector(GitRepository gitRepository)
