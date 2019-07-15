@@ -26,28 +26,9 @@ namespace mrCore
       All
    }
 
-   public struct DiscussionParameters
-   {
-      public string Body;
-
-      public struct PositionDetails
-      {
-         public string OldPath;
-         public string NewPath;
-         public string OldLine;
-         public string NewLine;
-         public string BaseSHA;
-         public string HeadSHA;
-         public string StartSHA;
-      }
-
-      public PositionDetails? Position;
-   }
-
-
    public class GitLabClient
    {
-      private string protocol = "https://";
+      private readonly string protocol = "https://";
 
       public GitLabClient(string host, string token, ApiVersion version = ApiVersion.v4)
       {
@@ -56,11 +37,21 @@ namespace mrCore
          _version = version;
 
          ServicePointManager.ServerCertificateValidationCallback += (o, c, ch, er) => true;
-         _client = new WebClient();
-         _client.BaseAddress = _host;
+         _client = new WebClient
+         {
+            BaseAddress = _host
+         };
          _client.Headers.Add("Content-Type:application/json");
          _client.Headers.Add("Accept:application/json");
          _client.Headers["Private-Token"] = _token;
+      }
+
+      public User GetCurrentUser()
+      {
+         string url = makeCommonUrl() + "/user";
+         string response = get(url);
+         dynamic json = deserializeJson(response);
+         return readUser(json);
       }
 
       public List<Project> GetAllProjects(bool publicOnly)
@@ -72,9 +63,11 @@ namespace mrCore
          List<Project> projects = new List<Project>();
          foreach (dynamic item in (s as Array))
          {
-            Project project = new Project();
-            project.Id = item["id"];
-            project.NameWithNamespace = item["path_with_namespace"];
+            Project project = new Project
+            {
+               Id = item["id"],
+               NameWithNamespace = item["path_with_namespace"]
+            };
             projects.Add(project);
          }
          return projects;
@@ -106,7 +99,7 @@ namespace mrCore
 
       public List<MergeRequest> GetAllProjectMergeRequests(string project)
       {
-         string url = makeUrlForAllProjectMergeRequests(project, StateFilter.Open, WorkInProgressFilter.Yes);
+         string url = makeUrlForAllProjectMergeRequests(project, StateFilter.Open, WorkInProgressFilter.Yes, 100);
          string response = get(url);
 
          dynamic json = deserializeJson(response);
@@ -147,15 +140,50 @@ namespace mrCore
          List<Version> versions = new List<Version>();
          foreach (dynamic item in (json as Array))
          {
-            Version version = new Version();
-            version.Id = item["id"];
-            version.HeadSHA = item["head_commit_sha"];
-            version.BaseSHA = item["base_commit_sha"];
-            version.StartSHA = item["start_commit_sha"];
+            Version version = new Version
+            {
+               Id = item["id"]
+            };
+            version.Refs.HeadSHA = item["head_commit_sha"];
+            version.Refs.BaseSHA = item["base_commit_sha"];
+            version.Refs.StartSHA = item["start_commit_sha"];
             version.CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime;
             versions.Add(version);
          }
          return versions;
+      }
+
+      public Discussion GetSingleDiscussion(string project, int mergeRequestId, string discussionId)
+      {
+         string url = makeUrlForSingleDiscussion(project, mergeRequestId, discussionId);
+         string response = get(url);
+
+         dynamic json = deserializeJson(response);
+         return readDiscussion(json);
+      }
+
+      public List<Discussion> GetMergeRequestDiscussions(string project, int id)
+      {
+         // evaluate total number of items
+         get(makeUrlForMergeRequestDiscussions(project, id, 1, 1));
+         int total = int.Parse(_client.ResponseHeaders["X-Total"]);
+         int perPage = 100;
+         int pages = total / perPage + (total % perPage > 0 ? 1 : 0);
+
+         // load all discussions page by page
+         List<Discussion> discussions = new List<Discussion>();
+         for (int iPage = 0; iPage < pages; ++iPage)
+         {
+            string url = makeUrlForMergeRequestDiscussions(project, id, iPage + 1, perPage);
+            string response = get(url);
+
+            dynamic json = deserializeJson(response);
+            foreach (dynamic item in (json as Array))
+            {
+               discussions.Add(readDiscussion(item));
+            }
+         }
+         return discussions;
       }
 
       public void AddSpentTimeForMergeRequest(string project, int id, ref TimeSpan span)
@@ -176,14 +204,35 @@ namespace mrCore
          post(url);
       }
 
+      public void ModifyDiscussionNote(string project, int mergeRequestId, string discussionId, int noteId,
+         string body, bool? resolved)
+      {
+         if (body != null && resolved.HasValue)
+         {
+            // (exactly one of body or resolved must be set)
+            return;
+         }
+
+         string url = makeUrlForNoteModification(project, mergeRequestId, discussionId, noteId, body, resolved);
+         put(url);
+      }
+
+      public void DeleteDiscussionNote(string project, int mergeRequestId, string discussionId, int noteId)
+      {
+         string url = makeUrlForNoteDeletion(project, mergeRequestId, discussionId, noteId);
+         delete(url);
+      }
+
       private static MergeRequest readMergeRequest(dynamic json)
       {
-         MergeRequest mr = new MergeRequest();
-         mr.Id = json["iid"];
-         mr.Title = json["title"];
-         mr.Description = json["description"];
-         mr.SourceBranch = json["source_branch"];
-         mr.TargetBranch = json["target_branch"];
+         MergeRequest mr = new MergeRequest
+         {
+            Id = json["iid"],
+            Title = json["title"],
+            Description = json["description"],
+            SourceBranch = json["source_branch"],
+            TargetBranch = json["target_branch"]
+         };
          Enum.TryParse(json["state"], true, out mr.State);
          dynamic jsonLables = json["labels"];
          mr.Labels = new List<string>();
@@ -193,25 +242,90 @@ namespace mrCore
          }
          mr.WebUrl = json["web_url"];
          mr.WorkInProgress = json["work_in_progress"];
-
-         dynamic jsonAuthor = json["author"];
-         mr.Author.Id = jsonAuthor["id"];
-         mr.Author.Name = jsonAuthor["name"];
-         mr.Author.Username = jsonAuthor["username"];
+         mr.Author = readUser(json["author"]);
 
          if (json.ContainsKey("diff_refs"))
          {
             dynamic jsonDiffRefs = json["diff_refs"];
-            mr.BaseSHA = jsonDiffRefs["base_sha"];
-            mr.HeadSHA = jsonDiffRefs["head_sha"];
-            mr.StartSHA = jsonDiffRefs["start_sha"];
+            mr.Refs.BaseSHA = jsonDiffRefs["base_sha"];
+            mr.Refs.HeadSHA = jsonDiffRefs["head_sha"];
+            mr.Refs.StartSHA = jsonDiffRefs["start_sha"];
          }
          return mr;
+      }
+
+      private static User readUser(dynamic jsonUser)
+      {
+         User user = new User
+         {
+            Id = jsonUser["id"],
+            Name = jsonUser["name"],
+            Username = jsonUser["username"]
+         };
+         return user;
+      }
+
+      private static Discussion readDiscussion(dynamic json)
+      {
+         Discussion discussion = new Discussion
+         {
+            Id = json["id"],
+            IndividualNote = json["individual_note"]
+         };
+         dynamic jsonNotes = json["notes"];
+         discussion.Notes = new List<DiscussionNote>();
+         foreach (dynamic item in (jsonNotes as Array))
+         {
+            DiscussionNote discussionNote = new DiscussionNote
+            {
+               Id = item["id"],
+               Body = item["body"],
+               Author = readUser(item["author"]),
+               Type = convertDiscussionNoteTypeFromJson(item["type"]),
+               System = item["system"],
+               Resolvable = item["resolvable"],
+               CreatedAt = DateTimeOffset.Parse(item["created_at"]).DateTime
+            };
+            if (item.ContainsKey("resolved"))
+            {
+               discussionNote.Resolved = item["resolved"];
+            }
+            if (item.ContainsKey("position"))
+            {
+               discussionNote.Position = readposition(item["position"]);
+            }
+            discussionNote.DiscussionId = discussion.Id;
+            discussion.Notes.Add(discussionNote);
+         }
+         return discussion;
+      }
+
+      private static Position readposition(dynamic json)
+      {
+         Position position;
+         position.Refs.HeadSHA = json["head_sha"];
+         position.Refs.BaseSHA = json["base_sha"];
+         position.Refs.StartSHA = json["start_sha"];
+         position.OldLine = json["old_line"] != null ? json["old_line"].ToString() : null;
+         position.OldPath = json["old_path"];
+         position.NewLine = json["new_line"] != null ? json["new_line"].ToString() : null;
+         position.NewPath = json["new_path"];
+         return position;
       }
 
       private string post(string data)
       {
          return _client.UploadString(data, "");
+      }
+
+      private string put(string data)
+      {
+         return _client.UploadString(data, "PUT", "");
+      }
+
+      private string delete(string data)
+      {
+         return _client.UploadString(data, "DELETE", "");
       }
 
       private string get(string request)
@@ -245,12 +359,13 @@ namespace mrCore
          return makeUrlForSingleProject(project, id) + "/merge_requests/" + id.ToString();
       }
 
-      private string makeUrlForAllProjectMergeRequests(string project, StateFilter state, WorkInProgressFilter wip)
+      private string makeUrlForAllProjectMergeRequests(string project, StateFilter state, WorkInProgressFilter wip,
+         int perPage)
       {
          return makeCommonUrl()
             + "/projects/" + WebUtility.UrlEncode(project)
             + "/merge_requests"
-            + query("?per_page", "100")
+            + query("?per_page", perPage.ToString())
             + query("&order_by", "updated_at")
             + query("&wip", workInProgressToString(wip))
             + query("&state", stateFilterToString(state)); 
@@ -263,8 +378,7 @@ namespace mrCore
             + query("&wip", workInProgressToString(wip))
             + query("&state", stateFilterToString(state))
             + query("&labels", labels)
-            + query("&author", author)
-            + query("&per_page", "100");
+            + query("&author", author);
       }
 
       private string makeUrlForMergeRequestCommits(string project, int id)
@@ -295,9 +409,9 @@ namespace mrCore
             url += "&" + WebUtility.UrlEncode("position[position_type]") + "=text";
             url += "&" + WebUtility.UrlEncode("position[old_path]") + "=" + WebUtility.UrlEncode(pos.Value.OldPath);
             url += "&" + WebUtility.UrlEncode("position[new_path]") + "=" + WebUtility.UrlEncode(pos.Value.NewPath);
-            url += "&" + WebUtility.UrlEncode("position[base_sha]") + "=" + pos.Value.BaseSHA;
-            url += "&" + WebUtility.UrlEncode("position[start_sha]") + "=" + pos.Value.StartSHA;
-            url += "&" + WebUtility.UrlEncode("position[head_sha]") + "=" + pos.Value.HeadSHA;
+            url += "&" + WebUtility.UrlEncode("position[base_sha]") + "=" + pos.Value.Refs.BaseSHA;
+            url += "&" + WebUtility.UrlEncode("position[start_sha]") + "=" + pos.Value.Refs.StartSHA;
+            url += "&" + WebUtility.UrlEncode("position[head_sha]") + "=" + pos.Value.Refs.HeadSHA;
             if (pos.Value.OldLine != null)
             {
                url += "&" + WebUtility.UrlEncode("position[old_line]") + "=" + pos.Value.OldLine;
@@ -311,17 +425,74 @@ namespace mrCore
          return url;
       }
 
+      private string makeUrlForSingleDiscussion(string project, int mergeRequestId, string discussionId)
+      {
+         string url = makeUrlForSingleMergeRequest(project, mergeRequestId)
+            + "/discussions/" + discussionId;
+         return url;
+      }
+
+      private string makeUrlForMergeRequestDiscussions(string project, int id, int pageNumber, int perPage)
+      {
+         string url = makeUrlForSingleMergeRequest(project, id)
+            + "/discussions"
+            + query("?page", pageNumber.ToString())
+            + query("&per_page", perPage.ToString());
+         return url;
+      }
+
       private string makeUrlForNewNote(string project, int id, string body)
       {
          string url = makeUrlForSingleMergeRequest(project, id)
             + "/notes"
-            + "?body=" + WebUtility.UrlEncode(body);
+            + query("?body", WebUtility.UrlEncode(body));
+         return url;
+      }
+
+      private string makeUrlForNoteModification(string project, int mergeRequestId, string discussionId, int noteId,
+         string body, bool? resolved)
+      {
+         string modQuery = String.Empty;
+         if (body != null)
+         {
+            modQuery += query("?body", WebUtility.UrlEncode(body));
+         }
+         else if (resolved.HasValue)
+         {
+            modQuery += query("?resolved", resolved.Value ? "true" : "false");
+         }
+
+         string url = makeUrlForSingleMergeRequest(project, mergeRequestId)
+            + "/discussions/" + discussionId
+            + "/notes/" + noteId.ToString()
+            + modQuery;
+         return url;
+      }
+
+      private string makeUrlForNoteDeletion(string project, int mergeRequestId, string discussionId, int noteId)
+      {
+         string url = makeUrlForSingleMergeRequest(project, mergeRequestId)
+            + "/discussions/" + discussionId
+            + "/notes/" + noteId.ToString();
          return url;
       }
 
       private string convertTimeSpanToGitlabDuration(TimeSpan span)
       {
          return span.ToString("hh") + "h" + span.ToString("mm") + "m" + span.ToString("ss") + "s";
+      }
+
+      private static DiscussionNoteType convertDiscussionNoteTypeFromJson(string type)
+      {
+         if (type == "DiffNote")
+         {
+            return DiscussionNoteType.DiffNote;
+         }
+         else if (type == "DiscussionNote")
+         {
+            return DiscussionNoteType.DiscussionNote;
+         } 
+         return DiscussionNoteType.Default;
       }
 
       private string stateFilterToString(StateFilter state)
@@ -331,8 +502,7 @@ namespace mrCore
             case StateFilter.All: return "";
             case StateFilter.Closed: return "closed";
             case StateFilter.Merged: return "merged";
-            case StateFilter.Open: return "opened";
-         }
+            case StateFilter.Open: return "opened"; }
          return "";
       }
 
@@ -365,6 +535,6 @@ namespace mrCore
       private readonly string _host;
       private readonly string _token;
       private readonly ApiVersion _version;
-      private WebClient _client;
+      private readonly WebClient _client;
    }
 }

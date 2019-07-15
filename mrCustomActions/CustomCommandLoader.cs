@@ -17,7 +17,6 @@ namespace mrCustomActions
          XmlDocument document = new XmlDocument();
          document.Load(filename);
          XmlNode commands = document.SelectSingleNode("Commands");
-         List<int> ids = new List<int>();
          foreach (XmlNode child in commands.ChildNodes)
          {
             XmlNode command = child.SelectSingleNode("Command");
@@ -33,6 +32,6 @@ namespace mrCustomActions
          return results;
       }
 
-      ICommandCallback _callback;
+      private readonly ICommandCallback _callback;
    }
 }

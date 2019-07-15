@@ -13,23 +13,22 @@ namespace mrHelperUI
 
    public partial class mrHelperForm : Form, ICommandCallback
    {
-      static private string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
-      static System.Threading.Mutex timeTrackingMutex =
+      private static readonly string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
+      private static readonly System.Threading.Mutex timeTrackingMutex =
           new System.Threading.Mutex(false, timeTrackingMutexGuid);
 
       // TODO Move to resources
       // {
-      static private string buttonStartTimerDefaultText = "Start Timer";
-      static private string buttonStartTimerTrackingText = "Send Spent";
-      static private string labelSpentTimeDefaultText = "00:00:00";
-      static private int timeTrackingTimerInterval = 1000; // ms
+      private static readonly string buttonStartTimerDefaultText = "Start Timer";
+      private static readonly string buttonStartTimerTrackingText = "Send Spent";
+      private static readonly string labelSpentTimeDefaultText = "00:00:00";
+      private static readonly int timeTrackingTimerInterval = 1000; // ms
 
-      static private string errorMessageBoxText = "Error";
-      static private string warningMessageBoxText = "Warning";
-      static private string informationMessageBoxText = "Information";
+      private static readonly string errorMessageBoxText = "Error";
+      private static readonly string warningMessageBoxText = "Warning";
+      private static readonly string informationMessageBoxText = "Information";
 
-      static private string errorTrackedTimeNotSet = "Tracked time was not sent to server";
-      static private string errorNoValidRepository = "Cannot launch difftool because there is no valid repository";
+      private static readonly string errorTrackedTimeNotSet = "Tracked time was not sent to server";
 
       /// <summary>
       /// Tooltip timeout in seconds
@@ -38,7 +37,7 @@ namespace mrHelperUI
       // }
 
       public const string GitDiffToolName = "mrhelperdiff";
-      private const string CustomActionsFilename = "CustomActions.xml";
+      private const string CustomActionsFileName = "CustomActions.xml";
 
       public mrHelperForm()
       {
@@ -47,30 +46,34 @@ namespace mrHelperUI
 
       private void addCustomActions()
       {
-         if (!File.Exists(CustomActionsFilename))
+         if (!File.Exists(CustomActionsFileName))
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state
             // Do not try to load custom actions if they don't exist
             return;
          }
          CustomCommandLoader loader = new CustomCommandLoader(this);
-         List<ICommand> commands = loader.LoadCommands(CustomActionsFilename);
+         List<ICommand> commands = loader.LoadCommands(CustomActionsFileName);
          int id = 0;
-         System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point();
-         offSetFromGroupBoxTopLeft.X = 10;
-         offSetFromGroupBoxTopLeft.Y = 17;
+         System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
+         {
+            X = 10,
+            Y = 17
+         };
          System.Drawing.Size typicalSize = new System.Drawing.Size(83, 27);
          foreach (var command in commands)
          {
             string name = command.GetName();
-            var button = new System.Windows.Forms.Button();
-            button.Name = "customAction" + id;
-            button.Location = offSetFromGroupBoxTopLeft;
-            button.Size = typicalSize;
-            button.Text = name;
-            button.UseVisualStyleBackColor = true;
-            button.Enabled = false;
-            button.TabStop = false;
+            var button = new System.Windows.Forms.Button
+            {
+               Name = "customAction" + id,
+               Location = offSetFromGroupBoxTopLeft,
+               Size = typicalSize,
+               Text = name,
+               UseVisualStyleBackColor = true,
+               Enabled = false,
+               TabStop = false
+            };
             button.Click += (x, y) =>
             {
                try
@@ -195,6 +198,7 @@ namespace mrHelperUI
       {
          try
          {
+            _gitRepository = null;
             updateProjectsDropdownList(getAllProjects());
             _settings.LastSelectedHost = (sender as ComboBox).Text;
          }
@@ -208,6 +212,7 @@ namespace mrHelperUI
       {
          try
          {
+            _gitRepository = null;
             updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
             _settings.LastSelectedProject = (sender as ComboBox).Text;
          }
@@ -360,6 +365,44 @@ namespace mrHelperUI
       {
          _settings.LastUsedLabels = textBoxLabels.Text;
       }
+      private void comboBoxDCDepth_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         _settings.DiffContextDepth = (sender as ComboBox).Text;
+      }
+
+      private void ButtonDiscussions_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            onShowDiscussionsForm();
+            return;
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void onShowDiscussionsForm()
+      {
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         {
+            return;
+         }
+
+         if (_gitRepository == null)
+         {
+            _gitRepository = initializeGitRepository();
+         }
+
+         checkForUpdates();
+
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id,
+            mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text));
+         form.Show(this);
+      }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
       {
@@ -456,7 +499,7 @@ namespace mrHelperUI
          return client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
       }
 
-      void sendTrackedTimeSpan(TimeSpan span)
+      private void sendTrackedTimeSpan(TimeSpan span)
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
@@ -471,37 +514,58 @@ namespace mrHelperUI
 
       private void onLaunchDiffTool()
       {
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         if (_gitRepository == null)
+         {
+            _gitRepository = initializeGitRepository();
+         }
+
+         if (_gitRepository == null)
+         {
+            throw new ApplicationException("Cannot launch a diff tool because of a problem with git repository");
+         }
+
+         checkForUpdates();
+
+         _difftool = null; // in case the next line throws
+         _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
+         updateInterprocessSnapshot();
+      }
+
+      // git repository may be not up-to-date. Check if there is a version in GitLab which is newer than latest update.
+      private void checkForUpdates()
+      {
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
          {
             return;
          }
 
-         string currentDirectory = Directory.GetCurrentDirectory();
-         try
+         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
+         List<mrCore.Version> versions = client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
+         if (versions.Count == 0)
          {
-            string project = comboBoxProjects.Text;
-            string localGitFolder = textBoxLocalGitFolder.Text;
-            HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-            string repository = initializeGitRepository(localGitFolder, item.Host, project);
-
-            Directory.SetCurrentDirectory(repository);
-            _difftool = GitClient.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
-         }
-         catch (Exception ex)
-         {
-            _difftool = null;
-            throw ex;
-         }
-         finally
-         {
-            Directory.SetCurrentDirectory(currentDirectory);
+            return;
          }
 
-         updateDetailsSnapshot();
+         mrCore.Version latestVersion = versions[0];
+         if (latestVersion.CreatedAt.ToLocalTime() > _gitRepository.LastUpdateTime)
+         {
+            _gitRepository.Fetch();
+         }
       }
 
-      string initializeGitRepository(string localGitFolder, string host, string projectWithNamespace)
+      private GitRepository initializeGitRepository()
       {
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         {
+            return null;
+         }
+
+         string projectWithNamespace = comboBoxProjects.Text;
+         string localGitFolder = textBoxLocalGitFolder.Text;
+         string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
+
          if (!Directory.Exists(localGitFolder))
          {
             if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
@@ -511,34 +575,30 @@ namespace mrHelperUI
             }
             else
             {
-               throw new ApplicationException(errorNoValidRepository);
+               return null;
             }
          }
 
          string project = projectWithNamespace.Split('/')[1];
-         string repository = localGitFolder + "/" + project;
-         if (!Directory.Exists(repository))
+         string path = Path.Combine(localGitFolder, project);
+         if (!Directory.Exists(path))
          {
-            if (MessageBox.Show("There is no project " + project + " repository within folder " + localGitFolder +
+            if (MessageBox.Show("There is no project \"" + project + "\" repository in " + localGitFolder +
                ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.Yes)
             {
-               GitClient.CloneRepo(host, projectWithNamespace, repository);
+               return GitRepository.CreateByClone(host, projectWithNamespace, path);
             }
             else
             {
-               throw new ApplicationException(errorNoValidRepository);
+               return null; 
             }
          }
-         else
-         {
-            string currentDir = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(repository);
-            GitClient.Fetch();
-            Directory.SetCurrentDirectory(currentDir);
-         }
 
-         return repository;
+         GitRepository gitRepository = new GitRepository(path);
+         gitRepository.Fetch();
+
+         return gitRepository;
       }
 
       private string getGitTag(bool left)
@@ -546,13 +606,13 @@ namespace mrHelperUI
          // swap sides to be consistent with gitlab web ui
          if (!left)
          {
-            return comboBoxLeftVersion.SelectedItem != null ?
-               ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).SHA : "";
+            Debug.Assert(comboBoxLeftVersion.SelectedItem != null);
+            return ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).SHA;
          }
          else
          {
-            return comboBoxRightVersion.SelectedItem != null ?
-               ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).SHA : "";
+            Debug.Assert(comboBoxRightVersion.SelectedItem != null);
+            return ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).SHA;
          }
       }
 
@@ -568,7 +628,7 @@ namespace mrHelperUI
          e.Value = item.Text;
          if (item.TimeStamp.HasValue)
          {
-            e.Value += " (" + item.TimeStamp.Value.ToString("u") + ")";
+            e.Value += " (" + item.TimeStamp.Value.ToLocalTime().ToString("g") + ")";
          }
       }
 
@@ -599,8 +659,15 @@ namespace mrHelperUI
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
          checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
-         checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
-
+         if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
+         {
+            comboBoxDCDepth.Text = _settings.DiffContextDepth;
+         }
+         else
+         {
+            comboBoxDCDepth.SelectedIndex = 0;
+         }
+		 checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
          _loadingConfiguration = false;
       }
 
@@ -609,10 +676,10 @@ namespace mrHelperUI
          _settings.Update();
       }
 
-      private void updateDetailsSnapshot()
+      private void updateInterprocessSnapshot()
       {
          // delete old snapshot first
-         DetailedSnapshotSerializer serializer = new DetailedSnapshotSerializer();
+         InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
          serializer.PurgeSerialized();
 
          bool diffToolIsRunning = _difftool != null && !_difftool.HasExited;
@@ -639,17 +706,17 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
 
-         MergeRequestDetails details;
-         details.AccessToken = item.AccessToken;
-         details.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
-         details.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
-         details.StartSHA = baseSHA;
-         details.Host = item.Host;
-         details.Id = mergeRequest.Id;
-         details.Project = comboBoxProjects.Text;
-         details.TempFolder = textBoxLocalGitFolder.Text;
-
-         serializer.SerializeToDisk(details);
+         InterprocessSnapshot snapshot;
+         snapshot.AccessToken = item.AccessToken;
+         snapshot.Refs.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
+         snapshot.Refs.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
+         snapshot.Refs.StartSHA = baseSHA; 
+         snapshot.Host = item.Host;
+         snapshot.Id = mergeRequest.Id;
+         snapshot.Project = comboBoxProjects.Text;
+         snapshot.TempFolder = textBoxLocalGitFolder.Text;
+         
+         serializer.SerializeToDisk(snapshot);
       }
 
       private void loadSettings()
@@ -682,8 +749,10 @@ namespace mrHelperUI
       private void onApplicationStarted()
       {
 
-         _timeTrackingTimer = new Timer();
-         _timeTrackingTimer.Interval = timeTrackingTimerInterval;
+         _timeTrackingTimer = new Timer
+         {
+            Interval = timeTrackingTimerInterval
+         };
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
@@ -699,9 +768,11 @@ namespace mrHelperUI
          comboBoxHost.Items.Clear();
          foreach (ListViewItem item in listViewKnownHosts.Items)
          {
-            HostComboBoxItem hostItem = new HostComboBoxItem();
-            hostItem.Host = item.Text;
-            hostItem.AccessToken = item.SubItems[1].Text;
+            HostComboBoxItem hostItem = new HostComboBoxItem
+            {
+               Host = item.Text,
+               AccessToken = item.SubItems[1].Text
+            };
             comboBoxHost.Items.Add(hostItem);
             if (hostItem.Host == _settings.LastSelectedHost)
             {
@@ -816,6 +887,7 @@ namespace mrHelperUI
             // 4. Toggle state of buttons
             buttonDiffTool.Enabled = false;
             buttonToggleTimer.Enabled = false;
+            buttonDiscussions.Enabled = false;
             foreach (Control control in groupBoxActions.Controls)
             {
                control.Enabled = false;
@@ -840,14 +912,14 @@ namespace mrHelperUI
          foreach (var version in getVersions())
          {
             VersionComboBoxItem item =
-               new VersionComboBoxItem(version.HeadSHA, version.HeadSHA.Substring(0, 10), version.CreatedAt);
+               new VersionComboBoxItem(version.Refs.HeadSHA, version.Refs.HeadSHA.Substring(0, 10), version.CreatedAt);
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
 
          // Add target branch to the right combo-box
          VersionComboBoxItem targetBranch =
-            new VersionComboBoxItem(mergeRequest.BaseSHA, mergeRequest.TargetBranch, null);
+            new VersionComboBoxItem(mergeRequest.Refs.BaseSHA, mergeRequest.TargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
          comboBoxLeftVersion.SelectedIndex = 0;
@@ -856,6 +928,7 @@ namespace mrHelperUI
          // 5. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
          buttonDiffTool.Enabled = true;
+         buttonDiscussions.Enabled = true;
          foreach (Control control in groupBoxActions.Controls)
          {
             control.Enabled = true;
@@ -877,18 +950,15 @@ namespace mrHelperUI
          // 2. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
-         // 3. Store current time
-         _lastStartTimeStamp = DateTime.Now;
-
-         // 4. Start timer
+         // 3. Start timer
          _timeTrackingTimer.Start();
 
-         // 5. Reset and start stopwatch
+         // 4. Reset and start stopwatch
          _stopWatch.Reset();
          _stopWatch.Start();
 
-         // 6. Update information available to other instances
-         updateDetailsSnapshot();
+         // 5. Update information available to other instances
+         updateInterprocessSnapshot();
       }
 
       private void onStopTimer(bool sendTrackedTime)
@@ -900,7 +970,7 @@ namespace mrHelperUI
          _timeTrackingTimer.Stop();
 
          // 3. Update information available to other instances
-         updateDetailsSnapshot();
+         updateInterprocessSnapshot();
 
          // 4. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
@@ -1032,28 +1102,27 @@ namespace mrHelperUI
          return 0;
       }
 
-      private DateTime _lastStartTimeStamp;
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
       private bool _loadingConfiguration = false;
       private bool _requireShowingTooltip = true;
-
-      UserDefinedSettings _settings;
+      private UserDefinedSettings _settings;
+      private GitRepository _gitRepository;
 
       // For accurate time tracking
-      Stopwatch _stopWatch = new Stopwatch();
+      private readonly Stopwatch _stopWatch = new Stopwatch();
 
       // Last launched instance of a diff tool
-      Process _difftool;
+      private Process _difftool;
 
-      struct HostComboBoxItem
+      private struct HostComboBoxItem
       {
          public string Host;
          public string AccessToken;
       }
 
-      struct VersionComboBoxItem
+      private struct VersionComboBoxItem
       {
          public string SHA;
          public string Text;

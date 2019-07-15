@@ -3,33 +3,31 @@ using System.Web.Script.Serialization;
 
 namespace mrCore
 {
-   public struct MergeRequestDetails
+   public struct InterprocessSnapshot
    {
       public int Id;
       public string Host;
       public string AccessToken;
       public string Project;
-      public string BaseSHA;
-      public string StartSHA;
-      public string HeadSHA;
+      public DiffRefs Refs;
       public string TempFolder;
    }
 
-   public class DetailedSnapshotSerializer
+   public class InterprocessSnapshotSerializer
    {
-      private static string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
-      private static string InterprocessSnapshotFilename = "details.json";
+      private static readonly string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
+      private static readonly string InterprocessSnapshotFileName = "snapshot.json";
 
-      public void SerializeToDisk(MergeRequestDetails details)
+      public void SerializeToDisk(InterprocessSnapshot snapshot)
       {
          JavaScriptSerializer serializer = new JavaScriptSerializer();
-         string json = serializer.Serialize(details);
-         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFilename), json);
+         string json = serializer.Serialize(snapshot);
+         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName), json);
       }
 
-      public MergeRequestDetails? DeserializeFromDisk()
+      public InterprocessSnapshot? DeserializeFromDisk()
       {
-         string fullSnapshotName = System.IO.Path.Combine(snapshotPath,InterprocessSnapshotFilename);
+         string fullSnapshotName = System.IO.Path.Combine(snapshotPath,InterprocessSnapshotFileName);
          if (!System.IO.File.Exists(fullSnapshotName))
          {
             return null;
@@ -40,21 +38,22 @@ namespace mrCore
          JavaScriptSerializer serializer = new JavaScriptSerializer();
          dynamic json = serializer.DeserializeObject(jsonStr);
 
-         MergeRequestDetails details;
-         details.Host = json["Host"];
-         details.AccessToken = json["AccessToken"];
-         details.Project = json["Project"];
-         details.Id = json["Id"];
-         details.BaseSHA = json["BaseSHA"];
-         details.StartSHA = json["StartSHA"];
-         details.HeadSHA = json["HeadSHA"];
-         details.TempFolder = json["TempFolder"];
-         return details;
+         InterprocessSnapshot snapshot;
+         snapshot.Host = json["Host"];
+         snapshot.AccessToken = json["AccessToken"];
+         snapshot.Project = json["Project"];
+         snapshot.Id = json["Id"];
+         snapshot.TempFolder = json["TempFolder"];
+         dynamic refs = json["Refs"];
+         snapshot.Refs.BaseSHA = refs["BaseSHA"];
+         snapshot.Refs.StartSHA = refs["StartSHA"];
+         snapshot.Refs.HeadSHA = refs["HeadSHA"];
+         return snapshot;
       }
 
       public void PurgeSerialized()
       {
-         System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFilename));
+         System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName));
       }
    }
 }
