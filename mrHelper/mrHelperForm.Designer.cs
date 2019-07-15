@@ -189,7 +189,7 @@
          this.textBoxLabels.Size = new System.Drawing.Size(232, 20);
          this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests that contain any of these labels");
-         this.textBoxLabels.Leave += new System.EventHandler(this.textBoxLabels_Leave);
+         this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_Leave);
          // 
          // checkBoxLabels
          // 
@@ -200,7 +200,7 @@
          this.checkBoxLabels.TabIndex = 3;
          this.checkBoxLabels.Text = "Labels";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
-         this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.checkBoxLabels_CheckedChanged);
+         this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.CheckBoxLabels_CheckedChanged);
          // 
          // linkLabelConnectedTo
          // 
@@ -351,7 +351,7 @@
          this.checkBoxMinimizeOnClose.TabIndex = 7;
          this.checkBoxMinimizeOnClose.Text = "Minimize on close";
          this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
-         this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.checkBoxMinimizeOnClose_CheckedChanged);
+         this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
          // 
          // checkBoxShowPublicOnly
          // 
@@ -373,7 +373,7 @@
          this.checkBoxRequireTimer.TabIndex = 5;
          this.checkBoxRequireTimer.Text = "Require started timer for creating new discussions";
          this.checkBoxRequireTimer.UseVisualStyleBackColor = true;
-         this.checkBoxRequireTimer.CheckedChanged += new System.EventHandler(this.checkBoxRequireTimer_CheckedChanged);
+         this.checkBoxRequireTimer.CheckedChanged += new System.EventHandler(this.CheckBoxRequireTimer_CheckedChanged);
          // 
          // groupBoxGit
          // 

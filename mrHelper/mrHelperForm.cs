@@ -111,7 +111,6 @@ namespace mrHelperUI
                onHideToTray(e);
                return;
             }
-            saveConfiguration();
          }
          catch (Exception ex)
          {
@@ -340,6 +339,26 @@ namespace mrHelperUI
          {
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+      }
+
+      private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.RequireTimeTracking = (sender as CheckBox).Checked;
+      }
+
+      private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.MinimizeOnClose = (sender as CheckBox).Checked;
+      }
+
+      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+      }
+
+      private void TextBoxLabels_Leave(object sender, EventArgs e)
+      {
+         _settings.LastUsedLabels = textBoxLabels.Text;
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
@@ -587,10 +606,6 @@ namespace mrHelperUI
 
       private void saveConfiguration()
       {
-         if (_loadingConfiguration)
-         {
-            return;
-         }
          _settings.Update();
       }
 
@@ -1050,26 +1065,6 @@ namespace mrHelperUI
             Text = text;
             TimeStamp = timeStamp;
          }
-      }
-
-      private void checkBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
-      {
-         _settings.RequireTimeTracking = (sender as CheckBox).Checked;
-      }
-
-      private void checkBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
-      {
-         _settings.MinimizeOnClose = (sender as CheckBox).Checked;
-      }
-
-      private void checkBoxLabels_CheckedChanged(object sender, EventArgs e)
-      {
-         _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
-      }
-
-      private void textBoxLabels_Leave(object sender, EventArgs e)
-      {
-         _settings.LastUsedLabels = textBoxLabels.Text;
       }
    }
 }
