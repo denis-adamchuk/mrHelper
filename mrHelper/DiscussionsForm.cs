@@ -505,6 +505,11 @@ namespace mrHelperUI
       // Create a label that shows filename
       private static Label createLabelFilename(DiscussionNote firstNote)
       {
+         if (firstNote.Type != DiscussionNoteType.DiffNote)
+         {
+            return null;
+         }
+
          string oldPath = firstNote.Position?.OldPath ?? String.Empty;
          string newPath = firstNote.Position?.NewPath ?? String.Empty;
          string result = oldPath == newPath ? oldPath : (newPath + "\n(was " + oldPath + ")");
