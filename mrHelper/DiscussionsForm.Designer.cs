@@ -29,6 +29,7 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DiscussionsForm));
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.toolTipNotifier = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
@@ -46,6 +47,7 @@
          this.AutoScroll = true;
          this.ClientSize = new System.Drawing.Size(263, 129);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+         this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
