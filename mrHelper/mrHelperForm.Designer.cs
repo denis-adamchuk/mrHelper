@@ -52,6 +52,7 @@
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.buttonDiffTool = new System.Windows.Forms.Button();
+         this.buttonDiscussions = new System.Windows.Forms.Button();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,6 +60,7 @@
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
+         this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
@@ -67,7 +69,7 @@
          this.groupBoxSelectProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProjects = new System.Windows.Forms.ComboBox();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
-         this.groupBoxDiffTool = new System.Windows.Forms.GroupBox();
+         this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelSpentTime = new System.Windows.Forms.Label();
          this.buttonToggleTimer = new System.Windows.Forms.Button();
@@ -82,6 +84,7 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
+         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -91,7 +94,7 @@
          this.groupBoxGit.SuspendLayout();
          this.tabPageMR.SuspendLayout();
          this.groupBoxSelectProject.SuspendLayout();
-         this.groupBoxDiffTool.SuspendLayout();
+         this.groupBoxReview.SuspendLayout();
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxDescription.SuspendLayout();
          this.groupBoxHost.SuspendLayout();
@@ -252,21 +255,33 @@
          // 
          // toolTip
          // 
-         this.toolTip.AutoPopDelay = 10000;
-         this.toolTip.InitialDelay = 10;
-         this.toolTip.ReshowDelay = 10;
+         this.toolTip.AutoPopDelay = 5000;
+         this.toolTip.InitialDelay = 500;
+         this.toolTip.ReshowDelay = 100;
          // 
          // buttonDiffTool
          // 
          this.buttonDiffTool.Enabled = false;
-         this.buttonDiffTool.Location = new System.Drawing.Point(6, 19);
+         this.buttonDiffTool.Location = new System.Drawing.Point(24, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(83, 27);
          this.buttonDiffTool.TabIndex = 11;
-         this.buttonDiffTool.Text = "Launch";
+         this.buttonDiffTool.Text = "Diff Tool";
          this.toolTip.SetToolTip(this.buttonDiffTool, "Press Alt-K to create a new discussion");
          this.buttonDiffTool.UseVisualStyleBackColor = true;
          this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
+         // 
+         // buttonDiscussions
+         // 
+         this.buttonDiscussions.Enabled = false;
+         this.buttonDiscussions.Location = new System.Drawing.Point(135, 19);
+         this.buttonDiscussions.Name = "buttonDiscussions";
+         this.buttonDiscussions.Size = new System.Drawing.Size(83, 27);
+         this.buttonDiscussions.TabIndex = 12;
+         this.buttonDiscussions.Text = "Discussions";
+         this.toolTip.SetToolTip(this.buttonDiscussions, "List of all discussions");
+         this.buttonDiscussions.UseVisualStyleBackColor = true;
+         this.buttonDiscussions.Click += new System.EventHandler(this.ButtonDiscussions_Click);
          // 
          // contextMenuStrip
          // 
@@ -327,13 +342,24 @@
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
          // 
+         // labelDepth
+         // 
+         this.labelDepth.AutoSize = true;
+         this.labelDepth.Location = new System.Drawing.Point(6, 68);
+         this.labelDepth.Name = "labelDepth";
+         this.labelDepth.Size = new System.Drawing.Size(94, 13);
+         this.labelDepth.TabIndex = 5;
+         this.labelDepth.Text = "Diff Context Depth";
+         // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.labelDepth);
+         this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxShowPublicOnly);
          this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(513, 70);
+         this.groupBoxOther.Size = new System.Drawing.Size(513, 99);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -375,7 +401,7 @@
          // 
          this.tabPageMR.Controls.Add(this.groupBoxSelectProject);
          this.tabPageMR.Controls.Add(this.groupBoxActions);
-         this.tabPageMR.Controls.Add(this.groupBoxDiffTool);
+         this.tabPageMR.Controls.Add(this.groupBoxReview);
          this.tabPageMR.Controls.Add(this.groupBoxTimeTracking);
          this.tabPageMR.Controls.Add(this.groupBoxDescription);
          this.tabPageMR.Controls.Add(this.groupBoxSelectMergeRequest);
@@ -419,15 +445,16 @@
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
          // 
-         // groupBoxDiffTool
+         // groupBoxReview
          // 
-         this.groupBoxDiffTool.Controls.Add(this.buttonDiffTool);
-         this.groupBoxDiffTool.Location = new System.Drawing.Point(276, 399);
-         this.groupBoxDiffTool.Name = "groupBoxDiffTool";
-         this.groupBoxDiffTool.Size = new System.Drawing.Size(243, 55);
-         this.groupBoxDiffTool.TabIndex = 11;
-         this.groupBoxDiffTool.TabStop = false;
-         this.groupBoxDiffTool.Text = "Diff Tool";
+         this.groupBoxReview.Controls.Add(this.buttonDiscussions);
+         this.groupBoxReview.Controls.Add(this.buttonDiffTool);
+         this.groupBoxReview.Location = new System.Drawing.Point(276, 399);
+         this.groupBoxReview.Name = "groupBoxReview";
+         this.groupBoxReview.Size = new System.Drawing.Size(243, 55);
+         this.groupBoxReview.TabIndex = 11;
+         this.groupBoxReview.TabStop = false;
+         this.groupBoxReview.Text = "Review";
          // 
          // groupBoxTimeTracking
          // 
@@ -560,18 +587,34 @@
          this.label3.AutoSize = true;
          this.label3.Location = new System.Drawing.Point(269, 16);
          this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(32, 13);
+         this.label3.Size = new System.Drawing.Size(25, 13);
          this.label3.TabIndex = 18;
-         this.label3.Text = "Right";
+         this.label3.Text = "and";
          // 
          // label4
          // 
          this.label4.AutoSize = true;
          this.label4.Location = new System.Drawing.Point(3, 16);
          this.label4.Name = "label4";
-         this.label4.Size = new System.Drawing.Size(25, 13);
+         this.label4.Size = new System.Drawing.Size(93, 13);
          this.label4.TabIndex = 15;
-         this.label4.Text = "Left";
+         this.label4.Text = "Changes between";
+         // 
+         // comboBoxDCDepth
+         // 
+         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxDCDepth.FormattingEnabled = true;
+         this.comboBoxDCDepth.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4"});
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 65);
+         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
+         this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
+         this.comboBoxDCDepth.TabIndex = 7;
+         this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          // 
          // mrHelperForm
          // 
@@ -599,7 +642,7 @@
          this.groupBoxGit.PerformLayout();
          this.tabPageMR.ResumeLayout(false);
          this.groupBoxSelectProject.ResumeLayout(false);
-         this.groupBoxDiffTool.ResumeLayout(false);
+         this.groupBoxReview.ResumeLayout(false);
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxTimeTracking.PerformLayout();
          this.groupBoxDescription.ResumeLayout(false);
@@ -646,7 +689,7 @@
       private System.Windows.Forms.Label label4;
       private System.Windows.Forms.ComboBox comboBoxHost;
       private System.Windows.Forms.GroupBox groupBoxHost;
-      private System.Windows.Forms.GroupBox groupBoxDiffTool;
+      private System.Windows.Forms.GroupBox groupBoxReview;
       private System.Windows.Forms.GroupBox groupBoxTimeTracking;
       private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBoxOther;
@@ -660,6 +703,9 @@
       private System.Windows.Forms.GroupBox groupBoxSelectProject;
       private System.Windows.Forms.ComboBox comboBoxProjects;
       private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;
+      private System.Windows.Forms.Button buttonDiscussions;
+      private System.Windows.Forms.Label labelDepth;
+      private System.Windows.Forms.ComboBox comboBoxDCDepth;
    }
 }
 

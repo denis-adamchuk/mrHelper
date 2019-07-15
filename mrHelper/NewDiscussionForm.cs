@@ -6,83 +6,38 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelperUI
 {
    public partial class NewDiscussionForm : Form
    {
-      private struct DiscussionContext
+      public NewDiscussionForm(InterprocessSnapshot snapshot, DiffToolInfo difftoolInfo)
       {
-         public IEnumerable<string> lines;
-         public string filename;
-         public string linenumber;
-         public int highlightedIndex;
-      }
+         _interprocessSnapshot = snapshot;
+         _difftoolInfo = difftoolInfo;
+         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]));
+         _renameChecker = new GitRenameDetector(_gitRepository);
+         _matcher = new RefsToLinesMatcher(_gitRepository);
 
-      static int contextLinesToShow = 4;
- 
-      public NewDiscussionForm(MergeRequestDetails mrDetails, DiffToolInfo difftoolInfo)
-      {
-         _mergeRequestDetails = mrDetails;
-         _discussionBuilder = new DiscussionBuilder(mrDetails, difftoolInfo);
          InitializeComponent();
-
-         onApplicationStarted(ref difftoolInfo);
+         htmlPanel.BorderStyle = BorderStyle.FixedSingle;
+         htmlPanel.Location = new Point(12, 73);
+         htmlPanel.Size = new Size(860, 76);
+         Controls.Add(htmlPanel);
       }
 
-      private void onApplicationStarted(ref DiffToolInfo diffToolInfo)
+      private void NewDiscussionForm_Load(object sender, EventArgs e)
       {
-         this.ActiveControl = textBoxDiscussionBody;
-
-         var positionState = _discussionBuilder.GetPositionState();
-         var context = loadDiscussionContext(diffToolInfo, positionState);
-         showDiscussionContext(textBoxContext, context);
-         showDiscussionContextDetails(textBoxFileName, textBoxLineNumber, context);
-
-         if (positionState == DiscussionBuilder.PositionState.Undefined)
-         {
-            checkBoxIncludeContext.Checked = false;
-            checkBoxIncludeContext.Enabled = false;
-         }
+         onApplicationStarted();
       }
 
       private void ButtonOK_Click(object sender, EventArgs e)
       {
-         if (textBoxDiscussionBody.Text.Length == 0)
+         if (submitDiscussion())
          {
-            MessageBox.Show("Discussion body cannot be empty", "Warning",
-               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            return;
+            Close();
          }
-
-         GitLabClient client = new GitLabClient(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         try
-         {
-            client.CreateNewMergeRequestDiscussion(
-               _mergeRequestDetails.Project, _mergeRequestDetails.Id,
-               _discussionBuilder.GetDiscussionParameters(textBoxDiscussionBody.Text, checkBoxIncludeContext.Checked));
-         }
-         catch (System.Net.WebException ex)
-         {
-            Debug.Assert(false);
-            if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-               // Fallback (need to send a discussion body only)
-               client.CreateNewMergeRequestDiscussion(
-                  _mergeRequestDetails.Project, _mergeRequestDetails.Id,
-                  _discussionBuilder.GetDiscussionParameters(textBoxDiscussionBody.Text, false));
-            }
-            else if (((System.Net.HttpWebResponse)ex.Response).StatusCode == System.Net.HttpStatusCode.InternalServerError)
-            { 
-               // TODO Implement a fallback here (need to revert a commited discussion) 
-            }
-
-            MessageBox.Show(ex.Message +
-               "Cannot create a new discussion. Gitlab does not accept passed line numbers.",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-
-         Close();
       }
 
       private void ButtonCancel_Click(object sender, EventArgs e)
@@ -90,63 +45,211 @@ namespace mrHelperUI
          Close();
       }
 
-      static private void showDiscussionContext(RichTextBox textbox, DiscussionContext context)
+      private void TextBoxDiscussionBody_KeyDown(object sender, KeyEventArgs e)
       {
-         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Regular);
-         for (int index = 0; index < context.highlightedIndex; ++index)
+         if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
          {
-            textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
-         }
+            e.Handled = false;
 
-         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Bold);
-         textbox.AppendText(context.lines.ElementAt(context.highlightedIndex) + "\r\n");
-
-         textbox.SelectionFont = new Font(textbox.Font, FontStyle.Regular);
-         for (int index = context.highlightedIndex + 1; index < context.lines.Count(); ++index)
-         {
-            textbox.AppendText(context.lines.ElementAt(index) + "\r\n");
+            if (submitDiscussion())
+            {
+               Close();
+            }
          }
       }
 
-      private void showDiscussionContextDetails(TextBox tbFilename, TextBox tbLineNumber, DiscussionContext context)
+      private void onApplicationStarted()
       {
-         tbFilename.Text = context.filename;
-         tbLineNumber.Text = context.linenumber.ToString();
-      }
+         this.ActiveControl = textBoxDiscussionBody;
 
-      static private DiscussionContext loadDiscussionContext(DiffToolInfo diffToolInfo, DiscussionBuilder.PositionState positionState)
-      {
-         DiscussionContext context = new DiscussionContext();
-         switch (positionState)
+         if (checkForRenamedFile())
          {
-            case DiscussionBuilder.PositionState.OldLineOnly:
-               context.lines = File.ReadLines(diffToolInfo.LeftSideFileNameFull).
-                  Skip(diffToolInfo.LeftSideLineNumber - 1).Take(contextLinesToShow);
-               context.filename = diffToolInfo.LeftSideFileNameBrief;
-               context.linenumber = diffToolInfo.LeftSideLineNumber.ToString();
-               break;
-
-            case DiscussionBuilder.PositionState.NewLineOnly:
-            case DiscussionBuilder.PositionState.Both:
-               context.lines = File.ReadLines(diffToolInfo.RightSideFileNameFull).
-                  Skip(diffToolInfo.RightSideLineNumber - 1).Take(contextLinesToShow);
-               context.filename = diffToolInfo.RightSideFileNameBrief;
-               context.linenumber = diffToolInfo.RightSideLineNumber.ToString();
-               break;
-
-            case DiscussionBuilder.PositionState.Undefined:
-               List<string> strings = new List<string>();
-               strings.Add("N/A");
-               context.lines = strings;
-               context.filename = "N/A";
-               context.linenumber = "N/A";
-               break;
+            Close();
+            return;
          }
-         context.highlightedIndex = 0;
-         return context;
+
+         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
+         if (!_position.HasValue)
+         {
+            handleMatchingError();
+            return;
+         }
+
+         showDiscussionContext(htmlPanel, textBoxFileName);
       }
 
-      private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly DiscussionBuilder _discussionBuilder;
+      private bool checkForRenamedFile()
+      {
+         if (_difftoolInfo.Left.HasValue && _difftoolInfo.Right.HasValue)
+         {
+            // two file names are provided, nothing to check
+            return false;
+         }
+
+         string anotherName = String.Empty;
+         if (!_difftoolInfo.Left.HasValue)
+         {
+            Debug.Assert(_difftoolInfo.Right.HasValue);
+            anotherName = _renameChecker.IsRenamed(
+               _interprocessSnapshot.Refs.BaseSHA, _interprocessSnapshot.Refs.HeadSHA, _difftoolInfo.Right?.FileName, false);
+            if (anotherName == _difftoolInfo.Right?.FileName)
+            {
+               // it is not a renamed but removed file
+               return false;
+            }
+         }
+         if (!_difftoolInfo.Right.HasValue)
+         {
+            Debug.Assert(_difftoolInfo.Left.HasValue);
+            anotherName = _renameChecker.IsRenamed(
+               _interprocessSnapshot.Refs.BaseSHA, _interprocessSnapshot.Refs.HeadSHA, _difftoolInfo.Left?.FileName, true);
+            if (anotherName == _difftoolInfo.Left?.FileName)
+            {
+               // it is not a renamed but added file
+               return false;
+            }
+         }
+
+         MessageBox.Show(
+            "We detected that this file is a renamed version of "
+            + "\"" + anotherName + "\"" 
+            + ". GitLab will not accept such input. Please match files manually in the diff tool and try again.",
+            "Cannot create a discussion",
+            MessageBoxButtons.OK, MessageBoxIcon.Information);
+         return true;
+      }
+
+      private bool submitDiscussion()
+      {
+         if (textBoxDiscussionBody.Text.Length == 0)
+         {
+            MessageBox.Show("Discussion body cannot be empty", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return false;
+         }
+
+         DiscussionParameters parameters = prepareDiscussionParameters();
+         createDiscussionAtGitlab(parameters);
+         return true;
+      }
+
+      private DiscussionParameters prepareDiscussionParameters()
+      {
+         DiscussionParameters parameters = new DiscussionParameters
+         {
+            Body = textBoxDiscussionBody.Text
+         };
+         if (!_position.HasValue)
+         {
+            parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
+         }
+         else
+         {
+            parameters.Position = checkBoxIncludeContext.Checked ? _position : null;
+         }
+         return parameters;
+      }
+
+      private string getFallbackInfo()
+      {
+         return "<b>" + (_difftoolInfo.Left?.FileName ?? "N/A") + "</b>"
+            + " (line " + (_difftoolInfo.Left?.LineNumber.ToString() ?? "N/A") + ") <i>vs</i> "
+            + "<b>" + (_difftoolInfo.Right?.FileName ?? "N/A") + "</b>"
+            + " (line " + (_difftoolInfo.Right?.LineNumber.ToString() ?? "N/A") + ")";
+      }
+
+      private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
+      {
+         ContextDepth depth = new ContextDepth(0, 3);
+         IContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
+         DiffContext context = textContextMaker.GetContext(_position.Value, depth);
+
+         DiffContextFormatter formatter = new DiffContextFormatter();
+         htmlPanel.Text = formatter.FormatAsHTML(context);
+
+         tbFileName.Text = "Left: " + (_difftoolInfo.Left?.FileName ?? "N/A")
+            + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
+      }
+
+      private void createDiscussionAtGitlab(DiscussionParameters parameters)
+      {
+         GitLabClient client = new GitLabClient(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
+         try
+         {
+            client.CreateNewMergeRequestDiscussion(
+               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+         }
+         catch (System.Net.WebException ex)
+         {
+            handleGitlabError(parameters, client, ex);
+         }
+      }
+
+      private void handleMatchingError()
+      {
+         Debug.Assert(false); // matching failed
+         MessageBox.Show("Line numbers from diff tool do not match line numbers from git diff." +
+            "Context will not be included into the discussion.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+         checkBoxIncludeContext.Checked = false;
+         checkBoxIncludeContext.Enabled = false;
+         htmlPanel.Text = "<html><body>N/A</body></html>";
+         textBoxFileName.Text = "N/A";
+      }
+
+      private void handleGitlabError(DiscussionParameters parameters, GitLabClient client, System.Net.WebException ex)
+      {
+         var response = ((System.Net.HttpWebResponse)ex.Response);
+
+         if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+         {
+            Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
+            createMergeRequestWithoutPosition(parameters, client);
+         }
+         else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+         {
+            Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
+            cleanupBadNotes(parameters, client);
+            createMergeRequestWithoutPosition(parameters, client);
+         }
+      }
+
+      private void createMergeRequestWithoutPosition(DiscussionParameters parameters, GitLabClient client)
+      {
+         parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
+         parameters.Position = null;
+         client.CreateNewMergeRequestDiscussion(
+            _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+      }
+
+      // Instead of searching for a latest discussion note with some heuristically prepared parameters,
+      // let's clean up all similar notes, including a recently added one
+      private void cleanupBadNotes(DiscussionParameters parameters, GitLabClient client)
+      {
+         Debug.Assert(parameters.Position.HasValue);
+
+         List<Discussion> discussions = client.GetMergeRequestDiscussions(
+            _interprocessSnapshot.Project, _interprocessSnapshot.Id);
+         foreach (Discussion discussion in discussions)
+         {
+            foreach (DiscussionNote note in discussion.Notes)
+            {
+               if (note.Position.HasValue && note.Position.Value.Equals(parameters.Position.Value))
+               {
+                  client.DeleteDiscussionNote(
+                     _interprocessSnapshot.Project, _interprocessSnapshot.Id, discussion.Id, note.Id);
+               }
+            }
+         }
+      }
+
+      private readonly InterprocessSnapshot _interprocessSnapshot;
+      private readonly DiffToolInfo _difftoolInfo;
+      private readonly RefsToLinesMatcher _matcher;
+      private readonly GitRenameDetector _renameChecker;
+
+      private Position? _position;
+      private readonly GitRepository _gitRepository;
    }
 }
+

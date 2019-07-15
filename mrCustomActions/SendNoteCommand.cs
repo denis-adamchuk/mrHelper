@@ -21,8 +21,8 @@
             _callback.GetCurrentProjectName(), _callback.GetCurrentMergeRequestId(), _body); 
       }
 
-      ICommandCallback _callback;
-      string _name;
-      string _body;
+      private readonly ICommandCallback _callback;
+      private readonly string _name;
+      private readonly string _body;
    }
 }
