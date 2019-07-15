@@ -34,11 +34,8 @@ namespace mrHelperUI
       private static readonly string ShowPublicOnlyKeyName = "ShowPublicOnly";
       private static readonly string ShowPublicOnlyDefaultValue = "true";
 
-      private static readonly string DiffContextAlgoKeyName = "DiffContextAlgo";
-      private static readonly string DiffContextAlgoDefaultValue = "Combined";
-
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
-      private static readonly string DiffContextDepthDefaultValue = "3";
+      private static readonly string DiffContextDepthDefaultValue = "2";
 
       public UserDefinedSettings()
       {
@@ -104,12 +101,6 @@ namespace mrHelperUI
       {
          get { return getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue); }
          set { setValue(ShowPublicOnlyKeyName, value); }
-      }
-
-      public string DiffContextAlgo
-      {
-         get { return getValue(DiffContextAlgoKeyName, DiffContextAlgoDefaultValue); }
-         set { setValue(DiffContextAlgoKeyName, value); }
       }
 
       public string DiffContextDepth
