@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using mrCore;
 using mrCustomActions;
 using mrDiffTool;
+using System.Linq;
 
 namespace mrHelperUI
 {
@@ -596,7 +597,11 @@ namespace mrHelperUI
       {
          VersionComboBoxItem item = (VersionComboBoxItem)(e.ListItem);
          e.Value = item.Text;
-         if (item.TimeStamp.HasValue)
+         if(item.IsLatest)
+         {
+            e.Value = "Latest";
+         }
+         else if (item.TimeStamp.HasValue)
          {
             e.Value += " (" + item.TimeStamp.Value.ToLocalTime().ToString("g") + ")";
          }
@@ -895,10 +900,17 @@ namespace mrHelperUI
          comboBoxLeftVersion.Items.Clear();
          comboBoxRightVersion.Items.Clear();
 
-         foreach (var version in getVersions())
+         var versions = getVersions();
+         var latest = new VersionComboBoxItem(versions[0]);
+         latest.IsLatest = true;
+         comboBoxLeftVersion.Items.Add(latest);
+         for (int i=1; i < versions.Count; i++)
          {
-            VersionComboBoxItem item =
-               new VersionComboBoxItem(version.Refs.HeadSHA, version.Refs.HeadSHA.Substring(0, 10), version.CreatedAt);
+            VersionComboBoxItem item = new VersionComboBoxItem(versions[i]);
+            if (comboBoxLeftVersion.Items.Cast<VersionComboBoxItem>().Any(x => x.SHA == item.SHA))
+            {
+               continue;
+            }
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
@@ -1111,13 +1123,26 @@ namespace mrHelperUI
       {
          public string SHA;
          public string Text;
+         public bool IsLatest;
          public DateTime? TimeStamp;
+
+         public override string ToString()
+         {
+            return Text;
+         }
 
          public VersionComboBoxItem(string sha, string text, DateTime? timeStamp)
          {
             SHA = sha;
             Text = text;
             TimeStamp = timeStamp;
+            IsLatest = false;
+         }
+
+         public VersionComboBoxItem(mrCore.Version ver)
+            : this(ver.Refs.HeadSHA, ver.Refs.HeadSHA.Substring(0, 10), ver.CreatedAt)
+         {
+
          }
       }
    }
