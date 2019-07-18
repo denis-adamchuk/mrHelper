@@ -8,10 +8,10 @@ namespace mrCore.Context
 {
    internal class Helpers
    {
-      public static bool IsValidPosition(Position position)
+      public static bool IsValidPosition(DiffPosition position)
       {
-         return ((position.OldLine != null && int.TryParse(position.OldLine, out int oldLineNumber) && oldLineNumber > 0)
-              || (position.NewLine != null && int.TryParse(position.NewLine, out int newLineNumber) && newLineNumber > 0));
+         return ((position.LeftLine != null && int.TryParse(position.LeftLine, out int LeftLineNumber) && LeftLineNumber > 0)
+              || (position.RightLine != null && int.TryParse(position.RightLine, out int RightLineNumber) && RightLineNumber > 0));
       }
 
       public static bool IsValidContextDepth(ContextDepth depth)

@@ -21,20 +21,20 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public DiffContext GetContext(Position position, ContextDepth depth)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
          {
             return new DiffContext();
          }
 
-         // If NewLine is valid, then it points to either added/modified or unchanged line, handle them the same way
-         bool isRightSideContext = position.NewLine != null;
-         int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
-         string leftFilename = position.OldPath;
-         string rightFilename = position.NewPath;
-         string leftSHA = position.Refs.BaseSHA;
-         string rightSHA = position.Refs.HeadSHA;
+         // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
+         bool isRightSideContext = position.RightLine != null;
+         int linenumber = isRightSideContext ? int.Parse(position.RightLine) : int.Parse(position.LeftLine);
+         string leftFilename = position.LeftPath;
+         string rightFilename = position.RightPath;
+         string leftSHA = position.Refs.LeftSHA;
+         string rightSHA = position.Refs.RightSHA;
 
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
          FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, leftFilename, rightFilename);

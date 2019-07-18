@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using GitLabSharp;
 using mrCore;
 using mrCustomActions;
 using mrDiffTool;
+using Version = GitLabSharp.Version;
 
 namespace mrHelperUI
 {
@@ -427,8 +429,8 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
-         return client.GetAllProjects(checkBoxShowPublicOnly.Checked);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         return gl.Projects.LoadAll(new ProjectsFilter { PublicOnly = checkBoxShowPublicOnly.Checked });
       }
 
       private List<MergeRequest> getAllProjectMergeRequests(string project)
@@ -439,8 +441,8 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
-         return client.GetAllProjectMergeRequests(project);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.LoadAll(new MergeRequestsFilter());
       }
 
       private MergeRequest getMergeRequest()
@@ -452,21 +454,21 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
-         return client.GetSingleMergeRequest(comboBoxProjects.Text, mergeRequest.Value.Id);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).Load();
       }
 
-      private List<mrCore.Version> getVersions()
+      private List<Version> getVersions()
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
          {
-            return new List<mrCore.Version>();
+            return new List<Version>();
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
-         return client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).Versions.LoadAll();
       }
 
       private void sendTrackedTimeSpan(TimeSpan span)
@@ -478,8 +480,9 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
-         client.AddSpentTimeForMergeRequest(comboBoxProjects.Text, mergeRequest.Value.Id, ref span);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).AddSpentTime(
+            new AddSpentTimeParameters { Span = span });
       }
 
       private void onLaunchDiffTool()
@@ -511,15 +514,15 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLabClient client = new GitLabClient(item.Host, item.AccessToken);
-         List<mrCore.Version> versions = client.GetMergeRequestVersions(comboBoxProjects.Text, mergeRequest.Value.Id);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         var versions = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).Versions.LoadAll();
          if (versions.Count == 0)
          {
             return;
          }
 
-         mrCore.Version latestVersion = versions[0];
-         if (latestVersion.CreatedAt.ToLocalTime() > _gitRepository.LastUpdateTime)
+         Version latestVersion = versions[0];
+         if (latestVersion.Created_At.ToLocalTime() > _gitRepository.LastUpdateTime)
          {
             _gitRepository.Fetch();
          }
@@ -687,8 +690,8 @@ namespace mrHelperUI
             return;
          }
 
-         string headSHA = diffArgs[diffArgs.Length - 1];
-         string baseSHA = diffArgs[diffArgs.Length - 2];
+         string rightSHA = diffArgs[diffArgs.Length - 1];
+         string leftSHA = diffArgs[diffArgs.Length - 2];
 
          MergeRequest mergeRequest = getMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
@@ -700,11 +703,10 @@ namespace mrHelperUI
 
          InterprocessSnapshot snapshot;
          snapshot.AccessToken = item.AccessToken;
-         snapshot.Refs.BaseSHA = baseSHA;                       // Base commit SHA in the source branch
-         snapshot.Refs.HeadSHA = headSHA;                       // SHA referencing HEAD of this merge request
-         snapshot.Refs.StartSHA = baseSHA; 
+         snapshot.Refs.LeftSHA = leftSHA;                       // Base commit SHA in the source branch
+         snapshot.Refs.RightSHA = rightSHA;                       // SHA referencing HEAD of this merge request
          snapshot.Host = item.Host;
-         snapshot.Id = mergeRequest.Id;
+         snapshot.MergeRequestId = mergeRequest.Id;
          snapshot.Project = comboBoxProjects.Text;
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
          
@@ -786,10 +788,10 @@ namespace mrHelperUI
          comboBoxProjects.Items.Clear();
          foreach (var project in projects)
          {
-            comboBoxProjects.Items.Add(project.NameWithNamespace);
-            if (project.NameWithNamespace == _settings.LastSelectedProject)
+            comboBoxProjects.Items.Add(project.Path_With_Namespace);
+            if (project.Path_With_Namespace == _settings.LastSelectedProject)
             {
-               lastSelectedProjectName = project.NameWithNamespace;
+               lastSelectedProjectName = project.Path_With_Namespace;
             }
          }
          if (lastSelectedProjectName != null)
@@ -885,7 +887,7 @@ namespace mrHelperUI
 
          // 1. Update status, add merge request url
          linkLabelConnectedTo.Visible = true;
-         linkLabelConnectedTo.Text = mergeRequest.WebUrl;
+         linkLabelConnectedTo.Text = mergeRequest.Web_Url;
 
          // 2. Populate edit boxes with merge request details
          textBoxMergeRequestName.Text = mergeRequest.Title;
@@ -898,14 +900,14 @@ namespace mrHelperUI
          foreach (var version in getVersions())
          {
             VersionComboBoxItem item =
-               new VersionComboBoxItem(version.Refs.HeadSHA, version.Refs.HeadSHA.Substring(0, 10), version.CreatedAt);
+               new VersionComboBoxItem(version.Head_Commit_SHA, version.Head_Commit_SHA.Substring(0, 10), version.Created_At);
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
 
          // Add target branch to the right combo-box
          VersionComboBoxItem targetBranch =
-            new VersionComboBoxItem(mergeRequest.Refs.BaseSHA, mergeRequest.TargetBranch, null);
+            new VersionComboBoxItem(mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
          comboBoxLeftVersion.SelectedIndex = 0;

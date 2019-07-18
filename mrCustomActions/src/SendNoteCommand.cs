@@ -1,4 +1,6 @@
-﻿namespace mrCustomActions
+﻿using GitLabSharp;
+
+namespace mrCustomActions
 {
    public class SendNoteCommand : ICommand
    {
@@ -16,9 +18,12 @@
 
       public void Run()
       {
-         mrCore.GitLabClient client = new mrCore.GitLabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
-         client.CreateNewMergeRequestNote(
-            _callback.GetCurrentProjectName(), _callback.GetCurrentMergeRequestId(), _body); 
+         GitLab gl = new GitLab(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
+         gl.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.Get(_callback.GetCurrentMergeRequestId()).
+            Notes.CreateNew(new CreateNewNoteParameters
+            {
+               Body = _body
+            });
       }
 
       private readonly ICommandCallback _callback;

@@ -20,7 +20,7 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public DiffContext GetContext(Position position, ContextDepth depth)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
          {
@@ -28,13 +28,13 @@ namespace mrCore
          }
 
          GitDiffAnalyzer analyzer = new GitDiffAnalyzer(_gitRepository,
-            position.Refs.BaseSHA, position.Refs.HeadSHA, position.OldPath, position.NewPath);
+            position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath);
 
-         // If NewLine is valid, then it points to either added/modified or unchanged line, handle them the same way
-         bool isRightSideContext = position.NewLine != null;
-         int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
-         string filename = isRightSideContext ? position.NewPath : position.OldPath;
-         string sha = isRightSideContext ? position.Refs.HeadSHA : position.Refs.BaseSHA;
+         // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
+         bool isRightSideContext = position.RightLine != null;
+         int linenumber = isRightSideContext ? int.Parse(position.RightLine) : int.Parse(position.LeftLine);
+         string filename = isRightSideContext ? position.RightPath : position.LeftPath;
+         string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
          return createDiffContext(linenumber, filename, sha, isRightSideContext, analyzer, depth);
       }

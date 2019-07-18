@@ -37,22 +37,20 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Context\ContextMakerItf.cs" />
-    <Compile Include="Context\ContextMakingHelpers.cs" />
-    <Compile Include="DetailedSnapshotSerializer.cs" />
-    <Compile Include="DiffArgumentsParser.cs" />
-    <Compile Include="Context\CombinedContextMaker.cs" />
-    <Compile Include="Git\GitRenameDetector.cs" />
-    <Compile Include="RefsToLinesMatcher.cs" />
-    <Compile Include="Context\FullContextDiffProvider.cs" />
-    <Compile Include="Git\GitRepository.cs" />
-    <Compile Include="Git\GitDiffAnalyzer.cs" />
-    <Compile Include="GitLab\GitLabClient.cs" />
-    <Compile Include="GitLab\GitLabStructs.cs" />
-    <Compile Include="Context\EnhancedContextMaker.cs" />
-    <Compile Include="Context\SimpleContextMaker.cs" />
-    <Compile Include="GitLab\UrlParser.cs" />
+    <Compile Include="src\Context\ContextMakerItf.cs" />
+    <Compile Include="src\Context\ContextMakingHelpers.cs" />
+    <Compile Include="src\DetailedSnapshotSerializer.cs" />
+    <Compile Include="src\DiffArgumentsParser.cs" />
+    <Compile Include="src\Context\CombinedContextMaker.cs" />
+    <Compile Include="src\Git\GitRenameDetector.cs" />
+    <Compile Include="src\RefsToLinesMatcher.cs" />
+    <Compile Include="src\Context\FullContextDiffProvider.cs" />
+    <Compile Include="src\Git\GitRepository.cs" />
+    <Compile Include="src\Git\GitDiffAnalyzer.cs" />
+    <Compile Include="src\Context\EnhancedContextMaker.cs" />
+    <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Types.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -5,7 +5,7 @@ namespace mrCore
 {
    public struct InterprocessSnapshot
    {
-      public int Id;
+      public int MergeRequestId;
       public string Host;
       public string AccessToken;
       public string Project;
@@ -42,12 +42,11 @@ namespace mrCore
          snapshot.Host = json["Host"];
          snapshot.AccessToken = json["AccessToken"];
          snapshot.Project = json["Project"];
-         snapshot.Id = json["Id"];
+         snapshot.MergeRequestId = json["Id"];
          snapshot.TempFolder = json["TempFolder"];
          dynamic refs = json["Refs"];
-         snapshot.Refs.BaseSHA = refs["BaseSHA"];
-         snapshot.Refs.StartSHA = refs["StartSHA"];
-         snapshot.Refs.HeadSHA = refs["HeadSHA"];
+         snapshot.Refs.LeftSHA = refs["LeftSHA"];
+         snapshot.Refs.RightSHA = refs["RightSHA"];
          return snapshot;
       }
 
