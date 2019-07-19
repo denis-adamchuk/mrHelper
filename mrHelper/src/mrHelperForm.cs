@@ -736,11 +736,11 @@ namespace mrHelperUI
                         && textBoxLocalGitFolder.Text.Length > 0;
          if (configured)
          {
-            tabPageMR.Select();
+            tabControl.SelectedTab = tabPageMR;
          }
          else
          {
-            tabPageSettings.Select();
+            tabControl.SelectedTab = tabPageSettings;
          }
       }
 
