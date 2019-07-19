@@ -45,21 +45,21 @@ namespace mrCore
       {
          Debug.Assert(difftoolInfo.Left.HasValue || difftoolInfo.Right.HasValue);
 
-         string LeftPath = String.Empty;
-         string RightPath = String.Empty;
-         getPositionPaths(ref difftoolInfo, ref LeftPath, ref RightPath);
+         string leftPath = String.Empty;
+         string rightPath = String.Empty;
+         getPositionPaths(ref difftoolInfo, ref leftPath, ref rightPath);
 
-         string LeftLine = String.Empty;
-         string RightLine = String.Empty;
-         getPositionLines(state, ref difftoolInfo, ref LeftLine, ref RightLine);
+         string leftLine = String.Empty;
+         string rightLine = String.Empty;
+         getPositionLines(state, ref difftoolInfo, ref leftLine, ref rightLine);
 
          DiffPosition position = new DiffPosition
          {
             Refs = diffRefs,
-            LeftPath = LeftPath,
-            LeftLine = LeftLine,
-            RightPath = RightPath,
-            RightLine = RightLine
+            leftPath = leftPath,
+            leftLine = leftLine,
+            rightPath = rightPath,
+            rightLine = rightLine
          };
          return position;
       }
@@ -91,30 +91,30 @@ namespace mrCore
       }
 
       private void getPositionLines(MatchResult state, ref DiffToolInfo difftoolInfo,
-         ref string LeftLine, ref string RightLine)
+         ref string leftLine, ref string rightLine)
       {
          switch (state)
          {
             case MatchResult.RightLineOnly:
                Debug.Assert(difftoolInfo.Right.HasValue);
 
-               LeftLine = null;
-               RightLine = difftoolInfo.Right.Value.LineNumber.ToString();
+               leftLine = null;
+               rightLine = difftoolInfo.Right.Value.LineNumber.ToString();
                break;
 
             case MatchResult.LeftLineOnly:
                Debug.Assert(difftoolInfo.Left.HasValue);
 
-               LeftLine = difftoolInfo.Left.Value.LineNumber.ToString();
-               RightLine = null;
+               leftLine = difftoolInfo.Left.Value.LineNumber.ToString();
+               rightLine = null;
                break;
 
             case MatchResult.Both:
                Debug.Assert(difftoolInfo.Right.HasValue);
                Debug.Assert(difftoolInfo.Left.HasValue);
 
-               LeftLine = difftoolInfo.Left.Value.LineNumber.ToString();
-               RightLine = difftoolInfo.Right.Value.LineNumber.ToString();
+               leftLine = difftoolInfo.Left.Value.LineNumber.ToString();
+               rightLine = difftoolInfo.Right.Value.LineNumber.ToString();
                break;
 
             case MatchResult.Undefined:

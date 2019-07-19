@@ -690,8 +690,8 @@ namespace mrHelperUI
             return;
          }
 
-         string rightSHA = diffArgs[diffArgs.Length - 1];
          string leftSHA = diffArgs[diffArgs.Length - 2];
+         string rightSHA = diffArgs[diffArgs.Length - 1];
 
          MergeRequest mergeRequest = getMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
