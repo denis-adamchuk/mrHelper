@@ -401,7 +401,7 @@ namespace mrHelperUI
          checkForUpdates();
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.Id,
+         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.IId,
             mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text));
          form.Show(this);
       }
@@ -485,7 +485,7 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          GitLab gl = new GitLab(item.Host, item.AccessToken);
-         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).Load();
+         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Load();
       }
 
       private List<Version> getVersions()
@@ -498,7 +498,7 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          GitLab gl = new GitLab(item.Host, item.AccessToken);
-         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).Versions.LoadAll();
+         return gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Versions.LoadAll();
       }
 
       private void sendTrackedTimeSpan(TimeSpan span)
@@ -511,7 +511,7 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          GitLab gl = new GitLab(item.Host, item.AccessToken);
-         gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).AddSpentTime(
+         gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).AddSpentTime(
             new AddSpentTimeParameters { Span = span });
       }
 
@@ -545,7 +545,7 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          GitLab gl = new GitLab(item.Host, item.AccessToken);
-         var versions = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.Id).Versions.LoadAll();
+         var versions = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Versions.LoadAll();
          if (versions.Count == 0)
          {
             return;
@@ -715,7 +715,7 @@ namespace mrHelperUI
          snapshot.Refs.LeftSHA = leftSHA;                       // Base commit SHA in the source branch
          snapshot.Refs.RightSHA = rightSHA;                       // SHA referencing HEAD of this merge request
          snapshot.Host = item.Host;
-         snapshot.MergeRequestId = mergeRequest.Id;
+         snapshot.MergeRequestId = mergeRequest.IId;
          snapshot.Project = comboBoxProjects.Text;
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
          
@@ -773,7 +773,7 @@ namespace mrHelperUI
          {
             HostComboBoxItem hostItem = new HostComboBoxItem
             {
-               Host = item.Text,
+               Host = "https://" + item.Text,
                AccessToken = item.SubItems[1].Text
             };
             comboBoxHost.Items.Add(hostItem);
@@ -1107,7 +1107,7 @@ namespace mrHelperUI
       {
          if (comboBoxFilteredMergeRequests.SelectedItem != null)
          {
-            return ((MergeRequest)(comboBoxFilteredMergeRequests.SelectedItem)).Id;
+            return ((MergeRequest)(comboBoxFilteredMergeRequests.SelectedItem)).IId;
          }
          return 0;
       }

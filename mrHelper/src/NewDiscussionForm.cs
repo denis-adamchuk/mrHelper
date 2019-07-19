@@ -252,13 +252,30 @@ namespace mrHelperUI
          {
             foreach (DiscussionNote note in discussion.Notes)
             {
-               if (note.Position.Equals(parameters.Position.Value))
+               if (arePositionsEqual(note.Position, parameters.Position.Value))
                {
                   mergeRequest.Notes.Get(note.Id).Delete();
                }
             }
          }
       }
+
+      /// <summary>
+      /// Compares GitLabSharp.Position object which is received from GitLab
+      /// to GitLabSharp.PositionParameters whichi is sent to GitLab for equality
+      /// </summary>
+      /// <returns>true if objects point to the same position</returns>
+      private bool arePositionsEqual(Position pos, PositionParameters posParams)
+      {
+         return pos.Base_SHA == posParams.BaseSHA
+             && pos.Head_SHA == posParams.HeadSHA
+             && pos.Start_SHA == posParams.StartSHA
+             && pos.Old_Line == posParams.OldLine
+             && pos.Old_Path == posParams.OldPath
+             && pos.New_Line == posParams.NewLine
+             && pos.New_Path == posParams.NewPath;
+      }
+
 
       private readonly InterprocessSnapshot _interprocessSnapshot;
       private readonly DiffToolInfo _difftoolInfo;

@@ -42,7 +42,7 @@ namespace mrCore
          snapshot.Host = json["Host"];
          snapshot.AccessToken = json["AccessToken"];
          snapshot.Project = json["Project"];
-         snapshot.MergeRequestId = json["Id"];
+         snapshot.MergeRequestId = json["MergeRequestId"];
          snapshot.TempFolder = json["TempFolder"];
          dynamic refs = json["Refs"];
          snapshot.Refs.LeftSHA = refs["LeftSHA"];
