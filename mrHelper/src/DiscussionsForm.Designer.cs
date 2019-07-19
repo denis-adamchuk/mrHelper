@@ -48,9 +48,11 @@
          this.ClientSize = new System.Drawing.Size(263, 129);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+         this.KeyPreview = true;
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+         this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
          this.ResumeLayout(false);
 
       }

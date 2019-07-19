@@ -79,8 +79,7 @@ namespace mrHelperUI
          htmlToolTip.AutoPopDelay = 10000; // 10s
          htmlToolTip.BaseStylesheet = ".htmltooltip { padding: 1px; }";
 
-         createControls(loadDiscussions());
-         repositionAll();
+         onRefresh();
       }
 
       private void DiscussionNoteTextBox_LostFocus(object sender, EventArgs e)
@@ -133,6 +132,29 @@ namespace mrHelperUI
          {
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+      }
+
+      private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
+      {
+         try
+         {
+            if (e.KeyCode == Keys.F5)
+            {
+               onRefresh();
+            }
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private void onRefresh()
+      {
+         Controls.Clear();
+         createControls(loadDiscussions());
+         repositionAll();
+         Focus();
       }
 
       private void onDeleteNote(TextBox textBox)
