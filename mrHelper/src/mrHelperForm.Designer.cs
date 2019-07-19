@@ -53,6 +53,7 @@
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.buttonDiffTool = new System.Windows.Forms.Button();
          this.buttonDiscussions = new System.Windows.Forms.Button();
+         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,8 +61,9 @@
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
-         this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.labelDepth = new System.Windows.Forms.Label();
+         this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
@@ -84,7 +86,6 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
-         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -191,6 +192,7 @@
          this.textBoxLabels.Size = new System.Drawing.Size(232, 20);
          this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests that contain any of these labels");
+         this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_Leave);
          // 
          // checkBoxLabels
          // 
@@ -201,6 +203,7 @@
          this.checkBoxLabels.TabIndex = 3;
          this.checkBoxLabels.Text = "Labels";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
+         this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.CheckBoxLabels_CheckedChanged);
          // 
          // linkLabelConnectedTo
          // 
@@ -283,6 +286,23 @@
          this.buttonDiscussions.UseVisualStyleBackColor = true;
          this.buttonDiscussions.Click += new System.EventHandler(this.ButtonDiscussions_Click);
          // 
+         // comboBoxDCDepth
+         // 
+         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxDCDepth.FormattingEnabled = true;
+         this.comboBoxDCDepth.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4"});
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 82);
+         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
+         this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
+         this.comboBoxDCDepth.TabIndex = 7;
+         this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
+         this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -342,27 +362,39 @@
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
          // 
+         // groupBoxOther
+         // 
+         this.groupBoxOther.Controls.Add(this.labelDepth);
+         this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
+         this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
+         this.groupBoxOther.Controls.Add(this.checkBoxShowPublicOnly);
+         this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
+         this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
+         this.groupBoxOther.Name = "groupBoxOther";
+         this.groupBoxOther.Size = new System.Drawing.Size(513, 113);
+         this.groupBoxOther.TabIndex = 2;
+         this.groupBoxOther.TabStop = false;
+         this.groupBoxOther.Text = "Other";
+         // 
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(6, 68);
+         this.labelDepth.Location = new System.Drawing.Point(6, 85);
          this.labelDepth.Name = "labelDepth";
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
          this.labelDepth.Text = "Diff Context Depth";
          // 
-         // groupBoxOther
+         // checkBoxMinimizeOnClose
          // 
-         this.groupBoxOther.Controls.Add(this.labelDepth);
-         this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
-         this.groupBoxOther.Controls.Add(this.checkBoxShowPublicOnly);
-         this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
-         this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
-         this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(513, 99);
-         this.groupBoxOther.TabIndex = 2;
-         this.groupBoxOther.TabStop = false;
-         this.groupBoxOther.Text = "Other";
+         this.checkBoxMinimizeOnClose.AutoSize = true;
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 65);
+         this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
+         this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
+         this.checkBoxMinimizeOnClose.TabIndex = 7;
+         this.checkBoxMinimizeOnClose.Text = "Minimize on close";
+         this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
+         this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
          // 
          // checkBoxShowPublicOnly
          // 
@@ -384,6 +416,7 @@
          this.checkBoxRequireTimer.TabIndex = 5;
          this.checkBoxRequireTimer.Text = "Require started timer for creating new discussions";
          this.checkBoxRequireTimer.UseVisualStyleBackColor = true;
+         this.checkBoxRequireTimer.CheckedChanged += new System.EventHandler(this.CheckBoxRequireTimer_CheckedChanged);
          // 
          // groupBoxGit
          // 
@@ -600,22 +633,6 @@
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
-         // comboBoxDCDepth
-         // 
-         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxDCDepth.FormattingEnabled = true;
-         this.comboBoxDCDepth.Items.AddRange(new object[] {
-            "0",
-            "1",
-            "2",
-            "3",
-            "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 65);
-         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
-         this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
-         this.comboBoxDCDepth.TabIndex = 7;
-         this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
-         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -706,6 +723,7 @@
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Label labelDepth;
       private System.Windows.Forms.ComboBox comboBoxDCDepth;
+	  private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
    }
 }
 

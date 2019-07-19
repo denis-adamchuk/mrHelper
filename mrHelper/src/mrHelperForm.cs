@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using GitLabSharp;
 using mrCore;
@@ -110,12 +111,11 @@ namespace mrHelperUI
       {
          try
          {
-            if (!_exiting)
+            if (checkBoxMinimizeOnClose.Checked && !_exiting)
             {
                onHideToTray(e);
                return;
             }
-            saveConfiguration();
          }
          catch (Exception ex)
          {
@@ -202,6 +202,7 @@ namespace mrHelperUI
          {
             _gitRepository = null;
             updateProjectsDropdownList(getAllProjects());
+            _settings.LastSelectedHost = (sender as ComboBox).Text;
          }
          catch (Exception ex)
          {
@@ -215,6 +216,7 @@ namespace mrHelperUI
          {
             _gitRepository = null;
             updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+            _settings.LastSelectedProject = (sender as ComboBox).Text;
          }
          catch (Exception ex)
          {
@@ -310,6 +312,9 @@ namespace mrHelperUI
                   MessageBox.Show("Such host is already in the list", "Host will not be added",
                      MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
+               _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+               _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+                  .Select(i => i.SubItems[1].Text).ToList();
             }
          }
          catch (Exception ex)
@@ -335,11 +340,36 @@ namespace mrHelperUI
          try
          {
             updateProjectsDropdownList(getAllProjects());
+            _settings.ShowPublicOnly = (sender as CheckBox).Checked;
          }
          catch (Exception ex)
          {
             MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+      }
+
+      private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.RequireTimeTracking = (sender as CheckBox).Checked;
+      }
+
+      private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.MinimizeOnClose = (sender as CheckBox).Checked;
+      }
+
+      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      {
+         _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+      }
+
+      private void TextBoxLabels_Leave(object sender, EventArgs e)
+      {
+         _settings.LastUsedLabels = textBoxLabels.Text;
+      }
+      private void comboBoxDCDepth_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         _settings.DiffContextDepth = (sender as ComboBox).Text;
       }
 
       private void ButtonDiscussions_Click(object sender, EventArgs e)
@@ -599,7 +629,11 @@ namespace mrHelperUI
       {
          VersionComboBoxItem item = (VersionComboBoxItem)(e.ListItem);
          e.Value = item.Text;
-         if (item.TimeStamp.HasValue)
+         if(item.IsLatest)
+         {
+            e.Value = "Latest";
+         }
+         else if (item.TimeStamp.HasValue)
          {
             e.Value += " (" + item.TimeStamp.Value.ToLocalTime().ToString("g") + ")";
          }
@@ -613,8 +647,6 @@ namespace mrHelperUI
 
       private void loadConfiguration()
       {
-         _loadingConfiguration = true;
-
          Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
          // Remove all items except header
          for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
@@ -628,10 +660,10 @@ namespace mrHelperUI
             addKnownHost(host, accessToken);
          }
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
-         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking == "true";
-         checkBoxLabels.Checked = _settings.CheckedLabelsFilter == "true";
+         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking;
+         checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
-         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly == "true";
+         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
          if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
          {
             comboBoxDCDepth.Text = _settings.DiffContextDepth;
@@ -640,34 +672,11 @@ namespace mrHelperUI
          {
             comboBoxDCDepth.SelectedIndex = 0;
          }
-
-         _loadingConfiguration = false;
+         checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
       }
 
       private void saveConfiguration()
       {
-         if (_loadingConfiguration)
-         {
-            return;
-         }
-
-         List<string> hosts = new List<string>();
-         List<string> accessTokens = new List<string>();
-         foreach (ListViewItem hostListViewItem in listViewKnownHosts.Items)
-         {
-            hosts.Add(hostListViewItem.Text);
-            accessTokens.Add(hostListViewItem.SubItems[1].Text);
-         }
-         _settings.KnownHosts = hosts;
-         _settings.KnownAccessTokens = accessTokens;
-         _settings.LocalGitFolder = textBoxLocalGitFolder.Text;
-         _settings.RequireTimeTracking = checkBoxRequireTimer.Checked ? "true" : "false";
-         _settings.CheckedLabelsFilter = checkBoxLabels.Checked ? "true" : "false";
-         _settings.LastUsedLabels = textBoxLabels.Text;
-         _settings.LastSelectedHost = comboBoxHost.Text;
-         _settings.LastSelectedProject = comboBoxProjects.Text;
-         _settings.ShowPublicOnly = checkBoxShowPublicOnly.Checked ? "true" : "false";
-         _settings.DiffContextDepth = comboBoxDCDepth.Text;
          _settings.Update();
       }
 
@@ -717,6 +726,7 @@ namespace mrHelperUI
       {
          _settings = new UserDefinedSettings();
          loadConfiguration();
+         _settings.PropertyChanged += onSettingsPropertyChanged;
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
@@ -732,6 +742,11 @@ namespace mrHelperUI
          {
             tabPageSettings.Select();
          }
+      }
+
+      private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+      {
+         saveConfiguration();
       }
 
       private void onApplicationStarted()
@@ -897,10 +912,17 @@ namespace mrHelperUI
          comboBoxLeftVersion.Items.Clear();
          comboBoxRightVersion.Items.Clear();
 
-         foreach (var version in getVersions())
+         var versions = getVersions();
+         var latest = new VersionComboBoxItem(versions[0]);
+         latest.IsLatest = true;
+         comboBoxLeftVersion.Items.Add(latest);
+         for (int i=1; i < versions.Count; i++)
          {
-            VersionComboBoxItem item =
-               new VersionComboBoxItem(version.Head_Commit_SHA, version.Head_Commit_SHA.Substring(0, 10), version.Created_At);
+            VersionComboBoxItem item = new VersionComboBoxItem(versions[i]);
+            if (comboBoxLeftVersion.Items.Cast<VersionComboBoxItem>().Any(x => x.SHA == item.SHA))
+            {
+               continue;
+            }
             comboBoxLeftVersion.Items.Add(item);
             comboBoxRightVersion.Items.Add(item);
          }
@@ -1015,6 +1037,7 @@ namespace mrHelperUI
       private void onGitFolderSelected()
       {
          textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
+         _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -1092,7 +1115,6 @@ namespace mrHelperUI
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
-      private bool _loadingConfiguration = false;
       private bool _requireShowingTooltip = true;
       private UserDefinedSettings _settings;
       private GitRepository _gitRepository;
@@ -1113,13 +1135,26 @@ namespace mrHelperUI
       {
          public string SHA;
          public string Text;
+         public bool IsLatest;
          public DateTime? TimeStamp;
+
+         public override string ToString()
+         {
+            return Text;
+         }
 
          public VersionComboBoxItem(string sha, string text, DateTime? timeStamp)
          {
             SHA = sha;
             Text = text;
             TimeStamp = timeStamp;
+            IsLatest = false;
+         }
+
+         public VersionComboBoxItem(Version ver)
+            : this(ver.Head_Commit_SHA, ver.Head_Commit_SHA.Substring(0, 10), ver.Created_At)
+         {
+
          }
       }
    }

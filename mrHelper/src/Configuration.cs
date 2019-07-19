@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
+using System.ComponentModel;
 
 namespace mrHelperUI
 {
-   internal class UserDefinedSettings
+   class UserDefinedSettings : INotifyPropertyChanged
    {
       private static readonly string KnownHostsKeyName = "KnownHosts";
       private static readonly List<string> KnownHostsDefaultValue = new List<string>();
@@ -37,6 +37,11 @@ namespace mrHelperUI
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
 
+      private static string MinimizeOnCloseKeyName = "MinimizeOnClose";
+      private static string MinimizeOnCloseDefaultValue = "false";
+
+      public event PropertyChangedEventHandler PropertyChanged;
+
       public UserDefinedSettings()
       {
          _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -52,61 +57,111 @@ namespace mrHelperUI
       public List<string> KnownHosts
       {
          get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue); }
-         set { setValues(KnownHostsKeyName, value); }
+         set
+         {
+            setValues(KnownHostsKeyName, value);
+            OnPropertyChanged(KnownHostsKeyName);
+         }
       }
 
       public List<string> KnownAccessTokens
       {
          get { return getValues(KnownAccessTokensKeyName, KnownAccessTokensDefaultValue); }
-         set { setValues(KnownAccessTokensKeyName, value); }
+         set
+         {
+            setValues(KnownAccessTokensKeyName, value);
+            OnPropertyChanged(KnownAccessTokensKeyName);
+         }
       }
 
       public string LocalGitFolder
       {
          get { return getValue(LocalGitFolderKeyName, LocalGitFolderDefaultValue); }
-         set { setValue(LocalGitFolderKeyName, value); }
+         set
+         {
+            setValue(LocalGitFolderKeyName, value);
+            OnPropertyChanged(LocalGitFolderKeyName);
+         }
       }
 
-      public string RequireTimeTracking
+      public bool RequireTimeTracking
       {
-         get { return getValue(RequireTimeTrackingKeyName, RequireTimeTrackingDefaultValue); }
-         set { setValue(RequireTimeTrackingKeyName, value); }
+         get { return bool.Parse(getValue(RequireTimeTrackingKeyName, RequireTimeTrackingDefaultValue)); }
+         set
+         {
+            setValue(RequireTimeTrackingKeyName, value.ToString().ToLower());
+            OnPropertyChanged(RequireTimeTrackingKeyName);
+         }
       }
 
-      public string CheckedLabelsFilter
+      public bool CheckedLabelsFilter
       {
-         get { return getValue(CheckedLabelsFilterKeyName, CheckedLabelsFilterDefaultValue); }
-         set { setValue(CheckedLabelsFilterKeyName, value); }
+         get { return bool.Parse(getValue(CheckedLabelsFilterKeyName, CheckedLabelsFilterDefaultValue)); }
+         set
+         {
+            setValue(CheckedLabelsFilterKeyName, value.ToString().ToLower());
+            OnPropertyChanged(CheckedLabelsFilterKeyName);
+         }
       }
 
       public string LastUsedLabels
       {
          get { return getValue(LastUsedLabelsKeyName, LastUsedLabelsDefaultValue); }
-         set { setValue(LastUsedLabelsKeyName, value); }
+         set
+         {
+            setValue(LastUsedLabelsKeyName, value);
+            OnPropertyChanged(LastUsedLabelsKeyName);
+         }
       }
 
       public string LastSelectedProject
       {
          get { return getValue(LastSelectedProjectKeyName, LastSelectedProjectDefaultValue); }
-         set { setValue(LastSelectedProjectKeyName, value); }
+         set
+         {
+            setValue(LastSelectedProjectKeyName, value);
+            OnPropertyChanged(LastSelectedProjectKeyName);
+         }
       }
 
       public string LastSelectedHost
       {
          get { return getValue(LastSelectedHostKeyName, LastSelectedHostDefaultValue); }
-         set { setValue(LastSelectedHostKeyName, value); }
+         set
+         {
+            setValue(LastSelectedHostKeyName, value);
+            OnPropertyChanged(LastSelectedHostKeyName);
+         }
       }
 
-      public string ShowPublicOnly
+      public bool ShowPublicOnly
       {
-         get { return getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue); }
-         set { setValue(ShowPublicOnlyKeyName, value); }
+         get { return bool.Parse(getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue)); }
+         set
+         {
+            setValue(ShowPublicOnlyKeyName, value.ToString().ToLower());
+            OnPropertyChanged(ShowPublicOnlyKeyName);
+         }
+      }
+
+      public bool MinimizeOnClose
+      {
+         get { return bool.Parse(getValue(MinimizeOnCloseKeyName, MinimizeOnCloseDefaultValue)); }
+         set
+         {
+            setValue(MinimizeOnCloseKeyName, value.ToString().ToLower());
+            OnPropertyChanged(MinimizeOnCloseKeyName);
+         }
       }
 
       public string DiffContextDepth
       {
          get { return getValue(DiffContextDepthKeyName, DiffContextDepthDefaultValue); }
-         set { setValue(DiffContextDepthKeyName, value); }
+         set
+         {
+            setValue(DiffContextDepthKeyName, value);
+            OnPropertyChanged(DiffContextDepthKeyName);
+         }
       }
 
       private string getValue(string key, string defaultValue)
@@ -149,6 +204,11 @@ namespace mrHelperUI
 
          setValues(key, defaultValues);
          return defaultValues;
+      }
+
+      private void OnPropertyChanged(string name)
+      {
+         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
       }
 
       private void setValues(string key, List<string> values)

@@ -56,10 +56,10 @@ namespace mrCore
          DiffPosition position = new DiffPosition
          {
             Refs = diffRefs,
-            leftPath = leftPath,
-            leftLine = leftLine,
-            rightPath = rightPath,
-            rightLine = rightLine
+            LeftPath = leftPath,
+            LeftLine = leftLine,
+            RightPath = rightPath,
+            RightLine = rightLine
          };
          return position;
       }
