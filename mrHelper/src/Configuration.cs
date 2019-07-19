@@ -40,6 +40,9 @@ namespace mrHelperUI
       private static string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static string MinimizeOnCloseDefaultValue = "false";
 
+      private static string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
+      private static string ColorSchemeFileNameDefaultValue = "";
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       public UserDefinedSettings()
@@ -162,6 +165,11 @@ namespace mrHelperUI
             setValue(DiffContextDepthKeyName, value);
             OnPropertyChanged(DiffContextDepthKeyName);
          }
+      }
+
+      public string ColorSchemeFileName
+      {
+         get { return getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue); }
       }
 
       private string getValue(string key, string defaultValue)

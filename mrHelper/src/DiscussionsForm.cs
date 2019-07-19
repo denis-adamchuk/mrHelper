@@ -57,7 +57,7 @@ namespace mrHelperUI
       }
 
       public DiscussionsForm(string host, string accessToken, string projectId, int mergeRequestId,
-         User mrAuthor, GitRepository gitRepository, int diffContextDepth)
+         User mrAuthor, GitRepository gitRepository, int diffContextDepth, ColorScheme colorScheme)
       {
          _host = host;
          _accessToken = accessToken;
@@ -74,6 +74,7 @@ namespace mrHelperUI
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
          _formatter = new DiffContextFormatter();
+         _colorScheme = colorScheme;
 
          InitializeComponent();
          htmlToolTip.AutoPopDelay = 10000; // 10s
@@ -471,16 +472,18 @@ namespace mrHelperUI
          {
             if (note.Author.Id == _mrAuthor.Id)
             {
-               return note.Resolved ? Color.FromArgb(181, 180, 149) : Color.FromArgb(154, 157, 141);
+               return note.Resolved ? _colorScheme.GetColor("Discussions_Author_Notes_Resolved")
+                                    : _colorScheme.GetColor("Discussions_Author_Notes_Unresolved");
             }
             else
             {
-               return note.Resolved ? Color.FromArgb(237, 217, 184) : Color.FromArgb(214, 192, 155);
+               return note.Resolved ? _colorScheme.GetColor("Discussions_NonAuthor_Notes_Resolved")
+                                    : _colorScheme.GetColor("Discussions_NonAuthor_Notes_Unresolved");
             }
          }
          else
          {
-            return Color.FromArgb(236, 124, 127);
+            return _colorScheme.GetColor("Discussions_Comments");
          }
       }
 
@@ -593,6 +596,7 @@ namespace mrHelperUI
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
       private readonly DiffContextFormatter _formatter;
+      private ColorScheme _colorScheme;
    }
 }
 

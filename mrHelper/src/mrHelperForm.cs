@@ -402,7 +402,7 @@ namespace mrHelperUI
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.IId,
-            mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text));
+            mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text), _colorScheme);
          form.Show(this);
       }
 
@@ -727,6 +727,8 @@ namespace mrHelperUI
          _settings = new UserDefinedSettings();
          loadConfiguration();
          _settings.PropertyChanged += onSettingsPropertyChanged;
+
+         _colorScheme = new ColorScheme(_settings.ColorSchemeFileName);
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
@@ -1124,6 +1126,8 @@ namespace mrHelperUI
 
       // Last launched instance of a diff tool
       private Process _difftool;
+
+      private ColorScheme _colorScheme;
 
       private struct HostComboBoxItem
       {
