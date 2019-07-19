@@ -178,12 +178,13 @@ namespace mrHelperUI
          note.Note.Body = textBox.Text;
 
          GitLab gl = new GitLab(_host, _accessToken);
-         gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).Notes.Get(note.Note.Id).Modify(
-            new ModifyNoteParameters
-            {
-               Type = ModifyNoteParameters.ModificationType.Body,
-               Body = note.Note.Body
-            });
+         gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).
+            Discussions.Get(note.DiscussionId).ModifyNote(note.Note.Id,
+               new ModifyDiscussionNoteParameters
+               {
+                  Type = ModifyDiscussionNoteParameters.ModificationType.Body,
+                  Body = note.Note.Body
+               });
 
          toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
 
@@ -214,12 +215,13 @@ namespace mrHelperUI
          note.Note.Resolved = !note.Note.Resolved;
 
          GitLab gl = new GitLab(_host, _accessToken);
-         gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).Notes.Get(note.Note.Id).Modify(
-            new ModifyNoteParameters
-            {
-               Type = ModifyNoteParameters.ModificationType.Resolved,
-               Resolved = note.Note.Resolved
-            });
+         gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).
+            Discussions.Get(note.DiscussionId).ModifyNote(note.Note.Id,
+               new ModifyDiscussionNoteParameters
+               {
+                  Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
+                  Resolved = note.Note.Resolved
+               });
 
          // Create a new text box
          TextBox newTextBox = createTextBox(note.DiscussionId, note.Note);
