@@ -23,6 +23,13 @@ namespace mrHelperUI
 
       private class DiscussionBox : Panel
       {
+         // Widths in %
+         public int HorzMarginWidth = 1;
+         public int LabelAuthorWidth = 5;
+         public int ContextWidth = 55;
+         public int NotesWidth = 30;
+         public int LabelFilenameWidth = 30;
+
          public Control LabelAuthor;
          public Control LabelFilename;
          public Control Context;
@@ -148,6 +155,11 @@ namespace mrHelperUI
          {
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+      }
+
+      private void DiscussionsForm_Resize(object sender, EventArgs e)
+      {
+         repositionAll();
       }
 
       private void onRefresh()
@@ -315,24 +327,47 @@ namespace mrHelperUI
                X = groupBoxMarginLeft,
                Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop
             };
+
+            resizeBoxContent(control as DiscussionBox);
             repositionBoxContent(control as DiscussionBox);
+
             control.Location = location;
             previousBoxLocation = control.Location;
             previousBoxSize = control.Size;
          }
       }
 
+      private void resizeBoxContent(DiscussionBox box)
+      {
+         foreach (var textbox in box.Notes)
+         {
+            textbox.Width = this.Width * box.NotesWidth / 100;
+            textbox.Height = getTextBoxPreferredHeight(textbox as TextBox);
+         }
+
+         if (box.Context != null)
+         {
+            box.Context.Width = this.Width * box.ContextWidth / 100;
+         }
+         box.LabelAuthor.Width = this.Width * box.LabelAuthorWidth / 100;
+         if (box.LabelFilename != null)
+         {
+            box.LabelFilename.Width = this.Width * box.LabelFilenameWidth / 100;
+         }
+      }
+
       private void repositionBoxContent(DiscussionBox box)
       {
          int interControlVertMargin = 5;
-         int interControlHorzMargin = 10;
+         int interControlHorzMargin = this.Width * box.HorzMarginWidth / 100;
 
          // the LabelAuthor is placed at the left side
          Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
          box.LabelAuthor.Location = labelPos;
 
          // the Context is an optional control to the right of the Label
-         Point ctxPos = new Point(140 /* hard-coded to have a better alignment */, interControlVertMargin);
+         Point ctxPos = new Point(box.LabelAuthor.Location.X + box.LabelAuthor.Width + interControlHorzMargin,
+            interControlVertMargin);
          if (box.Context != null)
          {
             box.Context.Location = ctxPos;
@@ -409,13 +444,11 @@ namespace mrHelperUI
 
       private TextBox createTextBox(string discussionId, DiscussionNote note)
       {
-         Size singleTextBoxSize = new Size(500, 0 /* height is adjusted to line count */);
          bool canBeModified = note.Author.Id == _currentUser.Id;
 
          TextBox textBox = new TextBox();
          toolTip.SetToolTip(textBox, getNoteTooltipText(note));
          textBox.ReadOnly = !canBeModified;
-         textBox.Size = singleTextBoxSize;
          textBox.Text = note.Body;
          textBox.Multiline = true;
          textBox.Height = getTextBoxPreferredHeight(textBox);
@@ -504,8 +537,8 @@ namespace mrHelperUI
 
          HtmlPanel htmlPanel = new HtmlPanel
          {
-            Size = new Size(1000 /* big enough for long lines */, panelHeight),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Height = panelHeight
          };
 
          DiffPosition position = convertToDiffPosition(firstNote.Position);
@@ -533,18 +566,17 @@ namespace mrHelperUI
       }
 
       // Create a label that shows discussion author
-      private static Label createLabelAuthor(DiscussionNote firstNote)
+      private Label createLabelAuthor(DiscussionNote firstNote)
       {
          Label labelAuthor = new Label
          {
-            Text = firstNote.Author.Name,
-            AutoSize = true
+            Text = firstNote.Author.Name
          };
          return labelAuthor;
       }
 
       // Create a label that shows filename
-      private static Label createLabelFilename(DiscussionNote firstNote)
+      private Label createLabelFilename(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
          {

@@ -45,14 +45,14 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
-         this.ClientSize = new System.Drawing.Size(263, 129);
-         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+         this.ClientSize = new System.Drawing.Size(1353, 456);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.KeyPreview = true;
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
          this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
+         this.Resize += new System.EventHandler(this.DiscussionsForm_Resize);
          this.ResumeLayout(false);
 
       }
