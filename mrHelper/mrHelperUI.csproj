@@ -49,44 +49,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddKnownHostForm.cs">
+    <Compile Include="src\AddKnownHostForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AddKnownHostForm.Designer.cs">
+    <Compile Include="src\AddKnownHostForm.Designer.cs">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Configuration.cs" />
-    <Compile Include="DiffContextFormatter.cs" />
-    <Compile Include="DiscussionsForm.cs">
+    <Compile Include="src\Configuration.cs" />
+    <Compile Include="src\DiffContextFormatter.cs" />
+    <Compile Include="src\DiscussionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DiscussionsForm.Designer.cs">
+    <Compile Include="src\DiscussionsForm.Designer.cs">
       <DependentUpon>DiscussionsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="mrHelperForm.cs">
+    <Compile Include="src\mrHelperForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="mrHelperForm.Designer.cs">
+    <Compile Include="src\mrHelperForm.Designer.cs">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="NewDiscussionForm.cs">
+    <Compile Include="src\NewDiscussionForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="NewDiscussionForm.Designer.cs">
+    <Compile Include="src\NewDiscussionForm.Designer.cs">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="src\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="AddKnownHostForm.resx">
+    <EmbeddedResource Include="src\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DiscussionsForm.resx">
+    <EmbeddedResource Include="src\DiscussionsForm.resx">
       <DependentUpon>DiscussionsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="mrHelperForm.resx">
+    <EmbeddedResource Include="src\mrHelperForm.resx">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="NewDiscussionForm.resx">
+    <EmbeddedResource Include="src\NewDiscussionForm.resx">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -120,6 +120,10 @@
     <None Include="Resources\gitlab.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GitLabSharp\GitLabSharp.csproj">
+      <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
+      <Name>GitLabSharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\mrCore\mrCore.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrCore</Name>

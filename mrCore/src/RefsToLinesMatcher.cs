@@ -7,7 +7,7 @@ using System.Linq;
 namespace mrCore
 {
    // This 'matcher' matches SHA of two commits to the line/side information obtained from diff tool.
-   // Result of match is 'Position' structure object which can be passed to Gitlab.
+   // Result of match is 'DiffPosition' structure object.
    //
    // Cost: one 'git diff -U0' for each Match() call and two 'git show' calls for each Match() call.
    public class RefsToLinesMatcher
@@ -15,8 +15,8 @@ namespace mrCore
       // What lines need to be included into Merge Request Discussion Position
       private enum MatchResult
       {
-         OldLineOnly,
-         NewLineOnly,
+         LeftLineOnly,
+         RightLineOnly,
          Both,
          Undefined
       }
@@ -28,61 +28,61 @@ namespace mrCore
 
       // Returns Position if match succeeded and null if match failed, what most likely means that
       // diff tool info is invalid
-      public Position? Match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      public DiffPosition? Match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
          if (!difftoolInfo.IsValid())
          {
             Debug.Assert(false);
-            return new Nullable<Position>();
+            return new Nullable<DiffPosition>();
          }
 
          MatchResult matchResult = match(diffRefs, difftoolInfo);
          return matchResult != MatchResult.Undefined
-            ? createPosition(matchResult, diffRefs, difftoolInfo) : new Nullable<Position>();
+            ? createPosition(matchResult, diffRefs, difftoolInfo) : new Nullable<DiffPosition>();
       }
 
-      private Position createPosition(MatchResult state, DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      private DiffPosition createPosition(MatchResult state, DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
          Debug.Assert(difftoolInfo.Left.HasValue || difftoolInfo.Right.HasValue);
 
-         string oldPath = String.Empty;
-         string newPath = String.Empty;
-         getPositionPaths(ref difftoolInfo, ref oldPath, ref newPath);
+         string leftPath = String.Empty;
+         string rightPath = String.Empty;
+         getPositionPaths(ref difftoolInfo, ref leftPath, ref rightPath);
 
-         string oldLine = String.Empty;
-         string newLine = String.Empty;
-         getPositionLines(state, ref difftoolInfo, ref oldLine, ref newLine);
+         string leftLine = String.Empty;
+         string rightLine = String.Empty;
+         getPositionLines(state, ref difftoolInfo, ref leftLine, ref rightLine);
 
-         Position position = new Position
+         DiffPosition position = new DiffPosition
          {
             Refs = diffRefs,
-            OldPath = oldPath,
-            OldLine = oldLine,
-            NewPath = newPath,
-            NewLine = newLine
+            LeftPath = leftPath,
+            LeftLine = leftLine,
+            RightPath = rightPath,
+            RightLine = rightLine
          };
          return position;
       }
 
-      private void getPositionPaths(ref DiffToolInfo difftoolInfo, ref string oldPath, ref string newPath)
+      private void getPositionPaths(ref DiffToolInfo difftoolInfo, ref string LeftPath, ref string RightPath)
       {
          if (difftoolInfo.Left.HasValue && !difftoolInfo.Right.HasValue)
          {
-            // When a file is removed, diff tool does not provide a right-side file name, but GitLab needs both
-            oldPath = difftoolInfo.Left.Value.FileName;
-            newPath = oldPath;
+            // When a file is removed, diff tool does not provide a right-side file name
+            LeftPath = difftoolInfo.Left.Value.FileName;
+            RightPath = LeftPath;
          }
          else if (!difftoolInfo.Left.HasValue && difftoolInfo.Right.HasValue)
          {
-            // When a file is added, diff tool does not provide a left-side file name, but GitLab needs both
-            oldPath = difftoolInfo.Right.Value.FileName;
-            newPath = oldPath;
+            // When a file is added, diff tool does not provide a left-side file name
+            LeftPath = difftoolInfo.Right.Value.FileName;
+            RightPath = LeftPath;
          }
          else if (difftoolInfo.Left.HasValue && difftoolInfo.Right.HasValue)
          {
-            // Filenames may be different and may be the same, it does not matter here, provide them both to GitLab
-            oldPath = difftoolInfo.Left.Value.FileName;
-            newPath = difftoolInfo.Right.Value.FileName;
+            // Filenames may be different and may be the same, it does not matter here
+            LeftPath = difftoolInfo.Left.Value.FileName;
+            RightPath = difftoolInfo.Right.Value.FileName;
          }
          else
          {
@@ -91,30 +91,30 @@ namespace mrCore
       }
 
       private void getPositionLines(MatchResult state, ref DiffToolInfo difftoolInfo,
-         ref string oldLine, ref string newLine)
+         ref string leftLine, ref string rightLine)
       {
          switch (state)
          {
-            case MatchResult.NewLineOnly:
+            case MatchResult.RightLineOnly:
                Debug.Assert(difftoolInfo.Right.HasValue);
 
-               oldLine = null;
-               newLine = difftoolInfo.Right.Value.LineNumber.ToString();
+               leftLine = null;
+               rightLine = difftoolInfo.Right.Value.LineNumber.ToString();
                break;
 
-            case MatchResult.OldLineOnly:
+            case MatchResult.LeftLineOnly:
                Debug.Assert(difftoolInfo.Left.HasValue);
 
-               oldLine = difftoolInfo.Left.Value.LineNumber.ToString();
-               newLine = null;
+               leftLine = difftoolInfo.Left.Value.LineNumber.ToString();
+               rightLine = null;
                break;
 
             case MatchResult.Both:
                Debug.Assert(difftoolInfo.Right.HasValue);
                Debug.Assert(difftoolInfo.Left.HasValue);
 
-               oldLine = difftoolInfo.Left.Value.LineNumber.ToString();
-               newLine = difftoolInfo.Right.Value.LineNumber.ToString();
+               leftLine = difftoolInfo.Left.Value.LineNumber.ToString();
+               rightLine = difftoolInfo.Right.Value.LineNumber.ToString();
                break;
 
             case MatchResult.Undefined:
@@ -127,7 +127,7 @@ namespace mrCore
       {
          // Obtain git diff -U0 sections
          GitDiffAnalyzer gitDiffAnalyzer = new GitDiffAnalyzer(_gitRepository,
-            diffRefs.BaseSHA, diffRefs.HeadSHA,
+            diffRefs.LeftSHA, diffRefs.RightSHA,
             difftoolInfo.Left?.FileName ?? null, difftoolInfo.Right?.FileName ?? null);
 
          MatchResult result = MatchResult.Undefined;
@@ -159,18 +159,18 @@ namespace mrCore
          // If we are at the right side, check if a selected line was added/modified
          if (gitDiffAnalyzer.IsLineAddedOrModified(difftoolInfo.Right.Value.LineNumber))
          {
-            result = MatchResult.NewLineOnly;
+            result = MatchResult.RightLineOnly;
          }
          // Bad line number, a line belongs to the right side but it is not added
          else if (!difftoolInfo.Left.HasValue)
          {
             result = MatchResult.Undefined;
          }
-         // If selected line is not added/modified, we need to send a deleted line to Gitlab
-         // Make sure that a line selected at the left side was deleted
+         // If selected line is not added/modified, check a left-side line number
+         // Make sure that it was deleted
          else if (gitDiffAnalyzer.IsLineDeleted(difftoolInfo.Left.Value.LineNumber))
          {
-            result = MatchResult.OldLineOnly;
+            result = MatchResult.LeftLineOnly;
          }
 
          return result != MatchResult.Undefined;
@@ -185,7 +185,7 @@ namespace mrCore
          // If we are the left side, let's check first if the selected line was deleted
          if (gitDiffAnalyzer.IsLineDeleted(difftoolInfo.Left.Value.LineNumber))
          {
-            result = MatchResult.OldLineOnly;
+            result = MatchResult.LeftLineOnly;
          }
          // Bad line number, a line belongs to the left side but it is not removed
          else if (!difftoolInfo.Right.HasValue)
@@ -196,7 +196,7 @@ namespace mrCore
          // Make sure that it was added/modified
          else if (gitDiffAnalyzer.IsLineAddedOrModified(difftoolInfo.Right.Value.LineNumber))
          {
-            result = MatchResult.NewLineOnly;
+            result = MatchResult.RightLineOnly;
          }
 
          return result != MatchResult.Undefined;
@@ -206,8 +206,8 @@ namespace mrCore
       {
          Debug.Assert(info.Left.HasValue && info.Right.HasValue);
 
-         List<string> left = _gitRepository.ShowFileByRevision(info.Left.Value.FileName, diffRefs.BaseSHA);
-         List<string> right = _gitRepository.ShowFileByRevision(info.Right.Value.FileName, diffRefs.HeadSHA);
+         List<string> left = _gitRepository.ShowFileByRevision(info.Left.Value.FileName, diffRefs.LeftSHA);
+         List<string> right = _gitRepository.ShowFileByRevision(info.Right.Value.FileName, diffRefs.RightSHA);
          if (info.Left.Value.LineNumber > left.Count && info.Right.Value.LineNumber> right.Count)
          {
             Debug.Assert(false);

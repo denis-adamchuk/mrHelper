@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using mrCore;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using GitLabSharp;
 
 namespace mrHelperUI
 {
@@ -118,8 +119,8 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         if (!note.Resolvable || !note.Resolved.HasValue)
+         DiscussionNoteWithParentId note = (DiscussionNoteWithParentId)(textBox.Tag);
+         if (!note.Note.Resolvable)
          {
             return;
          }
@@ -136,16 +137,17 @@ namespace mrHelperUI
 
       private void onDeleteNote(TextBox textBox)
       {
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         DiscussionNoteWithParentId note = (DiscussionNoteWithParentId)(textBox.Tag);
 
-         GitLabClient client = new GitLabClient(_host, _accessToken);
-         client.DeleteDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id);
+         GitLab gl = new GitLab(_host, _accessToken);
+         var mergeRequest = gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId);
+         mergeRequest.Notes.Get(note.Note.Id).Delete();
 
          // When a text box is deleted, we recreate a whole discussion box
          DiscussionBox newDiscussionBox = null;
          try
          {
-            Discussion discussion = client.GetSingleDiscussion(_projectId, _mergeRequestId, note.DiscussionId);
+            Discussion discussion = mergeRequest.Discussions.Get(note.DiscussionId).Load();
             if (!discussion.Notes[0].System)
             {
                newDiscussionBox = createDiscussionBox(discussion);
@@ -167,21 +169,26 @@ namespace mrHelperUI
 
       private void onEditNote(TextBox textBox)
       {
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         if (textBox.Text == note.Body)
+         DiscussionNoteWithParentId note = (DiscussionNoteWithParentId)(textBox.Tag);
+         if (textBox.Text == note.Note.Body)
          {
             return;
          }
 
-         note.Body = textBox.Text;
+         note.Note.Body = textBox.Text;
 
-         GitLabClient client = new GitLabClient(_host, _accessToken);
-         client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, note.Body, null);
+         GitLab gl = new GitLab(_host, _accessToken);
+         gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).Notes.Get(note.Note.Id).Modify(
+            new ModifyNoteParameters
+            {
+               Type = ModifyNoteParameters.ModificationType.Body,
+               Body = note.Note.Body
+            });
 
          toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
 
          // Create a new text box
-         TextBox newTextBox = createTextBox(note);
+         TextBox newTextBox = createTextBox(note.DiscussionId, note.Note);
 
          // By default place a new textbox at the same place as the old one. It may be changed if height changed.
          // It is better to change Location right now to avoid flickering during repositionAll(). 
@@ -203,14 +210,19 @@ namespace mrHelperUI
 
       private void onToggleResolveNote(TextBox textBox)
       {
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         note.Resolved = !note.Resolved.Value;
+         DiscussionNoteWithParentId note = (DiscussionNoteWithParentId)(textBox.Tag);
+         note.Note.Resolved = !note.Note.Resolved;
 
-         GitLabClient client = new GitLabClient(_host, _accessToken);
-         client.ModifyDiscussionNote(_projectId, _mergeRequestId, note.DiscussionId, note.Id, null, note.Resolved.Value);
+         GitLab gl = new GitLab(_host, _accessToken);
+         gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).Notes.Get(note.Note.Id).Modify(
+            new ModifyNoteParameters
+            {
+               Type = ModifyNoteParameters.ModificationType.Resolved,
+               Resolved = note.Note.Resolved
+            });
 
          // Create a new text box
-         TextBox newTextBox = createTextBox(note);
+         TextBox newTextBox = createTextBox(note.DiscussionId, note.Note);
 
          // New textbox is placed at the same place as the old one
          newTextBox.Location = textBox.Location;
@@ -239,14 +251,14 @@ namespace mrHelperUI
 
       private List<Discussion> loadDiscussions()
       {
-         GitLabClient client = new GitLabClient(_host, _accessToken);
-         return client.GetMergeRequestDiscussions(_projectId, _mergeRequestId);
+         GitLab gl = new GitLab(_host, _accessToken);
+         return gl.Projects.Get(_projectId).MergeRequests.Get(_mergeRequestId).Discussions.LoadAll();
       }
 
       private User getUser()
       {
-         GitLabClient client = new GitLabClient(_host, _accessToken);
-         return client.GetCurrentUser();
+         GitLab gl = new GitLab(_host, _accessToken);
+         return gl.CurrentUser.Load();
       }
 
       private void createControls(List<Discussion> discussions)
@@ -341,7 +353,7 @@ namespace mrHelperUI
             LabelAuthor = createLabelAuthor(firstNote),
             LabelFilename = createLabelFilename(firstNote),
             Context = createDiffContext(firstNote),
-            Notes = createTextBoxes(discussion.Notes)
+            Notes = createTextBoxes(discussion.Id, discussion.Notes)
          };
          controls.Controls.Add(controls.LabelAuthor);
          controls.Controls.Add(controls.LabelFilename);
@@ -353,7 +365,7 @@ namespace mrHelperUI
          return controls;
       }
 
-      private List<Control> createTextBoxes(List<DiscussionNote> notes)
+      private List<Control> createTextBoxes(string discussionId, List<DiscussionNote> notes)
       {
          List<Control> boxes = new List<Control>();
          foreach (var note in notes)
@@ -364,13 +376,13 @@ namespace mrHelperUI
                continue;
             }
 
-            TextBox textBox = createTextBox(note);
+            TextBox textBox = createTextBox(discussionId, note);
             boxes.Add(textBox);
          }
          return boxes;
       }
 
-      private TextBox createTextBox(DiscussionNote note)
+      private TextBox createTextBox(string discussionId, DiscussionNote note)
       {
          Size singleTextBoxSize = new Size(500, 0 /* height is adjusted to line count */);
          bool canBeModified = note.Author.Id == _currentUser.Id;
@@ -384,7 +396,11 @@ namespace mrHelperUI
          textBox.Height = getTextBoxPreferredHeight(textBox);
          textBox.BackColor = getNoteColor(note);
          textBox.LostFocus += DiscussionNoteTextBox_LostFocus;
-         textBox.Tag = note;
+         textBox.Tag = new DiscussionNoteWithParentId
+         {
+            Note = note,
+            DiscussionId = discussionId
+         };
 
          textBox.ContextMenu = new ContextMenu();
 
@@ -392,7 +408,7 @@ namespace mrHelperUI
          {
             Tag = textBox,
             Text =
-            note.Resolvable && note.Resolved.HasValue && note.Resolved.Value ? "Unresolve" : "Resolve"
+            note.Resolvable && note.Resolved ? "Unresolve" : "Resolve"
          };
          menuItemToggleResolve.Click += MenuItemToggleResolve_Click;
          textBox.ContextMenu.MenuItems.Add(menuItemToggleResolve);
@@ -419,9 +435,9 @@ namespace mrHelperUI
          string result = string.Empty;
          if (note.Resolvable)
          {
-            result += note.Resolved.Value ? "Resolved." : "Not resolved.";
+            result += note.Resolved ? "Resolved." : "Not resolved.";
          }
-         result += " Created by " + note.Author.Name + " at " + note.CreatedAt.ToLocalTime().ToString("g");
+         result += " Created by " + note.Author.Name + " at " + note.Created_At.ToLocalTime().ToString("g");
          return result;
       }
 
@@ -429,15 +445,13 @@ namespace mrHelperUI
       {
          if (note.Resolvable)
          {
-            Debug.Assert(note.Resolved.HasValue);
-
             if (note.Author.Id == _mrAuthor.Id)
             {
-               return note.Resolved.Value ? Color.FromArgb(181, 180, 149) : Color.FromArgb(154, 157, 141);
+               return note.Resolved ? Color.FromArgb(181, 180, 149) : Color.FromArgb(154, 157, 141);
             }
             else
             {
-               return note.Resolved.Value ? Color.FromArgb(237, 217, 184) : Color.FromArgb(214, 192, 155);
+               return note.Resolved ? Color.FromArgb(237, 217, 184) : Color.FromArgb(214, 192, 155);
             }
          }
          else
@@ -448,12 +462,10 @@ namespace mrHelperUI
 
       private HtmlPanel createDiffContext(DiscussionNote firstNote)
       {
-         if (firstNote.Type != DiscussionNoteType.DiffNote)
+         if (firstNote.Type != "DiffNote")
          {
             return null;
          }
-
-         Debug.Assert(firstNote.Position.HasValue);
 
          int fontSizePx = 12;
          int rowsVPaddingPx = 2;
@@ -469,9 +481,11 @@ namespace mrHelperUI
             BorderStyle = BorderStyle.FixedSingle
          };
 
+         DiffPosition position = convertToDiffPosition(firstNote.Position);
+
          if (_panelContextMaker != null && _formatter != null)
          {
-            DiffContext briefContext = _panelContextMaker.GetContext(firstNote.Position.Value, _diffContextDepth);
+            DiffContext briefContext = _panelContextMaker.GetContext(position, _diffContextDepth);
             string briefContextText = _formatter.FormatAsHTML(briefContext, fontSizePx, rowsVPaddingPx);
             htmlPanel.Text = briefContextText;
          }
@@ -482,7 +496,7 @@ namespace mrHelperUI
 
          if (_tooltipContextMaker != null && _formatter != null)
          {
-            DiffContext fullContext = _tooltipContextMaker.GetContext(firstNote.Position.Value, _tooltipContextDepth);
+            DiffContext fullContext = _tooltipContextMaker.GetContext(position, _tooltipContextDepth);
             string fullContextText = _formatter.FormatAsHTML(fullContext, fontSizePx, rowsVPaddingPx);
             htmlToolTip.MaximumSize = new Size(htmlPanel.Width, 0 /* auto-height */);
             htmlToolTip.SetToolTip(htmlPanel, fullContextText);
@@ -505,13 +519,13 @@ namespace mrHelperUI
       // Create a label that shows filename
       private static Label createLabelFilename(DiscussionNote firstNote)
       {
-         if (firstNote.Type != DiscussionNoteType.DiffNote)
+         if (firstNote.Type != "DiffNote")
          {
             return null;
          }
 
-         string oldPath = firstNote.Position?.OldPath ?? String.Empty;
-         string newPath = firstNote.Position?.NewPath ?? String.Empty;
+         string oldPath = firstNote.Position.Old_Path ?? String.Empty;
+         string newPath = firstNote.Position.New_Path ?? String.Empty;
          string result = oldPath == newPath ? oldPath : (newPath + "\n(was " + oldPath + ")");
 
          Label labelFilename = new Label
@@ -520,6 +534,28 @@ namespace mrHelperUI
             AutoSize = true
          };
          return labelFilename;
+      }
+
+      private struct DiscussionNoteWithParentId
+      {
+         public DiscussionNote Note;
+         public string DiscussionId;
+      }
+
+      private DiffPosition convertToDiffPosition(Position position)
+      {
+         return new DiffPosition
+         {
+            LeftLine = position.Old_Line,
+            LeftPath = position.Old_Path,
+            RightLine = position.New_Line,
+            RightPath = position.New_Path,
+            Refs = new mrCore.DiffRefs
+            {
+               LeftSHA = position.Base_SHA,
+               RightSHA = position.Head_SHA
+            }
+         };
       }
 
       private readonly string _host;

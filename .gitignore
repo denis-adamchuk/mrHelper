@@ -3,3 +3,4 @@
 /*/obj
 *.csproj.user
 /build.bat
+/packages/*

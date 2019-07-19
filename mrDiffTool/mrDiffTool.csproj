@@ -36,9 +36,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BC3Tool.cs" />
-    <Compile Include="DiffToolIntegration.cs" />
-    <Compile Include="IntegratedDiffToolItf.cs" />
+    <Compile Include="src\BC3Tool.cs" />
+    <Compile Include="src\DiffToolIntegration.cs" />
+    <Compile Include="src\IntegratedDiffToolItf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

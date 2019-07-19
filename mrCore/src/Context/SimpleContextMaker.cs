@@ -18,17 +18,17 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      public DiffContext GetContext(Position position, ContextDepth depth)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
          {
             return new DiffContext();
          }
 
-         bool isRightSideContext = position.NewLine != null;
-         int linenumber = isRightSideContext ? int.Parse(position.NewLine) : int.Parse(position.OldLine);
-         string filename = isRightSideContext ? position.NewPath : position.OldPath;
-         string sha = isRightSideContext ? position.Refs.HeadSHA : position.Refs.BaseSHA;
+         bool isRightSideContext = position.RightLine != null;
+         int linenumber = isRightSideContext ? int.Parse(position.RightLine) : int.Parse(position.LeftLine);
+         string filename = isRightSideContext ? position.RightPath : position.LeftPath;
+         string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
          return createDiffContext(linenumber, filename, sha, isRightSideContext, depth);
       }

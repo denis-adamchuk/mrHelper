@@ -1,4 +1,5 @@
-﻿using mrCore;
+﻿using GitLabSharp;
+using mrCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,7 +92,7 @@ namespace mrHelperUI
          {
             Debug.Assert(_difftoolInfo.Right.HasValue);
             anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.BaseSHA, _interprocessSnapshot.Refs.HeadSHA, _difftoolInfo.Right?.FileName, false);
+               _interprocessSnapshot.Refs.LeftSHA, _interprocessSnapshot.Refs.RightSHA, _difftoolInfo.Right?.FileName, false);
             if (anotherName == _difftoolInfo.Right?.FileName)
             {
                // it is not a renamed but removed file
@@ -102,7 +103,7 @@ namespace mrHelperUI
          {
             Debug.Assert(_difftoolInfo.Left.HasValue);
             anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.BaseSHA, _interprocessSnapshot.Refs.HeadSHA, _difftoolInfo.Left?.FileName, true);
+               _interprocessSnapshot.Refs.LeftSHA, _interprocessSnapshot.Refs.RightSHA, _difftoolInfo.Left?.FileName, true);
             if (anotherName == _difftoolInfo.Left?.FileName)
             {
                // it is not a renamed but added file
@@ -128,14 +129,14 @@ namespace mrHelperUI
             return false;
          }
 
-         DiscussionParameters parameters = prepareDiscussionParameters();
+         NewDiscussionParameters parameters = prepareDiscussionParameters();
          createDiscussionAtGitlab(parameters);
          return true;
       }
 
-      private DiscussionParameters prepareDiscussionParameters()
+      private NewDiscussionParameters prepareDiscussionParameters()
       {
-         DiscussionParameters parameters = new DiscussionParameters
+         NewDiscussionParameters parameters = new NewDiscussionParameters
          {
             Body = textBoxDiscussionBody.Text
          };
@@ -145,9 +146,24 @@ namespace mrHelperUI
          }
          else
          {
-            parameters.Position = checkBoxIncludeContext.Checked ? _position : null;
+            parameters.Position = checkBoxIncludeContext.Checked
+               ? createPositionParameters(_position.Value) : new Nullable<PositionParameters>();
          }
          return parameters;
+      }
+
+      private PositionParameters createPositionParameters(DiffPosition position)
+      {
+         return new PositionParameters
+         {
+            OldPath = position.LeftPath,
+            OldLine = position.LeftLine,
+            NewPath = position.RightPath,
+            NewLine = position.RightLine,
+            BaseSHA = position.Refs.LeftSHA,
+            HeadSHA = position.Refs.RightSHA,
+            StartSHA = position.Refs.LeftSHA
+         };
       }
 
       private string getFallbackInfo()
@@ -171,17 +187,17 @@ namespace mrHelperUI
             + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
       }
 
-      private void createDiscussionAtGitlab(DiscussionParameters parameters)
+      private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
-         GitLabClient client = new GitLabClient(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
+         GitLab gl = new GitLab(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
          try
          {
-            client.CreateNewMergeRequestDiscussion(
-               _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+            var project = gl.Projects.Get(_interprocessSnapshot.Project);
+            project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
          }
          catch (System.Net.WebException ex)
          {
-            handleGitlabError(parameters, client, ex);
+            handleGitlabError(parameters, gl, ex);
          }
       }
 
@@ -197,47 +213,48 @@ namespace mrHelperUI
          textBoxFileName.Text = "N/A";
       }
 
-      private void handleGitlabError(DiscussionParameters parameters, GitLabClient client, System.Net.WebException ex)
+      private void handleGitlabError(NewDiscussionParameters parameters, GitLab gl, System.Net.WebException ex)
       {
          var response = ((System.Net.HttpWebResponse)ex.Response);
 
          if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
          {
             Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
-            createMergeRequestWithoutPosition(parameters, client);
+            createMergeRequestWithoutPosition(parameters, gl);
          }
          else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
          {
             Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
-            cleanupBadNotes(parameters, client);
-            createMergeRequestWithoutPosition(parameters, client);
+            cleanupBadNotes(parameters, gl);
+            createMergeRequestWithoutPosition(parameters, gl);
          }
       }
 
-      private void createMergeRequestWithoutPosition(DiscussionParameters parameters, GitLabClient client)
+      private void createMergeRequestWithoutPosition(NewDiscussionParameters parameters, GitLab gl)
       {
          parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
          parameters.Position = null;
-         client.CreateNewMergeRequestDiscussion(
-            _interprocessSnapshot.Project, _interprocessSnapshot.Id, parameters);
+
+         var project = gl.Projects.Get(_interprocessSnapshot.Project);
+         project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
       }
 
       // Instead of searching for a latest discussion note with some heuristically prepared parameters,
       // let's clean up all similar notes, including a recently added one
-      private void cleanupBadNotes(DiscussionParameters parameters, GitLabClient client)
+      private void cleanupBadNotes(NewDiscussionParameters parameters, GitLab gl)
       {
          Debug.Assert(parameters.Position.HasValue);
 
-         List<Discussion> discussions = client.GetMergeRequestDiscussions(
-            _interprocessSnapshot.Project, _interprocessSnapshot.Id);
+         var project = gl.Projects.Get(_interprocessSnapshot.Project);
+         var mergeRequest = project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId);
+         List<Discussion> discussions = mergeRequest.Discussions.LoadAll();
          foreach (Discussion discussion in discussions)
          {
             foreach (DiscussionNote note in discussion.Notes)
             {
-               if (note.Position.HasValue && note.Position.Value.Equals(parameters.Position.Value))
+               if (note.Position.Equals(parameters.Position.Value))
                {
-                  client.DeleteDiscussionNote(
-                     _interprocessSnapshot.Project, _interprocessSnapshot.Id, discussion.Id, note.Id);
+                  mergeRequest.Notes.Get(note.Id).Delete();
                }
             }
          }
@@ -248,7 +265,7 @@ namespace mrHelperUI
       private readonly RefsToLinesMatcher _matcher;
       private readonly GitRenameDetector _renameChecker;
 
-      private Position? _position;
+      private DiffPosition? _position;
       private readonly GitRepository _gitRepository;
    }
 }

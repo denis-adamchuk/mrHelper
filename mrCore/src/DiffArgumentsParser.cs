@@ -88,10 +88,10 @@ namespace mrCore
          }
 
          DiffToolInfo.Side? current = new DiffToolInfo.Side(
-            convertToGitlabFileName(tempFolder, _arguments[0]), currentLineNumber);
+            convertToGitFileName(tempFolder, _arguments[0]), currentLineNumber);
 
          DiffToolInfo.Side? next = _arguments.Length > 2
-            ? new DiffToolInfo.Side(convertToGitlabFileName(tempFolder, _arguments[2]), nextLineNumber)
+            ? new DiffToolInfo.Side(convertToGitFileName(tempFolder, _arguments[2]), nextLineNumber)
             : new Nullable<DiffToolInfo.Side>();
 
          DiffToolInfo toolInfo;
@@ -117,7 +117,7 @@ namespace mrCore
          return parsePath(tempFolder, fullFileName)[1].Value == "left";
       }
 
-      static private string convertToGitlabFileName(string tempFolder, string fullFileName)
+      static private string convertToGitFileName(string tempFolder, string fullFileName)
       {
          return parsePath(tempFolder, fullFileName)[2].Value;
       }
