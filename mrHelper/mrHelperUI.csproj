@@ -59,6 +59,9 @@
     <Compile Include="src\ColorScheme.cs" />
     <Compile Include="src\Configuration.cs" />
     <Compile Include="src\DiffContextFormatter.cs" />
+    <Compile Include="src\DiscussionBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\DiscussionsForm.cs">
       <SubType>Form</SubType>
     </Compile>

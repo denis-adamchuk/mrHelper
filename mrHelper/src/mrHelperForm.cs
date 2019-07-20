@@ -401,8 +401,16 @@ namespace mrHelperUI
          checkForUpdates();
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         var form = new DiscussionsForm(item.Host, item.AccessToken, comboBoxProjects.Text, mergeRequest.Value.IId,
-            mergeRequest.Value.Author, _gitRepository, int.Parse(comboBoxDCDepth.Text), _colorScheme);
+         var mergeRequestDetails = new MergeRequestDetails
+         {
+            Host = item.Host,
+            AccessToken = item.AccessToken,
+            ProjectId = comboBoxProjects.Text,
+            MergeRequestIId = mergeRequest.Value.IId,
+            Author = mergeRequest.Value.Author
+         };
+         var form = new DiscussionsForm(mergeRequestDetails, _gitRepository, int.Parse(comboBoxDCDepth.Text),
+            _colorScheme);
          form.Show(this);
       }
 
