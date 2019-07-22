@@ -170,6 +170,11 @@ namespace mrHelperUI
       public string ColorSchemeFileName
       {
          get { return getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue); }
+         set
+         {
+            setValue(ColorSchemeFileNameKeyName, value);
+            OnPropertyChanged(ColorSchemeFileNameKeyName);
+         }
       }
 
       private string getValue(string key, string defaultValue)

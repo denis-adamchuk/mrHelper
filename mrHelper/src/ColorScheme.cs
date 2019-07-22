@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Web.Script.Serialization;
 
@@ -20,25 +21,33 @@ namespace mrHelperUI
             return;
          }
 
-         string json = System.IO.File.ReadAllText(filename);
-
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-         dynamic colors = serializer.DeserializeObject(json);
-         foreach (var record in colors)
+         try
          {
-            string[] rgbs = record.Value.ToString().Split(',');
-            if (rgbs.Length != 3)
-            {
-               continue;
-            }
+            string json = System.IO.File.ReadAllText(filename);
 
-            int r = 0, g = 0, b = 0;
-            if (!int.TryParse(rgbs[0], out r) || !int.TryParse(rgbs[1], out g) || !int.TryParse(rgbs[2], out b))
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            dynamic colors = serializer.DeserializeObject(json);
+            foreach (var record in colors)
             {
-               continue;
-            }
+               string[] rgbs = record.Value.ToString().Split(',');
+               if (rgbs.Length != 3)
+               {
+                  continue;
+               }
 
-            setColor(record.Key, Color.FromArgb(r, g, b));
+               int r = 0, g = 0, b = 0;
+               if (!int.TryParse(rgbs[0], out r) || !int.TryParse(rgbs[1], out g) || !int.TryParse(rgbs[2], out b))
+               {
+                  continue;
+               }
+
+               setColor(record.Key, Color.FromArgb(r, g, b));
+            }
+         }
+         catch (Exception)
+         {
+            // Bad JSON
+            throw new ApplicationException("Unexpected format or color scheme file");
          }
       }
 

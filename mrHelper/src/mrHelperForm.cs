@@ -196,6 +196,27 @@ namespace mrHelperUI
          }
       }
 
+      private void ComboBoxColorSchemes_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         try
+         {
+            if (comboBoxColorSchemes.SelectedItem.ToString() == "Default")
+            {
+               _colorScheme = new ColorScheme();
+            }
+            else
+            {
+               _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString());
+            }
+            _settings.ColorSchemeFileName = (sender as ComboBox).Text;
+         }
+         catch (Exception ex)
+         {
+            comboBoxColorSchemes.SelectedIndex = 0;
+            MessageBox.Show(ex.Message, errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
       private void ComboBoxHost_SelectedIndexChanged(object sender, EventArgs e)
       {
          try
@@ -681,6 +702,7 @@ namespace mrHelperUI
             comboBoxDCDepth.SelectedIndex = 0;
          }
          checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
+         fillColorSchemesList();
       }
 
       private void saveConfiguration()
@@ -735,8 +757,6 @@ namespace mrHelperUI
          _settings = new UserDefinedSettings();
          loadConfiguration();
          _settings.PropertyChanged += onSettingsPropertyChanged;
-
-         _colorScheme = new ColorScheme(_settings.ColorSchemeFileName);
 
          labelSpentTime.Text = labelSpentTimeDefaultText;
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
@@ -1122,6 +1142,36 @@ namespace mrHelperUI
          return 0;
       }
 
+      private void fillColorSchemesList()
+      {
+         comboBoxColorSchemes.Items.Clear();
+         comboBoxColorSchemes.Items.Add("Default");
+
+         string selectedScheme = null;
+         string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
+         foreach (string file in files)
+         {
+            if (file.EndsWith(".colors.json"))
+            {
+               string scheme = Path.GetFileName(file);
+               comboBoxColorSchemes.Items.Add(scheme);
+               if (scheme == _settings.ColorSchemeFileName)
+               {
+                  selectedScheme = scheme;
+               }
+            }
+         }
+
+         if (selectedScheme != null)
+         {
+            comboBoxColorSchemes.SelectedItem = selectedScheme;
+         }
+         else
+         {
+            comboBoxColorSchemes.SelectedIndex = 0;
+         }
+      }
+
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
@@ -1135,7 +1185,7 @@ namespace mrHelperUI
       // Last launched instance of a diff tool
       private Process _difftool;
 
-      private ColorScheme _colorScheme;
+      private ColorScheme _colorScheme = new ColorScheme();
 
       private struct HostComboBoxItem
       {

@@ -86,6 +86,8 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
+         this.labelColorScheme = new System.Windows.Forms.Label();
+         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -296,7 +298,7 @@
             "2",
             "3",
             "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 82);
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 88);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
          this.comboBoxDCDepth.TabIndex = 7;
@@ -364,6 +366,8 @@
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.comboBoxColorSchemes);
+         this.groupBoxOther.Controls.Add(this.labelColorScheme);
          this.groupBoxOther.Controls.Add(this.labelDepth);
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
@@ -371,7 +375,7 @@
          this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(513, 113);
+         this.groupBoxOther.Size = new System.Drawing.Size(513, 144);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -379,7 +383,7 @@
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(6, 85);
+         this.labelDepth.Location = new System.Drawing.Point(6, 91);
          this.labelDepth.Name = "labelDepth";
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
@@ -633,6 +637,25 @@
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
+         // labelColorScheme
+         // 
+         this.labelColorScheme.AutoSize = true;
+         this.labelColorScheme.Location = new System.Drawing.Point(6, 118);
+         this.labelColorScheme.Name = "labelColorScheme";
+         this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
+         this.labelColorScheme.TabIndex = 8;
+         this.labelColorScheme.Text = "Color scheme";
+         // 
+         // comboBoxColorSchemes
+         // 
+         this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxColorSchemes.FormattingEnabled = true;
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 115);
+         this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
+         this.comboBoxColorSchemes.Size = new System.Drawing.Size(159, 21);
+         this.comboBoxColorSchemes.TabIndex = 9;
+         this.comboBoxColorSchemes.SelectedIndexChanged += new System.EventHandler(this.ComboBoxColorSchemes_SelectedIndexChanged);
+         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -724,6 +747,8 @@
       private System.Windows.Forms.Label labelDepth;
       private System.Windows.Forms.ComboBox comboBoxDCDepth;
 	  private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
+      private System.Windows.Forms.ComboBox comboBoxColorSchemes;
+      private System.Windows.Forms.Label labelColorScheme;
    }
 }
 
