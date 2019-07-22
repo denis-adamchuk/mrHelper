@@ -28,17 +28,8 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.components = new System.ComponentModel.Container();
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DiscussionsForm));
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.toolTipNotifier = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
-         // 
-         // toolTip
-         // 
-         this.toolTip.AutoPopDelay = 5000;
-         this.toolTip.InitialDelay = 500;
-         this.toolTip.ReshowDelay = 100;
          // 
          // DiscussionsForm
          // 
@@ -52,15 +43,12 @@
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
          this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
-         this.Resize += new System.EventHandler(this.DiscussionsForm_Resize);
+         this.Layout += new System.Windows.Forms.LayoutEventHandler(this.DiscussionsForm_Layout);
          this.ResumeLayout(false);
 
       }
 
       #endregion
 
-      private System.Windows.Forms.ToolTip toolTip;
-      private System.Windows.Forms.ToolTip toolTipNotifier;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip htmlToolTip = new TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip();
    }
 }
