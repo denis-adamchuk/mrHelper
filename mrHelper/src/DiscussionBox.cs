@@ -150,6 +150,8 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
          {
@@ -170,6 +172,8 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
 
@@ -187,6 +191,8 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
 
@@ -327,7 +333,7 @@ namespace mrHelperUI
 
       private bool canBeModified(DiscussionNote note)
       {
-         return note.Author.Id == _currentUser.Id;
+         return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
       private TextBox createTextBox(DiscussionNote note, bool discussionResolved)
