@@ -69,7 +69,11 @@ namespace mrHelperUI
          {
             if (textBox.ReadOnly && e.KeyData == Keys.F2)
             {
-               onStartEditNote(textBox);
+               DiscussionNote note = (DiscussionNote)(textBox.Tag);
+               if (canBeModified(note))
+               {
+                  onStartEditNote(textBox);
+               }
             }
             else if (!textBox.ReadOnly && e.KeyData == Keys.Escape)
             {
@@ -166,8 +170,8 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
-         DiscussionNoteWrapper note = (DiscussionNoteWrapper)(textBox.Tag);
-         Debug.Assert(note.Note.Resolvable);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         Debug.Assert(note.Resolvable);
 
          try
          {
@@ -183,8 +187,8 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
-         DiscussionNoteWrapper note = (DiscussionNoteWrapper)(textBox.Tag);
-         Debug.Assert(note.Note.Resolvable);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         Debug.Assert(note.Resolvable);
 
          try
          {
@@ -210,7 +214,6 @@ namespace mrHelperUI
          Debug.Assert(!firstNote.System);
 
          _discussionId = discussion.Id;
-         _discussionResolved = discussion.Notes.Cast<DiscussionNote>().All(x => x.Resolved);
 
          _labelAuthor = createLabelAuthor(firstNote);
          _labelFileName = createLabelFilename(firstNote);
@@ -286,7 +289,8 @@ namespace mrHelperUI
 
          Label labelFilename = new Label
          {
-            Text = result
+            Text = result,
+            AutoSize = true
          };
          return labelFilename;
       }
@@ -304,6 +308,8 @@ namespace mrHelperUI
 
       private List<Control> createTextBoxes(List<DiscussionNote> notes)
       {
+         var discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
+
          List<Control> boxes = new List<Control>();
          foreach (var note in notes)
          {
@@ -313,16 +319,19 @@ namespace mrHelperUI
                continue;
             }
 
-            TextBox textBox = createTextBox(note);
+            TextBox textBox = createTextBox(note, discussionResolved);
             boxes.Add(textBox);
          }
          return boxes;
       }
 
-      private TextBox createTextBox(DiscussionNote note)
+      private bool canBeModified(DiscussionNote note)
       {
-         bool canBeModified = note.Author.Id == _currentUser.Id;
+         return note.Author.Id == _currentUser.Id;
+      }
 
+      private TextBox createTextBox(DiscussionNote note, bool discussionResolved)
+      {
          TextBox textBox = new TextBox();
          _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
          textBox.ReadOnly = true;
@@ -334,24 +343,21 @@ namespace mrHelperUI
          textBox.KeyDown += TextBox_KeyDown;
          textBox.KeyUp += TextBox_KeyUp;
          textBox.MinimumSize = new Size(300, 0);
-         textBox.Tag = new DiscussionNoteWrapper
-         {
-            Note = note
-         };
-         textBox.ContextMenu = createContextMenuForDiscussionNote(note, canBeModified, textBox);
+         textBox.Tag = note;
+         textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
 
          return textBox;
       }
 
       private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note,
-         bool canBeModified, TextBox textBox)
+         bool discussionResolved, TextBox textBox)
       {
          var contextMenu = new ContextMenu();
 
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
          {
             Tag = textBox,
-            Text = (_discussionResolved ? "Unresolve" : "Resolve") + " Discussion",
+            Text = (discussionResolved ? "Unresolve" : "Resolve") + " Discussion",
             Enabled = note.Resolvable
          };
          menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
@@ -369,7 +375,7 @@ namespace mrHelperUI
          MenuItem menuItemDeleteNote = new MenuItem
          {
             Tag = textBox,
-            Enabled = canBeModified,
+            Enabled = canBeModified(note),
             Text = "Delete Note"
          };
          menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
@@ -378,7 +384,7 @@ namespace mrHelperUI
          MenuItem menuItemEditNote = new MenuItem
          {
             Tag = textBox,
-            Enabled = canBeModified,
+            Enabled = canBeModified(note),
             Text = "Edit Note"
          };
          menuItemEditNote.Click += MenuItemEditNote_Click;
@@ -500,33 +506,34 @@ namespace mrHelperUI
       {
          textBox.ReadOnly = true;
 
-         DiscussionNoteWrapper note = (DiscussionNoteWrapper)(textBox.Tag);
-         textBox.Text = note.Note.Body;
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         textBox.Text = note.Body;
       }
 
       private void onSubmitNewBody(TextBox textBox)
       {
-         DiscussionNoteWrapper note = (DiscussionNoteWrapper)(textBox.Tag);
-         if (textBox.Text == note.Note.Body)
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         if (textBox.Text == note.Body)
          {
             return;
          }
 
-         note.Note.Body = textBox.Text;
+         string body = textBox.Text;
 
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
-            Discussions.Get(_discussionId).ModifyNote(note.Note.Id,
+            Discussions.Get(_discussionId).ModifyNote(note.Id,
                new ModifyDiscussionNoteParameters
                {
                   Type = ModifyDiscussionNoteParameters.ModificationType.Body,
-                  Body = note.Note.Body
+                  Body = body
                });
 
          _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
 
          // Create a new text box
-         TextBox newTextBox = createTextBox(note.Note);
+         note.Body = body;
+         TextBox newTextBox = createTextBox(note, isDiscussionResolved()); 
 
          // By default place a new textbox at the same place as the old one. It may be changed if height changed.
          // It is better to change Location right now to avoid flickering during _onSizeChanged(). 
@@ -538,6 +545,9 @@ namespace mrHelperUI
          // Measure heights
          int oldHeight = textBox.Height;
          int newHeight = getTextBoxPreferredHeight(newTextBox);
+
+         // Update Height, because initial one was measured for a wrong width
+         newTextBox.Height = newHeight;
 
          // Replace text box in Discussion Box
          replaceControlInParent(textBox, newTextBox);
@@ -551,42 +561,24 @@ namespace mrHelperUI
 
       private void onDeleteNote(TextBox textBox)
       {
-         DiscussionNoteWrapper note = (DiscussionNoteWrapper)(textBox.Tag);
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
 
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          var mergeRequest = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
             Get(_mergeRequestDetails.MergeRequestIId);
-         mergeRequest.Notes.Get(note.Note.Id).Delete();
+         mergeRequest.Notes.Get(note.Id).Delete();
 
-         // When a text box is deleted, we recreate a whole discussion box
-         DiscussionBox newDiscussionBox = null;
-         try
+         if (!refreshDiscussion())
          {
-            Discussion discussion = mergeRequest.Discussions.Get(_discussionId).Load();
-            if (!discussion.Notes[0].System)
-            {
-               onCreate(discussion);
-               newDiscussionBox = this;
-            }
+            // Seems it was the only note in the discussion, remove ourselves from parents controls
+            Parent.Controls.Remove(this);
          }
-         catch (System.Net.WebException ex)
-         {
-            // Seems it was the only note in the discussion
-            var response = ((System.Net.HttpWebResponse)ex.Response);
-            Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
-         }
-
-         // Replace discussion box among parent's Controls
-         replaceControlInParent(textBox.Parent as DiscussionBox, newDiscussionBox);
-
-         // Notify parent that our size has changed
-         _onSizeChanged();
       }
 
       private void onToggleResolveNote(TextBox textBox)
       {
-         ref DiscussionNote note = ref ((DiscussionNoteWrapper)(textBox.Tag)).Note;
-         note.Resolved = !note.Resolved;
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         bool wasResolved = note.Resolved;
 
          // Change discussion item state at Server
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
@@ -595,94 +587,84 @@ namespace mrHelperUI
                new ModifyDiscussionNoteParameters
                {
                   Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
-                  Resolved = note.Resolved
+                  Resolved = !wasResolved
                });
 
-         // Check if the whole discussion state is changed
-         bool discussionResolved = true;
-         foreach (TextBox siblingBoxes in _textboxesNotes)
-         {
-            ref DiscussionNote siblingNote = ref ((DiscussionNoteWrapper)(siblingBoxes.Tag)).Note;
-            if (!siblingNote.Resolved)
-            {
-               discussionResolved = false;
-               break;
-            }
-         }
-
-         // If discussion state changed, recreate all boxes, otherwise recreate the only box
-         if (_discussionResolved != discussionResolved)
-         {
-            _discussionResolved = discussionResolved;
-            recreateTextBoxes();
-            return;
-         }
-
-         // Create a new text box
-         TextBox newTextBox = createTextBox(note);
-
-         // New textbox is placed at the same place as the old one
-         newTextBox.Location = textBox.Location;
-         newTextBox.Size = textBox.Size;
-         
-         // Replace text box in Discussion Box
-         replaceControlInParent(textBox, newTextBox);
+         refreshDiscussion();
       }
 
       private void onToggleResolveDiscussion()
       {
+         bool wasResolved = isDiscussionResolved();
+         
          // Change discussion state at Server
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
             Discussions.Get(_discussionId).Resolve(
                new ResolveThreadParameters
                {
-                  Resolve = !_discussionResolved
+                  Resolve = !wasResolved
                });
 
-         // Change cached state
-         _discussionResolved = !_discussionResolved;
-
-         // Change state of all notes
-         List<TextBox> newTextBoxes = new List<TextBox>();
-         foreach (TextBox textBox in _textboxesNotes)
-         {
-            ref DiscussionNote note = ref ((DiscussionNoteWrapper)(textBox.Tag)).Note;
-            note.Resolved = _discussionResolved;
-         }
-
-         // Recreate all boxes
-         recreateTextBoxes();
+         refreshDiscussion();
       }
 
-      private void recreateTextBoxes()
+      private bool refreshDiscussion()
       {
-         List<TextBox> newTextBoxes = new List<TextBox>();
-         foreach (TextBox textBox in _textboxesNotes)
+         // Get rid of old text boxes
+         for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
          {
-            ref DiscussionNote note = ref ((DiscussionNoteWrapper)(textBox.Tag)).Note;
-
-            // Create a new text box
-            TextBox newTextBox = createTextBox(note);
-
-            // New textbox is placed at the same place as the old one
-            newTextBox.Location = textBox.Location;
-            newTextBox.Size = textBox.Size;
-
-            // Remove old text box from Controls collection
-            Controls.Remove(textBox);
-
-            // Add new textbox to a new collection
-            newTextBoxes.Add(newTextBox);
+            if (Controls[iControl] is TextBox)
+            {
+               Controls.Remove(Controls[iControl]);
+            }
          }
-
          _textboxesNotes.Clear();
 
-         foreach (TextBox textBox in newTextBoxes)
+         // Load updated discussion
+         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         try
          {
-            _textboxesNotes.Add(textBox);
-            Controls.Add(textBox);
+            var discussion = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+               Get(_mergeRequestDetails.MergeRequestIId).Discussions.Get(_discussionId).Load();
+            if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
+            {
+               return false;
+            }
+
+            // Create controls
+            _textboxesNotes = createTextBoxes(discussion.Notes);
+            foreach (var note in _textboxesNotes)
+            {
+               Controls.Add(note);
+            }
+         
+            // To reposition new controls
+            _onSizeChanged();
          }
+         catch (System.Net.WebException ex)
+         {
+            var response = ((System.Net.HttpWebResponse)ex.Response);
+            Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+
+            return false;
+         }
+
+         return true;
+      }
+
+      private bool isDiscussionResolved()
+      {
+         bool result = true;
+         foreach (TextBox textBox in _textboxesNotes)
+         {
+            DiscussionNote note = (DiscussionNote)(textBox.Tag);
+            if (note.Resolvable && !note.Resolved)
+            {
+               result = false;
+            }
+         }
+         return result;
       }
 
       private void replaceControlInParent(Control oldControl, Control newControl)
@@ -744,11 +726,6 @@ namespace mrHelperUI
             }
          };
       }
-
-      private class DiscussionNoteWrapper
-      {
-         public DiscussionNote Note;
-      }
       
       // Widths in %
       private readonly int HorzMarginWidth = 1;
@@ -765,7 +742,6 @@ namespace mrHelperUI
       private readonly MergeRequestDetails _mergeRequestDetails;
       private readonly User _currentUser;
       private string _discussionId;
-      private bool _discussionResolved;
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
