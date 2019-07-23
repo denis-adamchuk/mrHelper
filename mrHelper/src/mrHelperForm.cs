@@ -436,7 +436,7 @@ namespace mrHelperUI
          };
          var form = new DiscussionsForm(mergeRequestDetails, _gitRepository, int.Parse(comboBoxDCDepth.Text),
             _colorScheme);
-         form.Show(this);
+         form.Show();
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
@@ -564,10 +564,10 @@ namespace mrHelperUI
             new AddSpentTimeParameters { Span = span });
       }
 
-      private struct HostInProjectsFile
+      private class HostInProjectsFile
       {
-         public string Name;
-         public List<Project> Projects;
+         public string Name = null;
+         public List<Project> Projects = null;
       }
 
       /// <summary>
