@@ -62,6 +62,8 @@
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
+         this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelDepth = new System.Windows.Forms.Label();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
@@ -86,8 +88,6 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
-         this.labelColorScheme = new System.Windows.Forms.Label();
-         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -301,7 +301,7 @@
          this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 88);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
-         this.comboBoxDCDepth.TabIndex = 7;
+         this.comboBoxDCDepth.TabIndex = 8;
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
@@ -379,6 +379,25 @@
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // comboBoxColorSchemes
+         // 
+         this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxColorSchemes.FormattingEnabled = true;
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 115);
+         this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
+         this.comboBoxColorSchemes.Size = new System.Drawing.Size(159, 21);
+         this.comboBoxColorSchemes.TabIndex = 9;
+         this.comboBoxColorSchemes.SelectedIndexChanged += new System.EventHandler(this.ComboBoxColorSchemes_SelectedIndexChanged);
+         // 
+         // labelColorScheme
+         // 
+         this.labelColorScheme.AutoSize = true;
+         this.labelColorScheme.Location = new System.Drawing.Point(6, 118);
+         this.labelColorScheme.Name = "labelColorScheme";
+         this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
+         this.labelColorScheme.TabIndex = 8;
+         this.labelColorScheme.Text = "Color scheme";
          // 
          // labelDepth
          // 
@@ -637,25 +656,6 @@
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
-         // labelColorScheme
-         // 
-         this.labelColorScheme.AutoSize = true;
-         this.labelColorScheme.Location = new System.Drawing.Point(6, 118);
-         this.labelColorScheme.Name = "labelColorScheme";
-         this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
-         this.labelColorScheme.TabIndex = 8;
-         this.labelColorScheme.Text = "Color scheme";
-         // 
-         // comboBoxColorSchemes
-         // 
-         this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxColorSchemes.FormattingEnabled = true;
-         this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 115);
-         this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
-         this.comboBoxColorSchemes.Size = new System.Drawing.Size(159, 21);
-         this.comboBoxColorSchemes.TabIndex = 9;
-         this.comboBoxColorSchemes.SelectedIndexChanged += new System.EventHandler(this.ComboBoxColorSchemes_SelectedIndexChanged);
-         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -667,7 +667,7 @@
          this.MaximizeBox = false;
          this.MinimizeBox = false;
          this.Name = "mrHelperForm";
-         this.Text = "Merge Requests Helper";
+         this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);
          this.Load += new System.EventHandler(this.MrHelperForm_Load);
          this.groupBoxKnownHosts.ResumeLayout(false);

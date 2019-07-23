@@ -47,7 +47,7 @@ namespace mrHelperUI
          catch (Exception)
          {
             // Bad JSON
-            throw new ApplicationException("Unexpected format or color scheme file");
+            throw new ApplicationException("Unexpected format of color scheme file. Will use default colors.");
          }
       }
 

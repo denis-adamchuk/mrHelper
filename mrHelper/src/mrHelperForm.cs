@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp;
 using mrCore;
@@ -40,6 +41,9 @@ namespace mrHelperUI
 
       public const string GitDiffToolName = "mrhelperdiff";
       private const string CustomActionsFileName = "CustomActions.xml";
+      private const string ProjectListFileName = "projects.json";
+      private const string DefaultColorSchemeName = "Default";
+      private const string ColorSchemeFileNamePrefix = "colors.json";
 
       public mrHelperForm()
       {
@@ -200,7 +204,7 @@ namespace mrHelperUI
       {
          try
          {
-            if (comboBoxColorSchemes.SelectedItem.ToString() == "Default")
+            if (comboBoxColorSchemes.SelectedItem.ToString() == DefaultColorSchemeName)
             {
                _colorScheme = new ColorScheme();
             }
@@ -488,8 +492,24 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
-         return gl.Projects.LoadAll(new ProjectsFilter { PublicOnly = checkBoxShowPublicOnly.Checked });
+         List<Project> projects = null;
+         if (File.Exists(ProjectListFileName))
+         {
+            try
+            {
+               projects = loadProjectsFromFile(item.Host, ProjectListFileName);
+            }
+            catch (Exception ex)
+            {
+               MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+         }
+         if (projects == null || projects.Count == 0)
+         {
+            GitLab gl = new GitLab(item.Host, item.AccessToken);
+            projects = gl.Projects.LoadAll(new ProjectsFilter { PublicOnly = checkBoxShowPublicOnly.Checked });
+         }
+         return projects;
       }
 
       private List<MergeRequest> getAllProjectMergeRequests(string project)
@@ -542,6 +562,46 @@ namespace mrHelperUI
          GitLab gl = new GitLab(item.Host, item.AccessToken);
          gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).AddSpentTime(
             new AddSpentTimeParameters { Span = span });
+      }
+
+      private struct HostInProjectsFile
+      {
+         public string Name;
+         public List<Project> Projects;
+      }
+
+      /// <summary>
+      /// Loads project list from file with JSON format
+      /// </summary>
+      /// <param name="hostname">Host name to look up projects for</param>
+      /// <param name="filename">Name of JSON file with project list</param>
+      /// <param name="projects">Output list of projects</param>
+      /// <returns>false if given file does not have projects for the given Host, otherwise true</returns>
+      private List<Project> loadProjectsFromFile(string hostname, string filename)
+      {
+         Debug.Assert(File.Exists(filename));
+
+         try
+         {
+            string json = System.IO.File.ReadAllText(filename);
+
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            List<HostInProjectsFile> hosts = serializer.Deserialize<List<HostInProjectsFile>>(json);
+            foreach (var host in hosts)
+            {
+               if (host.Name == hostname)
+               {
+                  return host.Projects;
+               }
+            }
+         }
+         catch (Exception)
+         {
+            // Bad JSON
+            throw new ApplicationException("Unexpected format of project list file. File content is ignored.");
+         }
+
+         return null;
       }
 
       private void onLaunchDiffTool()
@@ -1145,13 +1205,13 @@ namespace mrHelperUI
       private void fillColorSchemesList()
       {
          comboBoxColorSchemes.Items.Clear();
-         comboBoxColorSchemes.Items.Add("Default");
+         comboBoxColorSchemes.Items.Add(DefaultColorSchemeName);
 
          string selectedScheme = null;
          string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
          foreach (string file in files)
          {
-            if (file.EndsWith(".colors.json"))
+            if (file.EndsWith(ColorSchemeFileNamePrefix))
             {
                string scheme = Path.GetFileName(file);
                comboBoxColorSchemes.Items.Add(scheme);
