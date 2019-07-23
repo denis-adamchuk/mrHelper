@@ -669,7 +669,7 @@ namespace mrHelperUI
       private bool isDiscussionResolved()
       {
          bool result = true;
-         foreach (TextBox textBox in _textboxesNotes)
+         foreach (Control textBox in _textboxesNotes)
          {
             DiscussionNote note = (DiscussionNote)(textBox.Tag);
             if (note.Resolvable && !note.Resolved)
