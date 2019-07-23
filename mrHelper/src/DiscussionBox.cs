@@ -508,12 +508,19 @@ namespace mrHelperUI
          textBox.Focus();
       }
 
-      private static void onCancelEditNote(TextBox textBox)
+      private void onCancelEditNote(TextBox textBox)
       {
          textBox.ReadOnly = true;
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          textBox.Text = note.Body;
+
+         int newHeight = getTextBoxPreferredHeight(textBox);
+         if (newHeight < textBox.Height)
+         {
+            textBox.Height = newHeight;
+            _onSizeChanged();
+         }
       }
 
       private void onSubmitNewBody(TextBox textBox)
