@@ -1,6 +1,8 @@
+/build-debug.bat
+/.root
+/tags
 /.vs
 /*/bin
 /*/obj
 *.csproj.user
-/build.bat
 /packages/*
