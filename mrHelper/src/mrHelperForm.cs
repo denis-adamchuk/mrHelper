@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp;
@@ -80,11 +81,15 @@ namespace mrHelperUI
                Enabled = false,
                TabStop = false
             };
-            button.Click += (x, y) =>
+            button.Click += async (x, y) =>
             {
                try
                {
-                  command.Run();
+                  setCustomActionsEnabled(false);
+                  await Task.Run(() => command.Run());
+                  MessageBox.Show("Custom action successfully completed", "Info",
+                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+                  setCustomActionsEnabled(true);
                }
                catch (Exception ex)
                {
@@ -94,6 +99,15 @@ namespace mrHelperUI
             groupBoxActions.Controls.Add(button);
             offSetFromGroupBoxTopLeft.X += typicalSize.Width + 10;
             id++;
+         }
+      }
+
+      private void setCustomActionsEnabled(bool enabled)
+      {
+         foreach (var control in groupBoxActions.Controls)
+         {
+            if (control is Button)
+               (control as Button).Enabled = enabled;
          }
       }
 
