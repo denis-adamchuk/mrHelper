@@ -37,6 +37,9 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
+      <Link>SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="src\Context\ContextMakerItf.cs" />
     <Compile Include="src\Context\ContextMakingHelpers.cs" />
     <Compile Include="src\DetailedSnapshotSerializer.cs" />
