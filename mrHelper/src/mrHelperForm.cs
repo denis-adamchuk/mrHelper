@@ -240,7 +240,7 @@ namespace mrHelperUI
          try
          {
             _gitRepository = null;
-            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text), false);
             _settings.LastSelectedProject = (sender as ComboBox).Text;
          }
          catch (Exception ex)
@@ -265,7 +265,7 @@ namespace mrHelperUI
       {
          try
          {
-            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text));
+            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text), false);
          }
          catch (Exception ex)
          {
@@ -647,6 +647,113 @@ namespace mrHelperUI
          }
       }
 
+      private void onTimer()
+      {
+         var newMergeRequests = new List<MergeRequest>();
+         var updatedMergeRequests = new List<MergeRequest>();
+         collectUpdates(out newMergeRequests, out updatedMergeRequests);
+         notifyOnUpdates(newMergeRequests, updatedMergeRequests);
+
+         // Update lists in combo-boxes
+         if (comboBoxProjects.SelectedItem != null)
+         {
+            int selectedProjectId = ((Project)(comboBoxProjects.SelectedItem)).Id;
+
+            // Update list of available merge requests
+            List<MergeRequest> mergeRequestsOfSelectedProject = new List<MergeRequest>();
+            foreach (var mergeRequest in updatedMergeRequests)
+            {
+               if (mergeRequest.Project_Id == selectedProjectId)
+               {
+                  mergeRequestsOfSelectedProject.Add(mergeRequest);
+               }
+            }
+            updateMergeRequestsDropdownList(mergeRequestsOfSelectedProject, true);
+
+            // Update list of versions
+            foreach (var mergeRequest in mergeRequestsOfSelectedProject)
+            {
+               if (mergeRequest.IId == ((MergeRequest)(comboBoxFilteredMergeRequests.SelectedItem)).IId)
+               {
+                  updateVersions(mergeRequest, true);
+               }
+            }
+         }
+      }
+
+      /// <summary>
+      /// Collects requests that have been created or updated later than _lastCheckTime.
+      /// By 'updated' we mean that 'merge request has a version with a timestamp later than ...'.
+      /// Checks all the hosts.
+      /// Checks all the projects if project filtering is not used, otherwise checks only filtered project.
+      /// Includes only those merge requests that match Labels filters.
+      /// </summary>
+      private void collectUpdates(out List<MergeRequest> newMergeRequests, out List<MergeRequest> updatedMergeRequests)
+      {
+         newMergeRequests = new List<MergeRequest>();
+         updatedMergeRequests = new List<MergeRequest>();
+
+         foreach (var item in comboBoxHost.Items)
+         {
+            HostComboBoxItem hostItem = (HostComboBoxItem)(item); 
+            GitLab gl = new GitLab(hostItem.Host, hostItem.AccessToken);
+
+            List<Project> projectsToCheck = new List<Project>();
+
+            // If project list is filtered, check all filtered, otherwise check the selected only
+            if (File.Exists(ProjectListFileName))
+            {
+               foreach (var itemProject in comboBoxProjects.Items)
+               {
+                  projectsToCheck.Add((Project)(itemProject));
+               }
+            }
+            else
+            {
+               projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
+            }
+
+            foreach (var project in projectsToCheck)
+            {
+               List<MergeRequest> mergeRequests =
+                  gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAll(new MergeRequestsFilter());
+
+               foreach (var mergeRequest in mergeRequests)
+               {
+                  if (!doesMergeRequestMatchLabels(mergeRequest))
+                  {
+                     continue;
+                  }
+
+                  if (mergeRequest.Created_At.ToLocalTime() > _lastCheckTime)
+                  {
+                     newMergeRequests.Add(mergeRequest);
+                  }
+                  else if (mergeRequest.Updated_At.ToLocalTime() > _lastCheckTime)
+                  {
+                     var versions = gl.Projects.Get(project.Path_With_Namespace).
+                        MergeRequests.Get(mergeRequest.IId).Versions.LoadAll();
+                     if (versions.Count == 0)
+                     {
+                        continue;
+                     }
+
+                     Version latestVersion = versions[0];
+                     if (latestVersion.Created_At.ToLocalTime() > _lastCheckTime)
+                     {
+                        updatedMergeRequests.Add(mergeRequest);
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      private void notifyOnUpdates(List<MergeRequest> newMergeRequests, List<MergeRequest> updatedMergeRequests)
+      {
+         throw new NotImplementedException();
+      }
+
       private GitRepository initializeGitRepository()
       {
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
@@ -808,7 +915,7 @@ namespace mrHelperUI
          snapshot.MergeRequestId = mergeRequest.IId;
          snapshot.Project = comboBoxProjects.Text;
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
-         
+
          serializer.SerializeToDisk(snapshot);
       }
 
@@ -913,30 +1020,14 @@ namespace mrHelperUI
          }
       }
 
-      private void updateMergeRequestsDropdownList(List<MergeRequest> mergeRequests)
+      private void updateMergeRequestsDropdownList(List<MergeRequest> mergeRequests, bool keepPosition)
       {
-         List<string> labelsRequested = new List<string>();
-         if (checkBoxLabels.Checked && textBoxLabels.Text != null)
-         {
-            foreach (var item in textBoxLabels.Text.Split(','))
-            {
-               labelsRequested.Add(item.Trim(' '));
-            }
-         }
+         if (keepPosition) throw new NotImplementedException();
+
          comboBoxFilteredMergeRequests.Items.Clear();
          foreach (var mergeRequest in mergeRequests)
          {
-            if (labelsRequested.Count > 0)
-            {
-               foreach (var label in labelsRequested)
-               {
-                  if (mergeRequest.Labels.Contains(label))
-                  {
-                     comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
-                  }
-               }
-            }
-            else
+            if (doesMergeRequestMatchLabels(mergeRequest))
             {
                comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
             }
@@ -949,9 +1040,39 @@ namespace mrHelperUI
          {
             comboBoxFilteredMergeRequests.SelectedIndex = -1;
 
-            // call it manually because an event is not called on -1
+            // call it manually because events are not called on -1
             onMergeRequestSelected();
          }
+      }
+
+      private bool doesMergeRequestMatchLabels(MergeRequest mergeRequest)
+      {
+         // TODO This can be cached
+         List<string> labelsRequested = new List<string>();
+         if (checkBoxLabels.Checked && textBoxLabels.Text != null)
+         {
+            foreach (var item in textBoxLabels.Text.Split(','))
+            {
+               labelsRequested.Add(item.Trim(' '));
+            }
+         }
+
+         if (labelsRequested.Count > 0)
+         {
+            foreach (var label in labelsRequested)
+            {
+               if (mergeRequest.Labels.Contains(label))
+               {
+                  return true;
+               }
+            }
+         }
+         else
+         {
+            return true;
+         }
+
+         return false;
       }
 
       private void onMergeRequestSelected()
@@ -998,7 +1119,21 @@ namespace mrHelperUI
          textBoxMergeRequestName.Text = mergeRequest.Title;
          richTextBoxMergeRequestDescription.Text = mergeRequest.Description;
 
-         // 3. Add version information to combo boxes
+         // 3. Add versions to combo-boxes
+         updateVersions(mergeRequest, false);
+
+         // 4. Toggle state of  buttons
+         buttonToggleTimer.Enabled = true;
+         buttonDiffTool.Enabled = true;
+         buttonDiscussions.Enabled = true;
+         foreach (Control control in groupBoxActions.Controls)
+         {
+            control.Enabled = true;
+         }
+      }
+
+      private void updateVersions(MergeRequest mergeRequest, bool keepPosition)
+      {
          comboBoxLeftVersion.Items.Clear();
          comboBoxRightVersion.Items.Clear();
 
@@ -1006,7 +1141,7 @@ namespace mrHelperUI
          var latest = new VersionComboBoxItem(versions[0]);
          latest.IsLatest = true;
          comboBoxLeftVersion.Items.Add(latest);
-         for (int i=1; i < versions.Count; i++)
+         for (int i = 1; i < versions.Count; i++)
          {
             VersionComboBoxItem item = new VersionComboBoxItem(versions[i]);
             if (comboBoxLeftVersion.Items.Cast<VersionComboBoxItem>().Any(x => x.SHA == item.SHA))
@@ -1022,16 +1157,14 @@ namespace mrHelperUI
             new VersionComboBoxItem(mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
-         comboBoxLeftVersion.SelectedIndex = 0;
-         comboBoxRightVersion.SelectedIndex = 0;
-
-         // 5. Toggle state of  buttons
-         buttonToggleTimer.Enabled = true;
-         buttonDiffTool.Enabled = true;
-         buttonDiscussions.Enabled = true;
-         foreach (Control control in groupBoxActions.Controls)
+         if (!keepPosition)
          {
-            control.Enabled = true;
+            comboBoxLeftVersion.SelectedIndex = 0;
+            comboBoxRightVersion.SelectedIndex = 0;
+         }
+         else
+         {
+            throw new NotImplementedException();
          }
       }
 
@@ -1246,6 +1379,8 @@ namespace mrHelperUI
       private Process _difftool;
 
       private ColorScheme _colorScheme = new ColorScheme();
+
+      private DateTime _lastCheckTime = DateTime.Now;
 
       private struct HostComboBoxItem
       {
