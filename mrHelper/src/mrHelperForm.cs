@@ -655,14 +655,21 @@ namespace mrHelperUI
 
       private void onMergeRequestCheckTimer(object sender, EventArgs e)
       {
-         List<MergeRequest> newMergeRequests = new List<MergeRequest>();
-         List<MergeRequest> updatedMergeRequests = new List<MergeRequest>();
-         collectMergeRequestUpdates(out newMergeRequests, out updatedMergeRequests);
-         notifyOnMergeRequestUpdates(newMergeRequests, updatedMergeRequests);
-
-         if (newMergeRequests.Count > 0 || updatedMergeRequests.Count > 0)
+         try
          {
-            updateDropdownsOnTimer();
+            List<MergeRequest> newMergeRequests = new List<MergeRequest>();
+            List<MergeRequest> updatedMergeRequests = new List<MergeRequest>();
+            collectMergeRequestUpdates(out newMergeRequests, out updatedMergeRequests);
+            notifyOnMergeRequestUpdates(newMergeRequests, updatedMergeRequests);
+
+            if (newMergeRequests.Count > 0 || updatedMergeRequests.Count > 0)
+            {
+               updateDropdownsOnTimer();
+            }
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error occurred on auto-update", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -714,8 +721,18 @@ namespace mrHelperUI
 
             foreach (var project in projectsToCheck)
             {
-               List<MergeRequest> mergeRequests =
-                  gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAll(new MergeRequestsFilter());
+               List<MergeRequest> mergeRequests = new List<MergeRequest>();
+
+               try
+               {
+                  mergeRequests =
+                     gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAll(new MergeRequestsFilter());
+               }
+               catch (System.Net.WebException ex)
+               {
+                  var response = ((System.Net.HttpWebResponse)ex.Response);
+                  Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+               }
 
                foreach (var mergeRequest in mergeRequests)
                {
@@ -750,22 +767,36 @@ namespace mrHelperUI
          _lastCheckTime = DateTime.Now;
       }
 
+      private void notifyOnMergeRequestEvent(MergeRequest mergeRequest, string title)
+      {
+         string projectName = String.Empty;
+         foreach (var item in comboBoxProjects.Items)
+         {
+            Project project = (Project)(item);
+            if (project.Id == mergeRequest.Project_Id)
+            {
+               projectName = project.Path_With_Namespace;
+            }
+         }
+
+         showTooltipBalloon(title, "\""
+            + mergeRequest.Title
+            + "\" from "
+            + mergeRequest.Author.Name
+            + " in project "
+            + (projectName == String.Empty ? "N/A" : projectName));
+      }
+
       private void notifyOnMergeRequestUpdates(List<MergeRequest> newMergeRequests, List<MergeRequest> updatedMergeRequests)
       {
          foreach (MergeRequest mergeRequest in newMergeRequests)
          {
-            showTooltipBalloon("Information", "Detected new merge request \""
-                                             + mergeRequest.Title
-                                             + "\" from "
-                                             + mergeRequest.Author.Name);
+            notifyOnMergeRequestEvent(mergeRequest, "New merge request");
          }
 
          foreach (MergeRequest mergeRequest in updatedMergeRequests)
          {
-            showTooltipBalloon("Information", "Detected new commits in merge request \""
-                                             + mergeRequest.Title
-                                             + "\" from "
-                                             + mergeRequest.Author.Name);
+            notifyOnMergeRequestEvent(mergeRequest, "New commit in merge request");
          }
       }
 
