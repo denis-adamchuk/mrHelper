@@ -1384,7 +1384,8 @@ namespace mrHelperUI
       {
          if (comboBoxProjects.SelectedItem != null)
          {
-            return comboBoxProjects.SelectedItem.ToString();
+            Project project = (Project)comboBoxProjects.SelectedItem;
+            return project.Path_With_Namespace;
          }
          return null;
       }
