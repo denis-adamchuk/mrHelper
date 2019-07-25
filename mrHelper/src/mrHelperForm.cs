@@ -702,7 +702,7 @@ namespace mrHelperUI
                projectsToCheck.Add((Project)(itemProject));
             }
          }
-         else
+         else if (comboBoxProjects.SelectedItem != null)
          {
             projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
          }
