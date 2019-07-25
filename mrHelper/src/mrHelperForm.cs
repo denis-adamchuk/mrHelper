@@ -699,66 +699,58 @@ namespace mrHelperUI
          newMergeRequests = new List<MergeRequest>();
          updatedMergeRequests = new List<MergeRequest>();
 
-         foreach (var item in comboBoxHost.Items)
+         if (comboBoxHost.SelectedItem == null)
          {
-            HostComboBoxItem hostItem = (HostComboBoxItem)(item); 
-            GitLab gl = new GitLab(hostItem.Host, hostItem.AccessToken);
+            return;
+         }
 
-            List<Project> projectsToCheck = new List<Project>();
+         HostComboBoxItem hostItem = (HostComboBoxItem)(comboBoxHost.SelectedItem); 
+         GitLab gl = new GitLab(hostItem.Host, hostItem.AccessToken);
 
-            // If project list is filtered, check all filtered, otherwise check the selected only
-            if (File.Exists(ProjectListFileName))
+         List<Project> projectsToCheck = new List<Project>();
+
+         // If project list is filtered, check all filtered, otherwise check the selected only
+         if (File.Exists(ProjectListFileName))
+         {
+            foreach (var itemProject in comboBoxProjects.Items)
             {
-               foreach (var itemProject in comboBoxProjects.Items)
-               {
-                  projectsToCheck.Add((Project)(itemProject));
-               }
+               projectsToCheck.Add((Project)(itemProject));
             }
-            else
-            {
-               projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
-            }
+         }
+         else
+         {
+            projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
+         }
 
-            foreach (var project in projectsToCheck)
-            {
-               List<MergeRequest> mergeRequests = new List<MergeRequest>();
+         foreach (var project in projectsToCheck)
+         {
+            List<MergeRequest> mergeRequests =
+               gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAll(new MergeRequestsFilter());
 
-               try
+            foreach (var mergeRequest in mergeRequests)
+            {
+               if (!doesMergeRequestMatchLabels(mergeRequest))
                {
-                  mergeRequests =
-                     gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAll(new MergeRequestsFilter());
-               }
-               catch (System.Net.WebException ex)
-               {
-                  var response = ((System.Net.HttpWebResponse)ex.Response);
-                  Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+                  continue;
                }
 
-               foreach (var mergeRequest in mergeRequests)
+               if (mergeRequest.Created_At.ToLocalTime() > _lastCheckTime)
                {
-                  if (!doesMergeRequestMatchLabels(mergeRequest))
+                  newMergeRequests.Add(mergeRequest);
+               }
+               else if (mergeRequest.Updated_At.ToLocalTime() > _lastCheckTime)
+               {
+                  var versions = gl.Projects.Get(project.Path_With_Namespace).
+                     MergeRequests.Get(mergeRequest.IId).Versions.LoadAll();
+                  if (versions.Count == 0)
                   {
                      continue;
                   }
 
-                  if (mergeRequest.Created_At.ToLocalTime() > _lastCheckTime)
+                  Version latestVersion = versions[0];
+                  if (latestVersion.Created_At.ToLocalTime() > _lastCheckTime)
                   {
-                     newMergeRequests.Add(mergeRequest);
-                  }
-                  else if (mergeRequest.Updated_At.ToLocalTime() > _lastCheckTime)
-                  {
-                     var versions = gl.Projects.Get(project.Path_With_Namespace).
-                        MergeRequests.Get(mergeRequest.IId).Versions.LoadAll();
-                     if (versions.Count == 0)
-                     {
-                        continue;
-                     }
-
-                     Version latestVersion = versions[0];
-                     if (latestVersion.Created_At.ToLocalTime() > _lastCheckTime)
-                     {
-                        updatedMergeRequests.Add(mergeRequest);
-                     }
+                     updatedMergeRequests.Add(mergeRequest);
                   }
                }
             }
