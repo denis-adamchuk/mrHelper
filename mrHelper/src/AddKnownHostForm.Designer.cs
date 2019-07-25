@@ -68,6 +68,7 @@
          this.textBoxAccessToken.Name = "textBoxAccessToken";
          this.textBoxAccessToken.Size = new System.Drawing.Size(193, 20);
          this.textBoxAccessToken.TabIndex = 1;
+         this.textBoxAccessToken.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAccessToken_KeyDown);
          // 
          // buttonCancel
          // 
@@ -93,6 +94,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(430, 94);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);

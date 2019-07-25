@@ -26,6 +26,7 @@ namespace mrHelperUI
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
+      private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
 
       private static readonly string errorMessageBoxText = "Error";
       private static readonly string warningMessageBoxText = "Warning";
@@ -302,6 +303,11 @@ namespace mrHelperUI
          formatHostListItem(e);
       }
 
+      private void ComboBoxProjects_Format(object sender, ListControlConvertEventArgs e)
+      {
+         formatProjectsListItem(e);
+      }
+
       private void ComboBoxFilteredMergeRequests_Format(object sender, ListControlConvertEventArgs e)
       {
          formatMergeRequestListItem(e);
@@ -423,7 +429,7 @@ namespace mrHelperUI
             _gitRepository = initializeGitRepository();
          }
 
-         checkForUpdates();
+         checkForRepositoryUpdates();
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          var mergeRequestDetails = new MergeRequestDetails
@@ -451,7 +457,7 @@ namespace mrHelperUI
          VersionComboBoxItem rightItem = (VersionComboBoxItem)(comboBoxRightVersion.SelectedItem);
          if (!leftItem.TimeStamp.HasValue)
          {
-            throw new NotImplementedException("Left combobox cannot have an item w/o timestamp");
+            throw new ApplicationException("Left combobox cannot have an item w/o timestamp");
          }
 
          if (rightItem.TimeStamp.HasValue)
@@ -616,7 +622,7 @@ namespace mrHelperUI
             throw new ApplicationException("Cannot launch a diff tool because of a problem with git repository");
          }
 
-         checkForUpdates();
+         checkForRepositoryUpdates();
 
          _difftool = null; // in case the next line throws
          _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
@@ -624,7 +630,7 @@ namespace mrHelperUI
       }
 
       // git repository may be not up-to-date. Check if there is a version in GitLab which is newer than latest update.
-      private void checkForUpdates()
+      private void checkForRepositoryUpdates()
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
@@ -647,38 +653,31 @@ namespace mrHelperUI
          }
       }
 
-      private void onTimer()
+      private void onMergeRequestCheckTimer(object sender, EventArgs e)
       {
-         var newMergeRequests = new List<MergeRequest>();
-         var updatedMergeRequests = new List<MergeRequest>();
-         collectUpdates(out newMergeRequests, out updatedMergeRequests);
-         notifyOnUpdates(newMergeRequests, updatedMergeRequests);
+         List<MergeRequest> newMergeRequests = new List<MergeRequest>();
+         List<MergeRequest> updatedMergeRequests = new List<MergeRequest>();
+         collectMergeRequestUpdates(out newMergeRequests, out updatedMergeRequests);
+         notifyOnMergeRequestUpdates(newMergeRequests, updatedMergeRequests);
 
-         // Update lists in combo-boxes
-         if (comboBoxProjects.SelectedItem != null)
+         if (newMergeRequests.Count > 0 || updatedMergeRequests.Count > 0)
          {
-            int selectedProjectId = ((Project)(comboBoxProjects.SelectedItem)).Id;
-
-            // Update list of available merge requests
-            List<MergeRequest> mergeRequestsOfSelectedProject = new List<MergeRequest>();
-            foreach (var mergeRequest in updatedMergeRequests)
-            {
-               if (mergeRequest.Project_Id == selectedProjectId)
-               {
-                  mergeRequestsOfSelectedProject.Add(mergeRequest);
-               }
-            }
-            updateMergeRequestsDropdownList(mergeRequestsOfSelectedProject, true);
-
-            // Update list of versions
-            foreach (var mergeRequest in mergeRequestsOfSelectedProject)
-            {
-               if (mergeRequest.IId == ((MergeRequest)(comboBoxFilteredMergeRequests.SelectedItem)).IId)
-               {
-                  updateVersions(mergeRequest, true);
-               }
-            }
+            updateDropdownsOnTimer();
          }
+      }
+
+      private void updateDropdownsOnTimer()
+      {
+         if (comboBoxProjects.SelectedItem == null)
+         {
+            return;
+         }
+
+         Project selectedProject = (Project)(comboBoxProjects.SelectedItem);
+         List<MergeRequest> mergeRequests = getAllProjectMergeRequests(selectedProject.Path_With_Namespace);
+
+         // This will automatically update version list for the currently selected MR (if there are new)
+         updateMergeRequestsDropdownList(mergeRequests, true);
       }
 
       /// <summary>
@@ -688,7 +687,7 @@ namespace mrHelperUI
       /// Checks all the projects if project filtering is not used, otherwise checks only filtered project.
       /// Includes only those merge requests that match Labels filters.
       /// </summary>
-      private void collectUpdates(out List<MergeRequest> newMergeRequests, out List<MergeRequest> updatedMergeRequests)
+      private void collectMergeRequestUpdates(out List<MergeRequest> newMergeRequests, out List<MergeRequest> updatedMergeRequests)
       {
          newMergeRequests = new List<MergeRequest>();
          updatedMergeRequests = new List<MergeRequest>();
@@ -747,11 +746,27 @@ namespace mrHelperUI
                }
             }
          }
+
+         _lastCheckTime = DateTime.Now;
       }
 
-      private void notifyOnUpdates(List<MergeRequest> newMergeRequests, List<MergeRequest> updatedMergeRequests)
+      private void notifyOnMergeRequestUpdates(List<MergeRequest> newMergeRequests, List<MergeRequest> updatedMergeRequests)
       {
-         throw new NotImplementedException();
+         foreach (MergeRequest mergeRequest in newMergeRequests)
+         {
+            showTooltipBalloon("Information", "Detected new merge request \""
+                                             + mergeRequest.Title
+                                             + "\" from "
+                                             + mergeRequest.Author.Name);
+         }
+
+         foreach (MergeRequest mergeRequest in updatedMergeRequests)
+         {
+            showTooltipBalloon("Information", "Detected new commits in merge request \""
+                                             + mergeRequest.Title
+                                             + "\" from "
+                                             + mergeRequest.Author.Name);
+         }
       }
 
       private GitRepository initializeGitRepository()
@@ -839,6 +854,12 @@ namespace mrHelperUI
       {
          HostComboBoxItem item = (HostComboBoxItem)(e.ListItem);
          e.Value = item.Host;
+      }
+
+      private static void formatProjectsListItem(ListControlConvertEventArgs e)
+      {
+         Project item = (Project)(e.ListItem);
+         e.Value = item.Path_With_Namespace;
       }
 
       private void loadConfiguration()
@@ -948,12 +969,18 @@ namespace mrHelperUI
 
       private void onApplicationStarted()
       {
-
          _timeTrackingTimer = new Timer
          {
             Interval = timeTrackingTimerInterval
          };
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+
+         _mergeRequestCheckTimer = new Timer
+         {
+            Interval = mergeRequestCheckTimerInterval
+         };
+         _mergeRequestCheckTimer.Tick += new System.EventHandler(onMergeRequestCheckTimer);
+         _mergeRequestCheckTimer.Start();
 
          DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
          integration.RegisterInGit(GitDiffToolName);
@@ -996,19 +1023,19 @@ namespace mrHelperUI
       private void updateProjectsDropdownList(List<Project> projects)
       {
          // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
-         string lastSelectedProjectName = null;
+         Project? lastSelectedProject = null;
          comboBoxProjects.Items.Clear();
          foreach (var project in projects)
          {
-            comboBoxProjects.Items.Add(project.Path_With_Namespace);
+            comboBoxProjects.Items.Add(project);
             if (project.Path_With_Namespace == _settings.LastSelectedProject)
             {
-               lastSelectedProjectName = project.Path_With_Namespace;
+               lastSelectedProject = project;
             }
          }
-         if (lastSelectedProjectName != null)
+         if (lastSelectedProject != null)
          {
-            comboBoxProjects.SelectedItem = lastSelectedProjectName;
+            comboBoxProjects.SelectedItem = lastSelectedProject;
          }
          else if (comboBoxProjects.Items.Count > 0)
          {
@@ -1022,7 +1049,9 @@ namespace mrHelperUI
 
       private void updateMergeRequestsDropdownList(List<MergeRequest> mergeRequests, bool keepPosition)
       {
-         if (keepPosition) throw new NotImplementedException();
+         keepPosition &= (comboBoxFilteredMergeRequests.SelectedItem != null);
+         MergeRequest? currentItem =
+            keepPosition ? (MergeRequest)comboBoxFilteredMergeRequests.SelectedItem : new Nullable<MergeRequest>();
 
          comboBoxFilteredMergeRequests.Items.Clear();
          foreach (var mergeRequest in mergeRequests)
@@ -1034,10 +1063,26 @@ namespace mrHelperUI
          }
          if (comboBoxFilteredMergeRequests.Items.Count > 0)
          {
-            comboBoxFilteredMergeRequests.SelectedIndex = 0;
+            if (currentItem.HasValue)
+            {
+               for (int iItem = 0; iItem < comboBoxFilteredMergeRequests.Items.Count; ++iItem)
+               {
+                  MergeRequest mr = (MergeRequest)(comboBoxFilteredMergeRequests.Items[iItem]);
+                  if (mr.Id == currentItem?.Id)
+                  {
+                     comboBoxFilteredMergeRequests.SelectedIndex = iItem;
+                     break;
+                  }
+               }
+            }
+            else
+            {
+               comboBoxFilteredMergeRequests.SelectedIndex = 0;
+            }
          }
          else
          {
+            // this case means that selection was reset. It needs a special handling.
             comboBoxFilteredMergeRequests.SelectedIndex = -1;
 
             // call it manually because events are not called on -1
@@ -1120,7 +1165,7 @@ namespace mrHelperUI
          richTextBoxMergeRequestDescription.Text = mergeRequest.Description;
 
          // 3. Add versions to combo-boxes
-         updateVersions(mergeRequest, false);
+         updateVersions(mergeRequest);
 
          // 4. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
@@ -1132,7 +1177,7 @@ namespace mrHelperUI
          }
       }
 
-      private void updateVersions(MergeRequest mergeRequest, bool keepPosition)
+      private void updateVersions(MergeRequest mergeRequest)
       {
          comboBoxLeftVersion.Items.Clear();
          comboBoxRightVersion.Items.Clear();
@@ -1157,15 +1202,8 @@ namespace mrHelperUI
             new VersionComboBoxItem(mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
-         if (!keepPosition)
-         {
-            comboBoxLeftVersion.SelectedIndex = 0;
-            comboBoxRightVersion.SelectedIndex = 0;
-         }
-         else
-         {
-            throw new NotImplementedException();
-         }
+         comboBoxLeftVersion.SelectedIndex = 0;
+         comboBoxRightVersion.SelectedIndex = 0;
       }
 
       private void onStartTimer()
@@ -1235,20 +1273,22 @@ namespace mrHelperUI
       private void onHideToTray(FormClosingEventArgs e)
       {
          e.Cancel = true;
-         if (_requireShowingTooltip)
+         if (_requireShowingTooltipOnHideToTray)
          {
-            showTooltipBalloon();
+            // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
+            // so it's only shown once in a lifetime
+            showTooltipBalloon("Information", "I will now live in your tray");
+            _requireShowingTooltipOnHideToTray = false;
          }
          Hide();
          ShowInTaskbar = false;
       }
 
-      private void showTooltipBalloon()
+      private void showTooltipBalloon(string title, string text)
       {
-         // TODO: Maybe it's a good idea to save the requireShowingTooltip state
-         // so it's only shown once in a lifetime
+         notifyIcon.BalloonTipTitle = title;
+         notifyIcon.BalloonTipText = text;
          notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
-         _requireShowingTooltip = false;
       }
 
       private void onRestoreWindow()
@@ -1368,7 +1408,7 @@ namespace mrHelperUI
       private Timer _timeTrackingTimer;
 
       private bool _exiting = false;
-      private bool _requireShowingTooltip = true;
+      private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
       private GitRepository _gitRepository;
 
@@ -1380,6 +1420,7 @@ namespace mrHelperUI
 
       private ColorScheme _colorScheme = new ColorScheme();
 
+      private Timer _mergeRequestCheckTimer;
       private DateTime _lastCheckTime = DateTime.Now;
 
       private struct HostComboBoxItem

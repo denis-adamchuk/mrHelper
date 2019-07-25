@@ -491,6 +491,7 @@
          this.comboBoxProjects.Sorted = true;
          this.comboBoxProjects.TabIndex = 2;
          this.comboBoxProjects.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProjects_SelectedIndexChanged);
+         this.comboBoxProjects.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProjects_Format);
          // 
          // groupBoxActions
          // 
