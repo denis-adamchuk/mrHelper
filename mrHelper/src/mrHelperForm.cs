@@ -662,29 +662,14 @@ namespace mrHelperUI
             collectMergeRequestUpdates(out newMergeRequests, out updatedMergeRequests);
             notifyOnMergeRequestUpdates(newMergeRequests, updatedMergeRequests);
 
-            if (newMergeRequests.Count > 0 || updatedMergeRequests.Count > 0)
-            {
-               updateDropdownsOnTimer();
-            }
+            // This will automatically update version list for the currently selected MR (if there are new).
+            // This will also remove merged merge requests from the list.
+            updateMergeRequestsDropdownList(getAllProjectMergeRequests(comboBoxProjects.Text), true);
          }
          catch (Exception ex)
          {
             MessageBox.Show(ex.Message, "Error occurred on auto-update", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-      }
-
-      private void updateDropdownsOnTimer()
-      {
-         if (comboBoxProjects.SelectedItem == null)
-         {
-            return;
-         }
-
-         Project selectedProject = (Project)(comboBoxProjects.SelectedItem);
-         List<MergeRequest> mergeRequests = getAllProjectMergeRequests(selectedProject.Path_With_Namespace);
-
-         // This will automatically update version list for the currently selected MR (if there are new)
-         updateMergeRequestsDropdownList(mergeRequests, true);
       }
 
       /// <summary>
@@ -1088,14 +1073,21 @@ namespace mrHelperUI
          {
             if (currentItem.HasValue)
             {
+               bool found = false;
                for (int iItem = 0; iItem < comboBoxFilteredMergeRequests.Items.Count; ++iItem)
                {
                   MergeRequest mr = (MergeRequest)(comboBoxFilteredMergeRequests.Items[iItem]);
                   if (mr.Id == currentItem?.Id)
                   {
                      comboBoxFilteredMergeRequests.SelectedIndex = iItem;
+                     found = true;
                      break;
                   }
+               }
+
+               if (!found)
+               {
+                  comboBoxFilteredMergeRequests.SelectedIndex = 0;
                }
             }
             else
