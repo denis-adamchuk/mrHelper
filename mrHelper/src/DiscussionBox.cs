@@ -131,6 +131,22 @@ namespace mrHelperUI
          }
       }
 
+      private void MenuItemReply_Click(object sender, EventArgs e)
+      {
+         try
+         {
+            NewDiscussionItemForm form = new NewDiscussionItemForm();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               onReply(form.Body);
+            }
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
       private void MenuItemEditNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
@@ -220,6 +236,7 @@ namespace mrHelperUI
          Debug.Assert(!firstNote.System);
 
          _discussionId = discussion.Id;
+         _individual = discussion.Individual_Note;
 
          _labelAuthor = createLabelAuthor(firstNote);
          _labelFileName = createLabelFilename(firstNote);
@@ -341,7 +358,7 @@ namespace mrHelperUI
          TextBox textBox = new TextBox();
          _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
          textBox.ReadOnly = true;
-         textBox.Text = note.Body;
+         textBox.Text = note.Body.Replace("\n", "\r\n");
          textBox.Multiline = true;
          textBox.Height = getTextBoxPreferredHeight(textBox);
          textBox.BackColor = getNoteColor(note);
@@ -395,6 +412,14 @@ namespace mrHelperUI
          };
          menuItemEditNote.Click += MenuItemEditNote_Click;
          contextMenu.MenuItems.Add(menuItemEditNote);
+
+         MenuItem menuItemReply = new MenuItem
+         {
+            Enabled = !_individual,
+            Text = "Reply"
+         };
+         menuItemReply.Click += MenuItemReply_Click;
+         contextMenu.MenuItems.Add(menuItemReply);
 
          return contextMenu;
       }
@@ -502,6 +527,19 @@ namespace mrHelperUI
          Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
       }
 
+      private void onReply(string body)
+      {
+         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
+            Discussions.Get(_discussionId).CreateNewNote(
+               new CreateNewNoteParameters
+               {
+                  Body = body
+               });
+
+         refreshDiscussion();
+      }
+
       private void onStartEditNote(TextBox textBox)
       {
          textBox.ReadOnly = false;
@@ -513,7 +551,7 @@ namespace mrHelperUI
          textBox.ReadOnly = true;
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         textBox.Text = note.Body;
+         textBox.Text = note.Body.Replace("\n", "\r\n");
 
          int newHeight = getTextBoxPreferredHeight(textBox);
          if (newHeight < textBox.Height)
@@ -531,21 +569,18 @@ namespace mrHelperUI
             return;
          }
 
-         string body = textBox.Text;
-
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
+         note = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
             Discussions.Get(_discussionId).ModifyNote(note.Id,
                new ModifyDiscussionNoteParameters
                {
                   Type = ModifyDiscussionNoteParameters.ModificationType.Body,
-                  Body = body
+                  Body = textBox.Text
                });
 
          _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
 
          // Create a new text box
-         note.Body = body;
          TextBox newTextBox = createTextBox(note, isDiscussionResolved()); 
 
          // By default place a new textbox at the same place as the old one. It may be changed if height changed.
@@ -609,7 +644,7 @@ namespace mrHelperUI
       private void onToggleResolveDiscussion()
       {
          bool wasResolved = isDiscussionResolved();
-         
+
          // Change discussion state at Server
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
@@ -651,7 +686,7 @@ namespace mrHelperUI
             {
                Controls.Add(note);
             }
-         
+
             // To reposition new controls
             _onSizeChanged();
          }
@@ -755,6 +790,7 @@ namespace mrHelperUI
       private readonly MergeRequestDetails _mergeRequestDetails;
       private readonly User _currentUser;
       private string _discussionId;
+      private bool _individual;
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;

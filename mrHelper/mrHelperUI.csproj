@@ -53,6 +53,12 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\NewDiscussionItemForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\NewDiscussionItemForm.Designer.cs">
+      <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\AddKnownHostForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +91,9 @@
     </Compile>
     <Compile Include="src\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="src\NewDiscussionItemForm.resx">
+      <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </EmbeddedResource>
