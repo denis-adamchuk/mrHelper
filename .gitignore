@@ -1,9 +1,7 @@
 *.swp
-/build-release.bat
-/build-debug.bat
 /.root
-/tags
 /.vs
+/tags
 /bin/*
 /*/obj
 *.csproj.user
