@@ -6,6 +6,15 @@ using System.Linq;
 
 namespace mrCore
 {
+   public class MatchException : Exception
+   {
+      public MatchException(DiffRefs diffRefs, DiffToolInfo diffToolInfo)
+         : base(String.Format("Cannot match commits to diff tool information.\nDiffRefs: {0}\nDiffToolInfo: {1}",
+            diffRefs.ToString(), difftoolInfo.ToString())
+      {
+      }
+   }
+
    // This 'matcher' matches SHA of two commits to the line/side information obtained from diff tool.
    // Result of match is 'DiffPosition' structure object.
    //
@@ -26,19 +35,23 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      // Returns Position if match succeeded and null if match failed, what most likely means that
+      // Returns DiffPosition if match succeeded and throws if match failed, what most likely means that
       // diff tool info is invalid
-      public DiffPosition? Match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      public DiffPosition Match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
          if (!difftoolInfo.IsValid())
          {
-            Debug.Assert(false);
-            return new Nullable<DiffPosition>();
+            throw new ArgumentException(
+               String.Format("Bad diff tool info: {0}", difftoolInfo.ToString()));
          }
 
          MatchResult matchResult = match(diffRefs, difftoolInfo);
-         return matchResult != MatchResult.Undefined
-            ? createPosition(matchResult, diffRefs, difftoolInfo) : new Nullable<DiffPosition>();
+         if (matchResult == MatchResult.Undefined)
+         {
+            throw new MatchException(diffRefs, difftoolInfo);
+         }
+
+         return createPosition(matchResult, diffRefs, difftoolInfo);
       }
 
       private DiffPosition createPosition(MatchResult state, DiffRefs diffRefs, DiffToolInfo difftoolInfo)

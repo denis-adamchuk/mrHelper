@@ -1,11 +1,12 @@
 ﻿namespace mrDiffTool
 {
-
    public interface IntegratedDiffTool
    {
       string GetToolCommandArguments();
 
-      string[] GetToolNames();
+      string GetToolName();
+
+      string[] GetToolRegistryNames();
 
       string GetToolCommand();
 
@@ -13,3 +14,4 @@
    }
 
 }
+

@@ -16,10 +16,6 @@ namespace mrHelperUI
 
    public partial class mrHelperForm : Form, ICommandCallback
    {
-      private static readonly string timeTrackingMutexGuid = "{f0b3cbf1-e022-468b-aeb6-db0417a12379}";
-      private static readonly System.Threading.Mutex timeTrackingMutex =
-          new System.Threading.Mutex(false, timeTrackingMutexGuid);
-
       // TODO Move to resources
       // {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
@@ -53,14 +49,19 @@ namespace mrHelperUI
 
       private void addCustomActions()
       {
-         if (!File.Exists(CustomActionsFileName))
+         List<ICommand> commans = null;
+         try
+         {
+            CustomCommandLoader loader = new CustomCommandLoader(this);
+            commands = loader.LoadCommands(CustomActionsFileName);
+         }
+         catch (Exception ex)
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state
             // Do not try to load custom actions if they don't exist
             return;
          }
-         CustomCommandLoader loader = new CustomCommandLoader(this);
-         List<ICommand> commands = loader.LoadCommands(CustomActionsFileName);
+
          int id = 0;
          System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
          {
@@ -624,8 +625,23 @@ namespace mrHelperUI
 
          checkForRepositoryUpdates();
 
-         _difftool = null; // in case the next line throws
-         _difftool = _gitRepository.DiffTool(GitDiffToolName, getGitTag(true /* left */), getGitTag(false /* right */));
+         _leftSHA = null;
+         _rightSHA = null;
+
+         string leftSHA = getGitTag(true /* left */);
+         string rightSHA = getGitTag(false /* right */);
+         try
+         {
+            _gitRepository.DiffTool(GitDiffToolName, leftSHA, rightSHA);
+
+            _leftSHA = leftSHA;
+            _rightSHA = rightSHA;
+         }
+         catch (GitOperationException ex)
+         {
+            // TODO
+         }
+
          updateInterprocessSnapshot();
       }
 
@@ -912,21 +928,16 @@ namespace mrHelperUI
          InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
          serializer.PurgeSerialized();
 
-         bool diffToolIsRunning = _difftool != null && !_difftool.HasExited;
          bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
-         if (!allowReportingIssues || !diffToolIsRunning)
+         if (!allowReportingIssues)
          {
             return;
          }
 
-         string[] diffArgs = _difftool.StartInfo.Arguments.Split(' ');
-         if (diffArgs.Length < 2)
+         if (_leftSHA == null || _rightSHA == null)
          {
             return;
          }
-
-         string leftSHA = diffArgs[diffArgs.Length - 2];
-         string rightSHA = diffArgs[diffArgs.Length - 1];
 
          MergeRequest mergeRequest = getMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
@@ -938,8 +949,8 @@ namespace mrHelperUI
 
          InterprocessSnapshot snapshot;
          snapshot.AccessToken = item.AccessToken;
-         snapshot.Refs.LeftSHA = leftSHA;                       // Base commit SHA in the source branch
-         snapshot.Refs.RightSHA = rightSHA;                       // SHA referencing HEAD of this merge request
+         snapshot.Refs.LeftSHA = _leftSHA;                       // Base commit SHA in the source branch
+         snapshot.Refs.RightSHA = _rightSHA;                     // SHA referencing HEAD of this merge request
          snapshot.Host = item.Host;
          snapshot.MergeRequestId = mergeRequest.IId;
          snapshot.Project = comboBoxProjects.Text;
@@ -1223,13 +1234,6 @@ namespace mrHelperUI
 
       private void onStartTimer()
       {
-         // Try to lock a mutex so that another instance cannot track time simultaneously with this one
-         if (!timeTrackingMutex.WaitOne(TimeSpan.Zero))
-         {
-            // Another instance is currently tracking time
-            throw new ApplicationException("Another instance is tracking time");
-         }
-
          // 1. Update button text
          buttonToggleTimer.Text = buttonStartTimerTrackingText;
 
@@ -1269,9 +1273,6 @@ namespace mrHelperUI
          {
             sendTrackedTimeSpan(_stopWatch.Elapsed);
          }
-
-         // 7. Allow others to track time
-         timeTrackingMutex.ReleaseMutex();
       }
 
       private void onTimer(object sender, EventArgs e)

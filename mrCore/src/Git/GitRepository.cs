@@ -10,9 +10,9 @@ namespace mrCore
       // Constructor expects a valid git repository as input argument
       public GitRepository(string path, DateTime? lastUpdateTime = null)
       {
-         if (!Directory.Exists(path) || !IsGitRepository(path))
+         if (!Directory.Exists(path) || !isGitRepository(path))
          {
-            throw new ApplicationException("There is no a valid repository at path " + path);
+            throw new ArgumentException("There is no a valid repository at path " + path);
          }
 
          _path = path;
@@ -26,72 +26,51 @@ namespace mrCore
       // Creates a new git repository by cloning a passed project into a dir with the same name at the given path
       static public GitRepository CreateByClone(string host, string project, string path)
       {
-         // TODO Use shallow clone
-         var process = Process.Start("git", "clone " + "https://" + host + "/" + project + " " + path);
-         process.WaitForExit();
-         if (process.ExitCode == 0)
-         {
-            return new GitRepository(path, DateTime.Now);
-         }
-         return null;
-      }
-
-      static public bool IsGitRepository(string dir)
-      {
-         var cwd = Directory.GetCurrentDirectory();
          List<string> output = null;
+         List<string> errors = null;
+         string arguments = "clone " + "https://" + host + "/" + project + " " + path;
 
-         try
+         int code = gatherStdOutputLines(arguments, true, out output, out errors);
+         if (code != 0)
          {
-            Directory.SetCurrentDirectory(dir);
-            var arguments = "rev-parse --is-inside-work-tree";
-            output = gatherStdOutputLines(arguments);
-         }
-         catch (System.Exception)
-         {
-            // something went wrong
-            return false;
-         }
-         finally
-         {
-            // revert anyway
-            Directory.SetCurrentDirectory(cwd);
+            throw new GitOperationException(code, errors);
          }
 
-         // success path
-         return output.Count > 0 && output[0] == "true";
+         return new GitRepository(path, DateTime.Now);
       }
 
       public bool Fetch()
       {
-         bool success = (bool)exec(() =>
+         run_in_path(() =>
          {
-            var process = Process.Start("git", "fetch");
-            process.WaitForExit();
-            return process.ExitCode == 0;
+            List<string> output = null;
+            List<string> errors = null;
+            string arguments = "fetch";
+
+            int code = gatherStdOutputLines(arguments, true, out output, out errors);
+            if (code != 0)
+            {
+               throw new GitOperationException(code, errors);
+            }
          });
 
-         if (success)
-         {
-            LastUpdateTime = DateTime.Now;
-         }
-         return success;
+         LastUpdateTime = DateTime.Now;
       }
 
-      public Process DiffTool(string name, string leftCommit, string rightCommit)
+      public void DiffTool(string name, string leftCommit, string rightCommit)
       {
-         return (Process)exec(() =>
+         run_in_path(() =>
          {
-            return Process.Start("git", "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit);
+            List<string> output = null;
+            List<string> errors = null;
+            string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
+
+            int code = gatherStdOutputLines(arguments, false, out output, out errors);
+            if (code != 0)
+            {
+               throw new GitOperationException(code, errors);
+            }
          });
-      }
-
-      static public bool SetGlobalDiffTool(string name, string command)
-      {
-         // No need to change current directory because we're changing a global setting (not a repo one)
-         var process = Process.Start("git", "config --global difftool." + name + "" + ".cmd " + command);
-         process.WaitForExit();
-         return process.ExitCode == 0;
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -153,9 +132,24 @@ namespace mrCore
          return result;
       }
 
-      static private List<string> gatherStdOutputLines(string arguments)
+      static private bool isGitRepository(string dir)
       {
-         List<string> result = new List<string>();
+         Debug.Assert(Directory.Exists(dir));
+
+         return (bool)exec(() =>
+         {
+            List<string> output = null;
+            List<string> errors = null;
+            var arguments = "rev-parse --is-inside-work-tree";
+
+            return gatherStdOutputLines(arguments, output, errors) == 0;
+         }, dir);
+      }
+
+      static private int gatherStdOutputLines(string arguments, bool wait, out output, out errors)
+      {
+         output = new List<string>();
+         errors = new List<string>();
 
          var proc = new Process
          {
@@ -170,22 +164,41 @@ namespace mrCore
          };
 
          proc.Start();
-         while (!proc.StandardOutput.EndOfStream)
+
+         process.OutputDataReceived += (sender, args) => output.Add(args.Data);
+         process.ErrorDataReceived += (sender, args) => errors.Add(args.Data);
+
+         process.BeginOutputReadLine();
+         process.BeginErrorReadLine();
+
+         if (wait)
          {
-            result.Add(proc.StandardOutput.ReadLine());
+            process.WaitForExit();
+         }
+         else
+         {
+            Thread.Sleep(500); // ms
+            if (process.HasExited)
+            {
+               return process.ExitCode;
+            }
+            else
+            {
+               return 0;
+            }
          }
 
-         return result;
+         return process.ExitCode;
       }
 
       private delegate object command();
 
-      private object exec(command cmd)
+      static private object run_in_path(command cmd, string path)
       {
          var cwd = Directory.GetCurrentDirectory();
          try
          {
-            Directory.SetCurrentDirectory(_path);
+            Directory.SetCurrentDirectory(path);
             return cmd();
          }
          finally

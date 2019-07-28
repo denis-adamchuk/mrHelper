@@ -17,7 +17,12 @@ namespace mrDiffTool
          return " //solo //expandall \\\"$LOCAL\\\" \\\"$REMOTE\\\"";
       }
 
-      public string[] GetToolNames()
+      private string GetToolName()
+      {
+         return "Beyond Compare 3";
+      }
+
+      public string[] GetToolRegistryNames()
       {
          string[] names = { "Beyond Compare 3", "Beyond Compare Version 3"};
          return names;
@@ -30,14 +35,37 @@ namespace mrDiffTool
          var prefs = System.IO.Path.Combine(bcFolder, "BCPreferences.xml");
          if (!System.IO.File.Exists(prefs))
          {
-            return; } string integrationKey = "mrhelper-bc3-integration"; string defaultShortcut = "32843"; // Alt-K
+            throw new DiffToolIntegrationException(GetToolName(), String.Format("File is missing: \"{0}\"", prefs));
+         }
+
+         string integrationKey = "mrhelper-bc3-integration";
+         string defaultShortcut = "32843"; // Alt-K
          var arguments = " %25F1 %l1 %25F2 %l2";
 
          XmlDocument document = new XmlDocument();
          document.Load(prefs);
          var root = document.SelectSingleNode("BCPreferences");
+         if (root == null)
+         {
+            throw new DiffToolIntegrationException(GetToolName(),
+               String.Format("Unexpected format of preferences file \"{0}\". Missing \"BCPreferences\" node", prefs));
+         }
+
          var tbPrefs = root.SelectSingleNode("TBcPrefs");
+         if (tbPrefs == null)
+         {
+            throw new DiffToolIntegrationException(GetToolName(),
+               String.Format("Unexpected format of preferences file \"{0}\". Missing \"TBcPrefs\" node", prefs));
+         }
+
          var opensWith = tbPrefs.SelectSingleNode("OpenWiths");
+         if (opensWith == null)
+         {
+            throw new DiffToolIntegrationException(GetToolName(),
+               String.Format("Unexpected format of preferences file \"{0}\". Missing \"opensWith\" node", prefs));
+         }
+
+         // check if we already integrated
          List<int> ids = new List<int>();
          foreach (XmlNode child in opensWith.ChildNodes)
          {
@@ -61,6 +89,8 @@ namespace mrDiffTool
                   ((XmlElement)currentCmdLine).SetAttribute("Value", launchCommand + arguments);
                   ((XmlElement)currentShortCut).SetAttribute("Value", defaultShortcut);
                   document.Save(prefs);
+
+                  // patch updated
                   return;
                }
             }
@@ -86,5 +116,7 @@ namespace mrDiffTool
 
          document.Save(prefs);
       }
+
    }
 }
+

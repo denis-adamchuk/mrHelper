@@ -5,42 +5,6 @@ using System.Text.RegularExpressions;
 
 namespace mrCore
 {
-   public struct DiffToolInfo
-   {
-      public struct Side
-      {
-         public string FileName;
-         public int LineNumber;
-
-         public Side(string filename, int linenumber)
-         {
-            FileName = filename;
-            LineNumber = linenumber;
-         }
-      }
-
-      public bool IsValid()
-      {
-         if (!Left.HasValue && !Right.HasValue)
-         {
-            return false;
-         }
-         if (IsLeftSideCurrent && (!Left.HasValue || Left.Value.FileName == null))
-         {
-            return false;
-         }
-         if (!IsLeftSideCurrent && (!Right.HasValue || Right.Value.FileName == null))
-         {
-            return false;
-         }
-         return true;
-      }
-
-      public Side? Left;
-      public Side? Right;
-      public bool IsLeftSideCurrent;
-   }
-
    // It expected that one of paths has word 'right' and another one 'left' (git difftool --dir-diff makes them)
    public class DiffArgumentsParser
    {
@@ -68,7 +32,8 @@ namespace mrCore
          }
          else
          {
-            throw new ApplicationException("Bad number of arguments");
+            throw new ArgumentException(
+               String.Format("Bad number of arguments ({0} were given, 5 or 6 are expected)", arguments.Length);
          }
       }
 
@@ -78,13 +43,15 @@ namespace mrCore
 
          if (!int.TryParse(_arguments[1], out int currentLineNumber))
          {
-            throw new ApplicationException("Bad argument \"" + _arguments[1] + "\" at position 1");
+            throw new ArgumentException(
+               String.Format("Bad argument \"{0}\" at position 1", _arguments[1]);
          }
 
          int nextLineNumber = 0;
          if (_arguments.Length > 2 && !int.TryParse(_arguments[3], out nextLineNumber))
          {
-            throw new ApplicationException("Bad argument \"" + _arguments[3] + "\" at position 3");
+            throw new ArgumentException(
+               String.Format("Bad argument \"{0}\" at position 3", _arguments[3]);
          }
 
          DiffToolInfo.Side? current = new DiffToolInfo.Side(
@@ -137,7 +104,8 @@ namespace mrCore
          Match m = trimmedFileNameRe.Match(trimmed);
          if (!m.Success || m.Groups.Count < 3 || !m.Groups[1].Success || !m.Groups[2].Success)
          {
-            throw new ApplicationException("Cannot parse a path obtained from diff tool");
+            throw new ArgumentException(
+               String.Format("Cannot parse path \"{0}\" obtained from diff tool", fullFileName));
          }
          return m.Groups;
       }

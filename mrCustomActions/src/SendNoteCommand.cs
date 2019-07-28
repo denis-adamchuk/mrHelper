@@ -10,7 +10,7 @@ namespace mrCustomActions
          _name = name;
          _body = body;
       }
-      
+
       public string GetName()
       {
          return _name;

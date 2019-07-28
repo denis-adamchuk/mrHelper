@@ -20,9 +20,16 @@ namespace mrCore
 
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
-         if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
+         if (!Context.Helpers.IsValidPosition(position))
          {
-            return new DiffContext();
+            throw new ArgumentException(
+               String.Format("Bad \"position\": {0}", position.ToString()));
+         }
+
+         if (!Context.Helpers.IsValidContextDepth(depth))
+         {
+            throw new ArgumentException(
+               String.Format("Bad \"depth\": {0}", depth.ToString()));
          }
 
          bool isRightSideContext = position.RightLine != null;
@@ -30,24 +37,26 @@ namespace mrCore
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
-         return createDiffContext(linenumber, filename, sha, isRightSideContext, depth);
+         List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
+         if (linenumber > contents.Count)
+         {
+            throw new ArgumentException(
+               String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
+               linenumber.ToString(), position.ToString());
+         }
+
+         return createDiffContext(linenumber, contents, isRightSideContext, depth);
       }
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
       // linenumber is one-based
-      private DiffContext createDiffContext(int linenumber, string filename, string sha, bool isRightSideContext,
+      private DiffContext createDiffContext(int linenumber, List<string> contents, bool isRightSideContext,
          ContextDepth depth)
       {
          DiffContext diffContext = new DiffContext
          {
             Lines = new List<DiffContext.Line>()
          };
-
-         List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
-         if (linenumber > contents.Count)
-         {
-            return new DiffContext();
-         }
 
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
          IEnumerable<string> shiftedContents = contents.Skip(startLineNumber - 1);

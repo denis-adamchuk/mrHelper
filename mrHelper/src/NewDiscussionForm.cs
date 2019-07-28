@@ -69,10 +69,21 @@ namespace mrHelperUI
             return;
          }
 
-         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         if (!_position.HasValue)
+         try
          {
-            handleMatchingError();
+            _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
+         }
+         catch (ArgumentException)
+         {
+            // TODO just log and exit
+            return;
+         }
+         catch (MatchingException)
+         {
+            MessageBox.Show(
+               "Line numbers from diff tool do not match line numbers from git diff. " +
+               "Make sure that you use correct instance of diff tool.",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -92,7 +103,10 @@ namespace mrHelperUI
          {
             Debug.Assert(_difftoolInfo.Right.HasValue);
             anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.LeftSHA, _interprocessSnapshot.Refs.RightSHA, _difftoolInfo.Right?.FileName, false);
+               _interprocessSnapshot.Refs.LeftSHA,
+               _interprocessSnapshot.Refs.RightSHA,
+               _difftoolInfo.Right?.FileName,
+               false);
             if (anotherName == _difftoolInfo.Right?.FileName)
             {
                // it is not a renamed but removed file
@@ -103,7 +117,10 @@ namespace mrHelperUI
          {
             Debug.Assert(_difftoolInfo.Left.HasValue);
             anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.LeftSHA, _interprocessSnapshot.Refs.RightSHA, _difftoolInfo.Left?.FileName, true);
+               _interprocessSnapshot.Refs.LeftSHA,
+               _interprocessSnapshot.Refs.RightSHA,
+               _difftoolInfo.Left?.FileName,
+               true);
             if (anotherName == _difftoolInfo.Left?.FileName)
             {
                // it is not a renamed but added file
@@ -140,15 +157,8 @@ namespace mrHelperUI
          {
             Body = textBoxDiscussionBody.Text
          };
-         if (!_position.HasValue)
-         {
-            parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
-         }
-         else
-         {
-            parameters.Position = checkBoxIncludeContext.Checked
-               ? createPositionParameters(_position.Value) : new Nullable<PositionParameters>();
-         }
+         parameters.Position = checkBoxIncludeContext.Checked
+            ? createPositionParameters(_position) : new Nullable<PositionParameters>();
          return parameters;
       }
 
@@ -178,7 +188,7 @@ namespace mrHelperUI
       {
          ContextDepth depth = new ContextDepth(0, 3);
          IContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
-         DiffContext context = textContextMaker.GetContext(_position.Value, depth);
+         DiffContext context = textContextMaker.GetContext(_position, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
          htmlPanel.Text = formatter.FormatAsHTML(context);
@@ -199,18 +209,6 @@ namespace mrHelperUI
          {
             handleGitlabError(parameters, gl, ex);
          }
-      }
-
-      private void handleMatchingError()
-      {
-         Debug.Assert(false); // matching failed
-         MessageBox.Show("Line numbers from diff tool do not match line numbers from git diff." +
-            "Context will not be included into the discussion.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-         checkBoxIncludeContext.Checked = false;
-         checkBoxIncludeContext.Enabled = false;
-         htmlPanel.Text = "<html><body>N/A</body></html>";
-         textBoxFileName.Text = "N/A";
       }
 
       private void handleGitlabError(NewDiscussionParameters parameters, GitLab gl, System.Net.WebException ex)
@@ -282,7 +280,7 @@ namespace mrHelperUI
       private readonly RefsToLinesMatcher _matcher;
       private readonly GitRenameDetector _renameChecker;
 
-      private DiffPosition? _position;
+      private DiffPosition _position;
       private readonly GitRepository _gitRepository;
    }
 }

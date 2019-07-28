@@ -279,9 +279,16 @@ namespace mrHelperUI
 
          if (_panelContextMaker != null && _formatter != null)
          {
-            DiffContext briefContext = _panelContextMaker.GetContext(position, _diffContextDepth);
-            string briefContextText = _formatter.FormatAsHTML(briefContext, fontSizePx, rowsVPaddingPx);
-            htmlPanel.Text = briefContextText;
+            try
+            {
+               DiffContext briefContext = _panelContextMaker.GetContext(position, _diffContextDepth);
+               string briefContextText = _formatter.FormatAsHTML(briefContext, fontSizePx, rowsVPaddingPx);
+               htmlPanel.Text = briefContextText;
+            }
+            catch (Exception ex)
+            {
+               // TODO Log
+            }
          }
          else
          {
@@ -290,9 +297,16 @@ namespace mrHelperUI
 
          if (_tooltipContextMaker != null && _formatter != null)
          {
-            DiffContext fullContext = _tooltipContextMaker.GetContext(position, _tooltipContextDepth);
-            string fullContextText = _formatter.FormatAsHTML(fullContext, fontSizePx, rowsVPaddingPx);
-            _htmlToolTip.SetToolTip(htmlPanel, fullContextText);
+            try
+            {
+               DiffContext fullContext = _tooltipContextMaker.GetContext(position, _tooltipContextDepth);
+               string fullContextText = _formatter.FormatAsHTML(fullContext, fontSizePx, rowsVPaddingPx);
+               _htmlToolTip.SetToolTip(htmlPanel, fullContextText);
+            }
+            catch (Exception ex)
+            {
+               // TODO Log
+            }
          }
 
          return htmlPanel;

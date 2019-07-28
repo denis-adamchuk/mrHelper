@@ -16,9 +16,9 @@ namespace mrHelperUI
       {
          resetToDefault();
 
-         if (filename == null || filename.Length == 0 || !System.IO.File.Exists(filename))
+         if (!System.IO.File.Exists(filename))
          {
-            return;
+            throw new ArgumentException(String.Empty("Cannot find file \"{0}\"", filename));
          }
 
          try
@@ -47,7 +47,7 @@ namespace mrHelperUI
          catch (Exception)
          {
             // Bad JSON
-            throw new ApplicationException("Unexpected format of color scheme file. Will use default colors.");
+            throw new ArgumentException("Unexpected format of color scheme file. Will use default colors.");
          }
       }
 

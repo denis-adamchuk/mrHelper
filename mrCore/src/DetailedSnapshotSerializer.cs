@@ -3,6 +3,9 @@ using System.Web.Script.Serialization;
 
 namespace mrCore
 {
+   /// <summary>
+   /// Data structure used for communication between the main application instance and instances launched from diff tool
+   /// </summary>
    public struct InterprocessSnapshot
    {
       public int MergeRequestId;
@@ -25,29 +28,19 @@ namespace mrCore
          System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName), json);
       }
 
-      public InterprocessSnapshot? DeserializeFromDisk()
+      public InterprocessSnapshot DeserializeFromDisk()
       {
-         string fullSnapshotName = System.IO.Path.Combine(snapshotPath,InterprocessSnapshotFileName);
+         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName);
          if (!System.IO.File.Exists(fullSnapshotName))
          {
-            return null;
+            throw new IOException(
+               String.Empty("Cannot find interprocess snapshot at path \"{0}\"", fullSnapshotName));
          }
 
          string jsonStr = System.IO.File.ReadAllText(fullSnapshotName);
 
          JavaScriptSerializer serializer = new JavaScriptSerializer();
-         dynamic json = serializer.DeserializeObject(jsonStr);
-
-         InterprocessSnapshot snapshot;
-         snapshot.Host = json["Host"];
-         snapshot.AccessToken = json["AccessToken"];
-         snapshot.Project = json["Project"];
-         snapshot.MergeRequestId = json["MergeRequestId"];
-         snapshot.TempFolder = json["TempFolder"];
-         dynamic refs = json["Refs"];
-         snapshot.Refs.LeftSHA = refs["LeftSHA"];
-         snapshot.Refs.RightSHA = refs["RightSHA"];
-         return snapshot;
+         return serializer.Deserialize<InterprocessSnapshot>(jsonStr);
       }
 
       public void PurgeSerialized()

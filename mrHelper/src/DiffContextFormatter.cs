@@ -104,8 +104,8 @@ namespace mrHelperUI
          {
             return line.Right.Value.State == DiffContext.Line.State.Unchanged ? "unchanged" : "added";
          }
-         Debug.Assert(false);
-         return "added";
+
+         throw new ArgumentException(String.Format("Bad context line: {0}", line.ToString());
       }
 
       private string getCode(DiffContext.Line line)
@@ -130,3 +130,4 @@ namespace mrHelperUI
       private readonly string _css;
    }
 }
+
