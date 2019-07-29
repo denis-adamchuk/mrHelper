@@ -52,10 +52,9 @@ namespace mrHelperUI
                   {
                      snapshot = serializer.DeserializeFromDisk();
                   }
-                  catch (IOException)
+                  catch (IOException ex)
                   {
-                     throw new ApplicationException(
-                           "To create a discussion you need to start tracking time and have a running diff tool");
+                     MessageBox.Show("Make sure that timer is started in the main application");
                   }
                   Application.Run(new NewDiscussionForm(snapshot, diffToolInfo));
                }

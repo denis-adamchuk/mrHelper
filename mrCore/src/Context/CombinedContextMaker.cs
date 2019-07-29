@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
-   // This 'maker' creates a list of lines that belong to both left and right sides.
-   // List starts from the line passed to GetContext() and includes a context with adjacent
-   // removed, added and unmodified.
-   //
-   // Cost: one 'git diff -U20000' call for each GetContext() call.
+   /// <summary>
+   /// This 'maker' creates a list of lines that belong to both left and right sides.
+   /// List starts from the line passed to GetContext() and includes a context with adjacent
+   /// removed, added and unmodified.
+   ///
+   /// Cost: one 'git diff -U20000' call for each GetContext() call.
+   /// </summary>
    public class CombinedContextMaker : IContextMaker
    {
       public CombinedContextMaker(GitRepository gitRepository)
@@ -21,6 +23,10 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
+      /// <summary>
+      /// Throws ArgumentException.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position))
@@ -50,7 +56,7 @@ namespace mrCore
          {
             throw new ArgumentException(
                String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
-               linenumber.ToString(), position.ToString());
+               linenumber.ToString(), position.ToString()));
          }
 
          return createDiffContext(linenumber, isRightSideContext, context, depth);

@@ -17,7 +17,7 @@ namespace mrDiffTool
          return " //solo //expandall \\\"$LOCAL\\\" \\\"$REMOTE\\\"";
       }
 
-      private string GetToolName()
+      public string GetToolName()
       {
          return "Beyond Compare 3";
       }
@@ -28,6 +28,10 @@ namespace mrDiffTool
          return names;
       }
 
+      /// <summary>
+      /// Adds a command to launch MRHelper to Beyond Compare 3 preferences file
+      /// Throws DiffToolIntegrationException
+      /// </summary>
       public void PatchToolConfig(string launchCommand)
       {
          var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

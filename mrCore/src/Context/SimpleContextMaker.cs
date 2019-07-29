@@ -5,11 +5,13 @@ using System.Linq;
 
 namespace mrCore
 {
-   // This 'maker' creates a list of lines for either left or right side.
-   // The list starts from a line that is passed to GetContext() method and contains 'size' lines from the same side as
-   // the first line. If the first line is 'unmodified' then resulting list contains 'size' lines from the right side.
-   //
+   /// <summary>
+   /// This 'maker' creates a list of lines for either left or right side.
+   /// The list starts from a line that is passed to GetContext() method and contains 'size' lines from the same side as
+   /// the first line. If the first line is 'unmodified' then resulting list contains 'size' lines from the right side.
+   ///
    // Cost: one 'git show' command for each GetContext() call.
+   /// </summary>
    public class SimpleContextMaker : IContextMaker
    {
       public SimpleContextMaker(GitRepository gitRepository)
@@ -18,6 +20,10 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
+      /// <summary>
+      /// Throws ArgumentException.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position))
@@ -42,7 +48,7 @@ namespace mrCore
          {
             throw new ArgumentException(
                String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
-               linenumber.ToString(), position.ToString());
+               linenumber.ToString(), position.ToString()));
          }
 
          return createDiffContext(linenumber, contents, isRightSideContext, depth);

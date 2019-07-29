@@ -24,16 +24,16 @@ namespace mrCore
             public int Number;
             public State State;
 
-            public string ToString()
+            new public string ToString()
             {
-               return String.Format("Number: {0}\nState: {1}", Number.ToString(), State.ToString());
+               return String.Format("\nNumber: {0}\nState: {1}", Number.ToString(), State.ToString());
             }
          }
 
-         public string ToString()
+         new public string ToString()
          {
-            return String.Format("Text: {0}\nLeft: {1}\nRight: {2}",
-               line.Text, (line.Left?.ToString() ?? "null"), (line.Right?.ToString() ?? null));
+            return String.Format("\nText: {0}\nLeft: {1}\nRight: {2}",
+               Text, (Left?.ToString() ?? "null"), (Right?.ToString() ?? null));
          }
 
          public string Text;
@@ -45,15 +45,17 @@ namespace mrCore
 
       public int SelectedIndex;
 
+      /*
       public string ToString()
       {
-         string result = String.Empty;
+         string result = "\n";
          for (Line line in Lines)
          {
             result += line.ToString() + "\n";
          }
          result += String.Format("SelectedIndex: {0}", SelectedIndex.ToString());
       }
+      */
    }
 
    public struct ContextDepth
@@ -72,9 +74,9 @@ namespace mrCore
          Down = down;
       }
 
-      public string ToString()
+      public override string ToString()
       {
-         return String.Format("Up: {0}\nDown: {1}", Up.ToString(), Down.ToString());
+         return String.Format("\nUp: {0}\nDown: {1}", Up.ToString(), Down.ToString());
       }
    }
 

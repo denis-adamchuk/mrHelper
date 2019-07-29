@@ -21,9 +21,9 @@ namespace mrCore
             LineNumber = linenumber;
          }
 
-         public string ToString()
+         new public string ToString()
          {
-            return String.Format("FileName: {0}\nLineNumber: {1}", FileName, LineNumber.ToString());
+            return String.Format("\nFileName: {0}\nLineNumber: {1}", FileName, LineNumber.ToString());
          }
       }
 
@@ -44,9 +44,9 @@ namespace mrCore
          return true;
       }
 
-      public string ToString()
+      new public string ToString()
       {
-         return String.Format("Left: {0}\nRight: {1}\nIsLeftSideCurrent: {2}",
+         return String.Format("\nLeft: {0}\nRight: {1}\nIsLeftSideCurrent: {2}",
             (Left?.ToString() ?? "null"), (Right?.ToString() ?? "null"), IsLeftSideCurrent);
       }
 

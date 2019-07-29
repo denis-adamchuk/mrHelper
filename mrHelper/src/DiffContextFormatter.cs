@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace mrHelperUI
 {
+   /// <summary>
+   /// Renders DiffContext objects into HTML web page using CSS from resources
+   /// </summary>
    public class DiffContextFormatter
    {
       public DiffContextFormatter()
@@ -17,6 +20,9 @@ namespace mrHelperUI
          _css = loadStylesFromCSS();
       }
 
+      /// <summary>
+      /// Throws ArgumentException if DiffContext is invalid
+      /// </summary>
       public string FormatAsHTML(DiffContext context, int fontSizePx = 12, int rowsVPaddingPx = 2)
       {
          return getContextHTML(context, fontSizePx, rowsVPaddingPx);
@@ -105,7 +111,7 @@ namespace mrHelperUI
             return line.Right.Value.State == DiffContext.Line.State.Unchanged ? "unchanged" : "added";
          }
 
-         throw new ArgumentException(String.Format("Bad context line: {0}", line.ToString());
+         throw new ArgumentException(String.Format("Bad context line: {0}", line.ToString()));
       }
 
       private string getCode(DiffContext.Line line)

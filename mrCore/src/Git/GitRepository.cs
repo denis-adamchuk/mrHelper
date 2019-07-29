@@ -5,10 +5,31 @@ using System.IO;
 
 namespace mrCore
 {
+   public class GitOperationException : Exception
+   {
+      public GitOperationException(string command, int exitcode, List<string> errorOutput)
+         : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
+      {
+         Details = String.Join("\n", errorOutput);
+      }
+
+      public string Details { get; }
+   }
+
+   /// <summary>
+   /// Provides access to git repository.
+   /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
+   /// </summary>
    public class GitRepository
    {
-      // Constructor expects a valid git repository as input argument
-      public GitRepository(string path, DateTime? lastUpdateTime = null)
+      // Timestamp of the most recent fetch/clone
+      public DateTime LastUpdateTime { get; private set; }
+
+      /// <summary>
+      /// Constructor expects a valid git repository as input argument
+      /// Throws ArgumentException
+      /// </summary>
+      public GitRepository(string path)
       {
          if (!Directory.Exists(path) || !isGitRepository(path))
          {
@@ -16,43 +37,28 @@ namespace mrCore
          }
 
          _path = path;
-         _cachedDiffs = new Dictionary<DiffCacheKey, List<string>>();
-         _cachedRevisions = new Dictionary<RevisionCacheKey, List<string>>();
-         LastUpdateTime = lastUpdateTime ?? new DateTime();
+         LastUpdateTime = DateTime.MinValue;
       }
 
-      public DateTime LastUpdateTime { get; private set; }
-
-      // Creates a new git repository by cloning a passed project into a dir with the same name at the given path
-      static public GitRepository CreateByClone(string host, string project, string path)
+      /// <summary>
+      /// Creates a new git repository by cloning a passed project into a dir with the same name at the given path
+      /// </summary>
+      public GitRepository(string host, string project, string path)
       {
-         List<string> output = null;
-         List<string> errors = null;
          string arguments = "clone " + "https://" + host + "/" + project + " " + path;
+         GitUtils.git(arguments, true);
 
-         int code = gatherStdOutputLines(arguments, true, out output, out errors);
-         if (code != 0)
-         {
-            throw new GitOperationException(code, errors);
-         }
-
-         return new GitRepository(path, DateTime.Now);
+         _path = path;
+         LastUpdateTime = DateTime.Now;
       }
 
-      public bool Fetch()
+      public void Fetch()
       {
          run_in_path(() =>
          {
-            List<string> output = null;
-            List<string> errors = null;
             string arguments = "fetch";
-
-            int code = gatherStdOutputLines(arguments, true, out output, out errors);
-            if (code != 0)
-            {
-               throw new GitOperationException(code, errors);
-            }
-         });
+            return GitUtils.git(arguments, true);
+         }, _path);
 
          LastUpdateTime = DateTime.Now;
       }
@@ -61,16 +67,9 @@ namespace mrCore
       {
          run_in_path(() =>
          {
-            List<string> output = null;
-            List<string> errors = null;
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-
-            int code = gatherStdOutputLines(arguments, false, out output, out errors);
-            if (code != 0)
-            {
-               throw new GitOperationException(code, errors);
-            }
-         });
+            return GitUtils.git(arguments, false);
+         }, _path);
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -90,12 +89,13 @@ namespace mrCore
             return _cachedDiffs[key];
          }
 
-         List<string> result = (List<string>)exec(() =>
+         List<string> result = (List<string>)run_in_path(() =>
          {
-            var arguments = "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
-            + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
-            return gatherStdOutputLines(arguments);
-         });
+            string arguments =
+               "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
+               + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
+            return GitUtils.git(arguments, true);
+         }, _path);
 
          _cachedDiffs[key] = result;
          return result;
@@ -103,11 +103,11 @@ namespace mrCore
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)exec(() =>
+         return (List<string>)run_in_path(() =>
          {
-            var arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
-            return gatherStdOutputLines(arguments);
-         });
+            string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
+            return GitUtils.git(arguments, true);
+         }, _path);
       }
 
       public List<string> ShowFileByRevision(string filename, string sha)
@@ -123,10 +123,11 @@ namespace mrCore
             return _cachedRevisions[key];
          }
 
-         List<string> result = (List<string>)exec(() =>
+         List<string> result = (List<string>)run_in_path(() =>
          {
-            return gatherStdOutputLines("show " + sha + ":" + filename);
-         });
+            string arguments = "show " + sha + ":" + filename;
+            return GitUtils.git(arguments, true);
+         }, _path);
 
          _cachedRevisions[key] = result;
          return result;
@@ -136,59 +137,19 @@ namespace mrCore
       {
          Debug.Assert(Directory.Exists(dir));
 
-         return (bool)exec(() =>
+         return (bool)run_in_path(() =>
          {
-            List<string> output = null;
-            List<string> errors = null;
-            var arguments = "rev-parse --is-inside-work-tree";
-
-            return gatherStdOutputLines(arguments, output, errors) == 0;
+            try
+            {
+               var arguments = "rev-parse --is-inside-work-tree";
+               GitUtils.git(arguments, true);
+               return true;
+            }
+            catch (GitOperationException)
+            {
+               return false;
+            }
          }, dir);
-      }
-
-      static private int gatherStdOutputLines(string arguments, bool wait, out output, out errors)
-      {
-         output = new List<string>();
-         errors = new List<string>();
-
-         var proc = new Process
-         {
-            StartInfo = new ProcessStartInfo
-            {
-               FileName = "git",
-               Arguments = arguments,
-               UseShellExecute = false,
-               RedirectStandardOutput = true,
-               CreateNoWindow = true
-            }
-         };
-
-         proc.Start();
-
-         process.OutputDataReceived += (sender, args) => output.Add(args.Data);
-         process.ErrorDataReceived += (sender, args) => errors.Add(args.Data);
-
-         process.BeginOutputReadLine();
-         process.BeginErrorReadLine();
-
-         if (wait)
-         {
-            process.WaitForExit();
-         }
-         else
-         {
-            Thread.Sleep(500); // ms
-            if (process.HasExited)
-            {
-               return process.ExitCode;
-            }
-            else
-            {
-               return 0;
-            }
-         }
-
-         return process.ExitCode;
       }
 
       private delegate object command();
@@ -218,7 +179,8 @@ namespace mrCore
          public int context;
       }
 
-      private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs;
+      private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs =
+         new Dictionary<DiffCacheKey, List<string>>();
 
       private struct RevisionCacheKey
       {
@@ -226,7 +188,8 @@ namespace mrCore
          public string filename;
       }
 
-      private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions;
+      private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
+         new Dictionary<RevisionCacheKey, List<string>>();
    }
 }
 

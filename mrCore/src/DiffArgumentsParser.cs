@@ -5,13 +5,21 @@ using System.Text.RegularExpressions;
 
 namespace mrCore
 {
-   // It expected that one of paths has word 'right' and another one 'left' (git difftool --dir-diff makes them)
+   /// <summary>
+   /// Parses command-line arguments to DiffToolInfo structure
+   /// </summary>
    public class DiffArgumentsParser
    {
       private static readonly Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
 
+      /// <summary>
+      /// Loads command-line arguments into internal storage.
+      /// Throws ArgumentException.
+      /// </summary>
       public DiffArgumentsParser(string[] arguments)
       {
+         Debug.Assert(arguments[1] == "diff");
+
          if (arguments.Length == 6)
          {
             // Expected arguments (when comparing two files):
@@ -33,10 +41,14 @@ namespace mrCore
          else
          {
             throw new ArgumentException(
-               String.Format("Bad number of arguments ({0} were given, 5 or 6 are expected)", arguments.Length);
+               String.Format("Bad number of arguments ({0} were given, 5 or 6 are expected)", arguments.Length));
          }
       }
 
+      /// <summary>
+      /// Creates DiffToolInfo structure.
+      /// Throws ArgumentException.
+      /// </summary>
       public DiffToolInfo Parse()
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
@@ -44,14 +56,14 @@ namespace mrCore
          if (!int.TryParse(_arguments[1], out int currentLineNumber))
          {
             throw new ArgumentException(
-               String.Format("Bad argument \"{0}\" at position 1", _arguments[1]);
+               String.Format("Bad argument \"{0}\" at position 1", _arguments[1]));
          }
 
          int nextLineNumber = 0;
          if (_arguments.Length > 2 && !int.TryParse(_arguments[3], out nextLineNumber))
          {
             throw new ArgumentException(
-               String.Format("Bad argument \"{0}\" at position 3", _arguments[3]);
+               String.Format("Bad argument \"{0}\" at position 3", _arguments[3]));
          }
 
          DiffToolInfo.Side? current = new DiffToolInfo.Side(

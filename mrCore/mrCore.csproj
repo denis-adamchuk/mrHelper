@@ -49,6 +49,7 @@
     <Compile Include="src\Git\GitRenameDetector.cs" />
     <Compile Include="src\RefsToLinesMatcher.cs" />
     <Compile Include="src\Context\FullContextDiffProvider.cs" />
+    <Compile Include="src\Git\GitUtils.cs" />
     <Compile Include="src\Git\GitRepository.cs" />
     <Compile Include="src\Git\GitDiffAnalyzer.cs" />
     <Compile Include="src\Context\EnhancedContextMaker.cs" />

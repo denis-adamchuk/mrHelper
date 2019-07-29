@@ -10,18 +10,19 @@ namespace mrCore
    {
       public MatchException(DiffRefs diffRefs, DiffToolInfo diffToolInfo)
          : base(String.Format("Cannot match commits to diff tool information.\nDiffRefs: {0}\nDiffToolInfo: {1}",
-            diffRefs.ToString(), difftoolInfo.ToString())
+            diffRefs.ToString(), diffToolInfo.ToString()))
       {
       }
    }
 
-   // This 'matcher' matches SHA of two commits to the line/side information obtained from diff tool.
-   // Result of match is 'DiffPosition' structure object.
-   //
-   // Cost: one 'git diff -U0' for each Match() call and two 'git show' calls for each Match() call.
+   /// <summary>
+   /// Matches SHA of two commits to the line/side details obtained from diff tool.
+   /// See matching rules in comments for DiffPosition structure.
+   /// Cost: one 'git diff -U0' for each Match() call and two 'git show' calls for each Match() call.
+   /// </summary>
    public class RefsToLinesMatcher
    {
-      // What lines need to be included into Merge Request Discussion Position
+      // Internal matching state
       private enum MatchResult
       {
          LeftLineOnly,
@@ -35,8 +36,12 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      // Returns DiffPosition if match succeeded and throws if match failed, what most likely means that
-      // diff tool info is invalid
+      /// <summary>
+      /// Returns DiffPosition if match succeeded and throws if match failed
+      /// Throws ArgumentException in case of bad arguments.
+      /// Throws MatchException when match failed.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public DiffPosition Match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
       {
          if (!difftoolInfo.IsValid())

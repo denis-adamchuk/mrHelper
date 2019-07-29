@@ -5,13 +5,23 @@ using System.Web.Script.Serialization;
 
 namespace mrHelperUI
 {
+   /// <summary>
+   /// Represents a color scheme used in the application
+   /// </summary>
    public class ColorScheme
    {
+      /// <summary>
+      /// Create a default scheme
+      /// </summary>
       public ColorScheme()
       {
          resetToDefault();
       }
 
+      /// <summary>
+      /// Read scheme from file
+      /// Throws ArgumentException
+      /// </summary>
       public ColorScheme(string filename)
       {
          resetToDefault();

@@ -21,7 +21,6 @@ namespace mrHelperUI
          int diffContextDepth, ColorScheme colorScheme)
       {
          _mergeRequestDetails = mergeRequestDetails;
-         _currentUser = getUser();
 
          _gitRepository = gitRepository;
          _diffContextDepth = diffContextDepth;
@@ -29,22 +28,22 @@ namespace mrHelperUI
          _colorScheme = colorScheme;
 
          InitializeComponent();
+      }
 
-         onRefresh();
+      /// <summary>
+      /// Creates a form and fills it with content
+      /// </summary>
+      private void DiscussionsForm_Load(object sender, KeyEventArgs e)
+      {
+         _currentUser = getUser();
+         onRefresh(loadDiscussions());
       }
 
       private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
       {
-         try
+         if (e.KeyCode == Keys.F5)
          {
-            if (e.KeyCode == Keys.F5)
-            {
-               onRefresh();
-            }
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            onRefresh(loadDiscussions());
          }
       }
 
@@ -63,19 +62,47 @@ namespace mrHelperUI
 
       private List<Discussion> loadDiscussions()
       {
+         List<Discussion> discussions = new List<Discussion>();
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         return gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-            Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAll();
+         try
+         {
+            discussions = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+               Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAll();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show("Cannot load discussions from GitLab", "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         return discussions;
       }
 
       private User getUser()
       {
+         User user = new User();
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         return gl.CurrentUser.Load();
+         try
+         {
+            user = gl.CurrentUser.Load();
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show("Cannot load current user details from GitLab", "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close(); // a simple way to handle fatal errors in this Form
+         }
+         return user;
       }
 
-      private void onRefresh()
+      private void onRefresh(List<Discussion> discussions)
       {
+         if (discussions.Count == 0)
+         {
+            MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
+               MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Close(); // a simple way to handle fatal errors in this Form
+         }
+
          // Avoid scroll bar redraw on each added control
          SuspendLayout();
 
@@ -83,7 +110,7 @@ namespace mrHelperUI
          Controls.Clear();
 
          // Load updated data and create controls for it
-         createDiscussionBoxes(loadDiscussions());
+         createDiscussionBoxes(discussions);
 
          // Put controls at their places
          ResumeLayout();

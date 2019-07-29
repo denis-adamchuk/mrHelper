@@ -1,4 +1,6 @@
-﻿namespace mrCore
+﻿using System;
+
+namespace mrCore
 {
    /// <summary>
    /// Defines position of two lines in two files according to the following rules:
@@ -35,9 +37,9 @@
       public string RightLine;
       public DiffRefs Refs;
 
-      public string ToString()
+      new public string ToString()
       {
-         return String.Format("LeftPath: {0}\nRightPath: {1}\nLeftLine: {2}\nRightLine: {3}\nRefs: {4}",
+         return String.Format("\nLeftPath: {0}\nRightPath: {1}\nLeftLine: {2}\nRightLine: {3}\nRefs: {4}",
             LeftPath, RightPath, LeftLine, RightLine, Refs.ToString());
       }
    }
@@ -50,9 +52,9 @@
       public string LeftSHA;
       public string RightSHA;
 
-      public string ToString()
+      new public string ToString()
       {
-         return String.Format("LeftSHA: {0}\nRightSHA: {1}", LeftSHA, RightSHA);
+         return String.Format("\nLeftSHA: {0}\nRightSHA: {1}", LeftSHA, RightSHA);
       }
    }
 }

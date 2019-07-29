@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
-   // This class is able to check whether a line number belongs to added/modified or deleted (or none of them)
+   /// <summary>
+   /// Checks whether a line number belongs to added/modified or deleted sections (or none of them)
+   /// </summary>
    public class GitDiffAnalyzer
    {
       private static readonly Regex diffSectionRe = new Regex(
@@ -22,7 +24,10 @@ namespace mrCore
          public int RightSectionEnd;
       }
 
-      // no problem if any of passed filename strings is 'null'
+      /// <summary>
+      /// Note: filename1 or filename2 can be 'null'
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public GitDiffAnalyzer(GitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {

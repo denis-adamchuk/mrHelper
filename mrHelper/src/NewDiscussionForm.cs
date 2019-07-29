@@ -13,6 +13,9 @@ namespace mrHelperUI
 {
    public partial class NewDiscussionForm : Form
    {
+      /// <summary>
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public NewDiscussionForm(InterprocessSnapshot snapshot, DiffToolInfo difftoolInfo)
       {
          _interprocessSnapshot = snapshot;
@@ -28,6 +31,10 @@ namespace mrHelperUI
          Controls.Add(htmlPanel);
       }
 
+      /// <summary>
+      /// Creates a form and fill its content.
+      /// Throws different types of ecxeptions, all of them are considered fatal and passed to the upper-level handler
+      /// </summary>
       private void NewDiscussionForm_Load(object sender, EventArgs e)
       {
          onApplicationStarted();
@@ -63,34 +70,42 @@ namespace mrHelperUI
       {
          this.ActiveControl = textBoxDiscussionBody;
 
-         if (checkForRenamedFile())
-         {
-            Close();
-            return;
-         }
-
          try
          {
+            string anothername = String.Empty;
+            if (checkForRenamedFile(out anothername))
+            {
+               MessageBox.Show(
+                  "We detected that this file is a renamed version of "
+                  + "\"" + anotherName + "\"" 
+                  + ". GitLab will not accept such input. Please match files manually in the diff tool and try again.",
+                  "Cannot create a discussion",
+                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+               Close();
+               return;
+            }
+
             _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         }
-         catch (ArgumentException)
-         {
-            // TODO just log and exit
-            return;
+
+            showDiscussionContext(htmlPanel, textBoxFileName);
          }
          catch (MatchingException)
          {
+            // Some kind of special handling
             MessageBox.Show(
                "Line numbers from diff tool do not match line numbers from git diff. " +
                "Make sure that you use correct instance of diff tool.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            throw ex;
          }
 
-         showDiscussionContext(htmlPanel, textBoxFileName);
+         // Pass other exceptions to upper-level handlers
       }
 
-      private bool checkForRenamedFile()
+      /// <summary>
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
+      private bool checkForRenamedFile(out string anothername)
       {
          if (_difftoolInfo.Left.HasValue && _difftoolInfo.Right.HasValue)
          {
@@ -98,7 +113,7 @@ namespace mrHelperUI
             return false;
          }
 
-         string anotherName = String.Empty;
+         anotherName = String.Empty;
          if (!_difftoolInfo.Left.HasValue)
          {
             Debug.Assert(_difftoolInfo.Right.HasValue);
@@ -127,16 +142,29 @@ namespace mrHelperUI
                return false;
             }
          }
-
-         MessageBox.Show(
-            "We detected that this file is a renamed version of "
-            + "\"" + anotherName + "\"" 
-            + ". GitLab will not accept such input. Please match files manually in the diff tool and try again.",
-            "Cannot create a discussion",
-            MessageBoxButtons.OK, MessageBoxIcon.Information);
          return true;
       }
 
+      /// <summary>
+      /// Throws ArgumentException.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
+      private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
+      {
+         ContextDepth depth = new ContextDepth(0, 3);
+         IContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
+         DiffContext context = textContextMaker.GetContext(_position, depth);
+
+         DiffContextFormatter formatter = new DiffContextFormatter();
+         htmlPanel.Text = formatter.FormatAsHTML(context);
+
+         tbFileName.Text = "Left: " + (_difftoolInfo.Left?.FileName ?? "N/A")
+            + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
+      }
+
+      /// <summary>
+      /// Throws GitLabRequestException in case of fatal GitLab problems.
+      /// </summary>
       private bool submitDiscussion()
       {
          if (textBoxDiscussionBody.Text.Length == 0)
@@ -176,27 +204,6 @@ namespace mrHelperUI
          };
       }
 
-      private string getFallbackInfo()
-      {
-         return "<b>" + (_difftoolInfo.Left?.FileName ?? "N/A") + "</b>"
-            + " (line " + (_difftoolInfo.Left?.LineNumber.ToString() ?? "N/A") + ") <i>vs</i> "
-            + "<b>" + (_difftoolInfo.Right?.FileName ?? "N/A") + "</b>"
-            + " (line " + (_difftoolInfo.Right?.LineNumber.ToString() ?? "N/A") + ")";
-      }
-
-      private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
-      {
-         ContextDepth depth = new ContextDepth(0, 3);
-         IContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
-         DiffContext context = textContextMaker.GetContext(_position, depth);
-
-         DiffContextFormatter formatter = new DiffContextFormatter();
-         htmlPanel.Text = formatter.FormatAsHTML(context);
-
-         tbFileName.Text = "Left: " + (_difftoolInfo.Left?.FileName ?? "N/A")
-            + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
-      }
-
       private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
          GitLab gl = new GitLab(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
@@ -217,24 +224,39 @@ namespace mrHelperUI
 
          if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
          {
-            Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
+            // Something went wrong at the GitLab site, let's report a discussion without Position
             createMergeRequestWithoutPosition(parameters, gl);
          }
          else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
          {
-            Debug.Assert(parameters.Position.HasValue); // otherwise we could not get this error...
+            // Something went wrong at the GitLab site, let's report a discussion without Position
             cleanupBadNotes(parameters, gl);
             createMergeRequestWithoutPosition(parameters, gl);
+         }
+         else
+         {
+            // Fatal error. To be catched and logged at the upper level.
+            throw ex;
          }
       }
 
       private void createMergeRequestWithoutPosition(NewDiscussionParameters parameters, GitLab gl)
       {
+         Debug.Assert(parameters.Position.HasValue);
+
          parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
          parameters.Position = null;
 
          var project = gl.Projects.Get(_interprocessSnapshot.Project);
          project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
+      }
+
+      private string getFallbackInfo()
+      {
+         return "<b>" + (_difftoolInfo.Left?.FileName ?? "N/A") + "</b>"
+            + " (line " + (_difftoolInfo.Left?.LineNumber.ToString() ?? "N/A") + ") <i>vs</i> "
+            + "<b>" + (_difftoolInfo.Right?.FileName ?? "N/A") + "</b>"
+            + " (line " + (_difftoolInfo.Right?.LineNumber.ToString() ?? "N/A") + ")";
       }
 
       // Instead of searching for a latest discussion note with some heuristically prepared parameters,
@@ -273,7 +295,6 @@ namespace mrHelperUI
              && pos.New_Line == posParams.NewLine
              && pos.New_Path == posParams.NewPath;
       }
-
 
       private readonly InterprocessSnapshot _interprocessSnapshot;
       private readonly DiffToolInfo _difftoolInfo;

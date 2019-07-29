@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
-   // This 'maker' create a list of lines belonging to the same side as the line passed to GetContext() call.
-   // Unlike TextContextMaker this maker preserves state of each line: added/modified vs unchanged for right-side and
-   // removed vs unchanged for left-side.
-   //
-   // Cost: one 'git show' and one 'git diff -U0' for each GetContext() call
+   /// <summary>
+   /// This 'maker' create a list of lines belonging to the same side as the line passed to GetContext() call.
+   /// Unlike TextContextMaker this maker preserves state of each line: added/modified vs unchanged for right-side and
+   /// removed vs unchanged for left-side.
+   ///
+   /// Cost: one 'git show' and one 'git diff -U0' for each GetContext() call
+   /// </summary>
    public class EnhancedContextMaker : IContextMaker
    {
       public EnhancedContextMaker(GitRepository gitRepository)
@@ -20,6 +22,10 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
+      /// <summary>
+      /// Throws ArgumentException.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position))
@@ -48,10 +54,10 @@ namespace mrCore
          {
             throw new ArgumentException(
                String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
-               linenumber.ToString(), position.ToString());
+               linenumber.ToString(), position.ToString()));
          }
 
-         return createDiffContext(linenumber, filename, sha, isRightSideContext, analyzer, depth);
+         return createDiffContext(linenumber, isRightSideContext, contents, analyzer, depth);
       }
 
       // isRightSideContext is true when linenumber and sha correspond to the right side

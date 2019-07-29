@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
+   /// <summary>
+   /// Detects if a file was renamed between two commits. Uses default git threshold.
+   /// </summary>
    public class GitRenameDetector
    {
       private static readonly Regex diffRenameRe = new Regex(
@@ -17,7 +20,10 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
-      // returns a name of file at the opposite side. if not renamed, returns 'filename'
+      /// <summary>
+      /// Returns a name of file at the opposite side.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public string IsRenamed(string leftcommit, string rightcommit, string filename, bool leftsidename)
       {
          List<string> renames = _gitRepository.GetListOfRenames(leftcommit, rightcommit);

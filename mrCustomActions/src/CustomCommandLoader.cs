@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Xml;
 
 namespace mrCustomActions
 {
+   /// <summary>
+   /// Loads custom actions from XML file
+   /// </summary>
    public class CustomCommandLoader
    {
       public CustomCommandLoader(ICommandCallback callback)
@@ -10,9 +14,13 @@ namespace mrCustomActions
          _callback = callback;
       }
 
+      /// <summary>
+      /// Loads custom actions from XML file
+      /// Throws ArgumentException
+      /// </summary>
       public List<ICommand> LoadCommands(string filename)
       {
-         if (!File.Exists(CustomActionsFileName))
+         if (!System.IO.File.Exists(filename))
          {
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using System;
+using Microsoft.Win32;
 using mrCore;
 using System.Diagnostics;
 
@@ -6,17 +7,16 @@ namespace mrDiffTool
 {
    public class DiffToolIntegrationException : Exception
    {
-      DiffToolIntegrationException(string toolname, string reason)
-         : base(String.Format("Cannot integrate mrHelper in \"{0}\". Reason: {1}", toolname, reason)
+      public DiffToolIntegrationException(string toolname, string reason)
+         : base(String.Format("Cannot integrate mrHelper in \"{0}\". Reason: {1}", toolname, reason))
       {
       }
    }
 
    public class GitIntegrationException : Exception
    {
-      GitIntegrationException(string toolname, string command, int exitcode)
-         : base(String.Format("Cannot set global git diff tool \"{0}\" with command \"{1}\". Process exited with code {2}",
-            toolname, command, exitcode)
+      public GitIntegrationException(string toolname, string command)
+         : base(String.Format("Cannot set global git diff tool \"{0}\" with command \"{1}\".", toolname, command))
       {
       }
    }
@@ -31,14 +31,12 @@ namespace mrDiffTool
          _diffTool = diffTool;
       }
 
-      public bool IsInstalled()
-      {
-         return getToolPath() != null;
-      }
-
+      /// <summary>
+      /// Throws DiffToolIntegrationException if integration failed
+      /// </summary>
       public void RegisterInTool()
       {
-         if (!IsInstalled())
+         if (!isInstalled())
          {
             return;
          }
@@ -46,18 +44,30 @@ namespace mrDiffTool
          _diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
       }
 
+      /// <summary>
+      /// Throws GitIntegrationException if integration failed
+      /// </summary>
       public void RegisterInGit(string name)
       {
-         if (!IsInstalled())
+         if (!isInstalled())
          {
             return;
          }
 
-         int exitCode = GitRepository.SetGlobalDiffTool(name, getGitCommand());
-         if (exitCode != 0)
+         try
          {
-            throw new GitIntegrationException(name, getGitCommand(), exitCode);
+            GitUtils.SetGlobalDiffTool(name, getGitCommand());
          }
+         catch (GitOperationException ex)
+         {
+            // TODO Log details of 'ex'
+            throw new GitIntegrationException(name, getGitCommand());
+         }
+      }
+
+      public bool isInstalled()
+      {
+         return getToolPath() != null;
       }
 
       static private string getInstallPath(string[] applicationNames)
