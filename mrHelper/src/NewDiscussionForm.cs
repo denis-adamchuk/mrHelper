@@ -72,8 +72,8 @@ namespace mrHelperUI
 
          try
          {
-            string anothername = String.Empty;
-            if (checkForRenamedFile(out anothername))
+            string anotherName = String.Empty;
+            if (checkForRenamedFile(out anotherName))
             {
                MessageBox.Show(
                   "We detected that this file is a renamed version of "
@@ -89,14 +89,14 @@ namespace mrHelperUI
 
             showDiscussionContext(htmlPanel, textBoxFileName);
          }
-         catch (MatchingException)
+         catch (MatchException)
          {
             // Some kind of special handling
             MessageBox.Show(
                "Line numbers from diff tool do not match line numbers from git diff. " +
                "Make sure that you use correct instance of diff tool.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            throw ex;
+            throw;
          }
 
          // Pass other exceptions to upper-level handlers
@@ -105,15 +105,15 @@ namespace mrHelperUI
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      private bool checkForRenamedFile(out string anothername)
+      private bool checkForRenamedFile(out string anotherName)
       {
+         anotherName = String.Empty;
          if (_difftoolInfo.Left.HasValue && _difftoolInfo.Right.HasValue)
          {
             // two file names are provided, nothing to check
             return false;
          }
 
-         anotherName = String.Empty;
          if (!_difftoolInfo.Left.HasValue)
          {
             Debug.Assert(_difftoolInfo.Right.HasValue);

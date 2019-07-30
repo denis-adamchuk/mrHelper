@@ -33,7 +33,7 @@ namespace mrHelperUI
       /// <summary>
       /// Creates a form and fills it with content
       /// </summary>
-      private void DiscussionsForm_Load(object sender, KeyEventArgs e)
+      private void DiscussionsForm_Load(object sender, EventArgs e)
       {
          _currentUser = getUser();
          onRefresh(loadDiscussions());
@@ -166,13 +166,11 @@ namespace mrHelperUI
       }
 
       private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly User _currentUser;
-
       private readonly GitRepository _gitRepository;
       private readonly int _diffContextDepth;
+      private readonly ColorScheme _colorScheme;
 
-      private ColorScheme _colorScheme;
-
+      private User _currentUser;
    }
 }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 using mrCore;
 
@@ -52,9 +53,10 @@ namespace mrHelperUI
                   {
                      snapshot = serializer.DeserializeFromDisk();
                   }
-                  catch (IOException ex)
+                  catch (System.IO.IOException ex)
                   {
                      MessageBox.Show("Make sure that timer is started in the main application");
+                     return;
                   }
                   Application.Run(new NewDiscussionForm(snapshot, diffToolInfo));
                }

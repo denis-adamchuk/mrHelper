@@ -28,7 +28,7 @@ namespace mrHelperUI
 
          if (!System.IO.File.Exists(filename))
          {
-            throw new ArgumentException(String.Empty("Cannot find file \"{0}\"", filename));
+            throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
          try

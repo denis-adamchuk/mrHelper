@@ -236,7 +236,7 @@ namespace mrHelperUI
          try
          {
             DiffContext context = contextMaker.GetContext(position, _diffContextDepth);
-            contextHtml = _formatter.FormatAsHTML(briefContext, fontSizePx, rowsVPaddingPx);
+            contextHtml = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
          }
          catch (Exception ex)
          {
@@ -628,7 +628,6 @@ namespace mrHelperUI
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          try
          {
-            GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
             gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
                Discussions.Get(_discussionId).Resolve(
                   new ResolveThreadParameters
@@ -658,10 +657,11 @@ namespace mrHelperUI
          _textboxesNotes.Clear();
 
          // Load updated discussion
+         Discussion discussion;
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          try
          {
-            var discussion = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+            discussion = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
                Get(_mergeRequestDetails.MergeRequestIId).Discussions.Get(_discussionId).Load();
             if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
             {
@@ -671,7 +671,8 @@ namespace mrHelperUI
          catch (GitLabRequestException ex)
          {
             // it is not an error here because we treat it as 'last discussion item has been deleted'
-            Debug.Assert(ex.Code == System.Net.HttpStatusCode.NotFound);
+            var response = (System.Net.HttpWebResponse)(ex.WebException.Response);
+            Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
             return false;
          }
 

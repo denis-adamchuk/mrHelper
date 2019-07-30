@@ -244,7 +244,7 @@ namespace mrHelperUI
 
       private void addCustomActions()
       {
-         List<ICommand> commans = null;
+         List<ICommand> commands = null;
          try
          {
             CustomCommandLoader loader = new CustomCommandLoader(this);
@@ -914,15 +914,18 @@ namespace mrHelperUI
          serializer.PurgeSerialized();
 
          bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
-         if (!allowReportingIssues
-          || !_diffToolArgs.HasValue
-          || comboBoxHost.SelectedItem == null
-          || comboBoxProjects.SelectedItem == null)
+         if (!allowReportingIssues || !_diffToolArgs.HasValue
+          || comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
          {
             return;
          }
 
-         MergeRequest mergeRequest = getMergeRequest();
+         MergeRequest? mergeRequest = getMergeRequest();
+         if (!mergeRequest.HasValue)
+         {
+            return;
+         }
+
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
 
          InterprocessSnapshot snapshot;
@@ -930,7 +933,7 @@ namespace mrHelperUI
          snapshot.Refs.LeftSHA = _diffToolArgs.Value.LeftSHA;     // Base commit SHA in the source branch
          snapshot.Refs.RightSHA = _diffToolArgs.Value.RightSHA;   // SHA referencing HEAD of this merge request
          snapshot.Host = item.Host;
-         snapshot.MergeRequestId = mergeRequest.IId;
+         snapshot.MergeRequestId = mergeRequest.Value.IId;
          snapshot.Project = comboBoxProjects.Text;
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
 
@@ -1069,7 +1072,7 @@ namespace mrHelperUI
                for (int iItem = 0; iItem < comboBoxFilteredMergeRequests.Items.Count; ++iItem)
                {
                   MergeRequest mr = (MergeRequest)(comboBoxFilteredMergeRequests.Items[iItem]);
-                  if (mr.Id == currentItem?.Id)
+                  if (mr.Id == currentItem.Value.Id)
                   {
                      comboBoxFilteredMergeRequests.SelectedIndex = iItem;
                      found = true;
@@ -1161,18 +1164,22 @@ namespace mrHelperUI
             return;
          }
 
-         MergeRequest mergeRequest = getMergeRequest();
+         MergeRequest? mergeRequest = getMergeRequest();
+         if (!mergeRequest.HasValue)
+         {
+            return;
+         }
 
          // 1. Update status, add merge request url
          linkLabelConnectedTo.Visible = true;
-         linkLabelConnectedTo.Text = mergeRequest.Web_Url;
+         linkLabelConnectedTo.Text = mergeRequest.Value.Web_Url;
 
          // 2. Populate edit boxes with merge request details
-         textBoxMergeRequestName.Text = mergeRequest.Title;
-         richTextBoxMergeRequestDescription.Text = mergeRequest.Description;
+         textBoxMergeRequestName.Text = mergeRequest.Value.Title;
+         richTextBoxMergeRequestDescription.Text = mergeRequest.Value.Description;
 
          // 3. Add versions to combo-boxes
-         updateVersions(mergeRequest);
+         updateVersions(mergeRequest.Value);
 
          // 4. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
