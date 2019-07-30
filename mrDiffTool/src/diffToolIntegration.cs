@@ -60,7 +60,8 @@ namespace mrDiffTool
          }
          catch (GitOperationException ex)
          {
-            // TODO Log details of 'ex'
+            Trace.TraceError("GitOperationException: {0} Details:\n{1}", ex.Message, ex.Details);
+
             throw new GitIntegrationException(name, getGitCommand());
          }
       }

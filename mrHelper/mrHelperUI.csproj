@@ -66,6 +66,7 @@
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\ColorScheme.cs" />
+    <Compile Include="src\ExceptionHandlers.cs" />
     <Compile Include="src\Configuration.cs" />
     <Compile Include="src\DiffContextFormatter.cs" />
     <Compile Include="src\DiscussionBox.cs">

@@ -54,9 +54,11 @@ namespace mrHelperUI
                setColor(record.Key, Color.FromArgb(r, g, b));
             }
          }
-         catch (Exception)
+         catch (Exception ex)
          {
-            // Bad JSON
+            // Trace original exception
+            ExceptionHandlers.Handle(ex, "", false);
+
             throw new ArgumentException("Unexpected format of color scheme file. Will use default colors.");
          }
       }

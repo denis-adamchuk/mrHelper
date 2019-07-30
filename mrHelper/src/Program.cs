@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Diagnostics;
 using System.Windows.Forms;
 using mrCore;
 
@@ -30,6 +31,9 @@ namespace mrHelperUI
                      return;
                   }
 
+                  Trace.Listeners.Add(new TextWriterTraceListener("mrHelper.main.log") { TraceOutputOptions = TraceOptions.Timestamp });
+                  Trace.AutoFlush = true;
+
                   Application.Run(new mrHelperForm());
                }
             }
@@ -42,7 +46,9 @@ namespace mrHelperUI
                      return;
                   }
 
-                  Application.Run(new mrHelperForm());
+                  Trace.Listeners.Add(new TextWriterTraceListener("mrHelper.diff.log") { TraceOutputOptions = TraceOptions.Timestamp });
+                  Trace.AutoFlush = true;
+
                   DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
                   DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
@@ -55,6 +61,7 @@ namespace mrHelperUI
                   }
                   catch (System.IO.IOException ex)
                   {
+                     Trace.TraceError("Cannot de-serialize snapshot. IOException: {0}", ex.Message);
                      MessageBox.Show("Make sure that timer is started in the main application");
                      return;
                   }
@@ -68,8 +75,10 @@ namespace mrHelperUI
          }
          catch (Exception ex)
          {
+            Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
    }
 }
+

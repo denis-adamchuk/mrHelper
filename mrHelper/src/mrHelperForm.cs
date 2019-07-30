@@ -22,10 +22,6 @@ namespace mrHelperUI
       private static readonly int timeTrackingTimerInterval = 1000; // ms
       private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
 
-      private static readonly string errorMessageBoxText = "Error";
-      private static readonly string warningMessageBoxText = "Warning";
-      private static readonly string informationMessageBoxText = "Information";
-
       /// <summary>
       /// Tooltip timeout in seconds
       /// </summary>
@@ -109,11 +105,10 @@ namespace mrHelperUI
          {
             _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString());
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
+            ExceptionHandlers.Handle(ex, "Cannot change color scheme");
             comboBoxColorSchemes.SelectedIndex = 0; // recursive
-            MessageBox.Show("Cannot switch to the selected color scheme", errorMessageBoxText,
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
          _settings.ColorSchemeFileName = (sender as ComboBox).Text;
@@ -182,7 +177,7 @@ namespace mrHelperUI
          }
          catch (Exception ex)
          {
-            MessageBox.Show("Cannot open URL", errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot open URL");
          }
       }
 
@@ -250,10 +245,11 @@ namespace mrHelperUI
             CustomCommandLoader loader = new CustomCommandLoader(this);
             commands = loader.LoadCommands(CustomActionsFileName);
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state
             // Do not try to load custom actions if they don't exist
+            ExceptionHandlers.Handle(ex, "Cannot load custom actions");
             return;
          }
 
@@ -285,8 +281,7 @@ namespace mrHelperUI
                }
                catch (Exception ex)
                {
-                  MessageBox.Show("Custom command execution failed.", errorMessageBoxText,
-                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  ExceptionHandlers.Handle(ex, "Custom action execution failed");
                }
             };
             groupBoxActions.Controls.Add(button);
@@ -376,16 +371,16 @@ namespace mrHelperUI
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          List<Project> projects = null;
 
+         // Check if file exists. If it does not, it is not an error.
          if (File.Exists(ProjectListFileName))
          {
             try
             {
                projects = loadProjectsFromFile(item.Host, ProjectListFileName);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-               MessageBox.Show("Cannot load projects from file. Will use full list.",
-                  errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+               ExceptionHandlers.Handle(ex, "Cannot load projects from file. Will use full list.");
             }
          }
 
@@ -399,10 +394,9 @@ namespace mrHelperUI
          {
             projects = gl.Projects.LoadAll(new ProjectsFilter { PublicOnly = checkBoxShowPublicOnly.Checked });
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot load projects from GitLab.", errorMessageBoxText,
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab");
          }
 
          return projects;
@@ -423,10 +417,9 @@ namespace mrHelperUI
          {
             mergeRequests = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.LoadAll(new MergeRequestsFilter());
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot load merge requests from GitLab.", errorMessageBoxText,
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
          }
 
          return mergeRequests;
@@ -449,10 +442,9 @@ namespace mrHelperUI
          {
             mergeRequest = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Load();
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot load merge request from GitLab.", errorMessageBoxText,
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
          }
 
          return mergeRequest;
@@ -473,10 +465,9 @@ namespace mrHelperUI
          {
             versions = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Versions.LoadAll();
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot load merge request versions from GitLab.", errorMessageBoxText,
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot load merge request versions from GitLab");
          }
 
          return versions;
@@ -499,8 +490,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot send tracked time to GitLab", errorMessageBoxText,
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
          }
       }
 
@@ -536,9 +526,11 @@ namespace mrHelperUI
                }
             }
          }
-         catch (Exception)
+         catch (Exception ex)
          {
-            // Bad JSON
+            // Trace original exception
+            ExceptionHandlers.Handle(ex, "", false);
+
             throw new ArgumentException("Unexpected format of project list file. File content is ignored.");
          }
 
@@ -570,9 +562,8 @@ namespace mrHelperUI
          }
          catch (GitOperationException ex)
          {
-            MessageBox.Show("Cannot launch diff tool", errorMessageBoxText, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
 
-            // TODO Log details along with a general info
             updateInterprocessSnapshot(); // to purge serialized snapshot
             return;
          }
@@ -616,9 +607,9 @@ namespace mrHelperUI
                return true;
             }
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot check for updates.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot check for updates");
          }
 
          return false;
@@ -678,9 +669,9 @@ namespace mrHelperUI
             {
                mergeRequests = gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAll(new MergeRequestsFilter());
             }
-            catch (Exception ex)
+            catch (GitLabRequestException ex)
             {
-               // TODO Add log but don't notify user because this is auto-update
+               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update.", false);
                continue;
             }
 
@@ -703,9 +694,9 @@ namespace mrHelperUI
                      versions = gl.Projects.Get(project.Path_With_Namespace).MergeRequests.
                         Get(mergeRequest.IId).Versions.LoadAll();
                   }
-                  catch (Exception ex)
+                  catch (GitLabRequestException ex)
                   {
-                     // TODO Add log but don't notify user because this is auto-update
+                     ExceptionHandlers.Handle(ex, "Cannot load merge request versions on auto-update.", false);
                      continue;
                   }
 
@@ -771,7 +762,7 @@ namespace mrHelperUI
                }
                catch (GitOperationException ex)
                {
-                  MessageBox.Show("Cannot update git repository", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  ExceptionHandlers.Handle(ex, "Cannot update git repository.");
                }
             }
             return;
@@ -789,7 +780,7 @@ namespace mrHelperUI
          if (!Directory.Exists(localGitFolder))
          {
             if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
-               warningMessageBoxText, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                Directory.CreateDirectory(localGitFolder);
             }
@@ -806,7 +797,7 @@ namespace mrHelperUI
          if (!Directory.Exists(path))
          {
             if (MessageBox.Show("There is no project \"" + project + "\" repository in " + localGitFolder +
-               ". Do you want to clone git repository?", informationMessageBoxText, MessageBoxButtons.YesNo,
+               ". Do you want to clone git repository?", "Information", MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) != DialogResult.Yes)
             {
                return;
@@ -818,9 +809,9 @@ namespace mrHelperUI
          {
             _gitRepository = clone ? new GitRepository(host, projectWithNamespace, path) : new GitRepository(path);
          }
-         catch (Exception ex)
+         catch (GitOperationException ex)
          {
-            MessageBox.Show("Cannot initialize git repository", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot initialize git repository.");
          }
       }
 

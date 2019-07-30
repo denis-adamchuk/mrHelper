@@ -59,10 +59,7 @@ namespace mrHelperUI
          {
             e.Handled = false;
 
-            if (submitDiscussion())
-            {
-               Close();
-            }
+            buttonOK.PerformClick();
          }
       }
 
@@ -75,6 +72,8 @@ namespace mrHelperUI
             string anotherName = String.Empty;
             if (checkForRenamedFile(out anotherName))
             {
+               Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
+
                MessageBox.Show(
                   "We detected that this file is a renamed version of "
                   + "\"" + anotherName + "\"" 
@@ -212,15 +211,30 @@ namespace mrHelperUI
             var project = gl.Projects.Get(_interprocessSnapshot.Project);
             project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
          }
-         catch (System.Net.WebException ex)
+         catch (GitLabRequestException ex)
          {
+            ExceptionHandlers.Handle(ex, "Cannot create a discussion.", false);
+            Trace.TraceInformation(
+               "Extra information:\n" +
+               "Position: {0}\n" +
+               "Include context: {1}\n" +
+               "Snapshot refs: {2}\n" +
+               "DiffToolInfo: {3}\n" +
+               "Body:\n{4}",
+               _position.ToString(),
+               checkBoxIncludeContext.Checked.ToString(),
+               _interprocessSnapshot.Refs.ToString(),
+               _difftoolInfo.ToString(),
+               textBoxDiscussionBody.Text);
+
             handleGitlabError(parameters, gl, ex);
          }
       }
 
-      private void handleGitlabError(NewDiscussionParameters parameters, GitLab gl, System.Net.WebException ex)
+      private void handleGitlabError(NewDiscussionParameters parameters, GitLab gl, GitLabRequestException ex)
       {
-         var response = ((System.Net.HttpWebResponse)ex.Response);
+         var webException = ex.WebException;
+         var response = ((System.Net.HttpWebResponse)webException.Response);
 
          if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
          {
@@ -274,6 +288,11 @@ namespace mrHelperUI
             {
                if (arePositionsEqual(note.Position, parameters.Position.Value))
                {
+                  Trace.TraceInformation(
+                     "Deleting discussion note." +
+                     " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
+                     note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
+
                   mergeRequest.Notes.Get(note.Id).Delete();
                }
             }

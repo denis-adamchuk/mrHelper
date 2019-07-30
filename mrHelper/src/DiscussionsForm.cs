@@ -69,10 +69,9 @@ namespace mrHelperUI
             discussions = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
                Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAll();
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot load discussions from GitLab", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
          }
          return discussions;
       }
@@ -85,10 +84,9 @@ namespace mrHelperUI
          {
             user = gl.CurrentUser.Load();
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot load current user details from GitLab", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot load current user details from GitLab");
             Close(); // a simple way to handle fatal errors in this Form
          }
          return user;

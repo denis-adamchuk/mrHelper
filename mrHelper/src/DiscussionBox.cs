@@ -238,9 +238,13 @@ namespace mrHelperUI
             DiffContext context = contextMaker.GetContext(position, _diffContextDepth);
             contextHtml = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
-            // TODO Log
+            ExceptionHandlers.Handle(ex, "Cannot render HTML context.");
+         }
+         catch (GitOperationException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot render HTML context.");
          }
          return contextHtml;
       }
@@ -486,9 +490,9 @@ namespace mrHelperUI
                      Body = body
                   });
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot create a reply to discussion", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion.");
             return;
          }
 
@@ -535,9 +539,9 @@ namespace mrHelperUI
                      Body = textBox.Text
                   });
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot submit a new body", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot create a new body.");
             return;
          }
 
@@ -581,9 +585,9 @@ namespace mrHelperUI
                Get(_mergeRequestDetails.MergeRequestIId);
             mergeRequest.Notes.Get(note.Id).Delete();
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot delete a discussion note", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot delete a discussion note");
             return;
          }
 
@@ -611,9 +615,9 @@ namespace mrHelperUI
                      Resolved = !wasResolved
                   });
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot toggle resolve state", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion note.");
             return;
          }
 
@@ -635,9 +639,9 @@ namespace mrHelperUI
                      Resolve = !wasResolved
                   });
          }
-         catch (Exception ex)
+         catch (GitLabRequestException ex)
          {
-            MessageBox.Show("Cannot toggle resolve state", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion.");
             return;
          }
 
