@@ -105,7 +105,7 @@ namespace mrHelperUI
          {
             _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString());
          }
-         catch (ArgumentException ex)
+         catch (Exception ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot change color scheme");
             comboBoxColorSchemes.SelectedIndex = 0; // recursive
@@ -240,15 +240,15 @@ namespace mrHelperUI
       private void addCustomActions()
       {
          List<ICommand> commands = null;
+         CustomCommandLoader loader = new CustomCommandLoader(this);
          try
          {
-            CustomCommandLoader loader = new CustomCommandLoader(this);
             commands = loader.LoadCommands(CustomActionsFileName);
          }
          catch (ArgumentException ex)
          {
-            // If file doesn't exist the loader throws, leaving the app in an undesirable state
-            // Do not try to load custom actions if they don't exist
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
+            // Do not try to load custom actions if they don't exist.
             ExceptionHandlers.Handle(ex, "Cannot load custom actions");
             return;
          }
@@ -281,7 +281,7 @@ namespace mrHelperUI
                }
                catch (Exception ex)
                {
-                  ExceptionHandlers.Handle(ex, "Custom action execution failed");
+                  ExceptionHandlers.Handle(ex, "Custom action failed");
                }
             };
             groupBoxActions.Controls.Add(button);
@@ -365,7 +365,7 @@ namespace mrHelperUI
       {
          if (comboBoxHost.SelectedItem == null)
          {
-            return new List<Project>();
+            return null;
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
@@ -378,9 +378,9 @@ namespace mrHelperUI
             {
                projects = loadProjectsFromFile(item.Host, ProjectListFileName);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load projects from file. Will use full list.");
+               ExceptionHandlers.Handle(ex, "Cannot load projects from file");
             }
          }
 
@@ -406,12 +406,11 @@ namespace mrHelperUI
       {
          if (comboBoxHost.SelectedItem == null)
          {
-            return new List<MergeRequest>();
+            return null;
          }
 
+         List<MergeRequest> mergeRequests = null;
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         List<MergeRequest> mergeRequests = new List<MergeRequest>();
-
          GitLab gl = new GitLab(item.Host, item.AccessToken);
          try
          {
@@ -433,7 +432,7 @@ namespace mrHelperUI
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
          {
-            return mergeRequest;
+            return null;
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
@@ -452,13 +451,13 @@ namespace mrHelperUI
 
       private List<Version> getVersions()
       {
-         List<Version> versions = new List<Version>();
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
          {
-            return versions;
+            return null;
          }
 
+         List<Version> versions = null;
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          GitLab gl = new GitLab(item.Host, item.AccessToken);
          try
@@ -482,9 +481,9 @@ namespace mrHelperUI
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
          try
          {
-            GitLab gl = new GitLab(item.Host, item.AccessToken);
             gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).AddSpentTime(
                new AddSpentTimeParameters { Span = span });
          }
@@ -502,36 +501,34 @@ namespace mrHelperUI
 
       /// <summary>
       /// Loads project list from file with JSON format
-      /// Throws ArgumentException.
+      /// Throws ArgumentException
+      /// Throws ArgumentNullException
+      /// Throws InvalidOperationException
       /// </summary>
-      /// <param name="hostname">Host name to look up projects for</param>
-      /// <param name="filename">Name of JSON file with project list</param>
-      /// <param name="projects">Output list of projects</param>
-      /// <returns>false if given file does not have projects for the given Host, otherwise true</returns>
       private List<Project> loadProjectsFromFile(string hostname, string filename)
       {
          Debug.Assert(File.Exists(filename));
 
+         string json = System.IO.File.ReadAllText(filename);
+
+         JavaScriptSerializer serializer = new JavaScriptSerializer();
+
+         List<HostInProjectsFile> hosts = null;
          try
          {
-            string json = System.IO.File.ReadAllText(filename);
-
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            List<HostInProjectsFile> hosts = serializer.Deserialize<List<HostInProjectsFile>>(json);
-            foreach (var host in hosts)
-            {
-               if (host.Name == hostname)
-               {
-                  return host.Projects;
-               }
-            }
+            hosts = serializer.Deserialize<List<HostInProjectsFile>>(json);
          }
-         catch (Exception ex)
+         catch (Exception)
          {
-            // Trace original exception
-            ExceptionHandlers.Handle(ex, "", false);
+            throw;
+         }
 
-            throw new ArgumentException("Unexpected format of project list file. File content is ignored.");
+         foreach (var host in hosts)
+         {
+            if (host.Name == hostname)
+            {
+               return host.Projects;
+            }
          }
 
          return null;
@@ -591,28 +588,20 @@ namespace mrHelperUI
             return false;
          }
 
+         List<Version> versions = null;
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         GitLab gl = new GitLab(item.Host, item.AccessToken);
          try
          {
-            GitLab gl = new GitLab(item.Host, item.AccessToken);
-            var versions = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Versions.LoadAll();
-            if (versions.Count == 0)
-            {
-               return false;
-            }
-
-            Version latestVersion = versions[0];
-            if (latestVersion.Created_At.ToLocalTime() > _gitRepository.LastUpdateTime)
-            {
-               return true;
-            }
+            versions = gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).Versions.LoadAll();
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot check for updates");
+            ExceptionHandlers.Handle(ex, "Cannot check GitLab for updates");
          }
 
-         return false;
+         return versions != null && versions.Count > 0
+            && versions[0].Created_At.ToLocalTime() > _gitRepository.LastUpdateTime;
       }
 
       private void onMergeRequestCheckTimer(object sender, EventArgs e)
@@ -671,7 +660,7 @@ namespace mrHelperUI
             }
             catch (GitLabRequestException ex)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update.", false);
+               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update", false);
                continue;
             }
 
@@ -696,7 +685,7 @@ namespace mrHelperUI
                   }
                   catch (GitLabRequestException ex)
                   {
-                     ExceptionHandlers.Handle(ex, "Cannot load merge request versions on auto-update.", false);
+                     ExceptionHandlers.Handle(ex, "Cannot load merge request versions on auto-update", false);
                      continue;
                   }
 
@@ -762,7 +751,7 @@ namespace mrHelperUI
                }
                catch (GitOperationException ex)
                {
-                  ExceptionHandlers.Handle(ex, "Cannot update git repository.");
+                  ExceptionHandlers.Handle(ex, "Cannot update git repository");
                }
             }
             return;
@@ -811,7 +800,7 @@ namespace mrHelperUI
          }
          catch (GitOperationException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot initialize git repository.");
+            ExceptionHandlers.Handle(ex, "Cannot initialize git repository");
          }
       }
 
@@ -978,9 +967,28 @@ namespace mrHelperUI
 
       private void integrateDiffTool()
       {
-         DiffToolIntegration integration = new DiffToolIntegration(new BC3Tool());
-         integration.RegisterInGit(GitDiffToolName);
-         integration.RegisterInTool();
+         IntegratedDiffTool diffTool = new BC3Tool();
+         DiffToolIntegration integration = new DiffToolIntegration(diffTool);
+
+         try
+         {
+            integration.RegisterInGit(GitDiffToolName);
+         }
+         catch (GitOperationException ex)
+         {
+            ExceptionHandlers.Handle(ex,
+               String.Format("Cannot integrate \"{0}\" in git", diffTool.GetToolName()), true);
+         }
+
+         try
+         {
+            integration.RegisterInTool();
+         }
+         catch (DiffToolIntegrationException ex)
+         {
+            ExceptionHandlers.Handle(ex,
+               String.Format("Cannot integrate the application in \"{0}\"", diffTool.GetToolName()), true);
+         }
       }
 
       private void updateHostsDropdownList()
@@ -1016,6 +1024,11 @@ namespace mrHelperUI
 
       private void updateProjectsDropdownList(List<Project> projects)
       {
+         if (projects == null)
+         {
+            return;
+         }
+
          // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
          Project? lastSelectedProject = null;
          comboBoxProjects.Items.Clear();
@@ -1043,6 +1056,11 @@ namespace mrHelperUI
 
       private void updateMergeRequestsDropdownList(List<MergeRequest> mergeRequests, bool keepPosition)
       {
+         if (mergeRequests == null)
+         {
+            return;
+         }
+
          keepPosition &= (comboBoxFilteredMergeRequests.SelectedItem != null);
          MergeRequest? currentItem =
             keepPosition ? (MergeRequest)comboBoxFilteredMergeRequests.SelectedItem : new Nullable<MergeRequest>();
@@ -1188,7 +1206,7 @@ namespace mrHelperUI
          comboBoxRightVersion.Items.Clear();
 
          var versions = getVersions();
-         if (versions.Count == 0)
+         if (versions == null || versions.Count == 0)
          {
             return;
          }

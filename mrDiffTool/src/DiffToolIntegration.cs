@@ -7,16 +7,8 @@ namespace mrDiffTool
 {
    public class DiffToolIntegrationException : Exception
    {
-      public DiffToolIntegrationException(string toolname, string reason)
-         : base(String.Format("Cannot integrate mrHelper in \"{0}\". Reason: {1}", toolname, reason))
-      {
-      }
-   }
-
-   public class GitIntegrationException : Exception
-   {
-      public GitIntegrationException(string toolname, string command)
-         : base(String.Format("Cannot set global git diff tool \"{0}\" with command \"{1}\".", toolname, command))
+      public DiffToolIntegrationException(string message)
+         : base(String.Format(message))
       {
       }
    }
@@ -45,7 +37,7 @@ namespace mrDiffTool
       }
 
       /// <summary>
-      /// Throws GitIntegrationException if integration failed
+      /// Throws GitOperationException if integration failed
       /// </summary>
       public void RegisterInGit(string name)
       {
@@ -54,16 +46,7 @@ namespace mrDiffTool
             return;
          }
 
-         try
-         {
-            GitUtils.SetGlobalDiffTool(name, getGitCommand());
-         }
-         catch (GitOperationException ex)
-         {
-            Trace.TraceError("GitOperationException: {0} Details:\n{1}", ex.Message, ex.Details);
-
-            throw new GitIntegrationException(name, getGitCommand());
-         }
+         GitUtils.SetGlobalDiffTool(name, getGitCommand());
       }
 
       public bool isInstalled()
@@ -110,8 +93,7 @@ namespace mrDiffTool
          string toolPath = getToolPath();
          if (toolPath == null)
          {
-            throw new DiffToolIntegrationException(_diffTool.GetToolName(),
-               String.Format("Cannot find installation location in registry"));
+            throw new DiffToolIntegrationException(String.Format("Cannot find installation location in registry"));
          }
 
          var path = System.IO.Path.Combine(toolPath, _diffTool.GetToolCommand());

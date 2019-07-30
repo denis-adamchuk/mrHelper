@@ -39,7 +39,7 @@ namespace mrDiffTool
          var prefs = System.IO.Path.Combine(bcFolder, "BCPreferences.xml");
          if (!System.IO.File.Exists(prefs))
          {
-            throw new DiffToolIntegrationException(GetToolName(), String.Format("File is missing: \"{0}\"", prefs));
+            throw new DiffToolIntegrationException(String.Format("File is missing: \"{0}\"", prefs));
          }
 
          string integrationKey = "mrhelper-bc3-integration";
@@ -51,21 +51,21 @@ namespace mrDiffTool
          var root = document.SelectSingleNode("BCPreferences");
          if (root == null)
          {
-            throw new DiffToolIntegrationException(GetToolName(),
+            throw new DiffToolIntegrationException(
                String.Format("Unexpected format of preferences file \"{0}\". Missing \"BCPreferences\" node", prefs));
          }
 
          var tbPrefs = root.SelectSingleNode("TBcPrefs");
          if (tbPrefs == null)
          {
-            throw new DiffToolIntegrationException(GetToolName(),
+            throw new DiffToolIntegrationException(
                String.Format("Unexpected format of preferences file \"{0}\". Missing \"TBcPrefs\" node", prefs));
          }
 
          var opensWith = tbPrefs.SelectSingleNode("OpenWiths");
          if (opensWith == null)
          {
-            throw new DiffToolIntegrationException(GetToolName(),
+            throw new DiffToolIntegrationException(
                String.Format("Unexpected format of preferences file \"{0}\". Missing \"opensWith\" node", prefs));
          }
 

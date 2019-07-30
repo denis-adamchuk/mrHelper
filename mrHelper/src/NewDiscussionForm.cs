@@ -67,26 +67,34 @@ namespace mrHelperUI
       {
          this.ActiveControl = textBoxDiscussionBody;
 
+         string anotherName = String.Empty;
+         bool fileRenamed = false;
          try
          {
-            string anotherName = String.Empty;
-            if (checkForRenamedFile(out anotherName))
-            {
-               Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
+            fileRenamed = checkForRenamedFile(out anotherName);
+         }
+         catch (GitOperationException)
+         {
+            throw; // fatal error
+         }
 
-               MessageBox.Show(
+         if (fileRenamed)
+         {
+            Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
+
+            MessageBox.Show(
                   "We detected that this file is a renamed version of "
-                  + "\"" + anotherName + "\"" 
+                  + "\"" + anotherName + "\""
                   + ". GitLab will not accept such input. Please match files manually in the diff tool and try again.",
                   "Cannot create a discussion",
                   MessageBoxButtons.OK, MessageBoxIcon.Information);
-               Close();
-               return;
-            }
+            Close();
+            return;
+         }
 
+         try
+         {
             _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-
-            showDiscussionContext(htmlPanel, textBoxFileName);
          }
          catch (MatchException)
          {
@@ -95,10 +103,17 @@ namespace mrHelperUI
                "Line numbers from diff tool do not match line numbers from git diff. " +
                "Make sure that you use correct instance of diff tool.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            throw;
+            throw; // fatal error
          }
 
-         // Pass other exceptions to upper-level handlers
+         try
+         {
+            showDiscussionContext(htmlPanel, textBoxFileName);
+         }
+         catch (Exception)
+         {
+            throw; // fatal error
+         }
       }
 
       /// <summary>
@@ -206,14 +221,15 @@ namespace mrHelperUI
       private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
          GitLab gl = new GitLab(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
+         var project = gl.Projects.Get(_interprocessSnapshot.Project);
          try
          {
-            var project = gl.Projects.Get(_interprocessSnapshot.Project);
             project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a discussion.", false);
+            ExceptionHandlers.Handle(ex, "Cannot create a discussion", false);
+
             Trace.TraceInformation(
                "Extra information:\n" +
                "Position: {0}\n" +
@@ -258,11 +274,21 @@ namespace mrHelperUI
       {
          Debug.Assert(parameters.Position.HasValue);
 
+         Trace.TraceInformation("Looking up for a note with bad position...");
+
          parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
          parameters.Position = null;
 
          var project = gl.Projects.Get(_interprocessSnapshot.Project);
-         project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
+         try
+         {
+            project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot create a discussion (again)", false);
+            throw; // fatal error
+         }
       }
 
       private string getFallbackInfo()
@@ -278,6 +304,8 @@ namespace mrHelperUI
       private void cleanupBadNotes(NewDiscussionParameters parameters, GitLab gl)
       {
          Debug.Assert(parameters.Position.HasValue);
+
+         Trace.TraceInformation("Looking up for a note with bad position...");
 
          var project = gl.Projects.Get(_interprocessSnapshot.Project);
          var mergeRequest = project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId);

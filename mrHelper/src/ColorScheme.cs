@@ -21,6 +21,8 @@ namespace mrHelperUI
       /// <summary>
       /// Read scheme from file
       /// Throws ArgumentException
+      /// Throws ArgumentNullException
+      /// Throws InvalidOperationException
       /// </summary>
       public ColorScheme(string filename)
       {
@@ -31,35 +33,35 @@ namespace mrHelperUI
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
+         string json = System.IO.File.ReadAllText(filename);
+
+         JavaScriptSerializer serializer = new JavaScriptSerializer();
+
+         Dictionary<string, object> colors = null;
          try
          {
-            string json = System.IO.File.ReadAllText(filename);
-
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            dynamic colors = serializer.DeserializeObject(json);
-            foreach (var record in colors)
-            {
-               string[] rgbs = record.Value.ToString().Split(',');
-               if (rgbs.Length != 3)
-               {
-                  continue;
-               }
-
-               int r = 0, g = 0, b = 0;
-               if (!int.TryParse(rgbs[0], out r) || !int.TryParse(rgbs[1], out g) || !int.TryParse(rgbs[2], out b))
-               {
-                  continue;
-               }
-
-               setColor(record.Key, Color.FromArgb(r, g, b));
-            }
+            colors = (Dictionary<string, object>)serializer.DeserializeObject(json);
          }
-         catch (Exception ex)
+         catch (Exception)
          {
-            // Trace original exception
-            ExceptionHandlers.Handle(ex, "", false);
+            throw;
+         }
 
-            throw new ArgumentException("Unexpected format of color scheme file. Will use default colors.");
+         foreach (var record in colors)
+         {
+            string[] rgbs = record.Value.ToString().Split(',');
+            if (rgbs.Length != 3)
+            {
+               continue;
+            }
+
+            int r = 0, g = 0, b = 0;
+            if (!int.TryParse(rgbs[0], out r) || !int.TryParse(rgbs[1], out g) || !int.TryParse(rgbs[2], out b))
+            {
+               continue;
+            }
+
+            setColor(record.Key, Color.FromArgb(r, g, b));
          }
       }
 

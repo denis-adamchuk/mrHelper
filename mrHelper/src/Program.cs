@@ -61,8 +61,8 @@ namespace mrHelperUI
                   }
                   catch (System.IO.IOException ex)
                   {
-                     Trace.TraceError("Cannot de-serialize snapshot. IOException: {0}", ex.Message);
-                     MessageBox.Show("Make sure that timer is started in the main application");
+                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot", false);
+                     MessageBox.Show("Cannot create a discussion. Make sure that timer is started in the main application.");
                      return;
                   }
                   Application.Run(new NewDiscussionForm(snapshot, diffToolInfo));
@@ -75,8 +75,9 @@ namespace mrHelperUI
          }
          catch (Exception ex)
          {
-            Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.HandleUnhandled(ex);
+            MessageBox.Show("Fatal error occurred, see details in log file", "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
    }

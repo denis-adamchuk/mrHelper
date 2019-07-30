@@ -240,11 +240,11 @@ namespace mrHelperUI
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot render HTML context.");
+            ExceptionHandlers.Handle(ex, "Cannot render HTML context");
          }
          catch (GitOperationException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot render HTML context.");
+            ExceptionHandlers.Handle(ex, "Cannot render HTML context");
          }
          return contextHtml;
       }
@@ -492,7 +492,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion.");
+            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
             return;
          }
 
@@ -541,7 +541,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a new body.");
+            ExceptionHandlers.Handle(ex, "Cannot create a new body");
             return;
          }
 
@@ -579,10 +579,10 @@ namespace mrHelperUI
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
 
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         var mergeRequest = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+            Get(_mergeRequestDetails.MergeRequestIId);
          try
          {
-            var mergeRequest = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-               Get(_mergeRequestDetails.MergeRequestIId);
             mergeRequest.Notes.Get(note.Id).Delete();
          }
          catch (GitLabRequestException ex)
@@ -617,7 +617,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion note.");
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion note");
             return;
          }
 
@@ -641,7 +641,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion.");
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
             return;
          }
 
@@ -674,7 +674,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            // it is not an error here because we treat it as 'last discussion item has been deleted'
+            // it is not an error here, we treat it as 'last discussion item has been deleted'
             var response = (System.Net.HttpWebResponse)(ex.WebException.Response);
             Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
             return false;
