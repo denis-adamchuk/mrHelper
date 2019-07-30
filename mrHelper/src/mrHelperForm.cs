@@ -1137,6 +1137,7 @@ namespace mrHelperUI
 
       private void onMergeRequestSelected()
       {
+         /*
          if (_timeTrackingTimer != null && _timeTrackingTimer.Enabled)
          {
             bool sendTrackedTime =
@@ -1144,6 +1145,7 @@ namespace mrHelperUI
                   MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
             onStopTimer(sendTrackedTime);
          }
+         */
 
          if (comboBoxFilteredMergeRequests.SelectedIndex == -1)
          {
