@@ -7,10 +7,13 @@ namespace mrDiffTool
 {
    public class DiffToolIntegrationException : Exception
    {
-      public DiffToolIntegrationException(string message)
+      public DiffToolIntegrationException(string message, Exception ex = null)
          : base(String.Format(message))
       {
+         NestedException = ex;
       }
+
+      public Exception NestedException { get; }
    }
 
    /// <summary>
@@ -33,7 +36,18 @@ namespace mrDiffTool
             return;
          }
 
-         _diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
+         try
+         {
+            _diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
+         }
+         catch (DiffToolIntegrationException)
+         {
+            throw;
+         }
+         catch (Exception ex) // whatever XML exception
+         {
+            throw new DiffToolIntegrationException("Unknown error", ex);
+         }
       }
 
       /// <summary>

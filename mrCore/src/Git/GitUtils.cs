@@ -24,14 +24,15 @@ namespace mrCore
                Arguments = arguments,
                UseShellExecute = false,
                RedirectStandardOutput = true,
+               RedirectStandardError = true,
                CreateNoWindow = true
             }
          };
 
          process.Start();
 
-         process.OutputDataReceived += (sender, args) => output.Add(args.Data);
-         process.ErrorDataReceived += (sender, args) => errors.Add(args.Data);
+         process.OutputDataReceived += (sender, args) => { if (args.Data != null) output.Add(args.Data); };
+         process.ErrorDataReceived += (sender, args) => { if (args.Data != null) errors.Add(args.Data); };
 
          process.BeginOutputReadLine();
          process.BeginErrorReadLine();

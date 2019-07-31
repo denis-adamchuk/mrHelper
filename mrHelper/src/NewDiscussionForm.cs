@@ -110,7 +110,7 @@ namespace mrHelperUI
          {
             showDiscussionContext(htmlPanel, textBoxFileName);
          }
-         catch (Exception)
+         catch (Exception) // ArgumentException or GitOperationException
          {
             throw; // fatal error
          }
@@ -231,7 +231,7 @@ namespace mrHelperUI
             ExceptionHandlers.Handle(ex, "Cannot create a discussion", false);
 
             Trace.TraceInformation(
-               "Extra information:\n" +
+               "Extra information about above exception:\n" +
                "Position: {0}\n" +
                "Include context: {1}\n" +
                "Snapshot refs: {2}\n" +
@@ -274,7 +274,7 @@ namespace mrHelperUI
       {
          Debug.Assert(parameters.Position.HasValue);
 
-         Trace.TraceInformation("Looking up for a note with bad position...");
+         Trace.TraceInformation("Reporting a discussion without Position (fallback)");
 
          parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
          parameters.Position = null;
@@ -307,6 +307,8 @@ namespace mrHelperUI
 
          Trace.TraceInformation("Looking up for a note with bad position...");
 
+         int deletedCount = 0;
+
          var project = gl.Projects.Get(_interprocessSnapshot.Project);
          var mergeRequest = project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId);
          List<Discussion> discussions = mergeRequest.Discussions.LoadAll();
@@ -322,9 +324,12 @@ namespace mrHelperUI
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
                   mergeRequest.Notes.Get(note.Id).Delete();
+                  ++deletedCount;
                }
             }
          }
+
+         Trace.TraceInformation(String.Format("Deleted {0} notes", deletedCount));
       }
 
       /// <summary>

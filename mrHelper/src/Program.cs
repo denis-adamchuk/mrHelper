@@ -20,39 +20,49 @@ namespace mrHelperUI
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);
          var arguments = Environment.GetCommandLineArgs();
-         try
+         if (arguments.Length < 2)
          {
-            if (arguments.Length < 2)
+            using (Mutex mutex = new Mutex(false, "Global\\" + mutex1_guid))
             {
-               using(Mutex mutex = new Mutex(false, "Global\\" + mutex1_guid))
+               if (!mutex.WaitOne(0, false))
                {
-                  if(!mutex.WaitOne(0, false))
-                  {
-                     return;
-                  }
+                  return;
+               }
 
-                  Trace.Listeners.Add(new TextWriterTraceListener("mrHelper.main.log") { TraceOutputOptions = TraceOptions.Timestamp });
-                  Trace.AutoFlush = true;
-
+               Trace.Listeners.Add(new CustomTraceListener("mrHelper.main.log"));
+               Trace.AutoFlush = true;
+               try
+               {
                   Application.Run(new mrHelperForm());
                }
-            }
-            else if (arguments[1] == "diff")
-            {
-               using(Mutex mutex = new Mutex(false, "Global\\" + mutex2_guid))
+               catch (Exception ex) // whatever unhandled exception
                {
-                  if(!mutex.WaitOne(0, false))
-                  {
-                     return;
-                  }
+                  ExceptionHandlers.HandleUnhandled(ex);
+                  MessageBox.Show("Fatal error occurred, see details in log file", "Error",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
+            }
+         }
+         else if (arguments[1] == "diff")
+         {
+            using (Mutex mutex = new Mutex(false, "Global\\" + mutex2_guid))
+            {
+               if (!mutex.WaitOne(0, false))
+               {
+                  return;
+               }
 
-                  Trace.Listeners.Add(new TextWriterTraceListener("mrHelper.diff.log") { TraceOutputOptions = TraceOptions.Timestamp });
-                  Trace.AutoFlush = true;
+               string logfilename = "mrHelper.diff.log";
+               var listener = new CustomTraceListener(logfilename);
+               Trace.Listeners.Add(listener);
+               Trace.AutoFlush = true;
 
+               InterprocessSnapshot? snapshot = null;
+               try
+               {
                   DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
                   DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
-                  InterprocessSnapshot snapshot;
                   InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
 
                   try
@@ -65,19 +75,28 @@ namespace mrHelperUI
                      MessageBox.Show("Cannot create a discussion. Make sure that timer is started in the main application.");
                      return;
                   }
-                  Application.Run(new NewDiscussionForm(snapshot, diffToolInfo));
+                  Application.Run(new NewDiscussionForm(snapshot.Value, diffToolInfo));
+               }
+               catch (Exception ex) // whatever unhandled exception
+               {
+                  ExceptionHandlers.HandleUnhandled(ex);
+               }
+               finally
+               {
+                  if (snapshot.HasValue)
+                  {
+                     Trace.Listeners.Remove(listener);
+                     listener.Close();
+                     if (System.IO.File.Exists(logfilename))
+                     {
+                        string content = System.IO.File.ReadAllText(logfilename);
+                        System.IO.File.AppendAllText(
+                           System.IO.Path.Combine(snapshot.Value.CurrentDir, logfilename), content);
+                        System.IO.File.Delete(logfilename);
+                     }
+                  }
                }
             }
-            else
-            {
-               throw new ArgumentException("Unexpected argument");
-            }
-         }
-         catch (Exception ex)
-         {
-            ExceptionHandlers.HandleUnhandled(ex);
-            MessageBox.Show("Fatal error occurred, see details in log file", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
    }

@@ -1,9 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Xml;
 
 namespace mrCustomActions
 {
+   public class CustomCommandLoaderException : Exception
+   {
+      public CustomCommandLoaderException(string message, Exception ex = null)
+         : base(String.Format(message))
+      {
+         NestedException = ex;
+      }
+
+      public Exception NestedException { get; }
+   }
+
    /// <summary>
    /// Loads custom actions from XML file
    /// </summary>
@@ -16,13 +28,29 @@ namespace mrCustomActions
 
       /// <summary>
       /// Loads custom actions from XML file
-      /// Throws ArgumentException
+      /// Throws CustomCommandLoaderException
       /// </summary>
       public List<ICommand> LoadCommands(string filename)
       {
+         try
+         {
+            return doLoad(filename);
+         }
+         catch (ArgumentException ex)
+         {
+            throw new CustomCommandLoaderException("Cannot load commands", ex);
+         }
+         catch (Exception ex) // whatever XML exception
+         {
+            throw new CustomCommandLoaderException("Unknown error", ex);
+         }
+      }
+
+      private List<ICommand> doLoad(string filename)
+      {
          if (!System.IO.File.Exists(filename))
          {
-            throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
+            throw new ArgumentException(String.Format("File is missing \"{0}\"", filename));
          }
 
          List<ICommand> results = new List<ICommand>();
@@ -35,21 +63,24 @@ namespace mrCustomActions
             XmlNode command = child.SelectSingleNode("Command");
             if (command == null)
             {
-               // TODO Log warning
+               Trace.TraceInformation(String.Format("Missing \"Command\" node in node {0}, ignoring it", child.Name));
                continue;
             }
 
             XmlNode name = command.Attributes.GetNamedItem("Name");
             if (name == null)
             {
-               // TODO Log warning
+               Trace.TraceInformation(
+                 String.Format("Missing \"Name\" attribute in \"Command\" node of node {0}, ignoring this command",
+                 child.Name));
                continue;
             }
 
             XmlNode obj = command.FirstChild;
             if (obj == null)
             {
-               // TODO Log warning
+               Trace.TraceInformation(
+                 String.Format("No child nodes in \"Command\" node of node {0}, ignoring this command", child.Name));
                continue;
             }
 
@@ -60,7 +91,8 @@ namespace mrCustomActions
             }
             else
             {
-               // TODO Log warning
+               Trace.TraceInformation(
+                 String.Format("Unknown action type \"{0}\" in node {1}, ignoring this command", obj.Name, child.Name));
             }
          }
 

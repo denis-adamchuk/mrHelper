@@ -13,7 +13,7 @@ namespace mrCore
    public class GitDiffAnalyzer
    {
       private static readonly Regex diffSectionRe = new Regex(
-         @"\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@",
+         @"^\@\@\s-(?'left_start'\d+)(,(?'left_len'\d+))?\s\+(?'right_start'\d+)(,(?'right_len'\d+))?\s\@\@",
          RegexOptions.Compiled);
 
       private struct GitDiffSection

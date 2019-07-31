@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 
@@ -31,7 +32,8 @@ namespace mrDiffTool
       /// <summary>
       /// Adds a command to launch MRHelper to Beyond Compare 3 preferences file
       /// Throws DiffToolIntegrationException
-      /// </summary>
+      /// Throws exceptions related to XML parsing
+      /// </summaryArgument>
       public void PatchToolConfig(string launchCommand)
       {
          var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -85,7 +87,10 @@ namespace mrDiffTool
                   var currentShortCut = child.SelectSingleNode("ShortCut");
                   if (currentCmdLine == null || currentShortCut == null)
                   {
-                     // looks broken
+                     Trace.TraceWarning(
+                        String.Format("\"{0}\" configuration file is already patched, but {1} is missing.",
+                                      prefs, (currentCmdLine == null ? "CmdLine" : "ShortCut")));
+
                      opensWith.RemoveChild(child);
                      continue;
                   }
@@ -94,7 +99,10 @@ namespace mrDiffTool
                   ((XmlElement)currentShortCut).SetAttribute("Value", defaultShortcut);
                   document.Save(prefs);
 
-                  // patch updated
+                  Trace.TraceInformation(String.Format(
+                     "Updated \"{0}\" file. CmdLine=\"{1}\". ShortCut=\"{2}\"",
+                     prefs, launchCommand + arguments, defaultShortcut));
+
                   return;
                }
             }
@@ -117,6 +125,10 @@ namespace mrDiffTool
          newNode.AppendChild(description);
          newNode.AppendChild(shortcut);
          opensWith.AppendChild(newNode);
+
+         Trace.TraceInformation(String.Format(
+            "Patched \"{0}\" file. CmdLine=\"{1}\". Description=\"{2}\". ShortCut=\"{3}\"",
+            prefs, cmdLine.Value, description.Value, shortcut.Value));
 
          document.Save(prefs);
       }

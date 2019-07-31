@@ -42,7 +42,7 @@ namespace mrHelperUI
          {
             colors = (Dictionary<string, object>)serializer.DeserializeObject(json);
          }
-         catch (Exception)
+         catch (Exception) // whatever JSON exception
          {
             throw;
          }

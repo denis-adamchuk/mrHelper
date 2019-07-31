@@ -105,7 +105,7 @@ namespace mrHelperUI
          {
             _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString());
          }
-         catch (Exception ex)
+         catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle(ex, "Cannot change color scheme");
             comboBoxColorSchemes.SelectedIndex = 0; // recursive
@@ -175,7 +175,7 @@ namespace mrHelperUI
             // this should open a browser
             Process.Start(linkLabelConnectedTo.Text);
          }
-         catch (Exception ex)
+         catch (Exception ex) // see Process.Start exception list
          {
             ExceptionHandlers.Handle(ex, "Cannot open URL");
          }
@@ -245,7 +245,7 @@ namespace mrHelperUI
          {
             commands = loader.LoadCommands(CustomActionsFileName);
          }
-         catch (ArgumentException ex)
+         catch (CustomCommandLoaderException ex)
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state.
             // Do not try to load custom actions if they don't exist.
@@ -279,7 +279,7 @@ namespace mrHelperUI
                {
                   command.Run();
                }
-               catch (Exception ex)
+               catch (Exception ex) // Whatever happened in Run()
                {
                   ExceptionHandlers.Handle(ex, "Custom action failed");
                }
@@ -378,7 +378,7 @@ namespace mrHelperUI
             {
                projects = loadProjectsFromFile(item.Host, ProjectListFileName);
             }
-            catch (Exception ex)
+            catch (Exception ex) // whatever de-serialization exception
             {
                ExceptionHandlers.Handle(ex, "Cannot load projects from file");
             }
@@ -518,7 +518,7 @@ namespace mrHelperUI
          {
             hosts = serializer.Deserialize<List<HostInProjectsFile>>(json);
          }
-         catch (Exception)
+         catch (Exception) // whatever de-serialization exception
          {
             throw;
          }
@@ -916,6 +916,7 @@ namespace mrHelperUI
          snapshot.MergeRequestId = mergeRequest.Value.IId;
          snapshot.Project = comboBoxProjects.Text;
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
+         snapshot.CurrentDir = Directory.GetCurrentDirectory();
 
          serializer.SerializeToDisk(snapshot);
       }

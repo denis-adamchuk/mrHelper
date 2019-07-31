@@ -94,7 +94,7 @@ namespace mrHelperUI
 
       private void onRefresh(List<Discussion> discussions)
       {
-         if (discussions.Count == 0)
+         if (discussions.Count<Discussion>(x => x.Notes.Count > 0 && !x.Notes[0].System) == 0)
          {
             MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
