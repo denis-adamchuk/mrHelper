@@ -211,6 +211,7 @@ namespace mrHelperUI
       private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
       {
          _settings.RequireTimeTracking = (sender as CheckBox).Checked;
+         updateInterprocessSnapshot();
       }
 
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
@@ -298,7 +299,7 @@ namespace mrHelperUI
             return;
          }
 
-         updateGitRepository();
+         initializeGitRepository();
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          var mergeRequestDetails = new MergeRequestDetails
@@ -475,7 +476,8 @@ namespace mrHelperUI
       private void sendTrackedTimeSpan(TimeSpan span)
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue
+            || span.TotalSeconds < 1)
          {
             return;
          }
@@ -544,7 +546,7 @@ namespace mrHelperUI
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
-         updateGitRepository();
+         initializeGitRepository();
          if (_gitRepository == null)
          {
             // User declined to create a repository
@@ -741,58 +743,88 @@ namespace mrHelperUI
 
       private void updateGitRepository()
       {
+         Debug.Assert(_gitRepository != null);
+
+         if (checkForRepositoryUpdates())
+         {
+            try
+            {
+               _gitRepository.Fetch();
+            }
+            catch (GitOperationException ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot update git repository");
+            }
+         }
+      }
+
+      private bool isLocalTempFolderAvailable()
+      {
+         string localGitFolder = textBoxLocalGitFolder.Text;
+
+         if (!Directory.Exists(localGitFolder))
+         {
+            if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
+               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+            {
+               return false;
+            }
+
+            Directory.CreateDirectory(localGitFolder);
+         }
+
+         return true;
+      }
+
+      private bool isCloneAllowed()
+      {
+         Debug.Assert(comboBoxProjects.SelectedItem != null);
+
+         string project = comboBoxProjects.Text.Split('/')[1];
+         string path = Path.Combine(textBoxLocalGitFolder.Text, project);
+
+         if (!Directory.Exists(path))
+         {
+            if (MessageBox.Show("There is no project \"" + project + "\" repository in " + textBoxLocalGitFolder.Text +
+               ". Do you want to clone git repository?", "Information", MessageBoxButtons.YesNo,
+               MessageBoxIcon.Information) == DialogResult.No)
+            {
+               return false;
+            }
+         }
+         return true;
+      }
+
+      private bool isCloneNeeded()
+      {
+         Debug.Assert(comboBoxProjects.SelectedItem != null);
+
+         string project = comboBoxProjects.Text.Split('/')[1];
+         string path = Path.Combine(textBoxLocalGitFolder.Text, project);
+
+         return !Directory.Exists(path);
+      }
+
+      private void initializeGitRepository()
+      {
          if (_gitRepository != null)
          {
-            if (checkForRepositoryUpdates())
-            {
-               try
-               {
-                  _gitRepository.Fetch();
-               }
-               catch (GitOperationException ex)
-               {
-                  ExceptionHandlers.Handle(ex, "Cannot update git repository");
-               }
-            }
+            updateGitRepository();
             return;
          }
 
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         if (comboBoxProjects.SelectedItem == null || comboBoxHost.SelectedItem == null ||
+             !isLocalTempFolderAvailable() || !isCloneAllowed())
          {
             return;
          }
 
          string projectWithNamespace = comboBoxProjects.Text;
-         string localGitFolder = textBoxLocalGitFolder.Text;
          string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
+         string project = comboBoxProjects.Text.Split('/')[1];
+         string path = Path.Combine(textBoxLocalGitFolder.Text, project);
 
-         if (!Directory.Exists(localGitFolder))
-         {
-            if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
-               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-            {
-               Directory.CreateDirectory(localGitFolder);
-            }
-            else
-            {
-               return;
-            }
-         }
-
-         bool clone = false;
-
-         string project = projectWithNamespace.Split('/')[1];
-         string path = Path.Combine(localGitFolder, project);
-         if (!Directory.Exists(path))
-         {
-            if (MessageBox.Show("There is no project \"" + project + "\" repository in " + localGitFolder +
-               ". Do you want to clone git repository?", "Information", MessageBoxButtons.YesNo,
-               MessageBoxIcon.Information) != DialogResult.Yes)
-            {
-               return;
-            }
-            clone = true;
-         }
+         bool clone = isCloneNeeded();
 
          try
          {
@@ -801,6 +833,12 @@ namespace mrHelperUI
          catch (GitOperationException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot initialize git repository");
+            return;
+         }
+
+         if (!clone)
+         {
+            updateGitRepository();
          }
       }
 
@@ -950,16 +988,7 @@ namespace mrHelperUI
 
       private void onApplicationStarted()
       {
-         _timeTrackingTimer = new Timer
-         {
-            Interval = timeTrackingTimerInterval
-         };
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
-
-         _mergeRequestCheckTimer = new Timer
-         {
-            Interval = mergeRequestCheckTimerInterval
-         };
          _mergeRequestCheckTimer.Tick += new System.EventHandler(onMergeRequestCheckTimer);
          _mergeRequestCheckTimer.Start();
 
@@ -1320,6 +1349,8 @@ namespace mrHelperUI
       {
          textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
          _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
+
+         _gitRepository = null;
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -1425,7 +1456,10 @@ namespace mrHelperUI
          }
       }
 
-      private Timer _timeTrackingTimer;
+      private Timer _timeTrackingTimer = new Timer
+         {
+            Interval = timeTrackingTimerInterval
+         };
 
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
@@ -1445,7 +1479,10 @@ namespace mrHelperUI
 
       private ColorScheme _colorScheme = new ColorScheme();
 
-      private Timer _mergeRequestCheckTimer;
+      private Timer _mergeRequestCheckTimer = new Timer
+         {
+            Interval = mergeRequestCheckTimerInterval
+         };
       private DateTime _lastCheckTime = DateTime.Now;
 
       private struct HostComboBoxItem

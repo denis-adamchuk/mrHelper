@@ -188,6 +188,8 @@ namespace mrHelperUI
             return false;
          }
 
+         Hide(); // things below may take some time but we no longer need to show the form
+
          NewDiscussionParameters parameters = prepareDiscussionParameters();
          createDiscussionAtGitlab(parameters);
          return true;
