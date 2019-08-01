@@ -45,9 +45,11 @@ namespace mrHelperUI
          showMessageBox(meaning, show);
       }
 
-      static public void HandleUnhandled(Exception ex)
+      static public void HandleUnhandled(Exception ex, bool show)
       {
          Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
+         showMessageBox("Fatal error occurred, see details in log file", show);
+         Application.Exit();
       }
 
       static private void showMessageBox(string text, bool show)

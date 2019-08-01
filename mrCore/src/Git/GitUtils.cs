@@ -41,6 +41,7 @@ namespace mrCore
          if (wait)
          {
             process.WaitForExit();
+            exitcode = process.ExitCode;
          }
          else
          {
@@ -55,6 +56,11 @@ namespace mrCore
          {
             throw new GitOperationException(arguments, exitcode, errors);
          }
+         else if (errors.Count > 0)
+         {
+            Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
+               arguments, String.Join("\n", errors)));
+         }
          return output;
       }
 
@@ -64,8 +70,19 @@ namespace mrCore
       /// </summary>
       static public void SetGlobalDiffTool(string name, string command)
       {
-         // No need to change current directory because we're changing a global setting (not a repo one)
-         string arguments = "config --global difftool." + name + "" + ".cmd " + command;
+         // No need to change current directory because we're changing a global setting
+         string arguments = "config --global difftool." + name + ".cmd " + command;
+         git(arguments, true);
+      }
+      
+      /// <summary>
+      /// Removes a section for the difftool with the passed name from the global git configuration.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
+      static public void RemoveGlobalDiffTool(string name)
+      {
+         // No need to change current directory because we're changing a global setting
+         string arguments = "config --global --remove-section difftool." + name;
          git(arguments, true);
       }
    }

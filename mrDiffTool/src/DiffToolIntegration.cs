@@ -33,7 +33,7 @@ namespace mrDiffTool
       {
          if (!isInstalled())
          {
-            return;
+            throw new DiffToolIntegrationException("Diff tool not installed", null);
          }
 
          try
@@ -52,12 +52,13 @@ namespace mrDiffTool
 
       /// <summary>
       /// Throws GitOperationException if integration failed
+      /// Throws DiffToolIntegrationException if diff tooll is not installed
       /// </summary>
       public void RegisterInGit(string name)
       {
          if (!isInstalled())
          {
-            return;
+            throw new DiffToolIntegrationException("Diff tool not installed", null);
          }
 
          GitUtils.SetGlobalDiffTool(name, getGitCommand());

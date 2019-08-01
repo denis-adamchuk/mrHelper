@@ -33,7 +33,7 @@ namespace mrCore
          new public string ToString()
          {
             return String.Format("\nText: {0}\nLeft: {1}\nRight: {2}",
-               Text, (Left?.ToString() ?? "null"), (Right?.ToString() ?? null));
+               Text, (Left?.ToString() ?? "null"), (Right?.ToString() ?? "null"));
          }
 
          public string Text;

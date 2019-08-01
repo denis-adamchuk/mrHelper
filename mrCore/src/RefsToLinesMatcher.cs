@@ -226,7 +226,7 @@ namespace mrCore
 
          List<string> left = _gitRepository.ShowFileByRevision(info.Left.Value.FileName, diffRefs.LeftSHA);
          List<string> right = _gitRepository.ShowFileByRevision(info.Right.Value.FileName, diffRefs.RightSHA);
-         if (info.Left.Value.LineNumber > left.Count && info.Right.Value.LineNumber> right.Count)
+         if (info.Left.Value.LineNumber > left.Count || info.Right.Value.LineNumber > right.Count)
          {
             Debug.Assert(false);
             return false;

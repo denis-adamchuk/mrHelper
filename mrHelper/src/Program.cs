@@ -29,6 +29,8 @@ namespace mrHelperUI
                   return;
                }
 
+               Application.ThreadException += (sender,e) => ExceptionHandlers.HandleUnhandled(e.Exception, true);
+
                Trace.Listeners.Add(new CustomTraceListener("mrHelper.main.log"));
                Trace.AutoFlush = true;
                try
@@ -37,9 +39,7 @@ namespace mrHelperUI
                }
                catch (Exception ex) // whatever unhandled exception
                {
-                  ExceptionHandlers.HandleUnhandled(ex);
-                  MessageBox.Show("Fatal error occurred, see details in log file", "Error",
-                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  ExceptionHandlers.HandleUnhandled(ex, true);
                }
             }
          }
@@ -52,19 +52,23 @@ namespace mrHelperUI
                   return;
                }
 
-               string logfilename = "mrHelper.diff.log";
+               Application.ThreadException += (sender,e) => ExceptionHandlers.HandleUnhandled(e.Exception, false);
+
+               string currentExe = System.Reflection.Assembly.GetEntryAssembly().Location;
+               string currentDir = System.IO.Path.GetDirectoryName(currentExe);
+               string logfilename = System.IO.Path.Combine(currentDir, "mrHelper.diff.log");
+
                var listener = new CustomTraceListener(logfilename);
                Trace.Listeners.Add(listener);
                Trace.AutoFlush = true;
 
-               InterprocessSnapshot? snapshot = null;
                try
                {
                   DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
                   DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
                   InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
-
+                  InterprocessSnapshot? snapshot = null;
                   try
                   {
                      snapshot = serializer.DeserializeFromDisk();
@@ -75,26 +79,12 @@ namespace mrHelperUI
                      MessageBox.Show("Cannot create a discussion. Make sure that timer is started in the main application.");
                      return;
                   }
+
                   Application.Run(new NewDiscussionForm(snapshot.Value, diffToolInfo));
                }
                catch (Exception ex) // whatever unhandled exception
                {
-                  ExceptionHandlers.HandleUnhandled(ex);
-               }
-               finally
-               {
-                  if (snapshot.HasValue)
-                  {
-                     Trace.Listeners.Remove(listener);
-                     listener.Close();
-                     if (System.IO.File.Exists(logfilename))
-                     {
-                        string content = System.IO.File.ReadAllText(logfilename);
-                        System.IO.File.AppendAllText(
-                           System.IO.Path.Combine(snapshot.Value.CurrentDir, logfilename), content);
-                        System.IO.File.Delete(logfilename);
-                     }
-                  }
+                  ExceptionHandlers.HandleUnhandled(ex, false);
                }
             }
          }

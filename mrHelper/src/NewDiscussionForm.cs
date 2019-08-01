@@ -106,14 +106,7 @@ namespace mrHelperUI
             throw; // fatal error
          }
 
-         try
-         {
-            showDiscussionContext(htmlPanel, textBoxFileName);
-         }
-         catch (Exception) // ArgumentException or GitOperationException
-         {
-            throw; // fatal error
-         }
+         showDiscussionContext(htmlPanel, textBoxFileName);
       }
 
       /// <summary>

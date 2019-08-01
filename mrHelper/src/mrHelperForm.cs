@@ -250,7 +250,7 @@ namespace mrHelperUI
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state.
             // Do not try to load custom actions if they don't exist.
-            ExceptionHandlers.Handle(ex, "Cannot load custom actions");
+            ExceptionHandlers.Handle(ex, "Cannot load custom actions", false);
             return;
          }
 
@@ -445,6 +445,7 @@ namespace mrHelperUI
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
+            return null; // don't reset an incomplete version of merge request
          }
 
          return mergeRequest;
@@ -830,10 +831,14 @@ namespace mrHelperUI
          {
             _gitRepository = clone ? new GitRepository(host, projectWithNamespace, path) : new GitRepository(path);
          }
-         catch (GitOperationException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot initialize git repository");
-            return;
+            if (ex is ArgumentException || ex is GitOperationException)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot initialize git repository");
+               return;
+            }
+            throw;
          }
 
          if (!clone)
@@ -954,7 +959,6 @@ namespace mrHelperUI
          snapshot.MergeRequestId = mergeRequest.Value.IId;
          snapshot.Project = comboBoxProjects.Text;
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
-         snapshot.CurrentDir = Directory.GetCurrentDirectory();
 
          serializer.SerializeToDisk(snapshot);
       }
@@ -1004,10 +1008,15 @@ namespace mrHelperUI
          {
             integration.RegisterInGit(GitDiffToolName);
          }
-         catch (GitOperationException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex,
-               String.Format("Cannot integrate \"{0}\" in git", diffTool.GetToolName()), true);
+            if (ex is DiffToolIntegrationException || ex is GitOperationException)
+            {
+               ExceptionHandlers.Handle(ex,
+                  String.Format("Cannot integrate \"{0}\" in git", diffTool.GetToolName()), true);
+               return;
+            }
+            throw;
          }
 
          try
@@ -1018,6 +1027,16 @@ namespace mrHelperUI
          {
             ExceptionHandlers.Handle(ex,
                String.Format("Cannot integrate the application in \"{0}\"", diffTool.GetToolName()), true);
+
+            try
+            {
+               GitUtils.RemoveGlobalDiffTool(GitDiffToolName);
+            }
+            catch (GitOperationException ex2)
+            {
+               ExceptionHandlers.Handle(ex2,
+                  String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName), false);
+            }
          }
       }
 

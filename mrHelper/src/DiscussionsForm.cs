@@ -36,7 +36,10 @@ namespace mrHelperUI
       private void DiscussionsForm_Load(object sender, EventArgs e)
       {
          _currentUser = getUser();
-         onRefresh(loadDiscussions());
+         if (_currentUser.Id != 0)
+         {
+            onRefresh(loadDiscussions());
+         }
       }
 
       private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
@@ -62,7 +65,7 @@ namespace mrHelperUI
 
       private List<Discussion> loadDiscussions()
       {
-         List<Discussion> discussions = new List<Discussion>();
+         List<Discussion> discussions = null;
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          try
          {
@@ -94,11 +97,12 @@ namespace mrHelperUI
 
       private void onRefresh(List<Discussion> discussions)
       {
-         if (discussions.Count<Discussion>(x => x.Notes.Count > 0 && !x.Notes[0].System) == 0)
+         if (discussions == null || discussions.Count<Discussion>(x => x.Notes.Count > 0 && !x.Notes[0].System) == 0)
          {
             MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close(); // a simple way to handle fatal errors in this Form
+            return;
          }
 
          // Avoid scroll bar redraw on each added control

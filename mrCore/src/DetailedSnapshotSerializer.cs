@@ -14,7 +14,6 @@ namespace mrCore
       public string Project;
       public DiffRefs Refs;
       public string TempFolder;
-      public string CurrentDir;
    }
 
    /// <summary>
