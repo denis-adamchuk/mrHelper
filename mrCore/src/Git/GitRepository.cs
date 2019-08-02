@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace mrCore
 {
@@ -25,13 +26,16 @@ namespace mrCore
       // Timestamp of the most recent fetch/clone
       public DateTime LastUpdateTime { get; private set; }
 
+      public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
+      public event EventHandler<EventArgs> OnOperationCompleted;
+
       /// <summary>
       /// Constructor expects a valid git repository as input argument
       /// Throws ArgumentException
       /// </summary>
-      public GitRepository(string path)
+      public GitRepository(string path, bool check)
       {
-         if (!Directory.Exists(path) || !isGitRepository(path))
+         if (check && (!Directory.Exists(path) || !IsGitRepository(path)))
          {
             throw new ArgumentException("There is no a valid repository at path " + path);
          }
@@ -40,36 +44,62 @@ namespace mrCore
          LastUpdateTime = DateTime.MinValue;
       }
 
-      /// <summary>
-      /// Creates a new git repository by cloning a passed project into a dir with the same name at the given path
-      /// </summary>
-      public GitRepository(string host, string project, string path)
+      public async void CloneAsync(string host, string project, string path)
       {
-         string arguments = "clone " + "https://" + host + "/" + project + " " + path;
-         GitUtils.git(arguments, true);
+         string arguments = "clone " + host + "/" + project + " " + path;
 
-         _path = path;
+         Progress<string> progress = new Progress<string>();
+
+         progress.ProgressChanged += (sender, status) =>
+         {
+            OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
+         };
+
+         Task<List<string>> task = Task.Factory.StartNew(() => GitUtils.git(arguments, true, progress)); 
+         _tasks.Add(task);
+         List<string> r = await task;
+         _tasks.Remove(task);
+
+         OnOperationCompleted?.Invoke(this, null);
+
          LastUpdateTime = DateTime.Now;
       }
 
-      public void Fetch()
+      public async void FetchAsync()
       {
-         run_in_path(() =>
+         Progress<string> progress = new Progress<string>();
+
+         progress.ProgressChanged += (sender, status) =>
          {
-            string arguments = "fetch";
-            return GitUtils.git(arguments, true);
-         }, _path);
+            OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
+         };
+
+         Task task = Task.Factory.StartNew(() =>
+            run_in_path(() =>
+            {
+               string arguments = "fetch";
+               return GitUtils.git(arguments, true, progress);
+            }, _path));
+         _tasks.Add(task);
+         await task;
+         _tasks.Remove(task);
+
+         OnOperationCompleted?.Invoke(this, null);
 
          LastUpdateTime = DateTime.Now;
       }
 
-      public void DiffTool(string name, string leftCommit, string rightCommit)
+      public async void DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
-         run_in_path(() =>
-         {
-            string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-            return GitUtils.git(arguments, false);
-         }, _path);
+         Task task = Task.Factory.ContinueWhenAll(_tasks.ToArray(), (x) =>
+            run_in_path(() =>
+            {
+               string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
+               return GitUtils.git(arguments, true/*, OnOperationStatusChange, OnOperationCompleted*/);
+            }, _path));
+         _tasks.Add(task);
+         await task;
+         _tasks.Remove(task);
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -133,7 +163,7 @@ namespace mrCore
          return result;
       }
 
-      static private bool isGitRepository(string dir)
+      static public bool IsGitRepository(string dir)
       {
          Debug.Assert(Directory.Exists(dir));
 
@@ -159,7 +189,10 @@ namespace mrCore
          var cwd = Directory.GetCurrentDirectory();
          try
          {
-            Directory.SetCurrentDirectory(path);
+            if (path != null)
+            {
+               Directory.SetCurrentDirectory(path);
+            }
             return cmd();
          }
          finally
@@ -190,6 +223,8 @@ namespace mrCore
 
       private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
          new Dictionary<RevisionCacheKey, List<string>>();
+
+      private List<Task> _tasks = new List<Task>();
    }
 }
 

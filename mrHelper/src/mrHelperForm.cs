@@ -13,6 +13,7 @@ using Version = GitLabSharp.Version;
 
 namespace mrHelperUI
 {
+   delegate void UpdateTextCallback(string text);
 
    public partial class mrHelperForm : Form, ICommandCallback
    {
@@ -558,7 +559,7 @@ namespace mrHelperUI
 
          try
          {
-            _gitRepository.DiffTool(GitDiffToolName, leftSHA, rightSHA);
+            _gitRepository.DiffToolAsync(GitDiffToolName, leftSHA, rightSHA);
          }
          catch (GitOperationException ex)
          {
@@ -750,7 +751,7 @@ namespace mrHelperUI
          {
             try
             {
-               _gitRepository.Fetch();
+               _gitRepository.FetchAsync();
             }
             catch (GitOperationException ex)
             {
@@ -803,7 +804,7 @@ namespace mrHelperUI
          string project = comboBoxProjects.Text.Split('/')[1];
          string path = Path.Combine(textBoxLocalGitFolder.Text, project);
 
-         return !Directory.Exists(path);
+         return !Directory.Exists(path) || !GitRepository.IsGitRepository(path);
       }
 
       private void initializeGitRepository()
@@ -820,8 +821,6 @@ namespace mrHelperUI
             return;
          }
 
-         string projectWithNamespace = comboBoxProjects.Text;
-         string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
          string project = comboBoxProjects.Text.Split('/')[1];
          string path = Path.Combine(textBoxLocalGitFolder.Text, project);
 
@@ -829,7 +828,7 @@ namespace mrHelperUI
 
          try
          {
-            _gitRepository = clone ? new GitRepository(host, projectWithNamespace, path) : new GitRepository(path);
+            _gitRepository = new GitRepository(path, !clone);
          }
          catch (Exception ex)
          {
@@ -841,9 +840,33 @@ namespace mrHelperUI
             throw;
          }
 
+         _gitRepository.OnOperationStatusChange += (sender, e) => { updateStatusText(e.Status); }; 
+         _gitRepository.OnOperationCompleted += (sender, e) => { updateStatusText(String.Empty); }; 
+
+         if (clone)
+         {
+            string projectWithNamespace = comboBoxProjects.Text;
+            string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
+            _gitRepository.CloneAsync(host, projectWithNamespace, path);
+         }
+
          if (!clone)
          {
             updateGitRepository();
+         }
+      }
+
+
+      private void updateStatusText(string text)
+      {
+         if (labelGitStatus.InvokeRequired)
+         {
+            UpdateTextCallback fn = new UpdateTextCallback(updateStatusText);
+            Invoke(fn, new object [] { text });
+         }
+         else
+         {
+            labelGitStatus.Text = text;
          }
       }
 

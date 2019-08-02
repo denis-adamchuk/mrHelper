@@ -83,6 +83,7 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
+         this.labelGitStatus = new System.Windows.Forms.Label();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -343,7 +344,7 @@
          this.tabControl.Location = new System.Drawing.Point(9, 12);
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
-         this.tabControl.Size = new System.Drawing.Size(533, 554);
+         this.tabControl.Size = new System.Drawing.Size(533, 584);
          this.tabControl.TabIndex = 0;
          // 
          // tabPageSettings
@@ -450,6 +451,7 @@
          // 
          // tabPageMR
          // 
+         this.tabPageMR.Controls.Add(this.labelGitStatus);
          this.tabPageMR.Controls.Add(this.groupBoxSelectProject);
          this.tabPageMR.Controls.Add(this.groupBoxActions);
          this.tabPageMR.Controls.Add(this.groupBoxReview);
@@ -461,7 +463,7 @@
          this.tabPageMR.Location = new System.Drawing.Point(4, 22);
          this.tabPageMR.Name = "tabPageMR";
          this.tabPageMR.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageMR.Size = new System.Drawing.Size(525, 528);
+         this.tabPageMR.Size = new System.Drawing.Size(525, 558);
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
@@ -652,11 +654,20 @@
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
+         // labelGitStatus
+         // 
+         this.labelGitStatus.AutoEllipsis = true;
+         this.labelGitStatus.AutoSize = true;
+         this.labelGitStatus.Location = new System.Drawing.Point(6, 518);
+         this.labelGitStatus.Name = "labelGitStatus";
+         this.labelGitStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelGitStatus.TabIndex = 23;
+         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(548, 575);
+         this.ClientSize = new System.Drawing.Size(548, 608);
          this.Controls.Add(this.tabControl);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -677,6 +688,7 @@
          this.groupBoxGit.ResumeLayout(false);
          this.groupBoxGit.PerformLayout();
          this.tabPageMR.ResumeLayout(false);
+         this.tabPageMR.PerformLayout();
          this.groupBoxSelectProject.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxTimeTracking.ResumeLayout(false);
@@ -745,6 +757,7 @@
 	  private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
       private System.Windows.Forms.ComboBox comboBoxColorSchemes;
       private System.Windows.Forms.Label labelColorScheme;
+      private System.Windows.Forms.Label labelGitStatus;
    }
 }
 

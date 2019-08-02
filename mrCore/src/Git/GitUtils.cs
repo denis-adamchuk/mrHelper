@@ -2,16 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace mrCore
 {
    public class GitUtils
    {
+      public class OperationStatusChangeArgs : EventArgs
+      {
+         public OperationStatusChangeArgs(string status)
+         {
+            Status = status;
+         }
+
+         public string Status { get; }
+      }
+
       /// <summary>
       /// Launches 'git' with arguments passed and waits for process completion if needed.
       /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static internal List<string> git(string arguments, bool wait)
+      static internal List<string> git(string arguments, bool wait, IProgress<string> progress = null)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
@@ -29,10 +40,47 @@ namespace mrCore
             }
          };
 
+         if (wait && progress != null)
+         {
+            int cmdnamelen = arguments.IndexOf(' ');
+            string cmdname = arguments.Substring(0, cmdnamelen >= 0 ? cmdnamelen : arguments.Length);
+            string statusText = "git " + cmdname + " is in progress. ";
+            progress.Report(statusText);
+         }
+
          process.Start();
 
-         process.OutputDataReceived += (sender, args) => { if (args.Data != null) output.Add(args.Data); };
-         process.ErrorDataReceived += (sender, args) => { if (args.Data != null) errors.Add(args.Data); };
+         process.OutputDataReceived +=
+            (sender, args) =>
+         {
+            if (args.Data != null)
+            {
+               output.Add(args.Data);
+               if (wait && progress != null)
+               {
+                  int cmdnamelen = arguments.IndexOf(' ');
+                  string cmdname = arguments.Substring(0, cmdnamelen >= 0 ? cmdnamelen : arguments.Length);
+                  string statusText = "git " + cmdname + " is in progress. ";
+                  progress.Report(statusText + output[output.Count - 1]);
+               }
+            }
+         };
+
+         process.ErrorDataReceived +=
+            (sender, args) =>
+         {
+            if (args.Data != null)
+            {
+               errors.Add(args.Data);
+               if (wait && progress != null)
+               {
+                  int cmdnamelen = arguments.IndexOf(' ');
+                  string cmdname = arguments.Substring(0, cmdnamelen >= 0 ? cmdnamelen : arguments.Length);
+                  string statusText = "git " + cmdname + " is in progress. ";
+                  progress.Report(statusText + errors[errors.Count - 1]);
+               }
+            }
+         };
 
          process.BeginOutputReadLine();
          process.BeginErrorReadLine();
@@ -74,7 +122,7 @@ namespace mrCore
          string arguments = "config --global difftool." + name + ".cmd " + command;
          git(arguments, true);
       }
-      
+
       /// <summary>
       /// Removes a section for the difftool with the passed name from the global git configuration.
       /// Throws GitOperationException in case of problems with git.

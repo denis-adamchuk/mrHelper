@@ -20,7 +20,7 @@ namespace mrHelperUI
       {
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
-         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]));
+         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]), true);
          _renameChecker = new GitRenameDetector(_gitRepository);
          _matcher = new RefsToLinesMatcher(_gitRepository);
 
