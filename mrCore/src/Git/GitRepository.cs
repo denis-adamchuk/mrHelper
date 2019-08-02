@@ -46,7 +46,7 @@ namespace mrCore
 
       public async void CloneAsync(string host, string project, string path)
       {
-         string arguments = "clone " + host + "/" + project + " " + path;
+         string arguments = "clone --progress " + host + "/" + project + " " + path;
 
          Progress<string> progress = new Progress<string>();
 
@@ -77,7 +77,7 @@ namespace mrCore
          Task task = Task.Factory.StartNew(() =>
             run_in_path(() =>
             {
-               string arguments = "fetch";
+               string arguments = "fetch --progress";
                return GitUtils.git(arguments, true, progress);
             }, _path));
          _tasks.Add(task);
