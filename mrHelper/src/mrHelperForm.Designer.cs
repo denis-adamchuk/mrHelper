@@ -65,6 +65,7 @@
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
+         this.labelGitStatus = new System.Windows.Forms.Label();
          this.groupBoxSelectProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProjects = new System.Windows.Forms.ComboBox();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
@@ -83,7 +84,7 @@
          this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
-         this.labelGitStatus = new System.Windows.Forms.Label();
+         this.labelGitLabStatus = new System.Windows.Forms.Label();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -355,7 +356,7 @@
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
          this.tabPageSettings.Name = "tabPageSettings";
          this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSettings.Size = new System.Drawing.Size(525, 528);
+         this.tabPageSettings.Size = new System.Drawing.Size(525, 558);
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
@@ -451,6 +452,7 @@
          // 
          // tabPageMR
          // 
+         this.tabPageMR.Controls.Add(this.labelGitLabStatus);
          this.tabPageMR.Controls.Add(this.labelGitStatus);
          this.tabPageMR.Controls.Add(this.groupBoxSelectProject);
          this.tabPageMR.Controls.Add(this.groupBoxActions);
@@ -467,6 +469,15 @@
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
+         // 
+         // labelGitStatus
+         // 
+         this.labelGitStatus.AutoEllipsis = true;
+         this.labelGitStatus.AutoSize = true;
+         this.labelGitStatus.Location = new System.Drawing.Point(6, 518);
+         this.labelGitStatus.Name = "labelGitStatus";
+         this.labelGitStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelGitStatus.TabIndex = 23;
          // 
          // groupBoxSelectProject
          // 
@@ -654,14 +665,14 @@
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
-         // labelGitStatus
+         // labelGitLabStatus
          // 
-         this.labelGitStatus.AutoEllipsis = true;
-         this.labelGitStatus.AutoSize = true;
-         this.labelGitStatus.Location = new System.Drawing.Point(6, 518);
-         this.labelGitStatus.Name = "labelGitStatus";
-         this.labelGitStatus.Size = new System.Drawing.Size(0, 13);
-         this.labelGitStatus.TabIndex = 23;
+         this.labelGitLabStatus.AutoEllipsis = true;
+         this.labelGitLabStatus.AutoSize = true;
+         this.labelGitLabStatus.Location = new System.Drawing.Point(3, 542);
+         this.labelGitLabStatus.Name = "labelGitLabStatus";
+         this.labelGitLabStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelGitLabStatus.TabIndex = 24;
          // 
          // mrHelperForm
          // 
@@ -758,6 +769,7 @@
       private System.Windows.Forms.ComboBox comboBoxColorSchemes;
       private System.Windows.Forms.Label labelColorScheme;
       private System.Windows.Forms.Label labelGitStatus;
+      private System.Windows.Forms.Label labelGitLabStatus;
    }
 }
 

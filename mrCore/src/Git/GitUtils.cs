@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace mrCore
 {
@@ -22,7 +23,7 @@ namespace mrCore
       /// Launches 'git' with arguments passed and waits for process completion if needed.
       /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static internal List<string> git(string arguments, bool wait, IProgress<string> progress = null)
+      static internal List<string> git(string arguments)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
@@ -40,69 +41,19 @@ namespace mrCore
             }
          };
 
-         if (wait && progress != null)
-         {
-            int cmdnamelen = arguments.IndexOf(' ');
-            string cmdname = arguments.Substring(0, cmdnamelen >= 0 ? cmdnamelen : arguments.Length);
-            string statusText = "git " + cmdname + " is in progress. ";
-            progress.Report(statusText);
-         }
+         process.OutputDataReceived += (sender, args) => { if (args.Data != null) output.Add(args.Data); };
+         process.ErrorDataReceived += (sender, args) => { if (args.Data != null) errors.Add(args.Data); };
 
          process.Start();
-
-         process.OutputDataReceived +=
-            (sender, args) =>
-         {
-            if (args.Data != null)
-            {
-               output.Add(args.Data);
-               if (wait && progress != null)
-               {
-                  int cmdnamelen = arguments.IndexOf(' ');
-                  string cmdname = arguments.Substring(0, cmdnamelen >= 0 ? cmdnamelen : arguments.Length);
-                  string statusText = "git " + cmdname + " is in progress. ";
-                  progress.Report(statusText + output[output.Count - 1]);
-               }
-            }
-         };
-
-         process.ErrorDataReceived +=
-            (sender, args) =>
-         {
-            if (args.Data != null)
-            {
-               errors.Add(args.Data);
-               if (wait && progress != null)
-               {
-                  int cmdnamelen = arguments.IndexOf(' ');
-                  string cmdname = arguments.Substring(0, cmdnamelen >= 0 ? cmdnamelen : arguments.Length);
-                  string statusText = "git " + cmdname + " is in progress. ";
-                  progress.Report(statusText + errors[errors.Count - 1]);
-               }
-            }
-         };
 
          process.BeginOutputReadLine();
          process.BeginErrorReadLine();
 
-         int exitcode = 0;
-         if (wait)
-         {
-            process.WaitForExit();
-            exitcode = process.ExitCode;
-         }
-         else
-         {
-            System.Threading.Thread.Sleep(500); // ms
-            if (process.HasExited)
-            {
-               exitcode = process.ExitCode;
-            }
-         }
+         process.WaitForExit();
 
-         if (exitcode != 0)
+         if (process.ExitCode != 0)
          {
-            throw new GitOperationException(arguments, exitcode, errors);
+            throw new GitOperationException(arguments, process.ExitCode, errors);
          }
          else if (errors.Count > 0)
          {
@@ -113,6 +64,102 @@ namespace mrCore
       }
 
       /// <summary>
+      /// Launches 'git' with arguments passed and waits for process completion if needed.
+      /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
+      /// </summary>
+      static internal Task<int> gitAsync(string arguments, int? timeout, IProgress<string> progress)
+      {
+         List<string> output = new List<string>();
+         List<string> errors = new List<string>();
+
+         var process = new Process
+         {
+            StartInfo = new ProcessStartInfo
+            {
+               FileName = "git",
+               Arguments = arguments,
+               UseShellExecute = false,
+               RedirectStandardOutput = true,
+               RedirectStandardError = true,
+               CreateNoWindow = true
+            },
+            EnableRaisingEvents = true
+         };
+
+         string getStatus(string fullCommand, string details)
+         {
+            int cmdnamelen = fullCommand.IndexOf(' ');
+            string cmdName = fullCommand.Substring(0, cmdnamelen >= 0 ? cmdnamelen : fullCommand.Length);
+            return String.Format("git {0} is in progress{1}{2}",
+               cmdName, (details.Length > 0 ? ":" : "."), details.ToString());
+         };
+
+         progress?.Report(getStatus(arguments, String.Empty));
+
+         process.OutputDataReceived +=
+            (sender, args) =>
+         {
+            if (args.Data != null)
+            {
+               output.Add(args.Data);
+               progress?.Report(getStatus(arguments, output[output.Count - 1]));
+            }
+         };
+
+         process.ErrorDataReceived +=
+            (sender, args) =>
+         {
+            if (args.Data != null)
+            {
+               errors.Add(args.Data);
+               progress?.Report(getStatus(arguments, errors[errors.Count - 1]));
+            }
+         };
+
+         TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
+
+         process.Exited +=
+            (sender, args) =>
+         {
+            if (!tcs.Task.IsCompleted)
+            {
+               if (process.ExitCode == 0)
+               {
+                  tcs.SetResult(process.ExitCode);
+               }
+               else
+               {
+                  tcs.SetException(new GitOperationException(arguments, process.ExitCode, errors));
+               }
+               progress?.Report(String.Empty);
+            }
+         };
+
+         if (timeout.HasValue)
+         {
+            Timer timer = new Timer { Interval = timeout.Value };
+            timer.Elapsed +=
+               (sender, args) =>
+            {
+               timer.Stop();
+               if (!tcs.Task.IsCompleted)
+               {
+                  tcs.SetResult(0);
+                  progress?.Report(String.Empty);
+               }
+            };
+            timer.Start();
+         }
+
+         process.Start();
+
+         process.BeginOutputReadLine();
+         process.BeginErrorReadLine();
+
+         return tcs.Task;
+      }
+
+      /// <summary>
       /// Adds a difftool with the given name and command to the global git configuration.
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
@@ -120,7 +167,7 @@ namespace mrCore
       {
          // No need to change current directory because we're changing a global setting
          string arguments = "config --global difftool." + name + ".cmd " + command;
-         git(arguments, true);
+         git(arguments);
       }
 
       /// <summary>
@@ -131,7 +178,7 @@ namespace mrCore
       {
          // No need to change current directory because we're changing a global setting
          string arguments = "config --global --remove-section difftool." + name;
-         git(arguments, true);
+         git(arguments);
       }
    }
 }

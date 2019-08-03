@@ -23,11 +23,10 @@ namespace mrCore
    /// </summary>
    public class GitRepository
    {
-      // Timestamp of the most recent fetch/clone
-      public DateTime LastUpdateTime { get; private set; }
+      // Timestamp of the most recent fetch/clone, by default it is empty
+      public DateTime? LastUpdateTime { get; private set; }
 
       public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
-      public event EventHandler<EventArgs> OnOperationCompleted;
 
       /// <summary>
       /// Constructor expects a valid git repository as input argument
@@ -44,62 +43,28 @@ namespace mrCore
          LastUpdateTime = DateTime.MinValue;
       }
 
-      public async void CloneAsync(string host, string project, string path)
+      public Task<int> CloneAsync(string host, string project, string path)
       {
          string arguments = "clone --progress " + host + "/" + project + " " + path;
-
-         Progress<string> progress = new Progress<string>();
-
-         progress.ProgressChanged += (sender, status) =>
-         {
-            OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
-         };
-
-         Task<List<string>> task = Task.Factory.StartNew(() => GitUtils.git(arguments, true, progress)); 
-         _tasks.Add(task);
-         List<string> r = await task;
-         _tasks.Remove(task);
-
-         OnOperationCompleted?.Invoke(this, null);
-
-         LastUpdateTime = DateTime.Now;
+         return (Task<int>)run_tracked_progress_async(arguments, true);
       }
 
-      public async void FetchAsync()
+      public Task<int> FetchAsync()
       {
-         Progress<string> progress = new Progress<string>();
-
-         progress.ProgressChanged += (sender, status) =>
+         return (Task<int>)run_in_path(() =>
          {
-            OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
-         };
-
-         Task task = Task.Factory.StartNew(() =>
-            run_in_path(() =>
-            {
-               string arguments = "fetch --progress";
-               return GitUtils.git(arguments, true, progress);
-            }, _path));
-         _tasks.Add(task);
-         await task;
-         _tasks.Remove(task);
-
-         OnOperationCompleted?.Invoke(this, null);
-
-         LastUpdateTime = DateTime.Now;
+            string arguments = "fetch --progress";
+            return run_tracked_progress_async(arguments, true);
+         }, _path);
       }
 
-      public async void DiffToolAsync(string name, string leftCommit, string rightCommit)
+      public Task<int> DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
-         Task task = Task.Factory.ContinueWhenAll(_tasks.ToArray(), (x) =>
-            run_in_path(() =>
-            {
-               string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-               return GitUtils.git(arguments, true/*, OnOperationStatusChange, OnOperationCompleted*/);
-            }, _path));
-         _tasks.Add(task);
-         await task;
-         _tasks.Remove(task);
+         return (Task<int>)run_in_path(() =>
+         {
+            string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
+            return GitUtils.gitAsync(arguments, 500, null);
+         }, _path);
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -124,7 +89,7 @@ namespace mrCore
             string arguments =
                "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
                + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
-            return GitUtils.git(arguments, true);
+            return GitUtils.git(arguments);
          }, _path);
 
          _cachedDiffs[key] = result;
@@ -136,7 +101,7 @@ namespace mrCore
          return (List<string>)run_in_path(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
-            return GitUtils.git(arguments, true);
+            return GitUtils.git(arguments);
          }, _path);
       }
 
@@ -156,7 +121,7 @@ namespace mrCore
          List<string> result = (List<string>)run_in_path(() =>
          {
             string arguments = "show " + sha + ":" + filename;
-            return GitUtils.git(arguments, true);
+            return GitUtils.git(arguments);
          }, _path);
 
          _cachedRevisions[key] = result;
@@ -172,7 +137,7 @@ namespace mrCore
             try
             {
                var arguments = "rev-parse --is-inside-work-tree";
-               GitUtils.git(arguments, true);
+               GitUtils.git(arguments);
                return true;
             }
             catch (GitOperationException)
@@ -199,6 +164,23 @@ namespace mrCore
          {
             Directory.SetCurrentDirectory(cwd);
          }
+      }
+
+      private Task<int> run_tracked_progress_async(string arguments, bool updateTimestamp)
+      {
+         Progress<string> progress = new Progress<string>();
+
+         progress.ProgressChanged += (sender, status) =>
+         {
+            OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
+
+            if (updateTimestamp && status == String.Empty)
+            {
+               LastUpdateTime = DateTime.Now;
+            }
+         };
+
+         return GitUtils.gitAsync(arguments, null, progress);
       }
 
       private readonly string _path; // Path to repository

@@ -17,8 +17,10 @@ namespace mrHelperUI
 {
    public partial class DiscussionsForm : Form
    {
+      static private string DefaultCaption = "Discussions";
+
       public DiscussionsForm(MergeRequestDetails mergeRequestDetails, GitRepository gitRepository,
-         int diffContextDepth, ColorScheme colorScheme)
+         int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, User currentUser)
       {
          _mergeRequestDetails = mergeRequestDetails;
 
@@ -28,25 +30,19 @@ namespace mrHelperUI
          _colorScheme = colorScheme;
 
          InitializeComponent();
-      }
 
-      /// <summary>
-      /// Creates a form and fills it with content
-      /// </summary>
-      private void DiscussionsForm_Load(object sender, EventArgs e)
-      {
-         _currentUser = getUser();
+         _currentUser = currentUser;
          if (_currentUser.Id != 0)
          {
-            onRefresh(loadDiscussions());
+            onRefresh(discussions);
          }
       }
 
-      private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
+      async private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.F5)
          {
-            onRefresh(loadDiscussions());
+            onRefresh(await loadDiscussionsAsync());
          }
       }
 
@@ -63,36 +59,23 @@ namespace mrHelperUI
          return DisplayRectangle.Location;
       }
 
-      private List<Discussion> loadDiscussions()
+      async private Task<List<Discussion>> loadDiscussionsAsync()
       {
          List<Discussion> discussions = null;
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         this.Text = DefaultCaption + "   (Loading discussions)";
          try
          {
-            discussions = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-               Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAll();
+            discussions = await gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+               Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAllTaskAsync();
          }
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
          }
-         return discussions;
-      }
+         this.Text = DefaultCaption;
 
-      private User getUser()
-      {
-         User user = new User();
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         try
-         {
-            user = gl.CurrentUser.Load();
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot load current user details from GitLab");
-            Close(); // a simple way to handle fatal errors in this Form
-         }
-         return user;
+         return discussions;
       }
 
       private void onRefresh(List<Discussion> discussions)
