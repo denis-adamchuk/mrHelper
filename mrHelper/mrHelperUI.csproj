@@ -53,7 +53,7 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="src\DropDownList.cs">
+    <Compile Include="src\SelectionPreservingComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\NewDiscussionItemForm.cs">

@@ -7,11 +7,16 @@ using System.Windows.Forms;
 
 namespace mrHelperUI
 {
-   public class DropDownList : ComboBox
+   /// <summary>
+   /// Unlike its parent class, <> preserves state of SelectedIndex, SelectedItem, SelectedText and Text properties
+   /// until SelectedIndexChanged event is invoked, including cases when dropdown is expanded and user hovers but
+   /// does not click on items
+   /// </summary>
+   public class SelectionPreservingComboBox : ComboBox
    {
       new public event EventHandler SelectedIndexChanged;
 
-      public DropDownList()
+      public SelectionPreservingComboBox()
       {
          base.SelectionChangeCommitted +=
             (sender, args) =>

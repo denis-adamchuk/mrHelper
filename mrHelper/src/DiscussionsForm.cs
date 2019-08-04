@@ -95,10 +95,12 @@ namespace mrHelperUI
          Controls.Clear();
 
          // Load updated data and create controls for it
+         this.Text = DefaultCaption + "   (Rendering Discussions Form)";
          createDiscussionBoxes(discussions);
 
          // Put controls at their places
          ResumeLayout();
+         this.Text = DefaultCaption;
 
          // Set focus to the Form
          Focus();

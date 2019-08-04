@@ -12,9 +12,11 @@ namespace mrCore
          : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
       {
          Details = String.Join("\n", errorOutput);
+         ExitCode = exitcode;
       }
 
       public string Details { get; }
+      public int ExitCode { get; }
    }
 
    /// <summary>
@@ -42,53 +44,68 @@ namespace mrCore
          _path = path;
       }
 
-      public Task<int> CloneAsync(string host, string project, string path)
+      /// <summary>
+      /// Create an asyncronous task for 'git close' command
+      /// Throws:
+      /// InvalidOperationException if another async operation is running
+      /// </summary>
+      public Task CloneAsync(string host, string project, string path)
       {
-         if (_asyncPid.HasValue)
+         if (_descriptor != null)
          {
             throw new InvalidOperationException("Another acync operation is running");
          }
 
          string arguments = "clone --progress " + host + "/" + project + " " + path;
-         return (Task<int>)run_tracked_progress_async(arguments, true);
+         return run_async(arguments, null, true, true);
       }
 
-      public Task<int> FetchAsync()
+      /// <summary>
+      /// Create an asyncronous task for 'git fetch' command
+      /// Throws:
+      /// InvalidOperationException if another async operation is running
+      /// </summary>
+      public Task FetchAsync()
       {
-         if (_asyncPid.HasValue)
+         if (_descriptor != null)
          {
             throw new InvalidOperationException("Another acync operation is running");
          }
 
-         return (Task<int>)run_in_path(() =>
+         return (Task)run_in_path(() =>
          {
             string arguments = "fetch --progress";
-            return run_tracked_progress_async(arguments, true);
-         }, _path);
-      }
-
-      public Task<int> DiffToolAsync(string name, string leftCommit, string rightCommit)
-      {
-         if (_asyncPid.HasValue)
-         {
-            throw new InvalidOperationException("Another acync operation is running");
-         }
-
-         return (Task<int>)run_in_path(() =>
-         {
-            string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-            return GitUtils.gitAsync(arguments, 500, null);
+            return run_async(arguments, null, true, true);
          }, _path);
       }
 
       /// <summary>
-      /// Cancels currently running git async operation
+      /// Create an asyncronous task for 'git difftool --dir-diff' command
+      /// Throws:
+      /// InvalidOperationException if another async operation is running
+      /// </summary>
+      public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
+      {
+         if (_descriptor != null)
+         {
+            throw new InvalidOperationException("Another acync operation is running");
+         }
+
+         return (Task)run_in_path(() =>
+         {
+            string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
+            return run_async(arguments, 500, false, false);
+         }, _path);
+      }
+
+      /// <summary>
+      /// Cancel currently running git async operation
       /// Throws:
       /// InvalidOperationException if no async operation is running
       /// </summary>
       public void CancelAsyncOperation()
       {
-         if (!_asyncPid.HasValue)
+         if (_descriptor == null)
          {
             throw new InvalidOperationException("No acync operation is running");
          }
@@ -96,9 +113,9 @@ namespace mrCore
          Process process = null;
          try
          {
-            process = Process.GetProcessById(_asyncPid.Value);
+            process = Process.GetProcessById(_descriptor.ProcessId);
          }
-         catch (ArgumentException ex)
+         catch (ArgumentException)
          {
             // no longer running, nothing to do
             return;
@@ -106,13 +123,18 @@ namespace mrCore
          catch (InvalidOperationException)
          {
             Debug.Assert(false);
-            Trace.TraceWarning(String.Format("[InvalidOperationException] Bad git PID {0}", _asyncPid.Value));
+            Trace.TraceWarning(String.Format("[InvalidOperationException] Bad git PID {0}", _descriptor.ProcessId));
             return;
+         }
+         finally
+         {
+            _descriptor = null;
          }
 
          try
          {
             process.Kill();
+            process.WaitForExit();
          }
          catch (Exception)
          {
@@ -219,25 +241,25 @@ namespace mrCore
          }
       }
 
-      private Task<int> run_tracked_progress_async(string arguments, bool updateTimestamp)
+      async private Task run_async(string arguments, int? timeout, bool updateTimeStamp, bool trackProgress)
       {
-         Progress<string> progress = new Progress<string>();
-
-         progress.ProgressChanged += (sender, status) =>
+         Progress<string> progress = trackProgress ? new Progress<string>() : null;
+         if (trackProgress)
          {
-            OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
-
-            // TODO It is not an elegant way to report task completion
-            if (updateTimestamp && status == String.Empty)
+            progress.ProgressChanged += (sender, status) =>
             {
-               LastUpdateTime = DateTime.Now;
-               _asyncPid = 0;
-            }
-         };
+               OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
+            };
+         }
 
-         GitUtils.GitAsyncTaskDescriptor d = GitUtils.gitAsync(arguments, null, progress);
-         _asyncPid = d.ProcessId;
-         return d.Task;
+         _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
+         await _descriptor.TaskCompletionSource.Task;
+         _descriptor = null;
+
+         if (updateTimeStamp)
+         {
+            LastUpdateTime = DateTime.Now;
+         }
       }
 
       private readonly string _path; // Path to repository
@@ -263,9 +285,7 @@ namespace mrCore
       private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
          new Dictionary<RevisionCacheKey, List<string>>();
 
-      private List<Task> _tasks = new List<Task>();
-
-      private int? _asyncPid;
+      private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
    }
 }
 

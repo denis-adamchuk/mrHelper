@@ -16,6 +16,7 @@ using Version = GitLabSharp.Version;
 namespace mrHelperUI
 {
    delegate void UpdateTextCallback(string text);
+   delegate Task Command();
 
    public partial class mrHelperForm : Form, ICommandCallback
    {
@@ -120,6 +121,8 @@ namespace mrHelperUI
       async private void ComboBoxHost_SelectedIndexChanged(object sender, EventArgs e)
       {
          _gitRepository = null;
+         updateGitStatusText(String.Empty);
+
          await updateProjectsDropdownList();
          _settings.LastSelectedHost = (sender as ComboBox).Text;
       }
@@ -127,6 +130,8 @@ namespace mrHelperUI
       async private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
       {
          _gitRepository = null;
+         updateGitStatusText(String.Empty);
+
          await updateMergeRequestsDropdownList(false);
          _settings.LastSelectedProject = (sender as ComboBox).Text;
       }
@@ -244,7 +249,14 @@ namespace mrHelperUI
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          Debug.Assert(_gitRepository != null);
-         _gitRepository.CancelAsyncOperation();
+         try
+         {
+            _gitRepository.CancelAsyncOperation();
+         }
+         catch (InvalidOperationException)
+         {
+            Debug.Assert(false);
+         }
       }
 
       private void addCustomActions()
@@ -311,14 +323,33 @@ namespace mrHelperUI
             return;
          }
 
+         string result = String.Empty;
          try
          {
-            await initializeGitRepositoryAsync();
+            result = await initializeGitRepositoryAsync();
          }
-         catch (GitOperationException ex)
+         catch (Exception ex)
          {
+            Debug.Assert(ex is ArgumentException || ex is GitOperationException);
             ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
             return;
+         }
+
+         if (result == "CancelFetch")
+         {
+            if (MessageBox.Show("Without up-to-date git repository, some context code snippets might be missing. "
+               + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+            {
+               return;
+            }
+         }
+         else if (result == "CancelClone" || result == "NoRepository")
+         {
+            if (MessageBox.Show("Without git repository, context code snippets will be missing. "
+               + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+            {
+               return;
+            }
          }
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
@@ -338,8 +369,15 @@ namespace mrHelperUI
             return;
          }
 
+
+         labelGitLabStatus.Text = "Rendering Discussions Form...";
+         labelGitLabStatus.Update();
+
          var form = new DiscussionsForm(mergeRequestDetails, _gitRepository, int.Parse(comboBoxDCDepth.Text),
             _colorScheme, discussions, currentUser.Value);
+
+         labelGitLabStatus.Text = String.Empty;
+
          form.Show();
       }
 
@@ -576,10 +614,13 @@ namespace mrHelperUI
 
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
-         MergeRequest? mergeRequest = getSelectedMergeRequest();
-         Debug.Assert(mergeRequest.HasValue);
          Debug.Assert(comboBoxHost.SelectedItem != null);
          Debug.Assert(comboBoxProjects.SelectedItem != null);
+         MergeRequest? mergeRequest = getSelectedMergeRequest();
+         if (!mergeRequest.HasValue)
+         {
+            return null;
+         }
 
          CancellationTokenSource myTokenSource = new CancellationTokenSource();
          _currentTokenSources.Add(myTokenSource);
@@ -678,20 +719,22 @@ namespace mrHelperUI
          _diffToolArgs = null;
          await updateInterprocessSnapshot(); // to purge serialized snapshot
 
+         string result = String.Empty;
          try
          {
-            await initializeGitRepositoryAsync();
+            result = await initializeGitRepositoryAsync();
          }
-         catch (GitOperationException ex)
+         catch (Exception ex)
          {
+            Debug.Assert(ex is ArgumentException || ex is GitOperationException);
             ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
             return;
          }
 
-         if (_gitRepository == null)
+         if (result == "CancelFetch" || result == "CancelClone" || result == "NoRepository")
          {
             // User declined to create a repository
-            MessageBox.Show("Cannot launch a diff tool without git repository", "Warning",
+            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
                MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
          }
@@ -699,6 +742,8 @@ namespace mrHelperUI
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
+         buttonDiffTool.Enabled = false;
+         buttonDiscussions.Enabled = false;
          try
          {
             await _gitRepository.DiffToolAsync(GitDiffToolName, leftSHA, rightSHA);
@@ -707,6 +752,11 @@ namespace mrHelperUI
          {
             ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
             return;
+         }
+         finally
+         {
+            buttonDiffTool.Enabled = true;
+            buttonDiscussions.Enabled = true;
          }
 
          _diffToolArgs = new DiffToolArguments
@@ -952,26 +1002,36 @@ namespace mrHelperUI
          return !Directory.Exists(path) || !GitRepository.IsGitRepository(path);
       }
 
-      async private Task initializeGitRepositoryAsync()
+      async private Task<string> executeAsyncGitOperationAsync(Command command, string name,
+         string success_result, string cancel_result)
       {
-         linkLabelAbortGit.Visible = true;
-         buttonDiffTool.Enabled = false;
-         buttonDiscussions.Enabled = false;
-         comboBoxHost.Enabled = false;
-         comboBoxProjects.Enabled = false;
-
+         prepareToAsyncGitOperation();
          try
          {
-            await doInitializeGitRepositoryAsync();
+            await command();
+         }
+         catch (Exception ex)
+         {
+            bool cancelledByUser = (ex is GitOperationException && (ex as GitOperationException).ExitCode == -1);
+            string result = cancelledByUser ? "cancelled by user" : "failed";
+            updateGitStatusText(String.Format("git {0} {1}", name, result));
+            if (ex is InvalidOperationException)
+            {
+               Debug.Assert(false);
+            }
+            else if (!cancelledByUser)
+            {
+               throw;
+            }
+            return cancel_result;
          }
          finally
          {
-            linkLabelAbortGit.Visible = false;
-            buttonDiffTool.Enabled = true;
-            buttonDiscussions.Enabled = true;
-            comboBoxHost.Enabled = true;
-            comboBoxProjects.Enabled = true;
+            fixAfterAsyncGitOperation();
          }
+
+         updateGitStatusText(String.Empty);
+         return success_result;
       }
 
       /// <summary>
@@ -979,21 +1039,23 @@ namespace mrHelperUI
       /// Returns Task if initialization started and null otherwise.
       /// Sets asynchronous exception GitOperationException in case of problems with git.
       /// </summary>
-      async private Task doInitializeGitRepositoryAsync()
+      async private Task<string> initializeGitRepositoryAsync()
       {
          if (_gitRepository != null)
          {
             if (await checkForRepositoryUpdatesAsync())
             {
-               await _gitRepository.FetchAsync();
+               return await executeAsyncGitOperationAsync(() => _gitRepository.FetchAsync(),
+                  "fetch", "Fetch", "CancelFetch");
             }
+            return "Fetch";
          }
 
          if (_gitRepository != null
             || comboBoxProjects.SelectedItem == null || comboBoxHost.SelectedItem == null
             || !isLocalTempFolderAvailable() || !isCloneAllowed())
          {
-            return;
+            return "NoRepository";
          }
 
          string project = comboBoxProjects.Text.Split('/')[1];
@@ -1001,32 +1063,19 @@ namespace mrHelperUI
 
          bool clone = isCloneNeeded();
 
-         try
-         {
-            _gitRepository = new GitRepository(path, !clone);
-         }
-         catch (Exception ex)
-         {
-            if (ex is ArgumentException || ex is GitOperationException)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot initialize git repository");
-               return;
-            }
-            Debug.Assert(false);
-            throw;
-         }
-
+         _gitRepository = new GitRepository(path, !clone);
          _gitRepository.OnOperationStatusChange += (sender, e) => { updateGitStatusText(e.Status); }; 
 
          if (clone)
          {
             string projectWithNamespace = comboBoxProjects.Text;
             string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
-            await _gitRepository.CloneAsync(host, projectWithNamespace, path);
+            return await executeAsyncGitOperationAsync(() => _gitRepository.CloneAsync(host, projectWithNamespace, path),
+               "clone", "Clone", "CancelClone");
          }
 
-         Debug.Assert(!_gitRepository.LastUpdateTime.HasValue);
-         await _gitRepository.FetchAsync();
+         return await executeAsyncGitOperationAsync(() => _gitRepository.FetchAsync(),
+            "fetch", "Fetch", "CancelFetch");
       }
 
       /// <summary>
@@ -1399,30 +1448,26 @@ namespace mrHelperUI
 
       async private Task onMergeRequestSelected()
       {
-         if (comboBoxFilteredMergeRequests.SelectedIndex == -1)
+         // 1. Update status
+         linkLabelConnectedTo.Visible = false;
+
+         // 2. Clean-up textboxes with merge request details
+         textBoxMergeRequestName.Text = null;
+         richTextBoxMergeRequestDescription.Text = null;
+
+         // 3. Clean-up lists of versions
+         comboBoxRightVersion.SelectedIndex = -1;
+         comboBoxRightVersion.Items.Clear();
+         comboBoxLeftVersion.SelectedIndex = -1;
+         comboBoxLeftVersion.Items.Clear();
+
+         // 4. Toggle state of buttons
+         buttonDiffTool.Enabled = false;
+         buttonToggleTimer.Enabled = false;
+         buttonDiscussions.Enabled = false;
+         foreach (Control control in groupBoxActions.Controls)
          {
-            // 1. Update status
-            linkLabelConnectedTo.Visible = false;
-
-            // 2. Clean-up textboxes with merge request details
-            textBoxMergeRequestName.Text = null;
-            richTextBoxMergeRequestDescription.Text = null;
-
-            // 3. Clean-up lists of versions
-            comboBoxRightVersion.SelectedIndex = -1;
-            comboBoxRightVersion.Items.Clear();
-            comboBoxLeftVersion.SelectedIndex = -1;
-            comboBoxLeftVersion.Items.Clear();
-
-            // 4. Toggle state of buttons
-            buttonDiffTool.Enabled = false;
-            buttonToggleTimer.Enabled = false;
-            buttonDiscussions.Enabled = false;
-            foreach (Control control in groupBoxActions.Controls)
-            {
-               control.Enabled = false;
-            }
-            return;
+            control.Enabled = false;
          }
 
          MergeRequest? mergeRequest = await loadMergeRequestAsync();
@@ -1577,6 +1622,7 @@ namespace mrHelperUI
          _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
 
          _gitRepository = null;
+         updateGitStatusText(String.Empty);
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -1695,6 +1741,24 @@ namespace mrHelperUI
       {
          comboBox.Enabled = true;
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+      }
+
+      private void prepareToAsyncGitOperation()
+      {
+         linkLabelAbortGit.Visible = true;
+         buttonDiffTool.Enabled = false;
+         buttonDiscussions.Enabled = false;
+         comboBoxHost.Enabled = false;
+         comboBoxProjects.Enabled = false;
+      }
+
+      private void fixAfterAsyncGitOperation()
+      {
+         linkLabelAbortGit.Visible = false;
+         buttonDiffTool.Enabled = true;
+         buttonDiscussions.Enabled = true;
+         comboBoxHost.Enabled = true;
+         comboBoxProjects.Enabled = true;
       }
 
       private void cancelAllTokenSources()

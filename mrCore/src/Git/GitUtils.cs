@@ -21,13 +21,13 @@ namespace mrCore
 
       public class GitAsyncTaskDescriptor
       {
-         public Task<int> Task;
+         public TaskCompletionSource<int> TaskCompletionSource;
          public int ProcessId;
       }
 
       /// <summary>
-      /// Launches 'git' with arguments passed and waits for process completion if needed.
-      /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
+      /// Launche 'git' with arguments passed and waits for process completion if needed.
+      /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
       static internal List<string> git(string arguments)
       {
@@ -70,8 +70,7 @@ namespace mrCore
       }
 
       /// <summary>
-      /// Launches 'git' with arguments passed and waits for process completion if needed.
-      /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
+      /// Create a task to 'git' with arguments passed asynchronously
       /// </summary>
       static internal GitAsyncTaskDescriptor gitAsync(string arguments, int? timeout, IProgress<string> progress)
       {
@@ -96,8 +95,8 @@ namespace mrCore
          {
             int cmdnamelen = fullCommand.IndexOf(' ');
             string cmdName = fullCommand.Substring(0, cmdnamelen >= 0 ? cmdnamelen : fullCommand.Length);
-            return String.Format("git {0} is in progress{1}{2}",
-               cmdName, (details.Length > 0 ? ":" : "."), details.ToString());
+            return String.Format("git {0} is in progress {1}{2}",
+               cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
          progress?.Report(getStatus(arguments, String.Empty));
@@ -122,7 +121,6 @@ namespace mrCore
             }
          };
 
-         // TODO Wrap into a descriptor and Dispose when finishes
          TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
 
          process.Exited +=
@@ -130,6 +128,8 @@ namespace mrCore
          {
             if (!tcs.Task.IsCompleted)
             {
+               process.CancelOutputRead();
+               process.CancelErrorRead();
                if (process.ExitCode == 0)
                {
                   tcs.SetResult(process.ExitCode);
@@ -138,7 +138,7 @@ namespace mrCore
                {
                   tcs.SetException(new GitOperationException(arguments, process.ExitCode, errors));
                }
-               progress?.Report(String.Empty);
+               process.Dispose();
             }
          };
 
@@ -151,8 +151,10 @@ namespace mrCore
                timer.Stop();
                if (!tcs.Task.IsCompleted)
                {
+                  process.CancelOutputRead();
+                  process.CancelErrorRead();
                   tcs.SetResult(0);
-                  progress?.Report(String.Empty);
+                  process.Dispose();
                }
             };
             timer.Start();
@@ -165,7 +167,7 @@ namespace mrCore
 
          GitAsyncTaskDescriptor d = new GitAsyncTaskDescriptor
          {
-            Task = tcs.Task,
+            TaskCompletionSource = tcs,
             ProcessId = process.Id
          };
          return d;
