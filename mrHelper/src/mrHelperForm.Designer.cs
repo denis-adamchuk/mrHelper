@@ -41,7 +41,7 @@
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
-         this.comboBoxFilteredMergeRequests = new System.Windows.Forms.ComboBox();
+         this.comboBoxFilteredMergeRequests = new DropDownList();
          this.buttonBrowseLocalGitFolder = new System.Windows.Forms.Button();
          this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
@@ -65,9 +65,10 @@
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
+         this.labelGitLabStatus = new System.Windows.Forms.Label();
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.groupBoxSelectProject = new System.Windows.Forms.GroupBox();
-         this.comboBoxProjects = new System.Windows.Forms.ComboBox();
+         this.comboBoxProjects = new DropDownList();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
@@ -78,13 +79,13 @@
          this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
-         this.comboBoxHost = new System.Windows.Forms.ComboBox();
+         this.comboBoxHost = new DropDownList();
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
-         this.comboBoxRightVersion = new System.Windows.Forms.ComboBox();
-         this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
+         this.comboBoxRightVersion = new DropDownList();
+         this.comboBoxLeftVersion = new DropDownList();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
-         this.labelGitLabStatus = new System.Windows.Forms.Label();
+         this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -452,6 +453,7 @@
          // 
          // tabPageMR
          // 
+         this.tabPageMR.Controls.Add(this.linkLabelAbortGit);
          this.tabPageMR.Controls.Add(this.labelGitLabStatus);
          this.tabPageMR.Controls.Add(this.labelGitStatus);
          this.tabPageMR.Controls.Add(this.groupBoxSelectProject);
@@ -469,6 +471,15 @@
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
+         // 
+         // labelGitLabStatus
+         // 
+         this.labelGitLabStatus.AutoEllipsis = true;
+         this.labelGitLabStatus.AutoSize = true;
+         this.labelGitLabStatus.Location = new System.Drawing.Point(3, 542);
+         this.labelGitLabStatus.Name = "labelGitLabStatus";
+         this.labelGitLabStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelGitLabStatus.TabIndex = 24;
          // 
          // labelGitStatus
          // 
@@ -665,14 +676,17 @@
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
-         // labelGitLabStatus
+         // linkLabelAbortGit
          // 
-         this.labelGitLabStatus.AutoEllipsis = true;
-         this.labelGitLabStatus.AutoSize = true;
-         this.labelGitLabStatus.Location = new System.Drawing.Point(3, 542);
-         this.labelGitLabStatus.Name = "labelGitLabStatus";
-         this.labelGitLabStatus.Size = new System.Drawing.Size(0, 13);
-         this.labelGitLabStatus.TabIndex = 24;
+         this.linkLabelAbortGit.AutoSize = true;
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(484, 518);
+         this.linkLabelAbortGit.Name = "linkLabelAbortGit";
+         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
+         this.linkLabelAbortGit.TabIndex = 25;
+         this.linkLabelAbortGit.TabStop = true;
+         this.linkLabelAbortGit.Text = "Abort";
+         this.linkLabelAbortGit.Visible = false;
+         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
          // 
          // mrHelperForm
          // 
@@ -726,7 +740,7 @@
       private System.Windows.Forms.FolderBrowserDialog localGitFolderBrowser;
       private System.Windows.Forms.Button buttonBrowseLocalGitFolder;
       private System.Windows.Forms.TextBox textBoxLocalGitFolder;
-      private System.Windows.Forms.ComboBox comboBoxFilteredMergeRequests;
+      private DropDownList comboBoxFilteredMergeRequests;
       private System.Windows.Forms.TabControl tabControl;
       private System.Windows.Forms.TabPage tabPageSettings;
       private System.Windows.Forms.GroupBox groupBoxGit;
@@ -741,12 +755,12 @@
       private System.Windows.Forms.Label labelSpentTime;
       private System.Windows.Forms.Label labelSpentTimeLabel;
       private System.Windows.Forms.Button buttonToggleTimer;
-      private System.Windows.Forms.ComboBox comboBoxLeftVersion;
-      private System.Windows.Forms.ComboBox comboBoxRightVersion;
+      private DropDownList comboBoxLeftVersion;
+      private DropDownList comboBoxRightVersion;
       private System.Windows.Forms.Label label3;
       private System.Windows.Forms.Button buttonDiffTool;
       private System.Windows.Forms.Label label4;
-      private System.Windows.Forms.ComboBox comboBoxHost;
+      private DropDownList comboBoxHost;
       private System.Windows.Forms.GroupBox groupBoxHost;
       private System.Windows.Forms.GroupBox groupBoxReview;
       private System.Windows.Forms.GroupBox groupBoxTimeTracking;
@@ -760,16 +774,17 @@
       private System.Windows.Forms.ColumnHeader columnHeaderAccessToken;
       private System.Windows.Forms.Button buttonApplyLabels;
       private System.Windows.Forms.GroupBox groupBoxSelectProject;
-      private System.Windows.Forms.ComboBox comboBoxProjects;
+      private DropDownList comboBoxProjects;
       private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Label labelDepth;
       private System.Windows.Forms.ComboBox comboBoxDCDepth;
-	  private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
+      private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
       private System.Windows.Forms.ComboBox comboBoxColorSchemes;
       private System.Windows.Forms.Label labelColorScheme;
       private System.Windows.Forms.Label labelGitStatus;
       private System.Windows.Forms.Label labelGitLabStatus;
+      private System.Windows.Forms.LinkLabel linkLabelAbortGit;
    }
 }
 

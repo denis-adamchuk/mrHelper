@@ -40,17 +40,26 @@ namespace mrCore
          }
 
          _path = path;
-         LastUpdateTime = DateTime.MinValue;
       }
 
       public Task<int> CloneAsync(string host, string project, string path)
       {
+         if (_asyncPid.HasValue)
+         {
+            throw new InvalidOperationException("Another acync operation is running");
+         }
+
          string arguments = "clone --progress " + host + "/" + project + " " + path;
          return (Task<int>)run_tracked_progress_async(arguments, true);
       }
 
       public Task<int> FetchAsync()
       {
+         if (_asyncPid.HasValue)
+         {
+            throw new InvalidOperationException("Another acync operation is running");
+         }
+
          return (Task<int>)run_in_path(() =>
          {
             string arguments = "fetch --progress";
@@ -60,11 +69,55 @@ namespace mrCore
 
       public Task<int> DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
+         if (_asyncPid.HasValue)
+         {
+            throw new InvalidOperationException("Another acync operation is running");
+         }
+
          return (Task<int>)run_in_path(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
             return GitUtils.gitAsync(arguments, 500, null);
          }, _path);
+      }
+
+      /// <summary>
+      /// Cancels currently running git async operation
+      /// Throws:
+      /// InvalidOperationException if no async operation is running
+      /// </summary>
+      public void CancelAsyncOperation()
+      {
+         if (!_asyncPid.HasValue)
+         {
+            throw new InvalidOperationException("No acync operation is running");
+         }
+
+         Process process = null;
+         try
+         {
+            process = Process.GetProcessById(_asyncPid.Value);
+         }
+         catch (ArgumentException ex)
+         {
+            // no longer running, nothing to do
+            return;
+         }
+         catch (InvalidOperationException)
+         {
+            Debug.Assert(false);
+            Trace.TraceWarning(String.Format("[InvalidOperationException] Bad git PID {0}", _asyncPid.Value));
+            return;
+         }
+
+         try
+         {
+            process.Kill();
+         }
+         catch (Exception)
+         {
+            // most likely the process already exited, nothing to do
+         }
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -174,13 +227,17 @@ namespace mrCore
          {
             OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
 
+            // TODO It is not an elegant way to report task completion
             if (updateTimestamp && status == String.Empty)
             {
                LastUpdateTime = DateTime.Now;
+               _asyncPid = 0;
             }
          };
 
-         return GitUtils.gitAsync(arguments, null, progress);
+         GitUtils.GitAsyncTaskDescriptor d = GitUtils.gitAsync(arguments, null, progress);
+         _asyncPid = d.ProcessId;
+         return d.Task;
       }
 
       private readonly string _path; // Path to repository
@@ -207,6 +264,8 @@ namespace mrCore
          new Dictionary<RevisionCacheKey, List<string>>();
 
       private List<Task> _tasks = new List<Task>();
+
+      private int? _asyncPid;
    }
 }
 

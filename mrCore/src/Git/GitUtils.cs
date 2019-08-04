@@ -19,6 +19,12 @@ namespace mrCore
          public string Status { get; }
       }
 
+      public class GitAsyncTaskDescriptor
+      {
+         public Task<int> Task;
+         public int ProcessId;
+      }
+
       /// <summary>
       /// Launches 'git' with arguments passed and waits for process completion if needed.
       /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
@@ -67,7 +73,7 @@ namespace mrCore
       /// Launches 'git' with arguments passed and waits for process completion if needed.
       /// Returns StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static internal Task<int> gitAsync(string arguments, int? timeout, IProgress<string> progress)
+      static internal GitAsyncTaskDescriptor gitAsync(string arguments, int? timeout, IProgress<string> progress)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
@@ -116,6 +122,7 @@ namespace mrCore
             }
          };
 
+         // TODO Wrap into a descriptor and Dispose when finishes
          TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
 
          process.Exited +=
@@ -156,7 +163,12 @@ namespace mrCore
          process.BeginOutputReadLine();
          process.BeginErrorReadLine();
 
-         return tcs.Task;
+         GitAsyncTaskDescriptor d = new GitAsyncTaskDescriptor
+         {
+            Task = tcs.Task,
+            ProcessId = process.Id
+         };
+         return d;
       }
 
       /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -240,6 +241,12 @@ namespace mrHelperUI
          await showDiscussionsFormAsync();
       }
 
+      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         Debug.Assert(_gitRepository != null);
+         _gitRepository.CancelAsyncOperation();
+      }
+
       private void addCustomActions()
       {
          List<ICommand> commands = null;
@@ -411,6 +418,11 @@ namespace mrHelperUI
             return projects;
          }
 
+         cancelAllTokenSources();
+
+         CancellationTokenSource myTokenSource = new CancellationTokenSource();
+         _currentTokenSources.Add(myTokenSource);
+
          GitLab gl = new GitLab(item.Host, item.AccessToken);
          labelGitLabStatus.Text = "Loading projects...";
          try
@@ -427,7 +439,10 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         return projects;
+         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
+         _currentTokenSources.Remove(myTokenSource);
+
+         return isCancellationRequested ? null : projects;
       }
 
       async private Task<List<MergeRequest>> loadAllProjectMergeRequestsAsync()
@@ -436,6 +451,11 @@ namespace mrHelperUI
          {
             return null;
          }
+
+         cancelAllTokenSources();
+
+         CancellationTokenSource myTokenSource = new CancellationTokenSource();
+         _currentTokenSources.Add(myTokenSource);
 
          List<MergeRequest> mergeRequests = null;
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
@@ -452,7 +472,10 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         return mergeRequests;
+         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
+         _currentTokenSources.Remove(myTokenSource);
+
+         return isCancellationRequested ? null : mergeRequests;
       }
 
       /// <summary>
@@ -466,6 +489,11 @@ namespace mrHelperUI
          {
             return null;
          }
+
+         cancelAllTokenSources();
+
+         CancellationTokenSource myTokenSource = new CancellationTokenSource();
+         _currentTokenSources.Add(myTokenSource);
 
          MergeRequest? mergeRequest = null;
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
@@ -482,7 +510,10 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         return mergeRequest;
+         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
+         _currentTokenSources.Remove(myTokenSource);
+
+         return isCancellationRequested ? null : mergeRequest;
       }
 
       async private Task<List<Version>> loadVersionsAsync()
@@ -491,6 +522,9 @@ namespace mrHelperUI
          Debug.Assert(mergeRequest.HasValue);
          Debug.Assert(comboBoxHost.SelectedItem != null);
          Debug.Assert(comboBoxProjects.SelectedItem != null);
+
+         CancellationTokenSource myTokenSource = new CancellationTokenSource();
+         _currentTokenSources.Add(myTokenSource);
 
          List<Version> versions = null;
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
@@ -507,12 +541,18 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         return versions;
+         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
+         _currentTokenSources.Remove(myTokenSource);
+
+         return isCancellationRequested ? null : versions;
       }
 
       async private Task<User?> loadCurrentUserAsync()
       {
          Debug.Assert(comboBoxHost.SelectedItem != null);
+
+         CancellationTokenSource myTokenSource = new CancellationTokenSource();
+         _currentTokenSources.Add(myTokenSource);
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          User? user = null;
@@ -528,7 +568,10 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         return user;
+         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
+         _currentTokenSources.Remove(myTokenSource);
+
+         return isCancellationRequested ? null : user;
       }
 
       async private Task<List<Discussion>> loadDiscussionsAsync()
@@ -537,6 +580,9 @@ namespace mrHelperUI
          Debug.Assert(mergeRequest.HasValue);
          Debug.Assert(comboBoxHost.SelectedItem != null);
          Debug.Assert(comboBoxProjects.SelectedItem != null);
+
+         CancellationTokenSource myTokenSource = new CancellationTokenSource();
+         _currentTokenSources.Add(myTokenSource);
 
          HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          List<Discussion> discussions = null;
@@ -553,7 +599,10 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         return discussions;
+         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
+         _currentTokenSources.Remove(myTokenSource);
+
+         return isCancellationRequested ? null : discussions;
       }
 
       async private void sendTrackedTimeSpan(TimeSpan span)
@@ -903,12 +952,34 @@ namespace mrHelperUI
          return !Directory.Exists(path) || !GitRepository.IsGitRepository(path);
       }
 
+      async private Task initializeGitRepositoryAsync()
+      {
+         linkLabelAbortGit.Visible = true;
+         buttonDiffTool.Enabled = false;
+         buttonDiscussions.Enabled = false;
+         comboBoxHost.Enabled = false;
+         comboBoxProjects.Enabled = false;
+
+         try
+         {
+            await doInitializeGitRepositoryAsync();
+         }
+         finally
+         {
+            linkLabelAbortGit.Visible = false;
+            buttonDiffTool.Enabled = true;
+            buttonDiscussions.Enabled = true;
+            comboBoxHost.Enabled = true;
+            comboBoxProjects.Enabled = true;
+         }
+      }
+
       /// <summary>
       /// Initializes _gitRepository member asynchronously.
       /// Returns Task if initialization started and null otherwise.
       /// Sets asynchronous exception GitOperationException in case of problems with git.
       /// </summary>
-      async private Task initializeGitRepositoryAsync()
+      async private Task doInitializeGitRepositoryAsync()
       {
          if (_gitRepository != null)
          {
@@ -918,8 +989,9 @@ namespace mrHelperUI
             }
          }
 
-         if (comboBoxProjects.SelectedItem == null || comboBoxHost.SelectedItem == null ||
-             !isLocalTempFolderAvailable() || !isCloneAllowed())
+         if (_gitRepository != null
+            || comboBoxProjects.SelectedItem == null || comboBoxHost.SelectedItem == null
+            || !isLocalTempFolderAvailable() || !isCloneAllowed())
          {
             return;
          }
@@ -1169,6 +1241,7 @@ namespace mrHelperUI
       private void updateHostsDropdownList()
       {
          int? lastSelectedHostIndex = new Nullable<int>();
+         comboBoxHost.SelectedIndex = -1;
          comboBoxHost.Items.Clear();
          foreach (ListViewItem item in listViewKnownHosts.Items)
          {
@@ -1205,19 +1278,24 @@ namespace mrHelperUI
 
          fixComboBoxAfterAsyncLoading(comboBoxProjects);
 
+         if (projects == null)
+         {
+            return;
+         }
+
          // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
-         Project? lastSelectedProject = null;
+         int? lastSelectedProjectIndex = new Nullable<int>();
          foreach (var project in projects)
          {
             comboBoxProjects.Items.Add(project);
             if (project.Path_With_Namespace == _settings.LastSelectedProject)
             {
-               lastSelectedProject = project;
+               lastSelectedProjectIndex = comboBoxProjects.Items.Count - 1;
             }
          }
-         if (lastSelectedProject != null)
+         if (lastSelectedProjectIndex.HasValue)
          {
-            comboBoxProjects.SelectedItem = lastSelectedProject;
+            comboBoxProjects.SelectedIndex = lastSelectedProjectIndex.Value;
          }
          else if (comboBoxProjects.Items.Count > 0)
          {
@@ -1240,6 +1318,11 @@ namespace mrHelperUI
          List<MergeRequest> mergeRequests = await loadAllProjectMergeRequestsAsync();
 
          fixComboBoxAfterAsyncLoading(comboBoxFilteredMergeRequests);
+
+         if (mergeRequests == null)
+         {
+            return;
+         }
 
          foreach (var mergeRequest in mergeRequests)
          {
@@ -1326,7 +1409,9 @@ namespace mrHelperUI
             richTextBoxMergeRequestDescription.Text = null;
 
             // 3. Clean-up lists of versions
+            comboBoxRightVersion.SelectedIndex = -1;
             comboBoxRightVersion.Items.Clear();
+            comboBoxLeftVersion.SelectedIndex = -1;
             comboBoxLeftVersion.Items.Clear();
 
             // 4. Toggle state of buttons
@@ -1599,6 +1684,7 @@ namespace mrHelperUI
 
       private void prepareComboBoxToAsyncLoading(ComboBox comboBox)
       {
+         comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
          comboBox.DropDownStyle = ComboBoxStyle.DropDown;
          comboBox.Enabled = false;
@@ -1611,7 +1697,16 @@ namespace mrHelperUI
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private Timer _timeTrackingTimer = new Timer
+      private void cancelAllTokenSources()
+      {
+         foreach (var tokenSource in _currentTokenSources)
+         {
+            tokenSource.Cancel();
+         }
+         _currentTokenSources.Clear();
+      }
+
+      private System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
          {
             Interval = timeTrackingTimerInterval
          };
@@ -1634,7 +1729,7 @@ namespace mrHelperUI
 
       private ColorScheme _colorScheme = new ColorScheme();
 
-      private Timer _mergeRequestCheckTimer = new Timer
+      private System.Windows.Forms.Timer _mergeRequestCheckTimer = new System.Windows.Forms.Timer
          {
             Interval = mergeRequestCheckTimerInterval
          };
@@ -1645,6 +1740,8 @@ namespace mrHelperUI
          public string Host;
          public string AccessToken;
       }
+
+      private List<CancellationTokenSource> _currentTokenSources = new List<CancellationTokenSource>();
 
       private struct VersionComboBoxItem
       {
