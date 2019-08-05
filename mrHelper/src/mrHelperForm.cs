@@ -24,7 +24,7 @@ namespace mrHelperUI
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
-      private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
+      private static readonly int mergeRequestCheckTimerInterval = 10000; // ms
 
       /// <summary>
       /// Tooltip timeout in seconds
@@ -557,7 +557,11 @@ namespace mrHelperUI
       async private Task<List<Version>> loadVersionsAsync()
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
-         Debug.Assert(mergeRequest.HasValue);
+         if (!mergeRequest.HasValue)
+         {
+            return null;
+         }
+
          Debug.Assert(comboBoxHost.SelectedItem != null);
          Debug.Assert(comboBoxProjects.SelectedItem != null);
 
@@ -814,17 +818,22 @@ namespace mrHelperUI
 
       async private void onMergeRequestCheckTimer(object sender, EventArgs e)
       {
-         MergeRequestTimerUpdates? updates = await collectMergeRequestUpdates();
-         if (!updates.HasValue)
+         if (labelAutoUpdate.Visible)
          {
-            return;
+            return; // in auto-update already
          }
 
-         notifyOnMergeRequestUpdates(updates.Value);
+         labelAutoUpdate.Visible = true;
+         MergeRequestTimerUpdates updates = await collectMergeRequestUpdates();
+         if (true)//(updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
+         {
+            notifyOnMergeRequestUpdates(updates);
 
-         // This will automatically update version list for the currently selected MR (if there are new).
-         // This will also remove merged merge requests from the list.
-         await updateMergeRequestsDropdownList(true);
+            // This will automatically update version list for the currently selected MR (if there are new).
+            // This will also remove merged merge requests from the list.
+            await updateMergeRequestsDropdownList(true);
+         }
+         labelAutoUpdate.Visible = false;
       }
 
       /// <summary>
@@ -834,18 +843,18 @@ namespace mrHelperUI
       /// Checks all the projects if project filtering is not used, otherwise checks only filtered project.
       /// Includes only those merge requests that match Labels filters.
       /// </summary>
-      async private Task<MergeRequestTimerUpdates?> collectMergeRequestUpdates()
+      async private Task<MergeRequestTimerUpdates> collectMergeRequestUpdates()
       {
-         if (comboBoxHost.SelectedItem == null)
-         {
-            return null;
-         }
-
          MergeRequestTimerUpdates updates = new MergeRequestTimerUpdates
          {
             NewMergeRequests = new List<MergeRequest>(),
             UpdatedMergeRequests = new List<MergeRequest>()
          };
+
+         if (comboBoxHost.SelectedItem == null)
+         {
+            return updates;
+         }
 
          HostComboBoxItem hostItem = (HostComboBoxItem)(comboBoxHost.SelectedItem); 
          GitLab gl = new GitLab(hostItem.Host, hostItem.AccessToken);
@@ -1333,18 +1342,19 @@ namespace mrHelperUI
          }
 
          // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
-         int? lastSelectedProjectIndex = new Nullable<int>();
+         Project? lastSelectedProject = null;
+         comboBoxProjects.Items.Clear();
          foreach (var project in projects)
          {
             comboBoxProjects.Items.Add(project);
             if (project.Path_With_Namespace == _settings.LastSelectedProject)
             {
-               lastSelectedProjectIndex = comboBoxProjects.Items.Count - 1;
+               lastSelectedProject = project;
             }
          }
-         if (lastSelectedProjectIndex.HasValue)
+         if (lastSelectedProject != null)
          {
-            comboBoxProjects.SelectedIndex = lastSelectedProjectIndex.Value;
+            comboBoxProjects.SelectedItem = lastSelectedProject;
          }
          else if (comboBoxProjects.Items.Count > 0)
          {
@@ -1410,9 +1420,6 @@ namespace mrHelperUI
          {
             // this case means that selection was reset. It needs a special handling.
             comboBoxFilteredMergeRequests.SelectedIndex = -1;
-
-            // call it manually because events are not called on -1
-            await onMergeRequestSelected();
          }
       }
 
@@ -1451,15 +1458,24 @@ namespace mrHelperUI
          // 1. Update status
          linkLabelConnectedTo.Visible = false;
 
-         // 2. Clean-up textboxes with merge request details
+         // 2. Clean-up text boxes with merge request details
          textBoxMergeRequestName.Text = null;
          richTextBoxMergeRequestDescription.Text = null;
 
-         // 3. Clean-up lists of versions
-         comboBoxRightVersion.SelectedIndex = -1;
-         comboBoxRightVersion.Items.Clear();
-         comboBoxLeftVersion.SelectedIndex = -1;
-         comboBoxLeftVersion.Items.Clear();
+         // 2. Load full merge request
+         textBoxMergeRequestName.Text = "Loading...";
+         MergeRequest? mergeRequest = await loadMergeRequestAsync();
+
+         // 3. Load versions
+         prepareComboBoxToAsyncLoading(comboBoxLeftVersion);
+         prepareComboBoxToAsyncLoading(comboBoxRightVersion);
+
+         List<Version> versions = await loadVersionsAsync();
+
+         fixComboBoxAfterAsyncLoading(comboBoxLeftVersion);
+         fixComboBoxAfterAsyncLoading(comboBoxRightVersion);
+
+         textBoxMergeRequestName.Text = String.Empty;
 
          // 4. Toggle state of buttons
          buttonDiffTool.Enabled = false;
@@ -1470,24 +1486,24 @@ namespace mrHelperUI
             control.Enabled = false;
          }
 
-         MergeRequest? mergeRequest = await loadMergeRequestAsync();
+         // Nothing to do further
          if (!mergeRequest.HasValue)
          {
             return;
          }
 
-         // 1. Update status, add merge request url
+         // 6. Update status, add merge request url
          linkLabelConnectedTo.Visible = true;
          linkLabelConnectedTo.Text = mergeRequest.Value.Web_Url;
 
-         // 2. Populate edit boxes with merge request details
+         // 7. Populate edit boxes with merge request details
          textBoxMergeRequestName.Text = mergeRequest.Value.Title;
          richTextBoxMergeRequestDescription.Text = mergeRequest.Value.Description;
 
-         // 3. Add versions to combo-boxes
-         await updateVersions(mergeRequest.Value);
+         // 8. Add versions to combo-boxes
+         addVersionsToComboBoxes(versions, mergeRequest?.Diff_Refs.Base_SHA, mergeRequest?.Target_Branch);
 
-         // 4. Toggle state of  buttons
+         // 9. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
          buttonDiffTool.Enabled = true;
          buttonDiscussions.Enabled = true;
@@ -1497,16 +1513,8 @@ namespace mrHelperUI
          }
       }
 
-      async private Task updateVersions(MergeRequest mergeRequest)
+      private void addVersionsToComboBoxes(List<Version> versions, string mrBaseSha, string mrTargetBranch)
       {
-         prepareComboBoxToAsyncLoading(comboBoxLeftVersion);
-         prepareComboBoxToAsyncLoading(comboBoxRightVersion);
-
-         List<Version> versions = await loadVersionsAsync();
-
-         fixComboBoxAfterAsyncLoading(comboBoxLeftVersion);
-         fixComboBoxAfterAsyncLoading(comboBoxRightVersion);
-
          if (versions == null || versions.Count == 0)
          {
             return;
@@ -1528,7 +1536,7 @@ namespace mrHelperUI
 
          // Add target branch to the right combo-box
          VersionComboBoxItem targetBranch =
-            new VersionComboBoxItem(mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch, null);
+            new VersionComboBoxItem(mrBaseSha, mrTargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
 
          comboBoxLeftVersion.SelectedIndex = 0;
@@ -1728,8 +1736,9 @@ namespace mrHelperUI
          }
       }
 
-      private void prepareComboBoxToAsyncLoading(ComboBox comboBox)
+      private void prepareComboBoxToAsyncLoading(SelectionPreservingComboBox comboBox)
       {
+         comboBox.DroppedDown = false;
          comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
          comboBox.DropDownStyle = ComboBoxStyle.DropDown;
@@ -1737,7 +1746,7 @@ namespace mrHelperUI
          comboBox.Text = "Loading...";
       }
 
-      private void fixComboBoxAfterAsyncLoading(ComboBox comboBox)
+      private void fixComboBoxAfterAsyncLoading(SelectionPreservingComboBox comboBox)
       {
          comboBox.Enabled = true;
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;

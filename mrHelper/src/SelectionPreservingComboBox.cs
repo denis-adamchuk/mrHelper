@@ -28,6 +28,7 @@ namespace mrHelperUI
             (sender, args) =>
          {
             SelectedIndex = base.SelectedIndex;
+            SelectedIndexChanged?.Invoke(sender, args);
          };
       }
 
@@ -41,10 +42,13 @@ namespace mrHelperUI
          set
          {
             _selectedIndex = value;
+            if (_selectedIndex > Items.Count - 1)
+            {
+               _selectedIndex = -1;
+            }
             base.SelectedItem = SelectedItem;
             base.SelectedText = SelectedText;
             base.Text = Text;
-            SelectedIndexChanged?.Invoke(this, null);
          }
       }
 
@@ -68,11 +72,21 @@ namespace mrHelperUI
       {
          get
          {
+            if (DropDownStyle == ComboBoxStyle.DropDown && _customText != null)
+            {
+               return _customText;
+            }
             return _selectedIndex == -1 ? "" : GetItemText(Items[_selectedIndex]);
+         }
+         set
+         {
+            _customText = value;
+            base.Text = Text;
          }
       }
 
       private int _selectedIndex = -1;
+      private string _customText;
    }
 }
 
