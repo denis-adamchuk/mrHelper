@@ -24,7 +24,7 @@ namespace mrHelperUI
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
-      private static readonly int mergeRequestCheckTimerInterval = 10000; // ms
+      private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
 
       /// <summary>
       /// Tooltip timeout in seconds
@@ -825,7 +825,7 @@ namespace mrHelperUI
 
          labelAutoUpdate.Visible = true;
          MergeRequestTimerUpdates updates = await collectMergeRequestUpdates();
-         if (true)//(updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
+         if (updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
          {
             notifyOnMergeRequestUpdates(updates);
 
