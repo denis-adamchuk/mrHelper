@@ -859,19 +859,30 @@ namespace mrHelperUI
          HostComboBoxItem hostItem = (HostComboBoxItem)(comboBoxHost.SelectedItem); 
          GitLab gl = new GitLab(hostItem.Host, hostItem.AccessToken);
 
-         List<Project> projectsToCheck = new List<Project>();
+         List<Project> projectsToCheck = null;
 
          // If project list is filtered, check all filtered, otherwise check the selected only
          if (File.Exists(ProjectListFileName))
          {
-            foreach (var itemProject in comboBoxProjects.Items)
+            try
             {
-               projectsToCheck.Add((Project)(itemProject));
+               projectsToCheck = loadProjectsFromFile(hostItem.Host, ProjectListFileName);
+            }
+            catch (Exception ex) // whatever de-serialization exception
+            {
+               return updates;
             }
          }
-         else if (comboBoxProjects.SelectedItem != null)
+
+         if (projectsToCheck == null && comboBoxProjects.SelectedItem != null)
          {
+            projectsToCheck = new List<Project>();
             projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
+         }
+
+         if (projectsToCheck == null)
+         {
+            return updates;
          }
 
          foreach (var project in projectsToCheck)

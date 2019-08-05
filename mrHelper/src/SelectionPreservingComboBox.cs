@@ -27,7 +27,6 @@ namespace mrHelperUI
          base.SelectedIndexChanged +=
             (sender, args) =>
          {
-            SelectedIndex = base.SelectedIndex;
             SelectedIndexChanged?.Invoke(sender, args);
          };
       }
@@ -46,6 +45,7 @@ namespace mrHelperUI
             {
                _selectedIndex = -1;
             }
+            base.SelectedIndex = _selectedIndex;
             base.SelectedItem = SelectedItem;
             base.SelectedText = SelectedText;
             base.Text = Text;
@@ -57,6 +57,10 @@ namespace mrHelperUI
          get
          {
             return _selectedIndex == -1 ? null : Items[_selectedIndex];
+         }
+         set
+         {
+            SelectedIndex = Items.IndexOf(value);
          }
       }
 
