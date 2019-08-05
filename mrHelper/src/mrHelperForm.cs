@@ -318,7 +318,7 @@ namespace mrHelperUI
       async private Task showDiscussionsFormAsync()
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         if (GetCurrentHostName() == null || GetCurrentProjectName() == null || !mergeRequest.HasValue)
          {
             return;
          }
@@ -352,12 +352,11 @@ namespace mrHelperUI
             }
          }
 
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          var mergeRequestDetails = new MergeRequestDetails
          {
-            Host = item.Host,
-            AccessToken = item.AccessToken,
-            ProjectId = comboBoxProjects.Text,
+            Host = GetCurrentHostName(),
+            AccessToken = GetCurrentAccessToken(),
+            ProjectId = GetCurrentProjectName(),
             MergeRequestIId = mergeRequest.Value.IId,
             Author = mergeRequest.Value.Author
          };
@@ -430,12 +429,11 @@ namespace mrHelperUI
 
       async private Task<List<Project>> loadAllProjectsAsync()
       {
-         if (comboBoxHost.SelectedItem == null)
+         if (GetCurrentHostName() == null)
          {
             return null;
          }
 
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          List<Project> projects = null;
 
          // Check if file exists. If it does not, it is not an error.
@@ -443,7 +441,7 @@ namespace mrHelperUI
          {
             try
             {
-               projects = loadProjectsFromFile(item.Host, ProjectListFileName);
+               projects = loadProjectsFromFile(GetCurrentHostName(), ProjectListFileName);
             }
             catch (Exception ex) // whatever de-serialization exception
             {
@@ -456,12 +454,9 @@ namespace mrHelperUI
             return projects;
          }
 
-         cancelAllTokenSources();
+         var tokenSource = createCancellationTokenSource("Projects");
 
-         CancellationTokenSource myTokenSource = new CancellationTokenSource();
-         _currentTokenSources.Add(myTokenSource);
-
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = "Loading projects...";
          try
          {
@@ -477,31 +472,24 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
-         _currentTokenSources.Remove(myTokenSource);
-
-         return isCancellationRequested ? null : projects;
+         return destroyCancellationTokenSource(tokenSource) ? null : projects;
       }
 
       async private Task<List<MergeRequest>> loadAllProjectMergeRequestsAsync()
       {
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+         if (GetCurrentHostName() == null || GetCurrentProjectName() == null)
          {
             return null;
          }
 
-         cancelAllTokenSources();
-
-         CancellationTokenSource myTokenSource = new CancellationTokenSource();
-         _currentTokenSources.Add(myTokenSource);
+         var tokenSource = createCancellationTokenSource("MergeRequests");
 
          List<MergeRequest> mergeRequests = null;
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = "Loading merge requests...";
          try
          {
-            mergeRequests = await gl.Projects.Get(comboBoxProjects.Text).MergeRequests.LoadAllTaskAsync(
+            mergeRequests = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.LoadAllTaskAsync(
                new MergeRequestsFilter());
          }
          catch (GitLabRequestException ex)
@@ -510,10 +498,7 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
-         _currentTokenSources.Remove(myTokenSource);
-
-         return isCancellationRequested ? null : mergeRequests;
+         return destroyCancellationTokenSource(tokenSource) ? null : mergeRequests;
       }
 
       /// <summary>
@@ -522,24 +507,20 @@ namespace mrHelperUI
       async private Task<MergeRequest?> loadMergeRequestAsync()
       {
          MergeRequest? selectedMergeRequest = getSelectedMergeRequest();
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null
+         if (GetCurrentHostName() == null || GetCurrentProjectName() == null
             || !selectedMergeRequest.HasValue)
          {
             return null;
          }
 
-         cancelAllTokenSources();
-
-         CancellationTokenSource myTokenSource = new CancellationTokenSource();
-         _currentTokenSources.Add(myTokenSource);
+         var tokenSource = createCancellationTokenSource("MergeRequest");
 
          MergeRequest? mergeRequest = null;
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = String.Format("Loading merge request {0}...", selectedMergeRequest.Value.IId);
          try
          {
-            mergeRequest = await gl.Projects.Get(comboBoxProjects.Text).MergeRequests.
+            mergeRequest = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
                Get(selectedMergeRequest.Value.IId).LoadTaskAsync();
          }
          catch (GitLabRequestException ex)
@@ -548,10 +529,9 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
-         _currentTokenSources.Remove(myTokenSource);
+         Debug.WriteLine("Finished mr with Id = " + selectedMergeRequest.Value.IId);
 
-         return isCancellationRequested ? null : mergeRequest;
+         return destroyCancellationTokenSource(tokenSource) ? null : mergeRequest;
       }
 
       async private Task<List<Version>> loadVersionsAsync()
@@ -562,19 +542,17 @@ namespace mrHelperUI
             return null;
          }
 
-         Debug.Assert(comboBoxHost.SelectedItem != null);
-         Debug.Assert(comboBoxProjects.SelectedItem != null);
+         Debug.Assert(GetCurrentHostName() != null);
+         Debug.Assert(GetCurrentProjectName() != null);
 
-         CancellationTokenSource myTokenSource = new CancellationTokenSource();
-         _currentTokenSources.Add(myTokenSource);
+         var tokenSource = createCancellationTokenSource("Versions");
 
          List<Version> versions = null;
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = String.Format("Loading merge request {0} versions...", mergeRequest.Value.IId);
          try
          {
-            versions = await gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).
+            versions = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).
                Versions.LoadAllTaskAsync();
          }
          catch (GitLabRequestException ex)
@@ -583,22 +561,17 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
-         _currentTokenSources.Remove(myTokenSource);
-
-         return isCancellationRequested ? null : versions;
+         return destroyCancellationTokenSource(tokenSource) ? null : versions;
       }
 
       async private Task<User?> loadCurrentUserAsync()
       {
-         Debug.Assert(comboBoxHost.SelectedItem != null);
+         Debug.Assert(GetCurrentHostName() != null);
 
-         CancellationTokenSource myTokenSource = new CancellationTokenSource();
-         _currentTokenSources.Add(myTokenSource);
+         var tokenSource = createCancellationTokenSource("CurrentUser");
 
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
          User? user = null;
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = "Loading current user...";
          try
          {
@@ -610,32 +583,28 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
-         _currentTokenSources.Remove(myTokenSource);
-
-         return isCancellationRequested ? null : user;
+         return destroyCancellationTokenSource(tokenSource) ? null : user;
       }
 
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
-         Debug.Assert(comboBoxHost.SelectedItem != null);
-         Debug.Assert(comboBoxProjects.SelectedItem != null);
          MergeRequest? mergeRequest = getSelectedMergeRequest();
          if (!mergeRequest.HasValue)
          {
             return null;
          }
 
-         CancellationTokenSource myTokenSource = new CancellationTokenSource();
-         _currentTokenSources.Add(myTokenSource);
+         Debug.Assert(GetCurrentHostName() != null);
+         Debug.Assert(GetCurrentProjectName() != null);
 
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
+         var tokenSource = createCancellationTokenSource("Discussions");
+
          List<Discussion> discussions = null;
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = "Loading discussions...";
          try
          {
-            discussions = await gl.Projects.Get(comboBoxProjects.Text).MergeRequests.
+            discussions = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
                Get(mergeRequest.Value.IId).Discussions.LoadAllTaskAsync();
          }
          catch (GitLabRequestException ex)
@@ -644,27 +613,23 @@ namespace mrHelperUI
          }
          labelGitLabStatus.Text = String.Empty;
 
-         bool isCancellationRequested = myTokenSource.IsCancellationRequested;
-         _currentTokenSources.Remove(myTokenSource);
-
-         return isCancellationRequested ? null : discussions;
+         return destroyCancellationTokenSource(tokenSource) ? null : discussions;
       }
 
       async private void sendTrackedTimeSpan(TimeSpan span)
       {
          MergeRequest? mergeRequest = getSelectedMergeRequest();
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue
+         if (GetCurrentHostName() == null || GetCurrentProjectName() == null || !mergeRequest.HasValue
             || span.TotalSeconds < 1)
          {
             return;
          }
 
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = "Sending tracked time...";
          try
          {
-            await gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).AddSpentTimeAsync(
+            await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).AddSpentTimeAsync(
                new AddSpentTimeParameters
                {
                   Span = span
@@ -786,18 +751,17 @@ namespace mrHelperUI
          }
 
          MergeRequest? mergeRequest = getSelectedMergeRequest();
-         if (comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null || !mergeRequest.HasValue)
+         if (GetCurrentHostName() == null || GetCurrentProjectName() == null || !mergeRequest.HasValue)
          {
             return false;
          }
 
          List<Version> versions = null;
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-         GitLab gl = new GitLab(item.Host, item.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          labelGitLabStatus.Text = "Checking for new versions...";
          try
          {
-            versions = await gl.Projects.Get(comboBoxProjects.Text).MergeRequests.Get(mergeRequest.Value.IId).
+            versions = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).
                Versions.LoadAllTaskAsync();
          }
          catch (GitLabRequestException ex)
@@ -851,13 +815,12 @@ namespace mrHelperUI
             UpdatedMergeRequests = new List<MergeRequest>()
          };
 
-         if (comboBoxHost.SelectedItem == null)
+         if (GetCurrentHostName() == null)
          {
             return updates;
          }
 
-         HostComboBoxItem hostItem = (HostComboBoxItem)(comboBoxHost.SelectedItem); 
-         GitLab gl = new GitLab(hostItem.Host, hostItem.AccessToken);
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
 
          List<Project> projectsToCheck = null;
 
@@ -866,7 +829,7 @@ namespace mrHelperUI
          {
             try
             {
-               projectsToCheck = loadProjectsFromFile(hostItem.Host, ProjectListFileName);
+               projectsToCheck = loadProjectsFromFile(GetCurrentHostName(), ProjectListFileName);
             }
             catch (Exception) // whatever de-serialization exception
             {
@@ -874,7 +837,7 @@ namespace mrHelperUI
             }
          }
 
-         if (projectsToCheck == null && comboBoxProjects.SelectedItem != null)
+         if (projectsToCheck == null && GetCurrentProjectName() != null)
          {
             projectsToCheck = new List<Project>();
             projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
@@ -995,9 +958,9 @@ namespace mrHelperUI
 
       private bool isCloneAllowed()
       {
-         Debug.Assert(comboBoxProjects.SelectedItem != null);
+         Debug.Assert(GetCurrentProjectName() != null);
 
-         string project = comboBoxProjects.Text.Split('/')[1];
+         string project = GetCurrentProjectName().Split('/')[1];
          string path = Path.Combine(textBoxLocalGitFolder.Text, project);
 
          if (!Directory.Exists(path))
@@ -1014,9 +977,9 @@ namespace mrHelperUI
 
       private bool isCloneNeeded()
       {
-         Debug.Assert(comboBoxProjects.SelectedItem != null);
+         Debug.Assert(GetCurrentProjectName() != null);
 
-         string project = comboBoxProjects.Text.Split('/')[1];
+         string project = GetCurrentProjectName().Split('/')[1];
          string path = Path.Combine(textBoxLocalGitFolder.Text, project);
 
          return !Directory.Exists(path) || !GitRepository.IsGitRepository(path);
@@ -1072,13 +1035,13 @@ namespace mrHelperUI
          }
 
          if (_gitRepository != null
-            || comboBoxProjects.SelectedItem == null || comboBoxHost.SelectedItem == null
+            || GetCurrentProjectName() == null || GetCurrentHostName() == null
             || !isLocalTempFolderAvailable() || !isCloneAllowed())
          {
             return "NoRepository";
          }
 
-         string project = comboBoxProjects.Text.Split('/')[1];
+         string project = GetCurrentProjectName().Split('/')[1];
          string path = Path.Combine(textBoxLocalGitFolder.Text, project);
 
          bool clone = isCloneNeeded();
@@ -1088,9 +1051,9 @@ namespace mrHelperUI
 
          if (clone)
          {
-            string projectWithNamespace = comboBoxProjects.Text;
-            string host = ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
-            return await executeAsyncGitOperationAsync(() => _gitRepository.CloneAsync(host, projectWithNamespace, path),
+            string projectWithNamespace = GetCurrentProjectName();
+            return await executeAsyncGitOperationAsync(
+               () => _gitRepository.CloneAsync(GetCurrentHostName(), projectWithNamespace, path),
                "clone", "Clone", "CancelClone");
          }
 
@@ -1149,7 +1112,7 @@ namespace mrHelperUI
          }
       }
 
-      private static void formatHostListItem(ListControlConvertEventArgs e)
+      private void formatHostListItem(ListControlConvertEventArgs e)
       {
          HostComboBoxItem item = (HostComboBoxItem)(e.ListItem);
          e.Value = item.Host;
@@ -1205,7 +1168,7 @@ namespace mrHelperUI
 
          bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
          if (!allowReportingIssues || !_diffToolArgs.HasValue
-          || comboBoxHost.SelectedItem == null || comboBoxProjects.SelectedItem == null)
+          || GetCurrentHostName() == null || GetCurrentProjectName() == null)
          {
             return;
          }
@@ -1216,15 +1179,13 @@ namespace mrHelperUI
             return;
          }
 
-         HostComboBoxItem item = (HostComboBoxItem)(comboBoxHost.SelectedItem);
-
          InterprocessSnapshot snapshot;
-         snapshot.AccessToken = item.AccessToken;
+         snapshot.AccessToken = GetCurrentAccessToken();
          snapshot.Refs.LeftSHA = _diffToolArgs.Value.LeftSHA;     // Base commit SHA in the source branch
          snapshot.Refs.RightSHA = _diffToolArgs.Value.RightSHA;   // SHA referencing HEAD of this merge request
-         snapshot.Host = item.Host;
+         snapshot.Host = GetCurrentHostName();
          snapshot.MergeRequestId = mergeRequest.Value.IId;
-         snapshot.Project = comboBoxProjects.Text;
+         snapshot.Project = GetCurrentProjectName();
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
 
          serializer.SerializeToDisk(snapshot);
@@ -1466,71 +1427,62 @@ namespace mrHelperUI
 
       async private Task onMergeRequestSelected()
       {
-         // 1. Update status
-         linkLabelConnectedTo.Visible = false;
+         if (getSelectedMergeRequest() == null)
+         {
+            Debug.WriteLine("Switching to a missing mr");
+            onMergeRequestLoaded(null);
+            addVersionsToComboBoxes(null, null, null);
+            return;
+         }
 
-         // 2. Clean-up text boxes with merge request details
-         textBoxMergeRequestName.Text = null;
-         richTextBoxMergeRequestDescription.Text = null;
-
-         // 2. Load full merge request
+         Debug.WriteLine("Let's handle merge request selection");
          textBoxMergeRequestName.Text = "Loading...";
-         MergeRequest? mergeRequest = await loadMergeRequestAsync();
+         richTextBoxMergeRequestDescription.Text = "Loading...";
 
-         // 3. Load versions
+         Debug.WriteLine("Let's load mr with Id = " + (getSelectedMergeRequest()?.IId.ToString() ?? ""));
+         MergeRequest? mergeRequest = await loadMergeRequestAsync();
+         if (!mergeRequest.HasValue)
+         {
+            Debug.WriteLine("This guy was cancelled");
+            return;
+         }
+
+         Debug.WriteLine("Finished loading mr with id = " + mergeRequest.Value.IId);
+         onMergeRequestLoaded(mergeRequest);
+
          prepareComboBoxToAsyncLoading(comboBoxLeftVersion);
          prepareComboBoxToAsyncLoading(comboBoxRightVersion);
 
+         Debug.WriteLine("Let's load versions for mr " + getSelectedMergeRequest().Value.IId);
          List<Version> versions = await loadVersionsAsync();
+         Debug.WriteLine("Finished loading versions for some mr");
 
          fixComboBoxAfterAsyncLoading(comboBoxLeftVersion);
          fixComboBoxAfterAsyncLoading(comboBoxRightVersion);
 
-         textBoxMergeRequestName.Text = String.Empty;
-
-         // 4. Toggle state of buttons
-         buttonDiffTool.Enabled = false;
-         buttonToggleTimer.Enabled = false;
-         buttonDiscussions.Enabled = false;
-         foreach (Control control in groupBoxActions.Controls)
-         {
-            control.Enabled = false;
-         }
-
-         // Nothing to do further
-         if (!mergeRequest.HasValue)
-         {
-            return;
-         }
-
-         // 6. Update status, add merge request url
-         linkLabelConnectedTo.Visible = true;
-         linkLabelConnectedTo.Text = mergeRequest.Value.Web_Url;
-
-         // 7. Populate edit boxes with merge request details
-         textBoxMergeRequestName.Text = mergeRequest.Value.Title;
-         richTextBoxMergeRequestDescription.Text = mergeRequest.Value.Description;
-
-         // 8. Add versions to combo-boxes
+         Debug.WriteLine("Adding versions");
          addVersionsToComboBoxes(versions, mergeRequest.Value.Diff_Refs.Base_SHA, mergeRequest.Value.Target_Branch);
+      }
 
-         // 9. Toggle state of  buttons
-         buttonToggleTimer.Enabled = true;
-         buttonDiffTool.Enabled = true;
-         buttonDiscussions.Enabled = true;
-         foreach (Control control in groupBoxActions.Controls)
-         {
-            control.Enabled = true;
-         }
+      private void onMergeRequestLoaded(MergeRequest? mergeRequest)
+      {
+         bool success = mergeRequest.HasValue;
+         richTextBoxMergeRequestDescription.Text = mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
+         textBoxMergeRequestName.Text = mergeRequest.HasValue ? mergeRequest.Value.Title : String.Empty;
+         linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
+         linkLabelConnectedTo.Visible = success;
+         buttonDiscussions.Enabled = success;
+         buttonToggleTimer.Enabled = success;
+         buttonDiffTool.Enabled = success;
+         enableCustomActions(success);
       }
 
       private void addVersionsToComboBoxes(List<Version> versions, string mrBaseSha, string mrTargetBranch)
       {
-         Debug.Assert(comboBoxLeftVersion.Items.Count == 0);
-         Debug.Assert(comboBoxRightVersion.Items.Count == 0);
-
          if (versions == null || versions.Count == 0)
          {
+            comboBoxLeftVersion.Items.Clear();
+            comboBoxRightVersion.Items.Clear();
             return;
          }
 
@@ -1713,11 +1665,7 @@ namespace mrHelperUI
 
       public int GetCurrentMergeRequestId()
       {
-         if (comboBoxFilteredMergeRequests.SelectedItem != null)
-         {
-            return ((MergeRequest)(comboBoxFilteredMergeRequests.SelectedItem)).IId;
-         }
-         return 0;
+         return getSelectedMergeRequest()?.IId ?? 0;
       }
 
       private void fillColorSchemesList()
@@ -1784,13 +1732,101 @@ namespace mrHelperUI
          comboBoxProjects.Enabled = true;
       }
 
-      private void cancelAllTokenSources()
+      private void enableCustomActions(bool flag)
       {
-         foreach (var tokenSource in _currentTokenSources)
+         foreach (Control control in groupBoxActions.Controls)
          {
-            tokenSource.Cancel();
+            control.Enabled = flag;
          }
-         _currentTokenSources.Clear();
+      }
+
+      private class NamedCancellationTokenSource : CancellationTokenSource
+      {
+         public NamedCancellationTokenSource(string name)
+         {
+            Name = name;
+         }
+         public string Name { get; }
+      }
+
+      /// <summary>
+      /// Create a new cancellation token source and cancel ongoing asynchronous tasks. This is needed by two reasons:
+      /// 1. Application UI state consistency. Consider next sequence:
+      ///    - User switches to Project 1 in projects drop down list
+      ///    - App initiates an async task #1 for all merge requests of Project 1 and suspends on await
+      ///    - User switches to Project 2 in projects drop down list
+      ///    - App initiates an async task #2 for all merge requests of Project 2 and suspends on await
+      ///    - Async task #1 finishes and then the App initiates an async task #3 for specific merge request #1 details
+      ///      At this moment selected project is Project 2 and App attempts to request merge request #1 for Project 2 and fails
+      ///      because merge request #1 belongs to Project 1
+      ///    We can divide all tasks in three groups:
+      ///    - Cannot be started because of UI restrictions (selecting index -1 during GitLab request)
+      ///    - Can be started without risks
+      ///    - Cancel other tasks when started
+      /// 2. TODO - HTTP requests can be cancelled immediately
+      /// </summary>
+      private NamedCancellationTokenSource createCancellationTokenSource(string newTokenSourceName)
+      {
+         var cts = new NamedCancellationTokenSource(newTokenSourceName);
+
+         for (int iTokenSource = _currentTokenSources.Count - 1; iTokenSource >= 0; --iTokenSource)
+         {
+            NamedCancellationTokenSource oldTokenSource = _currentTokenSources[iTokenSource];
+            string oldTokenSourceName = oldTokenSource.Name;
+
+            bool cancel = false;
+
+            if (oldTokenSourceName == "Projects")
+            {
+               Debug.Assert(newTokenSourceName == "Projects");
+               cancel = true;
+            }
+            else if (oldTokenSourceName == "MergeRequests")
+            {
+               Debug.Assert(newTokenSourceName == "Projects" || newTokenSourceName == "MergeRequests");
+               cancel = true;
+            }
+            else if (oldTokenSourceName == "MergeRequest")
+            {
+               Debug.Assert(newTokenSourceName == "Projects" || newTokenSourceName == "MergeRequests" || newTokenSourceName == "MergeRequest");
+               cancel = true;
+            }
+            else if (oldTokenSourceName == "Versions")
+            {
+               if (newTokenSourceName != "Discussions" && newTokenSourceName != "CurrentUser")
+               {
+                  cancel = true;
+               }
+            }
+            else if (oldTokenSourceName == "Discussions" || oldTokenSourceName == "CurrentUser")
+            {
+               if (newTokenSourceName != "Discussions" && newTokenSourceName != "CurrentUser" && newTokenSourceName != "Versions")
+               {
+                  cancel = true;
+               }
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
+
+            if (cancel)
+            {
+               oldTokenSource.Cancel();
+               _currentTokenSources.RemoveAt(iTokenSource);
+            }
+         }
+
+         _currentTokenSources.Add(cts);
+         return cts;
+      }
+
+      private bool destroyCancellationTokenSource(NamedCancellationTokenSource cts)
+      {
+         bool isCancellationRequested = cts.IsCancellationRequested;
+         _currentTokenSources.Remove(cts);
+         cts.Dispose();
+         return isCancellationRequested;
       }
 
       private System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
@@ -1828,7 +1864,7 @@ namespace mrHelperUI
          public string AccessToken;
       }
 
-      private List<CancellationTokenSource> _currentTokenSources = new List<CancellationTokenSource>();
+      private List<NamedCancellationTokenSource> _currentTokenSources = new List<NamedCancellationTokenSource>();
 
       private struct VersionComboBoxItem
       {
@@ -1858,3 +1894,4 @@ namespace mrHelperUI
       }
    }
 }
+
