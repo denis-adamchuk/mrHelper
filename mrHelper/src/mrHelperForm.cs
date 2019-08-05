@@ -868,7 +868,7 @@ namespace mrHelperUI
             {
                projectsToCheck = loadProjectsFromFile(hostItem.Host, ProjectListFileName);
             }
-            catch (Exception ex) // whatever de-serialization exception
+            catch (Exception) // whatever de-serialization exception
             {
                return updates;
             }
@@ -1033,7 +1033,7 @@ namespace mrHelperUI
          catch (Exception ex)
          {
             bool cancelledByUser = (ex is GitOperationException && (ex as GitOperationException).ExitCode == -1);
-            string result = cancelledByUser ? "cancelled by user" : "failed";
+            string result = cancelledByUser ? "canceled by user" : "failed";
             updateGitStatusText(String.Format("git {0} {1}", name, result));
             if (ex is InvalidOperationException)
             {
@@ -1309,9 +1309,10 @@ namespace mrHelperUI
 
       private void updateHostsDropdownList()
       {
-         int? lastSelectedHostIndex = new Nullable<int>();
          comboBoxHost.SelectedIndex = -1;
          comboBoxHost.Items.Clear();
+
+         int? lastSelectedHostIndex = new Nullable<int>();
          foreach (ListViewItem item in listViewKnownHosts.Items)
          {
             HostComboBoxItem hostItem = new HostComboBoxItem
@@ -1325,17 +1326,19 @@ namespace mrHelperUI
                lastSelectedHostIndex = comboBoxHost.Items.Count - 1;
             }
          }
+
+         if (comboBoxHost.Items.Count == 0)
+         {
+            return;
+         }
+
          if (lastSelectedHostIndex.HasValue)
          {
             comboBoxHost.SelectedIndex = lastSelectedHostIndex.Value;
          }
-         else if (comboBoxHost.Items.Count > 0)
-         {
-            comboBoxHost.SelectedIndex = 0;
-         }
          else
          {
-            comboBoxHost.SelectedIndex = -1;
+            comboBoxHost.SelectedIndex = 0;
          }
       }
 
@@ -1354,7 +1357,6 @@ namespace mrHelperUI
 
          // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
          Project? lastSelectedProject = null;
-         comboBoxProjects.Items.Clear();
          foreach (var project in projects)
          {
             comboBoxProjects.Items.Add(project);
@@ -1363,17 +1365,19 @@ namespace mrHelperUI
                lastSelectedProject = project;
             }
          }
+
+         if (comboBoxProjects.Items.Count == 0)
+         {
+            return;
+         }
+
          if (lastSelectedProject != null)
          {
             comboBoxProjects.SelectedItem = lastSelectedProject;
          }
-         else if (comboBoxProjects.Items.Count > 0)
-         {
-            comboBoxProjects.SelectedIndex = 0;
-         }
          else
          {
-            comboBoxProjects.SelectedIndex = -1;
+            comboBoxProjects.SelectedIndex = 0;
          }
       }
 
@@ -1401,36 +1405,32 @@ namespace mrHelperUI
                comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
             }
          }
-         if (comboBoxFilteredMergeRequests.Items.Count > 0)
-         {
-            if (currentItem.HasValue)
-            {
-               bool found = false;
-               for (int iItem = 0; iItem < comboBoxFilteredMergeRequests.Items.Count; ++iItem)
-               {
-                  MergeRequest mr = (MergeRequest)(comboBoxFilteredMergeRequests.Items[iItem]);
-                  if (mr.Id == currentItem.Value.Id)
-                  {
-                     comboBoxFilteredMergeRequests.SelectedIndex = iItem;
-                     found = true;
-                     break;
-                  }
-               }
 
-               if (!found)
+         if (comboBoxFilteredMergeRequests.Items.Count == 0)
+         {
+            return;
+         }
+
+         if (currentItem.HasValue)
+         {
+            for (int iItem = 0; iItem < comboBoxFilteredMergeRequests.Items.Count; ++iItem)
+            {
+               MergeRequest mr = (MergeRequest)(comboBoxFilteredMergeRequests.Items[iItem]);
+               if (mr.Id == currentItem.Value.Id)
                {
-                  comboBoxFilteredMergeRequests.SelectedIndex = 0;
+                  comboBoxFilteredMergeRequests.SelectedIndex = iItem;
+                  break;
                }
             }
-            else
+
+            if (comboBoxFilteredMergeRequests.SelectedIndex  == -1)
             {
                comboBoxFilteredMergeRequests.SelectedIndex = 0;
             }
          }
          else
          {
-            // this case means that selection was reset. It needs a special handling.
-            comboBoxFilteredMergeRequests.SelectedIndex = -1;
+            comboBoxFilteredMergeRequests.SelectedIndex = 0;
          }
       }
 
@@ -1512,7 +1512,7 @@ namespace mrHelperUI
          richTextBoxMergeRequestDescription.Text = mergeRequest.Value.Description;
 
          // 8. Add versions to combo-boxes
-         addVersionsToComboBoxes(versions, mergeRequest?.Diff_Refs.Base_SHA, mergeRequest?.Target_Branch);
+         addVersionsToComboBoxes(versions, mergeRequest.Value.Diff_Refs.Base_SHA, mergeRequest.Value.Target_Branch);
 
          // 9. Toggle state of  buttons
          buttonToggleTimer.Enabled = true;
@@ -1526,6 +1526,9 @@ namespace mrHelperUI
 
       private void addVersionsToComboBoxes(List<Version> versions, string mrBaseSha, string mrTargetBranch)
       {
+         Debug.Assert(comboBoxLeftVersion.Items.Count == 0);
+         Debug.Assert(comboBoxRightVersion.Items.Count == 0);
+
          if (versions == null || versions.Count == 0)
          {
             return;
