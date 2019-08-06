@@ -379,10 +379,27 @@ namespace mrHelperUI
          labelGitLabStatus.Text = "Rendering Discussions Form...";
          labelGitLabStatus.Update();
 
-         var form = new DiscussionsForm(mergeRequestDetails, _gitRepository, int.Parse(comboBoxDCDepth.Text),
-            _colorScheme, discussions, currentUser.Value);
-
-         labelGitLabStatus.Text = String.Empty;
+         DiscussionsForm form = null;
+         try
+         {
+            form = new DiscussionsForm(mergeRequestDetails, _gitRepository, int.Parse(comboBoxDCDepth.Text),
+               _colorScheme, discussions, currentUser.Value);
+         }
+         catch (NoDiscussionsToShow)
+         {
+            MessageBox.Show("No discussions to show.", "Information",
+               MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot show discussions form", false);
+            return;
+         }
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
 
          form.Show();
       }

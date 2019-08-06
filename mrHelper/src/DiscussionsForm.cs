@@ -19,6 +19,10 @@ namespace mrHelperUI
    {
       static private string DefaultCaption = "Discussions";
 
+      /// <summary>
+      /// Throws:
+      /// ArgumentException
+      /// </summary>
       public DiscussionsForm(MergeRequestDetails mergeRequestDetails, GitRepository gitRepository,
          int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, User currentUser)
       {
@@ -32,9 +36,14 @@ namespace mrHelperUI
          InitializeComponent();
 
          _currentUser = currentUser;
-         if (_currentUser.Id != 0)
+         if (_currentUser.Id == 0)
          {
-            onRefresh(discussions);
+            throw new ArgumentException("Bad user Id");
+         }
+
+         if (!onRefresh(discussions))
+         {
+            throw new NoDiscussionsToShow();
          }
       }
 
@@ -42,13 +51,23 @@ namespace mrHelperUI
       {
          if (e.KeyCode == Keys.F5)
          {
-            onRefresh(await loadDiscussionsAsync());
+            if (!onRefresh(await loadDiscussionsAsync()))
+            {
+               MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
+                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+               Close();
+            }
          }
       }
 
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
       {
          repositionDiscussionBoxes();
+      }
+
+      private void DiscussionsForm_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         throw new System.NotImplementedException();
       }
 
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
@@ -78,14 +97,11 @@ namespace mrHelperUI
          return discussions;
       }
 
-      private void onRefresh(List<Discussion> discussions)
+      private bool onRefresh(List<Discussion> discussions)
       {
          if (discussions == null || discussions.Count<Discussion>(x => x.Notes.Count > 0 && !x.Notes[0].System) == 0)
          {
-            MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
-               MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Close(); // a simple way to handle fatal errors in this Form
-            return;
+            return false;
          }
 
          // Avoid scroll bar redraw on each added control
@@ -104,6 +120,8 @@ namespace mrHelperUI
 
          // Set focus to the Form
          Focus();
+
+         return true;
       }
 
       private void createDiscussionBoxes(List<Discussion> discussions)
@@ -159,5 +177,7 @@ namespace mrHelperUI
 
       private User _currentUser;
    }
+
+   public class NoDiscussionsToShow : ArgumentException { }; 
 }
 
