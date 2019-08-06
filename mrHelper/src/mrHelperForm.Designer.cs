@@ -13,11 +13,6 @@
       /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
       protected override void Dispose(bool disposing)
       {
-         if (_difftool != null)
-         {
-            _difftool.Dispose();
-         }
-
          if (disposing && (components != null))
          {
             components.Dispose();
@@ -46,7 +41,6 @@
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
-         this.comboBoxFilteredMergeRequests = new System.Windows.Forms.ComboBox();
          this.buttonBrowseLocalGitFolder = new System.Windows.Forms.Button();
          this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
@@ -70,8 +64,10 @@
          this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
+         this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
+         this.labelGitLabStatus = new System.Windows.Forms.Label();
+         this.labelGitStatus = new System.Windows.Forms.Label();
          this.groupBoxSelectProject = new System.Windows.Forms.GroupBox();
-         this.comboBoxProjects = new System.Windows.Forms.ComboBox();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
@@ -82,12 +78,15 @@
          this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
-         this.comboBoxHost = new System.Windows.Forms.ComboBox();
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
-         this.comboBoxRightVersion = new System.Windows.Forms.ComboBox();
-         this.comboBoxLeftVersion = new System.Windows.Forms.ComboBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
+         this.labelAutoUpdate = new System.Windows.Forms.Label();
+         this.comboBoxProjects = new mrHelperUI.SelectionPreservingComboBox();
+         this.comboBoxFilteredMergeRequests = new mrHelperUI.SelectionPreservingComboBox();
+         this.comboBoxHost = new mrHelperUI.SelectionPreservingComboBox();
+         this.comboBoxRightVersion = new mrHelperUI.SelectionPreservingComboBox();
+         this.comboBoxLeftVersion = new mrHelperUI.SelectionPreservingComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -219,17 +218,6 @@
          this.linkLabelConnectedTo.Visible = false;
          this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
          // 
-         // comboBoxFilteredMergeRequests
-         // 
-         this.comboBoxFilteredMergeRequests.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxFilteredMergeRequests.FormattingEnabled = true;
-         this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 46);
-         this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
-         this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(498, 21);
-         this.comboBoxFilteredMergeRequests.TabIndex = 6;
-         this.comboBoxFilteredMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectedIndexChanged);
-         this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
-         // 
          // buttonBrowseLocalGitFolder
          // 
          this.buttonBrowseLocalGitFolder.Location = new System.Drawing.Point(409, 31);
@@ -348,7 +336,7 @@
          this.tabControl.Location = new System.Drawing.Point(9, 12);
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
-         this.tabControl.Size = new System.Drawing.Size(533, 554);
+         this.tabControl.Size = new System.Drawing.Size(533, 584);
          this.tabControl.TabIndex = 0;
          // 
          // tabPageSettings
@@ -359,7 +347,7 @@
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
          this.tabPageSettings.Name = "tabPageSettings";
          this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSettings.Size = new System.Drawing.Size(525, 528);
+         this.tabPageSettings.Size = new System.Drawing.Size(525, 558);
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
@@ -455,6 +443,10 @@
          // 
          // tabPageMR
          // 
+         this.tabPageMR.Controls.Add(this.labelAutoUpdate);
+         this.tabPageMR.Controls.Add(this.linkLabelAbortGit);
+         this.tabPageMR.Controls.Add(this.labelGitLabStatus);
+         this.tabPageMR.Controls.Add(this.labelGitStatus);
          this.tabPageMR.Controls.Add(this.groupBoxSelectProject);
          this.tabPageMR.Controls.Add(this.groupBoxActions);
          this.tabPageMR.Controls.Add(this.groupBoxReview);
@@ -466,10 +458,39 @@
          this.tabPageMR.Location = new System.Drawing.Point(4, 22);
          this.tabPageMR.Name = "tabPageMR";
          this.tabPageMR.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageMR.Size = new System.Drawing.Size(525, 528);
+         this.tabPageMR.Size = new System.Drawing.Size(525, 558);
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
+         // 
+         // linkLabelAbortGit
+         // 
+         this.linkLabelAbortGit.AutoSize = true;
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(484, 518);
+         this.linkLabelAbortGit.Name = "linkLabelAbortGit";
+         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
+         this.linkLabelAbortGit.TabIndex = 25;
+         this.linkLabelAbortGit.TabStop = true;
+         this.linkLabelAbortGit.Text = "Abort";
+         this.linkLabelAbortGit.Visible = false;
+         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
+         // 
+         // labelGitLabStatus
+         // 
+         this.labelGitLabStatus.AutoEllipsis = true;
+         this.labelGitLabStatus.AutoSize = true;
+         this.labelGitLabStatus.Location = new System.Drawing.Point(3, 542);
+         this.labelGitLabStatus.Name = "labelGitLabStatus";
+         this.labelGitLabStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelGitLabStatus.TabIndex = 24;
+         // 
+         // labelGitStatus
+         // 
+         this.labelGitStatus.AutoEllipsis = true;
+         this.labelGitStatus.Location = new System.Drawing.Point(6, 518);
+         this.labelGitStatus.Name = "labelGitStatus";
+         this.labelGitStatus.Size = new System.Drawing.Size(472, 13);
+         this.labelGitStatus.TabIndex = 23;
          // 
          // groupBoxSelectProject
          // 
@@ -480,18 +501,6 @@
          this.groupBoxSelectProject.TabIndex = 2;
          this.groupBoxSelectProject.TabStop = false;
          this.groupBoxSelectProject.Text = "Select Project";
-         // 
-         // comboBoxProjects
-         // 
-         this.comboBoxProjects.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxProjects.FormattingEnabled = true;
-         this.comboBoxProjects.Location = new System.Drawing.Point(6, 15);
-         this.comboBoxProjects.Name = "comboBoxProjects";
-         this.comboBoxProjects.Size = new System.Drawing.Size(272, 21);
-         this.comboBoxProjects.Sorted = true;
-         this.comboBoxProjects.TabIndex = 2;
-         this.comboBoxProjects.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProjects_SelectedIndexChanged);
-         this.comboBoxProjects.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProjects_Format);
          // 
          // groupBoxActions
          // 
@@ -593,17 +602,6 @@
          this.groupBoxHost.TabStop = false;
          this.groupBoxHost.Text = "Select Host";
          // 
-         // comboBoxHost
-         // 
-         this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxHost.FormattingEnabled = true;
-         this.comboBoxHost.Location = new System.Drawing.Point(9, 15);
-         this.comboBoxHost.Name = "comboBoxHost";
-         this.comboBoxHost.Size = new System.Drawing.Size(205, 21);
-         this.comboBoxHost.TabIndex = 1;
-         this.comboBoxHost.SelectedIndexChanged += new System.EventHandler(this.ComboBoxHost_SelectedIndexChanged);
-         this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
-         // 
          // groupBoxDiff
          // 
          this.groupBoxDiff.Controls.Add(this.comboBoxRightVersion);
@@ -616,6 +614,68 @@
          this.groupBoxDiff.TabIndex = 8;
          this.groupBoxDiff.TabStop = false;
          this.groupBoxDiff.Text = "Select Versions";
+         // 
+         // label3
+         // 
+         this.label3.AutoSize = true;
+         this.label3.Location = new System.Drawing.Point(269, 16);
+         this.label3.Name = "label3";
+         this.label3.Size = new System.Drawing.Size(25, 13);
+         this.label3.TabIndex = 18;
+         this.label3.Text = "and";
+         // 
+         // label4
+         // 
+         this.label4.AutoSize = true;
+         this.label4.Location = new System.Drawing.Point(3, 16);
+         this.label4.Name = "label4";
+         this.label4.Size = new System.Drawing.Size(93, 13);
+         this.label4.TabIndex = 15;
+         this.label4.Text = "Changes between";
+         // 
+         // labelAutoUpdate
+         // 
+         this.labelAutoUpdate.AutoSize = true;
+         this.labelAutoUpdate.Location = new System.Drawing.Point(273, 542);
+         this.labelAutoUpdate.Name = "labelAutoUpdate";
+         this.labelAutoUpdate.Size = new System.Drawing.Size(152, 13);
+         this.labelAutoUpdate.TabIndex = 26;
+         this.labelAutoUpdate.Text = "Checking for updates...";
+         this.labelAutoUpdate.Visible = false;
+         // 
+         // comboBoxProjects
+         // 
+         this.comboBoxProjects.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxProjects.FormattingEnabled = true;
+         this.comboBoxProjects.Location = new System.Drawing.Point(6, 15);
+         this.comboBoxProjects.Name = "comboBoxProjects";
+         this.comboBoxProjects.Size = new System.Drawing.Size(272, 21);
+         this.comboBoxProjects.Sorted = true;
+         this.comboBoxProjects.TabIndex = 2;
+         this.comboBoxProjects.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProjects_SelectedIndexChanged);
+         this.comboBoxProjects.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProjects_Format);
+         // 
+         // comboBoxFilteredMergeRequests
+         // 
+         this.comboBoxFilteredMergeRequests.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxFilteredMergeRequests.FormattingEnabled = true;
+         this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 46);
+         this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
+         this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(498, 21);
+         this.comboBoxFilteredMergeRequests.TabIndex = 6;
+         this.comboBoxFilteredMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectedIndexChanged);
+         this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
+         // 
+         // comboBoxHost
+         // 
+         this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxHost.FormattingEnabled = true;
+         this.comboBoxHost.Location = new System.Drawing.Point(9, 15);
+         this.comboBoxHost.Name = "comboBoxHost";
+         this.comboBoxHost.Size = new System.Drawing.Size(205, 21);
+         this.comboBoxHost.TabIndex = 1;
+         this.comboBoxHost.SelectedIndexChanged += new System.EventHandler(this.ComboBoxHost_SelectedIndexChanged);
+         this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
          // comboBoxRightVersion
          // 
@@ -639,29 +699,11 @@
          this.comboBoxLeftVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftVersion_SelectedIndexChanged);
          this.comboBoxLeftVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
          // 
-         // label3
-         // 
-         this.label3.AutoSize = true;
-         this.label3.Location = new System.Drawing.Point(269, 16);
-         this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(25, 13);
-         this.label3.TabIndex = 18;
-         this.label3.Text = "and";
-         // 
-         // label4
-         // 
-         this.label4.AutoSize = true;
-         this.label4.Location = new System.Drawing.Point(3, 16);
-         this.label4.Name = "label4";
-         this.label4.Size = new System.Drawing.Size(93, 13);
-         this.label4.TabIndex = 15;
-         this.label4.Text = "Changes between";
-         // 
          // mrHelperForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(548, 575);
+         this.ClientSize = new System.Drawing.Size(548, 608);
          this.Controls.Add(this.tabControl);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -682,6 +724,7 @@
          this.groupBoxGit.ResumeLayout(false);
          this.groupBoxGit.PerformLayout();
          this.tabPageMR.ResumeLayout(false);
+         this.tabPageMR.PerformLayout();
          this.groupBoxSelectProject.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxTimeTracking.ResumeLayout(false);
@@ -708,7 +751,7 @@
       private System.Windows.Forms.FolderBrowserDialog localGitFolderBrowser;
       private System.Windows.Forms.Button buttonBrowseLocalGitFolder;
       private System.Windows.Forms.TextBox textBoxLocalGitFolder;
-      private System.Windows.Forms.ComboBox comboBoxFilteredMergeRequests;
+      private SelectionPreservingComboBox comboBoxFilteredMergeRequests;
       private System.Windows.Forms.TabControl tabControl;
       private System.Windows.Forms.TabPage tabPageSettings;
       private System.Windows.Forms.GroupBox groupBoxGit;
@@ -723,12 +766,12 @@
       private System.Windows.Forms.Label labelSpentTime;
       private System.Windows.Forms.Label labelSpentTimeLabel;
       private System.Windows.Forms.Button buttonToggleTimer;
-      private System.Windows.Forms.ComboBox comboBoxLeftVersion;
-      private System.Windows.Forms.ComboBox comboBoxRightVersion;
+      private SelectionPreservingComboBox comboBoxLeftVersion;
+      private SelectionPreservingComboBox comboBoxRightVersion;
       private System.Windows.Forms.Label label3;
       private System.Windows.Forms.Button buttonDiffTool;
       private System.Windows.Forms.Label label4;
-      private System.Windows.Forms.ComboBox comboBoxHost;
+      private SelectionPreservingComboBox comboBoxHost;
       private System.Windows.Forms.GroupBox groupBoxHost;
       private System.Windows.Forms.GroupBox groupBoxReview;
       private System.Windows.Forms.GroupBox groupBoxTimeTracking;
@@ -742,14 +785,18 @@
       private System.Windows.Forms.ColumnHeader columnHeaderAccessToken;
       private System.Windows.Forms.Button buttonApplyLabels;
       private System.Windows.Forms.GroupBox groupBoxSelectProject;
-      private System.Windows.Forms.ComboBox comboBoxProjects;
+      private SelectionPreservingComboBox comboBoxProjects;
       private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Label labelDepth;
       private System.Windows.Forms.ComboBox comboBoxDCDepth;
-	  private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
+      private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
       private System.Windows.Forms.ComboBox comboBoxColorSchemes;
       private System.Windows.Forms.Label labelColorScheme;
+      private System.Windows.Forms.Label labelGitStatus;
+      private System.Windows.Forms.Label labelGitLabStatus;
+      private System.Windows.Forms.LinkLabel linkLabelAbortGit;
+      private System.Windows.Forms.Label labelAutoUpdate;
    }
 }
 

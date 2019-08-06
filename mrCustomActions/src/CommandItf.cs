@@ -1,9 +1,11 @@
-﻿namespace mrCustomActions
+﻿using System.Threading.Tasks;
+
+namespace mrCustomActions
 {
    public interface ICommand
    {
       string GetName();
 
-      void Run();
+      Task Run();
    }
 }

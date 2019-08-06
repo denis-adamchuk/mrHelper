@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
+   /// <summary>
+   /// Result of context makers work. Contains a list of strings with their properties.
+   /// </summary>
    public struct DiffContext
    {
       public struct Line
@@ -15,13 +18,24 @@ namespace mrCore
             Changed,
             Unchanged
          }
-         
+
          public struct Side
          {
             public int Number;
             public State State;
+
+            new public string ToString()
+            {
+               return String.Format("\nNumber: {0}\nState: {1}", Number.ToString(), State.ToString());
+            }
          }
-         
+
+         new public string ToString()
+         {
+            return String.Format("\nText: {0}\nLeft: {1}\nRight: {2}",
+               Text, (Left?.ToString() ?? "null"), (Right?.ToString() ?? "null"));
+         }
+
          public string Text;
          public Side? Left;
          public Side? Right;
@@ -30,6 +44,18 @@ namespace mrCore
       public List<Line> Lines;
 
       public int SelectedIndex;
+
+      /*
+      public string ToString()
+      {
+         string result = "\n";
+         for (Line line in Lines)
+         {
+            result += line.ToString() + "\n";
+         }
+         result += String.Format("SelectedIndex: {0}", SelectedIndex.ToString());
+      }
+      */
    }
 
    public struct ContextDepth
@@ -47,6 +73,11 @@ namespace mrCore
          Up = up;
          Down = down;
       }
+
+      public override string ToString()
+      {
+         return String.Format("\nUp: {0}\nDown: {1}", Up.ToString(), Down.ToString());
+      }
    }
 
    public interface IContextMaker
@@ -54,3 +85,4 @@ namespace mrCore
       DiffContext GetContext(DiffPosition position, ContextDepth depth);
    }
 }
+

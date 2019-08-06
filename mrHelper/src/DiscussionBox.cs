@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
@@ -34,6 +35,10 @@ namespace mrHelperUI
       {
          _mergeRequestDetails = mergeRequestDetails;
          _currentUser = currentUser;
+
+         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         _mergeRequestAccessor = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+            Get(_mergeRequestDetails.MergeRequestIId);
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
@@ -65,24 +70,17 @@ namespace mrHelperUI
       {
          TextBox textBox = (TextBox)(sender);
 
-         try
+         if (textBox.ReadOnly && e.KeyData == Keys.F2)
          {
-            if (textBox.ReadOnly && e.KeyData == Keys.F2)
+            DiscussionNote note = (DiscussionNote)(textBox.Tag);
+            if (canBeModified(note))
             {
-               DiscussionNote note = (DiscussionNote)(textBox.Tag);
-               if (canBeModified(note))
-               {
-                  onStartEditNote(textBox);
-               }
-            }
-            else if (!textBox.ReadOnly && e.KeyData == Keys.Escape)
-            {
-               onCancelEditNote(textBox);
+               onStartEditNote(textBox);
             }
          }
-         catch (Exception ex)
+         else if (!textBox.ReadOnly && e.KeyData == Keys.Escape)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            onCancelEditNote(textBox);
          }
       }
 
@@ -90,16 +88,9 @@ namespace mrHelperUI
       {
          TextBox textBox = (TextBox)(sender);
 
-         try
+         if (!textBox.ReadOnly && e.KeyData == Keys.Enter)
          {
-            if (!textBox.ReadOnly && e.KeyData == Keys.Enter)
-            {
-               onNewLineAddedToNote(textBox);
-            }
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            onNewLineAddedToNote(textBox);
          }
       }
 
@@ -113,7 +104,7 @@ namespace mrHelperUI
          }
       }
 
-      private void TextBox_LostFocus(object sender, EventArgs e)
+      async private void TextBox_LostFocus(object sender, EventArgs e)
       {
          TextBox textBox = (TextBox)(sender);
          if (textBox.ReadOnly)
@@ -121,29 +112,22 @@ namespace mrHelperUI
             return;
          }
 
-         try
-         {
-            onSubmitNewBody(textBox);
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         await onSubmitNewBodyAsync(textBox);
       }
 
-      private void MenuItemReply_Click(object sender, EventArgs e)
+      async private void MenuItemReply_Click(object sender, EventArgs e)
       {
-         try
+         NewDiscussionItemForm form = new NewDiscussionItemForm();
+         if (form.ShowDialog() == DialogResult.OK)
          {
-            NewDiscussionItemForm form = new NewDiscussionItemForm();
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.Body.Length == 0)
             {
-               onReply(form.Body);
+               MessageBox.Show("Reply text cannot be empty", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               return;
             }
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            await onReplyAsync(form.Body);
          }
       }
 
@@ -151,18 +135,10 @@ namespace mrHelperUI
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
-
-         try
-         {
-            onStartEditNote(textBox);
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         onStartEditNote(textBox);
       }
 
-      private void MenuItemDeleteNote_Click(object sender, EventArgs e)
+      async private void MenuItemDeleteNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
@@ -174,17 +150,10 @@ namespace mrHelperUI
             return;
          }
 
-         try
-         {
-            onDeleteNote(textBox);
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         await onDeleteNoteAsync(textBox);
       }
 
-      private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
+      async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
@@ -193,17 +162,10 @@ namespace mrHelperUI
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
 
-         try
-         {
-            onToggleResolveNote(textBox);
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         await onToggleResolveNoteAsync(textBox);
       }
 
-      private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
+      async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
@@ -212,14 +174,7 @@ namespace mrHelperUI
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
 
-         try
-         {
-            onToggleResolveDiscussion();
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         await onToggleResolveDiscussionAsync();
       }
 
       public void AdjustToWidth(int width)
@@ -276,26 +231,37 @@ namespace mrHelperUI
          };
 
          DiffPosition position = convertToDiffPosition(firstNote.Position);
-
-         if (_panelContextMaker != null && _formatter != null)
-         {
-            DiffContext briefContext = _panelContextMaker.GetContext(position, _diffContextDepth);
-            string briefContextText = _formatter.FormatAsHTML(briefContext, fontSizePx, rowsVPaddingPx);
-            htmlPanel.Text = briefContextText;
-         }
-         else
-         {
-            htmlPanel.Text = "<html><body>Cannot access git repository and render diff context</body></html>";
-         }
-
-         if (_tooltipContextMaker != null && _formatter != null)
-         {
-            DiffContext fullContext = _tooltipContextMaker.GetContext(position, _tooltipContextDepth);
-            string fullContextText = _formatter.FormatAsHTML(fullContext, fontSizePx, rowsVPaddingPx);
-            _htmlToolTip.SetToolTip(htmlPanel, fullContextText);
-         }
+         htmlPanel.Text = getContext(_panelContextMaker, position,
+            _diffContextDepth, fontSizePx, rowsVPaddingPx);
+         _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
+            _tooltipContextDepth, fontSizePx, rowsVPaddingPx));
 
          return htmlPanel;
+      }
+
+      private string getContext(IContextMaker contextMaker, DiffPosition position,
+         ContextDepth depth, int fontSizePx, int rowsVPaddingPx)
+      {
+         if (contextMaker == null || _formatter == null)
+         {
+            return "<html><body>Cannot access git repository and render diff context</body></html>";
+         }
+
+         string contextHtml = "<html><body>N/A</body></html>";
+         try
+         {
+            DiffContext context = contextMaker.GetContext(position, depth);
+            contextHtml = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot render HTML context");
+         }
+         catch (GitOperationException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot render HTML context");
+         }
+         return contextHtml;
       }
 
       // Create a label that shows filename
@@ -527,17 +493,23 @@ namespace mrHelperUI
          Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
       }
 
-      private void onReply(string body)
+      async private Task onReplyAsync(string body)
       {
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
-            Discussions.Get(_discussionId).CreateNewNote(
+         try
+         {
+            await _mergeRequestAccessor.Discussions.Get(_discussionId).CreateNewNoteTaskAsync(
                new CreateNewNoteParameters
                {
                   Body = body
                });
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
+            return;
+         }
 
-         refreshDiscussion();
+         await refreshDiscussion();
       }
 
       private void onStartEditNote(TextBox textBox)
@@ -561,7 +533,7 @@ namespace mrHelperUI
          }
       }
 
-      private void onSubmitNewBody(TextBox textBox)
+      async private Task onSubmitNewBodyAsync(TextBox textBox)
       {
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          if (textBox.Text == note.Body)
@@ -569,16 +541,30 @@ namespace mrHelperUI
             return;
          }
 
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         note = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
-            Discussions.Get(_discussionId).ModifyNote(note.Id,
+         if (textBox.Text.Length == 0)
+         {
+            MessageBox.Show("Discussion text cannot be empty", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            onCancelEditNote(textBox);
+            return;
+         }
+
+         try
+         {
+            note = await _mergeRequestAccessor.Discussions.Get(_discussionId).ModifyNoteTaskAsync(note.Id,
                new ModifyDiscussionNoteParameters
                {
                   Type = ModifyDiscussionNoteParameters.ModificationType.Body,
                   Body = textBox.Text
                });
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot update discussion text");
+            return;
+         }
 
-         _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000);
+         _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
 
          // Create a new text box
          TextBox newTextBox = createTextBox(note, isDiscussionResolved()); 
@@ -607,57 +593,73 @@ namespace mrHelperUI
          }
       }
 
-      private void onDeleteNote(TextBox textBox)
+      async private Task onDeleteNoteAsync(TextBox textBox)
       {
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
 
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         var mergeRequest = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-            Get(_mergeRequestDetails.MergeRequestIId);
-         mergeRequest.Notes.Get(note.Id).Delete();
+         try
+         {
+            await _mergeRequestAccessor.Notes.Get(note.Id).DeleteTaskAsync();
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot delete a discussion note");
+            return;
+         }
 
-         if (!refreshDiscussion())
+         if (!await refreshDiscussion())
          {
             // Seems it was the only note in the discussion, remove ourselves from parents controls
             Parent.Controls.Remove(this);
          }
       }
 
-      private void onToggleResolveNote(TextBox textBox)
+      async private Task onToggleResolveNoteAsync(TextBox textBox)
       {
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          bool wasResolved = note.Resolved;
 
-         // Change discussion item state at Server
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
-            Discussions.Get(_discussionId).ModifyNote(note.Id,
+         try
+         {
+            await _mergeRequestAccessor.Discussions.Get(_discussionId).ModifyNoteTaskAsync(note.Id,
                new ModifyDiscussionNoteParameters
                {
                   Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
                   Resolved = !wasResolved
                });
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion note");
+            return;
+         }
 
-         refreshDiscussion();
+         await refreshDiscussion();
       }
 
-      private void onToggleResolveDiscussion()
+      async private Task onToggleResolveDiscussionAsync()
       {
          bool wasResolved = isDiscussionResolved();
 
          // Change discussion state at Server
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.Get(_mergeRequestDetails.MergeRequestIId).
-            Discussions.Get(_discussionId).Resolve(
+         try
+         {
+            await _mergeRequestAccessor.Discussions.Get(_discussionId).ResolveTaskAsync(
                new ResolveThreadParameters
                {
                   Resolve = !wasResolved
                });
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
+            return;
+         }
 
-         refreshDiscussion();
+         await refreshDiscussion();
       }
 
-      private bool refreshDiscussion()
+      async private Task<bool> refreshDiscussion()
       {
          // Get rid of old text boxes
          for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
@@ -670,34 +672,32 @@ namespace mrHelperUI
          _textboxesNotes.Clear();
 
          // Load updated discussion
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
+         Discussion discussion;
          try
          {
-            var discussion = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-               Get(_mergeRequestDetails.MergeRequestIId).Discussions.Get(_discussionId).Load();
+            discussion = await _mergeRequestAccessor.Discussions.Get(_discussionId).LoadTaskAsync();
             if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
             {
                return false;
             }
-
-            // Create controls
-            _textboxesNotes = createTextBoxes(discussion.Notes);
-            foreach (var note in _textboxesNotes)
-            {
-               Controls.Add(note);
-            }
-
-            // To reposition new controls
-            _onSizeChanged();
          }
-         catch (System.Net.WebException ex)
+         catch (GitLabRequestException ex)
          {
-            var response = ((System.Net.HttpWebResponse)ex.Response);
+            // it is not an error here, we treat it as 'last discussion item has been deleted'
+            var response = (System.Net.HttpWebResponse)(ex.WebException.Response);
             Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
-
             return false;
          }
 
+         // Create controls
+         _textboxesNotes = createTextBoxes(discussion.Notes);
+         foreach (var note in _textboxesNotes)
+         {
+            Controls.Add(note);
+         }
+
+         // To reposition new controls
+         _onSizeChanged();
          return true;
       }
 
@@ -774,7 +774,7 @@ namespace mrHelperUI
             }
          };
       }
-      
+
       // Widths in %
       private readonly int HorzMarginWidth = 1;
       private readonly int LabelAuthorWidth = 5;
@@ -788,15 +788,16 @@ namespace mrHelperUI
       private List<Control> _textboxesNotes;
 
       private readonly MergeRequestDetails _mergeRequestDetails;
+      private readonly SingleMergeRequestAccessor _mergeRequestAccessor;
       private readonly User _currentUser;
       private string _discussionId;
       private bool _individual;
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
-      private readonly DiffContextFormatter _formatter;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
+      private readonly DiffContextFormatter _formatter;
 
       private readonly ColorScheme _colorScheme;
 

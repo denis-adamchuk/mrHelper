@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 
@@ -17,12 +18,22 @@ namespace mrDiffTool
          return " //solo //expandall \\\"$LOCAL\\\" \\\"$REMOTE\\\"";
       }
 
-      public string[] GetToolNames()
+      public string GetToolName()
+      {
+         return "Beyond Compare 3";
+      }
+
+      public string[] GetToolRegistryNames()
       {
          string[] names = { "Beyond Compare 3", "Beyond Compare Version 3"};
          return names;
       }
 
+      /// <summary>
+      /// Adds a command to launch MRHelper to Beyond Compare 3 preferences file
+      /// Throws DiffToolIntegrationException
+      /// Throws exceptions related to XML parsing
+      /// </summaryArgument>
       public void PatchToolConfig(string launchCommand)
       {
          var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -30,14 +41,37 @@ namespace mrDiffTool
          var prefs = System.IO.Path.Combine(bcFolder, "BCPreferences.xml");
          if (!System.IO.File.Exists(prefs))
          {
-            return; } string integrationKey = "mrhelper-bc3-integration"; string defaultShortcut = "32843"; // Alt-K
+            throw new DiffToolIntegrationException(String.Format("File is missing: \"{0}\"", prefs));
+         }
+
+         string integrationKey = "mrhelper-bc3-integration";
+         string defaultShortcut = "32843"; // Alt-K
          var arguments = " %25F1 %l1 %25F2 %l2";
 
          XmlDocument document = new XmlDocument();
          document.Load(prefs);
          var root = document.SelectSingleNode("BCPreferences");
+         if (root == null)
+         {
+            throw new DiffToolIntegrationException(
+               String.Format("Unexpected format of preferences file \"{0}\". Missing \"BCPreferences\" node", prefs));
+         }
+
          var tbPrefs = root.SelectSingleNode("TBcPrefs");
+         if (tbPrefs == null)
+         {
+            throw new DiffToolIntegrationException(
+               String.Format("Unexpected format of preferences file \"{0}\". Missing \"TBcPrefs\" node", prefs));
+         }
+
          var opensWith = tbPrefs.SelectSingleNode("OpenWiths");
+         if (opensWith == null)
+         {
+            throw new DiffToolIntegrationException(
+               String.Format("Unexpected format of preferences file \"{0}\". Missing \"opensWith\" node", prefs));
+         }
+
+         // check if we already integrated
          List<int> ids = new List<int>();
          foreach (XmlNode child in opensWith.ChildNodes)
          {
@@ -53,7 +87,10 @@ namespace mrDiffTool
                   var currentShortCut = child.SelectSingleNode("ShortCut");
                   if (currentCmdLine == null || currentShortCut == null)
                   {
-                     // looks broken
+                     Trace.TraceWarning(
+                        String.Format("\"{0}\" configuration file is already patched, but {1} is missing.",
+                                      prefs, (currentCmdLine == null ? "CmdLine" : "ShortCut")));
+
                      opensWith.RemoveChild(child);
                      continue;
                   }
@@ -61,6 +98,11 @@ namespace mrDiffTool
                   ((XmlElement)currentCmdLine).SetAttribute("Value", launchCommand + arguments);
                   ((XmlElement)currentShortCut).SetAttribute("Value", defaultShortcut);
                   document.Save(prefs);
+
+                  Trace.TraceInformation(String.Format(
+                     "Updated \"{0}\" file. CmdLine=\"{1}\". ShortCut=\"{2}\"",
+                     prefs, launchCommand + arguments, defaultShortcut));
+
                   return;
                }
             }
@@ -84,7 +126,13 @@ namespace mrDiffTool
          newNode.AppendChild(shortcut);
          opensWith.AppendChild(newNode);
 
+         Trace.TraceInformation(String.Format(
+            "Patched \"{0}\" file. CmdLine=\"{1}\". Description=\"{2}\". ShortCut=\"{3}\"",
+            prefs, cmdLine.Value, description.Value, shortcut.Value));
+
          document.Save(prefs);
       }
+
    }
 }
+

@@ -1,4 +1,5 @@
 ﻿using GitLabSharp;
+using System.Threading.Tasks;
 
 namespace mrCustomActions
 {
@@ -10,17 +11,17 @@ namespace mrCustomActions
          _name = name;
          _body = body;
       }
-      
+
       public string GetName()
       {
          return _name;
       }
 
-      public void Run()
+      async public Task Run()
       {
          GitLab gl = new GitLab(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
-         gl.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.Get(_callback.GetCurrentMergeRequestId()).
-            Notes.CreateNew(new CreateNewNoteParameters
+         await gl.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.Get(_callback.GetCurrentMergeRequestId()).
+            Notes.CreateNewTaskAsync(new CreateNewNoteParameters
             {
                Body = _body
             });

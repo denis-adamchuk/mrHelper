@@ -6,15 +6,19 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
-   // Contains a diff between two revisions with all lines from each of revision including missing lines.
+   /// <summary>
+   /// Contains a diff between two revisions with all lines from each of revision including missing lines.
+   /// </summary>
    public struct FullContextDiff
    {
       public List<string> Left;
       public List<string> Right;
    }
 
-   // Provides two lists of the same size. First list contains lines from sha1 and null for missing lines. 
-   // Seconds list contains lines from sha2 and null for missing lines.
+   /// <summary>
+   /// Provides two lists of the same size. First list contains lines from sha1 and null for missing lines. 
+   /// Seconds list contains lines from sha2 and null for missing lines.
+   /// </summary>
    public class FullContextDiffProvider
    {
       private static readonly int maxDiffContext = 20000;
@@ -24,6 +28,9 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
+      /// <summary>
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
       {

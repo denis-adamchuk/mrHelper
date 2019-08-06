@@ -2,96 +2,144 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace mrCore
 {
+   public class GitOperationException : Exception
+   {
+      public GitOperationException(string command, int exitcode, List<string> errorOutput)
+         : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
+      {
+         Details = String.Join("\n", errorOutput);
+         ExitCode = exitcode;
+      }
+
+      public string Details { get; }
+      public int ExitCode { get; }
+   }
+
+   /// <summary>
+   /// Provides access to git repository.
+   /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
+   /// </summary>
    public class GitRepository
    {
-      // Constructor expects a valid git repository as input argument
-      public GitRepository(string path, DateTime? lastUpdateTime = null)
+      // Timestamp of the most recent fetch/clone, by default it is empty
+      public DateTime? LastUpdateTime { get; private set; }
+
+      public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
+
+      /// <summary>
+      /// Constructor expects a valid git repository as input argument
+      /// Throws ArgumentException
+      /// </summary>
+      public GitRepository(string path, bool check)
       {
-         if (!Directory.Exists(path) || !IsGitRepository(path))
+         if (check && (!Directory.Exists(path) || !IsGitRepository(path)))
          {
-            throw new ApplicationException("There is no a valid repository at path " + path);
+            throw new ArgumentException("There is no a valid repository at path " + path);
          }
 
          _path = path;
-         _cachedDiffs = new Dictionary<DiffCacheKey, List<string>>();
-         _cachedRevisions = new Dictionary<RevisionCacheKey, List<string>>();
-         LastUpdateTime = lastUpdateTime ?? new DateTime();
       }
 
-      public DateTime LastUpdateTime { get; private set; }
-
-      // Creates a new git repository by cloning a passed project into a dir with the same name at the given path
-      static public GitRepository CreateByClone(string host, string project, string path)
+      /// <summary>
+      /// Create an asyncronous task for 'git close' command
+      /// Throws:
+      /// InvalidOperationException if another async operation is running
+      /// </summary>
+      public Task CloneAsync(string host, string project, string path)
       {
-         // TODO Use shallow clone
-         var process = Process.Start("git", "clone " + "https://" + host + "/" + project + " " + path);
-         process.WaitForExit();
-         if (process.ExitCode == 0)
+         if (_descriptor != null)
          {
-            return new GitRepository(path, DateTime.Now);
+            throw new InvalidOperationException("Another acync operation is running");
          }
-         return null;
+
+         string arguments = "clone --progress " + host + "/" + project + " " + path;
+         return run_async(arguments, null, true, true);
       }
 
-      static public bool IsGitRepository(string dir)
+      /// <summary>
+      /// Create an asyncronous task for 'git fetch' command
+      /// Throws:
+      /// InvalidOperationException if another async operation is running
+      /// </summary>
+      public Task FetchAsync()
       {
-         var cwd = Directory.GetCurrentDirectory();
-         List<string> output = null;
+         if (_descriptor != null)
+         {
+            throw new InvalidOperationException("Another acync operation is running");
+         }
 
+         return (Task)run_in_path(() =>
+         {
+            string arguments = "fetch --progress";
+            return run_async(arguments, null, true, true);
+         }, _path);
+      }
+
+      /// <summary>
+      /// Create an asyncronous task for 'git difftool --dir-diff' command
+      /// Throws:
+      /// InvalidOperationException if another async operation is running
+      /// </summary>
+      public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
+      {
+         if (_descriptor != null)
+         {
+            throw new InvalidOperationException("Another acync operation is running");
+         }
+
+         return (Task)run_in_path(() =>
+         {
+            string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
+            return run_async(arguments, 500, false, false);
+         }, _path);
+      }
+
+      /// <summary>
+      /// Cancel currently running git async operation
+      /// Throws:
+      /// InvalidOperationException if no async operation is running
+      /// </summary>
+      public void CancelAsyncOperation()
+      {
+         if (_descriptor == null)
+         {
+            throw new InvalidOperationException("No acync operation is running");
+         }
+
+         Process process = null;
          try
          {
-            Directory.SetCurrentDirectory(dir);
-            var arguments = "rev-parse --is-inside-work-tree";
-            output = gatherStdOutputLines(arguments);
+            process = Process.GetProcessById(_descriptor.ProcessId);
          }
-         catch (System.Exception)
+         catch (ArgumentException)
          {
-            // something went wrong
-            return false;
+            // no longer running, nothing to do
+            return;
+         }
+         catch (InvalidOperationException)
+         {
+            Debug.Assert(false);
+            Trace.TraceWarning(String.Format("[InvalidOperationException] Bad git PID {0}", _descriptor.ProcessId));
+            return;
          }
          finally
          {
-            // revert anyway
-            Directory.SetCurrentDirectory(cwd);
+            _descriptor = null;
          }
 
-         // success path
-         return output.Count > 0 && output[0] == "true";
-      }
-
-      public bool Fetch()
-      {
-         bool success = (bool)exec(() =>
+         try
          {
-            var process = Process.Start("git", "fetch");
+            process.Kill();
             process.WaitForExit();
-            return process.ExitCode == 0;
-         });
-
-         if (success)
-         {
-            LastUpdateTime = DateTime.Now;
          }
-         return success;
-      }
-
-      public Process DiffTool(string name, string leftCommit, string rightCommit)
-      {
-         return (Process)exec(() =>
+         catch (Exception)
          {
-            return Process.Start("git", "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit);
-         });
-      }
-
-      static public bool SetGlobalDiffTool(string name, string command)
-      {
-         // No need to change current directory because we're changing a global setting (not a repo one)
-         var process = Process.Start("git", "config --global difftool." + name + "" + ".cmd " + command);
-         process.WaitForExit();
-         return process.ExitCode == 0;
+            // most likely the process already exited, nothing to do
+         }
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -111,12 +159,13 @@ namespace mrCore
             return _cachedDiffs[key];
          }
 
-         List<string> result = (List<string>)exec(() =>
+         List<string> result = (List<string>)run_in_path(() =>
          {
-            var arguments = "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
-            + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
-            return gatherStdOutputLines(arguments);
-         });
+            string arguments =
+               "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
+               + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
+            return GitUtils.git(arguments);
+         }, _path);
 
          _cachedDiffs[key] = result;
          return result;
@@ -124,11 +173,11 @@ namespace mrCore
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)exec(() =>
+         return (List<string>)run_in_path(() =>
          {
-            var arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
-            return gatherStdOutputLines(arguments);
-         });
+            string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
+            return GitUtils.git(arguments);
+         }, _path);
       }
 
       public List<string> ShowFileByRevision(string filename, string sha)
@@ -144,53 +193,72 @@ namespace mrCore
             return _cachedRevisions[key];
          }
 
-         List<string> result = (List<string>)exec(() =>
+         List<string> result = (List<string>)run_in_path(() =>
          {
-            return gatherStdOutputLines("show " + sha + ":" + filename);
-         });
+            string arguments = "show " + sha + ":" + filename;
+            return GitUtils.git(arguments);
+         }, _path);
 
          _cachedRevisions[key] = result;
          return result;
       }
 
-      static private List<string> gatherStdOutputLines(string arguments)
+      static public bool IsGitRepository(string dir)
       {
-         List<string> result = new List<string>();
+         Debug.Assert(Directory.Exists(dir));
 
-         var proc = new Process
+         return (bool)run_in_path(() =>
          {
-            StartInfo = new ProcessStartInfo
+            try
             {
-               FileName = "git",
-               Arguments = arguments,
-               UseShellExecute = false,
-               RedirectStandardOutput = true,
-               CreateNoWindow = true
+               var arguments = "rev-parse --is-inside-work-tree";
+               GitUtils.git(arguments);
+               return true;
             }
-         };
-
-         proc.Start();
-         while (!proc.StandardOutput.EndOfStream)
-         {
-            result.Add(proc.StandardOutput.ReadLine());
-         }
-
-         return result;
+            catch (GitOperationException)
+            {
+               return false;
+            }
+         }, dir);
       }
 
       private delegate object command();
 
-      private object exec(command cmd)
+      static private object run_in_path(command cmd, string path)
       {
          var cwd = Directory.GetCurrentDirectory();
          try
          {
-            Directory.SetCurrentDirectory(_path);
+            if (path != null)
+            {
+               Directory.SetCurrentDirectory(path);
+            }
             return cmd();
          }
          finally
          {
             Directory.SetCurrentDirectory(cwd);
+         }
+      }
+
+      async private Task run_async(string arguments, int? timeout, bool updateTimeStamp, bool trackProgress)
+      {
+         Progress<string> progress = trackProgress ? new Progress<string>() : null;
+         if (trackProgress)
+         {
+            progress.ProgressChanged += (sender, status) =>
+            {
+               OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
+            };
+         }
+
+         _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
+         await _descriptor.TaskCompletionSource.Task;
+         _descriptor = null;
+
+         if (updateTimeStamp)
+         {
+            LastUpdateTime = DateTime.Now;
          }
       }
 
@@ -205,7 +273,8 @@ namespace mrCore
          public int context;
       }
 
-      private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs;
+      private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs =
+         new Dictionary<DiffCacheKey, List<string>>();
 
       private struct RevisionCacheKey
       {
@@ -213,7 +282,10 @@ namespace mrCore
          public string filename;
       }
 
-      private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions;
+      private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
+         new Dictionary<RevisionCacheKey, List<string>>();
+
+      private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
    }
 }
 

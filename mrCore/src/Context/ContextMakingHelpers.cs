@@ -10,8 +10,10 @@ namespace mrCore.Context
    {
       public static bool IsValidPosition(DiffPosition position)
       {
-         return ((position.LeftLine != null && int.TryParse(position.LeftLine, out int LeftLineNumber) && LeftLineNumber > 0)
-              || (position.RightLine != null && int.TryParse(position.RightLine, out int RightLineNumber) && RightLineNumber > 0));
+         var leftLine = position.LeftLine;
+         var rightLine = position.RightLine;
+         return ((leftLine != null && int.TryParse(leftLine, out int LeftLineNumber) && LeftLineNumber > 0)
+              || (rightLine != null && int.TryParse(rightLine, out int RightLineNumber) && RightLineNumber > 0));
       }
 
       public static bool IsValidContextDepth(ContextDepth depth)

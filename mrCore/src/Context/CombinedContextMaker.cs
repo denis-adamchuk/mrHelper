@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace mrCore
 {
-   // This 'maker' creates a list of lines that belong to both left and right sides.
-   // List starts from the line passed to GetContext() and includes a context with adjacent
-   // removed, added and unmodified.
-   //
-   // Cost: one 'git diff -U20000' call for each GetContext() call.
+   /// <summary>
+   /// This 'maker' creates a list of lines that belong to both left and right sides.
+   /// List starts from the line passed to GetContext() and includes a context with adjacent
+   /// removed, added and unmodified.
+   ///
+   /// Cost: one 'git diff -U20000' call for each GetContext() call.
+   /// </summary>
    public class CombinedContextMaker : IContextMaker
    {
       public CombinedContextMaker(GitRepository gitRepository)
@@ -21,11 +23,22 @@ namespace mrCore
          _gitRepository = gitRepository;
       }
 
+      /// <summary>
+      /// Throws ArgumentException.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
-         if (!Context.Helpers.IsValidPosition(position) || !Context.Helpers.IsValidContextDepth(depth))
+         if (!Context.Helpers.IsValidPosition(position))
          {
-            return new DiffContext();
+            throw new ArgumentException(
+               String.Format("Bad \"position\": {0}", position.ToString()));
+         }
+
+         if (!Context.Helpers.IsValidContextDepth(depth))
+         {
+            throw new ArgumentException(
+               String.Format("Bad \"depth\": {0}", depth.ToString()));
          }
 
          // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
@@ -41,7 +54,9 @@ namespace mrCore
          Debug.Assert(context.Left.Count == context.Right.Count);
          if (linenumber > context.Left.Count)
          {
-            return new DiffContext();
+            throw new ArgumentException(
+               String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
+               linenumber.ToString(), position.ToString()));
          }
 
          return createDiffContext(linenumber, isRightSideContext, context, depth);
@@ -55,12 +70,12 @@ namespace mrCore
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
          int endLineNumber = linenumber + depth.Down;
 
-         calculateNullLinesCount(startLineNumber, isRightSideContext, context, out int nullsAtLeft, out int nullsAtRight);
+         calculateNullLinesCount(startLineNumber, isRightSideContext, context,
+            out int nullsAtLeft, out int nullsAtRight);
          if ((isRightSideContext && startLineNumber + nullsAtRight > context.Right.Count)
          || (!isRightSideContext && startLineNumber + nullsAtLeft > context.Left.Count))
          {
             Debug.Assert(false);
-            return new DiffContext();
          }
 
          // counters of null-lines that we encounter within the loop below

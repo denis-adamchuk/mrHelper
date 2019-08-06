@@ -17,11 +17,12 @@ namespace mrHelperUI
 {
    public partial class DiscussionsForm : Form
    {
+      static private string DefaultCaption = "Discussions";
+
       public DiscussionsForm(MergeRequestDetails mergeRequestDetails, GitRepository gitRepository,
-         int diffContextDepth, ColorScheme colorScheme)
+         int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, User currentUser)
       {
          _mergeRequestDetails = mergeRequestDetails;
-         _currentUser = getUser();
 
          _gitRepository = gitRepository;
          _diffContextDepth = diffContextDepth;
@@ -30,21 +31,18 @@ namespace mrHelperUI
 
          InitializeComponent();
 
-         onRefresh();
+         _currentUser = currentUser;
+         if (_currentUser.Id != 0)
+         {
+            onRefresh(discussions);
+         }
       }
 
-      private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
+      async private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
       {
-         try
+         if (e.KeyCode == Keys.F5)
          {
-            if (e.KeyCode == Keys.F5)
-            {
-               onRefresh();
-            }
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            onRefresh(await loadDiscussionsAsync());
          }
       }
 
@@ -61,21 +59,35 @@ namespace mrHelperUI
          return DisplayRectangle.Location;
       }
 
-      private List<Discussion> loadDiscussions()
+      async private Task<List<Discussion>> loadDiscussionsAsync()
       {
+         List<Discussion> discussions = null;
          GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         return gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-            Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAll();
+         this.Text = DefaultCaption + "   (Loading discussions)";
+         try
+         {
+            discussions = await gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
+               Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAllTaskAsync();
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
+         }
+         this.Text = DefaultCaption;
+
+         return discussions;
       }
 
-      private User getUser()
+      private void onRefresh(List<Discussion> discussions)
       {
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         return gl.CurrentUser.Load();
-      }
+         if (discussions == null || discussions.Count<Discussion>(x => x.Notes.Count > 0 && !x.Notes[0].System) == 0)
+         {
+            MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
+               MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Close(); // a simple way to handle fatal errors in this Form
+            return;
+         }
 
-      private void onRefresh()
-      {
          // Avoid scroll bar redraw on each added control
          SuspendLayout();
 
@@ -83,10 +95,12 @@ namespace mrHelperUI
          Controls.Clear();
 
          // Load updated data and create controls for it
-         createDiscussionBoxes(loadDiscussions());
+         this.Text = DefaultCaption + "   (Rendering Discussions Form)";
+         createDiscussionBoxes(discussions);
 
          // Put controls at their places
          ResumeLayout();
+         this.Text = DefaultCaption;
 
          // Set focus to the Form
          Focus();
@@ -139,13 +153,11 @@ namespace mrHelperUI
       }
 
       private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly User _currentUser;
-
       private readonly GitRepository _gitRepository;
       private readonly int _diffContextDepth;
+      private readonly ColorScheme _colorScheme;
 
-      private ColorScheme _colorScheme;
-
+      private User _currentUser;
    }
 }
 
