@@ -640,7 +640,7 @@
          this.labelAutoUpdate.Name = "labelAutoUpdate";
          this.labelAutoUpdate.Size = new System.Drawing.Size(152, 13);
          this.labelAutoUpdate.TabIndex = 26;
-         this.labelAutoUpdate.Text = "Starting auto-update on timer...";
+         this.labelAutoUpdate.Text = "Checking for updates...";
          this.labelAutoUpdate.Visible = false;
          // 
          // comboBoxProjects
