@@ -120,6 +120,13 @@ namespace mrHelperUI
          NewDiscussionItemForm form = new NewDiscussionItemForm();
          if (form.ShowDialog() == DialogResult.OK)
          {
+            if (form.Body.Length == 0)
+            {
+               MessageBox.Show("Reply text cannot be empty", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               return;
+            }
+
             await onReplyAsync(form.Body);
          }
       }
@@ -534,6 +541,14 @@ namespace mrHelperUI
             return;
          }
 
+         if (textBox.Text.Length == 0)
+         {
+            MessageBox.Show("Discussion text cannot be empty", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            onCancelEditNote(textBox);
+            return;
+         }
+
          try
          {
             note = await _mergeRequestAccessor.Discussions.Get(_discussionId).ModifyNoteTaskAsync(note.Id,
@@ -545,7 +560,7 @@ namespace mrHelperUI
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a new body");
+            ExceptionHandlers.Handle(ex, "Cannot update discussion text");
             return;
          }
 

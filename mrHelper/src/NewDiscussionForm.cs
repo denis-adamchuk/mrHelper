@@ -176,7 +176,7 @@ namespace mrHelperUI
       {
          if (textBoxDiscussionBody.Text.Length == 0)
          {
-            MessageBox.Show("Discussion body cannot be empty", "Warning",
+            MessageBox.Show("Discussion text cannot be empty", "Warning",
                MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             return false;
          }
