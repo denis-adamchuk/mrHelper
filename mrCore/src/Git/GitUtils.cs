@@ -194,6 +194,18 @@ namespace mrCore
          string arguments = "config --global --remove-section difftool." + name;
          git(arguments);
       }
+
+      /// <summary>
+      /// Sets http.sslVerify flag in the global git configuration to the given value.
+      /// Throws GitOperationException in case of problems with git.
+      /// </summary>
+      static public void SetGlobalSSLVerify(bool flag)
+      {
+         // No need to change current directory because we're changing a global setting
+         string arguments = "config --global http.sslVerify " + flag.ToString().ToLower();
+         git(arguments);
+      }
+
    }
 }
 

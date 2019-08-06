@@ -1095,13 +1095,57 @@ namespace mrHelperUI
          if (clone)
          {
             string projectWithNamespace = GetCurrentProjectName();
-            return await executeAsyncGitOperationAsync(
-               () => _gitRepository.CloneAsync(GetCurrentHostName(), projectWithNamespace, path),
-               "clone", "Clone", "CancelClone");
+            try
+            {
+               return await executeAsyncGitOperationAsync(() => _gitRepository.CloneAsync(
+                  GetCurrentHostName(), projectWithNamespace, path),
+                  "clone", "Clone", "CancelClone");
+            }
+            catch (Exception ex)
+            {
+               _gitRepository = null;
+               if (tryFixSSLProblem(ex as GitOperationException))
+               {
+                  return "NoRepository";
+               }
+               throw;
+            }
          }
 
-         return await executeAsyncGitOperationAsync(() => _gitRepository.FetchAsync(),
-            "fetch", "Fetch", "CancelFetch");
+         try
+         {
+            return await executeAsyncGitOperationAsync(() => _gitRepository.FetchAsync(),
+               "fetch", "Fetch", "CancelFetch");
+         }
+         catch (Exception ex)
+         {
+            _gitRepository = null;
+            if (tryFixSSLProblem(ex as GitOperationException))
+            {
+               return "NoRepository";
+            }
+            throw;
+         }
+      }
+
+      private bool tryFixSSLProblem(GitOperationException ex)
+      {
+         if (ex == null || !ex.Details.Contains("SSL certificate problem"))
+         {
+            return false;
+         }
+
+         if (MessageBox.Show("SSL certificate problem occured with git server. "
+            + "Do you want to disable certificate verification in global git config?",
+            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+         {
+            GitUtils.SetGlobalSSLVerify(false);
+            MessageBox.Show("SSL certificate verification disabled. Please repeat git operation.",
+               "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return true;
+         }
+
+         return false;
       }
 
       /// <summary>
