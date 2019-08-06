@@ -65,11 +65,6 @@ namespace mrHelperUI
          repositionDiscussionBoxes();
       }
 
-      private void DiscussionsForm_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
-      {
-         throw new System.NotImplementedException();
-      }
-
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
       {
          // https://nickstips.wordpress.com/2010/03/03/c-panel-resets-scroll-position-after-focus-is-lost-and-regained/

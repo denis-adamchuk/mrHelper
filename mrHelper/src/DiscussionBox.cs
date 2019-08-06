@@ -22,6 +22,19 @@ namespace mrHelperUI
       public User CurrentUser;
    }
 
+   internal class TextBoxNoWheel : TextBox
+   {
+      protected override void WndProc(ref Message m)
+      {
+         const int WM_MOUSEWHEEL = 0x020A;
+         if (m.Msg == WM_MOUSEWHEEL)
+         {
+            m.HWnd = this.Parent.Handle;
+         }
+         base.WndProc(ref m);
+      }
+   }
+
    internal class DiscussionBox : Panel
    {
       private const int EM_GETLINECOUNT = 0xba;
@@ -321,7 +334,7 @@ namespace mrHelperUI
 
       private TextBox createTextBox(DiscussionNote note, bool discussionResolved)
       {
-         TextBox textBox = new TextBox();
+         TextBox textBox = new TextBoxNoWheel();
          _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
          textBox.ReadOnly = true;
          textBox.Text = note.Body.Replace("\n", "\r\n");
