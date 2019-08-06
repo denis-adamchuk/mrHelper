@@ -1715,6 +1715,8 @@ namespace mrHelperUI
 
       private void prepareComboBoxToAsyncLoading(SelectionPreservingComboBox comboBox)
       {
+         Debug.Assert(!comboBox.IsDisposed);
+
          comboBox.DroppedDown = false;
          comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
@@ -1725,6 +1727,8 @@ namespace mrHelperUI
 
       private void fixComboBoxAfterAsyncLoading(SelectionPreservingComboBox comboBox)
       {
+         Debug.Assert(!comboBox.IsDisposed);
+
          comboBox.Enabled = true;
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }

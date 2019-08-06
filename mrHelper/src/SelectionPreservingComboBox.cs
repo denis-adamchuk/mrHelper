@@ -29,6 +29,12 @@ namespace mrHelperUI
          {
             SelectedIndexChanged?.Invoke(sender, args);
          };
+
+         base.Disposed +=
+            (sender, args) =>
+         {
+            System.Diagnostics.Debug.WriteLine("Disposing " + this.ToString());
+         };
       }
 
       new public int SelectedIndex
