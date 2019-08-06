@@ -1,6 +1,6 @@
-﻿namespace mrCustomActions
+﻿namespace Common
 {
-   public interface ICommandCallback
+   public interface IClientCallback
    {
       string GetCurrentHostName();
 
@@ -9,5 +9,7 @@
       string GetCurrentProjectName();
 
       int GetCurrentMergeRequestId();
+
+      string GetCurrentLocalGitFolder();
    }
 }

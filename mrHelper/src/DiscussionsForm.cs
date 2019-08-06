@@ -17,7 +17,6 @@ namespace mrHelperUI
 {
    public partial class DiscussionsForm : Form
    {
-      static private string DefaultCaption = "Discussions";
 
       /// <summary>
       /// Throws:
@@ -162,6 +161,15 @@ namespace mrHelperUI
                location.Y - VerticalScroll.Value);
             previousBoxLocation = location;
             previousBoxSize = control.Size;
+         }
+      }
+
+      private string DefaultCaption
+      {
+         get
+         {
+            String.Format("Discussions for merge request #{0} with code repository at \"{1}\"",
+               _mergeRequestDetails.MergeRequestIId, _gitRepository?.Path ?? "no repository");
          }
       }
 

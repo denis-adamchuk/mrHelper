@@ -18,7 +18,7 @@ namespace mrHelperUI
    delegate void UpdateTextCallback(string text);
    delegate Task Command();
 
-   public partial class mrHelperForm : Form, ICommandCallback
+   public partial class mrHelperForm : Form, ICommandCallback, IGitClientCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -63,7 +63,14 @@ namespace mrHelperUI
          {
             Hide();
             e.Cancel = true;
-            await _glTaskManager.WaitAllAsync();
+            try
+            {
+               await _glTaskManager.WaitAllAsync();
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot complete GitLab task(s)", false);
+            }
             Close();
          }
       }
@@ -127,20 +134,20 @@ namespace mrHelperUI
 
       async private void ComboBoxHost_SelectedIndexChanged(object sender, EventArgs e)
       {
-         _gitRepository = null;
          updateGitStatusText(String.Empty);
 
          await updateProjectsDropdownList();
          _settings.LastSelectedHost = (sender as ComboBox).Text;
+         createGitClient();
       }
 
       async private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
       {
-         _gitRepository = null;
          updateGitStatusText(String.Empty);
 
          await updateMergeRequestsDropdownList(false);
          _settings.LastSelectedProject = (sender as ComboBox).Text;
+         createGitClient();
       }
 
       async private void ComboBoxFilteredMergeRequests_SelectedIndexChanged(object sender, EventArgs e)
@@ -255,14 +262,18 @@ namespace mrHelperUI
 
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         Debug.Assert(_gitRepository != null);
+         _gitClient.CancelOperation();
+      }
+
+      private void createGitClient()
+      {
          try
          {
-            _gitRepository.CancelAsyncOperation();
+            _gitClient = new GitClient(textBoxLocalGitFolder, GetCurrentProjectName(), GetCurrentHostName());
          }
-         catch (InvalidOperationException)
+         catch (ArgumentException ex)
          {
-            Debug.Assert(false);
+            ExceptionHandlers.Handle(ex, "Cannot create Git Client", false);
          }
       }
 
@@ -337,6 +348,10 @@ namespace mrHelperUI
          }
          catch (Exception ex)
          {
+            if (tryFixSSLProblem(ex))
+            {
+               return;
+            }
             Debug.Assert(ex is ArgumentException || ex is GitOperationException);
             ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
             return;
@@ -382,7 +397,7 @@ namespace mrHelperUI
          DiscussionsForm form = null;
          try
          {
-            form = new DiscussionsForm(mergeRequestDetails, _gitRepository, int.Parse(comboBoxDCDepth.Text),
+            form = new DiscussionsForm(mergeRequestDetails, _gitClient, int.Parse(comboBoxDCDepth.Text),
                _colorScheme, discussions, currentUser.Value);
          }
          catch (NoDiscussionsToShow)
@@ -732,10 +747,14 @@ namespace mrHelperUI
          string result = String.Empty;
          try
          {
-            result = await initializeGitRepositoryAsync();
+            result = await _gitClient.InitializeAsync();
          }
          catch (Exception ex)
          {
+            if (tryFixSSLProblem(ex))
+            {
+               return;
+            }
             Debug.Assert(ex is ArgumentException || ex is GitOperationException);
             ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
             return;
@@ -754,20 +773,7 @@ namespace mrHelperUI
 
          buttonDiffTool.Enabled = false;
          buttonDiscussions.Enabled = false;
-         try
-         {
-            await _gitRepository.DiffToolAsync(GitDiffToolName, leftSHA, rightSHA);
-         }
-         catch (GitOperationException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
-            return;
-         }
-         finally
-         {
-            buttonDiffTool.Enabled = true;
-            buttonDiscussions.Enabled = true;
-         }
+         _gitClient.DiffTool(GitDiffToolName, leftSHA, rightSHA);
 
          _diffToolArgs = new DiffToolArguments
          {
@@ -979,173 +985,6 @@ namespace mrHelperUI
          {
             notifyOnMergeRequestEvent(mergeRequest, "New commit in merge request");
          }
-      }
-
-      private bool isLocalTempFolderAvailable()
-      {
-         string localGitFolder = textBoxLocalGitFolder.Text;
-
-         if (!Directory.Exists(localGitFolder))
-         {
-            if (MessageBox.Show("Path " + localGitFolder + " does not exist. Do you want to create it?",
-               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
-            {
-               return false;
-            }
-
-            Directory.CreateDirectory(localGitFolder);
-         }
-
-         return true;
-      }
-
-      private bool isCloneAllowed()
-      {
-         Debug.Assert(GetCurrentProjectName() != null);
-
-         string project = GetCurrentProjectName().Split('/')[1];
-         string path = Path.Combine(textBoxLocalGitFolder.Text, project);
-
-         if (!Directory.Exists(path))
-         {
-            if (MessageBox.Show("There is no project \"" + project + "\" repository in " + textBoxLocalGitFolder.Text +
-               ". Do you want to clone git repository?", "Information", MessageBoxButtons.YesNo,
-               MessageBoxIcon.Information) == DialogResult.No)
-            {
-               return false;
-            }
-         }
-         return true;
-      }
-
-      private bool isCloneNeeded()
-      {
-         Debug.Assert(GetCurrentProjectName() != null);
-
-         string project = GetCurrentProjectName().Split('/')[1];
-         string path = Path.Combine(textBoxLocalGitFolder.Text, project);
-
-         return !Directory.Exists(path) || !GitRepository.IsGitRepository(path);
-      }
-
-      async private Task<string> executeAsyncGitOperationAsync(Command command, string name,
-         string success_result, string cancel_result)
-      {
-         prepareToAsyncGitOperation();
-         try
-         {
-            await command();
-         }
-         catch (Exception ex)
-         {
-            bool cancelledByUser = (ex is GitOperationException && (ex as GitOperationException).ExitCode == -1);
-            string result = cancelledByUser ? "canceled by user" : "failed";
-            updateGitStatusText(String.Format("git {0} {1}", name, result));
-            if (ex is InvalidOperationException)
-            {
-               Debug.Assert(false);
-            }
-            else if (!cancelledByUser)
-            {
-               throw;
-            }
-            return cancel_result;
-         }
-         finally
-         {
-            fixAfterAsyncGitOperation();
-         }
-
-         updateGitStatusText(String.Empty);
-         return success_result;
-      }
-
-      /// <summary>
-      /// Initializes _gitRepository member asynchronously.
-      /// Returns Task if initialization started and null otherwise.
-      /// Sets asynchronous exception GitOperationException in case of problems with git.
-      /// </summary>
-      async private Task<string> initializeGitRepositoryAsync()
-      {
-         if (_gitRepository != null)
-         {
-            if (await checkForRepositoryUpdatesAsync())
-            {
-               return await executeAsyncGitOperationAsync(() => _gitRepository.FetchAsync(),
-                  "fetch", "Fetch", "CancelFetch");
-            }
-            return "Fetch";
-         }
-
-         if (_gitRepository != null
-            || GetCurrentProjectName() == null || GetCurrentHostName() == null
-            || !isLocalTempFolderAvailable() || !isCloneAllowed())
-         {
-            return "NoRepository";
-         }
-
-         string project = GetCurrentProjectName().Split('/')[1];
-         string path = Path.Combine(textBoxLocalGitFolder.Text, project);
-
-         bool clone = isCloneNeeded();
-
-         _gitRepository = new GitRepository(path, !clone);
-         _gitRepository.OnOperationStatusChange += (sender, e) => { updateGitStatusText(e.Status); }; 
-
-         if (clone)
-         {
-            string projectWithNamespace = GetCurrentProjectName();
-            try
-            {
-               return await executeAsyncGitOperationAsync(() => _gitRepository.CloneAsync(
-                  GetCurrentHostName(), projectWithNamespace, path),
-                  "clone", "Clone", "CancelClone");
-            }
-            catch (Exception ex)
-            {
-               _gitRepository = null;
-               if (tryFixSSLProblem(ex as GitOperationException))
-               {
-                  return "NoRepository";
-               }
-               throw;
-            }
-         }
-
-         try
-         {
-            return await executeAsyncGitOperationAsync(() => _gitRepository.FetchAsync(),
-               "fetch", "Fetch", "CancelFetch");
-         }
-         catch (Exception ex)
-         {
-            _gitRepository = null;
-            if (tryFixSSLProblem(ex as GitOperationException))
-            {
-               return "NoRepository";
-            }
-            throw;
-         }
-      }
-
-      private bool tryFixSSLProblem(GitOperationException ex)
-      {
-         if (ex == null || !ex.Details.Contains("SSL certificate problem"))
-         {
-            return false;
-         }
-
-         if (MessageBox.Show("SSL certificate problem occured with git server. "
-            + "Do you want to disable certificate verification in global git config?",
-            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-         {
-            GitUtils.SetGlobalSSLVerify(false);
-            MessageBox.Show("SSL certificate verification disabled. Please repeat git operation.",
-               "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return true;
-         }
-
-         return false;
       }
 
       /// <summary>
@@ -1694,8 +1533,11 @@ namespace mrHelperUI
          textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
          _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
 
-         _gitRepository = null;
+         MessageBox.Show("Git folder is changed, but it will not affect already opened Diff Tool and Discussions views",
+            "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
          updateGitStatusText(String.Empty);
+         createGitClient();
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -1760,6 +1602,11 @@ namespace mrHelperUI
             return project.Path_With_Namespace;
          }
          return null;
+      }
+
+      public string GetCurrentLocalGitFolder()
+      {
+         return textBoxLocalGitFolder.Text;
       }
 
       public int GetCurrentMergeRequestId()
@@ -1851,7 +1698,7 @@ namespace mrHelperUI
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
-      private GitRepository _gitRepository;
+      private GitClient _gitClient = null;
 
       // For accurate time tracking
       private readonly Stopwatch _stopWatch = new Stopwatch();

@@ -139,13 +139,24 @@ namespace mrHelperUI
       /// <summary>
       /// Schedules tasks for asynchronous execution one-by-one but discards the return values.
       /// It is useful when user wants to close the App but some tasks are still running 
+      /// Throws:
+      /// GitLabRequestException
       /// </summary>
       async public Task WaitAllAsync()
       {
          Debug.WriteLine("Start waiting for task completion, count = " + _RunningTasks.Count);
          while (AreRunningTasks())
          {
-            await _RunningTasks[0].WaitAsync();
+            try
+            {
+               await _RunningTasks[0].WaitAsync();
+            }
+            catch (Exception ex)
+            {
+               Debug.Assert(ex is GitLabSharp.GitLabRequestException);
+               _RunningTasks.RemoveAt(0);
+               throw;
+            }
             Debug.WriteLine("One more task has completed, remaining count = " + _RunningTasks.Count);
          }
       }

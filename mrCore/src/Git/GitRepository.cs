@@ -41,7 +41,7 @@ namespace mrCore
             throw new ArgumentException("There is no a valid repository at path " + path);
          }
 
-         _path = path;
+         Path = path;
       }
 
       /// <summary>
@@ -72,11 +72,11 @@ namespace mrCore
             throw new InvalidOperationException("Another acync operation is running");
          }
 
-         return (Task)run_in_path(() =>
+         return (Task)run_inPath(() =>
          {
             string arguments = "fetch --progress";
             return run_async(arguments, null, true, true);
-         }, _path);
+         }, Path);
       }
 
       /// <summary>
@@ -91,11 +91,11 @@ namespace mrCore
             throw new InvalidOperationException("Another acync operation is running");
          }
 
-         return (Task)run_in_path(() =>
+         return (Task)run_inPath(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
             return run_async(arguments, 500, false, false);
-         }, _path);
+         }, Path);
       }
 
       /// <summary>
@@ -159,13 +159,13 @@ namespace mrCore
             return _cachedDiffs[key];
          }
 
-         List<string> result = (List<string>)run_in_path(() =>
+         List<string> result = (List<string>)run_inPath(() =>
          {
             string arguments =
                "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
                + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
             return GitUtils.git(arguments);
-         }, _path);
+         }, Path);
 
          _cachedDiffs[key] = result;
          return result;
@@ -173,11 +173,11 @@ namespace mrCore
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)run_in_path(() =>
+         return (List<string>)run_inPath(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
             return GitUtils.git(arguments);
-         }, _path);
+         }, Path);
       }
 
       public List<string> ShowFileByRevision(string filename, string sha)
@@ -193,11 +193,11 @@ namespace mrCore
             return _cachedRevisions[key];
          }
 
-         List<string> result = (List<string>)run_in_path(() =>
+         List<string> result = (List<string>)run_inPath(() =>
          {
             string arguments = "show " + sha + ":" + filename;
             return GitUtils.git(arguments);
-         }, _path);
+         }, Path);
 
          _cachedRevisions[key] = result;
          return result;
@@ -207,7 +207,7 @@ namespace mrCore
       {
          Debug.Assert(Directory.Exists(dir));
 
-         return (bool)run_in_path(() =>
+         return (bool)run_inPath(() =>
          {
             try
             {
@@ -222,9 +222,11 @@ namespace mrCore
          }, dir);
       }
 
+      public readonly string Path { get; }
+
       private delegate object command();
 
-      static private object run_in_path(command cmd, string path)
+      static private object run_inPath(command cmd, string path)
       {
          var cwd = Directory.GetCurrentDirectory();
          try
@@ -261,8 +263,6 @@ namespace mrCore
             LastUpdateTime = DateTime.Now;
          }
       }
-
-      private readonly string _path; // Path to repository
 
       private struct DiffCacheKey
       {
