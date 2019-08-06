@@ -20,6 +20,7 @@ namespace mrHelperUI
       Versions,
       Discussions,
       CurrentUser
+      // TODO Add other requests here as well
    }
 
    /// <summary>
