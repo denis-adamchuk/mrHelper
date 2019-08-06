@@ -53,6 +53,7 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\GitLabTaskManager.cs" />
     <Compile Include="src\SelectionPreservingComboBox.cs">
       <SubType>Component</SubType>
     </Compile>

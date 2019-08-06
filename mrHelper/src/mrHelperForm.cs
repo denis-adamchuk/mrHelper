@@ -59,6 +59,10 @@ namespace mrHelperUI
          {
             onHideToTray(e);
          }
+         else
+         {
+            _glTaskManager.WaitAll();
+         }
       }
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
@@ -435,8 +439,6 @@ namespace mrHelperUI
          }
 
          Debug.WriteLine("Loading projects asynchronously for host " + GetCurrentHostName());
-         var tokenSource = createCancellationTokenSource(CancellationTokenSourceType.Projects);
-
          List<Project> projects = null;
 
          // Check if file exists. If it does not, it is not an error.
@@ -452,26 +454,34 @@ namespace mrHelperUI
             }
          }
 
-         if (projects == null || projects.Count == 0)
+         if (projects != null && projects.Count != 0)
          {
-            GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-            labelGitLabStatus.Text = "Loading projects...";
-            try
-            {
-               projects = await gl.Projects.LoadAllTaskAsync(
-                  new ProjectsFilter
-                  {
-                     PublicOnly = checkBoxShowPublicOnly.Checked
-                  });
-            }
-            catch (GitLabRequestException ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab");
-            }
-            labelGitLabStatus.Text = String.Empty;
+            _glTaskManager.CancelAll(GitLabTaskType.Projects);
+            return projects;
          }
 
-         return destroyCancellationTokenSource(tokenSource) ? null : projects;
+         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
+         var task  = _glTaskManager.CreateTask<List<Project>>(
+            gl.Projects.LoadAllTaskAsync(
+               new ProjectsFilter
+               {
+                  PublicOnly = checkBoxShowPublicOnly.Checked
+               }), GitLabTaskType.Projects);
+
+         labelGitLabStatus.Text = "Loading projects...";
+         try
+         {
+            return await _glTaskManager.RunAsync(task);
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab");
+            return null;
+         }
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
       }
 
       async private Task<List<MergeRequest>> loadAllProjectMergeRequestsAsync()
@@ -484,23 +494,25 @@ namespace mrHelperUI
          Debug.WriteLine("Loading project merge requests asynchronously for host "
             + GetCurrentHostName() + " and project " + GetCurrentProjectName());
 
-         var tokenSource = createCancellationTokenSource(CancellationTokenSourceType.MergeRequests);
-
-         List<MergeRequest> mergeRequests = null;
          GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
+         var task = _glTaskManager.CreateTask<List<MergeRequest>>(
+            gl.Projects.Get(GetCurrentProjectName()).MergeRequests.LoadAllTaskAsync(
+               new MergeRequestsFilter()), GitLabTaskType.MergeRequests);
+
          labelGitLabStatus.Text = "Loading merge requests...";
          try
          {
-            mergeRequests = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.LoadAllTaskAsync(
-               new MergeRequestsFilter());
+            return await _glTaskManager.RunAsync(task);
          }
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
+            return null;
          }
-         labelGitLabStatus.Text = String.Empty;
-
-         return destroyCancellationTokenSource(tokenSource) ? null : mergeRequests;
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
       }
 
       /// <summary>
@@ -515,23 +527,26 @@ namespace mrHelperUI
             return null;
          }
 
-         var tokenSource = createCancellationTokenSource(CancellationTokenSourceType.MergeRequest);
-
-         MergeRequest? mergeRequest = null;
          GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
+         var task = _glTaskManager.CreateTask(
+            gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
+               Get(selectedMergeRequest.Value.IId).LoadTaskAsync(), GitLabTaskType.MergeRequest);
+
          labelGitLabStatus.Text = String.Format("Loading merge request {0}...", selectedMergeRequest.Value.IId);
          try
          {
-            mergeRequest = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
-               Get(selectedMergeRequest.Value.IId).LoadTaskAsync();
+            var result = await _glTaskManager.RunAsync(task);
+            return result.Equals(default(MergeRequest)) ? null : new Nullable<MergeRequest>();
          }
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
+            return null;
          }
-         labelGitLabStatus.Text = String.Empty;
-
-         return destroyCancellationTokenSource(tokenSource) ? null : mergeRequest;
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
       }
 
       async private Task<List<Version>> loadVersionsAsync()
@@ -545,45 +560,49 @@ namespace mrHelperUI
          Debug.Assert(GetCurrentHostName() != null);
          Debug.Assert(GetCurrentProjectName() != null);
 
-         var tokenSource = createCancellationTokenSource(CancellationTokenSourceType.Versions);
-
-         List<Version> versions = null;
          GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
+         var task = _glTaskManager.CreateTask<List<Version>>(
+            gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).
+               Versions.LoadAllTaskAsync(), GitLabTaskType.Versions);
+
          labelGitLabStatus.Text = String.Format("Loading merge request {0} versions...", mergeRequest.Value.IId);
          try
          {
-            versions = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).
-               Versions.LoadAllTaskAsync();
+            return await _glTaskManager.RunAsync(task);
          }
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load merge request versions from GitLab");
+            return null;
          }
-         labelGitLabStatus.Text = String.Empty;
-
-         return destroyCancellationTokenSource(tokenSource) ? null : versions;
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
       }
 
       async private Task<User?> loadCurrentUserAsync()
       {
          Debug.Assert(GetCurrentHostName() != null);
 
-         var tokenSource = createCancellationTokenSource(CancellationTokenSourceType.CurrentUser);
-
-         User? user = null;
          GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
+         var task = _glTaskManager.CreateTask(gl.CurrentUser.LoadTaskAsync(), GitLabTaskType.CurrentUser);
+
          labelGitLabStatus.Text = "Loading current user...";
          try
          {
-            user = await gl.CurrentUser.LoadTaskAsync();
+            var result = await _glTaskManager.RunAsync(task);
+            return result.Equals(default(User)) ? null : new Nullable<User>();
          }
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load current user from GitLab");
+            return null;
          }
-         labelGitLabStatus.Text = String.Empty;
-
-         return destroyCancellationTokenSource(tokenSource) ? null : user;
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
       }
 
       async private Task<List<Discussion>> loadDiscussionsAsync()
@@ -597,23 +616,24 @@ namespace mrHelperUI
          Debug.Assert(GetCurrentHostName() != null);
          Debug.Assert(GetCurrentProjectName() != null);
 
-         var tokenSource = createCancellationTokenSource(CancellationTokenSourceType.Discussions);
-
-         List<Discussion> discussions = null;
          GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
+         var task = _glTaskManager.CreateTask(gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
+            Get(mergeRequest.Value.IId).Discussions.LoadAllTaskAsync(), GitLabTaskType.Discussions);
+
          labelGitLabStatus.Text = "Loading discussions...";
          try
          {
-            discussions = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
-               Get(mergeRequest.Value.IId).Discussions.LoadAllTaskAsync();
+            return await _glTaskManager.RunAsync(task);
          }
          catch (GitLabRequestException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
+            return null;
          }
-         labelGitLabStatus.Text = String.Empty;
-
-         return destroyCancellationTokenSource(tokenSource) ? null : discussions;
+         finally
+         {
+            labelGitLabStatus.Text = String.Empty;
+         }
       }
 
       async private void sendTrackedTimeSpan(TimeSpan span)
@@ -1759,98 +1779,6 @@ namespace mrHelperUI
          }
       }
 
-      private class TypedCancellationTokenSource : CancellationTokenSource
-      {
-         public TypedCancellationTokenSource(CancellationTokenSourceType type)
-         {
-            Type = type;
-         }
-         public CancellationTokenSourceType Type { get; }
-      }
-
-      /// <summary>
-      /// Create a new cancellation token source and cancel ongoing asynchronous tasks. This is needed by two reasons:
-      /// 1. Application UI state consistency. Consider next sequence:
-      ///    - User switches to Project 1 in projects drop down list
-      ///    - App initiates an async task #1 for all merge requests of Project 1 and suspends on await
-      ///    - User switches to Project 2 in projects drop down list
-      ///    - App initiates an async task #2 for all merge requests of Project 2 and suspends on await
-      ///    - Async task #1 finishes and then the App initiates an async task #3 for specific merge request #1 details
-      ///      At this moment selected project is Project 2 and App attempts to request merge request #1 for Project 2 and fails
-      ///      because merge request #1 belongs to Project 1
-      ///    We can divide all tasks in three groups:
-      ///    - Cannot be started because of UI restrictions (selecting index -1 during GitLab request)
-      ///    - Can be started without risks
-      ///    - Cancel other tasks when started
-      /// 2. TODO - Asynchronous HTTP requests can be cancelled immediately
-      /// </summary>
-      private TypedCancellationTokenSource createCancellationTokenSource(CancellationTokenSourceType newTokenSourceType)
-      {
-         var cts = new TypedCancellationTokenSource(newTokenSourceType);
-
-         for (int iTokenSource = _currentTokenSources.Count - 1; iTokenSource >= 0; --iTokenSource)
-         {
-            TypedCancellationTokenSource oldTokenSource = _currentTokenSources[iTokenSource];
-            if (oldTokenSource.IsCancellationRequested)
-            {
-               continue;
-            }
-
-            CancellationTokenSourceType oldTokenSourceType = oldTokenSource.Type;
-            if (oldTokenSourceType == CancellationTokenSourceType.Projects)
-            {
-               Debug.Assert(newTokenSourceType == CancellationTokenSourceType.Projects);
-               oldTokenSource.Cancel();
-            }
-            else if (oldTokenSourceType == CancellationTokenSourceType.MergeRequests)
-            {
-               Debug.Assert(newTokenSourceType == CancellationTokenSourceType.Projects
-                         || newTokenSourceType == CancellationTokenSourceType.MergeRequests);
-               oldTokenSource.Cancel();
-            }
-            else if (oldTokenSourceType == CancellationTokenSourceType.MergeRequest)
-            {
-               Debug.Assert(newTokenSourceType == CancellationTokenSourceType.Projects
-                         || newTokenSourceType == CancellationTokenSourceType.MergeRequests
-                         || newTokenSourceType == CancellationTokenSourceType.MergeRequest);
-               oldTokenSource.Cancel();
-            }
-            else if (oldTokenSourceType == CancellationTokenSourceType.Versions)
-            {
-               if (newTokenSourceType != CancellationTokenSourceType.Discussions
-                && newTokenSourceType != CancellationTokenSourceType.CurrentUser)
-               {
-                  oldTokenSource.Cancel();
-               }
-            }
-            else if (oldTokenSourceType == CancellationTokenSourceType.Discussions
-                  || oldTokenSourceType == CancellationTokenSourceType.CurrentUser)
-            {
-               if (newTokenSourceType != CancellationTokenSourceType.Discussions
-                && newTokenSourceType != CancellationTokenSourceType.CurrentUser
-                && newTokenSourceType != CancellationTokenSourceType.Versions)
-               {
-                  oldTokenSource.Cancel();
-               }
-            }
-            else
-            {
-               Debug.Assert(false);
-            }
-         }
-
-         _currentTokenSources.Add(cts);
-         return cts;
-      }
-
-      private bool destroyCancellationTokenSource(TypedCancellationTokenSource cts)
-      {
-         bool isCancellationRequested = cts.IsCancellationRequested;
-         _currentTokenSources.Remove(cts);
-         cts.Dispose();
-         return isCancellationRequested;
-      }
-
       private System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
          {
             Interval = timeTrackingTimerInterval
@@ -1886,16 +1814,7 @@ namespace mrHelperUI
          public string AccessToken;
       }
 
-      private List<TypedCancellationTokenSource> _currentTokenSources = new List<TypedCancellationTokenSource>();
-      private enum CancellationTokenSourceType
-      {
-         Projects,
-         MergeRequests,
-         MergeRequest,
-         Versions,
-         Discussions,
-         CurrentUser
-      }
+      private GitLabTaskManager _glTaskManager = new GitLabTaskManager();
 
       private struct VersionComboBoxItem
       {
