@@ -53,15 +53,18 @@ namespace mrHelperUI
          onApplicationStarted();
       }
 
-      private void MrHelperForm_FormClosing(object sender, FormClosingEventArgs e)
+      async private void MrHelperForm_FormClosing(object sender, FormClosingEventArgs e)
       {
          if (checkBoxMinimizeOnClose.Checked && !_exiting)
          {
             onHideToTray(e);
          }
-         else
+         else if (_glTaskManager.AreRunningTasks())
          {
-            _glTaskManager.WaitAll();
+            Hide();
+            e.Cancel = true;
+            await _glTaskManager.WaitAllAsync();
+            Close();
          }
       }
 
@@ -536,7 +539,7 @@ namespace mrHelperUI
          try
          {
             var result = await _glTaskManager.RunAsync(task);
-            return result.Equals(default(MergeRequest)) ? null : new Nullable<MergeRequest>();
+            return result.Equals(default(MergeRequest)) ? null : new Nullable<MergeRequest>(result);
          }
          catch (GitLabRequestException ex)
          {
@@ -592,7 +595,7 @@ namespace mrHelperUI
          try
          {
             var result = await _glTaskManager.RunAsync(task);
-            return result.Equals(default(User)) ? null : new Nullable<User>();
+            return result.Equals(default(User)) ? null : new Nullable<User>(result);
          }
          catch (GitLabRequestException ex)
          {

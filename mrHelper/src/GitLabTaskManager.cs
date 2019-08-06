@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace mrHelperUI
 {
    /// <summary>
-   /// 
+   /// Types of asynchronous requests that we made to GitLab
    /// </summary>
    public enum GitLabTaskType
    {
@@ -23,23 +23,23 @@ namespace mrHelperUI
    }
 
    /// <summary>
-   /// 
+   /// Manages asynchronous requests that UI makes to GitLab
    /// </summary>
    public class GitLabTaskManager
    {
       /// <summary>
-      /// 
+      /// Describes a request to GitLab
       /// </summary>
       public interface IGitLabTask
       {
          bool IsCancelled();
          void Cancel();
          GitLabTaskType GetTaskType();
-         void Wait();
+         Task WaitAsync();
       }
 
       /// <summary>
-      /// 
+      /// Implements IGitLabTask with specific result type
       /// </summary>
       public class GitLabTask<TResult> : IGitLabTask
       {
@@ -53,7 +53,7 @@ namespace mrHelperUI
          }
 
          /// <summary>
-         /// 
+         /// Returns a thing that can be 'await'-ed
          /// </summary>
          public TaskAwaiter<TResult> GetAwaiter()
          {
@@ -61,7 +61,7 @@ namespace mrHelperUI
          }
 
          /// <summary>
-         /// 
+         /// Checks if this task is cancelled
          /// </summary>
          public bool IsCancelled()
          {
@@ -69,7 +69,7 @@ namespace mrHelperUI
          }
 
          /// <summary>
-         /// 
+         /// Marks the task as cancelled
          /// </summary>
          public void Cancel()
          {
@@ -77,7 +77,7 @@ namespace mrHelperUI
          }
 
          /// <summary>
-         /// 
+         /// Returns type of task
          /// </summary>
          public GitLabTaskType GetTaskType()
          {
@@ -85,11 +85,11 @@ namespace mrHelperUI
          }
 
          /// <summary>
-         /// 
+         /// Allows to wait for task completion asynchronously, ignoring return value
          /// </summary>
-         public void Wait()
+         async public Task WaitAsync()
          {
-            Task.Wait();
+            await Task;
          }
 
          private bool Cancelled { get; set; }
@@ -97,6 +97,9 @@ namespace mrHelperUI
          private GitLabTaskType Type { get; }
       }
 
+      /// <summary>
+      /// Creates a GitLab task
+      /// </summary>
       public GitLabTask<TResult> CreateTask<TResult>(Task<TResult> task, GitLabTaskType type)
       {
          var gitLabTask = new GitLabTask<TResult>(task, type);
@@ -106,7 +109,7 @@ namespace mrHelperUI
       }
 
       /// <summary>
-      /// 
+      /// Schedules the task for asynchronous execution and when it finishes, returns the result
       /// </summary>
       async public Task<TResult> RunAsync<TResult>(GitLabTask<TResult> gitLabTask) where TResult : new()
       {
@@ -116,7 +119,8 @@ namespace mrHelperUI
       }
 
       /// <summary>
-      /// 
+      /// Cancels all running tasks in accordance with 'type map'
+      /// Note that it is a kind of 'soft cancelling', tasks continue execution but result value is ignored
       /// </summary>
       public void CancelAll(GitLabTaskType type)
       {
@@ -124,13 +128,24 @@ namespace mrHelperUI
       }
 
       /// <summary>
-      /// 
+      /// Checks if there are any running tasks
       /// </summary>
-      public void WaitAll()
+      public bool AreRunningTasks()
       {
-         foreach (var task in _RunningTasks)
+         return _RunningTasks.Count > 0;
+      }
+
+      /// <summary>
+      /// Schedules tasks for asynchronous execution one-by-one but discards the return values.
+      /// It is useful when user wants to close the App but some tasks are still running 
+      /// </summary>
+      async public Task WaitAllAsync()
+      {
+         Debug.WriteLine("Start waiting for task completion, count = " + _RunningTasks.Count);
+         while (AreRunningTasks())
          {
-            task.Wait();
+            await _RunningTasks[0].WaitAsync();
+            Debug.WriteLine("One more task has completed, remaining count = " + _RunningTasks.Count);
          }
       }
 
