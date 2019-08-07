@@ -1,17 +1,16 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.757
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelperUI", "mrHelper\mrHelperUI.csproj", "{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelperUI", "src\mrHelper\mrHelperUI.csproj", "{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrCore", "mrCore\mrCore.csproj", "{3789E25D-B132-4661-9BFC-99385E606572}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrCore", "src\mrCore\mrCore.csproj", "{3789E25D-B132-4661-9BFC-99385E606572}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrCustomActions", "mrCustomActions\mrCustomActions.csproj", "{CB91AD53-06A4-45C2-B568-215BD24033BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrCustomActions", "src\mrCustomActions\mrCustomActions.csproj", "{CB91AD53-06A4-45C2-B568-215BD24033BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrDiffTool", "mrDiffTool\mrDiffTool.csproj", "{B3A4A6EB-E9DF-47B1-BDF4-089DF6ED0DA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrDiffTool", "src\mrDiffTool\mrDiffTool.csproj", "{B3A4A6EB-E9DF-47B1-BDF4-089DF6ED0DA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitLabSharp", "GitLabSharp\GitLabSharp.csproj", "{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitLabSharp", "submodules\GitLabSharp\GitLabSharp.csproj", "{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
