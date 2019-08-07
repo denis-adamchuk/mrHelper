@@ -1,8 +1,8 @@
 *.swp
+*.csproj.user
 /.root
 /.vs
 /tags
 /bin/*
-/*/obj
-*.csproj.user
+/obj/*
 /packages/*
