@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using GitLabSharp;
 using mrHelper.Core;
 using mrHelper.CustomActions;
-using mrHelper.DiffTool;
 using mrHelper.Common;
 using mrHelper.Client;
 using Version = GitLabSharp.Version;
@@ -20,7 +19,7 @@ namespace mrHelper.App.Forms
    delegate void UpdateTextCallback(string text);
    delegate Task Command();
 
-   public partial class mrHelperForm : Form, IClientCallback
+   public partial class mrHelperForm : Form, ICommandCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -34,8 +33,6 @@ namespace mrHelper.App.Forms
       private const int notifyTooltipTimeout = 5;
 
       public const string GitDiffToolName = "mrhelperdiff";
-      private const string CustomActionsFileName = "CustomActions.xml";
-      private const string ProjectListFileName = "projects.json";
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
@@ -51,7 +48,7 @@ namespace mrHelper.App.Forms
       {
          loadSettings();
          addCustomActions();
-         integrateDiffTool();
+         DiffToolIntegrationHelper.IntegrateDiffTool(GitDiffToolName);
          onApplicationStarted();
       }
 
@@ -138,27 +135,36 @@ namespace mrHelper.App.Forms
       {
          updateGitStatusText(String.Empty);
 
-         await updateProjectsDropdownList();
          _settings.LastSelectedHost = (sender as ComboBox).Text;
-         createGitClient();
+         await onChangeHost((HostComboBoxItem)((sender as ComboBox).SelectedItem));
+         createHostUpdateChecker();
       }
 
       async private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
       {
          updateGitStatusText(String.Empty);
 
-         await updateMergeRequestsDropdownList(false);
          _settings.LastSelectedProject = (sender as ComboBox).Text;
-         createGitClient();
+         await updateMergeRequestsDropdownList(false);
       }
 
       async private void ComboBoxFilteredMergeRequests_SelectedIndexChanged(object sender, EventArgs e)
       {
          await onMergeRequestSelected();
+         createGitClient();
       }
 
       async private void ButtonApplyLabels_Click(object sender, EventArgs e)
       {
+         _labelsRequested = new List<string>();
+         if (checkBoxLabels.Checked && textBoxLabels.Text != null)
+         {
+            foreach (var item in textBoxLabels.Text.Split(','))
+            {
+               _labelsRequested.Add(item.Trim(' '));
+            }
+         }
+
          await updateMergeRequestsDropdownList(false);
       }
 
@@ -229,7 +235,7 @@ namespace mrHelper.App.Forms
       async private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
       {
          _settings.ShowPublicOnly = (sender as CheckBox).Checked;
-         await updateProjectsDropdownList();
+         await onChangeHost(_model.State.Access.Host, _model.State.Access.AccessToken);
       }
 
       async private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
@@ -269,9 +275,12 @@ namespace mrHelper.App.Forms
 
       private void createGitClient()
       {
+         _gitClient = null;
+
          try
          {
-            _gitClient = new GitClient(textBoxLocalGitFolder, GetCurrentProjectName(), GetCurrentHostName());
+            _gitClient = new GitClient(textBoxLocalGitFolder, GetCurrentProjectName(), GetCurrentHostName(),
+               createMergeRequstUpdateChecker());
          }
          catch (ArgumentException ex)
          {
@@ -279,21 +288,29 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void createHostUpdateChecker()
+      {
+         _hostUpdateChecker = null;
+
+         List<Project> projects = Tools.LoadProjectsFromFile();
+         if (projects == null && GetCurrentProjectName() != null)
+         {
+            projects = new List<Project>();
+            projects.Add((Project)(comboBoxProjects.SelectedItem));
+         }
+
+         _hostUpdateChecker = new SingleHostUpdateChecker(GetCurrentAccessToken(), GetCurrentHostName(), projects);
+      }
+
+      private void createMergeRequstUpdateChecker()
+      {
+         _singleMRUpdateChecker = new SingleMergeRequestUpdateChecker(GetCurrentAccessToken(), GetCurrentHostName(),
+            GetCurrentProjectName(), GetCurrentMergeRequestIId())
+      }
+
       private void addCustomActions()
       {
-         List<ICommand> commands = null;
-         CustomCommandLoader loader = new CustomCommandLoader(this);
-         try
-         {
-            commands = loader.LoadCommands(CustomActionsFileName);
-         }
-         catch (CustomCommandLoaderException ex)
-         {
-            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
-            // Do not try to load custom actions if they don't exist.
-            ExceptionHandlers.Handle(ex, "Cannot load custom actions", false);
-            return;
-         }
+         List<ICommand> commands = Tools.LoadCustomActions();
 
          int id = 0;
          System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
@@ -456,156 +473,6 @@ namespace mrHelper.App.Forms
             return new Nullable<MergeRequest>();
          }
          return ((MergeRequest)comboBoxFilteredMergeRequests.SelectedItem);
-      }
-
-      async private Task<List<Project>> loadAllProjectsAsync()
-      {
-         if (GetCurrentHostName() == null)
-         {
-            return null;
-         }
-
-         Debug.WriteLine("Loading projects asynchronously for host " + GetCurrentHostName());
-         List<Project> projects = null;
-
-         // Check if file exists. If it does not, it is not an error.
-         if (File.Exists(ProjectListFileName))
-         {
-            try
-            {
-               projects = loadProjectsFromFile(GetCurrentHostName(), ProjectListFileName);
-            }
-            catch (Exception ex) // whatever de-serialization exception
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load projects from file");
-            }
-         }
-
-         if (projects != null && projects.Count != 0)
-         {
-            _glTaskManager.CancelAll(GitLabTaskType.Projects);
-            return projects;
-         }
-
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-         var task  = _glTaskManager.CreateTask<List<Project>>(
-            gl.Projects.LoadAllTaskAsync(
-               new ProjectsFilter
-               {
-                  PublicOnly = checkBoxShowPublicOnly.Checked
-               }), GitLabTaskType.Projects);
-
-         labelGitLabStatus.Text = "Loading projects...";
-         try
-         {
-            return await _glTaskManager.RunAsync(task);
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab");
-            return null;
-         }
-         finally
-         {
-            labelGitLabStatus.Text = String.Empty;
-         }
-      }
-
-      async private Task<List<MergeRequest>> loadAllProjectMergeRequestsAsync()
-      {
-         if (GetCurrentHostName() == null || GetCurrentProjectName() == null)
-         {
-            return null;
-         }
-
-         Debug.WriteLine("Loading project merge requests asynchronously for host "
-            + GetCurrentHostName() + " and project " + GetCurrentProjectName());
-
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-         var task = _glTaskManager.CreateTask<List<MergeRequest>>(
-            gl.Projects.Get(GetCurrentProjectName()).MergeRequests.LoadAllTaskAsync(
-               new MergeRequestsFilter()), GitLabTaskType.MergeRequests);
-
-         labelGitLabStatus.Text = "Loading merge requests...";
-         try
-         {
-            return await _glTaskManager.RunAsync(task);
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
-            return null;
-         }
-         finally
-         {
-            labelGitLabStatus.Text = String.Empty;
-         }
-      }
-
-      /// <summary>
-      /// Unlike getSelectedMergeRequest(), this method returns a MergeRequest object with all fields.
-      /// </summary>
-      async private Task<MergeRequest?> loadMergeRequestAsync()
-      {
-         MergeRequest? selectedMergeRequest = getSelectedMergeRequest();
-         if (GetCurrentHostName() == null || GetCurrentProjectName() == null
-            || !selectedMergeRequest.HasValue)
-         {
-            return null;
-         }
-
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-         var task = _glTaskManager.CreateTask(
-            gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
-               Get(selectedMergeRequest.Value.IId).LoadTaskAsync(), GitLabTaskType.MergeRequest);
-
-         labelGitLabStatus.Text = String.Format("Loading merge request {0}...", selectedMergeRequest.Value.IId);
-         try
-         {
-            var result = await _glTaskManager.RunAsync(task);
-            return result.Equals(default(MergeRequest)) ? null : new Nullable<MergeRequest>(result);
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
-            return null;
-         }
-         finally
-         {
-            labelGitLabStatus.Text = String.Empty;
-         }
-      }
-
-      async private Task<List<Version>> loadVersionsAsync()
-      {
-         MergeRequest? mergeRequest = getSelectedMergeRequest();
-         if (!mergeRequest.HasValue)
-         {
-            return null;
-         }
-
-         Debug.Assert(GetCurrentHostName() != null);
-         Debug.Assert(GetCurrentProjectName() != null);
-
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-         var task = _glTaskManager.CreateTask<List<Version>>(
-            gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).
-               Versions.LoadAllTaskAsync(), GitLabTaskType.Versions);
-
-         labelGitLabStatus.Text = String.Format("Loading merge request {0} versions...", mergeRequest.Value.IId);
-         try
-         {
-            return await _glTaskManager.RunAsync(task);
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot load merge request versions from GitLab");
-            return null;
-         }
-         finally
-         {
-            labelGitLabStatus.Text = String.Empty;
-         }
       }
 
       async private Task<User?> loadCurrentUserAsync()
@@ -774,12 +641,6 @@ namespace mrHelper.App.Forms
          await updateInterprocessSnapshot();
       }
 
-      private struct MergeRequestTimerUpdates
-      {
-         public List<MergeRequest> NewMergeRequests;
-         public List<MergeRequest> UpdatedMergeRequests;
-      }
-
       async private void onMergeRequestCheckTimer(object sender, EventArgs e)
       {
          if (labelAutoUpdate.Visible)
@@ -802,107 +663,9 @@ namespace mrHelper.App.Forms
          labelAutoUpdate.Visible = false;
       }
 
-      /// <summary>
-      /// Collects requests that have been created or updated later than _lastCheckTime.
-      /// By 'updated' we mean that 'merge request has a version with a timestamp later than ...'.
-      /// Checks all the hosts.
-      /// Checks all the projects if project filtering is not used, otherwise checks only filtered project.
-      /// Includes only those merge requests that match Labels filters.
-      /// </summary>
-      async private Task<MergeRequestTimerUpdates> collectMergeRequestUpdates()
+      async private Task<MergeRequestUpdates> collectMergeRequestUpdates()
       {
-         MergeRequestTimerUpdates updates = new MergeRequestTimerUpdates
-         {
-            NewMergeRequests = new List<MergeRequest>(),
-            UpdatedMergeRequests = new List<MergeRequest>()
-         };
-
-         if (GetCurrentHostName() == null)
-         {
-            return updates;
-         }
-
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-
-         List<Project> projectsToCheck = null;
-
-         // If project list is filtered, check all filtered, otherwise check the selected only
-         if (File.Exists(ProjectListFileName))
-         {
-            try
-            {
-               projectsToCheck = loadProjectsFromFile(GetCurrentHostName(), ProjectListFileName);
-            }
-            catch (Exception) // whatever de-serialization exception
-            {
-               return updates;
-            }
-         }
-
-         if (projectsToCheck == null && GetCurrentProjectName() != null)
-         {
-            projectsToCheck = new List<Project>();
-            projectsToCheck.Add((Project)(comboBoxProjects.SelectedItem));
-         }
-
-         if (projectsToCheck == null)
-         {
-            return updates;
-         }
-
-         foreach (var project in projectsToCheck)
-         {
-            List<MergeRequest> mergeRequests = new List<MergeRequest>();
-            try
-            {
-               mergeRequests = await gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
-                  new MergeRequestsFilter());
-            }
-            catch (GitLabRequestException ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update", false);
-               continue;
-            }
-
-            foreach (var mergeRequest in mergeRequests)
-            {
-               if (!doesMergeRequestMatchLabels(mergeRequest))
-               {
-                  continue;
-               }
-
-               if (mergeRequest.Created_At.ToLocalTime() > _lastCheckTime)
-               {
-                  updates.NewMergeRequests.Add(mergeRequest);
-               }
-               else if (mergeRequest.Updated_At.ToLocalTime() > _lastCheckTime)
-               {
-                  List<Version> versions = new List<Version>();
-                  try
-                  {
-                     versions = await gl.Projects.Get(project.Path_With_Namespace).MergeRequests.
-                        Get(mergeRequest.IId).Versions.LoadAllTaskAsync();
-                  }
-                  catch (GitLabRequestException ex)
-                  {
-                     ExceptionHandlers.Handle(ex, "Cannot load merge request versions on auto-update", false);
-                     continue;
-                  }
-
-                  if (versions.Count == 0)
-                  {
-                     continue;
-                  }
-
-                  Version latestVersion = versions[0];
-                  if (latestVersion.Created_At.ToLocalTime() > _lastCheckTime)
-                  {
-                     updates.UpdatedMergeRequests.Add(mergeRequest);
-                  }
-               }
-            }
-         }
-
+         MergeRequestUpdates updates = _hostUpdateChecker.GetUpdates(_lastCheckTime);
          _lastCheckTime = DateTime.Now;
          return updates;
       }
@@ -1041,7 +804,7 @@ namespace mrHelper.App.Forms
 
       async private Task updateInterprocessSnapshot()
       {
-         // delete old snapshot first
+         // first of all, delete old snapshot
          InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
          serializer.PurgeSerialized();
 
@@ -1106,47 +869,6 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
       }
 
-      private void integrateDiffTool()
-      {
-         IntegratedDiffTool diffTool = new BC3Tool();
-         DiffToolIntegration integration = new DiffToolIntegration(diffTool);
-
-         try
-         {
-            integration.RegisterInGit(GitDiffToolName);
-         }
-         catch (Exception ex)
-         {
-            if (ex is DiffToolIntegrationException || ex is GitOperationException)
-            {
-               ExceptionHandlers.Handle(ex,
-                  String.Format("Cannot integrate \"{0}\" in git", diffTool.GetToolName()), true);
-               return;
-            }
-            throw;
-         }
-
-         try
-         {
-            integration.RegisterInTool();
-         }
-         catch (DiffToolIntegrationException ex)
-         {
-            ExceptionHandlers.Handle(ex,
-               String.Format("Cannot integrate the application in \"{0}\"", diffTool.GetToolName()), true);
-
-            try
-            {
-               GitUtils.RemoveGlobalDiffTool(GitDiffToolName);
-            }
-            catch (GitOperationException ex2)
-            {
-               ExceptionHandlers.Handle(ex2,
-                  String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName), false);
-            }
-         }
-      }
-
       private void updateHostsDropdownList()
       {
          comboBoxHost.SelectedIndex = -1;
@@ -1182,47 +904,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task updateProjectsDropdownList()
+      async private Task onChangeHost(string hostName, string accessToken)
       {
          Debug.WriteLine("Update projects dropdown list");
 
          Debug.WriteLine("Disable projects combo box");
          prepareComboBoxToAsyncLoading(comboBoxProjects);
 
-         List<Project> projects = await loadAllProjectsAsync();
+         labelGitLabStatus.Text = "Loading projects...";
+         List<Project> projects = await _model.SwitchHostAsync(;
+         labelGitLabStatus.Text = String.Empty;
 
          Debug.WriteLine("Enable projects combo box");
          fixComboBoxAfterAsyncLoading(comboBoxProjects);
-
-         if (projects == null)
-         {
-            return;
-         }
-
-         // dealing with 'SelectedItem' and not 'SelectedIndex' here because projects combobox id Sorted
-         Project? lastSelectedProject = null;
-         foreach (var project in projects)
-         {
-            comboBoxProjects.Items.Add(project);
-            if (project.Path_With_Namespace == _settings.LastSelectedProject)
-            {
-               lastSelectedProject = project;
-            }
-         }
-
-         if (comboBoxProjects.Items.Count == 0)
-         {
-            return;
-         }
-
-         if (lastSelectedProject != null)
-         {
-            comboBoxProjects.SelectedItem = lastSelectedProject;
-         }
-         else
-         {
-            comboBoxProjects.SelectedIndex = 0;
-         }
       }
 
       async private Task updateMergeRequestsDropdownList(bool keepPosition)
@@ -1248,7 +942,7 @@ namespace mrHelper.App.Forms
 
          foreach (var mergeRequest in mergeRequests)
          {
-            if (doesMergeRequestMatchLabels(mergeRequest))
+            if (_labelsRequested.Intersect(mergeRequest.Labels).Count > 0)
             {
                comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
             }
@@ -1280,36 +974,6 @@ namespace mrHelper.App.Forms
          {
             comboBoxFilteredMergeRequests.SelectedIndex = 0;
          }
-      }
-
-      private bool doesMergeRequestMatchLabels(MergeRequest mergeRequest)
-      {
-         // TODO This can be cached
-         List<string> labelsRequested = new List<string>();
-         if (checkBoxLabels.Checked && textBoxLabels.Text != null)
-         {
-            foreach (var item in textBoxLabels.Text.Split(','))
-            {
-               labelsRequested.Add(item.Trim(' '));
-            }
-         }
-
-         if (labelsRequested.Count > 0)
-         {
-            foreach (var label in labelsRequested)
-            {
-               if (mergeRequest.Labels.Contains(label))
-               {
-                  return true;
-               }
-            }
-         }
-         else
-         {
-            return true;
-         }
-
-         return false;
       }
 
       async private Task onMergeRequestSelected()
@@ -1531,40 +1195,22 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentHostName()
       {
-         if (comboBoxHost.SelectedItem != null)
-         {
-            return ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host;
-         }
-         return null;
+         return _model.GetState().HostName;
       }
 
       public string GetCurrentAccessToken()
       {
-         if (comboBoxHost.SelectedItem != null)
-         {
-            return ((HostComboBoxItem)(comboBoxHost.SelectedItem)).AccessToken;
-         }
-         return null;
+         return _model.GetState().AccessToken;
       }
 
       public string GetCurrentProjectName()
       {
-         if (comboBoxProjects.SelectedItem != null)
-         {
-            Project project = (Project)comboBoxProjects.SelectedItem;
-            return project.Path_With_Namespace;
-         }
-         return null;
+         return _model.GetState().SelectedProject.Path_With_Namespace;
       }
 
-      public string GetCurrentLocalGitFolder()
+      public int GetCurrentMergeRequestIId()
       {
-         return textBoxLocalGitFolder.Text;
-      }
-
-      public int GetCurrentMergeRequestId()
-      {
-         return getSelectedMergeRequest()?.IId ?? 0;
+         return _model.GetState().SelectedMergeRequest.IId;
       }
 
       private void fillColorSchemesList()
@@ -1652,6 +1298,9 @@ namespace mrHelper.App.Forms
       private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
       private GitClient _gitClient = null;
+      private SingleHostUpdateChecker _hostUpdateChecker = null;
+      private IUpdateChecker _singleMRUpdateChecker = null;
+      private List<string> _labelsRequested = null;
 
       // For accurate time tracking
       private readonly Stopwatch _stopWatch = new Stopwatch();

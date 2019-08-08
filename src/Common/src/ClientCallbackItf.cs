@@ -10,7 +10,7 @@ namespace mrHelper.Common
 
       string GetCurrentProjectName();
 
-      int GetCurrentMergeRequestId();
+      int GetCurrentMergeRequestIId();
 
       string GetCurrentLocalGitFolder();
    }

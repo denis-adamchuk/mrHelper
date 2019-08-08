@@ -11,6 +11,7 @@ namespace mrHelper.Client
 
    ///<summary>
    /// Wrapper on GitRepository that handles interaction with user
+   /// It is a lazy wrapper, it does not clone/fetch until InitializeAsync() is called.
    ///<summary>
    public class GitClient
    {
@@ -23,21 +24,26 @@ namespace mrHelper.Client
       public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
       public event EventHandler OnAsyncOperationFinished;
 
-      public GitClient(IClientCallback callback)
+      /// <summary>
+      /// Creates an instance of GitClient
+      /// Throws:
+      /// ArgumentException is local git folder is bad path
+      /// </summary>
+      public GitClient(string localFolder, string hostName, string projectName, IUpdateChecker updateChecker)
       {
-         if (callback == null)
-         {
-            throw new ArgumentException("Callback is null");
-         }
-
          try
          {
-            Directory.CreateDirectory(localFolder);
+            Directory.CreateDirectory(LocalGitFolder);
          }
          catch (Exception)
          {
-            throw new ArgumentException("Bad local folder");
+            throw new ArgumentException("Bad local folder path");
          }
+
+         LocalFolder = localFolder;
+         HostName = hostName;
+         ProjectName = projectName;
+         UpdateCheker = updateChecker;
       }
 
       /// <summary>
@@ -71,7 +77,10 @@ namespace mrHelper.Client
       /// </summary>
       public void CancelOperation()
       {
-         Debug.Assert(IsInitialized());
+         if (!IsInitialized())
+         {
+            return;
+         }
 
          try
          {
@@ -211,41 +220,27 @@ namespace mrHelper.Client
       {
          Debug.Assert(IsInitialized());
 
-         if (!_gitRepository.LastUpdateTime.HasValue)
+         if (!GitRepository.LastUpdateTime.HasValue)
          {
             return true;
          }
 
-         List<Version> versions = null;
-         GitLab gl = new GitLab(HostName, AccessToken));
-         try
-         {
-            versions = await gl.Projects.Get(ProjectName).MergeRequests.Get(MergeRequestIId).
-               Versions.LoadAllTaskAsync();
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot check GitLab for updates");
-         }
-
-         return versions != null && versions.Count > 0
-            && versions[0].Created_At.ToLocalTime() > _gitRepository.LastUpdateTime;
+         return UpdateChecker.AreAnyUpdatesAsync(GitRepository.LastUpdateTime.Value);
       }
 
       private string Path
       {
          get
          {
-            return Path.Combine(Callback.GetCurrentLocalGitFolder(), Callback.GetCurrentProjectName());
+            return Path.Combine(LocalFolder, ProjectName);
          }
       }
 
-      private string Host { get { return Callback.GetCurrentHostName(); } }
-      private string ProjectName { get { return Callback.GetCurrentProjectName(); } }
-      private string AccessToken { get { return Callback.GetCurrentAccessToken(); } }
-      private int MergeRequestIId { get { return Callback.GetCurrentMergeRequestId(); } }
+      private string Host { get; }
+      private string LocalFolder { get; }
+      private string ProjectName { get; }
+      private IUpdateChecker UpdateChecker { get; }
 
-      private IClientCallback Callback { get; }
       private GitRepository GitRepository { get; }
    }
 }

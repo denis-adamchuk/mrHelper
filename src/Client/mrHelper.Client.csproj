@@ -42,9 +42,9 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\ColorScheme.cs" />
     <Compile Include="src\Configuration.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\GitClient.cs" />
     <Compile Include="src\GitLabTaskManager.cs" />
     <Compile Include="..\Common\src\ClientCallbackItf.cs" />

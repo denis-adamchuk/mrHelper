@@ -142,6 +142,10 @@
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrHelper.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Client\mrHelper.Client.csproj">
+      <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>
+      <Name>mrHelper.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CustomActions\mrHelper.CustomActions.csproj">
       <Project>{cb91ad53-06a4-45c2-b568-215bd24033bc}</Project>
       <Name>mrHelper.CustomActions</Name>

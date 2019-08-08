@@ -20,7 +20,7 @@ namespace mrHelper.CustomActions
       async public Task Run()
       {
          GitLab gl = new GitLab(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
-         await gl.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.Get(_callback.GetCurrentMergeRequestId()).
+         await gl.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.Get(_callback.GetCurrentMergeRequestIId()).
             Notes.CreateNewTaskAsync(new CreateNewNoteParameters
             {
                Body = _body
