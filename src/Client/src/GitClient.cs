@@ -72,45 +72,7 @@ namespace mrHelper.Client
          return GitClientUpdateStatus.Success;
       }
 
-      /// <summary>
-      /// Cancels current git async operation if any.
-      /// </summary>
-      public void CancelOperation()
-      {
-         if (!IsInitialized())
-         {
-            return;
-         }
-
-         try
-         {
-            _gitRepository.CancelAsyncOperation();
-         }
-         catch (InvalidOperationException)
-         {
-            Debug.Assert(false);
-         }
-      }
-
-      /// <summary>
-      /// Launches diff tool asynchronously
-      /// </summary>
-      async public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
-      {
-         if (!IsInitialized())
-         {
-            return;
-         }
-
-         try
-         {
-            await _gitRepository.DiffToolAsync(name, leftCommit, rightCommit);
-         }
-         catch (GitOperationException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
-         }
-      }
+      public GitRepository GitRepository { get; private set; } = null;
 
       private bool isCloneAllowed()
       {
@@ -239,9 +201,6 @@ namespace mrHelper.Client
       private string Host { get; }
       private string LocalFolder { get; }
       private string ProjectName { get; }
-      private IUpdateChecker UpdateChecker { get; }
-
-      private GitRepository GitRepository { get; }
    }
 }
 

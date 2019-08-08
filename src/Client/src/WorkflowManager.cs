@@ -1,56 +1,8 @@
 namespace mrHelper.Client
 {
-   public class GitLabModelState
+   public class WorkflowManager
    {
-      public struct Access
-      {
-         string Host;
-         string AccessToken;
-      }
-
-      public Access GitLab
-      {
-         get;
-         set
-         {
-            Access = value;
-            Projects = null;
-            Project = null;
-            MergeRequest = null;
-         }
-      }
-
-      public List<Project> Projects
-      {
-         get;
-         set
-         {
-            Projects = value;
-            Project = null;
-            MergeRequest = null;
-         }
-      }
-
-      public Project Project
-      {
-         get;
-         set
-         {
-            Project = value;
-            MergeRequest = null;
-         }
-      }
-
-      public MergeRequest MergeRequest
-      {
-         get;
-         set;
-      }
-   }
-
-   public class GitLabModel
-   {
-      public GitLabModel(UserDefinedSettings settings)
+      public WorkflowManager(UserDefinedSettings settings)
       {
          Settings = settings;
       }
@@ -70,18 +22,17 @@ namespace mrHelper.Client
          await switchMergeRequestAsync(mergeRequestIId);
       }
 
-      public EventHandler<GitLabState> ProjectsLoaded;
-      public EventHandler<GitLabState> MergeRequestsLoaded;
-      public EventHandler<GitLabState> MergeRequestLoaded;
-      public EventHandler<GitLabState> VersionsLoaded;
+      public EventHandler<GitLabState> HostSwitched;
+      public EventHandler<GitLabState> ProjectSwitched;
+      public EventHandler<GitLabState> MergeRequestSwitched;
 
       async private Task switchHostAsync(string hostName, string accessToken)
       {
-         State = new GitLabState();
-         State.Access = new { Host = hostName, AccessToken = accessToken };
+         State = new WorkflowState();
+         State.Host = new WorkflowState.Host { Name = hostName, AccessToken = accessToken, Projects = null };
 
          List<Project> projects = await loadProjectsAsync();
-         State.Projects = projects;
+         State.Host.Projects = projects;
          ProjectsLoaded?.Invoke(State);
 
          string projectName = selectProjectFromList();
@@ -134,28 +85,30 @@ namespace mrHelper.Client
          return State.MergeRequests.Count > 0 ? State.MergeRequests[0] : null;
       }
 
+      private delegate object command();
+
       async private Task<List<Project>> loadProjectsAsync()
       {
-         Debug.WriteLine("Loading projects asynchronously for host " + hostName);
+         await waitForCancel();
 
          List<Project> projects = Tools.LoadProjectsFromFile();
          if (projects != null && projects.Count != 0)
          {
-            _glTaskManager.CancelAll(GitLabTaskType.Projects);
+            Debug.WriteLine("Project list is read from file");
             return projects;
          }
 
-         GitLab gl = new GitLab(State.HostName, State.AccessToken);
-         var task  = _glTaskManager.CreateTask<List<Project>>(
-            gl.Projects.LoadAllTaskAsync(
-               new ProjectsFilter
-               {
-                  PublicOnly = publicOnly
-               }), GitLabTaskType.Projects);
+         Debug.WriteLine("Loading projects asynchronously for host " + hostName);
 
+         GitLab gl = new GitLab(State.HostName, State.AccessToken);
          try
          {
-            return await _glTaskManager.RunAsync(task);
+            return (Task<List<Project>>)waitForComplete(() =>
+               return gl.Projects.LoadAllTaskAsync(
+                  new ProjectsFilter
+                  {
+                     PublicOnly = publicOnly
+                  });
          }
          catch (GitLabRequestException ex)
          {
@@ -166,17 +119,17 @@ namespace mrHelper.Client
 
       async private Task<List<MergeRequest>> loadMergeRequestsAsync(string hostName, string projectName)
       {
+         await waitForCancel();
+
          Debug.WriteLine("Loading project merge requests asynchronously for host "
             + GetCurrentHostName() + " and project " + GetCurrentProjectName());
 
          GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
-         var task = _glTaskManager.CreateTask<List<MergeRequest>>(
-            gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
-               new MergeRequestsFilter()), GitLabTaskType.MergeRequests);
-
          try
          {
-            return await _glTaskManager.RunAsync(task);
+            return (Task<List<MergeRequest>>)waitForComplete(() =>
+               return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
+                  new MergeRequestsFilter()));
          }
          catch (GitLabRequestException ex)
          {
@@ -187,15 +140,15 @@ namespace mrHelper.Client
 
       async private Task<MergeRequest?> loadMergeRequestAsync(int iid)
       {
-         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
-         var task = _glTaskManager.CreateTask(
-            gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.
-               Get(iid).LoadTaskAsync(), GitLabTaskType.MergeRequest);
+         await waitForCancel();
 
+         Debug.WriteLine("Loading merge request asynchronously for host ");
+
+         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
          try
          {
-            var result = await _glTaskManager.RunAsync(task);
-            return result.Equals(default(MergeRequest)) ? null : new Nullable<MergeRequest>(result);
+            return (Task<List<MergeRequest>>)waitForComplete(() =>
+               return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync());
          }
          catch (GitLabRequestException ex)
          {
@@ -206,14 +159,16 @@ namespace mrHelper.Client
 
       async private Task<List<Version>> loadVersionsAsync()
       {
-         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
-         var task = _glTaskManager.CreateTask<List<Version>>(
-            gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
-               Versions.LoadAllTaskAsync(), GitLabTaskType.Versions);
+         await waitForCancel();
 
+         Debug.WriteLine("Loading versions asynchronously for host ");
+
+         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
          try
          {
-            return await _glTaskManager.RunAsync(task);
+            return (Task<List<MergeRequest>>)waitForComplete(() =>
+               return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
+                  Versions.LoadAllTaskAsync(), GitLabTaskType.Versions);
          }
          catch (GitLabRequestException ex)
          {
@@ -222,8 +177,66 @@ namespace mrHelper.Client
          return null;
       }
 
-      public GitLabState State { get; private set; } = new GitLabState();
+      async private Task waitForCancel()
+      {
+         if (CurrentCancellationTokenSource == null)
+         {
+            return;
+         }
+
+         Debug.Assert(CurrentTask != null);
+         CurrentCancellationTokenSource.Cancel();
+
+         Debug.WriteLine("Waiting for current task cancellation ");
+         try
+         {
+            await CurrentTask;
+         }
+         catch (OperationCanceledException)
+         {
+         }
+         finally
+         {
+            CurrentTask = null;
+            CurrentCancellationTokenSource.Dispose();
+            CurrentCancellationTokenSource = null;
+         }
+      }
+
+      async private Task<object> waitForComplete(command cmd)
+      {
+         Debug.Assert(CurrentCancellationTokenSource == null);
+         Debug.Assert(CurrentTask == null);
+
+         CurrentTask = task;
+         CurrentCancellationTokenSource = new CancellationTokenSource();
+
+         try
+         {
+            return await cmd();
+         }
+         catch (OperationCanceledException)
+         {
+            Debug.Assert(false);
+         }
+         catch (GitLabRequestException)
+         {
+            throw;
+         }
+         finally
+         {
+            CurrentTask = null;
+            CurrentCancellationTokenSource.Dispose();
+            CurrentCancellationTokenSource = null;
+         }
+         return null;
+      }
+
+      public WorkflowState State { get; private set; } = new WorkflowState();
+
       private UserDefinedSettings Settings { get; }
+      private Task<object> CurrentTask = null;
+      private CancellationTokenSource CurrentCancellationTokenSource = null;
    }
 }
 

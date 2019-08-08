@@ -630,7 +630,15 @@ namespace mrHelper.App.Forms
 
          buttonDiffTool.Enabled = false;
          buttonDiscussions.Enabled = false;
-         _gitClient.DiffToolAsync(GitDiffToolName, leftSHA, rightSHA);
+
+         try
+         {
+            await _gitClient.GitRepository.DiffToolAsync(name, leftCommit, rightCommit);
+         }
+         catch (GitOperationException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
+         }
 
          _diffToolArgs = new DiffToolArguments
          {

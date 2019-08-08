@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace mrHelper.Core.Git
 {
-   public class GitUtils
+   public static class GitUtils
    {
       public class OperationStatusChangeArgs : EventArgs
       {
@@ -205,7 +205,6 @@ namespace mrHelper.Core.Git
          string arguments = "config --global http.sslVerify " + flag.ToString().ToLower();
          git(arguments);
       }
-
    }
 }
 
