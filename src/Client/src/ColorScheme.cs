@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Web.Script.Serialization;
 
-namespace mrHelper.UI
+namespace mrHelper.Client
 {
    /// <summary>
    /// Represents a color scheme used in the application

@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Forms
 {
    public partial class AddKnownHostForm : Form
    {
@@ -24,3 +24,4 @@ namespace mrHelper.UI
       }
    }
 }
+

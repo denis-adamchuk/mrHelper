@@ -1,4 +1,4 @@
-﻿namespace mrHelper.UI
+﻿namespace mrHelper.App.Forms
 {
    partial class DiscussionsForm
    {

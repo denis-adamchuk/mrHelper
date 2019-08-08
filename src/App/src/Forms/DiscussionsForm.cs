@@ -9,11 +9,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using mrHelper.Core;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp;
+using mrHelper.Core.Git;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Forms
 {
    public partial class DiscussionsForm : Form
    {
@@ -22,12 +22,12 @@ namespace mrHelper.UI
       /// Throws:
       /// ArgumentException
       /// </summary>
-      public DiscussionsForm(MergeRequestDetails mergeRequestDetails, GitRepository gitRepository,
+      public DiscussionsForm(MergeRequestDetails mergeRequestDetails, GitClient gitClient,
          int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, User currentUser)
       {
          _mergeRequestDetails = mergeRequestDetails;
 
-         _gitRepository = gitRepository;
+         _gitClient = gitClient;
          _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
@@ -128,7 +128,7 @@ namespace mrHelper.UI
             }
 
             var control = new DiscussionBox(discussion, _mergeRequestDetails, _currentUser,
-               _diffContextDepth, _gitRepository, _colorScheme,
+               _diffContextDepth, _gitClient, _colorScheme,
                () => {
                   repositionDiscussionBoxes();
                });
@@ -169,12 +169,12 @@ namespace mrHelper.UI
          get
          {
             String.Format("Discussions for merge request #{0} with code repository at \"{1}\"",
-               _mergeRequestDetails.MergeRequestIId, _gitRepository?.Path ?? "no repository");
+               _mergeRequestDetails.MergeRequestIId, _gitClient?.Path ?? "no repository");
          }
       }
 
       private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly GitRepository _gitRepository;
+      private readonly GitClient _gitClient;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 

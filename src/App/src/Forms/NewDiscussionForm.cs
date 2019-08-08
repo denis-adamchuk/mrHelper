@@ -1,6 +1,4 @@
-﻿using GitLabSharp;
-using mrHelper.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,8 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using GitLabSharp;
+using mrHelper.Core;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Forms
 {
    public partial class NewDiscussionForm : Form
    {

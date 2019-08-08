@@ -41,7 +41,7 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="src\CommandCallbackItf.cs" />
+    <Compile Include="..\Common\src\ClientCallbackItf.cs" />
     <Compile Include="src\CommandItf.cs" />
     <Compile Include="src\CustomCommandLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Context
 {
    /// <summary>
    /// This 'maker' creates a list of lines for either left or right side.

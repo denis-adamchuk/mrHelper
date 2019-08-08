@@ -2,7 +2,9 @@
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.757
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "src\UI\mrHelper.UI.csproj", "{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "src\App\mrHelper.App.csproj", "{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "src\Client\mrHelper.Client.csproj", "{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "src\Core\mrHelper.Core.csproj", "{3789E25D-B132-4661-9BFC-99385E606572}"
 EndProject
@@ -22,6 +24,10 @@ Global
 		{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3789E25D-B132-4661-9BFC-99385E606572}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3789E25D-B132-4661-9BFC-99385E606572}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3789E25D-B132-4661-9BFC-99385E606572}.Release|Any CPU.ActiveCfg = Release|Any CPU

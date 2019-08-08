@@ -1,6 +1,4 @@
-﻿using GitLabSharp;
-using mrHelper.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,8 +7,11 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using GitLabSharp;
+using mrHelper.Core;
+using mrHelper.Client;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Controls
 {
    public struct MergeRequestDetails
    {
@@ -20,19 +21,6 @@ namespace mrHelper.UI
       public int MergeRequestIId;
       public User Author;
       public User CurrentUser;
-   }
-
-   internal class TextBoxNoWheel : TextBox
-   {
-      protected override void WndProc(ref Message m)
-      {
-         const int WM_MOUSEWHEEL = 0x020A;
-         if (m.Msg == WM_MOUSEWHEEL)
-         {
-            m.HWnd = this.Parent.Handle;
-         }
-         base.WndProc(ref m);
-      }
    }
 
    internal class DiscussionBox : Panel

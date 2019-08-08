@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.Core;
 
-namespace mrHelper.UI
+namespace mrHelper.App
 {
    internal static class Program
    {

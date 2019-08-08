@@ -11,14 +11,16 @@ using GitLabSharp;
 using mrHelper.Core;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
+using mrHelper.Common;
+using mrHelper.Client;
 using Version = GitLabSharp.Version;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Forms
 {
    delegate void UpdateTextCallback(string text);
    delegate Task Command();
 
-   public partial class mrHelperForm : Form, ICommandCallback, IGitClientCallback
+   public partial class mrHelperForm : Form, IClientCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -341,23 +343,19 @@ namespace mrHelper.UI
             return;
          }
 
-         string result = String.Empty;
+         AsyncOperationResult result = AsyncOperationResult.Success;
          try
          {
-            result = await initializeGitRepositoryAsync();
+            result = await _gitClient.InitializeAsync();
          }
          catch (Exception ex)
          {
-            if (tryFixSSLProblem(ex))
-            {
-               return;
-            }
             Debug.Assert(ex is ArgumentException || ex is GitOperationException);
             ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
             return;
          }
 
-         if (result == "CancelFetch")
+         if (result == AsyncOperationResult.CancelledByUser)
          {
             if (MessageBox.Show("Without up-to-date git repository, some context code snippets might be missing. "
                + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
@@ -365,14 +363,8 @@ namespace mrHelper.UI
                return;
             }
          }
-         else if (result == "CancelClone" || result == "NoRepository")
-         {
-            if (MessageBox.Show("Without git repository, context code snippets will be missing. "
-               + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
-            {
-               return;
-            }
-         }
+
+         Debug.Assert(result == AsyncOperationResult.Success);
 
          var mergeRequestDetails = new MergeRequestDetails
          {
@@ -744,23 +736,19 @@ namespace mrHelper.UI
          _diffToolArgs = null;
          await updateInterprocessSnapshot(); // to purge serialized snapshot
 
-         string result = String.Empty;
+         AsyncOperationResult result = AsyncOperationResult.Success;
          try
          {
             result = await _gitClient.InitializeAsync();
          }
          catch (Exception ex)
          {
-            if (tryFixSSLProblem(ex))
-            {
-               return;
-            }
             Debug.Assert(ex is ArgumentException || ex is GitOperationException);
             ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
             return;
          }
 
-         if (result == "CancelFetch" || result == "CancelClone" || result == "NoRepository")
+         if (result == AsyncOperationResult.CancelledByUser)
          {
             // User declined to create a repository
             MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
@@ -768,12 +756,14 @@ namespace mrHelper.UI
             return;
          }
 
+         Debug.Assert(result == AsyncOperationResult.Success);
+
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
          buttonDiffTool.Enabled = false;
          buttonDiscussions.Enabled = false;
-         _gitClient.DiffTool(GitDiffToolName, leftSHA, rightSHA);
+         _gitClient.DiffToolAsync(GitDiffToolName, leftSHA, rightSHA);
 
          _diffToolArgs = new DiffToolArguments
          {
@@ -782,43 +772,6 @@ namespace mrHelper.UI
          };
 
          await updateInterprocessSnapshot();
-      }
-
-      /// <summary>
-      /// Checks if there is a version in GitLab which is newer than latest Git Repository update.
-      /// Returns 'true' if there is a newer version.
-      /// </summary>
-      async private Task<bool> checkForRepositoryUpdatesAsync()
-      {
-         Debug.Assert(_gitRepository != null);
-
-         if (!_gitRepository.LastUpdateTime.HasValue)
-         {
-            return true;
-         }
-
-         MergeRequest? mergeRequest = getSelectedMergeRequest();
-         if (GetCurrentHostName() == null || GetCurrentProjectName() == null || !mergeRequest.HasValue)
-         {
-            return false;
-         }
-
-         List<Version> versions = null;
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-         labelGitLabStatus.Text = "Checking for new versions...";
-         try
-         {
-            versions = await gl.Projects.Get(GetCurrentProjectName()).MergeRequests.Get(mergeRequest.Value.IId).
-               Versions.LoadAllTaskAsync();
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot check GitLab for updates");
-         }
-         labelGitLabStatus.Text = String.Empty;
-
-         return versions != null && versions.Count > 0
-            && versions[0].Created_At.ToLocalTime() > _gitRepository.LastUpdateTime;
       }
 
       private struct MergeRequestTimerUpdates

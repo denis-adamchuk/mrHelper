@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.Win32;
-using mrHelper.Core;
+using mrHelper.Core.Git;
 using System.Diagnostics;
 
 namespace mrHelper.DiffTool

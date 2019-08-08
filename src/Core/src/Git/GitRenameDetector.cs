@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Git
 {
    /// <summary>
    /// Detects if a file was renamed between two commits. Uses default git threshold.

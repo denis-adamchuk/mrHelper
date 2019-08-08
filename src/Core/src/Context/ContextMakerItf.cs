@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Context
 {
    /// <summary>
    /// Result of context makers work. Contains a list of strings with their properties.

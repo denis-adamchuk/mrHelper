@@ -52,66 +52,61 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="src\GitLabTaskManager.cs" />
-    <Compile Include="src\SelectionPreservingComboBox.cs">
+    <Compile Include="src\Controls\SelectionPreservingComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="src\NewDiscussionItemForm.cs">
+    <Compile Include="src\Forms\NewDiscussionItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\NewDiscussionItemForm.Designer.cs">
+    <Compile Include="src\Forms\NewDiscussionItemForm.Designer.cs">
       <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\AddKnownHostForm.cs">
+    <Compile Include="src\Forms\AddKnownHostForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\AddKnownHostForm.Designer.cs">
+    <Compile Include="src\Forms\AddKnownHostForm.Designer.cs">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\ColorScheme.cs" />
-    <Compile Include="src\ExceptionHandlers.cs" />
-    <Compile Include="src\Configuration.cs" />
-    <Compile Include="src\DiffContextFormatter.cs" />
-    <Compile Include="src\DiscussionBox.cs">
+    <Compile Include="src\Controls\DiscussionBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="src\DiscussionsForm.cs">
+    <Compile Include="src\Forms\DiscussionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\DiscussionsForm.Designer.cs">
+    <Compile Include="src\Forms\DiscussionsForm.Designer.cs">
       <DependentUpon>DiscussionsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\mrHelperForm.cs">
+    <Compile Include="src\Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\mrHelperForm.Designer.cs">
+    <Compile Include="src\Forms\MainForm.Designer.cs">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\NewDiscussionForm.cs">
+    <Compile Include="src\Forms\NewDiscussionForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\NewDiscussionForm.Designer.cs">
+    <Compile Include="src\Forms\NewDiscussionForm.Designer.cs">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\CustomTraceListener.cs" />
-    <EmbeddedResource Include="src\NewDiscussionItemForm.resx">
+    <Compile Include="src\ExceptionHandlers.cs" />
+    <Compile Include="src\Program.cs" />
+    <EmbeddedResource Include="src\Forms\NewDiscussionItemForm.resx">
       <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\AddKnownHostForm.resx">
+    <EmbeddedResource Include="src\Forms\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\DiscussionsForm.resx">
+    <EmbeddedResource Include="src\Forms\DiscussionsForm.resx">
       <DependentUpon>DiscussionsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\mrHelperForm.resx">
+    <EmbeddedResource Include="src\Forms\mrHelperForm.resx">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\NewDiscussionForm.resx">
+    <EmbeddedResource Include="src\Forms\NewDiscussionForm.resx">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -139,27 +134,21 @@
     <None Include="mrHelper.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\diff-context.css" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\gitlab.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\submodules\GitLabSharp\GitLabSharp.csproj">
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Core\Core.csproj">
+    <ProjectReference Include="..\Core\mrHelper.Core.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
-      <Name>mrCore</Name>
+      <Name>mrHelper.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CustomActions\CustomActions.csproj">
+    <ProjectReference Include="..\CustomActions\mrHelper.CustomActions.csproj">
       <Project>{cb91ad53-06a4-45c2-b568-215bd24033bc}</Project>
-      <Name>mrCustomActions</Name>
+      <Name>mrHelper.CustomActions</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DiffTool\DiffTool.csproj">
+    <ProjectReference Include="..\DiffTool\mrHelper.DiffTool.csproj">
       <Project>{b3a4a6eb-e9df-47b1-bdf4-089df6ed0da5}</Project>
-      <Name>DiffTool</Name>
+      <Name>mrHelper.DiffTool</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

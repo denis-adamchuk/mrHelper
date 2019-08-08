@@ -1,4 +1,6 @@
-﻿namespace mrHelper.Common
+﻿using System;
+
+namespace mrHelper.Common
 {
    public interface IClientCallback
    {
@@ -13,3 +15,4 @@
       string GetCurrentLocalGitFolder();
    }
 }
+

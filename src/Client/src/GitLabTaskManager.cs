@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace mrHelper.UI
+namespace mrHelper.Client
 {
    /// <summary>
    /// Types of asynchronous requests that we made to GitLab

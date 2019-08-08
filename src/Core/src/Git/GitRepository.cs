@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Git
 {
    public class GitOperationException : Exception
    {

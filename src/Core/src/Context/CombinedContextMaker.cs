@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Context
 {
    /// <summary>
    /// This 'maker' creates a list of lines that belong to both left and right sides.

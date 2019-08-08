@@ -1,5 +1,4 @@
-﻿using mrHelper.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.UI
+namespace mrHelper.Client
 {
    /// <summary>
    /// Renders DiffContext objects into HTML web page using CSS from resources

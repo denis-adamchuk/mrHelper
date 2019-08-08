@@ -1,6 +1,9 @@
-namespace mrHelper.UI
+using System;
+using mrHelper.Core.Git;
+
+namespace mrHelper.Client
 {
-   public GitClientResult
+   public AsyncOperationResult
    {
       Success,
       CancelledByUser
@@ -39,7 +42,6 @@ namespace mrHelper.UI
 
       /// <summary>
       /// Initializes GitRepository member asynchronously.
-      /// Returns Task if initialization started and null otherwise.
       /// Sets asynchronous exception GitOperationException in case of problems with git.
       /// </summary>
       async public Task<GitClientResult> InitializeAsync()
@@ -54,7 +56,7 @@ namespace mrHelper.UI
 
          if (isCloneNeeded())
          {
-            return await runAsync(() => GitRepository.CloneAsync( HostName, ProjectName, Path), "clone");
+            return await runAsync(() => GitRepository.CloneAsync(HostName, ProjectName, Path), "clone");
          }
          else if (await checkForRepositoryUpdatesAsync())
          {
@@ -64,6 +66,9 @@ namespace mrHelper.UI
          return GitClientUpdateStatus.Success;
       }
 
+      /// <summary>
+      /// Cancels current git async operation if any.
+      /// </summary>
       public void CancelOperation()
       {
          Debug.Assert(IsInitialized());
@@ -78,9 +83,15 @@ namespace mrHelper.UI
          }
       }
 
+      /// <summary>
+      /// Launches diff tool asynchronously
+      /// </summary>
       async public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
-         Debug.Assert(IsInitialized());
+         if (!IsInitialized())
+         {
+            return;
+         }
 
          try
          {
@@ -121,26 +132,10 @@ namespace mrHelper.UI
          }
          catch (Exception ex)
          {
-            bool cancelledByUser = (ex is GitOperationException && (ex as GitOperationException).ExitCode == -1);
-            string result = cancelledByUser ? "cancelled by user" : "failed";
-            OnOperationStatusChange?.Invoke(sender, String.Format("git {0} {1}", name, result));
             Debug.Assert(!(ex is InvalidOperationException));
-            if (cancelledByUser)
-            {
-               return AsyncOperationResult.CancelledByUser;
-            }
-            else if (ex is GitOperationException as gex)
-            {
-               if (tryFixSSLProblem(gex))
-               {
-                  OnOperationStatusChange?.Invoke(sender,
-                     "SSL certificate verification disabled. Please repeat git operation.");
-                  return AsyncOperationResult.Success;
-               }
-            }
 
             GitRepository = null;
-            throw;
+            return handleExceptionInRunAsync(ex, name);
          }
          finally
          {
@@ -148,6 +143,63 @@ namespace mrHelper.UI
          }
 
          OnOperationStatusChange?.Invoke(sender, String.Empty);
+         return AsyncOperationResult.Success;
+      }
+
+      private void handleExceptionInRunAsync(Exception ex, string name)
+      {
+         bool cancelledByUser = isCancelledByUser(ex);
+         string result = cancelledByUser ? "cancelled by user" : "failed";
+
+         OnOperationStatusChange?.Invoke(sender, String.Format("git {0} {1}", name, result));
+
+         if (cancelledByUser)
+         {
+            return AsyncOperationResult.CancelledByUser;
+         }
+         else if (isSSLCertificateProblem(ex))
+         {
+            return handleSSLCertificateProblem();
+         }
+
+         throw ex; // TODO - Or throw;
+      }
+
+      private bool isCancelledByUser(Exception ex)
+      {
+         return ex is GitOperationException && (ex as GitOperationException).ExitCode == -1;
+      }
+
+      private bool isSSLCertificateProblem(Exception ex)
+      {
+      }
+
+      private bool isGlobalSSLFixAllowed()
+      {
+         return MessageBox.Show("SSL certificate problem occurred with git server. "
+            + "Do you want to disable certificate verification in global git config?",
+            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+      }
+
+      private AsyncOperationResult handleSSLCertificateProblem()
+      {
+         if (!isGlobalSSLFixAllowed())
+         {
+            return AsyncOperationResult.CancelledByUser;
+         }
+
+         try
+         {
+            GitUtils.SetGlobalSSLVerify(false);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot change global http.verifySSL setting");
+            throw;
+         }
+
+         OnOperationStatusChange?.Invoke(sender,
+               "SSL certificate verification disabled. Please repeat git operation.");
          return AsyncOperationResult.Success;
       }
 
@@ -178,32 +230,6 @@ namespace mrHelper.UI
 
          return versions != null && versions.Count > 0
             && versions[0].Created_At.ToLocalTime() > _gitRepository.LastUpdateTime;
-      }
-
-      private bool tryFixSSLProblem(GitOperationException ex)
-      {
-         if (ex == null || !ex.Details.Contains("SSL certificate problem"))
-         {
-            return false;
-         }
-
-         if (MessageBox.Show("SSL certificate problem occured with git server. "
-            + "Do you want to disable certificate verification in global git config?",
-            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-         {
-            try
-            {
-               GitUtils.SetGlobalSSLVerify(false);
-            }
-            catch (Exception ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot change global http.verifySSL setting", true);
-               return false;
-            }
-            return true;
-         }
-
-         return false;
       }
 
       private string Path

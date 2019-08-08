@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Forms
 {
    public partial class NewDiscussionItemForm : Form
    {

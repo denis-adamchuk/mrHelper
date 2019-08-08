@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Context
 {
    /// <summary>
    /// This 'maker' create a list of lines belonging to the same side as the line passed to GetContext() call.

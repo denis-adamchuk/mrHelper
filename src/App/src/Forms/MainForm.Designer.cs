@@ -1,4 +1,4 @@
-﻿namespace mrHelper.UI
+﻿namespace mrHelper.App.Forms
 {
    partial class mrHelperForm
    {
@@ -82,11 +82,11 @@
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
          this.labelAutoUpdate = new System.Windows.Forms.Label();
-         this.comboBoxProjects = new mrHelper.UI.SelectionPreservingComboBox();
-         this.comboBoxFilteredMergeRequests = new mrHelper.UI.SelectionPreservingComboBox();
-         this.comboBoxHost = new mrHelper.UI.SelectionPreservingComboBox();
-         this.comboBoxRightVersion = new mrHelper.UI.SelectionPreservingComboBox();
-         this.comboBoxLeftVersion = new mrHelper.UI.SelectionPreservingComboBox();
+         this.comboBoxProjects = new mrHelper.App.SelectionPreservingComboBox();
+         this.comboBoxFilteredMergeRequests = new mrHelper.App.SelectionPreservingComboBox();
+         this.comboBoxHost = new mrHelper.App.SelectionPreservingComboBox();
+         this.comboBoxRightVersion = new mrHelper.App.SelectionPreservingComboBox();
+         this.comboBoxLeftVersion = new mrHelper.App.SelectionPreservingComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();

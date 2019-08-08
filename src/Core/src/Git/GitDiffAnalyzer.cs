@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Git
 {
    /// <summary>
    /// Checks whether a line number belongs to added/modified or deleted sections (or none of them)

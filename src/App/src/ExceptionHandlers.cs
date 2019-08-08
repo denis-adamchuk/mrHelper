@@ -6,7 +6,7 @@ using mrHelper.Core;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
 
-namespace mrHelper.UI
+namespace mrHelper.Client
 {
    public class ExceptionHandlers
    {

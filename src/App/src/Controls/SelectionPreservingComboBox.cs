@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper.UI
+namespace mrHelper.App.Controls
 {
    /// <summary>
-   /// Unlike its parent class, <> preserves state of SelectedIndex, SelectedItem, SelectedText and Text properties
-   /// until SelectedIndexChanged event is invoked, including cases when dropdown is expanded and user hovers but
-   /// does not click on items
+   /// Unlike its parent class, SelectionPreservingComboBox preserves state of SelectedIndex, SelectedItem,
+   /// SelectedText and Text properties until SelectedIndexChanged event is invoked, including cases
+   /// when dropdown is expanded and user hovers but does not click on items
    /// </summary>
    public class SelectionPreservingComboBox : ComboBox
    {
