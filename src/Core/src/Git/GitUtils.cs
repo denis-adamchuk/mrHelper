@@ -26,7 +26,7 @@ namespace mrHelper.Core.Git
       }
 
       /// <summary>
-      /// Launche 'git' with arguments passed and waits for process completion if needed.
+      /// Launch 'git' with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
       static internal List<string> git(string arguments)

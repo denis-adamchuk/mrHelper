@@ -37,6 +37,28 @@ namespace mrHelper.Client
          }
          return null;
       }
+
+      public static string GetAccessToken(string hostname, UserDefinedSettings settings)
+      {
+         for (int iKnownHost = 0; iKnownHost < settings.KnownHosts.Count; ++iKnownHost)
+         {
+            if (host == settings.KnownHosts[iKnownHost])
+            {
+               return settings.KnownAccessTokens[iKnownHost];
+            }
+         }
+         return String.Empty;
+      }
+
+      public static List<string> SplitLabels(string labels)
+      {
+         var result = new List<string>();
+         foreach (var item in labels.Split(','))
+         {
+            result.Add(item.Trim(' '));
+         }
+         return result;
+      }
    }
 }
 

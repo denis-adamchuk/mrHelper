@@ -275,19 +275,13 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createHostUpdateChecker(string hostname, Project project)
+      private void createGitLabUpdateChecker()
       {
-         _hostUpdateChecker = null;
-
-         List<Project> projects = Tools.LoadProjectsFromFile();
-         if (projects == null && project.Name_With_Namespace != String.Empty)
+         _GitLabUpdateChecker = new GitLabUpdateChecker(_settings);
+         _GitLabUpdateChecker.OnUpdate += async (sender, updates) =>
          {
-            projects = new List<Project>();
-            projects.Add((Project)(comboBoxProjects.SelectedItem));
+            notifyOnMergeRequestUpdates(updates);
          }
-
-         _hostUpdateChecker = new SingleHostUpdateChecker(hostname, projects, _settings);
-         _hostUpdateChecker.
       }
 
       private void addCustomActions()
@@ -356,16 +350,23 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-            ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
-            return;
-         }
-
-         if (gitClient == null)
-         {
-            if (MessageBox.Show("Without up-to-date git repository, some context code snippets might be missing. "
-               + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+            if (ex is RepeatOperationException)
             {
+               return;
+            }
+            else if (ex is CancelledByUserException)
+            {
+               if (MessageBox.Show("Without up-to-date git repository, some context code snippets might be missing. "
+                  + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
+                     DialogResult.No)
+               {
+                  return;
+               }
+            }
+            else
+            {
+               Debug.Assert(ex is ArgumentException || ex is GitOperationException);
+               ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
                return;
             }
          }
@@ -597,16 +598,17 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-            ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
-            return;
-         }
-
-         if (gitClient == null)
-         {
-            // User declined to create a repository
-            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
-               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (ex is CancelledByUserException)
+            {
+               // User declined to create a repository
+               MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else if (!(ex is RepeatOperationException))
+            {
+               Debug.Assert(ex is ArgumentException || ex is GitOperationException);
+               ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+            }
             return;
          }
 
@@ -636,16 +638,11 @@ namespace mrHelper.App.Forms
 
       async private void onMergeRequestUpdates(object sender, MergeRequestUpdates updates)
       {
-         notifyOnMergeRequestUpdates(updates);
-
-         // This will automatically update version list for the currently selected MR (if there are new).
-         // This will also remove merged merge requests from the list.
-         await updateMergeRequestsDropdownList(true);
       }
 
       async private Task<MergeRequestUpdates> collectMergeRequestUpdates()
       {
-         MergeRequestUpdates updates = _hostUpdateChecker.GetUpdates(_lastCheckTime);
+         MergeRequestUpdates updates = _GitLabUpdateChecker.GetUpdates(_lastCheckTime);
          _lastCheckTime = DateTime.Now;
          return updates;
       }
@@ -838,18 +835,6 @@ namespace mrHelper.App.Forms
       private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
       {
          saveConfiguration();
-
-         if (e.PropertyName == "LastUsedLabels")
-         {
-            _labelsRequested = new List<string>();
-            if (checkBoxLabels.Checked && textBoxLabels.Text != null)
-            {
-               foreach (var item in textBoxLabels.Text.Split(','))
-               {
-                  _labelsRequested.Add(item.Trim(' '));
-               }
-            }
-         }
       }
 
       async private void onApplicationStarted()
@@ -881,7 +866,9 @@ namespace mrHelper.App.Forms
 
       async private Task initializeWorkflow()
       {
-         _workflowManager = new WorkflowManager(_settings);
+         createGitLabUpdateChecker(state.HostName, state.Project);
+
+         _workflowManager = new WorkflowManager(_settings, _gitLabUpdateChecker);
          _workflowManager.HostSwitched += (sender, state) =>
          {
             comboBoxHost.SelectedText = state.HostName;
@@ -889,7 +876,6 @@ namespace mrHelper.App.Forms
             {
                comboBoxProjects.Add(project);
             }
-            createHostUpdateChecker(state.HostName, state.Project);
             createGitClientManager(_settings.LocalGitFolder, state.HostName);
          }
          _workflowManager.ProjectSwitched += (sender, state) =>
@@ -897,12 +883,8 @@ namespace mrHelper.App.Forms
             comboBoxProjects.SelectedText = state.Project.Path_With_Namespace;
             foreach (var mergeRequest in state.MergeRequests)
             {
-               if (_labelsRequested.Intersect(mergeRequest.Labels).Count > 0)
-               {
-                  comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
-               }
+               comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
             }
-            createHostUpdateChecker(state.HostName, state.Project);
          }
          _workflowManager.MergeRequestSwitched += (sender, state) =>
          {
@@ -958,11 +940,20 @@ namespace mrHelper.App.Forms
 
       async private Task updateMergeRequestsDropdownList(bool keepPosition)
       {
-
          keepPosition &= (comboBoxFilteredMergeRequests.SelectedItem != null);
          MergeRequest? currentItem =
             keepPosition ? (MergeRequest)comboBoxFilteredMergeRequests.SelectedItem : new Nullable<MergeRequest>();
 
+         GitLab gl = new GitLab(_workflowManager.State.HostName, getAccessToken(State.HostName));
+         try
+         {
+            return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
+               new MergeRequestsFilter());
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
+         }
          List<MergeRequest> mergeRequests = await loadAllProjectMergeRequestsAsync();
          if (mergeRequests == null)
          {
@@ -971,10 +962,7 @@ namespace mrHelper.App.Forms
 
          foreach (var mergeRequest in mergeRequests)
          {
-            if (_labelsRequested.Intersect(mergeRequest.Labels).Count > 0)
-            {
                comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
-            }
          }
 
          if (comboBoxFilteredMergeRequests.Items.Count == 0)
@@ -1328,7 +1316,7 @@ namespace mrHelper.App.Forms
       private UserDefinedSettings _settings;
       private WorkflowManager _workflowManager = null;
       private GitClientManager _gitClientManager = null;
-      private SingleHostUpdateChecker _hostUpdateChecker = null;
+      private GitLabUpdateChecker _gitLabUpdateChecker = null;
       private IUpdateChecker _singleMRUpdateChecker = null;
       private List<string> _labelsRequested = null;
 

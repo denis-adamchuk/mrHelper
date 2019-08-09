@@ -6,21 +6,27 @@ namespace mrHelper.Client
       public List<MergeRequest> UpdatedMergeRequests;
    }
 
-   public class SingleHostUpdateChecker
+   public class GitLabUpdateChecker
    {
-      SingleHostUpdatChecker<T>(string hostName, List<Project> projects, UserDefinedSettings settings)
+      GitLabUpdateChecker(UserDefinedSettings settings)
       {
-         HostName = hostName;
-         AccessToken = accessToken;
-         Projects = projects;
-         LabelFilter = labelFilter;
-         Labels = labels;
+         Settings = settings;
+         Settings.PropertyChange += async (sender, property) =>
+         {
+            if (property.PropertyName == "LastUsedLabels")
+            {
+               _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
+            }
+         }
+         _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
 
          Timer.Tick += new System.EventHandler(onTimer);
          Timer.Start();
       }
 
       public event EventHandler<MergeRequestUpdates> OnUpdate;
+
+      public WorkflowState State { get; set; }
 
       async void onTimer(object sender, EventArgs e)
       {
@@ -44,12 +50,12 @@ namespace mrHelper.Client
             UpdatedMergeRequests = new List<MergeRequest>()
          };
 
-         if (HostName == null || AccessToken == null || Projects == null)
+         if (State.HostName == null || State.Projects == null)
          {
             return updates;
          }
 
-         GitLab gl = new GitLab(HostName, AccessToken);
+         GitLab gl = new GitLab(State.HostName, Tools.GetAccessToken(State.HostName, Settings));
          foreach (var project in Projects)
          {
             List<MergeRequest> mergeRequests = new List<MergeRequest>();
@@ -66,7 +72,7 @@ namespace mrHelper.Client
 
             foreach (var mergeRequest in mergeRequests)
             {
-               if (Labels.Intersect(mergeRequest.Labels).Count == 0)
+               if (_cachedLabels.Intersect(mergeRequest.Labels).Count == 0)
                {
                   continue;
                }
@@ -104,10 +110,8 @@ namespace mrHelper.Client
          }
       }
 
-      private string HostName { get; }
-      private string AccessToken { get; }
-      private List<Project> Projects { get; }
-      private List<string> Labels { get; }
+      private UserDefinedSettings Settings { get; }
+      private List<Label> _cachedLabels { get; set; }
 
       private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
 

@@ -24,6 +24,7 @@ namespace mrHelper.Core.Git
    /// <summary>
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
+   /// All methods throw NoGitRepository if default constructor is called without succeeding Clone.
    /// </summary>
    public class GitClient
    {
@@ -33,20 +34,20 @@ namespace mrHelper.Core.Git
       public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
 
       /// <summary>
-      /// Constructor that creates an object that cannot be user before running Clone
-      /// On attempt to use such an object, NoGitRepository is thrown
+      /// Constructor that creates an object that cannot be user before running Clone.
+      /// On attempt to use such an object, NoGitRepository is thrown.
       /// </summary>
       public GitClient()
       {
       }
 
       /// <summary>
-      /// Constructor expects a valid git repository as input argument
+      /// Constructor that expects a valid git repository as input argument.
       /// Throws ArgumentException
       /// </summary>
-      public GitClient(string path, bool check)
+      public GitClient(string path)
       {
-         if (check && !IsGitClient(path))
+         if (!IsGitClient(path))
          {
             throw new ArgumentException("There is no a valid repository at path " + path);
          }
@@ -69,7 +70,7 @@ namespace mrHelper.Core.Git
          string arguments = "clone --progress " + host + "/" + project + " " + path;
          await run_async(arguments, null, true, true);
 
-         Debug.Assert(IsGitClient());
+         Debug.Assert(IsGitClient(path));
          Path = path;
       }
 

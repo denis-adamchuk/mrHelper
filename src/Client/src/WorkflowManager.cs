@@ -2,7 +2,7 @@ namespace mrHelper.Client
 {
    public class WorkflowManager
    {
-      public WorkflowManager(UserDefinedSettings settings)
+      public WorkflowManager(UserDefinedSettings settings, GitLabUpdateChecker updateChecker)
       {
          Settings = settings;
          Settings.PropertyChange += async (sender, property) =>
@@ -14,10 +14,19 @@ namespace mrHelper.Client
             }
             else if (property.PropertyName == "LastUsedLabels")
             {
+               _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
                // emulate project change to reload merge request list
                await switchProjectAsync(State.Project.Name_With_Namespace);
             }
          }
+         updateChecker.OnUpdate += async (sender, updates) =>
+         {
+            // emulate project change to reload merge request list
+            // This will automatically update version list (if there are new ones).
+            // This will also remove merged merge requests from the list.
+            await switchProjectAsync(State.Project.Name_With_Namespace);
+         }
+         _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
       }
 
       async public Task InitializeAsync()
@@ -128,14 +137,14 @@ namespace mrHelper.Client
 
          Debug.WriteLine("Loading projects asynchronously for host " + hostName);
 
-         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
+         GitLab gl = new GitLab(State.HostName, Tools.GetAccessToken(State.HostName, Settings));
          try
          {
             return (Task<List<Project>>)waitForComplete(() =>
                return gl.Projects.LoadAllTaskAsync(
                   new ProjectsFilter
                   {
-                     PublicOnly = _settings.ShowPublicOnly
+                     PublicOnly = Settings.ShowPublicOnly
                   });
          }
          catch (GitLabRequestException ex)
@@ -152,14 +161,19 @@ namespace mrHelper.Client
          Debug.WriteLine("Loading project merge requests asynchronously for host "
             + State.HostName + " and project " + State.Project);
 
-         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
+         GitLab gl = new GitLab(State.HostName, Tools.GetAccessToken(State.HostName, Settings));
          try
          {
-            return (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
+            List<MergeRequest> mergeRequests = (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
                return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
-
-
                   new MergeRequestsFilter()));
+            for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --i)
+            {
+               if (Settings.CheckedLabelsFilter && !_cachedLabels.Intersect(mergeRequest.Labels))
+               {
+                  mergeRequests.RemoveAt(iMergeRequest);
+               }
+            }
          }
          catch (GitLabRequestException ex)
          {
@@ -174,7 +188,7 @@ namespace mrHelper.Client
 
          Debug.WriteLine("Loading merge request asynchronously");
 
-         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
+         GitLab gl = new GitLab(State.HostName, Tools.GetAccessToken(State.HostName, Settings));
          try
          {
             return (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
@@ -193,7 +207,7 @@ namespace mrHelper.Client
 
          Debug.WriteLine("Loading versions asynchronously");
 
-         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
+         GitLab gl = new GitLab(State.HostName, Tools.GetAccessToken(State.HostName, Settings));
          try
          {
             return (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
@@ -274,23 +288,13 @@ namespace mrHelper.Client
          return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
       }
 
-      private string getAccessToken(string host)
-      {
-         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
-         {
-            if (host == _settings.KnownHosts[iKnownHost])
-            {
-               return _settings.KnownAccessTokens[iKnownHost];
-            }
-         }
-         return String.Empty;
-      }
-
       public WorkflowState State { get; private set; } = new WorkflowState();
 
       private UserDefinedSettings Settings { get; }
       private Task<object> CurrentTask = null;
       private CancellationTokenSource CurrentCancellationTokenSource = null;
+
+      private List<Label> _cachedLabels { get; set; }
    }
 }
 
