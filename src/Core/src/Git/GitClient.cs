@@ -19,11 +19,13 @@ namespace mrHelper.Core.Git
       public int ExitCode { get; }
    }
 
+   public class NoGitRepository : Exception {}
+
    /// <summary>
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
    /// </summary>
-   public class GitRepository
+   public class GitClient
    {
       // Timestamp of the most recent fetch/clone, by default it is empty
       public DateTime? LastUpdateTime { get; private set; }
@@ -31,12 +33,20 @@ namespace mrHelper.Core.Git
       public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
 
       /// <summary>
+      /// Constructor that creates an object that cannot be user before running Clone
+      /// On attempt to use such an object, NoGitRepository is thrown
+      /// </summary>
+      public GitClient()
+      {
+      }
+
+      /// <summary>
       /// Constructor expects a valid git repository as input argument
       /// Throws ArgumentException
       /// </summary>
-      public GitRepository(string path, bool check)
+      public GitClient(string path, bool check)
       {
-         if (check && (!Directory.Exists(path) || !IsGitRepository(path)))
+         if (check && !IsGitClient(path))
          {
             throw new ArgumentException("There is no a valid repository at path " + path);
          }
@@ -49,7 +59,7 @@ namespace mrHelper.Core.Git
       /// Throws:
       /// InvalidOperationException if another async operation is running
       /// </summary>
-      public Task CloneAsync(string host, string project, string path)
+      async public Task CloneAsync(string host, string project, string path)
       {
          if (_descriptor != null)
          {
@@ -57,7 +67,10 @@ namespace mrHelper.Core.Git
          }
 
          string arguments = "clone --progress " + host + "/" + project + " " + path;
-         return run_async(arguments, null, true, true);
+         await run_async(arguments, null, true, true);
+
+         Debug.Assert(IsGitClient());
+         Path = path;
       }
 
       /// <summary>
@@ -67,6 +80,11 @@ namespace mrHelper.Core.Git
       /// </summary>
       public Task FetchAsync()
       {
+         if (!IsGitClient(Path))
+         {
+            throw new NoGitRepository();
+         }
+
          if (_descriptor != null)
          {
             throw new InvalidOperationException("Another acync operation is running");
@@ -86,6 +104,11 @@ namespace mrHelper.Core.Git
       /// </summary>
       public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
+         if (!IsGitClient(Path))
+         {
+            throw new NoGitRepository();
+         }
+
          if (_descriptor != null)
          {
             throw new InvalidOperationException("Another acync operation is running");
@@ -145,6 +168,11 @@ namespace mrHelper.Core.Git
       // 'null' filename strings will be replaced with empty strings
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
+         if (!IsGitClient(Path))
+         {
+            throw new NoGitRepository();
+         }
+
          DiffCacheKey key = new DiffCacheKey
          {
             sha1 = leftcommit,
@@ -173,6 +201,11 @@ namespace mrHelper.Core.Git
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
+         if (!IsGitClient(Path))
+         {
+            throw new NoGitRepository();
+         }
+
          return (List<string>)run_inPath(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
@@ -182,6 +215,11 @@ namespace mrHelper.Core.Git
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
+         if (!IsGitClient(Path))
+         {
+            throw new NoGitRepository();
+         }
+
          RevisionCacheKey key = new RevisionCacheKey
          {
             filename = filename,
@@ -203,9 +241,12 @@ namespace mrHelper.Core.Git
          return result;
       }
 
-      static public bool IsGitRepository(string dir)
+      static public bool IsGitClient(string dir)
       {
-         Debug.Assert(Directory.Exists(dir));
+         if (dir == null || !Directory.Exists(dir))
+         {
+            return false;
+         }
 
          return (bool)run_inPath(() =>
          {

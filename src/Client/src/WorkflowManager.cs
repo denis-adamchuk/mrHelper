@@ -5,11 +5,29 @@ namespace mrHelper.Client
       public WorkflowManager(UserDefinedSettings settings)
       {
          Settings = settings;
+         Settings.PropertyChange += async (sender, property) =>
+         {
+            if (property.PropertyName == "ShowPublicOnly")
+            {
+               // emulate host change to reload project list
+               await switchHostAsync(State.HostName);
+            }
+            else if (property.PropertyName == "LastUsedLabels")
+            {
+               // emulate project change to reload merge request list
+               await switchProjectAsync(State.Project.Name_With_Namespace);
+            }
+         }
       }
 
-      async public Task SwitchHostAsync(string hostName, string accessToken)
+      async public Task InitializeAsync()
       {
-         await switchHostAsync(hostName, accessToken);
+         await switchHostAsync(getInitialHost());
+      }
+
+      async public Task SwitchHostAsync(string hostName)
+      {
+         await switchHostAsync(hostName);
       }
 
       async public Task SwitchProjectAsync(string projectName)
@@ -26,14 +44,19 @@ namespace mrHelper.Client
       public EventHandler<GitLabState> ProjectSwitched;
       public EventHandler<GitLabState> MergeRequestSwitched;
 
-      async private Task switchHostAsync(string hostName, string accessToken)
+      async private Task switchHostAsync(string hostName)
       {
+         if (hostName == String.Empty)
+         {
+            return;
+         }
+
          State = new WorkflowState();
-         State.Host = new WorkflowState.Host { Name = hostName, AccessToken = accessToken, Projects = null };
+         State.HostName = hostName;
 
          List<Project> projects = await loadProjectsAsync();
-         State.Host.Projects = projects;
-         ProjectsLoaded?.Invoke(State);
+         State.Projects = projects;
+         HostSwitched?.Invoke(State);
 
          string projectName = selectProjectFromList();
          if (projectName != null)
@@ -44,12 +67,17 @@ namespace mrHelper.Client
 
       async private Task<Project> switchProjectAsync(string projectName)
       {
+         if (projectName == String.Empty)
+         {
+            return;
+         }
+
          Project project = await loadProjectAsync(projectName);
          State.Project = project;
 
          List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(project);
          State.MergeRequests = mergeRequests;
-         MergeRequestsLoaded?.Invoke(State);
+         ProjectSwitched?.Invoke(State);
 
          int? iid = selectMergeRequestFromList();
          if (iid.HasValue)
@@ -62,10 +90,9 @@ namespace mrHelper.Client
       {
          MergeRequest mergeRequest = await loadMergeRequestAsync(mergeRequestIId);
          State.MergeRequest = mergeRequest;
-         MergeRequestLoaded?.Invoke(State);
 
          List<Version> versions = await loadVersionsAsync(mergeRequestIId);
-         VersionsLoaded?.Invoke(State);
+         MergeRequestSwitched?.Invoke(State);
       }
 
       async private string selectProjectFromList()
@@ -82,6 +109,7 @@ namespace mrHelper.Client
 
       async private int? selectMergeRequestFromList()
       {
+         // TODO We may remember IID of a MR on Project switch and then restore it here
          return State.MergeRequests.Count > 0 ? State.MergeRequests[0] : null;
       }
 
@@ -100,14 +128,14 @@ namespace mrHelper.Client
 
          Debug.WriteLine("Loading projects asynchronously for host " + hostName);
 
-         GitLab gl = new GitLab(State.HostName, State.AccessToken);
+         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
          try
          {
             return (Task<List<Project>>)waitForComplete(() =>
                return gl.Projects.LoadAllTaskAsync(
                   new ProjectsFilter
                   {
-                     PublicOnly = publicOnly
+                     PublicOnly = _settings.ShowPublicOnly
                   });
          }
          catch (GitLabRequestException ex)
@@ -122,13 +150,15 @@ namespace mrHelper.Client
          await waitForCancel();
 
          Debug.WriteLine("Loading project merge requests asynchronously for host "
-            + GetCurrentHostName() + " and project " + GetCurrentProjectName());
+            + State.HostName + " and project " + State.Project);
 
-         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
+         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
          try
          {
-            return (Task<List<MergeRequest>>)waitForComplete(() =>
+            return (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
                return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
+
+
                   new MergeRequestsFilter()));
          }
          catch (GitLabRequestException ex)
@@ -142,13 +172,13 @@ namespace mrHelper.Client
       {
          await waitForCancel();
 
-         Debug.WriteLine("Loading merge request asynchronously for host ");
+         Debug.WriteLine("Loading merge request asynchronously");
 
-         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
+         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
          try
          {
-            return (Task<List<MergeRequest>>)waitForComplete(() =>
-               return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync());
+            return (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
+               return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync(ct));
          }
          catch (GitLabRequestException ex)
          {
@@ -161,14 +191,14 @@ namespace mrHelper.Client
       {
          await waitForCancel();
 
-         Debug.WriteLine("Loading versions asynchronously for host ");
+         Debug.WriteLine("Loading versions asynchronously");
 
-         GitLab gl = new GitLab(State.Access.Host, State.Access.AccessToken);
+         GitLab gl = new GitLab(State.HostName, getAccessToken(State.HostName));
          try
          {
-            return (Task<List<MergeRequest>>)waitForComplete(() =>
+            return (Task<List<MergeRequest>>)waitForComplete((CancellationToken ct) =>
                return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
-                  Versions.LoadAllTaskAsync(), GitLabTaskType.Versions);
+                  Versions.LoadAllTaskAsync(ct));
          }
          catch (GitLabRequestException ex)
          {
@@ -187,7 +217,7 @@ namespace mrHelper.Client
          Debug.Assert(CurrentTask != null);
          CurrentCancellationTokenSource.Cancel();
 
-         Debug.WriteLine("Waiting for current task cancellation ");
+         Debug.WriteLine("Waiting for current task cancellation");
          try
          {
             await CurrentTask;
@@ -213,7 +243,7 @@ namespace mrHelper.Client
 
          try
          {
-            return await cmd();
+            return await cmd(CurrentCancellationTokenSource.CancellationToken);
          }
          catch (OperationCanceledException)
          {
@@ -230,6 +260,30 @@ namespace mrHelper.Client
             CurrentCancellationTokenSource = null;
          }
          return null;
+      }
+
+      private string getInitialHost()
+      {
+         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         {
+            if (_settings.KnownHosts[iKnownHost] == _settings.LastSelectedHost)
+            {
+               return _settings.LastSelectedHost;
+            }
+         }
+         return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
+      }
+
+      private string getAccessToken(string host)
+      {
+         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         {
+            if (host == _settings.KnownHosts[iKnownHost])
+            {
+               return _settings.KnownAccessTokens[iKnownHost];
+            }
+         }
+         return String.Empty;
       }
 
       public WorkflowState State { get; private set; } = new WorkflowState();

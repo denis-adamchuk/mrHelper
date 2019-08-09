@@ -3,33 +3,33 @@ using mrHelper.Core.Git;
 
 namespace mrHelper.Client
 {
-   public AsyncOperationResult
+   private AsyncOperationResult
    {
       Success,
       CancelledByUser
    }
 
+   public delegate bool CheckForUpdates();
+
    ///<summary>
-   /// Wrapper on GitRepository that handles interaction with user
+   /// Wrapper on GitClient that handles interaction with user
    /// It is a lazy wrapper, it does not clone/fetch until InitializeAsync() is called.
    ///<summary>
-   public class GitClient
+   public class GitClientManager
    {
       public bool IsInitialized()
       {
          return GetRepository() != null;
       }
 
-      public event EventHandler OnAsyncOperationStarted;
       public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
-      public event EventHandler OnAsyncOperationFinished;
 
       /// <summary>
-      /// Creates an instance of GitClient
+      /// Creates an instance of GitClientManager
       /// Throws:
       /// ArgumentException is local git folder is bad path
       /// </summary>
-      public GitClient(string localFolder, string hostName, string projectName, IUpdateChecker updateChecker)
+      public GitClientManager(string localFolder, string hostName)
       {
          try
          {
@@ -42,37 +42,58 @@ namespace mrHelper.Client
 
          LocalFolder = localFolder;
          HostName = hostName;
-         ProjectName = projectName;
          UpdateCheker = updateChecker;
       }
 
       /// <summary>
-      /// Initializes GitRepository member asynchronously.
+      /// Initializes GitClient member asynchronously.
       /// Sets asynchronous exception GitOperationException in case of problems with git.
       /// </summary>
-      async public Task<GitClientResult> InitializeAsync()
+      async public Task<AsyncOperationResult> GetClientAsync(string projectName, CheckForUpdates check)
       {
-         if (!isCloneAllowed())
+         if (Clients.ContainsKey(projectName))
          {
-            return GitClientResult.CancelledByUser;
+            GitClient client = Clients[projectName];
+            await checkForRepositoryUpdatesAsync(client, check);
+            return client;
          }
 
-         GitRepository = new GitRepository(Path, false);
-         GitRepository.OnOperationStatusChange += (sender, e) => { OnOperationStatusChange?.Invoke(sender, e); }; 
-
-         if (isCloneNeeded())
+         GitClient client = getClientAsync(projectName);
+         if (client != null)
          {
-            return await runAsync(() => GitRepository.CloneAsync(HostName, ProjectName, Path), "clone");
+            Clients[projectName] = client;
          }
-         else if (await checkForRepositoryUpdatesAsync())
-         {
-            return await runAsync(() => GitRepository.FetchAsync(), "fetch");
-         }
-
-         return GitClientUpdateStatus.Success;
+         return client;
       }
 
-      public GitRepository GitRepository { get; private set; } = null;
+      public GitClient GitClient { get; private set; } = null;
+
+      async private GitClient getClientAsync(string projectName, CheckForUpdates check)
+      {
+         string path = Path.Combine(LocalFolder, projectName);
+         if (!isCloneAllowed(path))
+         {
+            return null;
+         }
+
+         return createClientAsync(path, projectName, check) == AsyncOperationResult.Success ? gitClient : null;
+      }
+
+      async private AsyncOperationResult createClientAsync(string path, string projectName, CheckForUpdates check)
+      {
+         if (isCloneNeeded())
+         {
+            GitClient client = new GitClient();
+            return await runAsync(() => client.CloneAsync(HostName, projectName, path), "clone");
+         }
+
+         GitClient client = new GitClient(path, false);
+         if (await checkForRepositoryUpdatesAsync(client, check))
+         {
+            return await runAsync(() => client.FetchAsync(), "fetch");
+         }
+         return client
+      }
 
       private bool isCloneAllowed()
       {
@@ -90,13 +111,11 @@ namespace mrHelper.Client
 
       private bool isCloneNeeded()
       {
-         return !Directory.Exists(Path) || !GitRepository.IsGitRepository(Path);
+         return !Directory.Exists(Path) || !GitClient.IsGitClient(Path);
       }
 
       async private Task<AsyncOperationResult> runAsync(Command command, string name)
       {
-         OnAsyncOperationStarted?.Invoke(this);
-
          try
          {
             await command();
@@ -105,12 +124,8 @@ namespace mrHelper.Client
          {
             Debug.Assert(!(ex is InvalidOperationException));
 
-            GitRepository = null;
+            GitClient = null;
             return handleExceptionInRunAsync(ex, name);
-         }
-         finally
-         {
-            OnAsyncOperationFinished?.Invoke(this);
          }
 
          OnOperationStatusChange?.Invoke(sender, String.Empty);
@@ -143,6 +158,7 @@ namespace mrHelper.Client
 
       private bool isSSLCertificateProblem(Exception ex)
       {
+         throw new NotImplementedException();
       }
 
       private bool isGlobalSSLFixAllowed()
@@ -178,29 +194,22 @@ namespace mrHelper.Client
       /// Checks if there is a version in GitLab which is newer than latest Git Repository update.
       /// Returns 'true' if there is a newer version.
       /// </summary>
-      async private Task<bool> checkForRepositoryUpdatesAsync()
+      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CheckForUpdates check)
       {
          Debug.Assert(IsInitialized());
 
-         if (!GitRepository.LastUpdateTime.HasValue)
+         if (!client.LastUpdateTime.HasValue)
          {
             return true;
          }
 
-         return UpdateChecker.AreAnyUpdatesAsync(GitRepository.LastUpdateTime.Value);
-      }
-
-      private string Path
-      {
-         get
-         {
-            return Path.Combine(LocalFolder, ProjectName);
-         }
+         return check(gitClient.LastUpdateTime.Value);
       }
 
       private string Host { get; }
       private string LocalFolder { get; }
-      private string ProjectName { get; }
+
+      private Dictionary<string, GitClient> Clients { get; set; }
    }
 }
 

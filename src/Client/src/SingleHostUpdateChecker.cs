@@ -8,13 +8,27 @@ namespace mrHelper.Client
 
    public class SingleHostUpdateChecker
    {
-      SingleHostUpdatChecker<T>(string accessToken, string hostName, List<Project> projects, List<string> labels)
+      SingleHostUpdatChecker<T>(string hostName, List<Project> projects, UserDefinedSettings settings)
       {
          HostName = hostName;
          AccessToken = accessToken;
          Projects = projects;
          LabelFilter = labelFilter;
          Labels = labels;
+
+         Timer.Tick += new System.EventHandler(onTimer);
+         Timer.Start();
+      }
+
+      public event EventHandler<MergeRequestUpdates> OnUpdate;
+
+      async void onTimer(object sender, EventArgs e)
+      {
+         MergeRequestUpdates updates = await getUpdatesAsync(lastCheckTimestamp);
+         if (updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
+         {
+            OnUpdate?.Invoke(this, updates);
+         }
       }
 
       /// <summary>
@@ -22,7 +36,7 @@ namespace mrHelper.Client
       /// By 'updated' we mean that 'merge request has a version with a timestamp later than ...'.
       /// Includes only those merge requests that match Labels filters.
       /// </summary>
-      async public Task<MergeRequestUpdates> GetUpdatesAsync(DateTime timestamp)
+      async private Task<MergeRequestUpdates> getUpdatesAsync(DateTime timestamp)
       {
          MergeRequestUpdates updates = new MergeRequestUpdates
          {
@@ -94,6 +108,14 @@ namespace mrHelper.Client
       private string AccessToken { get; }
       private List<Project> Projects { get; }
       private List<string> Labels { get; }
+
+      private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
+
+      private readonly System.Timers.Timer Timer { get; } = new System.Timers.Timer
+         {
+            Interval = mergeRequestCheckTimerInterval
+         };
+      private DateTime _lastCheckTime = DateTime.Now;
    }
 }
 

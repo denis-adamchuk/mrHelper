@@ -2,21 +2,23 @@ namespace mrHelper.Client
 {
    public class WorkflowState
    {
-      public struct Host
-      {
-         string Name;
-         string AccessToken;
-         public List<Project> Projects;
-      }
-
-      public Host GitLab
+      public string HostName
       {
          get;
          set
          {
-            Host = value;
+            HostName = value;
+            Projects = null;
+         }
+      }
+
+      public List<Project> Projects
+      {
+         get;
+         set
+         {
+            Projects = value;
             Project = null;
-            MergeRequest = null;
          }
       }
 
