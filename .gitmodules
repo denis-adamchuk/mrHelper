@@ -1,3 +1,0 @@
-[submodule "submodules/GitLabSharp"]
-	path = submodules/GitLabSharp
-	url = git@github.com:denis-adamchuk/GitLabSharp
