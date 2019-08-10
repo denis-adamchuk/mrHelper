@@ -20,7 +20,7 @@ namespace mrHelper.Core
    /// See matching rules in comments for DiffPosition structure.
    /// Cost: one 'git diff -U0' for each Match() call and two 'git show' calls for each Match() call.
    /// </summary>
-   public class RefsToLinesMatcher
+   public class RefToLineMatcher
    {
       // Internal matching state
       private enum MatchResult
@@ -31,7 +31,7 @@ namespace mrHelper.Core
          Undefined
       }
 
-      public RefsToLinesMatcher(GitRepository gitRepository)
+      public RefToLineMatcher(GitRepository gitRepository)
       {
          _gitRepository = gitRepository;
       }

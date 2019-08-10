@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace mrHelper.Client
 {
    public struct MergeRequestUpdates
@@ -6,9 +9,9 @@ namespace mrHelper.Client
       public List<MergeRequest> UpdatedMergeRequests;
    }
 
-   public class GitLabUpdateChecker
+   public class WorkflowUpdater
    {
-      GitLabUpdateChecker(UserDefinedSettings settings)
+      WorkflowUpdater(UserDefinedSettings settings)
       {
          Settings = settings;
          Settings.PropertyChange += async (sender, property) =>

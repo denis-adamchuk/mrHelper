@@ -57,18 +57,13 @@ namespace mrHelper.App.Forms
          {
             onHideToTray(e);
          }
-         else if (_glTaskManager.AreRunningTasks())
+         else if (_workflow != null)
          {
             Hide();
             e.Cancel = true;
-            try
-            {
-               await _glTaskManager.WaitAllAsync();
-            }
-            catch (Exception ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot complete GitLab task(s)", false);
-            }
+            await _workflow.CancelAsync();
+            _workflow.Dispose();
+            _workflow = null;
             Close();
          }
       }
@@ -135,7 +130,7 @@ namespace mrHelper.App.Forms
          updateGitStatusText(String.Empty);
 
          _settings.LastSelectedHost = (sender as ComboBox).Text;
-         await changeHost((HostComboBoxItem)((sender as ComboBox).SelectedItem).Host);
+         await onChangeHost((HostComboBoxItem)((sender as ComboBox).SelectedItem).Host);
       }
 
       async private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
@@ -143,12 +138,12 @@ namespace mrHelper.App.Forms
          updateGitStatusText(String.Empty);
 
          _settings.LastSelectedProject = (sender as ComboBox).Text;
-         await changeProject((sender as ComboBox).Text);
+         await onChangeProject((sender as ComboBox).Text);
       }
 
       async private void ComboBoxFilteredMergeRequests_SelectedIndexChanged(object sender, EventArgs e)
       {
-         await onMergeRequestSelected();
+         await onChangeMergeRequest();
       }
 
       async private void ButtonApplyLabels_Click(object sender, EventArgs e)
@@ -225,7 +220,7 @@ namespace mrHelper.App.Forms
          _settings.ShowPublicOnly = (sender as CheckBox).Checked;
 
          // emulate host change to reload project list
-         //await changeHost(_workflowManager.State.Host.Name);
+         //await onChangeHost(_workflow.State.Host.Name);
       }
 
       async private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
@@ -265,22 +260,13 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _gitClientManager = new GitClient(localFolder, hostName);
+            _gitClientManager = new GitClientManager(localFolder, hostName);
             _gitClientManager.OnOperationStatusChange +=
                (sender, e) => updateGitStatusText(((GitUtils.OperationStatusChangeArgs)e).Status);
          }
          catch (ArgumentException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot create Git Client", false);
-         }
-      }
-
-      private void createGitLabUpdateChecker()
-      {
-         _GitLabUpdateChecker = new GitLabUpdateChecker(_settings);
-         _GitLabUpdateChecker.OnUpdate += async (sender, updates) =>
-         {
-            notifyOnMergeRequestUpdates(updates);
          }
       }
 
@@ -467,12 +453,14 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(GetCurrentHostName() != null);
 
-         GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
-         var task = _glTaskManager.CreateTask(gl.CurrentUser.LoadTaskAsync(), GitLabTaskType.CurrentUser);
+         GitLabClient client = new GitLabClient(_workflow.State.HostName,
+            Tools.GetAccessToken(_workflow.State.HostName));
 
          labelGitLabStatus.Text = "Loading current user...";
          try
          {
+            var result = client.RunAsync(async (gl) => return await gl.CurrentUser.LoadTaskAsync());
+
             var result = await _glTaskManager.RunAsync(task);
             return result.Equals(default(User)) ? null : new Nullable<User>(result);
          }
@@ -500,7 +488,7 @@ namespace mrHelper.App.Forms
 
          GitLab gl = new GitLab(GetCurrentHostName(), GetCurrentAccessToken());
          var task = _glTaskManager.CreateTask(gl.Projects.Get(GetCurrentProjectName()).MergeRequests.
-            Get(mergeRequest.Value.IId).Discussions.LoadAllTaskAsync(), GitLabTaskType.Discussions);
+            Get(mergeRequest.Value.IId).Discussions.LoadAllTaskAsync());
 
          labelGitLabStatus.Text = "Loading discussions...";
          try
@@ -634,17 +622,6 @@ namespace mrHelper.App.Forms
          };
 
          await updateInterprocessSnapshot();
-      }
-
-      async private void onMergeRequestUpdates(object sender, MergeRequestUpdates updates)
-      {
-      }
-
-      async private Task<MergeRequestUpdates> collectMergeRequestUpdates()
-      {
-         MergeRequestUpdates updates = _GitLabUpdateChecker.GetUpdates(_lastCheckTime);
-         _lastCheckTime = DateTime.Now;
-         return updates;
       }
 
       private void notifyOnMergeRequestEvent(MergeRequest mergeRequest, string title)
@@ -841,6 +818,11 @@ namespace mrHelper.App.Forms
       {
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
+         _workflowManager = new WorkflowManager(_settings);
+         _updateManager = new UpdateManager(_settings);
+         _timeTrackingManager = new TimeTrackingManager(_settings);
+         _timeTrackingManager = new DiscussionManager(_settings);
+
          updateHostsDropdownList();
          await initializeWorkflow();
       }
@@ -866,34 +848,16 @@ namespace mrHelper.App.Forms
 
       async private Task initializeWorkflow()
       {
-         createGitLabUpdateChecker(state.HostName, state.Project);
+         _workflowUpdater = _updateManager.GetWorkflowUpdater();
+         _workflowUpdater.OnUpdate += async (sender, updates) =>
+         {
+            notifyOnMergeRequestUpdates(updates);
+         }
 
-         _workflowManager = new WorkflowManager(_settings, _gitLabUpdateChecker);
-         _workflowManager.HostSwitched += (sender, state) =>
-         {
-            comboBoxHost.SelectedText = state.HostName;
-            foreach (var project in state.Projects)
-            {
-               comboBoxProjects.Add(project);
-            }
-            createGitClientManager(_settings.LocalGitFolder, state.HostName);
-         }
-         _workflowManager.ProjectSwitched += (sender, state) =>
-         {
-            comboBoxProjects.SelectedText = state.Project.Path_With_Namespace;
-            foreach (var mergeRequest in state.MergeRequests)
-            {
-               comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
-            }
-         }
-         _workflowManager.MergeRequestSwitched += (sender, state) =>
-         {
-            MergeRequest item = ((MergeRequest)e.ListItem);
-            comboBoxFilteredMergeRequests.SelectedText =
-               item.Title + "    " + "[" + item.Author.Username + "]";
-            comboBoxLeftVersion.SelectedIndex = 0;
-            comboBoxRightVersion.SelectedIndex = 0;
-         }
+         _workflow = _workflowManager.CreateWorkflow(_settings);
+         _workflow.HostSwitched += (sender, state) => onHostChanged(state);
+         _workflow.ProjectSwitched += (sender, state) => onProjectChanged(state);
+         _workflow.MergeRequestSwitched += (sender, state) => onMergeRequestChanged(state);
 
          Debug.WriteLine("Initializing workflow");
 
@@ -901,14 +865,24 @@ namespace mrHelper.App.Forms
          prepareComboBoxToAsyncLoading(comboBoxProjects);
 
          labelGitLabStatus.Text = "Initializing...";
-         await _workflowManager.InitializeAsync();
+         await _workflow.SwitchHostAsync(() =>
+         {
+            for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+            {
+               if (_settings.KnownHosts[iKnownHost] == _settings.LastSelectedHost)
+               {
+                  return _settings.LastSelectedHost;
+               }
+            }
+            return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
+         }());
          labelGitLabStatus.Text = String.Empty;
 
          Debug.WriteLine("Enable projects combo box");
          fixComboBoxAfterAsyncLoading(comboBoxProjects);
       }
 
-      async private Task changeHost(string hostName)
+      async private Task onChangeHost(string hostName)
       {
          Debug.WriteLine("Update projects dropdown list");
 
@@ -916,14 +890,32 @@ namespace mrHelper.App.Forms
          prepareComboBoxToAsyncLoading(comboBoxProjects);
 
          labelGitLabStatus.Text = "Loading projects...";
-         List<Project> projects = await _model.SwitchHostAsync(hostName);
+         try
+         {
+            await _workflow.SwitchHostAsync(hostName);
+         }
+         catch (WorkflowException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot switch host", true);
+         }
          labelGitLabStatus.Text = String.Empty;
 
          Debug.WriteLine("Enable projects combo box");
          fixComboBoxAfterAsyncLoading(comboBoxProjects);
       }
 
-      async private Task changeProject(string projectName)
+      private void onHostChanged()
+      {
+         comboBoxHost.SelectedText = state.HostName;
+         foreach (var project in state.Projects)
+         {
+            comboBoxProjects.Add(project);
+         }
+         createGitClientManager(_settings.LocalGitFolder, state.HostName);
+         _workflowUpdater.State = state;
+      }
+
+      async private Task onChangeProject(string projectName)
       {
          Debug.WriteLine("Update merge requests dropdown list");
 
@@ -931,109 +923,75 @@ namespace mrHelper.App.Forms
          prepareComboBoxToAsyncLoading(comboBoxFilteredMergeRequests);
 
          labelGitLabStatus.Text = "Loading merge requests...";
-         List<Project> projects = await _model.SwitchProjectAsync(projectName);
+         try
+         {
+            await _workflow.SwitchProjectAsync(projectName);
+         }
+         catch (WorkflowException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot switch project", true);
+         }
          labelGitLabStatus.Text = String.Empty;
 
          Debug.WriteLine("Enable merge requests combo box");
          fixComboBoxAfterAsyncLoading(comboBoxFilteredMergeRequests);
       }
 
-      async private Task updateMergeRequestsDropdownList(bool keepPosition)
+      private void onProjectChanged(WorkflowState state)
       {
-         keepPosition &= (comboBoxFilteredMergeRequests.SelectedItem != null);
-         MergeRequest? currentItem =
-            keepPosition ? (MergeRequest)comboBoxFilteredMergeRequests.SelectedItem : new Nullable<MergeRequest>();
-
-         GitLab gl = new GitLab(_workflowManager.State.HostName, getAccessToken(State.HostName));
-         try
+         comboBoxProjects.SelectedText = state.Project.Path_With_Namespace;
+         foreach (var mergeRequest in state.MergeRequests)
          {
-            return gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
-               new MergeRequestsFilter());
+            comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
          }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
-         }
-         List<MergeRequest> mergeRequests = await loadAllProjectMergeRequestsAsync();
-         if (mergeRequests == null)
-         {
-            return;
-         }
-
-         foreach (var mergeRequest in mergeRequests)
-         {
-               comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
-         }
-
-         if (comboBoxFilteredMergeRequests.Items.Count == 0)
-         {
-            return;
-         }
-
-         if (currentItem.HasValue)
-         {
-            for (int iItem = 0; iItem < comboBoxFilteredMergeRequests.Items.Count; ++iItem)
-            {
-               MergeRequest mr = (MergeRequest)(comboBoxFilteredMergeRequests.Items[iItem]);
-               if (mr.Id == currentItem.Value.Id)
-               {
-                  comboBoxFilteredMergeRequests.SelectedIndex = iItem;
-                  break;
-               }
-            }
-
-            if (comboBoxFilteredMergeRequests.SelectedIndex  == -1)
-            {
-               comboBoxFilteredMergeRequests.SelectedIndex = 0;
-            }
-         }
-         else
-         {
-            comboBoxFilteredMergeRequests.SelectedIndex = 0;
-         }
+         _workflowUpdater.State = state;
       }
 
-      async private Task onMergeRequestSelected()
+      async private Task onChangeMergeRequest(int mergeRequestIId)
       {
          Debug.WriteLine("Let's handle merge request selection");
 
          Debug.WriteLine("Disable UI controls");
          onMergeRequestLoaded(null);
          addVersionsToComboBoxes(null, null, null);
-         if (getSelectedMergeRequest() == null)
-         {
-            Debug.WriteLine("Switched to a missing merge request");
-            return;
-         }
 
          textBoxMergeRequestName.Text = "Loading...";
          richTextBoxMergeRequestDescription.Text = "Loading...";
 
-         Debug.WriteLine("Let's load merge request with Id " + (getSelectedMergeRequest()?.IId.ToString() ?? ""));
-         MergeRequest? mergeRequest = await loadMergeRequestAsync();
-         Debug.WriteLine("Finished loading MR. Current selected MR is " + (getSelectedMergeRequest()?.IId.ToString() ?? ""));
-
-         Debug.WriteLine("Enable UI controls according to selected MR");
-         onMergeRequestLoaded(getSelectedMergeRequest());
-
-         if (!mergeRequest.HasValue)
-         {
-            Debug.WriteLine("MR which has just loaded is cancelled");
-            return;
-         }
-
          prepareComboBoxToAsyncLoading(comboBoxLeftVersion);
          prepareComboBoxToAsyncLoading(comboBoxRightVersion);
 
-         Debug.WriteLine("Let's load versions for MR " + getSelectedMergeRequest().Value.IId);
-         List<Version> versions = await loadVersionsAsync();
-         Debug.WriteLine("Finished loading MR Versions. Current selected MR is " + (getSelectedMergeRequest()?.IId.ToString() ?? ""));
+         Debug.WriteLine("Let's load merge request with Id " + mergeRequestIId.ToString());
+         try
+         {
+            await _workflow.SwitchMergeRequestAsync(mergeRequestIId);
+         }
+         catch (WorkflowException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot switch merge request", true);
+         }
+         Debug.WriteLine("Finished loading MR. Current selected MR is " + _workflow.State.MergeRequest.IId);
 
          fixComboBoxAfterAsyncLoading(comboBoxLeftVersion);
          fixComboBoxAfterAsyncLoading(comboBoxRightVersion);
+      }
 
-         Debug.WriteLine("Adding versions");
-         addVersionsToComboBoxes(versions, mergeRequest.Value.Diff_Refs.Base_SHA, mergeRequest.Value.Target_Branch);
+      private void onMergeRequestChanged()
+      {
+         MergeRequest item = ((MergeRequest)e.ListItem);
+         comboBoxFilteredMergeRequests.SelectedText =
+            item.Title + "    " + "[" + item.Author.Username + "]";
+         onMergeRequestLoaded(item);
+         addVersionsToComboBoxes(item.
+         _workflowUpdater.State = state;
+
+         GitClientUpdater updater = _updateManager.GetGitClientUpdater(new MergeRequestDesriptor
+         {
+            HostName = State.HostName,
+            ProjectName = State.Project.Name_With_Namespace,
+            MergeRequestIId = State.MergeRequest.IId
+         };
+         _gitClientManager.GetClient(State.Project).SetUpdater(updater);
       }
 
       private void onMergeRequestLoaded(MergeRequest? mergeRequest)
@@ -1076,9 +1034,6 @@ namespace mrHelper.App.Forms
          VersionComboBoxItem targetBranch =
             new VersionComboBoxItem(mrBaseSha, mrTargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
-
-         comboBoxLeftVersion.SelectedIndex = 0;
-         comboBoxRightVersion.SelectedIndex = 0;
       }
 
       async private Task onStartTimer()
@@ -1171,7 +1126,7 @@ namespace mrHelper.App.Forms
             "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
          updateGitStatusText(String.Empty);
-         createGitClientManager(_settings.LocalGitFolder, _workflowManager.State.HostName);
+         createGitClientManager(_settings.LocalGitFolder, _workflow.State.HostName);
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -1314,11 +1269,15 @@ namespace mrHelper.App.Forms
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
-      private WorkflowManager _workflowManager = null;
-      private GitClientManager _gitClientManager = null;
-      private GitLabUpdateChecker _gitLabUpdateChecker = null;
-      private IUpdateChecker _singleMRUpdateChecker = null;
-      private List<string> _labelsRequested = null;
+
+      private WorkflowManager _workflowManager;
+      private UpdateManager _updateManager;
+      private TimeTrackingManager _timeTrackingManager;
+      private DiscussionManager _timeTrackingManager;
+      private GitClientManager _gitClientManager;
+
+      private Workflow _workflow;
+      private WorkflowUpdater _workflowUpdater;
 
       // For accurate time tracking
       private readonly Stopwatch _stopWatch = new Stopwatch();
@@ -1338,8 +1297,6 @@ namespace mrHelper.App.Forms
          public string Host;
          public string AccessToken;
       }
-
-      private GitLabTaskManager _glTaskManager = new GitLabTaskManager();
 
       private struct VersionComboBoxItem
       {

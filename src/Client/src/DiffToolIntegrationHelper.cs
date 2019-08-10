@@ -1,3 +1,4 @@
+using System;
 using mrHelper.DiffTool;
 
 namespace mrHelper.Client

@@ -55,6 +55,11 @@ namespace mrHelper.Core.Git
          Path = path;
       }
 
+      void SetUpdater(GitClientUpdater updater)
+      {
+         throw new NotImplementedException();
+      }
+
       /// <summary>
       /// Create an asyncronous task for 'git close' command
       /// Throws:

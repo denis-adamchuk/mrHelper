@@ -64,7 +64,7 @@ namespace mrHelper.App
 
                try
                {
-                  DiffArgumentsParser argumentsParser = new DiffArgumentsParser(arguments);
+                  DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
                   DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
                   InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();

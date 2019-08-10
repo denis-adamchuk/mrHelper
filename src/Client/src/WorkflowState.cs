@@ -28,14 +28,34 @@ namespace mrHelper.Client
          set
          {
             Project = value;
-            MergeRequest = null;
+            MergeRequests = null;
+         }
+      }
+
+      public List<MergeRequest> MergeRequests
+      {
+         get;
+         set
+         {
+            MergeRequests = value;
+            MergeRequest = null
          }
       }
 
       public MergeRequest MergeRequest
       {
          get;
-         set;
+         set
+         {
+            MergeRequest = value;
+            Versions = null;
+         }
+      }
+
+      public List<Version> Versions
+      {
+         get;
+         set
       }
    }
 }

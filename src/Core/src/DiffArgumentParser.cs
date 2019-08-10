@@ -8,7 +8,7 @@ namespace mrHelper.Core
    /// <summary>
    /// Parses command-line arguments to DiffToolInfo structure
    /// </summary>
-   public class DiffArgumentsParser
+   public class DiffArgumentParser
    {
       private static readonly Regex trimmedFileNameRe = new Regex(@".*\/(right|left)\/(.*)", RegexOptions.Compiled);
 
@@ -16,7 +16,7 @@ namespace mrHelper.Core
       /// Loads command-line arguments into internal storage.
       /// Throws ArgumentException.
       /// </summary>
-      public DiffArgumentsParser(string[] arguments)
+      public DiffArgumentParser(string[] arguments)
       {
          Debug.Assert(arguments[1] == "diff");
 

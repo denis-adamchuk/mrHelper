@@ -22,7 +22,7 @@ namespace mrHelper.App.Forms
          _difftoolInfo = difftoolInfo;
          _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]), true);
          _renameChecker = new GitRenameDetector(_gitRepository);
-         _matcher = new RefsToLinesMatcher(_gitRepository);
+         _matcher = new RefToLineMatcher(_gitRepository);
 
          InitializeComponent();
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
@@ -345,7 +345,7 @@ namespace mrHelper.App.Forms
 
       private readonly InterprocessSnapshot _interprocessSnapshot;
       private readonly DiffToolInfo _difftoolInfo;
-      private readonly RefsToLinesMatcher _matcher;
+      private readonly RefToLineMatcher _matcher;
       private readonly GitRenameDetector _renameChecker;
 
       private DiffPosition _position;
