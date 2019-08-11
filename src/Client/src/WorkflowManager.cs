@@ -14,9 +14,9 @@ namespace mrHelper.Client
       {
       }
 
-      async public Task<Workflow> CreateWorkflow(WorkflowUpdater updater)
+      async public Task<Workflow> CreateWorkflow()
       {
-         return new Workflow(settings, updater);
+         return new Workflow(settings);
       }
    }
 }

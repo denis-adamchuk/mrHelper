@@ -65,7 +65,7 @@
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
-         this.labelGitLabStatus = new System.Windows.Forms.Label();
+         this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.groupBoxSelectProject = new System.Windows.Forms.GroupBox();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
@@ -445,7 +445,7 @@
          // 
          this.tabPageMR.Controls.Add(this.labelAutoUpdate);
          this.tabPageMR.Controls.Add(this.linkLabelAbortGit);
-         this.tabPageMR.Controls.Add(this.labelGitLabStatus);
+         this.tabPageMR.Controls.Add(this.labelWorkflowStatus);
          this.tabPageMR.Controls.Add(this.labelGitStatus);
          this.tabPageMR.Controls.Add(this.groupBoxSelectProject);
          this.tabPageMR.Controls.Add(this.groupBoxActions);
@@ -475,14 +475,14 @@
          this.linkLabelAbortGit.Visible = false;
          this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
          // 
-         // labelGitLabStatus
+         // labelWorkflowStatus
          // 
-         this.labelGitLabStatus.AutoEllipsis = true;
-         this.labelGitLabStatus.AutoSize = true;
-         this.labelGitLabStatus.Location = new System.Drawing.Point(3, 542);
-         this.labelGitLabStatus.Name = "labelGitLabStatus";
-         this.labelGitLabStatus.Size = new System.Drawing.Size(0, 13);
-         this.labelGitLabStatus.TabIndex = 24;
+         this.labelWorkflowStatus.AutoEllipsis = true;
+         this.labelWorkflowStatus.AutoSize = true;
+         this.labelWorkflowStatus.Location = new System.Drawing.Point(3, 542);
+         this.labelWorkflowStatus.Name = "labelWorkflowStatus";
+         this.labelWorkflowStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelWorkflowStatus.TabIndex = 24;
          // 
          // labelGitStatus
          // 
@@ -794,7 +794,7 @@
       private System.Windows.Forms.ComboBox comboBoxColorSchemes;
       private System.Windows.Forms.Label labelColorScheme;
       private System.Windows.Forms.Label labelGitStatus;
-      private System.Windows.Forms.Label labelGitLabStatus;
+      private System.Windows.Forms.Label labelWorkflowStatus;
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
       private System.Windows.Forms.Label labelAutoUpdate;
    }

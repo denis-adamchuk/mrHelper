@@ -6,18 +6,21 @@ namespace mrHelper.Client
    {
       public UpdateManager(UserDefinedSettings settings)
       {
-         throw new NotImplementedException();
+         UpdateOperator UpdateOperator = new UpdateOperator(settings);
       }
 
-      public WorkflowUpdater GetWorkflowUpdater()
+      public WorkflowUpdateChecker GetWorkflowUpdateChecker(Workflow workflow)
       {
-         throw new NotImplementedException();
+         return new WorkflowUpdateChecker(settings, UpdateOperator);
       }
 
-      public GitClientUpdater GetGitClientUpdater(MergeRequestDescriptor mrd)
+      public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
       {
-         throw new NotImplementedException();
+         return new CommitChecker(mrd, UpdateOperator);
       }
+
+      private UpdateOperator UpdateOperator { get; }
+      private WorkflowUpdateChecker WorkflowUpdateChecker { get; }
    }
 }
 

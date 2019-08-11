@@ -39,7 +39,6 @@ namespace mrHelper.Client
 
          LocalFolder = localFolder;
          HostName = hostName;
-         UpdateCheker = updateChecker;
       }
 
       /// <summary>
@@ -48,12 +47,12 @@ namespace mrHelper.Client
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async public Task<GitClient> GetClientAsync(string projectName, CheckForUpdates check)
+      async public Task<GitClient> GetClientAsync(string projectName, CommitChecker commitChecker)
       {
          if (Clients.ContainsKey(projectName))
          {
             GitClient client = Clients[projectName];
-            await checkForRepositoryUpdatesAsync(client, check);
+            await checkForRepositoryUpdatesAsync(client, commitChecker);
             return client;
          }
 
@@ -63,7 +62,7 @@ namespace mrHelper.Client
             return null;
          }
 
-         GitClient client = createClientAsync(path, projectName, check);
+         GitClient client = createClientAsync(path, projectName, commitChecker);
          Debug.Assert(client != null);
          Clients[projectName] = client;
          return client;
@@ -75,18 +74,22 @@ namespace mrHelper.Client
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private GitClient createClientAsync(string path, string projectName, CheckForUpdates check)
+      async private GitClient createClientAsync(string path, string projectName, CommitChecker commitChecker)
       {
          if (isCloneNeeded())
          {
             GitClient client = new GitClient();
             await runAsync(client, (client) => client.CloneAsync(HostName, projectName, path), "clone");
+            Debug.Assert(client.IsGitClient(client.Path));
+            client.SetUpdater(UpdateManager.GetGitClientUpdater());
+            return client;
          }
 
          GitClient client = new GitClient(path);
-         if (await checkForRepositoryUpdatesAsync(client, check))
+         if (await checkForRepositoryUpdatesAsync(client, commitChecker))
          {
             await runAsync(client, (client) => client.FetchAsync(), "fetch");
+            client.SetUpdater(UpdateManager.GetGitClientUpdater());
          }
          return client;
       }
@@ -214,7 +217,7 @@ namespace mrHelper.Client
       /// Checks if there is a version in GitLab which is newer than latest Git Repository update.
       /// Returns 'true' if there is a newer version.
       /// </summary>
-      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CheckForUpdates check)
+      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CommitChecker commitChecker)
       {
          Debug.Assert(IsInitialized());
 
@@ -223,11 +226,12 @@ namespace mrHelper.Client
             return true;
          }
 
-         return check(gitClient.LastUpdateTime.Value);
+         return await commitChecker.AreNewCommits(gitClient.LastUpdateTime.Value);
       }
 
       private string Host { get; }
       private string LocalFolder { get; }
+      private UpdateManager updateManager { get; }
 
       private Dictionary<string, GitClient> Clients { get; set; }
    }

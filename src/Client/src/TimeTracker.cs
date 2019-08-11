@@ -4,25 +4,34 @@ namespace mrHelper.Client
 {
    public class TimeTracker
    {
-      internal TimeTracker(MergeRequestDescriptor mrd)
+      internal TimeTracker(MergeRequestDescriptor mrd, TimeTrackingOperator trackingOperator)
       {
-         throw new NotImplementedException();
+         MergeRequestDescriptor = mrd;
+         TimeTrackingOperator = trackingOperator;
       }
 
       public void Start()
       {
-         throw new NotImplementedException();
+         _stopwatch.Reset();
+         _stopwatch.Start();
       }
 
       public void Stop()
       {
-         throw new NotImplementedException();
+         _stopwatch.Stop();
+         TimeTrackingOperator.AddSpanAsync(_stopwatch.Elapsed, MergeRequestDescriptor);
       }
 
       public void Cancel()
       {
-         throw new NotImplementedException();
+         _stopwatch.Stop();
       }
+
+      public string Elapsed { get { return _stopWatch.Elapsed; } }
+
+      private MergeRequestDescriptor MergeRequestDescriptor { get; }
+      private StopWatch _stopwatch { get; }
+      private TimeTrackingOperator TimeTrackingOperator;
    }
 }
 

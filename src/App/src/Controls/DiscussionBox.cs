@@ -31,15 +31,12 @@ namespace mrHelper.App.Controls
 
       public delegate void OnBoxEvent();
 
-      public DiscussionBox(Discussion discussion, MergeRequestDetails mergeRequestDetails, User currentUser,
-         int diffContextDepth, GitRepository gitRepository, ColorScheme colorScheme,  OnBoxEvent onSizeChanged)
+      public DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
+         int diffContextDepth, GitRepository gitRepository, ColorScheme colorScheme, OnBoxEvent onSizeChanged)
       {
-         _mergeRequestDetails = mergeRequestDetails;
+         _editor = editor;
+         _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
-
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
-         _mergeRequestAccessor = gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-            Get(_mergeRequestDetails.MergeRequestIId);
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
@@ -191,7 +188,6 @@ namespace mrHelper.App.Controls
          var firstNote = discussion.Notes[0];
          Debug.Assert(!firstNote.System);
 
-         _discussionId = discussion.Id;
          _individual = discussion.Individual_Note;
 
          _labelAuthor = createLabelAuthor(firstNote);
@@ -412,7 +408,7 @@ namespace mrHelper.App.Controls
       {
          if (note.Resolvable)
          {
-            if (note.Author.Id == _mergeRequestDetails.Author.Id)
+            if (note.Author.Id == _mergeRequestAuthor.Id)
             {
                return note.Resolved ? _colorScheme.GetColor("Discussions_Author_Notes_Resolved")
                                     : _colorScheme.GetColor("Discussions_Author_Notes_Unresolved");
@@ -487,7 +483,8 @@ namespace mrHelper.App.Controls
          int lblAuthorHeight = _labelAuthor.Location.Y + _labelAuthor.PreferredSize.Height;
          int lblFNameHeight = (_labelFileName == null ? 0 : _labelFileName.Location.Y + _labelFileName.Height);
          int ctxHeight = (_panelContext == null ? 0 : _panelContext.Location.Y + _panelContext.Height);
-         int notesHeight = _textboxesNotes[_textboxesNotes.Count - 1].Location.Y + _textboxesNotes[_textboxesNotes.Count - 1].Height;
+         int notesHeight = _textboxesNotes[_textboxesNotes.Count - 1].Location.Y
+                         + _textboxesNotes[_textboxesNotes.Count - 1].Height;
 
          int boxContentWidth = nextNoteX + _textboxesNotes[0].Width;
          int boxContentHeight = new[] { lblAuthorHeight, lblFNameHeight, ctxHeight, notesHeight }.Max();
@@ -498,15 +495,11 @@ namespace mrHelper.App.Controls
       {
          try
          {
-            await _mergeRequestAccessor.Discussions.Get(_discussionId).CreateNewNoteTaskAsync(
-               new CreateNewNoteParameters
-               {
-                  Body = body
-               });
+            await _editor.ReplyAsync(body);
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionEditorException)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
+            MessageBox.Show("Cannot create a reply to discussion");
             return;
          }
 
@@ -552,16 +545,11 @@ namespace mrHelper.App.Controls
 
          try
          {
-            note = await _mergeRequestAccessor.Discussions.Get(_discussionId).ModifyNoteTaskAsync(note.Id,
-               new ModifyDiscussionNoteParameters
-               {
-                  Type = ModifyDiscussionNoteParameters.ModificationType.Body,
-                  Body = textBox.Text
-               });
+            await _editor.ModifyNoteBodyAsync(note.Id, body);
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionEditorException)
          {
-            ExceptionHandlers.Handle(ex, "Cannot update discussion text");
+            MessageBox.Show("Cannot update discussion text", "Error", MessageBoxButtons.OK, MessageBoxIcons.Error);
             return;
          }
 
@@ -600,11 +588,11 @@ namespace mrHelper.App.Controls
 
          try
          {
-            await _mergeRequestAccessor.Notes.Get(note.Id).DeleteTaskAsync();
+            await _editor.DeleteNoteAsync(note.Id);
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionEditorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot delete a discussion note");
+            MessageBox.Show("Cannot delete a note", "Error", MessageBoxButtons.OK, MessageBoxIcons.Error);
             return;
          }
 
@@ -622,16 +610,12 @@ namespace mrHelper.App.Controls
 
          try
          {
-            await _mergeRequestAccessor.Discussions.Get(_discussionId).ModifyNoteTaskAsync(note.Id,
-               new ModifyDiscussionNoteParameters
-               {
-                  Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
-                  Resolved = !wasResolved
-               });
+            await _editor.ResolveNoteAsync(note.Id);
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionEditorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion note");
+            MessageBox.Show("Cannot toggle 'Resolved' state of a note", "Error",
+               MessageBoxButtons.OK, MessageBoxIcons.Error);
             return;
          }
 
@@ -642,18 +626,14 @@ namespace mrHelper.App.Controls
       {
          bool wasResolved = isDiscussionResolved();
 
-         // Change discussion state at Server
          try
          {
-            await _mergeRequestAccessor.Discussions.Get(_discussionId).ResolveTaskAsync(
-               new ResolveThreadParameters
-               {
-                  Resolve = !wasResolved
-               });
+            await _editor.ResolveDiscussionAsync();
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionEditorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
+            MessageBox.Show("Cannot toggle 'Resolved' state of a discussion", "Error",
+               MessageBoxButtons.OK, MessageBoxIcons.Error);
             return;
          }
 
@@ -676,17 +656,16 @@ namespace mrHelper.App.Controls
          Discussion discussion;
          try
          {
-            discussion = await _mergeRequestAccessor.Discussions.Get(_discussionId).LoadTaskAsync();
-            if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
-            {
-               return false;
-            }
+            discussion = await _editor.GetDiscussion();
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionEditorException)
          {
             // it is not an error here, we treat it as 'last discussion item has been deleted'
-            var response = (System.Net.HttpWebResponse)(ex.WebException.Response);
-            Debug.Assert(response.StatusCode == System.Net.HttpStatusCode.NotFound);
+            return false;
+         }
+
+         if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
+         {
             return false;
          }
 
@@ -788,10 +767,7 @@ namespace mrHelper.App.Controls
       private Control _panelContext;
       private List<Control> _textboxesNotes;
 
-      private readonly MergeRequestDetails _mergeRequestDetails;
-      private readonly SingleMergeRequestAccessor _mergeRequestAccessor;
       private readonly User _currentUser;
-      private string _discussionId;
       private bool _individual;
 
       private readonly ContextDepth _diffContextDepth;

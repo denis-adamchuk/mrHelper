@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using GitLabSharp;
 using mrHelper.Core.Git;
 
 namespace mrHelper.App.Forms
@@ -22,10 +21,12 @@ namespace mrHelper.App.Forms
       /// Throws:
       /// ArgumentException
       /// </summary>
-      public DiscussionsForm(MergeRequestDetails mergeRequestDetails, GitClient gitClient,
-         int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, User currentUser)
+      public DiscussionsForm(MergeRequestDescriptor mrd, User mergeRequestAuthor, GitClient gitClient,
+         int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, DiscussionManager manager,
+         User currentUser)
       {
-         _mergeRequestDetails = mergeRequestDetails;
+         _mergeRequestDescriptor = mrd;
+         _mergeRequestAuthor = mergeRequestAuthor;
 
          _gitClient = gitClient;
          _diffContextDepth = diffContextDepth;
@@ -33,6 +34,8 @@ namespace mrHelper.App.Forms
          _colorScheme = colorScheme;
 
          InitializeComponent();
+
+         _manager = manager;
 
          _currentUser = currentUser;
          if (_currentUser.Id == 0)
@@ -75,18 +78,24 @@ namespace mrHelper.App.Forms
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
          List<Discussion> discussions = null;
-         GitLab gl = new GitLab(_mergeRequestDetails.Host, _mergeRequestDetails.AccessToken);
          this.Text = DefaultCaption + "   (Loading discussions)";
          try
          {
-            discussions = await gl.Projects.Get(_mergeRequestDetails.ProjectId).MergeRequests.
-               Get(_mergeRequestDetails.MergeRequestIId).Discussions.LoadAllTaskAsync();
+            discussions = await _manager.GetDiscussionsAsync(new MergeRequestDesriptor
+               {
+                  HostName = State.HostName,
+                  ProjectName = State.Project.Path_With_Namespace,
+                  MergeRequestIId = State.MergeRequest.IId
+               };
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionManagerException)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
+            MessageBox.Show("Cannot load discussions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-         this.Text = DefaultCaption;
+         finally
+         {
+            this.Text = DefaultCaption;
+         }
 
          return discussions;
       }
@@ -127,7 +136,8 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            var control = new DiscussionBox(discussion, _mergeRequestDetails, _currentUser,
+            DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestDescriptor, discussion.Id);
+            Control control = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
                _diffContextDepth, _gitClient, _colorScheme,
                () => {
                   repositionDiscussionBoxes();
@@ -169,16 +179,18 @@ namespace mrHelper.App.Forms
          get
          {
             String.Format("Discussions for merge request #{0} with code repository at \"{1}\"",
-               _mergeRequestDetails.MergeRequestIId, _gitClient?.Path ?? "no repository");
+               _mergeRequestDescriptor.IId, _gitClient?.Path ?? "no repository");
          }
       }
 
-      private readonly MergeRequestDetails _mergeRequestDetails;
+      private readonly MergeRequestDescriptor _mergeRequestDescriptor;
+      private readonly User _mergeRequestAuthor;
       private readonly GitClient _gitClient;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 
       private User _currentUser;
+      private DiscussionManager _manager;
    }
 
    public class NoDiscussionsToShow : ArgumentException { }; 

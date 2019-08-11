@@ -3,13 +3,24 @@ using System.Collections.Generic;
 
 namespace mrHelper.Client
 {
-   internal class WorkflowDataOperatorException : Exception {}
-
    internal class WorkflowDataOperator : IDisposable
    {
       internal WorkflowDataOperator(string host, string token)
       {
          Client = new GitLabClient(host, token);
+      }
+
+      async internal Task<User> GetCurrentUser()
+      {
+         try
+         {
+            return await Client.RunAsync(async (gl) => return await gl.CurrentUser.LoadTaskAsync());
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load current user from GitLab");
+            throw new OperatorException(ex);
+         }
       }
 
       async internal Task<List<Project>> GetProjectsAsync()
@@ -27,16 +38,13 @@ namespace mrHelper.Client
          try
          {
             return await Client.RunAsync(async (gl) =>
-            {
-               return await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = Settings.ShowPublicOnly });
-            });
+               return await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = Settings.ShowPublicOnly }));
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab", false);
-            throw new WorkflowDataOperatorException();
+            ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab");
+            throw new OperatorException(ex);
          }
-         return null;
       }
 
       async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string hostName, string projectName)
@@ -48,25 +56,20 @@ namespace mrHelper.Client
          try
          {
             mergeRequests = Client.RunAsync(async (gl) =>
-            {
-               mergeRequests = await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
+               return await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
                   new MergeRequestsFilter()));
-            });
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab", false);
-            throw new WorkflowDataOperatorException();
+            ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
+            throw new OperatorException(ex);
          }
 
-         if (mergeRequests != null)
+         for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --i)
          {
-            for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --i)
+            if (Settings.CheckedLabelsFilter && !_cachedLabels.Intersect(mergeRequest.Labels))
             {
-               if (Settings.CheckedLabelsFilter && !_cachedLabels.Intersect(mergeRequest.Labels))
-               {
-                  mergeRequests.RemoveAt(iMergeRequest);
-               }
+               mergeRequests.RemoveAt(iMergeRequest);
             }
          }
 
@@ -80,16 +83,13 @@ namespace mrHelper.Client
          try
          {
             return await Client.RunAsync(async (gl) =>
-            {
                return await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync(ct));
-            });
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab", false);
-            throw new WorkflowDataOperatorException();
+            ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
+            throw new OperatorException(ex);
          }
-         return null;
       }
 
       async internal Task<List<Version>> GetVersionsAsync()
@@ -99,17 +99,14 @@ namespace mrHelper.Client
          try
          {
             return await Client.RunAsync(async (gl) =>
-            {
                return await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
                   Versions.LoadAllTaskAsync(ct));
-            });
          }
          catch (GitLabRequestException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load merge request versions from GitLab", false);
-            throw new WorkflowDataOperatorException();
+            ExceptionHandlers.Handle(ex, "Cannot load merge request versions from GitLab");
+            throw new OperatorException(ex);
          }
-         return null;
       }
 
       async public void CancelAsync()

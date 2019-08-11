@@ -6,23 +6,27 @@ namespace mrHelper.Client
    {
       public TimeTrackingManager(UserDefinedSettings settings)
       {
-         throw new NotImplementedException();
+         Settings = settings;
+         TimeTrackingOperator = new TimeTrackingOperator(Settings);
       }
 
-      public Task<TimeSpan> GetTotalAsync(MergeRequestDescriptor mrd)
+      async public Task<TimeSpan> GetTotalAsync(MergeRequestDescriptor mrd)
       {
          throw new NotImplementedException();
       }
 
-      public Task SetTotalAsync(TimeSpan span, MergeRequestDescriptor mrd)
+      async public Task SetTotalAsync(TimeSpan span, MergeRequestDescriptor mrd)
       {
          throw new NotImplementedException();
       }
 
-      public TimeTracker GetTimeTracker(MergeRequestDescriptor mrd)
+      async public TimeTracker GetTracker(MergeRequestDescriptor mrd)
       {
-         throw new NotImplementedException();
+         return new TimeTracker(mrd, TimeTrackingOperator);
       }
+
+      private Settings Settings { get; }
+      private TimeTrackingOperator TimeTrackingOperator { get; }
    }
 }
 

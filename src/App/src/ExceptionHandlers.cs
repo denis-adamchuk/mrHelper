@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Windows.Forms;
 using GitLabSharp;
 using mrHelper.Core;
 using mrHelper.CustomActions;
@@ -10,9 +9,15 @@ namespace mrHelper.Client
 {
    public class ExceptionHandlers
    {
-      static public void Handle(Exception exception, string meaning, bool show = true)
+      static public void Handle(Exception exception, string meaning)
       {
-         if (exception is GitLabRequestException ex1)
+         if (exception is OperatorException ex0)
+         {
+            Trace.TraceError("[{0}] {1}: {2}\nNested GitLabRequestException:",
+                  ex1.GetType().ToString(), meaning, ex1.Message);
+            Handle(ex0.GitLabRequestException, meaning);
+         }
+         else if (exception is GitLabRequestException ex1)
          {
             Trace.TraceError("[{0}] {1}: {2}\nNested WebException: {3}",
                   ex1.GetType().ToString(), meaning, ex1.Message, ex1.WebException.Message);
@@ -38,22 +43,12 @@ namespace mrHelper.Client
          {
             Trace.TraceError("[{0}] {1}: {2}", exception.GetType().ToString(), meaning, exception.Message);
          }
-         showMessageBox(meaning, show);
       }
 
-      static public void HandleUnhandled(Exception ex, bool show)
+      static public void HandleUnhandled(Exception ex)
       {
          Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
-         showMessageBox("Fatal error occurred, see details in log file", show);
          Application.Exit();
-      }
-
-      static private void showMessageBox(string text, bool show)
-      {
-         if (show)
-         {
-            MessageBox.Show(text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
       }
    }
 }

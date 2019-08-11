@@ -10,7 +10,7 @@ namespace mrHelper.Client
    /// </summary>
    public class Workflow : IDisposable
    {
-      public Workflow(UserDefinedSettings settings, WorkflowUpdater updater)
+      public Workflow(UserDefinedSettings settings)
       {
          Settings = settings;
          Settings.PropertyChange += async (sender, property) =>
@@ -24,18 +24,7 @@ namespace mrHelper.Client
             {
                _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
                // emulate project change to reload merge request list
-               await switchProjectAsync(State.Project.Name_With_Namespace);
-            }
-         }
-         updater.OnUpdate += async (sender, updates) =>
-         {
-            // emulate project change to reload merge request list
-            // This will automatically update version list (if there are new ones).
-            // This will also remove merged merge requests from the list.
-            if (updates.NewMergeRequests.Cast<MergeRequest>.Any(x => x.Project.Id == State.Project.Id)
-             || updates.UpdatedMergeRequests.Cast<MergeRequest>.Any(x => x.Project.Id == State.Project.Id))
-            {
-               await switchProjectAsync(State.Project.Name_With_Namespace);
+               await switchProjectAsync(State.Project.Path_With_Namespace);
             }
          }
          _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
@@ -44,6 +33,11 @@ namespace mrHelper.Client
       async public Task SwitchHostAsync(string hostName)
       {
          await switchHostAsync(hostName);
+      }
+
+      async public Task<User> GetCurrentUser()
+      {
+         await Operator?.GetCurrentUser();
       }
 
       async public Task SwitchProjectAsync(string projectName)

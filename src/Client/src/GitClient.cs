@@ -53,13 +53,12 @@ namespace mrHelper.Core.Git
          }
 
          Path = path;
+
+         Timer.Tick += new System.EventHandler(onTimer);
+         Timer.Start();
       }
 
-      void SetUpdater(GitClientUpdater updater)
-      {
-         throw new NotImplementedException();
-      }
-
+      // TOOD - Subsequent clone support
       /// <summary>
       /// Create an asyncronous task for 'git close' command
       /// Throws:
@@ -67,6 +66,11 @@ namespace mrHelper.Core.Git
       /// </summary>
       async public Task CloneAsync(string host, string project, string path)
       {
+         if (IsGitClient(Path))
+         {
+            throw new NotSupportedOperation("Multiple Clone not supported");
+         }
+
          if (_descriptor != null)
          {
             throw new InvalidOperationException("Another acync operation is running");
@@ -77,6 +81,9 @@ namespace mrHelper.Core.Git
 
          Debug.Assert(IsGitClient(path));
          Path = path;
+
+         Timer.Tick += new System.EventHandler(onTimer);
+         Timer.Start();
       }
 
       /// <summary>
@@ -311,6 +318,11 @@ namespace mrHelper.Core.Git
          }
       }
 
+      async private void onTimer(object sender, EventArgs e)
+      {
+         await FetchAsync();
+      }
+
       private struct DiffCacheKey
       {
          public string sha1;
@@ -333,6 +345,8 @@ namespace mrHelper.Core.Git
          new Dictionary<RevisionCacheKey, List<string>>();
 
       private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
+
+      private System.Timers.Timer Timer { get; }
    }
 }
 

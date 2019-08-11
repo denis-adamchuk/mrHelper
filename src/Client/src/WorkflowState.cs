@@ -57,6 +57,18 @@ namespace mrHelper.Client
          get;
          set
       }
+
+      public MergeRequestDescriptor MergeRequestDescriptor
+      {
+         get
+         {
+            return new MergeRequestDescriptor
+            {
+               HostName = HostName,
+               ProjectName = Project.Path_With_Namespace,
+               IId = MergeRequest.IId
+            }
+      }
    }
 }
 

@@ -8,8 +8,15 @@ namespace mrHelper.App
 {
    internal static class Program
    {
-     static string mutex1_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
-     static string mutex2_guid = "{08c448dc-8635-42d0-89bd-75c14837aaa1}";
+      static string mutex1_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
+      static string mutex2_guid = "{08c448dc-8635-42d0-89bd-75c14837aaa1}";
+
+      private static void HandleUnhandledException()
+      {
+         MessageBox.Show("Fatal error occurred, see details in logs",
+            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         ExceptionHandlers.HandleUnhandled(e.Exception);
+      }
 
       /// <summary>
       /// The main entry point for the application.
@@ -29,7 +36,7 @@ namespace mrHelper.App
                   return;
                }
 
-               Application.ThreadException += (sender,e) => ExceptionHandlers.HandleUnhandled(e.Exception, true);
+               Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
 
                Trace.Listeners.Add(new CustomTraceListener("mrHelper.main.log"));
                Trace.AutoFlush = true;
@@ -39,7 +46,7 @@ namespace mrHelper.App
                }
                catch (Exception ex) // whatever unhandled exception
                {
-                  ExceptionHandlers.HandleUnhandled(ex, true);
+                  HandleUnhandledException(ex);
                }
             }
          }
@@ -52,7 +59,7 @@ namespace mrHelper.App
                   return;
                }
 
-               Application.ThreadException += (sender,e) => ExceptionHandlers.HandleUnhandled(e.Exception, false);
+               Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
 
                string currentExe = System.Reflection.Assembly.GetEntryAssembly().Location;
                string currentDir = System.IO.Path.GetDirectoryName(currentExe);
@@ -84,7 +91,7 @@ namespace mrHelper.App
                }
                catch (Exception ex) // whatever unhandled exception
                {
-                  ExceptionHandlers.HandleUnhandled(ex, false);
+                  HandleUnhandledException(ex);
                }
             }
          }

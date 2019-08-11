@@ -9,9 +9,9 @@ namespace mrHelper.Client
       public List<MergeRequest> UpdatedMergeRequests;
    }
 
-   public class WorkflowUpdater
+   public class WorkflowUpdateChecker
    {
-      WorkflowUpdater(UserDefinedSettings settings)
+      WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow workflow)
       {
          Settings = settings;
          Settings.PropertyChange += async (sender, property) =>
@@ -25,11 +25,12 @@ namespace mrHelper.Client
 
          Timer.Tick += new System.EventHandler(onTimer);
          Timer.Start();
+
+         UpdateOperator = updateOperator;
+         Workflow = workflow;
       }
 
       public event EventHandler<MergeRequestUpdates> OnUpdate;
-
-      public WorkflowState State { get; set; }
 
       async void onTimer(object sender, EventArgs e)
       {
@@ -58,18 +59,12 @@ namespace mrHelper.Client
             return updates;
          }
 
-         GitLab gl = new GitLab(State.HostName, Tools.GetAccessToken(State.HostName, Settings));
          foreach (var project in Projects)
          {
-            List<MergeRequest> mergeRequests = new List<MergeRequest>();
-            try
+            List<MergeRequest> mergeRequests =
+               updateOperator.GetMergeRequests(State.HostName, project.Path_With_Namespace);
+            if (mergeRequests == null)
             {
-               mergeRequests = await gl.Projects.Get(project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
-                  new MergeRequestsFilter());
-            }
-            catch (GitLabRequestException ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update", false);
                continue;
             }
 
@@ -86,19 +81,14 @@ namespace mrHelper.Client
                }
                else if (mergeRequest.Updated_At.ToLocalTime() > _lastCheckTime)
                {
-                  List<Version> versions = new List<Version>();
-                  try
-                  {
-                     versions = await gl.Projects.Get(project.Path_With_Namespace).MergeRequests.
-                        Get(mergeRequest.IId).Versions.LoadAllTaskAsync();
-                  }
-                  catch (GitLabRequestException ex)
-                  {
-                     ExceptionHandlers.Handle(ex, "Cannot load merge request versions on auto-update", false);
-                     continue;
-                  }
-
-                  if (versions.Count == 0)
+                  List<Version> versions = updateOperator.GetVersions(
+                     new MergeRequestDescriptor
+                     {
+                        HostName = State.HostName,
+                        ProjectName = project.Path_With_Namespace,
+                        IId = mergeRequest.IId
+                     });
+                  if (versions == null || versions.Count == 0)
                   {
                      continue;
                   }

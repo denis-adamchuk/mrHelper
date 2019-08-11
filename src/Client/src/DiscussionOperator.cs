@@ -2,47 +2,159 @@ using System;
 
 namespace mrHelper.Client
 {
-   public class DiscussionOperator
+   internal class DiscussionOperator
    {
-      internal DiscussionOperator(UserDefinedSettings settings, MergeRequestDescriptor mrd)
+      internal DiscussionOperator(UserDefinedSettings settings) 
       {
-         throw new NotImplementedException();
+         Settings = settings;
       }
 
-      Task<List<Discussion>> GetDiscussionsAsync()
+      async internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestDescriptor mrd)
       {
-         throw new NotImplementedException();
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         try
+         {
+            return await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.LoadAllTaskAsync());
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
+            throw new OperatorException(ex);
+         }
       }
 
-      Task ReplyAsync(int discussionId, string body)
+      async internal Task<Discussion> GetDiscussionAsync(MergeRequestDescriptor mrd, string discussionId)
       {
-         throw new NotImplementedException();
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         try
+         {
+            return await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.Get(discussionId).LoadTaskAsync());
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load discussion from GitLab");
+            throw new OperatorException(ex);
+         }
       }
 
-      Task ModifyNoteBody(string discussionId, int noteId, string body)
+      async internal Task ReplyAsync(MergeRequestDescriptor mrd, int discussionId, string body)
       {
-         throw new NotImplementedException();
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName));
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.Get(_discussionId).CreateNewNoteTaskAsync(
+                     new CreateNewNoteParameters
+                     {
+                        Body = body
+                     });
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
+            throw new OperatorException(ex);
+         }
       }
 
-      Task DeleteNoteAsync(int noteId)
+      async internal Task ModifyNoteBodyAsync(MergeRequestDescriptor mrd, string discussionId, int noteId, string body)
       {
-         throw new NotImplementedException();
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName));
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
+                     new ModifyDiscussionNoteParameters
+                     {
+                        Type = ModifyDiscussionNoteParameters.ModificationType.Body,
+                        Body = textBox.Text
+                     }));
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot update discussion text");
+            throw new OperatorException(ex);
+         }
       }
 
-      Task ResolveNote(string discussionId, int noteId)
+      async internal Task DeleteNoteAsync(MergeRequestDescriptor mrd, string discussionId, int noteId)
       {
-         throw new NotImplementedException();
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Notes.Get(noteId).DeleteTaskAsync());
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot delete a note");
+            throw new OperatorException(ex);
+         }
       }
 
-      Task ResolveDiscussion(string discussionId)
+      async internal Task ResolveNoteAsync(MergeRequestDescriptor mrd, string discussionId, int noteId)
       {
-         throw new NotImplementedException();
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName));
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
+                     new ModifyDiscussionNoteParameters
+                     {
+                        Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
+                        Resolved = !wasResolved
+                     }));
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a note");
+            throw new OperatorException(ex);
+         }
       }
 
-      Task CreateDiscussion(NewDiscussionParameters parameters)
+      async internal Task ResolveDiscussionAsync(MergeRequestDescriptor mrd, string discussionId)
       {
-         throw new NotImplementedException();
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName));
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.Get(discussionId).ResolveTaskAsync(
+                     new ResolveThreadParameters
+                     {
+                        Resolve = !wasResolved
+                     }));
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
+            throw new OperatorException(ex);
+         }
       }
+
+      async internal Task CreateDiscussionAsync(MergeRequestDescriptor mrd, NewDiscussionParameters parameters)
+      {
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName));
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Discussions.CreateNew(parameters));
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot create a discussion", false);
+            throw new OperatorException(ex);
+         }
+      }
+
+      private Settings Settings { get; }
    }
 }
 

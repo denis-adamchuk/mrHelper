@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using GitLabSharp;
 using mrHelper.Core;
 
 namespace mrHelper.App.Forms
@@ -215,18 +214,23 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
-         GitLab gl = new GitLab(_interprocessSnapshot.Host, _interprocessSnapshot.AccessToken);
-         var project = gl.Projects.Get(_interprocessSnapshot.Project);
+         DiscussionManager manager = new DiscussionManager(null);
+         DiscussionCreator creator = manager.GetDiscussionCreator(
+            new MergeRequestDescriptor
+            {
+               HostName = _interprocessSnapshot.Host,
+               Project = _interprocessSnapshot.Project,
+               IId = _interprocessSnapshot.MergeRequestId
+            });
+
          try
          {
-            project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
+            creator.CreateDiscussionAsync(parameters);
          }
-         catch (GitLabRequestException ex)
+         catch (DiscussionCreatorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a discussion", false);
-
             Trace.TraceInformation(
-               "Extra information about above exception:\n" +
+               "Additional information about exception:\n" +
                "Position: {0}\n" +
                "Include context: {1}\n" +
                "Snapshot refs: {2}\n" +
@@ -238,109 +242,11 @@ namespace mrHelper.App.Forms
                _difftoolInfo.ToString(),
                textBoxDiscussionBody.Text);
 
-            handleGitlabError(parameters, gl, ex);
-         }
-      }
-
-      private void handleGitlabError(NewDiscussionParameters parameters, GitLab gl, GitLabRequestException ex)
-      {
-         var webException = ex.WebException;
-         var response = ((System.Net.HttpWebResponse)webException.Response);
-
-         if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-         {
-            // Something went wrong at the GitLab site, let's report a discussion without Position
-            createMergeRequestWithoutPosition(parameters, gl);
-         }
-         else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-         {
-            // Something went wrong at the GitLab site, let's report a discussion without Position
-            cleanupBadNotes(parameters, gl);
-            createMergeRequestWithoutPosition(parameters, gl);
-         }
-         else
-         {
-            // Fatal error. To be catched and logged at the upper level.
-            throw ex;
-         }
-      }
-
-      private void createMergeRequestWithoutPosition(NewDiscussionParameters parameters, GitLab gl)
-      {
-         Debug.Assert(parameters.Position.HasValue);
-
-         Trace.TraceInformation("Reporting a discussion without Position (fallback)");
-
-         parameters.Body = getFallbackInfo() + "<br>" + parameters.Body;
-         parameters.Position = null;
-
-         var project = gl.Projects.Get(_interprocessSnapshot.Project);
-         try
-         {
-            project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId).Discussions.CreateNew(parameters);
-         }
-         catch (GitLabRequestException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot create a discussion (again)", false);
-            throw; // fatal error
-         }
-      }
-
-      private string getFallbackInfo()
-      {
-         return "<b>" + (_difftoolInfo.Left?.FileName ?? "N/A") + "</b>"
-            + " (line " + (_difftoolInfo.Left?.LineNumber.ToString() ?? "N/A") + ") <i>vs</i> "
-            + "<b>" + (_difftoolInfo.Right?.FileName ?? "N/A") + "</b>"
-            + " (line " + (_difftoolInfo.Right?.LineNumber.ToString() ?? "N/A") + ")";
-      }
-
-      // Instead of searching for a latest discussion note with some heuristically prepared parameters,
-      // let's clean up all similar notes, including a recently added one
-      private void cleanupBadNotes(NewDiscussionParameters parameters, GitLab gl)
-      {
-         Debug.Assert(parameters.Position.HasValue);
-
-         Trace.TraceInformation("Looking up for a note with bad position...");
-
-         int deletedCount = 0;
-
-         var project = gl.Projects.Get(_interprocessSnapshot.Project);
-         var mergeRequest = project.MergeRequests.Get(_interprocessSnapshot.MergeRequestId);
-         List<Discussion> discussions = mergeRequest.Discussions.LoadAll();
-         foreach (Discussion discussion in discussions)
-         {
-            foreach (DiscussionNote note in discussion.Notes)
+            if (!ex.Handled)
             {
-               if (arePositionsEqual(note.Position, parameters.Position.Value))
-               {
-                  Trace.TraceInformation(
-                     "Deleting discussion note." +
-                     " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
-                     note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
-
-                  mergeRequest.Notes.Get(note.Id).Delete();
-                  ++deletedCount;
-               }
+               throw;
             }
          }
-
-         Trace.TraceInformation(String.Format("Deleted {0} notes", deletedCount));
-      }
-
-      /// <summary>
-      /// Compares GitLabSharp.Position object which is received from GitLab
-      /// to GitLabSharp.PositionParameters whichi is sent to GitLab for equality
-      /// </summary>
-      /// <returns>true if objects point to the same position</returns>
-      private bool arePositionsEqual(Position pos, PositionParameters posParams)
-      {
-         return pos.Base_SHA == posParams.BaseSHA
-             && pos.Head_SHA == posParams.HeadSHA
-             && pos.Start_SHA == posParams.StartSHA
-             && pos.Old_Line == posParams.OldLine
-             && pos.Old_Path == posParams.OldPath
-             && pos.New_Line == posParams.NewLine
-             && pos.New_Path == posParams.NewPath;
       }
 
       private readonly InterprocessSnapshot _interprocessSnapshot;
