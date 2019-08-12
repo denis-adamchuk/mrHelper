@@ -45,7 +45,7 @@ namespace mrHelper.App.Forms
       {
          loadSettings();
          addCustomActions();
-         DiffToolIntegrationHelper.IntegrateDiffTool(GitDiffToolName);
+         integrateInTools();
          await onApplicationStarted();
       }
 
@@ -117,6 +117,7 @@ namespace mrHelper.App.Forms
          catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle(ex, "Cannot change color scheme");
+            MessageBox.Show("Cannot change color scheme", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             comboBoxColorSchemes.SelectedIndex = 0; // recursive
          }
 
@@ -189,6 +190,7 @@ namespace mrHelper.App.Forms
          catch (Exception ex) // see Process.Start exception list
          {
             ExceptionHandlers.Handle(ex, "Cannot open URL");
+            MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -261,13 +263,19 @@ namespace mrHelper.App.Forms
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create Git Client", false);
+            ExceptionHandlers.Handle(ex, "Cannot create Git Client");
+            MessageBox.Show("Cannot create Git Client, check temp folder path",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
       private void addCustomActions()
       {
          List<ICommand> commands = Tools.LoadCustomActions();
+         if (commands == null)
+         {
+            return;
+         }
 
          int id = 0;
          System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
@@ -299,6 +307,8 @@ namespace mrHelper.App.Forms
                catch (Exception ex) // Whatever happened in Run()
                {
                   ExceptionHandlers.Handle(ex, "Custom action failed");
+                  MessageBox.Show("Custom action failed", "Error",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return;
                }
                labelWorkflowStatus.Text = "Command " + name + " completed";
@@ -335,6 +345,8 @@ namespace mrHelper.App.Forms
             {
                Debug.Assert(ex is ArgumentException || ex is GitOperationException);
                ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+               MessageBox.Show("Cannot initialize git repository",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                return;
             }
          }
@@ -364,7 +376,9 @@ namespace mrHelper.App.Forms
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot show discussions form", false);
+            ExceptionHandlers.Handle(ex, "Cannot show Discussions form");
+            MessageBox.Show("Cannot show Discussions form", "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
          finally
@@ -503,6 +517,8 @@ namespace mrHelper.App.Forms
             {
                Debug.Assert(ex is ArgumentException || ex is GitOperationException);
                ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+               MessageBox.Show("Cannot initialize git repository",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return;
          }
@@ -520,6 +536,8 @@ namespace mrHelper.App.Forms
          catch (GitOperationException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
+            MessageBox.Show("Cannot launch diff tool", "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
          _diffToolArgs = new DiffToolArguments
@@ -687,16 +705,39 @@ namespace mrHelper.App.Forms
          snapshot.Refs.LeftSHA = _diffToolArgs.Value.LeftSHA;     // Base commit SHA in the source branch
          snapshot.Refs.RightSHA = _diffToolArgs.Value.RightSHA;   // SHA referencing HEAD of this merge request
          snapshot.Host = GetCurrentHostName();
-         snapshot.MergeRequestId = mergeRequest.Value.IId;
+         snapshot.MergeRequestIId = mergeRequest.Value.IId;
          snapshot.Project = GetCurrentProjectName();
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
 
          serializer.SerializeToDisk(snapshot);
       }
 
+      private void integrateInTools()
+      {
+         DiffToolIntegration integration = new DiffToolIntegration(new GlobalGitConfiguration());
+
+         try
+         {
+            integration.Integrate(new BC3Tool());
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show("Diff tool integration failed. Application cannot start. See logs for details",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            if (ex is DiffToolIntegrationException || ex is GitOperationException)
+            {
+               ExceptionHandlers.Handle(ex,
+                  String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()));
+               return;
+            }
+            throw;
+         }
+      }
+
       private void loadSettings()
       {
-         _settings = new UserDefinedSettings();
+         _settings = new UserDefinedSettings(true);
          loadConfiguration();
          _settings.PropertyChanged += onSettingsPropertyChanged;
 
@@ -731,7 +772,16 @@ namespace mrHelper.App.Forms
          _discussionManager = new DiscussionManager(_settings);
 
          updateHostsDropdownList();
-         await initializeWorkflow();
+
+         try
+         {
+            await initializeWorkflow();
+         }
+         catch (WorkflowException)
+         {
+            MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
+               "Error", MessageBoxButtons.OK, MessageBoxIcons.Error)";
+         }
       }
 
       /// <summary>
@@ -774,7 +824,14 @@ namespace mrHelper.App.Forms
                // emulate project change to reload merge request list
                // This will automatically update version list (if there are new ones).
                // This will also remove merged merge requests from the list.
-               await _workflow.SwitchProjectAsync(state.Project.Path_With_Namespace);
+               try
+               {
+                  await _workflow.SwitchProjectAsync(state.Project.Path_With_Namespace);
+               }
+               catch (WorkflowException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
+               }
             }
          }
 
@@ -784,6 +841,8 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Initializing...";
          await _workflow.SwitchHostAsync(() =>
          {
+            // If Last Selected Host is in the list, select it as initial host.
+            // Otherwise, select the first host from the list.
             for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
             {
                if (_settings.KnownHosts[iKnownHost] == _settings.LastSelectedHost)
@@ -813,7 +872,8 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot switch host", true);
+            ExceptionHandlers.Handle(ex, "Cannot switch host");
+            MessageBox.Show("Cannot select this host", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          labelWorkflowStatus.Text = String.Empty;
 
@@ -845,7 +905,8 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot switch project", true);
+            ExceptionHandlers.Handle(ex, "Cannot switch project");
+            MessageBox.Show("Cannot select this project", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          labelWorkflowStatus.Text = String.Empty;
 
@@ -883,7 +944,8 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot switch merge request", true);
+            ExceptionHandlers.Handle(ex, "Cannot switch merge request");
+            MessageBox.Show("Cannot select this merge request", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          Debug.WriteLine("Finished loading MR. Current selected MR is " + _workflow.State.MergeRequest.IId);
 
@@ -970,9 +1032,17 @@ namespace mrHelper.App.Forms
          if (sendTrackedTime && span.Seconds > 1)
          {
             labelWorkflowStatus.Text = "Sending tracked time...";
-            _timeTracker.Stop();
             string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
-            labelWorkflowStatus.Text = String.Format("Tracked time {0} sent successfully", duration);
+            string status = String.Format("Tracked time {0} sent successfully", duration);
+            try
+            {
+               _timeTracker.Stop();
+            }
+            catch (TimeTrackerException)
+            {
+               status = "Error occurred. Tracked time is not sent!";
+            }
+            labelWorkflowStatus.Text = status;
          }
          _timeTracker = null;
 

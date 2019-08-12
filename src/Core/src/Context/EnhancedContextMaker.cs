@@ -16,7 +16,7 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class EnhancedContextMaker : IContextMaker
    {
-      public EnhancedContextMaker(GitRepository gitRepository)
+      public EnhancedContextMaker(IGitRepository gitRepository)
       {
          Debug.Assert(gitRepository != null);
          _gitRepository = gitRepository;
@@ -133,6 +133,6 @@ namespace mrHelper.Core.Context
          }
       }
 
-      private readonly GitRepository _gitRepository;
+      private readonly IGitRepository _gitRepository;
    }
 }

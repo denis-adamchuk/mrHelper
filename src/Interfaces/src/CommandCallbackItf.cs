@@ -1,4 +1,6 @@
-﻿namespace mrCustomActions
+﻿using System;
+
+namespace mrHelper.Common
 {
    public interface ICommandCallback
    {
@@ -9,5 +11,8 @@
       string GetCurrentProjectName();
 
       int GetCurrentMergeRequestIId();
+
+      string GetCurrentLocalGitFolder();
    }
 }
+

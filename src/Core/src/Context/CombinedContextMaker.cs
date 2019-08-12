@@ -17,7 +17,7 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class CombinedContextMaker : IContextMaker
    {
-      public CombinedContextMaker(GitRepository gitRepository)
+      public CombinedContextMaker(IGitRepository gitRepository)
       {
          Debug.Assert(gitRepository != null);
          _gitRepository = gitRepository;
@@ -220,7 +220,7 @@ namespace mrHelper.Core.Context
          }
       }
 
-      private readonly GitRepository _gitRepository;
+      private readonly IGitRepository _gitRepository;
    }
 }
 

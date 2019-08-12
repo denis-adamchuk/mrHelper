@@ -23,7 +23,7 @@ namespace mrHelper.Core.Context
    {
       private static readonly int maxDiffContext = 20000;
 
-      public FullContextDiffProvider(GitRepository gitRepository)
+      public FullContextDiffProvider(IGitRepository gitRepository)
       {
          _gitRepository = gitRepository;
       }
@@ -74,7 +74,7 @@ namespace mrHelper.Core.Context
          return fullContextDiff;
       }
 
-      private readonly GitRepository _gitRepository;
+      private readonly IGitRepository _gitRepository;
    }
 }
 

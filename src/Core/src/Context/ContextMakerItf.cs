@@ -44,18 +44,6 @@ namespace mrHelper.Core.Context
       public List<Line> Lines;
 
       public int SelectedIndex;
-
-      /*
-      public string ToString()
-      {
-         string result = "\n";
-         for (Line line in Lines)
-         {
-            result += line.ToString() + "\n";
-         }
-         result += String.Format("SelectedIndex: {0}", SelectedIndex.ToString());
-      }
-      */
    }
 
    public struct ContextDepth

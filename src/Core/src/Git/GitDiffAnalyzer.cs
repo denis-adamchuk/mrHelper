@@ -28,7 +28,7 @@ namespace mrHelper.Core.Git
       /// Note: filename1 or filename2 can be 'null'
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public GitDiffAnalyzer(GitRepository gitRepository,
+      public GitDiffAnalyzer(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
          _sections = getDiffSections(gitRepository, sha1, sha2, filename1, filename2);
@@ -58,7 +58,7 @@ namespace mrHelper.Core.Git
          return false;
       }
 
-      static private List<GitDiffSection> getDiffSections(GitRepository gitRepository,
+      static private List<GitDiffSection> getDiffSections(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();

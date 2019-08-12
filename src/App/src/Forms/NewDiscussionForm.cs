@@ -19,7 +19,8 @@ namespace mrHelper.App.Forms
       {
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
-         _gitRepository = new GitRepository(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]), true);
+
+         _gitRepository = new GitClient(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]), false);
          _renameChecker = new GitRenameDetector(_gitRepository);
          _matcher = new RefToLineMatcher(_gitRepository);
 
@@ -214,37 +215,40 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
-         DiscussionManager manager = new DiscussionManager(null);
-         DiscussionCreator creator = manager.GetDiscussionCreator(
-            new MergeRequestDescriptor
-            {
-               HostName = _interprocessSnapshot.Host,
-               Project = _interprocessSnapshot.Project,
-               IId = _interprocessSnapshot.MergeRequestId
-            });
-
-         try
+         using (UserDefinedSettings settings = new UserDefinedSettings(false))
          {
-            creator.CreateDiscussionAsync(parameters);
-         }
-         catch (DiscussionCreatorException ex)
-         {
-            Trace.TraceInformation(
-               "Additional information about exception:\n" +
-               "Position: {0}\n" +
-               "Include context: {1}\n" +
-               "Snapshot refs: {2}\n" +
-               "DiffToolInfo: {3}\n" +
-               "Body:\n{4}",
-               _position.ToString(),
-               checkBoxIncludeContext.Checked.ToString(),
-               _interprocessSnapshot.Refs.ToString(),
-               _difftoolInfo.ToString(),
-               textBoxDiscussionBody.Text);
+            DiscussionManager manager = new DiscussionManager(settings);
+            DiscussionCreator creator = manager.GetDiscussionCreator(
+               new MergeRequestDescriptor
+               {
+                  HostName = _interprocessSnapshot.Host,
+                  Project = _interprocessSnapshot.Project,
+                  IId = _interprocessSnapshot.MergeRequestIId
+               });
 
-            if (!ex.Handled)
+            try
             {
-               throw;
+               creator.CreateDiscussionAsync(parameters);
+            }
+            catch (DiscussionCreatorException ex)
+            {
+               Trace.TraceInformation(
+                  "Additional information about exception:\n" +
+                  "Position: {0}\n" +
+                  "Include context: {1}\n" +
+                  "Snapshot refs: {2}\n" +
+                  "DiffToolInfo: {3}\n" +
+                  "Body:\n{4}",
+                  _position.ToString(),
+                  checkBoxIncludeContext.Checked.ToString(),
+                  _interprocessSnapshot.Refs.ToString(),
+                  _difftoolInfo.ToString(),
+                  textBoxDiscussionBody.Text);
+
+               if (!ex.Handled)
+               {
+                  throw;
+               }
             }
          }
       }
@@ -255,7 +259,7 @@ namespace mrHelper.App.Forms
       private readonly GitRenameDetector _renameChecker;
 
       private DiffPosition _position;
-      private readonly GitRepository _gitRepository;
+      private readonly IGitRepository _gitRepository;
    }
 }
 

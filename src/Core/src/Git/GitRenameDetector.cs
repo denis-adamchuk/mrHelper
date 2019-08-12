@@ -15,7 +15,7 @@ namespace mrHelper.Core.Git
       private static readonly Regex diffRenameRe = new Regex(
          @"\d+\s+\d+\s+(?'left_name'.+)\s\=\>\s(?'right_name'.+)", RegexOptions.Compiled);
 
-      public GitRenameDetector(GitRepository gitRepository)
+      public GitRenameDetector(IGitRepository gitRepository)
       {
          _gitRepository = gitRepository;
       }
@@ -54,6 +54,6 @@ namespace mrHelper.Core.Git
          return filename;
       }
 
-      private readonly GitRepository _gitRepository;
+      private readonly IGitRepository _gitRepository;
    }
 }

@@ -82,7 +82,7 @@ namespace mrHelper.App
                   }
                   catch (System.IO.IOException ex)
                   {
-                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot", false);
+                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
                      MessageBox.Show("Cannot create a discussion. Make sure that timer is started in the main application.");
                      return;
                   }

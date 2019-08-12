@@ -244,21 +244,22 @@ namespace mrHelper.App.Controls
             return "<html><body>Cannot access git repository and render diff context</body></html>";
          }
 
-         string contextHtml = "<html><body>N/A</body></html>";
+         string contextHtml = "<html><body></body></html>";
          try
          {
             DiffContext context = contextMaker.GetContext(position, depth);
-            contextHtml = _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+            return _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
          }
          catch (ArgumentException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot render HTML context");
+            return String.Format("<html><body>{0}</body></html>", ex.Message);
          }
          catch (GitOperationException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot render HTML context");
+            return String.Format("<html><body>{0}</body></html>", ex.Message);
          }
-         return contextHtml;
       }
 
       // Create a label that shows filename

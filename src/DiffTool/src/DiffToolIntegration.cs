@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Win32;
-using mrHelper.Core.Git;
 using System.Diagnostics;
 
 namespace mrHelper.DiffTool
@@ -21,15 +20,44 @@ namespace mrHelper.DiffTool
    /// </summary>
    public class DiffToolIntegration
    {
-      public DiffToolIntegration(IntegratedDiffTool diffTool)
+      public DiffToolIntegration(IGlobalGitConfiguration globalGitConfiguration)
       {
-         _diffTool = diffTool;
+         _globalGitConfiguration = globalGitConfiguration;
+      }
+
+      /// <summary>
+      /// Throws GitOperationException if integration failed
+      /// Throws DiffToolIntegrationException if diff tool is not installed
+      /// </summary>
+      public void Integrate(IntegratedDiffTool diffTool)
+      {
+         registerInGit(gitDiffToolName);
+
+         try
+         {
+            registerInTool();
+         }
+         catch (DiffToolIntegrationException)
+         {
+            Trace.TraceError(String.Format("Cannot register the application in \"{0}\"", GitDiffToolName));
+
+            try
+            {
+               _globalGitConfiguration.RemoveGlobalDiffTool(GitDiffToolName);
+            }
+            catch (GitOperationException)
+            {
+               Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName));
+            }
+
+            throw;
+         }
       }
 
       /// <summary>
       /// Throws DiffToolIntegrationException if integration failed
       /// </summary>
-      public void RegisterInTool()
+      private void registerInTool(IntegratedDiffTool diffTool)
       {
          if (!isInstalled())
          {
@@ -38,7 +66,7 @@ namespace mrHelper.DiffTool
 
          try
          {
-            _diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
+            diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
          }
          catch (DiffToolIntegrationException)
          {
@@ -52,21 +80,21 @@ namespace mrHelper.DiffTool
 
       /// <summary>
       /// Throws GitOperationException if integration failed
-      /// Throws DiffToolIntegrationException if diff tooll is not installed
+      /// Throws DiffToolIntegrationException if diff tool is not installed
       /// </summary>
-      public void RegisterInGit(string name)
+      private void registerInGit(IntegratedDiffTool diffTool, string name)
       {
          if (!isInstalled())
          {
             throw new DiffToolIntegrationException("Diff tool not installed", null);
          }
 
-         GitUtils.SetGlobalDiffTool(name, getGitCommand());
+         _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand());
       }
 
-      public bool isInstalled()
+      public bool isInstalled(IntegratedDiffTool diffTool)
       {
-         return getToolPath() != null;
+         return getToolPath(diffTool) != null;
       }
 
       static private string getInstallPath(string[] applicationNames)
@@ -103,25 +131,25 @@ namespace mrHelper.DiffTool
          return null;
       }
 
-      private string getGitCommand()
+      private string getGitCommand(IntegratedDiffTool diffTool)
       {
-         string toolPath = getToolPath();
+         string toolPath = getToolPath(diffTool);
          if (toolPath == null)
          {
             throw new DiffToolIntegrationException(String.Format("Cannot find installation location in registry"));
          }
 
-         var path = System.IO.Path.Combine(toolPath, _diffTool.GetToolCommand());
+         var path = System.IO.Path.Combine(toolPath, diffTool.GetToolCommand());
          path = path.Replace(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
-         return "\"\\\"" + path + "\\\"" + _diffTool.GetToolCommandArguments() + "\"";
+         return "\"\\\"" + path + "\\\"" + diffTool.GetToolCommandArguments() + "\"";
       }
 
-      private string getToolPath()
+      private string getToolPath(IntegratedDiffTool diffTool)
       {
-         return getInstallPath(_diffTool.GetToolRegistryNames());
+         return getInstallPath(diffTool.GetToolRegistryNames());
       }
 
-      private readonly IntegratedDiffTool _diffTool;
+      private IGlobalGitConfiguration _globalGitConfiguration;
    }
 }
 
