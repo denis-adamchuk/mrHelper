@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.DiffTool
 {
-   public class BC3Tool : IntegratedDiffTool
+   public class BC3Tool : IIntegratedDiffTool
    {
       public string GetToolCommand()
       {

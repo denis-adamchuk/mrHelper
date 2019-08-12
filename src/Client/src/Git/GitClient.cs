@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using mrHelper.Common.Interfaces;
 
-namespace mrHelper.Core.Git
+namespace mrHelper.Client.Git
 {
    public class GitOperationException : Exception
    {

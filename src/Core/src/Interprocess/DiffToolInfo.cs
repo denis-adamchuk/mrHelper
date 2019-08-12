@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Interprocess
 {
    /// <summary>
    /// It is expected that diff tool provides these details about lines of code a new discussion shall be created for

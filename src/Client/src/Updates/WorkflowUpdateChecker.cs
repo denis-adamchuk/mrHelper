@@ -1,7 +1,9 @@
 using System;
-using System.Collections.Generic;
+using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Workflow;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Updates
 {
    public struct MergeRequestUpdates
    {

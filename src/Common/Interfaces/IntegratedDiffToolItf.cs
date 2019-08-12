@@ -1,6 +1,6 @@
-﻿namespace mrHelper.DiffTool
+﻿namespace mrHelper.Common.Interfaces
 {
-   public interface IntegratedDiffTool
+   public interface IIntegratedDiffTool
    {
       string GetToolCommandArguments();
 

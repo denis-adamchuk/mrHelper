@@ -1,11 +1,12 @@
 using System;
 using System.Diagnostics;
-using GitLabSharp;
-using mrHelper.Core;
+using GitLabSharp.Accessors;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
+using mrHelper.Client.Git;
+using mrHelper.Client.Operators;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Tools
 {
    public class ExceptionHandlers
    {

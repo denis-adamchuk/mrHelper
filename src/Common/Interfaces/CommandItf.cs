@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace mrHelper.CustomActions
+namespace mrHelper.Common.Interfaces
 {
    public interface ICommand
    {

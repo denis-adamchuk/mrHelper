@@ -1,4 +1,9 @@
-namespace mrHelper.Client
+using System;
+using GitLabSharp;
+using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
+
+namespace mrHelper.Client.TimeTracking
 {
    /// <summary>
    /// Implements Time-Tracking-related interaction with GitLab

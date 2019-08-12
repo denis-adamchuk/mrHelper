@@ -1,6 +1,6 @@
 using System;
 
-namespace mrHelper.Common
+namespace mrHelper.Common.Interfaces
 {
    public interface IGlobalGitConfiguration
    {

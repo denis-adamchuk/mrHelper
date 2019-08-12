@@ -7,10 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
-using mrHelper.Core;
+using GitLabSharp.Entities;
 using mrHelper.CustomActions;
-using mrHelper.Common;
+using mrHelper.Common.Interfaces;
+using mrHelper.Core;
 using mrHelper.Client;
+using mrHelper.Forms;
 
 namespace mrHelper.App.Forms
 {
@@ -223,7 +225,7 @@ namespace mrHelper.App.Forms
       async private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
       {
          _settings.RequireTimeTracking = (sender as CheckBox).Checked;
-         await updateInterprocessSnapshot();
+         await updateSnapshot();
       }
 
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
@@ -498,7 +500,7 @@ namespace mrHelper.App.Forms
       async private void onLaunchDiffTool()
       {
          _diffToolArgs = null;
-         await updateInterprocessSnapshot(); // to purge serialized snapshot
+         await updateSnapshot(); // to purge serialized snapshot
 
          GitClient gitClient = null;
          try
@@ -546,7 +548,7 @@ namespace mrHelper.App.Forms
             RightSHA = rightSHA
          };
 
-         await updateInterprocessSnapshot();
+         await updateSnapshot();
       }
 
       private void notifyOnMergeRequestEvent(MergeRequest mergeRequest, string title)
@@ -681,10 +683,10 @@ namespace mrHelper.App.Forms
          _settings.Update();
       }
 
-      async private Task updateInterprocessSnapshot()
+      async private Task updateSnapshot()
       {
          // first of all, delete old snapshot
-         InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
+         SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.PurgeSerialized();
 
          bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
@@ -700,7 +702,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         InterprocessSnapshot snapshot;
+         Snapshot snapshot;
          snapshot.AccessToken = GetCurrentAccessToken();
          snapshot.Refs.LeftSHA = _diffToolArgs.Value.LeftSHA;     // Base commit SHA in the source branch
          snapshot.Refs.RightSHA = _diffToolArgs.Value.RightSHA;   // SHA referencing HEAD of this merge request
@@ -1022,7 +1024,7 @@ namespace mrHelper.App.Forms
          _timeTracker.Start();
 
          // 5. Update information available to other instances
-         await updateInterprocessSnapshot();
+         await updateSnapshot();
       }
 
       async private Task onStopTimer()
@@ -1050,7 +1052,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Stop();
 
          // 3. Update information available to other instances
-         await updateInterprocessSnapshot();
+         await updateSnapshot();
 
          // 4. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;

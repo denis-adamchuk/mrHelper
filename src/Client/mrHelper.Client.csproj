@@ -39,15 +39,31 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\ColorScheme.cs" />
-    <Compile Include="src\Configuration.cs" />
-    <Compile Include="src\GitClient.cs" />
-    <Compile Include="src\GitLabTaskManager.cs" />
-    <Compile Include="..\Common\src\ClientCallbackItf.cs" />
+    <Compile Include="src\Discussions\DiscussionCreator.cs" />
+    <Compile Include="src\Discussions\DiscussionEditor.cs" />
+    <Compile Include="src\Discussions\DiscussionManager.cs" />
+    <Compile Include="src\Discussions\DiscussionOperator.cs" />
+    <Compile Include="src\Git\GitClient.cs" />
+    <Compile Include="src\Git\GitClientManager.cs" />
+    <Compile Include="src\Git\GitUtils.cs" />
+    <Compile Include="src\Git\GlobalGitConfiguration.cs" />
+    <Compile Include="src\TimeTracking\TimeTracker.cs" />
+    <Compile Include="src\TimeTracking\TimeTrackingManager.cs" />
+    <Compile Include="src\TimeTracking\TimeTrackingOperator.cs" />
+    <Compile Include="src\Tools\Configuration.cs" />
+    <Compile Include="src\Tools\ExceptionHandlers.cs" />
+    <Compile Include="src\Tools\MergeRequestDescriptor.cs" />
+    <Compile Include="src\Tools\OperatorException.cs" />
+    <Compile Include="src\Tools\Tools.cs" />
+    <Compile Include="src\Workflow\Workflow.cs" />
+    <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
+    <Compile Include="src\Workflow\WorkflowManager.cs" />
+    <Compile Include="src\Workflow\WorkflowState.cs" />
+    <Compile Include="..\Common\Interfaces\GitRepositoryItf.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

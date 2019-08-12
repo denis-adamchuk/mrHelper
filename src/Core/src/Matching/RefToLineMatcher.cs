@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Matching
 {
    public class MatchException : Exception
    {

@@ -1,33 +1,33 @@
 ﻿using System;
 using System.Web.Script.Serialization;
 
-namespace mrHelper.Core
+namespace mrHelper.Interprocess
 {
    /// <summary>
    /// Encapsulates work with the interprocess snapshot.
    /// </summary>
-   public class InterprocessSnapshotSerializer
+   public class SnapshotSerializer
    {
       private static readonly string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
-      private static readonly string InterprocessSnapshotFileName = "snapshot.json";
+      private static readonly string SnapshotFileName = "snapshot.json";
 
       /// <summary>
       /// Serializes snapshot to disk.
       /// </summary>
-      public void SerializeToDisk(InterprocessSnapshot snapshot)
+      public void SerializeToDisk(Snapshot snapshot)
       {
          JavaScriptSerializer serializer = new JavaScriptSerializer();
          string json = serializer.Serialize(snapshot);
-         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName), json);
+         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, SnapshotFileName), json);
       }
 
       /// <summary>
       /// Loads snapshot from disk and de-serializes it.
       /// Throws FileNotFoundException if snapshot is missing.
       /// </summary>
-      public InterprocessSnapshot DeserializeFromDisk()
+      public Snapshot DeserializeFromDisk()
       {
-         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName);
+         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, SnapshotFileName);
          if (!System.IO.File.Exists(fullSnapshotName))
          {
             throw new System.IO.FileNotFoundException(
@@ -37,7 +37,7 @@ namespace mrHelper.Core
          string jsonStr = System.IO.File.ReadAllText(fullSnapshotName);
 
          JavaScriptSerializer serializer = new JavaScriptSerializer();
-         return serializer.Deserialize<InterprocessSnapshot>(jsonStr);
+         return serializer.Deserialize<Snapshot>(jsonStr);
       }
 
       /// <summary>
@@ -45,7 +45,7 @@ namespace mrHelper.Core
       /// </summary>
       public void PurgeSerialized()
       {
-         System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, InterprocessSnapshotFileName));
+         System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, SnapshotFileName));
       }
    }
 }

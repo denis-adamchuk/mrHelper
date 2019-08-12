@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using mrHelper.Client.Tools
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Workflow
 {
    public class WorkflowException : Exception {}
 

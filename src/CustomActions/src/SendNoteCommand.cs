@@ -1,5 +1,7 @@
-﻿using GitLabSharp;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using GitLabSharp;
+using GitLabSharp.Entities;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.CustomActions
 {

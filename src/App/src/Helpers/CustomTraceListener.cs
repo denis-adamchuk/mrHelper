@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace mrHelper.App
+namespace mrHelper.App.Helpers
 {
    public class CustomTraceListener : TextWriterTraceListener
    {

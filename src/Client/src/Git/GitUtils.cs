@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace mrHelper.Core.Git
+namespace mrHelper.Client.Git
 {
    public static class GitUtils
    {

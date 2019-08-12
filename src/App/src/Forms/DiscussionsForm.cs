@@ -10,25 +10,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using mrHelper.Core.Git;
+using GitLabSharp.Entities;
+using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
    public partial class DiscussionsForm : Form
    {
-
       /// <summary>
       /// Throws:
       /// ArgumentException
       /// </summary>
-      public DiscussionsForm(MergeRequestDescriptor mrd, User mergeRequestAuthor, GitClient gitClient,
+      public DiscussionsForm(MergeRequestDescriptor mrd, User mergeRequestAuthor, IGitRepository gitRepository,
          int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, DiscussionManager manager,
          User currentUser)
       {
          _mergeRequestDescriptor = mrd;
          _mergeRequestAuthor = mergeRequestAuthor;
 
-         _gitClient = gitClient;
+         _gitRepository = gitRepository;
          _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
@@ -138,7 +138,7 @@ namespace mrHelper.App.Forms
 
             DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestDescriptor, discussion.Id);
             Control control = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
-               _diffContextDepth, _gitClient, _colorScheme,
+               _diffContextDepth, _gitRepository, _colorScheme,
                () => {
                   repositionDiscussionBoxes();
                });
@@ -185,7 +185,7 @@ namespace mrHelper.App.Forms
 
       private readonly MergeRequestDescriptor _mergeRequestDescriptor;
       private readonly User _mergeRequestAuthor;
-      private readonly GitClient _gitClient;
+      private readonly IGitRepository _gitRepository;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Matching
 {
    /// <summary>
    /// Defines position of two lines in two files according to the following rules:

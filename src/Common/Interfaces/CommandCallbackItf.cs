@@ -1,4 +1,4 @@
-﻿namespace mrCustomActions
+﻿namespace mrHelper.Common.Interfaces
 {
    public interface ICommandCallback
    {

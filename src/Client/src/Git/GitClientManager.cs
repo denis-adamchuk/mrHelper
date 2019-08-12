@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using mrHelper.Core.Git;
+using mrHelper.Client.Git;
+using mrHelper.Client.Tools
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Git
 {
    public delegate bool CheckForUpdates();
 

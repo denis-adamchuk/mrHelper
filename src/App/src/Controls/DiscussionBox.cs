@@ -7,22 +7,14 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using GitLabSharp;
-using mrHelper.Core;
-using mrHelper.Client;
+using GitLabSharp.Entities;
+using mrHelper.Common.Interfaces;
+using mrHelper.Client.Discussions;
+using mrHelper.Core.Context;
+using mrHelper.Forms;
 
 namespace mrHelper.App.Controls
 {
-   public struct MergeRequestDetails
-   {
-      public string Host;
-      public string AccessToken;
-      public string ProjectId;
-      public int MergeRequestIId;
-      public User Author;
-      public User CurrentUser;
-   }
-
    internal class DiscussionBox : Panel
    {
       private const int EM_GETLINECOUNT = 0xba;
@@ -32,7 +24,7 @@ namespace mrHelper.App.Controls
       public delegate void OnBoxEvent();
 
       public DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
-         int diffContextDepth, GitRepository gitRepository, ColorScheme colorScheme, OnBoxEvent onSizeChanged)
+         int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme, OnBoxEvent onSizeChanged)
       {
          _editor = editor;
          _mergeRequestAuthor = mergeRequestAuthor;

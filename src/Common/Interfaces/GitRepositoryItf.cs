@@ -1,6 +1,6 @@
 using System;
 
-namespace mrHelper.Common
+namespace mrHelper.Common.Interfaces
 {
    /// <summary>
    /// Set of operations on git repository available across the application

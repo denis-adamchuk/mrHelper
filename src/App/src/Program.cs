@@ -2,7 +2,8 @@
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
-using mrHelper.Core;
+using mrHelper.Core.Interprocess;
+using mrHelper.Forms;
 
 namespace mrHelper.App
 {
@@ -74,8 +75,8 @@ namespace mrHelper.App
                   DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
                   DiffToolInfo diffToolInfo = argumentsParser.Parse();
 
-                  InterprocessSnapshotSerializer serializer = new InterprocessSnapshotSerializer();
-                  InterprocessSnapshot? snapshot = null;
+                  SnapshotSerializer serializer = new SnapshotSerializer();
+                  Snapshot? snapshot = null;
                   try
                   {
                      snapshot = serializer.DeserializeFromDisk();

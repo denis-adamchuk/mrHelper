@@ -1,6 +1,6 @@
 using System;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Tools
 {
    public struct MergeRequestDescriptor
    {

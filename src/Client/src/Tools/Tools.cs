@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
+using GitLabSharp.Entities;
+using mrHelper.CustomActions;
+using mrHelper.Client.Tools;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Tools
 {
    public static class Tools
    {

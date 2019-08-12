@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using GitLabSharp;
+using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Workflow
 {
    /// <summary>
    /// Implements Workflow-related interaction with GitLab

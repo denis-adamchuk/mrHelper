@@ -1,6 +1,8 @@
 using System;
+using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Updates
 {
    /// <summary>
    /// Checks for new commits

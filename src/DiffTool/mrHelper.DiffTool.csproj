@@ -38,12 +38,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\Common\Interfaces\GlobalGitConfigurationItf.cs" />
     <Compile Include="src\BC3Tool.cs" />
     <Compile Include="src\DiffToolIntegration.cs" />
-    <Compile Include="src\IntegratedDiffToolItf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

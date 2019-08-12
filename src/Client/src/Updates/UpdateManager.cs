@@ -1,6 +1,7 @@
 using System;
+using mrHelper.Client.Tools
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Updates
 {
    /// <summary>
    /// Manages updates

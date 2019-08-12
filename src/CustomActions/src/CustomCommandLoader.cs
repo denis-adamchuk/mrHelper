@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Xml;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.CustomActions
 {

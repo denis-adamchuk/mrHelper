@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Workflow
 {
    public class WorkflowException : Exception {}
 

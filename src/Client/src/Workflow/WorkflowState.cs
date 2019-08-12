@@ -1,4 +1,7 @@
-namespace mrHelper.Client
+using System;
+using mrHelper.Client.Tools;
+
+namespace mrHelper.Client.Workflow;
 {
    public class WorkflowState
    {

@@ -1,6 +1,9 @@
 using System;
+using GitLabSharp;
+using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Updates
 {
    /// <summary>
    /// Implements Updates-related interaction with GitLab

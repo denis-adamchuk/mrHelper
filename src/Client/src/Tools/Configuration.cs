@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
 
-namespace mrHelper.Client
+namespace mrHelper.Client.Tools
 {
    class ChangesNotAllowedException : Exception {}
 

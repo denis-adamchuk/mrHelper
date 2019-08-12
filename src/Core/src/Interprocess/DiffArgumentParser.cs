@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace mrHelper.Core
+namespace mrHelper.Core.Interprocess
 {
    /// <summary>
    /// Parses command-line arguments to DiffToolInfo structure

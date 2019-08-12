@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Win32;
 using System.Diagnostics;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.DiffTool
 {
@@ -29,7 +30,7 @@ namespace mrHelper.DiffTool
       /// Throws GitOperationException if integration failed
       /// Throws DiffToolIntegrationException if diff tool is not installed
       /// </summary>
-      public void Integrate(IntegratedDiffTool diffTool)
+      public void Integrate(IIntegratedDiffTool diffTool)
       {
          registerInGit(gitDiffToolName);
 
@@ -57,7 +58,7 @@ namespace mrHelper.DiffTool
       /// <summary>
       /// Throws DiffToolIntegrationException if integration failed
       /// </summary>
-      private void registerInTool(IntegratedDiffTool diffTool)
+      private void registerInTool(IIntegratedDiffTool diffTool)
       {
          if (!isInstalled())
          {
@@ -82,7 +83,7 @@ namespace mrHelper.DiffTool
       /// Throws GitOperationException if integration failed
       /// Throws DiffToolIntegrationException if diff tool is not installed
       /// </summary>
-      private void registerInGit(IntegratedDiffTool diffTool, string name)
+      private void registerInGit(IIntegratedDiffTool diffTool, string name)
       {
          if (!isInstalled())
          {
@@ -92,7 +93,7 @@ namespace mrHelper.DiffTool
          _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand());
       }
 
-      public bool isInstalled(IntegratedDiffTool diffTool)
+      public bool isInstalled(IIntegratedDiffTool diffTool)
       {
          return getToolPath(diffTool) != null;
       }
@@ -131,7 +132,7 @@ namespace mrHelper.DiffTool
          return null;
       }
 
-      private string getGitCommand(IntegratedDiffTool diffTool)
+      private string getGitCommand(IIntegratedDiffTool diffTool)
       {
          string toolPath = getToolPath(diffTool);
          if (toolPath == null)
@@ -144,7 +145,7 @@ namespace mrHelper.DiffTool
          return "\"\\\"" + path + "\\\"" + diffTool.GetToolCommandArguments() + "\"";
       }
 
-      private string getToolPath(IntegratedDiffTool diffTool)
+      private string getToolPath(IIntegratedDiffTool diffTool)
       {
          return getInstallPath(diffTool.GetToolRegistryNames());
       }

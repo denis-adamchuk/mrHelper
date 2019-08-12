@@ -6,7 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using mrHelper.Core;
+using GitLabSharp.Entities;
+using mrHelper.Common.Interfaces;
+using mrHelper.Core.Interprocess;
+using mrHelper.Core.Matchers;
+using mrHelper.Core.Git;
+using mrHelper.Client.Managers;
 
 namespace mrHelper.App.Forms
 {
@@ -15,7 +20,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public NewDiscussionForm(InterprocessSnapshot snapshot, DiffToolInfo difftoolInfo)
+      public NewDiscussionForm(Snapshot snapshot, DiffToolInfo difftoolInfo)
       {
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
@@ -253,7 +258,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private readonly InterprocessSnapshot _interprocessSnapshot;
+      private readonly Snapshot _interprocessSnapshot;
       private readonly DiffToolInfo _difftoolInfo;
       private readonly RefToLineMatcher _matcher;
       private readonly GitRenameDetector _renameChecker;
