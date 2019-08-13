@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>mrHelper.UI</RootNamespace>
+    <RootNamespace>mrHelper.App</RootNamespace>
     <AssemblyName>mrHelper</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -83,22 +83,22 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.Designer.cs">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.Async.cs">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.EventHandler.cs">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.Init.cs">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.Utils.cs">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.Workflow.cs">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\NewDiscussionForm.cs">
       <SubType>Form</SubType>
@@ -124,8 +124,8 @@
     <EmbeddedResource Include="src\Forms\DiscussionsForm.resx">
       <DependentUpon>DiscussionsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\mrHelperForm.resx">
-      <DependentUpon>mrHelperForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\NewDiscussionForm.resx">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>

@@ -20,11 +20,17 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
-         _gitClient = null;
+         string path = Path.Combine(_settings.LocalFolder, GetCurrentProjectName().Split('/')[1]);
+         createGitClient(localFolder, path);
+         if (_gitClient == null)
+         {
+            return;
+         }
+
          prepareToAsyncGitOperation();
          try
          {
-            _gitClient = await _gitClientInitializer.InitAsync(_settings.LocalGitFolder, GetCurrentHostName(),
+            await _gitClientInitializer.InitAsync(_gitClient, path, GetCurrentHostName(),
                GetCurrentProjectName(), _commitChecker);
          }
          catch (Exception ex)
@@ -94,48 +100,22 @@ namespace mrHelper.App.Forms
          form.Show();
       }
 
-      async private Task<User?> loadCurrentUserAsync()
-      {
-         labelWorkflowStatus.Text = "Loading current user...";
-         User? currentUser = null;
-         try
-         {
-            currentUser = await _workflow.GetCurrentUser();
-         }
-         catch (WorkflowException)
-         {
-            MessageBox.Show("Cannot load current user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         labelWorkflowStatus.Text = String.Empty;
-         return currentUser;
-      }
-
-      async private Task<List<Discussion>> loadDiscussionsAsync()
-      {
-         labelWorkflowStatus.Text = "Loading discussions...";
-         List<Discussion> discussions;
-         try
-         {
-            discussions = await _discussionManager.GetDiscussionsAsync(_workflow.State.MergeRequestDescriptor);
-         }
-         catch (DiscussionManagerException)
-         {
-            MessageBox.Show("Cannot load discussions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         labelWorkflowStatus.Text = String.Empty;
-         return discussions;
-      }
-
       async private void onLaunchDiffTool()
       {
          _diffToolArgs = null;
          await updateInterprocessSnapshot(); // to purge serialized snapshot
 
-         _gitClient = null;
+         string path = Path.Combine(_settings.LocalFolder, GetCurrentProjectName().Split('/')[1]);
+         createGitClient(localFolder, path);
+         if (_gitClient == null)
+         {
+            return;
+         }
+
          prepareToAsyncGitOperation();
          try
          {
-            _gitClient = await _gitClientInitializer.InitAsync(_settings.LocalGitFolder, GetCurrentHostName(),
+            await _gitClientInitializer.InitAsync(_gitClient, path, GetCurrentHostName(),
                GetCurrentProjectName(), _commitChecker);
          }
          catch (Exception ex)
@@ -216,6 +196,39 @@ namespace mrHelper.App.Forms
 
          serializer.SerializeToDisk(snapshot);
       }
+
+      async private Task<User?> loadCurrentUserAsync()
+      {
+         labelWorkflowStatus.Text = "Loading current user...";
+         User? currentUser = null;
+         try
+         {
+            currentUser = await _workflow.GetCurrentUser();
+         }
+         catch (WorkflowException)
+         {
+            MessageBox.Show("Cannot load current user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         labelWorkflowStatus.Text = String.Empty;
+         return currentUser;
+      }
+
+      async private Task<List<Discussion>> loadDiscussionsAsync()
+      {
+         labelWorkflowStatus.Text = "Loading discussions...";
+         List<Discussion> discussions;
+         try
+         {
+            discussions = await _discussionManager.GetDiscussionsAsync(_workflow.State.MergeRequestDescriptor);
+         }
+         catch (DiscussionManagerException)
+         {
+            MessageBox.Show("Cannot load discussions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         labelWorkflowStatus.Text = String.Empty;
+         return discussions;
+      }
+
 
       async private Task onStartTimer()
       {

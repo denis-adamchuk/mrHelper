@@ -32,7 +32,7 @@ namespace mrHelper.Client.Git
       // Timestamp of the most recent fetch/clone, by default it is empty
       public DateTime? LastUpdateTime { get; private set; }
 
-      public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
+      public event EventHandler<string> OnOperationStatusChange;
 
       /// <summary>
       /// Constructor that creates an object that cannot be user before running Clone.
@@ -305,7 +305,7 @@ namespace mrHelper.Client.Git
          {
             progress.ProgressChanged += (sender, status) =>
             {
-               OnOperationStatusChange?.Invoke(sender, new GitUtils.OperationStatusChangeArgs(status));
+               OnOperationStatusChange?.Invoke(sender, status);
             };
          }
 

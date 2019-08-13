@@ -279,6 +279,27 @@ namespace mrHelper.App.Forms
             notifyOnMergeRequestEvent(mergeRequest, "New commit in merge request");
          }
       }
+
+      private void createGitClient(string localFolder, string path)
+      {
+         if (!Directory.Exists(localFolder))
+         {
+            try
+            {
+               Directory.CreateDirectory(localFolder);
+            }
+            catch (Exception ex)
+            {
+               MessageBox.Show("Invalid path to \"Parent folder for git repositories\"",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               _gitClient = null;
+               return;
+            }
+         }
+
+         _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName());
+         _gitClient.OnOperationStatusChange =+ (sender, e) => updateGitStatusText(e);
+      }
    }
 }
 
