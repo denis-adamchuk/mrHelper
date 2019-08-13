@@ -1,5 +1,5 @@
 using System;
-using mrHelper.Client.Tools
+using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.TimeTracking
 {

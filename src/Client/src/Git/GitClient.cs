@@ -7,19 +7,6 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Git
 {
-   public class GitOperationException : Exception
-   {
-      public GitOperationException(string command, int exitcode, List<string> errorOutput)
-         : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
-      {
-         Details = String.Join("\n", errorOutput);
-         ExitCode = exitcode;
-      }
-
-      public string Details { get; }
-      public int ExitCode { get; }
-   }
-
    public class NoGitRepository : Exception {}
 
    /// <summary>
@@ -277,7 +264,7 @@ namespace mrHelper.Client.Git
          }, dir);
       }
 
-      public readonly string Path { get; }
+      public string Path { get; }
 
       private delegate object command();
 

@@ -1,7 +1,7 @@
 using System;
 using mrHelper.Client.Tools;
 
-namespace mrHelper.Client.Workflow;
+namespace mrHelper.Client.Workflow
 {
    public class WorkflowState
    {
@@ -41,7 +41,7 @@ namespace mrHelper.Client.Workflow;
          set
          {
             MergeRequests = value;
-            MergeRequest = null
+            MergeRequest = null;
          }
       }
 
@@ -58,7 +58,7 @@ namespace mrHelper.Client.Workflow;
       public List<Version> Versions
       {
          get;
-         set
+         set;
       }
 
       public MergeRequestDescriptor MergeRequestDescriptor
@@ -70,7 +70,8 @@ namespace mrHelper.Client.Workflow;
                HostName = HostName,
                ProjectName = Project.Path_With_Namespace,
                IId = MergeRequest.IId
-            }
+            };
+         }
       }
    }
 }

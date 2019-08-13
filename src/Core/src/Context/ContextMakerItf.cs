@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using mrHelper.Core.Matching;
+using mrHelper.Core.Interprocess;
 
 namespace mrHelper.Core.Context
 {

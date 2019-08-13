@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Web.Script.Serialization;
 
-namespace mrHelper.Interprocess
+namespace mrHelper.Core.Interprocess
 {
    /// <summary>
    /// Encapsulates work with the interprocess snapshot.

@@ -1,6 +1,7 @@
 using System;
+using GitLabSharp.Accessors;
 
-namespace mrHelper.Client.Tools
+namespace mrHelper.Client.Operators
 {
    internal class OperatorException
    {

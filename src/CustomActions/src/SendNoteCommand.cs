@@ -1,7 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using GitLabSharp;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.CustomActions
 {
@@ -22,7 +25,7 @@ namespace mrHelper.CustomActions
       async public Task Run()
       {
          GitLabClient client = new GitLabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
-         client.RunAsync(async (gitlab) =>
+         await client.RunAsync(async (gitlab) =>
             await gitlab.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.
                Get(_callback.GetCurrentMergeRequestIId()).
                   Notes.CreateNewTaskAsync(new CreateNewNoteParameters

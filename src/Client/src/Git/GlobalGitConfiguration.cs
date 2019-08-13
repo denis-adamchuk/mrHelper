@@ -26,5 +26,6 @@ namespace mrHelper.Client.Git
          string arguments = "config --global --remove-section difftool." + name;
          git(arguments);
       }
+   }
 }
 

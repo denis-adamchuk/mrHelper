@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using mrHelper.Client.Tools
+using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Workflow
 {

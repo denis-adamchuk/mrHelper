@@ -4,8 +4,8 @@ namespace mrHelper.Common.Interfaces
 {
    public interface IGlobalGitConfiguration
    {
-      public void SetDiffTool(string name, string command);
-      public void RemoveDiffTool(string name);
+      void SetGlobalDiffTool(string name, string command);
+      void RemoveGlobalDiffTool(string name);
    }
 }
 

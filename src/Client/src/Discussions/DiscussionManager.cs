@@ -1,5 +1,5 @@
 using System;
-using mrHelper.Client.Tools
+using mrHelper.Client.Tools;
 using mrHelper.Client.Discussions;
 
 namespace mrHelper.Client.Discussions

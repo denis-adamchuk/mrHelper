@@ -2,27 +2,17 @@
 using Microsoft.Win32;
 using System.Diagnostics;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.DiffTool
 {
-   public const string GitDiffToolName = "mrhelperdiff";
-
-   public class DiffToolIntegrationException : Exception
-   {
-      public DiffToolIntegrationException(string message, Exception ex = null)
-         : base(String.Format(message))
-      {
-         NestedException = ex;
-      }
-
-      public Exception NestedException { get; }
-   }
-
    /// <summary>
    /// Performs integration of the application into the specific DiffTool. Registers special difftool in git.
    /// </summary>
    public class DiffToolIntegration
    {
+      public const string GitDiffToolName = "mrhelperdiff";
+
       public DiffToolIntegration(IGlobalGitConfiguration globalGitConfiguration)
       {
          _globalGitConfiguration = globalGitConfiguration;
@@ -34,11 +24,11 @@ namespace mrHelper.DiffTool
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
-         registerInGit(GitDiffToolName);
+         registerInGit(diffTool, GitDiffToolName);
 
          try
          {
-            registerInTool();
+            registerInTool(diffTool);
          }
          catch (DiffToolIntegrationException)
          {
@@ -62,7 +52,7 @@ namespace mrHelper.DiffTool
       /// </summary>
       private void registerInTool(IIntegratedDiffTool diffTool)
       {
-         if (!isInstalled())
+         if (!isInstalled(diffTool))
          {
             throw new DiffToolIntegrationException("Diff tool not installed", null);
          }
@@ -87,12 +77,12 @@ namespace mrHelper.DiffTool
       /// </summary>
       private void registerInGit(IIntegratedDiffTool diffTool, string name)
       {
-         if (!isInstalled())
+         if (!isInstalled(diffTool))
          {
             throw new DiffToolIntegrationException("Diff tool not installed", null);
          }
 
-         _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand());
+         _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand(diffTool));
       }
 
       public bool isInstalled(IIntegratedDiffTool diffTool)

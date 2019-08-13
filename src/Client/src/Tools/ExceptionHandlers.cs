@@ -1,10 +1,7 @@
 using System;
 using System.Diagnostics;
 using GitLabSharp.Accessors;
-using mrHelper.CustomActions;
-using mrHelper.DiffTool;
-using mrHelper.Client.Git;
-using mrHelper.Client.Operators;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Tools
 {

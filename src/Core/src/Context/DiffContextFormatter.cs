@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.Client
+namespace mrHelper.Core.Context
 {
    /// <summary>
    /// Renders DiffContext objects into HTML web page using CSS from resources

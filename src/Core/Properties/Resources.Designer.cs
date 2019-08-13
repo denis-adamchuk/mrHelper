@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace mrHelper.App.Properties {
+namespace mrHelper.Core.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace mrHelper.App.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("mrHelper.App.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("mrHelper.Core.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,6 +57,46 @@ namespace mrHelper.App.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to body {
+        ///   width: 100%;
+        ///   margin: 0;
+        ///}
+        ///
+        ///table { 
+        ///   font-family: Consolas, monospace;
+        ///   position: absolute;
+        ///   top: 0;
+        ///   bottom: 0;
+        ///   left: 0;
+        ///   right: 0;
+        ///   width: 100%;
+        ///   margin: 0;
+        ///   border: none;
+        ///}
+        ///
+        ///tr.selected {
+        ///   font-weight: bold;
+        ///}
+        ///
+        ///td.linenumbers {
+        ///   width: 50px;
+        ///   color: rgb(175, 175, 175);
+        ///   background-color: rgb(250, 250, 250);
+        ///   text-align: center;
+        ///   border-right: solid 1px rgb(240, 240, 240);
+        ///}
+        ///
+        ///td.unchanged {
+        ///   color: rgb(46, 46, 46);
+        ///   background- [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string DiffContextCSS {
+            get {
+                return ResourceManager.GetString("diff_context", resourceCulture);
             }
         }
     }

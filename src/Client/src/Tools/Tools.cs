@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
 using GitLabSharp.Entities;
-using mrHelper.CustomActions;
 using mrHelper.Client.Tools;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Tools
 {

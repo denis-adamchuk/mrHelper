@@ -3,20 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Xml;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.CustomActions
 {
-   public class CustomCommandLoaderException : Exception
-   {
-      public CustomCommandLoaderException(string message, Exception ex = null)
-         : base(String.Format(message))
-      {
-         NestedException = ex;
-      }
-
-      public Exception NestedException { get; }
-   }
-
    /// <summary>
    /// Loads custom actions from XML file
    /// </summary>

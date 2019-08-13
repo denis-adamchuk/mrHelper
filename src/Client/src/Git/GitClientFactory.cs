@@ -21,7 +21,7 @@ namespace mrHelper.Client.Git
             return Clients[key];
          }
 
-         GitClient client = isCloneNeeded() : new GitClient() : new GitClient(path);
+         GitClient client = isCloneNeeded() ? new GitClient() : new GitClient(path);
          Clients[key] = client;
          return client;
       }

@@ -21,7 +21,7 @@ namespace mrHelper.Client.Updates
          try
          {
            return await client.RunAsync(async (gitlab) =>
-              return await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter());
+              await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter());
          }
          catch (GitLabRequestException ex)
          {
@@ -36,7 +36,7 @@ namespace mrHelper.Client.Updates
          try
          {
             return await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync());
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync());
          }
          catch (GitLabRequestException ex)
          {

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using mrHelper.Core.Git;
+using mrHelper.Core.Interprocess;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Core.Matching
 {

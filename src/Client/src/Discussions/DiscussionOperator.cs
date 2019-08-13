@@ -21,7 +21,7 @@ namespace mrHelper.Client.Discussions
          try
          {
             return await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.LoadAllTaskAsync());
          }
          catch (GitLabRequestException ex)
@@ -37,7 +37,7 @@ namespace mrHelper.Client.Discussions
          try
          {
             return await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).LoadTaskAsync());
          }
          catch (GitLabRequestException ex)
@@ -52,13 +52,13 @@ namespace mrHelper.Client.Discussions
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+            return await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(_discussionId).CreateNewNoteTaskAsync(
                      new CreateNewNoteParameters
                      {
                         Body = body
-                     });
+                     }));
          }
          catch (GitLabRequestException ex)
          {
@@ -72,8 +72,8 @@ namespace mrHelper.Client.Discussions
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+            return await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                      new ModifyDiscussionNoteParameters
                      {
@@ -92,8 +92,8 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+            return await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Notes.Get(noteId).DeleteTaskAsync());
          }
          catch (GitLabRequestException ex)
@@ -108,8 +108,8 @@ namespace mrHelper.Client.Discussions
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+            return await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                      new ModifyDiscussionNoteParameters
                      {
@@ -129,8 +129,8 @@ namespace mrHelper.Client.Discussions
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+            return await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).ResolveTaskAsync(
                      new ResolveThreadParameters
                      {
@@ -149,8 +149,8 @@ namespace mrHelper.Client.Discussions
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            await client.RunAsync(async (gitlab) =>
-               return await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+            return await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.CreateNew(parameters));
          }
          catch (GitLabRequestException ex)

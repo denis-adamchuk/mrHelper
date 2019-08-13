@@ -28,7 +28,7 @@ namespace mrHelper.Client.Workflow
                // emulate project change to reload merge request list
                await switchProjectAsync(State.Project.Path_With_Namespace);
             }
-         }
+         };
          _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
       }
 

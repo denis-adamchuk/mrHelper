@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using mrHelper.Core.Matching;
+using mrHelper.Core.Interprocess;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Core.Context
 {

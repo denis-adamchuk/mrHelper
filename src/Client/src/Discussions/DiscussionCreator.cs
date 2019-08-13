@@ -1,6 +1,9 @@
 using System;
+using System.Threading.Task;
 using GitLabSharp.Entities;
+using GitLabSharp.Accessors;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Operators;
 
 namespace mrHelper.Client.Discussions
 {
@@ -33,12 +36,12 @@ namespace mrHelper.Client.Discussions
          }
          catch (OperatorException ex)
          {
-            bool handled = handleGitlabError(parameters, gl, ex);
+            bool handled = await handleGitlabError(parameters, gl, ex);
             throw new DiscussionCreatorException(handled);
          }
       }
 
-      private void handleGitlabError(NewDiscussionParameters parameters, OperatorException ex)
+      async private Task<bool> handleGitlabError(NewDiscussionParameters parameters, OperatorException ex)
       {
          var webException = ex.GitLabRequestException.WebException;
          var response = ((System.Net.HttpWebResponse)webException.Response);
@@ -58,7 +61,7 @@ namespace mrHelper.Client.Discussions
          return false;
       }
 
-      async private bool createMergeRequestWithoutPosition(NewDiscussionParameters parameters)
+      async private Task<bool> createMergeRequestWithoutPosition(NewDiscussionParameters parameters)
       {
          Debug.Assert(parameters.Position.HasValue);
 
@@ -69,7 +72,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            DiscussionOperator.CreateDiscussionAsync(MergeRequestDescriptor, parameters);
+            await DiscussionOperator.CreateDiscussionAsync(MergeRequestDescriptor, parameters);
          }
          catch (OperatorException ex)
          {

@@ -41,7 +41,10 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\Common\Interfaces\IntegratedDiffToolItf.cs" />
     <Compile Include="..\Common\Interfaces\GlobalGitConfigurationItf.cs" />
+    <Compile Include="..\Common\Exceptions\GitOperationException.cs" />
+    <Compile Include="..\Common\Exceptions\DiffToolIntegrationException.cs" />
     <Compile Include="src\BC3Tool.cs" />
     <Compile Include="src\DiffToolIntegration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

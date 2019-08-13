@@ -20,7 +20,7 @@ namespace mrHelper.Client.Workflow
       {
          try
          {
-            return await Client.RunAsync(async (gl) => return await gl.CurrentUser.LoadTaskAsync());
+            return await Client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() );
          }
          catch (GitLabRequestException ex)
          {
@@ -44,7 +44,7 @@ namespace mrHelper.Client.Workflow
          try
          {
             return await Client.RunAsync(async (gl) =>
-               return await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = Settings.ShowPublicOnly }));
+               await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = Settings.ShowPublicOnly }));
          }
          catch (GitLabRequestException ex)
          {
@@ -61,8 +61,8 @@ namespace mrHelper.Client.Workflow
          List<MergeRequest> mergeRequests = null;
          try
          {
-            mergeRequests = Client.RunAsync(async (gl) =>
-               return await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
+            mergeRequests = await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
                   new MergeRequestsFilter()));
          }
          catch (GitLabRequestException ex)
@@ -89,7 +89,7 @@ namespace mrHelper.Client.Workflow
          try
          {
             return await Client.RunAsync(async (gl) =>
-               return await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync(ct));
+               await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync(ct));
          }
          catch (GitLabRequestException ex)
          {
@@ -105,7 +105,7 @@ namespace mrHelper.Client.Workflow
          try
          {
             return await Client.RunAsync(async (gl) =>
-               return await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
+               await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
                   Versions.LoadAllTaskAsync(ct));
          }
          catch (GitLabRequestException ex)
