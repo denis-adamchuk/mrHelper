@@ -15,12 +15,12 @@ using mrHelper.Client.Managers;
 
 namespace mrHelper.App.Forms
 {
-   public partial class NewDiscussionForm : Form
+   internal partial class NewDiscussionForm : Form
    {
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public NewDiscussionForm(Snapshot snapshot, DiffToolInfo difftoolInfo)
+      internal NewDiscussionForm(Snapshot snapshot, DiffToolInfo difftoolInfo)
       {
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;

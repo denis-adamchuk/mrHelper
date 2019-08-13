@@ -5,6 +5,8 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.DiffTool
 {
+   public const string GitDiffToolName = "mrhelperdiff";
+
    public class DiffToolIntegrationException : Exception
    {
       public DiffToolIntegrationException(string message, Exception ex = null)
@@ -32,7 +34,7 @@ namespace mrHelper.DiffTool
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
-         registerInGit(gitDiffToolName);
+         registerInGit(GitDiffToolName);
 
          try
          {

@@ -1,72 +1,52 @@
 using System;
-using System.Collections.Generic;
 using mrHelper.Client.Git;
-using mrHelper.Client.Tools
+using mrHelper.Client.Update;
 
-namespace mrHelper.Client.Git
+namespace mrHelper.App.Helpers
 {
-   public delegate bool CheckForUpdates();
-
    public class CancelledByUserException : Exception {}
    public class RepeatOperationException : Exception {}
 
-   ///<summary>
-   /// Creates and manages GitClient objects.
-   ///<summary>
-   public class GitClientManager
+   internal class GitClientInitializer
    {
-      public bool IsInitialized()
+      internal event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
+
+      internal GitClientInitializer(GitClientFactory factory)
       {
-         return GetRepository() != null;
+         GitClientFactory = factory;
       }
 
-      public event EventHandler<GitUtils.OperationStatusChangeArgs> OnOperationStatusChange;
-
       /// <summary>
-      /// Create an instance of GitClientManager
-      /// Throws:
-      /// ArgumentException is local git folder is bad path
+      /// Creates a GitClient object and initializes it.
+      /// Return GitClient object if creation succeeded, throws otherwise.
+      /// Throw ArgumentException if passed path is bad.
+      /// Throw GitOperationException on unrecoverable errors.
+      /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      public GitClientManager(string localFolder, string hostName)
+      internal Task<GitClient> InitAsync(string localFolder, string hostName, string projectName,
+         CommitChecker commitChecker)
       {
          try
          {
-            Directory.CreateDirectory(LocalGitFolder);
+            Directory.CreateDirectory(localFolder);
          }
          catch (Exception)
          {
             throw new ArgumentException("Bad local folder path");
          }
 
-         LocalFolder = localFolder;
-         HostName = hostName;
-      }
-
-      /// <summary>
-      /// Create a GitClient object. Checks internal cache also.
-      /// Return GitClient object if creation succeeded, throws otherwise.
-      /// Throw GitOperationException on unrecoverable errors.
-      /// Throw CancelledByUserException and RepeatOperationException.
-      /// </summary>
-      async public Task<GitClient> GetClientAsync(string projectName, CommitChecker commitChecker)
-      {
-         if (Clients.ContainsKey(projectName))
-         {
-            GitClient client = Clients[projectName];
-            await checkForRepositoryUpdatesAsync(client, commitChecker);
-            return client;
-         }
-
-         string path = Path.Combine(LocalFolder, projectName);
+         string path = Path.Combine(localFolder, projectName);
          if (!isCloneAllowed(path))
          {
             return null;
          }
 
-         GitClient client = createClientAsync(path, projectName, commitChecker);
-         Debug.Assert(client != null);
-         Clients[projectName] = client;
-         return client;
+         return await createClientAsync(path, projectName, hostName, commitChecker);
+      }
+
+      internal void CancelAsyncOperation()
+      {
+         GitClient?.CancelAsyncOperation();
       }
 
       /// <summary>
@@ -75,23 +55,22 @@ namespace mrHelper.Client.Git
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private GitClient createClientAsync(string path, string projectName, CommitChecker commitChecker)
+      async private Task<GitClient> createClientAsync(string path, string hostName, string projectName,
+         CommitChecker commitChecker)
       {
-         if (isCloneNeeded())
-         {
-            GitClient client = new GitClient();
-            await runAsync(client, (client) => client.CloneAsync(HostName, projectName, path), "clone");
-            Debug.Assert(client.IsGitClient(client.Path));
-            client.SetUpdater(UpdateManager.GetGitClientUpdater());
-            return client;
-         }
+         GitClient client = GitClientFactory.GetClient(path, hostName, projectName);
+         client.OnOperationStatusChange += ((sender, e) => OnOperationStatusChange?.Invoke(sender, e));
 
-         GitClient client = new GitClient(path);
-         if (await checkForRepositoryUpdatesAsync(client, commitChecker))
+         if (isCloneNeeded(path))
+         {
+            await runAsync(client, (client) => client.CloneAsync(hostName, projectName, path), "clone");
+            Debug.Assert(client.IsGitClient(client.Path));
+         }
+         else if (await checkForRepositoryUpdatesAsync(client, commitChecker))
          {
             await runAsync(client, (client) => client.FetchAsync(), "fetch");
-            client.SetUpdater(UpdateManager.GetGitClientUpdater());
          }
+
          return client;
       }
 
@@ -99,7 +78,7 @@ namespace mrHelper.Client.Git
       /// Check if Path exists and asks user if we can clone a git repository.
       /// Return true if Path exists or user allows to create it, false otherwise
       /// </summary>
-      private bool isCloneAllowed()
+      private bool isCloneAllowed(string path)
       {
          if (!Directory.Exists(Path))
          {
@@ -116,9 +95,9 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Check if Path exists and it is a valid git repository
       /// </summary>
-      private bool isCloneNeeded()
+      private bool isCloneNeeded(string path)
       {
-         return !Directory.Exists(Path) || !GitClient.IsGitClient(Path);
+         return !Directory.Exists(path) || !GitClient.IsGitClient(path);
       }
 
       /// <summary>
@@ -227,14 +206,11 @@ namespace mrHelper.Client.Git
             return true;
          }
 
-         return await commitChecker.AreNewCommits(gitClient.LastUpdateTime.Value);
+         return await commitChecker.AreNewCommits(client.LastUpdateTime.Value);
       }
 
-      private string Host { get; }
-      private string LocalFolder { get; }
-      private UpdateManager updateManager { get; }
-
-      private Dictionary<string, GitClient> Clients { get; set; }
+      private GitClientFactory GitClientFactory { get; }
+      private GitClient GitClient { get; set; }
    }
 }
 

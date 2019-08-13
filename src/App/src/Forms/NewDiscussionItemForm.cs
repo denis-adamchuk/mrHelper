@@ -10,14 +10,14 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   public partial class NewDiscussionItemForm : Form
+   internal partial class NewDiscussionItemForm : Form
    {
-      public NewDiscussionItemForm()
+      internal NewDiscussionItemForm()
       {
          InitializeComponent();
       }
 
-      public string Body => textBox.Text;
+      internal string Body => textBox.Text;
 
       private void textBox_KeyDown(object sender, KeyEventArgs e)
       {

@@ -8,12 +8,12 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Represents a color scheme used in the application
    /// </summary>
-   public class ColorScheme
+   internal class ColorScheme
    {
       /// <summary>
       /// Create a default scheme
       /// </summary>
-      public ColorScheme()
+      internal ColorScheme()
       {
          resetToDefault();
       }
@@ -24,7 +24,7 @@ namespace mrHelper.App.Helpers
       /// Throws ArgumentNullException
       /// Throws InvalidOperationException
       /// </summary>
-      public ColorScheme(string filename)
+      internal ColorScheme(string filename)
       {
          resetToDefault();
 
@@ -65,7 +65,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public Color GetColor(string name)
+      internal Color GetColor(string name)
       {
          if (!_colors.ContainsKey(name))
          {

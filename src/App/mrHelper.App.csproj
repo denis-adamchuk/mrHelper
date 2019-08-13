@@ -85,6 +85,21 @@
     <Compile Include="src\Forms\MainForm.Designer.cs">
       <DependentUpon>mrHelperForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\MainForm.Async.cs">
+      <DependentUpon>mrHelperForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.EventHandler.cs">
+      <DependentUpon>mrHelperForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Init.cs">
+      <DependentUpon>mrHelperForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Utils.cs">
+      <DependentUpon>mrHelperForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Workflow.cs">
+      <DependentUpon>mrHelperForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\NewDiscussionForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -92,6 +107,9 @@
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Program.cs" />
+    <Compile Include="src\Helpers\ColorScheme.cs" />
+    <Compile Include="src\Helpers\CustomTraceListener.cs" />
+    <Compile Include="src\Helpers\GitClientInitializer.cs" />
     <Compile Include="..\Common\Interfaces\CommandCallbackItf.cs" />
     <Compile Include="..\Common\Interfaces\CommandItf.cs" />
     <Compile Include="..\Common\Interfaces\GitRepositoryItf.cs" />

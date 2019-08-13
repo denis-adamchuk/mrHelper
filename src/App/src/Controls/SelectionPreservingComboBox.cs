@@ -12,11 +12,11 @@ namespace mrHelper.App.Controls
    /// SelectedText and Text properties until SelectedIndexChanged event is invoked, including cases
    /// when dropdown is expanded and user hovers but does not click on items
    /// </summary>
-   public class SelectionPreservingComboBox : ComboBox
+   internal class SelectionPreservingComboBox : ComboBox
    {
-      new public event EventHandler SelectedIndexChanged;
+      new internal event EventHandler SelectedIndexChanged;
 
-      public SelectionPreservingComboBox()
+      internal SelectionPreservingComboBox()
       {
          base.SelectionChangeCommitted +=
             (sender, args) =>
@@ -37,7 +37,7 @@ namespace mrHelper.App.Controls
          };
       }
 
-      new public int SelectedIndex
+      new internal int SelectedIndex
       {
          get
          {
@@ -58,7 +58,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new public object SelectedItem
+      new internal object SelectedItem
       {
          get
          {
@@ -70,7 +70,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new public string SelectedText
+      new internal string SelectedText
       {
          get
          {
@@ -78,7 +78,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new public string Text
+      new internal string Text
       {
          get
          {

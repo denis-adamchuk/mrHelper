@@ -3,14 +3,14 @@ using System.Diagnostics;
 
 namespace mrHelper.App.Helpers
 {
-   public class CustomTraceListener : TextWriterTraceListener
+   internal class CustomTraceListener : TextWriterTraceListener
    {
-      public CustomTraceListener(string filename)
+      internal CustomTraceListener(string filename)
          : base(filename)
       {
       }
 
-      public override void Write(string x)
+      internal override void Write(string x)
       {
          base.Write(String.Format("{0} UTC: {1}", DateTime.UtcNow, x));
       }

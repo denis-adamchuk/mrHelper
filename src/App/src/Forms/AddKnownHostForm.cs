@@ -2,16 +2,16 @@
 
 namespace mrHelper.App.Forms
 {
-   public partial class AddKnownHostForm : Form
+   internal partial class AddKnownHostForm : Form
    {
-      public AddKnownHostForm()
+      internal AddKnownHostForm()
       {
          InitializeComponent();
       }
 
-      public string Host => textBoxHost.Text;
+      internal string Host => textBoxHost.Text;
 
-      public string AccessToken => textBoxAccessToken.Text;
+      internal string AccessToken => textBoxAccessToken.Text;
 
       private void textBoxAccessToken_KeyDown(object sender, KeyEventArgs e)
       {

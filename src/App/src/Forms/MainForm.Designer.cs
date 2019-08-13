@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Forms
 {
-   partial class mrHelperForm
+   internal partial class mrHelperForm
    {
       /// <summary>
       /// Required designer variable.
@@ -244,7 +244,7 @@
          this.labelLocalGitFolder.Name = "labelLocalGitFolder";
          this.labelLocalGitFolder.Size = new System.Drawing.Size(139, 13);
          this.labelLocalGitFolder.TabIndex = 8;
-         this.labelLocalGitFolder.Text = "Local folder for git repository";
+         this.labelLocalGitFolder.Text = "Parent folder for git repositories";
          // 
          // toolTip
          // 

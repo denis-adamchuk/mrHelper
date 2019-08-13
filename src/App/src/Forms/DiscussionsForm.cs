@@ -15,13 +15,13 @@ using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
-   public partial class DiscussionsForm : Form
+   internal partial class DiscussionsForm : Form
    {
       /// <summary>
       /// Throws:
       /// ArgumentException
       /// </summary>
-      public DiscussionsForm(MergeRequestDescriptor mrd, User mergeRequestAuthor, IGitRepository gitRepository,
+      internal DiscussionsForm(MergeRequestDescriptor mrd, User mergeRequestAuthor, IGitRepository gitRepository,
          int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, DiscussionManager manager,
          User currentUser)
       {
@@ -193,6 +193,6 @@ namespace mrHelper.App.Forms
       private DiscussionManager _manager;
    }
 
-   public class NoDiscussionsToShow : ArgumentException { }; 
+   internal class NoDiscussionsToShow : ArgumentException { }; 
 }
 

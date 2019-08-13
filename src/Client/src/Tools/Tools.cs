@@ -67,6 +67,47 @@ namespace mrHelper.Client.Tools
          }
          return result;
       }
+
+      private class HostInProjectsFile
+      {
+         internal string Name = null;
+         internal List<Project> Projects = null;
+      }
+
+      /// <summary>
+      /// Loads project list from file with JSON format
+      /// Throws ArgumentException
+      /// Throws ArgumentNullException
+      /// Throws InvalidOperationException
+      /// </summary>
+      private List<Project> loadProjectsFromFile(string hostname, string filename)
+      {
+         Debug.Assert(File.Exists(filename));
+
+         string json = System.IO.File.ReadAllText(filename);
+
+         JavaScriptSerializer serializer = new JavaScriptSerializer();
+
+         List<HostInProjectsFile> hosts = null;
+         try
+         {
+            hosts = serializer.Deserialize<List<HostInProjectsFile>>(json);
+         }
+         catch (Exception) // whatever de-serialization exception
+         {
+            throw;
+         }
+
+         foreach (var host in hosts)
+         {
+            if (host.Name == hostname)
+            {
+               return host.Projects;
+            }
+         }
+
+         return null;
+      }
    }
 }
 

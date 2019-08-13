@@ -21,9 +21,9 @@ namespace mrHelper.App.Controls
       [DllImport("user32", EntryPoint = "SendMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
       private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam);
 
-      public delegate void OnBoxEvent();
+      internal delegate void OnBoxEvent();
 
-      public DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
+      internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
          int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme, OnBoxEvent onSizeChanged)
       {
          _editor = editor;
@@ -167,7 +167,7 @@ namespace mrHelper.App.Controls
          await onToggleResolveDiscussionAsync();
       }
 
-      public void AdjustToWidth(int width)
+      internal void AdjustToWidth(int width)
       {
          resizeBoxContent(width);
          repositionBoxContent(width);
