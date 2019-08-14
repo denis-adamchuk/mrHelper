@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.Core.Interprocess;
 using mrHelper.App.Forms;
+using mrHelper.App.Helpers;
+using mrHelper.Client.Tools;
 
 namespace mrHelper.App
 {

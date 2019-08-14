@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Git;
@@ -19,7 +20,7 @@ using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
-   delegate void UpdateTextCallback(string text);
+   delegate void UpdateTextCallback(object sender, string text);
 
    internal partial class mrHelperForm : Form, ICommandCallback
    {
@@ -77,6 +78,7 @@ namespace mrHelper.App.Forms
       private GitClientFactory _gitClientFactory;
       private GitClientInitializer _gitClientInitializer;
 
+      private GitClient _gitClient;
       private Workflow _workflow;
       private WorkflowUpdateChecker _workflowUpdateChecker;
       private CommitChecker _commitChecker;
@@ -105,7 +107,7 @@ namespace mrHelper.App.Forms
          internal bool IsLatest;
          internal DateTime? TimeStamp;
 
-         internal override string ToString()
+         public override string ToString()
          {
             return Text;
          }
@@ -118,7 +120,7 @@ namespace mrHelper.App.Forms
             IsLatest = false;
          }
 
-         internal VersionComboBoxItem(Version ver)
+         internal VersionComboBoxItem(GitLabSharp.Entities.Version ver)
             : this(ver.Head_Commit_SHA, ver.Head_Commit_SHA.Substring(0, 10), ver.Created_At)
          {
          }

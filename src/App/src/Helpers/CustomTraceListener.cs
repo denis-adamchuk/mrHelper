@@ -10,7 +10,7 @@ namespace mrHelper.App.Helpers
       {
       }
 
-      internal override void Write(string x)
+      public override void Write(string x)
       {
          base.Write(String.Format("{0} UTC: {1}", DateTime.UtcNow, x));
       }

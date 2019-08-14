@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using mrHelper.App.Controls;
+
+namespace mrHelper.App.Forms
 {
    internal partial class mrHelperForm
    {
@@ -82,11 +84,11 @@
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
          this.labelAutoUpdate = new System.Windows.Forms.Label();
-         this.comboBoxProjects = new mrHelper.App.SelectionPreservingComboBox();
-         this.comboBoxFilteredMergeRequests = new mrHelper.App.SelectionPreservingComboBox();
-         this.comboBoxHost = new mrHelper.App.SelectionPreservingComboBox();
-         this.comboBoxRightVersion = new mrHelper.App.SelectionPreservingComboBox();
-         this.comboBoxLeftVersion = new mrHelper.App.SelectionPreservingComboBox();
+         this.comboBoxProjects = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxFilteredMergeRequests = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxRightVersion = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxLeftVersion = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -193,7 +195,6 @@
          this.textBoxLabels.Size = new System.Drawing.Size(232, 20);
          this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests that contain any of these labels");
-         this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_Leave);
          // 
          // checkBoxLabels
          // 
@@ -416,7 +417,6 @@
          this.checkBoxShowPublicOnly.TabIndex = 6;
          this.checkBoxShowPublicOnly.Text = "Show projects with public visibility only";
          this.checkBoxShowPublicOnly.UseVisualStyleBackColor = true;
-         this.checkBoxShowPublicOnly.CheckedChanged += new System.EventHandler(this.CheckBoxShowPublicOnly_CheckedChanged);
          // 
          // checkBoxRequireTimer
          // 

@@ -227,7 +227,7 @@ namespace mrHelper.App.Forms
          comboBoxRightVersion.Items.Add(targetBranch);
       }
 
-      private string formatMergeRequestForDropdown(MergeRequest mergeRequest)
+      private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)
       {
          return mergeRequest.Title + "    " + "[" + mergeRequest.Author.Username + "]";
       }
@@ -235,7 +235,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Typically called from another thread
       /// </summary>
-      private void updateGitStatusText(string text)
+      private void updateGitStatusText(object sender, string text)
       {
          if (labelGitStatus.InvokeRequired)
          {
@@ -289,7 +289,7 @@ namespace mrHelper.App.Forms
             {
                Directory.CreateDirectory(localFolder);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                MessageBox.Show("Invalid path to \"Parent folder for git repositories\"",
                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -298,8 +298,22 @@ namespace mrHelper.App.Forms
             }
          }
 
-         _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName());
-         _gitClient.OnOperationStatusChange =+ new System.EventHandler(updateGitStatusText);
+         _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName(), true);
+         _gitClient.OnOperationStatusChange += updateGitStatusText;
+      }
+
+      private string getInitialHostName()
+      {
+         // If Last Selected Host is in the list, select it as initial host.
+         // Otherwise, select the first host from the list.
+         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         {
+            if (_settings.KnownHosts[iKnownHost] == _settings.LastSelectedHost)
+            {
+               return _settings.LastSelectedHost;
+            }
+         }
+         return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
       }
    }
 }

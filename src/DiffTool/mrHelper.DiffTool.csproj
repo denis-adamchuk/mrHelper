@@ -38,18 +38,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Common\Interfaces\IntegratedDiffToolItf.cs" />
-    <Compile Include="..\Common\Interfaces\GlobalGitConfigurationItf.cs" />
-    <Compile Include="..\Common\Exceptions\GitOperationException.cs" />
-    <Compile Include="..\Common\Exceptions\DiffToolIntegrationException.cs" />
     <Compile Include="src\BC3Tool.cs" />
     <Compile Include="src\DiffToolIntegration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
+      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Core\mrHelper.Core.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrCore</Name>

@@ -8,8 +8,13 @@ using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
+using mrHelper.Client.Git;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 using mrHelper.Core.Interprocess;
+using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Core.Git;
 
@@ -25,7 +30,9 @@ namespace mrHelper.App.Forms
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
 
-         _gitRepository = new GitClient(Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]), false);
+         GitClientFactory factory = new GitClientFactory();
+         string path = Path.Combine(snapshot.TempFolder, snapshot.Project.Split('/')[1]);
+         _gitRepository = factory.GetClient(path, _interprocessSnapshot.Host, _interprocessSnapshot.Project, false);
          _renameChecker = new GitRenameDetector(_gitRepository);
          _matcher = new RefToLineMatcher(_gitRepository);
 
@@ -220,24 +227,23 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
-         using (UserDefinedSettings settings = new UserDefinedSettings(false))
-         {
-            DiscussionManager manager = new DiscussionManager(settings);
-            DiscussionCreator creator = manager.GetDiscussionCreator(
+         UserDefinedSettings settings = new UserDefinedSettings(false);
+         DiscussionManager manager = new DiscussionManager(settings);
+         DiscussionCreator creator = manager.GetDiscussionCreator(
                new MergeRequestDescriptor
                {
-                  HostName = _interprocessSnapshot.Host,
-                  Project = _interprocessSnapshot.Project,
-                  IId = _interprocessSnapshot.MergeRequestIId
+               HostName = _interprocessSnapshot.Host,
+               ProjectName = _interprocessSnapshot.Project,
+               IId = _interprocessSnapshot.MergeRequestIId
                });
 
-            try
-            {
-               creator.CreateDiscussionAsync(parameters);
-            }
-            catch (DiscussionCreatorException ex)
-            {
-               Trace.TraceInformation(
+         try
+         {
+            creator.CreateDiscussionAsync(parameters);
+         }
+         catch (DiscussionCreatorException ex)
+         {
+            Trace.TraceInformation(
                   "Additional information about exception:\n" +
                   "Position: {0}\n" +
                   "Include context: {1}\n" +
@@ -250,10 +256,9 @@ namespace mrHelper.App.Forms
                   _difftoolInfo.ToString(),
                   textBoxDiscussionBody.Text);
 
-               if (!ex.Handled)
-               {
-                  throw;
-               }
+            if (!ex.Handled)
+            {
+               throw;
             }
          }
       }

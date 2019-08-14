@@ -13,6 +13,8 @@ namespace mrHelper.Common.Interfaces
       List<string> GetListOfRenames(string leftcommit, string rightcommit);
 
       List<string> ShowFileByRevision(string filename, string sha);
+
+      string Path { get; set; }
    }
 }
 

@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client;
+using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 
 namespace mrHelper.App.Forms
@@ -22,7 +24,7 @@ namespace mrHelper.App.Forms
       {
          Debug.WriteLine("Initializing workflow");
 
-         _workflow = _workflowManager.CreateWorkflow(_settings);
+         _workflow = _workflowManager.CreateWorkflow();
          _workflow.HostSwitched += (sender, state) => onHostChanged(state);
          _workflow.ProjectSwitched += (sender, state) => onProjectChanged(state);
          _workflow.MergeRequestSwitched += (sender, state) => onMergeRequestChanged(state);
@@ -33,8 +35,8 @@ namespace mrHelper.App.Forms
             notifyOnMergeRequestUpdates(updates);
 
             WorkflowState state = _workflow.State;
-            if (updates.NewMergeRequests.Cast<MergeRequest>.Any(x => x.Project.Id == state.Project.Id)
-             || updates.UpdatedMergeRequests.Cast<MergeRequest>.Any(x => x.Project.Id == state.Project.Id))
+            if (updates.NewMergeRequests.Any(x => x.Project_Id == state.Project.Id)
+             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == state.Project.Id))
             {
                // emulate project change to reload merge request list
                // This will automatically update version list (if there are new ones).
@@ -54,19 +56,7 @@ namespace mrHelper.App.Forms
          prepareComboBoxToAsyncLoading(comboBoxProjects);
 
          labelWorkflowStatus.Text = "Initializing...";
-         await _workflow.SwitchHostAsync(() =>
-         {
-            // If Last Selected Host is in the list, select it as initial host.
-            // Otherwise, select the first host from the list.
-            for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
-            {
-               if (_settings.KnownHosts[iKnownHost] == _settings.LastSelectedHost)
-               {
-                  return _settings.LastSelectedHost;
-               }
-            }
-            return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
-         }());
+         await _workflow.SwitchHostAsync(getInitialHostName());
          labelWorkflowStatus.Text = String.Empty;
 
          Debug.WriteLine("Enable projects combo box");
@@ -96,12 +86,16 @@ namespace mrHelper.App.Forms
          fixComboBoxAfterAsyncLoading(comboBoxProjects);
       }
 
-      private void onHostChanged()
+      private void onHostChanged(WorkflowState state)
       {
-         comboBoxHost.SelectedText = state.HostName;
+         comboBoxHost.SelectedItem = new HostComboBoxItem
+         {
+            Host = state.HostName,
+            AccessToken = Tools.GetAccessToken(state.HostName, _settings)
+         };
          foreach (var project in state.Projects)
          {
-            comboBoxProjects.Add(project);
+            comboBoxProjects.Items.Add(project);
          }
       }
 
@@ -130,7 +124,7 @@ namespace mrHelper.App.Forms
 
       private void onProjectChanged(WorkflowState state)
       {
-         comboBoxProjects.SelectedText = state.Project.Path_With_Namespace;
+         comboBoxProjects.SelectedItem = state.Project;
          foreach (var mergeRequest in state.MergeRequests)
          {
             comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
@@ -169,10 +163,10 @@ namespace mrHelper.App.Forms
 
       private void onMergeRequestChanged(WorkflowState state)
       {
-         MergeRequest item = ((MergeRequest)e.ListItem);
-         comboBoxFilteredMergeRequests.SelectedText = formatMergeRequestListItem(item);
-         enableControlsOnChangedMergeRequest(item);
-         addVersionsToComboBoxes(state.Versions, item.Diff_Refs.Base_SHA, item.Target_Branch);
+         comboBoxFilteredMergeRequests.SelectedItem = state.MergeRequest;
+         enableControlsOnChangedMergeRequest(state.MergeRequest);
+         addVersionsToComboBoxes(state.Versions,
+            state.MergeRequest.Diff_Refs.Base_SHA, state.MergeRequest.Target_Branch);
 
          _commitChecker = _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor);
       }

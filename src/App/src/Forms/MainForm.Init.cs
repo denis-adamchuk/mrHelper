@@ -8,10 +8,18 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
+using mrHelper.DiffTool;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 using mrHelper.Core;
-using mrHelper.Client;
+using mrHelper.Client.Git;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
+using mrHelper.Client.Workflow;
+using mrHelper.Client.Discussions;
+using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
@@ -84,7 +92,7 @@ namespace mrHelper.App.Forms
          checkBoxRequireTimer.Checked = _settings.RequireTimeTracking;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
-         checkBoxShowinternalOnly.Checked = _settings.ShowinternalOnly;
+         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
          if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
          {
             comboBoxDCDepth.Text = _settings.DiffContextDepth;
@@ -99,11 +107,12 @@ namespace mrHelper.App.Forms
 
       private void integrateInTools()
       {
+         IIntegratedDiffTool diffTool = new BC3Tool();
          DiffToolIntegration integration = new DiffToolIntegration(new GlobalGitConfiguration());
 
          try
          {
-            integration.Integrate(new BC3Tool());
+            integration.Integrate(diffTool);
          }
          catch (Exception ex)
          {
@@ -142,7 +151,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void onApplicationStarted()
+      async private Task onApplicationStarted()
       {
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
@@ -152,7 +161,7 @@ namespace mrHelper.App.Forms
          _discussionManager = new DiscussionManager(_settings);
          _gitClientFactory = new GitClientFactory();
          _gitClientInitializer = new GitClientInitializer(_gitClientFactory);
-         _gitClientInitializer.OnInitializationStatusChange += (sender, e) => updateGitStatusText(e);
+         _gitClientInitializer.OnInitializationStatusChange += (sender, e) => updateGitStatusText(sender, e);
 
          updateHostsDropdownList();
 
@@ -163,7 +172,7 @@ namespace mrHelper.App.Forms
          catch (WorkflowException)
          {
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
-               "Error", MessageBoxButtons.OK, MessageBoxIcons.Error);
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
    }

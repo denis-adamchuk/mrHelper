@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
-using mrHelper.Client;
+using mrHelper.Client.Tools;
+using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
@@ -64,7 +66,7 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            await onStartTimer();
+            onStartTimer();
          }
       }
 
@@ -85,7 +87,7 @@ namespace mrHelper.App.Forms
             MessageBox.Show("Git folder is changed, but it will not affect already opened Diff Tool and Discussions views",
                "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            updateGitStatusText(String.Empty);
+            updateGitStatusText(this, String.Empty);
          }
       }
 
@@ -113,7 +115,7 @@ namespace mrHelper.App.Forms
 
       async private void ComboBoxHost_SelectedIndexChanged(object sender, EventArgs e)
       {
-         updateGitStatusText(String.Empty);
+         updateGitStatusText(this, String.Empty);
 
          string hostname = (sender as ComboBox).Text;
          _settings.LastSelectedHost = hostname;
@@ -122,7 +124,7 @@ namespace mrHelper.App.Forms
 
       async private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
       {
-         updateGitStatusText(String.Empty);
+         updateGitStatusText(this, String.Empty);
 
          string projectname = (sender as ComboBox).Text;
          _settings.LastSelectedProject = projectname;
@@ -136,7 +138,7 @@ namespace mrHelper.App.Forms
          await onChangeMergeRequest(mergeRequest.IId);
       }
 
-      async private void ButtonApplyLabels_Click(object sender, EventArgs e)
+      private void ButtonApplyLabels_Click(object sender, EventArgs e)
       {
          _settings.LastUsedLabels = textBoxLabels.Text;
       }
@@ -206,15 +208,15 @@ namespace mrHelper.App.Forms
          onRemoveKnownHost();
       }
 
-      async private void CheckBoxShowinternalOnly_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
       {
-         _settings.ShowinternalOnly = (sender as CheckBox).Checked;
+         _settings.ShowPublicOnly = (sender as CheckBox).Checked;
       }
 
-      async private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
       {
          _settings.RequireTimeTracking = (sender as CheckBox).Checked;
-         await updateInterprocessSnapshot();
+         updateInterprocessSnapshot();
       }
 
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
@@ -316,6 +318,59 @@ namespace mrHelper.App.Forms
             listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
          }
          updateHostsDropdownList();
+      }
+
+      private void onStartTimer()
+      {
+         // 1. Update button text
+         buttonToggleTimer.Text = buttonStartTimerTrackingText;
+
+         // 2. Set default text to tracked time label
+         labelSpentTime.Text = labelSpentTimeDefaultText;
+
+         // 3. Start timer
+         _timeTrackingTimer.Start();
+
+         // 4. Reset and start stopwatch
+         _timeTracker = _timeTrackingManager.GetTracker(_workflow.State.MergeRequestDescriptor);
+         _timeTracker.Start();
+
+         // 5. Update information available to other instances
+         updateInterprocessSnapshot();
+      }
+
+      async private Task onStopTimer()
+      {
+         // 1. Stop stopwatch and send tracked time
+         TimeSpan span = _timeTracker.Elapsed;
+         if (span.Seconds > 1)
+         {
+            labelWorkflowStatus.Text = "Sending tracked time...";
+            string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
+            string status = String.Format("Tracked time {0} sent successfully", duration);
+            try
+            {
+               await _timeTracker.StopAsync();
+            }
+            catch (TimeTrackerException)
+            {
+               status = "Error occurred. Tracked time is not sent!";
+            }
+            labelWorkflowStatus.Text = status;
+         }
+         _timeTracker = null;
+
+         // 2. Stop timer
+         _timeTrackingTimer.Stop();
+
+         // 3. Update information available to other instances
+         updateInterprocessSnapshot();
+
+         // 4. Set default text to tracked time label
+         labelSpentTime.Text = labelSpentTimeDefaultText;
+
+         // 5. Update button text
+         buttonToggleTimer.Text = buttonStartTimerDefaultText;
       }
    }
 }

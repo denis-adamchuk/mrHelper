@@ -8,7 +8,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
+using mrHelper.App.Forms;
+using mrHelper.App.Helpers;
+using mrHelper.App.Controls;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
+using mrHelper.Client.Tools;
 using mrHelper.Client.Discussions;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
@@ -236,21 +241,19 @@ namespace mrHelper.App.Controls
             return "<html><body>Cannot access git repository and render diff context</body></html>";
          }
 
-         string contextHtml = "<html><body></body></html>";
          try
          {
             DiffContext context = contextMaker.GetContext(position, depth);
             return _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
          }
-         catch (ArgumentException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot render HTML context");
-            return String.Format("<html><body>{0}</body></html>", ex.Message);
-         }
-         catch (GitOperationException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot render HTML context");
-            return String.Format("<html><body>{0}</body></html>", ex.Message);
+            if (ex is ArgumentException || ex is GitOperationException)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot render HTML context");
+               return String.Format("<html><body>{0}</body></html>", ex.Message);
+            }
+            throw;
          }
       }
 
@@ -538,11 +541,11 @@ namespace mrHelper.App.Controls
 
          try
          {
-            await _editor.ModifyNoteBodyAsync(note.Id, body);
+            await _editor.ModifyNoteBodyAsync(note.Id, textBox.Text);
          }
          catch (DiscussionEditorException)
          {
-            MessageBox.Show("Cannot update discussion text", "Error", MessageBoxButtons.OK, MessageBoxIcons.Error);
+            MessageBox.Show("Cannot update discussion text", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -583,9 +586,9 @@ namespace mrHelper.App.Controls
          {
             await _editor.DeleteNoteAsync(note.Id);
          }
-         catch (DiscussionEditorException ex)
+         catch (DiscussionEditorException)
          {
-            MessageBox.Show("Cannot delete a note", "Error", MessageBoxButtons.OK, MessageBoxIcons.Error);
+            MessageBox.Show("Cannot delete a note", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -605,10 +608,10 @@ namespace mrHelper.App.Controls
          {
             await _editor.ResolveNoteAsync(note.Id, !wasResolved);
          }
-         catch (DiscussionEditorException ex)
+         catch (DiscussionEditorException)
          {
             MessageBox.Show("Cannot toggle 'Resolved' state of a note", "Error",
-               MessageBoxButtons.OK, MessageBoxIcons.Error);
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -623,10 +626,10 @@ namespace mrHelper.App.Controls
          {
             await _editor.ResolveDiscussionAsync(!wasResolved);
          }
-         catch (DiscussionEditorException ex)
+         catch (DiscussionEditorException)
          {
             MessageBox.Show("Cannot toggle 'Resolved' state of a discussion", "Error",
-               MessageBoxButtons.OK, MessageBoxIcons.Error);
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -740,7 +743,7 @@ namespace mrHelper.App.Controls
             LeftPath = position.Old_Path,
             RightLine = position.New_Line,
             RightPath = position.New_Path,
-            Refs = new mrHelper.Core.DiffRefs
+            Refs = new mrHelper.Core.Matching.DiffRefs
             {
                LeftSHA = position.Base_SHA,
                RightSHA = position.Head_SHA
@@ -760,6 +763,7 @@ namespace mrHelper.App.Controls
       private Control _panelContext;
       private List<Control> _textboxesNotes;
 
+      private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
       private bool _individual;
 
@@ -768,6 +772,7 @@ namespace mrHelper.App.Controls
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
       private readonly DiffContextFormatter _formatter;
+      private readonly DiscussionEditor _editor;
 
       private readonly ColorScheme _colorScheme;
 

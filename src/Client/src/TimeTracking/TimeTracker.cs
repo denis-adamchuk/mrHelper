@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using mrHelper.Client.Tools;
 using mrHelper.Common.Exceptions;
@@ -25,7 +26,7 @@ namespace mrHelper.Client.TimeTracking
          Stopwatch.Start();
       }
 
-      async public void Stop()
+      async public Task StopAsync()
       {
          Stopwatch.Stop();
          try

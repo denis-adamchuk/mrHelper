@@ -23,16 +23,16 @@ namespace mrHelper.Client.Updates
       internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow.Workflow workflow)
       {
          Settings = settings;
-         Settings.PropertyChanged += async (sender, property) =>
+         Settings.PropertyChanged += (sender, property) =>
          {
             if (property.PropertyName == "LastUsedLabels")
             {
-               _cachedLabels = Tool.Tools.SplitLabels(Settings.LastUsedLabels);
+               _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
             }
          };
          _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
 
-         Timer.Elapsed += new System.EventHandler(onTimer);
+         Timer.Elapsed += onTimer;
          Timer.Start();
 
          UpdateOperator = updateOperator;
@@ -41,17 +41,22 @@ namespace mrHelper.Client.Updates
 
       public event EventHandler<MergeRequestUpdates> OnUpdate;
 
-      async void onTimer(object sender, EventArgs e)
+      async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
          MergeRequestUpdates updates = new MergeRequestUpdates();
          try
          {
-            updates = await getUpdatesAsync(lastCheckTimestamp);
+            updates = await getUpdatesAsync(_lastCheckTimeStamp);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
             ExceptionHandlers.Handle(ex, "Auto-update failed");
          }
+         finally
+         {
+            _lastCheckTimeStamp = DateTime.Now;
+         }
+
          if (updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
          {
             OnUpdate?.Invoke(this, updates);
@@ -59,7 +64,7 @@ namespace mrHelper.Client.Updates
       }
 
       /// <summary>
-      /// Collects requests that have been created or updated later than _lastCheckTime.
+      /// Collects requests that have been created or updated later than timestamp.
       /// By 'updated' we mean that 'merge request has a version with a timestamp later than ...'.
       /// Includes only those merge requests that match Labels filters.
       /// </summary>
@@ -71,15 +76,15 @@ namespace mrHelper.Client.Updates
             UpdatedMergeRequests = new List<MergeRequest>()
          };
 
-         if (State.HostName == null || State.Projects == null)
+         if (Workflow.State.HostName == null || Workflow.State.Projects == null)
          {
             return updates;
          }
 
-         foreach (var project in Projects)
+         foreach (var project in Workflow.State.Projects)
          {
             List<MergeRequest> mergeRequests =
-               updateOperator.GetMergeRequests(State.HostName, project.Path_With_Namespace);
+               await UpdateOperator.GetMergeRequests(Workflow.State.HostName, project.Path_With_Namespace);
             if (mergeRequests == null)
             {
                continue;
@@ -87,21 +92,21 @@ namespace mrHelper.Client.Updates
 
             foreach (var mergeRequest in mergeRequests)
             {
-               if (_cachedLabels.Intersect(mergeRequest.Labels).Count == 0)
+               if (_cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
                {
                   continue;
                }
 
-               if (mergeRequest.Created_At.ToLocalTime() > _lastCheckTime)
+               if (mergeRequest.Created_At.ToLocalTime() > timestamp)
                {
                   updates.NewMergeRequests.Add(mergeRequest);
                }
-               else if (mergeRequest.Updated_At.ToLocalTime() > _lastCheckTime)
+               else if (mergeRequest.Updated_At.ToLocalTime() > timestamp)
                {
-                  List<Version> versions = updateOperator.GetVersions(
+                  List<GitLabSharp.Entities.Version> versions = await UpdateOperator.GetVersions(
                      new MergeRequestDescriptor
                      {
-                        HostName = State.HostName,
+                        HostName = Workflow.State.HostName,
                         ProjectName = project.Path_With_Namespace,
                         IId = mergeRequest.IId
                      });
@@ -110,16 +115,20 @@ namespace mrHelper.Client.Updates
                      continue;
                   }
 
-                  Version latestVersion = versions[0];
-                  if (latestVersion.Created_At.ToLocalTime() > _lastCheckTime)
+                  GitLabSharp.Entities.Version latestVersion = versions[0];
+                  if (latestVersion.Created_At.ToLocalTime() > timestamp)
                   {
                      updates.UpdatedMergeRequests.Add(mergeRequest);
                   }
                }
             }
          }
+
+         return updates;
       }
 
+      private Workflow.Workflow Workflow { get; }
+      private UpdateOperator UpdateOperator { get; }
       private UserDefinedSettings Settings { get; }
       private List<string> _cachedLabels { get; set; }
 
@@ -129,7 +138,7 @@ namespace mrHelper.Client.Updates
          {
             Interval = mergeRequestCheckTimerInterval
          };
-      private DateTime _lastCheckTime = DateTime.Now;
+      private DateTime _lastCheckTimeStamp = DateTime.MinValue;
    }
 }
 

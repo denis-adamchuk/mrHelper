@@ -34,7 +34,7 @@ namespace mrHelper.Client.Git
       /// Constructor that expects a valid git repository as input argument.
       /// Throws ArgumentException
       /// </summary>
-      internal GitClient(string path, bool enableUpdates = true)
+      internal GitClient(string path, bool enableUpdates)
       {
          if (!IsGitClient(path))
          {
@@ -308,7 +308,6 @@ namespace mrHelper.Client.Git
       private void startTimer()
       {
          Timer.Elapsed += new System.Timers.ElapsedEventHandler(onTimer);
-         Timer.Interval = 60000;
          Timer.Start();
       }
 
@@ -340,7 +339,11 @@ namespace mrHelper.Client.Git
 
       private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
 
-      private System.Timers.Timer Timer { get; }
+      private static readonly int TimerInterval = 60000; // ms
+      private System.Timers.Timer Timer { get; } = new System.Timers.Timer
+         {
+            Interval = TimerInterval
+         };
    }
 }
 

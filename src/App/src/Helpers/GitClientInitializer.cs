@@ -1,7 +1,11 @@
 using System;
+using System.Windows.Forms;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using mrHelper.Client.Git;
+using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Helpers
 {
@@ -18,12 +22,11 @@ namespace mrHelper.App.Helpers
       }
 
       /// <summary>
-      /// Creates a GitClient object and initializes it.
-      /// Return GitClient object if creation succeeded, throws otherwise.
+      /// Initializes passed GitClient object.
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      internal Task InitAsync(GitClient client, string path, string hostName,
+      async internal Task InitAsync(GitClient client, string path, string hostName,
          string projectName, CommitChecker commitChecker)
       {
          if (!isCloneAllowed(path))
@@ -31,7 +34,7 @@ namespace mrHelper.App.Helpers
             throw new CancelledByUserException();
          }
 
-         return await createClientAsync(client, path, projectName, hostName, commitChecker);
+         await initClientAsync(client, path, projectName, hostName, commitChecker);
       }
 
       internal void CancelAsyncOperation()
@@ -40,22 +43,21 @@ namespace mrHelper.App.Helpers
       }
 
       /// <summary>
-      /// Create a GitClient object.
-      /// Return GitClient object if creation succeeded, throws otherwise.
+      /// Initializes passed GitClient object.
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private Task createClientAsync(GitClient client, string path, string hostName,
+      async private Task initClientAsync(GitClient client, string path, string hostName,
          string projectName, CommitChecker commitChecker)
       {
          if (isCloneNeeded(path))
          {
-            await runAsync(client, async (client) => await client.CloneAsync(hostName, projectName, path), "clone");
-            Debug.Assert(client.IsGitClient(client.Path));
+            await runAsync(async () => await client.CloneAsync(hostName, projectName, path), "clone");
+            Debug.Assert(GitClient.IsGitClient(client.Path));
          }
          else if (await checkForRepositoryUpdatesAsync(client, commitChecker))
          {
-            await runAsync(client, async (client) => await client.FetchAsync(), "fetch");
+            await runAsync(async () => await client.FetchAsync(), "fetch");
          }
       }
 
@@ -65,9 +67,9 @@ namespace mrHelper.App.Helpers
       /// </summary>
       private bool isCloneAllowed(string path)
       {
-         if (!Directory.Exists(Path))
+         if (!System.IO.Directory.Exists(path))
          {
-            if (MessageBox.Show("There is no git repository at \"" + Path + "\". "
+            if (MessageBox.Show("There is no git repository at \"" + path + "\". "
                + "Do you want to run 'git clone'?", "Information", MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.No)
             {
@@ -82,7 +84,7 @@ namespace mrHelper.App.Helpers
       /// </summary>
       private bool isCloneNeeded(string path)
       {
-         return !Directory.Exists(path) || !GitClient.IsGitClient(path);
+         return !System.IO.Directory.Exists(path) || !GitClient.IsGitClient(path);
       }
 
       private delegate Task Command();
@@ -92,11 +94,11 @@ namespace mrHelper.App.Helpers
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private Task runAsync(GitClient client, Command command, string name)
+      async private Task runAsync(Command command, string name)
       {
          try
          {
-            await command(client);
+            await command();
          }
          catch (Exception ex)
          {
@@ -106,14 +108,14 @@ namespace mrHelper.App.Helpers
             bool cancelledByUser = isCancelledByUser(ex);
 
             string result = cancelledByUser ? "cancelled by user" : "failed";
-            OnInitializationStatusChange?.Invoke(sender, String.Format("git {0} {1}", name, result));
+            OnInitializationStatusChange?.Invoke(this, String.Format("git {0} {1}", name, result));
 
             if (cancelledByUser)
             {
                throw new CancelledByUserException();
             }
 
-            if (isSSLCertificateProblem(ex))
+            if (isSSLCertificateProblem(ex as GitOperationException))
             {
                if (handleSSLCertificateProblem())
                {
@@ -157,7 +159,7 @@ namespace mrHelper.App.Helpers
             throw;
          }
 
-         OnInitializationStatusChange?.Invoke(sender,
+         OnInitializationStatusChange?.Invoke(this,
                "SSL certificate verification disabled. Please repeat git operation.");
          return true;
       }
@@ -165,7 +167,7 @@ namespace mrHelper.App.Helpers
       /// <summary>
       /// Check exception Details to figure out if it was caused by SSL certificate problem.
       /// </summary>
-      private bool isSSLCertificateProblem(Exception ex)
+      private bool isSSLCertificateProblem(GitOperationException ex)
       {
          return ex != null && ex.Details.Contains("SSL certificate problem");
       }
@@ -186,14 +188,12 @@ namespace mrHelper.App.Helpers
       /// </summary>
       async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CommitChecker commitChecker)
       {
-         Debug.Assert(IsInitialized());
-
          if (!client.LastUpdateTime.HasValue)
          {
             return true;
          }
 
-         return await commitChecker.AreNewCommits(client.LastUpdateTime.Value);
+         return await commitChecker.AreNewCommitsAsync(client.LastUpdateTime.Value);
       }
 
       private GitClientFactory GitClientFactory { get; }

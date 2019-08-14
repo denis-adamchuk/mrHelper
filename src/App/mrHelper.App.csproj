@@ -52,10 +52,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="src\Controls\SelectionPreservingComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\TextBoxNoWheel.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Forms\NewDiscussionItemForm.cs">
@@ -115,12 +118,6 @@
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\CustomTraceListener.cs" />
     <Compile Include="src\Helpers\GitClientInitializer.cs" />
-    <Compile Include="..\Common\Interfaces\CommandItf.cs" />
-    <Compile Include="..\Common\Interfaces\GlobalGitConfigurationItf.cs" />
-    <Compile Include="..\Common\Interfaces\IntegratedDiffToolItf.cs" />
-    <Compile Include="..\Common\Exceptions\GitOperationException.cs" />
-    <Compile Include="..\Common\Exceptions\DiffToolIntegrationException.cs" />
-    <Compile Include="..\Common\Exceptions\CustomCommandLoaderException.cs" />
     <EmbeddedResource Include="src\Forms\NewDiscussionItemForm.resx">
       <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -164,6 +161,10 @@
     <ProjectReference Include="..\..\submodules\GitLabSharp\GitLabSharp.csproj">
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
+      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\Core\mrHelper.Core.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>

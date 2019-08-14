@@ -11,11 +11,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
+using mrHelper.App.Controls;
 using mrHelper.Core.Context;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
-using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -85,12 +86,7 @@ namespace mrHelper.App.Forms
          this.Text = DefaultCaption + "   (Loading discussions)";
          try
          {
-            discussions = await _manager.GetDiscussionsAsync(new MergeRequestDesriptor
-               {
-                  HostName = State.HostName,
-                  ProjectName = State.Project.Path_With_Namespace,
-                  MergeRequestIId = State.MergeRequest.IId
-               });
+            discussions = await _manager.GetDiscussionsAsync(_mergeRequestDescriptor);
          }
          catch (DiscussionManagerException)
          {
@@ -182,8 +178,8 @@ namespace mrHelper.App.Forms
       {
          get
          {
-            String.Format("Discussions for merge request #{0} with code repository at \"{1}\"",
-               _mergeRequestDescriptor.IId, _gitClient?.Path ?? "no repository");
+            return String.Format("Discussions for merge request #{0} with code repository in \"{1}\"",
+               _mergeRequestDescriptor.IId, _gitRepository?.Path ?? "no repository");
          }
       }
 

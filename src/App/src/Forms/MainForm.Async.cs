@@ -8,10 +8,15 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 using mrHelper.Core;
-using mrHelper.Client;
+using mrHelper.Core.Interprocess;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Workflow;
+using mrHelper.Client.Discussions;
 
 namespace mrHelper.App.Forms
 {
@@ -19,8 +24,8 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
-         string path = Path.Combine(_settings.LocalFolder, GetCurrentProjectName().Split('/')[1]);
-         createGitClient(localFolder, path);
+         string path = Path.Combine(_settings.LocalGitFolder, GetCurrentProjectName().Split('/')[1]);
+         createGitClient(_settings.LocalGitFolder, path);
          if (_gitClient == null)
          {
             return;
@@ -74,8 +79,8 @@ namespace mrHelper.App.Forms
          DiscussionsForm form = null;
          try
          {
-            form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, gitClient,
-               int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
+            form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Author,
+               _gitClient, int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
                currentUser.Value);
          }
          catch (NoDiscussionsToShow)
@@ -102,10 +107,10 @@ namespace mrHelper.App.Forms
       async private void onLaunchDiffTool()
       {
          _diffToolArgs = null;
-         await updateInterprocessSnapshot(); // to purge serialized snapshot
+         updateInterprocessSnapshot(); // to purge serialized snapshot
 
-         string path = Path.Combine(_settings.LocalFolder, GetCurrentProjectName().Split('/')[1]);
-         createGitClient(localFolder, path);
+         string path = Path.Combine(_settings.LocalGitFolder, GetCurrentProjectName().Split('/')[1]);
+         createGitClient(_settings.LocalGitFolder, path);
          if (_gitClient == null)
          {
             return;
@@ -147,7 +152,8 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await gitClient.DiffToolAsync(name, leftCommit, rightCommit);
+            await _gitClient.DiffToolAsync(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
+               leftSHA, rightSHA);
          }
          catch (GitOperationException ex)
          {
@@ -162,24 +168,17 @@ namespace mrHelper.App.Forms
             RightSHA = rightSHA
          };
 
-         await updateInterprocessSnapshot();
+         updateInterprocessSnapshot();
       }
 
-      async private Task updateInterprocessSnapshot()
+      private void updateInterprocessSnapshot()
       {
          // first of all, delete old snapshot
          SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.PurgeSerialized();
 
          bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
-         if (!allowReportingIssues || !_diffToolArgs.HasValue
-          || GetCurrentHostName() == null || GetCurrentProjectName() == null)
-         {
-            return;
-         }
-
-         MergeRequest? mergeRequest = await loadMergeRequestAsync();
-         if (!mergeRequest.HasValue)
+         if (!allowReportingIssues || !_diffToolArgs.HasValue)
          {
             return;
          }
@@ -189,7 +188,7 @@ namespace mrHelper.App.Forms
          snapshot.Refs.LeftSHA = _diffToolArgs.Value.LeftSHA;     // Base commit SHA in the source branch
          snapshot.Refs.RightSHA = _diffToolArgs.Value.RightSHA;   // SHA referencing HEAD of this merge request
          snapshot.Host = GetCurrentHostName();
-         snapshot.MergeRequestIId = mergeRequest.Value.IId;
+         snapshot.MergeRequestIId = GetCurrentMergeRequestIId();
          snapshot.Project = GetCurrentProjectName();
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
 
@@ -215,7 +214,7 @@ namespace mrHelper.App.Forms
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
          labelWorkflowStatus.Text = "Loading discussions...";
-         List<Discussion> discussions;
+         List<Discussion> discussions = null;
          try
          {
             discussions = await _discussionManager.GetDiscussionsAsync(_workflow.State.MergeRequestDescriptor);
@@ -226,60 +225,6 @@ namespace mrHelper.App.Forms
          }
          labelWorkflowStatus.Text = String.Empty;
          return discussions;
-      }
-
-
-      async private Task onStartTimer()
-      {
-         // 1. Update button text
-         buttonToggleTimer.Text = buttonStartTimerTrackingText;
-
-         // 2. Set default text to tracked time label
-         labelSpentTime.Text = labelSpentTimeDefaultText;
-
-         // 3. Start timer
-         _timeTrackingTimer.Start();
-
-         // 4. Reset and start stopwatch
-         _timeTracker = _timeTrackingManager.GetTracker(_workflow.State.MergeRequestDescriptor);
-         _timeTracker.Start();
-
-         // 5. Update information available to other instances
-         await updateInterprocessSnapshot();
-      }
-
-      async private Task onStopTimer()
-      {
-         // 1. Stop stopwatch and send tracked time
-         string span = _timeTracker.Elapsed;
-         if (sendTrackedTime && span.Seconds > 1)
-         {
-            labelWorkflowStatus.Text = "Sending tracked time...";
-            string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
-            string status = String.Format("Tracked time {0} sent successfully", duration);
-            try
-            {
-               _timeTracker.Stop();
-            }
-            catch (TimeTrackerException)
-            {
-               status = "Error occurred. Tracked time is not sent!";
-            }
-            labelWorkflowStatus.Text = status;
-         }
-         _timeTracker = null;
-
-         // 2. Stop timer
-         _timeTrackingTimer.Stop();
-
-         // 3. Update information available to other instances
-         await updateInterprocessSnapshot();
-
-         // 4. Set default text to tracked time label
-         labelSpentTime.Text = labelSpentTimeDefaultText;
-
-         // 5. Update button text
-         buttonToggleTimer.Text = buttonStartTimerDefaultText;
       }
    }
 }
