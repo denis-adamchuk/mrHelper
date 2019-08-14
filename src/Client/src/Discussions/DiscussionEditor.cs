@@ -1,6 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Discussions
 {
@@ -11,7 +13,7 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionEditor
    {
-      public DiscussionEditor(MergeRequestDescriptor mrd, string discussionId, DiscussionOperator discussionOperator)
+      internal DiscussionEditor(MergeRequestDescriptor mrd, string discussionId, DiscussionOperator discussionOperator)
       {
          DiscussionOperator = discussionOperator;
          MergeRequestDescriptor = mrd;
@@ -66,11 +68,11 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task ResolveNoteAsync(int noteId)
+      async public Task ResolveNoteAsync(int noteId, bool resolved)
       {
          try
          {
-            await DiscussionOperator.ResolveNoteAsync(MergeRequestDescriptor, DiscussionId, noteId);
+            await DiscussionOperator.ResolveNoteAsync(MergeRequestDescriptor, DiscussionId, noteId, resolved);
          }
          catch (OperatorException)
          {
@@ -78,11 +80,11 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task ResolveDiscussionAsync()
+      async public Task ResolveDiscussionAsync(bool resolved)
       {
          try
          {
-            await DiscussionOperator.ResolveNoteAsync(MergeRequestDescriptor, DiscussionId);
+            await DiscussionOperator.ResolveNoteAsync(MergeRequestDescriptor, DiscussionId, resolved);
          }
          catch (OperatorException)
          {

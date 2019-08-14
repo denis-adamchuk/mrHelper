@@ -4,9 +4,9 @@ namespace mrHelper.Client.Tools
 {
    public struct MergeRequestDescriptor
    {
-      string HostName;
-      string ProjectName;
-      int MergeRequestIId;
+      public string HostName;
+      public string ProjectName;
+      public int IId;
    }
 }
 

@@ -1,21 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Configuration;
 using System.ComponentModel;
+using System.Web.Script.Serialization;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
+using mrHelper.CustomActions;
 
 namespace mrHelper.Client.Tools
 {
    public static class Tools
    {
-      private static const string ProjectListFileName = "projects.json";
+      private const string ProjectListFileName = "projects.json";
       private const string CustomActionsFileName = "CustomActions.xml";
 
-      public static List<ICommand> LoadCustomActions()
+      public static List<ICommand> LoadCustomActions(ICommandCallback callback)
       {
-         CustomCommandLoader loader = new CustomCommandLoader(this);
+         CustomCommandLoader loader = new CustomCommandLoader(callback);
          try
          {
             return loader.LoadCommands(CustomActionsFileName);
@@ -29,14 +33,14 @@ namespace mrHelper.Client.Tools
          return null;
       }
 
-      public static List<Project> LoadProjectsFromFile()
+      public static List<Project> LoadProjectsFromFile(string hostname)
       {
          // Check if file exists. If it does not, it is not an error.
-         if (File.Exists(ProjectListFileName))
+         if (System.IO.File.Exists(ProjectListFileName))
          {
             try
             {
-               return loadProjectsFromFile(GetCurrentHostName(), ProjectListFileName);
+               return loadProjectsFromFile(hostname, ProjectListFileName);
             }
             catch (Exception ex) // whatever de-serialization exception
             {
@@ -50,7 +54,7 @@ namespace mrHelper.Client.Tools
       {
          for (int iKnownHost = 0; iKnownHost < settings.KnownHosts.Count; ++iKnownHost)
          {
-            if (host == settings.KnownHosts[iKnownHost])
+            if (hostname == settings.KnownHosts[iKnownHost])
             {
                return settings.KnownAccessTokens[iKnownHost];
             }
@@ -80,9 +84,9 @@ namespace mrHelper.Client.Tools
       /// Throws ArgumentNullException
       /// Throws InvalidOperationException
       /// </summary>
-      private List<Project> loadProjectsFromFile(string hostname, string filename)
+      static private List<Project> loadProjectsFromFile(string hostname, string filename)
       {
-         Debug.Assert(File.Exists(filename));
+         Debug.Assert(System.IO.File.Exists(filename));
 
          string json = System.IO.File.ReadAllText(filename);
 

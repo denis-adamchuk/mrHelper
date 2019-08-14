@@ -13,7 +13,7 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Create a GitClient object or return it if already cached.
       /// </summary>
-      public Task<GitClient> GetClient(string path, string hostName, string projectName)
+      public GitClient GetClient(string path, string hostName, string projectName)
       {
          Key key = new Key{ HostName = hostName, ProjectName = projectName };
          if (Clients.ContainsKey(key))
@@ -21,7 +21,7 @@ namespace mrHelper.Client.Git
             return Clients[key];
          }
 
-         GitClient client = isCloneNeeded() ? new GitClient() : new GitClient(path);
+         GitClient client = isCloneNeeded(path) ? new GitClient() : new GitClient(path);
          Clients[key] = client;
          return client;
       }
@@ -31,13 +31,13 @@ namespace mrHelper.Client.Git
       /// </summary>
       private bool isCloneNeeded(string path)
       {
-         return !Directory.Exists(path) || !GitClient.IsGitClient(path);
+         return !System.IO.Directory.Exists(path) || !GitClient.IsGitClient(path);
       }
 
       private struct Key
       {
-         string HostName;
-         string ProjectName;
+         public string HostName;
+         public string ProjectName;
       }
       private Dictionary<Key, GitClient> Clients { get; set; }
    }

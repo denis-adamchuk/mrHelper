@@ -1,9 +1,11 @@
 using System;
-using System.Threading.Task;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.Client.Tools;
-using mrHelper.Client.Operators;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Discussions
 {
@@ -22,7 +24,7 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionCreator
    {
-      public DiscussionCreator(MergeRequestDescriptor mrd, DiscussionOperator discussionOperator)
+      internal DiscussionCreator(MergeRequestDescriptor mrd, DiscussionOperator discussionOperator)
       {
          DiscussionOperator = discussionOperator;
          MergeRequestDescriptor = mrd;
@@ -36,7 +38,7 @@ namespace mrHelper.Client.Discussions
          }
          catch (OperatorException ex)
          {
-            bool handled = await handleGitlabError(parameters, gl, ex);
+            bool handled = await handleGitlabError(parameters, ex);
             throw new DiscussionCreatorException(handled);
          }
       }
@@ -49,13 +51,13 @@ namespace mrHelper.Client.Discussions
          if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
          {
             // Something went wrong at the GitLab site, let's report a discussion without Position
-            return createMergeRequestWithoutPosition(parameters);
+            return await createMergeRequestWithoutPosition(parameters);
          }
          else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
          {
             // Something went wrong at the GitLab site, let's report a discussion without Position
-            cleanupBadNotes(parameters);
-            return createMergeRequestWithoutPosition(parameters);
+            await cleanupBadNotes(parameters);
+            return await createMergeRequestWithoutPosition(parameters);
          }
 
          return false;
@@ -92,7 +94,7 @@ namespace mrHelper.Client.Discussions
 
       // Instead of searching for a latest discussion note with some heuristically prepared parameters,
       // let's clean up all similar notes, including a recently added one
-      private void cleanupBadNotes(NewDiscussionParameters parameters)
+      async private Task cleanupBadNotes(NewDiscussionParameters parameters)
       {
          Debug.Assert(parameters.Position.HasValue);
 
@@ -118,7 +120,7 @@ namespace mrHelper.Client.Discussions
                      " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
-                  DiscussionOperator.DeleteNoteAsync(noteId);
+                  await DiscussionOperator.DeleteNoteAsync(note.Id);
                   ++deletedCount;
                }
             }

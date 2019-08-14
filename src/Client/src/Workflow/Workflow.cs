@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
@@ -12,10 +13,10 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      public Workflow(UserDefinedSettings settings)
+      internal Workflow(UserDefinedSettings settings)
       {
          Settings = settings;
-         Settings.PropertyChange += async (sender, property) =>
+         Settings.PropertyChanged += async (sender, property) =>
          {
             if (property.PropertyName == "ShowPublicOnly")
             {
@@ -24,12 +25,12 @@ namespace mrHelper.Client.Workflow
             }
             else if (property.PropertyName == "LastUsedLabels")
             {
-               _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
+               _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
                // emulate project change to reload merge request list
                await switchProjectAsync(State.Project.Path_With_Namespace);
             }
          };
-         _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
+         _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
       }
 
       async public Task SwitchHostAsync(string hostName)
@@ -41,7 +42,7 @@ namespace mrHelper.Client.Workflow
       {
          try
          {
-            await Operator?.GetCurrentUser();
+            return await Operator?.GetCurrentUser();
          }
          catch (OperatorException)
          {
@@ -59,7 +60,7 @@ namespace mrHelper.Client.Workflow
          await switchMergeRequestAsync(mergeRequestIId);
       }
 
-      async public void CancelAsync()
+      async public Task CancelAsync()
       {
          await Operator?.CancelAsync();
       }
@@ -86,7 +87,7 @@ namespace mrHelper.Client.Workflow
 
          try
          {
-            List<Project> projects = await Operator.GetProjectsAsync();
+            List<Project> projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }
          catch (OperatorException)
          {
@@ -115,7 +116,7 @@ namespace mrHelper.Client.Workflow
          try
          {
             Project project = await Operator.GetProjectAsync(projectName);
-            List<MergeRequest> mergeRequests = await Operator.GetMergeRequestsAsync(project);
+            List<MergeRequest> mergeRequests = await Operator.GetMergeRequestsAsync(project, Settings.CheckedLabelsFilter);
          }
          catch (OperatorException)
          {
@@ -150,7 +151,7 @@ namespace mrHelper.Client.Workflow
          MergeRequestSwitched?.Invoke(State);
       }
 
-      async private string selectProjectFromList()
+      private string selectProjectFromList()
       {
          foreach (var project in State.Projects)
          {
@@ -162,7 +163,7 @@ namespace mrHelper.Client.Workflow
          return State.Projects.Count > 0 ? State.Projects[0] : null;
       }
 
-      async private int? selectMergeRequestFromList()
+      private int? selectMergeRequestFromList()
       {
          // TODO We may remember IID of a MR on Project switch and then restore it here
          return State.MergeRequests.Count > 0 ? State.MergeRequests[0] : null;
@@ -171,7 +172,7 @@ namespace mrHelper.Client.Workflow
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator{ get; }
 
-      private List<Label> _cachedLabels = null;
+      private List<string> _cachedLabels = null;
    }
 }
 

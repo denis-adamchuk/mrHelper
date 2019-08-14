@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using mrHelper.Client.Tools;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -14,20 +16,21 @@ namespace mrHelper.Client.TimeTracking
       {
          MergeRequestDescriptor = mrd;
          TimeTrackingOperator = trackingOperator;
+         Stopwatch = new Stopwatch();
       }
 
       public void Start()
       {
-         _stopwatch.Reset();
-         _stopwatch.Start();
+         Stopwatch.Reset();
+         Stopwatch.Start();
       }
 
-      public void Stop()
+      async public void Stop()
       {
-         _stopwatch.Stop();
+         Stopwatch.Stop();
          try
          {
-            TimeTrackingOperator.AddSpanAsync(_stopwatch.Elapsed, MergeRequestDescriptor);
+            await TimeTrackingOperator.AddSpanAsync(Stopwatch.Elapsed, MergeRequestDescriptor);
          }
          catch (OperatorException)
          {
@@ -37,13 +40,13 @@ namespace mrHelper.Client.TimeTracking
 
       public void Cancel()
       {
-         _stopwatch.Stop();
+         Stopwatch.Stop();
       }
 
-      public string Elapsed { get { return _stopWatch.Elapsed; } }
+      public TimeSpan Elapsed { get { return Stopwatch.Elapsed; } }
 
       private MergeRequestDescriptor MergeRequestDescriptor { get; }
-      private StopWatch _stopwatch { get; }
+      private Stopwatch Stopwatch { get; }
       private TimeTrackingOperator TimeTrackingOperator;
    }
 }

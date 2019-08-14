@@ -12,11 +12,12 @@ namespace mrHelper.App
       static string mutex1_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
       static string mutex2_guid = "{08c448dc-8635-42d0-89bd-75c14837aaa1}";
 
-      private static void HandleUnhandledException()
+      private static void HandleUnhandledException(Exception ex)
       {
          MessageBox.Show("Fatal error occurred, see details in logs",
             "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         ExceptionHandlers.HandleUnhandled(e.Exception);
+         Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
+         Application.Exit();
       }
 
       /// <summary>

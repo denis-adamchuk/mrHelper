@@ -12,7 +12,7 @@ namespace mrHelper.Client.Tools
          if (exception is OperatorException ex0)
          {
             Trace.TraceError("[{0}] {1}: {2}\nNested GitLabRequestException:",
-                  ex1.GetType().ToString(), meaning, ex1.Message);
+                  ex0.GetType().ToString(), meaning, ex0.Message);
             Handle(ex0.GitLabRequestException, meaning);
          }
          else if (exception is GitLabRequestException ex1)
@@ -41,12 +41,6 @@ namespace mrHelper.Client.Tools
          {
             Trace.TraceError("[{0}] {1}: {2}", exception.GetType().ToString(), meaning, exception.Message);
          }
-      }
-
-      static public void HandleUnhandled(Exception ex)
-      {
-         Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
-         Application.Exit();
       }
    }
 }

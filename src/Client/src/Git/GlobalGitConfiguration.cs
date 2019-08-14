@@ -13,7 +13,7 @@ namespace mrHelper.Client.Git
       {
          // No need to change current directory because we're changing a global setting
          string arguments = "config --global difftool." + name + ".cmd " + command;
-         git(arguments);
+         GitUtils.git(arguments);
       }
 
       /// <summary>
@@ -24,7 +24,7 @@ namespace mrHelper.Client.Git
       {
          // No need to change current directory because we're changing a global setting
          string arguments = "config --global --remove-section difftool." + name;
-         git(arguments);
+         GitUtils.git(arguments);
       }
    }
 }

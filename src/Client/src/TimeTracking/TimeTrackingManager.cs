@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.TimeTracking
@@ -24,12 +25,12 @@ namespace mrHelper.Client.TimeTracking
          throw new NotImplementedException();
       }
 
-      async public TimeTracker GetTracker(MergeRequestDescriptor mrd)
+      public TimeTracker GetTracker(MergeRequestDescriptor mrd)
       {
          return new TimeTracker(mrd, TimeTrackingOperator);
       }
 
-      private Settings Settings { get; }
+      private UserDefinedSettings Settings { get; }
       private TimeTrackingOperator TimeTrackingOperator { get; }
    }
 }

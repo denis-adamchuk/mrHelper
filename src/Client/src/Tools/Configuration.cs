@@ -7,7 +7,7 @@ namespace mrHelper.Client.Tools
 {
    class ChangesNotAllowedException : Exception {}
 
-   class UserDefinedSettings : INotifyPropertyChanged
+   public class UserDefinedSettings : INotifyPropertyChanged
    {
       private static readonly string KnownHostsKeyName = "KnownHosts";
       private static readonly List<string> KnownHostsDefaultValue = new List<string>();

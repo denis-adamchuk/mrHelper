@@ -16,7 +16,7 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class WorkflowUpdateChecker
    {
-      WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow workflow)
+      internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow workflow)
       {
          Settings = settings;
          Settings.PropertyChange += async (sender, property) =>

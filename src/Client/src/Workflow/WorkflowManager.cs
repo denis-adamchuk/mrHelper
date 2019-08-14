@@ -1,11 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Workflow
 {
-   public class WorkflowException : Exception {}
-
    /// <summary>
    /// Manages Client workflows
    /// </summary>
@@ -13,12 +12,26 @@ namespace mrHelper.Client.Workflow
    {
       public WorkflowManager(UserDefinedSettings settings)
       {
+         Settings = settings;
       }
 
-      async public Task<Workflow> CreateWorkflow()
+      public void Dispose()
       {
-         return new Workflow(settings);
+         foreach (Workflow w in Workflows)
+         {
+            w.Dispose();
+         }
       }
+
+      public Workflow CreateWorkflow()
+      {
+         Workflow w = new Workflow(Settings);
+         Workflows.Add(w);
+         return w;
+      }
+
+      private UserDefinedSettings Settings;
+      private List<Workflow> Workflows = new List<Workflow>();
    }
 }
 

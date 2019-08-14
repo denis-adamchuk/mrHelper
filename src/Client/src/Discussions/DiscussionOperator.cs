@@ -1,5 +1,8 @@
 using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
@@ -17,12 +20,12 @@ namespace mrHelper.Client.Discussions
 
       async internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestDescriptor mrd)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            return (List<Discussion>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
-                  Discussions.LoadAllTaskAsync());
+                  Discussions.LoadAllTaskAsync()));
          }
          catch (GitLabRequestException ex)
          {
@@ -33,12 +36,12 @@ namespace mrHelper.Client.Discussions
 
       async internal Task<Discussion> GetDiscussionAsync(MergeRequestDescriptor mrd, string discussionId)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            return (Discussion)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
-                  Discussions.Get(discussionId).LoadTaskAsync());
+                  Discussions.Get(discussionId).LoadTaskAsync()));
          }
          catch (GitLabRequestException ex)
          {
@@ -49,12 +52,12 @@ namespace mrHelper.Client.Discussions
 
       async internal Task ReplyAsync(MergeRequestDescriptor mrd, int discussionId, string body)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
-                  Discussions.Get(_discussionId).CreateNewNoteTaskAsync(
+                  Discussions.Get(discussionId).CreateNewNoteTaskAsync(
                      new CreateNewNoteParameters
                      {
                         Body = body
@@ -69,16 +72,16 @@ namespace mrHelper.Client.Discussions
 
       async internal Task ModifyNoteBodyAsync(MergeRequestDescriptor mrd, string discussionId, int noteId, string body)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                      new ModifyDiscussionNoteParameters
                      {
                         Type = ModifyDiscussionNoteParameters.ModificationType.Body,
-                        Body = textBox.Text
+                        Body = body
                      }));
          }
          catch (GitLabRequestException ex)
@@ -88,11 +91,12 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task DeleteNoteAsync(MergeRequestDescriptor mrd, string discussionId, int noteId)
+      async internal Task DeleteNoteAsync(MergeRequestDescriptor mrd, int noteId)
       {
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Notes.Get(noteId).DeleteTaskAsync());
          }
@@ -103,18 +107,18 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task ResolveNoteAsync(MergeRequestDescriptor mrd, string discussionId, int noteId)
+      async internal Task ResolveNoteAsync(MergeRequestDescriptor mrd, string discussionId, int noteId, bool resolved)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                      new ModifyDiscussionNoteParameters
                      {
                         Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
-                        Resolved = !wasResolved
+                        Resolved = resolved
                      }));
          }
          catch (GitLabRequestException ex)
@@ -124,17 +128,17 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task ResolveDiscussionAsync(MergeRequestDescriptor mrd, string discussionId)
+      async internal Task ResolveDiscussionAsync(MergeRequestDescriptor mrd, string discussionId, bool resolved)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).ResolveTaskAsync(
                      new ResolveThreadParameters
                      {
-                        Resolve = !wasResolved
+                        Resolve = resolved
                      }));
          }
          catch (GitLabRequestException ex)
@@ -146,10 +150,10 @@ namespace mrHelper.Client.Discussions
 
       async internal Task CreateDiscussionAsync(MergeRequestDescriptor mrd, NewDiscussionParameters parameters)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.CreateNew(parameters));
          }
@@ -160,7 +164,7 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private Settings Settings { get; }
+      private UserDefinedSettings Settings { get; }
    }
 }
 

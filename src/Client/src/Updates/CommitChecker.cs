@@ -12,7 +12,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Binds to the specific MergeRequestDescriptor
       /// </summary>
-      public CommitChecker(MergeRequestDescriptor mrd, UpdateOperator updateOperator)
+      internal CommitChecker(MergeRequestDescriptor mrd, UpdateOperator updateOperator)
       {
          MergeRequestDescriptor = mrd;
          UpdateOperator = updateOperator;

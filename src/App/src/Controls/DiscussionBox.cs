@@ -603,7 +603,7 @@ namespace mrHelper.App.Controls
 
          try
          {
-            await _editor.ResolveNoteAsync(note.Id);
+            await _editor.ResolveNoteAsync(note.Id, !wasResolved);
          }
          catch (DiscussionEditorException ex)
          {
@@ -621,7 +621,7 @@ namespace mrHelper.App.Controls
 
          try
          {
-            await _editor.ResolveDiscussionAsync();
+            await _editor.ResolveDiscussionAsync(!wasResolved);
          }
          catch (DiscussionEditorException ex)
          {

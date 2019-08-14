@@ -1,6 +1,9 @@
 using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
@@ -11,16 +14,22 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    internal class WorkflowDataOperator : IDisposable
    {
-      internal WorkflowDataOperator(string host, string token)
+      internal WorkflowDataOperator(string host, string token, UserDefinedSettings settings)
       {
          Client = new GitLabClient(host, token);
+         Settings = settings;
+      }
+
+      public void Dispose()
+      {
+         Client.Dispose();
       }
 
       async internal Task<User> GetCurrentUser()
       {
          try
          {
-            return await Client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() );
+            return (User)(await Client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
          }
          catch (GitLabRequestException ex)
          {
@@ -29,12 +38,12 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<Project>> GetProjectsAsync()
+      async internal Task<List<Project>> GetProjectsAsync(string hostName, bool publicOnly)
       {
-         List<Project> projects = Tools.LoadProjectsFromFile();
+         List<Project> projects = Tools.Tools.LoadProjectsFromFile(hostName);
          if (projects != null && projects.Count != 0)
          {
-            Client.CancelAsync();
+            await Client.CancelAsync();
             Debug.WriteLine("Project list is read from file");
             return projects;
          }
@@ -43,8 +52,8 @@ namespace mrHelper.Client.Workflow
 
          try
          {
-            return await Client.RunAsync(async (gl) =>
-               await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = Settings.ShowPublicOnly }));
+            return (List<Project>(await Client.RunAsync(async (gl) =>
+               await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = publicOnly })));
          }
          catch (GitLabRequestException ex)
          {
@@ -53,17 +62,16 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string hostName, string projectName)
+      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName, bool filterLabels)
       {
-         Debug.WriteLine("Loading project merge requests asynchronously for host "
-            + State.HostName + " and project " + State.Project);
+         Debug.WriteLine("Loading project merge requests asynchronously for project " + projectName);
 
          List<MergeRequest> mergeRequests = null;
          try
          {
-            mergeRequests = await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.LoadAllTaskAsync(
-                  new MergeRequestsFilter()));
+            mergeRequests = (List<MergeRequest>(await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
+                  new MergeRequestsFilter())));
          }
          catch (GitLabRequestException ex)
          {
@@ -71,9 +79,9 @@ namespace mrHelper.Client.Workflow
             throw new OperatorException(ex);
          }
 
-         for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --i)
+         for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --iMergeRequest)
          {
-            if (Settings.CheckedLabelsFilter && !_cachedLabels.Intersect(mergeRequest.Labels))
+            if (filterLabels && !_cachedLabels.Intersect(mergeRequest.Labels))
             {
                mergeRequests.RemoveAt(iMergeRequest);
             }
@@ -98,7 +106,7 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<Version>> GetVersionsAsync()
+      async internal Task<List<GitLabSharp.Entities.Version>> GetVersionsAsync()
       {
          Debug.WriteLine("Loading versions asynchronously");
 
@@ -115,17 +123,13 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async public void CancelAsync()
+      public Task CancelAsync()
       {
-         await Client?.CancelAsync();
-      }
-
-      internal void Dispose()
-      {
-         Client?.Dispose();
+         return Client.CancelAsync();
       }
 
       private GitLabClient Client { get; }
+      private UserDefinedSettings Settings { get; }
    }
 }
 

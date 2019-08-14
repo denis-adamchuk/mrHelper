@@ -1,5 +1,7 @@
 using System;
+using System.Threading.Tasks;
 using GitLabSharp;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
@@ -22,10 +24,10 @@ namespace mrHelper.Client.TimeTracking
 
       async internal Task AddSpanAsync(TimeSpan span, MergeRequestDescriptor mrd)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
+            await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).AddSpentTimeAsync(
                   new AddSpentTimeParameters
                   {
@@ -39,7 +41,7 @@ namespace mrHelper.Client.TimeTracking
          }
       }
 
-      private Settings Settings { get; }
+      private UserDefinedSettings Settings { get; }
    }
 }
 

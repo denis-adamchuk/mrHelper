@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Workflow
@@ -7,58 +9,58 @@ namespace mrHelper.Client.Workflow
    {
       public string HostName
       {
-         get;
+         get { return _hostName; }
          set
          {
-            HostName = value;
-            Projects = null;
+            _hostName = value;
+            _projects = null;
          }
       }
 
       public List<Project> Projects
       {
-         get;
+         get { return _projects; }
          set
          {
-            Projects = value;
-            Project = null;
+            _projects = value;
+            _project = default(Project);
          }
       }
 
       public Project Project
       {
-         get;
+         get { return _project; }
          set
          {
-            Project = value;
-            MergeRequests = null;
+            _project = value;
+            _mergeRequests = null;
          }
       }
 
       public List<MergeRequest> MergeRequests
       {
-         get;
+         get { return _mergeRequests; }
          set
          {
-            MergeRequests = value;
-            MergeRequest = null;
+            _mergeRequests = value;
+            _mergeRequest = default(MergeRequest);
          }
       }
 
       public MergeRequest MergeRequest
       {
-         get;
+         get { return _mergeRequest; }
          set
          {
-            MergeRequest = value;
-            Versions = null;
+            _mergeRequest = value;
+            _versions = null;
          }
       }
 
-      public List<Version> Versions
+      public List<GitLabSharp.Entities.Version> Versions
       {
-         get;
-         set;
+         get { return _versions; }
+         set { _versions = value; }
       }
 
       public MergeRequestDescriptor MergeRequestDescriptor
@@ -73,6 +75,13 @@ namespace mrHelper.Client.Workflow
             };
          }
       }
+
+      private string _hostName = String.Empty;
+      private List<Project> _projects = new List<Project>();
+      private Project _project = new Project();
+      private List<MergeRequest> _mergeRequests = new List<MergeRequest>();
+      private MergeRequest _mergeRequest = new MergeRequest();
+      private List<GitLabSharp.Entities.Version> _versions = new List<GitLabSharp.Entities.Version>();
    }
 }
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Git
 {

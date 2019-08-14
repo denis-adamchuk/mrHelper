@@ -1,6 +1,10 @@
 using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Discussions;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Discussions
 {
@@ -21,7 +25,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.GetDiscussionsAsync(mrd);
+            return await DiscussionOperator.GetDiscussionsAsync(mrd);
          }
          catch (OperatorException)
          {
@@ -39,7 +43,7 @@ namespace mrHelper.Client.Discussions
          return new DiscussionEditor(mrd, discussionId, DiscussionOperator);
       }
 
-      private Settings Settings { get; }
+      private UserDefinedSettings Settings { get; }
       private DiscussionOperator DiscussionOperator { get; }
    }
 }

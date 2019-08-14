@@ -20,7 +20,7 @@ namespace mrHelper.App.Forms
    {
       private void addCustomActions()
       {
-         List<ICommand> commands = Tools.LoadCustomActions();
+         List<ICommand> commands = Tools.LoadCustomActions(this);
          if (commands == null)
          {
             return;

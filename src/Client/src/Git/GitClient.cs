@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Git
 {
@@ -25,7 +26,7 @@ namespace mrHelper.Client.Git
       /// Constructor that creates an object that cannot be user before running Clone.
       /// On attempt to use such an object, NoGitRepository is thrown.
       /// </summary>
-      public GitClient()
+      internal GitClient()
       {
       }
 
@@ -33,7 +34,7 @@ namespace mrHelper.Client.Git
       /// Constructor that expects a valid git repository as input argument.
       /// Throws ArgumentException
       /// </summary>
-      public GitClient(string path, bool enableUpdates = true)
+      internal GitClient(string path, bool enableUpdates = true)
       {
          if (!IsGitClient(path))
          {
@@ -42,8 +43,7 @@ namespace mrHelper.Client.Git
 
          Path = path;
 
-         Timer.Tick += new System.EventHandler(onTimer);
-         Timer.Start();
+         startTimer();
       }
 
       // TOOD - Subsequent clone support
@@ -56,7 +56,7 @@ namespace mrHelper.Client.Git
       {
          if (IsGitClient(Path))
          {
-            throw new NotSupportedOperation("Multiple Clone not supported");
+            throw new InvalidOperationException("Multiple Clone not supported");
          }
 
          if (_descriptor != null)
@@ -70,8 +70,7 @@ namespace mrHelper.Client.Git
          Debug.Assert(IsGitClient(path));
          Path = path;
 
-         Timer.Tick += new System.EventHandler(onTimer);
-         Timer.Start();
+         startTimer();
       }
 
       /// <summary>
@@ -264,7 +263,7 @@ namespace mrHelper.Client.Git
          }, dir);
       }
 
-      public string Path { get; }
+      public string Path { get; set; }
 
       private delegate object command();
 
@@ -304,6 +303,13 @@ namespace mrHelper.Client.Git
          {
             LastUpdateTime = DateTime.Now;
          }
+      }
+
+      private void startTimer()
+      {
+         Timer.Elapsed += new System.EventHandler(onTimer);
+         Timer.Interval = 60000;
+         Timer.Start();
       }
 
       async private void onTimer(object sender, EventArgs e)
