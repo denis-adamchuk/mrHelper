@@ -5,7 +5,11 @@ namespace mrHelper.Client.Tools
 {
    internal class OperatorException : Exception
    {
-      internal OperatorException(GitLabRequestException ex) {}
+      internal OperatorException(GitLabRequestException ex)
+      {
+         GitLabRequestException = ex;
+      }
+
       internal GitLabRequestException GitLabRequestException;
    }
 }

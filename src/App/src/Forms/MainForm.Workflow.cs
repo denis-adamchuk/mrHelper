@@ -12,7 +12,7 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client;
-using mrHelper.Forms;
+using mrHelper.Client.Workflow;
 
 namespace mrHelper.App.Forms
 {
@@ -48,7 +48,7 @@ namespace mrHelper.App.Forms
                   ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
                }
             }
-         }
+         };
 
          Debug.WriteLine("Disable projects combo box");
          prepareComboBoxToAsyncLoading(comboBoxProjects);

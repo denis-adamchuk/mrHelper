@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -52,7 +53,7 @@ namespace mrHelper.Client.Workflow
 
          try
          {
-            return (List<Project>(await Client.RunAsync(async (gl) =>
+            return (List<Project>)(await Client.RunAsync(async (gl) =>
                await gl.Projects.LoadAllTaskAsync(new ProjectsFilter{ PublicOnly = publicOnly })));
          }
          catch (GitLabRequestException ex)
@@ -62,14 +63,29 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName, bool filterLabels)
+      async internal Task<Project> GetProjectAsync(string projectName)
+      {
+         Debug.WriteLine("Loading project asynchronously");
+
+         try
+         {
+            return (Project)(await Client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
+         }
+         catch (GitLabRequestException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load project from GitLab");
+            throw new OperatorException(ex);
+         }
+      }
+
+      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName, List<string> labels)
       {
          Debug.WriteLine("Loading project merge requests asynchronously for project " + projectName);
 
          List<MergeRequest> mergeRequests = null;
          try
          {
-            mergeRequests = (List<MergeRequest>(await Client.RunAsync(async (gl) =>
+            mergeRequests = (List<MergeRequest>)(await Client.RunAsync(async (gl) =>
                await gl.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
                   new MergeRequestsFilter())));
          }
@@ -81,7 +97,7 @@ namespace mrHelper.Client.Workflow
 
          for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --iMergeRequest)
          {
-            if (filterLabels && !_cachedLabels.Intersect(mergeRequest.Labels))
+            if (labels != null && labels.Intersect(mergeRequests[iMergeRequest].Labels).Count() == 0)
             {
                mergeRequests.RemoveAt(iMergeRequest);
             }
@@ -90,14 +106,14 @@ namespace mrHelper.Client.Workflow
          return mergeRequests;
       }
 
-      async internal Task<MergeRequest?> GetMergeRequestAsync(int iid)
+      async internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
       {
          Debug.WriteLine("Loading merge request asynchronously");
 
          try
          {
-            return await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(iid).LoadTaskAsync(ct));
+            return (MergeRequest)(await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync()));
          }
          catch (GitLabRequestException ex)
          {
@@ -106,15 +122,14 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<GitLabSharp.Entities.Version>> GetVersionsAsync()
+      async internal Task<List<GitLabSharp.Entities.Version>> GetVersionsAsync(string projectName, int iid)
       {
          Debug.WriteLine("Loading versions asynchronously");
 
          try
          {
-            return await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(State.Project.Path_With_Namespace).MergeRequests.Get(State.MergeRequest.IId).
-                  Versions.LoadAllTaskAsync(ct));
+            return (List<GitLabSharp.Entities.Version>)(await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync()));
          }
          catch (GitLabRequestException ex)
          {

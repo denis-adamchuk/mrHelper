@@ -12,7 +12,6 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client;
-using mrHelper.Forms;
 
 namespace mrHelper.App.Forms
 {

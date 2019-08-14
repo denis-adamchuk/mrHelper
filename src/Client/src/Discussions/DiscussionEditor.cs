@@ -48,7 +48,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.ModifyNoteBodyAsync(MergeRequestDescriptor, DiscussionOperator, noteId, body);
+            await DiscussionOperator.ModifyNoteBodyAsync(MergeRequestDescriptor, DiscussionId, noteId, body);
          }
          catch (OperatorException)
          {
@@ -84,7 +84,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.ResolveNoteAsync(MergeRequestDescriptor, DiscussionId, resolved);
+            await DiscussionOperator.ResolveDiscussionAsync(MergeRequestDescriptor, DiscussionId, resolved);
          }
          catch (OperatorException)
          {

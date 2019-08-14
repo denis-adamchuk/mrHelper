@@ -1,5 +1,8 @@
 using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
@@ -15,13 +18,13 @@ namespace mrHelper.Client.Updates
          Settings = settings;
       }
 
-      async internal Task<List<MergeRequests>> GetMergeRequests(string host, string project)
+      async internal Task<List<MergeRequest>> GetMergeRequests(string host, string project)
       {
-         GitLabClient client = new GitLabClient(host, Tools.GetAccessToken(host, Settings);
+         GitLabClient client = new GitLabClient(host, Tools.Tools.GetAccessToken(host, Settings));
          try
          {
-           return await client.RunAsync(async (gitlab) =>
-              await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter());
+           return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
+              await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
          }
          catch (GitLabRequestException ex)
          {
@@ -30,13 +33,13 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      async internal Task<List<Versions>> GetVersions(MergeRequestDescriptor mrd)
+      async internal Task<List<GitLabSharp.Entities.Version>> GetVersions(MergeRequestDescriptor mrd)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.GetAccessToken(mrd.HostName, Settings);
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync());
+            return (List<GitLabSharp.Entities.Version>)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync()));
          }
          catch (GitLabRequestException ex)
          {
@@ -45,7 +48,7 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      private Settings Settings { get; }
+      private UserDefinedSettings Settings { get; }
    }
 }
 

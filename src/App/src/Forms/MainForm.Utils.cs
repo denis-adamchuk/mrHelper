@@ -12,7 +12,8 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client;
-using mrHelper.Forms;
+using mrHelper.App.Controls;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.App.Forms
 {
@@ -197,7 +198,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addVersionsToComboBoxes(List<Version> versions, string mrBaseSha, string mrTargetBranch)
+      private void addVersionsToComboBoxes(List<GitLabSharp.Entities.Version> versions, string mrBaseSha, string mrTargetBranch)
       {
          if (versions == null || versions.Count == 0)
          {
@@ -267,7 +268,7 @@ namespace mrHelper.App.Forms
             + (projectName == String.Empty ? "N/A" : projectName));
       }
 
-      private void notifyOnMergeRequestUpdates(MergeRequestTimerUpdates updates)
+      private void notifyOnMergeRequestUpdates(MergeRequestUpdates updates)
       {
          foreach (MergeRequest mergeRequest in updates.NewMergeRequests)
          {
@@ -298,7 +299,7 @@ namespace mrHelper.App.Forms
          }
 
          _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName());
-         _gitClient.OnOperationStatusChange =+ (sender, e) => updateGitStatusText(e);
+         _gitClient.OnOperationStatusChange =+ new System.EventHandler(updateGitStatusText);
       }
    }
 }

@@ -1,5 +1,6 @@
 using System;
-using mrHelper.Client.Tools
+using mrHelper.Client.Tools;
+using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.Updates
 {
@@ -11,11 +12,12 @@ namespace mrHelper.Client.Updates
       public UpdateManager(UserDefinedSettings settings)
       {
          UpdateOperator UpdateOperator = new UpdateOperator(settings);
+         Settings = settings;
       }
 
-      public WorkflowUpdateChecker GetWorkflowUpdateChecker(Workflow workflow)
+      public WorkflowUpdateChecker GetWorkflowUpdateChecker(Workflow.Workflow workflow)
       {
-         return new WorkflowUpdateChecker(settings, UpdateOperator);
+         return new WorkflowUpdateChecker(Settings, UpdateOperator, workflow);
       }
 
       public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
@@ -24,7 +26,7 @@ namespace mrHelper.Client.Updates
       }
 
       private UpdateOperator UpdateOperator { get; }
-      private WorkflowUpdateChecker WorkflowUpdateChecker { get; }
+      private UserDefinedSettings Settings { get; }
    }
 }
 

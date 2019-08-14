@@ -37,10 +37,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HtmlRenderer, Version=1.5.0.5, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlRenderer.Core.1.5.0.5\lib\net45\HtmlRenderer.dll</HintPath>
+      <HintPath>..\..\packages\HtmlRenderer.Core.1.5.0.5\lib\net45\HtmlRenderer.dll</HintPath>
     </Reference>
     <Reference Include="HtmlRenderer.WinForms, Version=1.5.0.6, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlRenderer.WinForms.1.5.0.6\lib\net45\HtmlRenderer.WinForms.dll</HintPath>
+      <HintPath>..\..\packages\HtmlRenderer.WinForms.1.5.0.6\lib\net45\HtmlRenderer.WinForms.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
@@ -89,8 +89,9 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\MainForm.EventHandler.cs">
+    <Compile Include="src\Forms\MainForm.EventHandlers.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.Init.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -114,12 +115,9 @@
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\CustomTraceListener.cs" />
     <Compile Include="src\Helpers\GitClientInitializer.cs" />
-    <Compile Include="..\Common\Interfaces\CommandCallbackItf.cs" />
     <Compile Include="..\Common\Interfaces\CommandItf.cs" />
-    <Compile Include="..\Common\Interfaces\GitRepositoryItf.cs" />
     <Compile Include="..\Common\Interfaces\GlobalGitConfigurationItf.cs" />
     <Compile Include="..\Common\Interfaces\IntegratedDiffToolItf.cs" />
-    <Compile Include="..\Common\Exceptions\OperatorException.cs" />
     <Compile Include="..\Common\Exceptions\GitOperationException.cs" />
     <Compile Include="..\Common\Exceptions\DiffToolIntegrationException.cs" />
     <Compile Include="..\Common\Exceptions\CustomCommandLoaderException.cs" />

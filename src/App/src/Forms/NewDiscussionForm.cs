@@ -6,12 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Interprocess;
-using mrHelper.Core.Matchers;
+using mrHelper.Core.Matching;
 using mrHelper.Core.Git;
-using mrHelper.Client.Managers;
 
 namespace mrHelper.App.Forms
 {

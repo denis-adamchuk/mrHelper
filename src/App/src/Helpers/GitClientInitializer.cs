@@ -1,6 +1,7 @@
 using System;
+using System.Threading.Tasks;
 using mrHelper.Client.Git;
-using mrHelper.Client.Update;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.App.Helpers
 {
@@ -49,12 +50,12 @@ namespace mrHelper.App.Helpers
       {
          if (isCloneNeeded(path))
          {
-            await runAsync(client, (client) => client.CloneAsync(hostName, projectName, path), "clone");
+            await runAsync(client, async (client) => await client.CloneAsync(hostName, projectName, path), "clone");
             Debug.Assert(client.IsGitClient(client.Path));
          }
          else if (await checkForRepositoryUpdatesAsync(client, commitChecker))
          {
-            await runAsync(client, (client) => client.FetchAsync(), "fetch");
+            await runAsync(client, async (client) => await client.FetchAsync(), "fetch");
          }
       }
 
@@ -83,6 +84,8 @@ namespace mrHelper.App.Helpers
       {
          return !Directory.Exists(path) || !GitClient.IsGitClient(path);
       }
+
+      private delegate Task Command();
 
       /// <summary>
       /// Run a git command asynchronously.

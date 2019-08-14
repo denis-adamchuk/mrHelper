@@ -15,12 +15,12 @@ namespace mrHelper.Client.TimeTracking
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
       }
 
-      async public Task<TimeSpan> GetTotalAsync(MergeRequestDescriptor mrd)
+      /*async*/ public Task<TimeSpan> GetTotalAsync(MergeRequestDescriptor mrd)
       {
          throw new NotImplementedException();
       }
 
-      async public Task SetTotalAsync(TimeSpan span, MergeRequestDescriptor mrd)
+      /*async*/ public Task SetTotalAsync(TimeSpan span, MergeRequestDescriptor mrd)
       {
          throw new NotImplementedException();
       }

@@ -12,7 +12,6 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client;
-using mrHelper.Forms;
 
 namespace mrHelper.App.Forms
 {
@@ -164,7 +163,7 @@ namespace mrHelper.App.Forms
          catch (WorkflowException)
          {
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
-               "Error", MessageBoxButtons.OK, MessageBoxIcons.Error)";
+               "Error", MessageBoxButtons.OK, MessageBoxIcons.Error);
          }
       }
    }

@@ -1,6 +1,10 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.Updates
@@ -16,19 +20,19 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class WorkflowUpdateChecker
    {
-      internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow workflow)
+      internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow.Workflow workflow)
       {
          Settings = settings;
-         Settings.PropertyChange += async (sender, property) =>
+         Settings.PropertyChanged += async (sender, property) =>
          {
             if (property.PropertyName == "LastUsedLabels")
             {
-               _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
+               _cachedLabels = Tool.Tools.SplitLabels(Settings.LastUsedLabels);
             }
-         }
-         _cachedLabels = Tools.SplitLabels(Settings.LastUsedLabels);
+         };
+         _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
 
-         Timer.Tick += new System.EventHandler(onTimer);
+         Timer.Elapsed += new System.EventHandler(onTimer);
          Timer.Start();
 
          UpdateOperator = updateOperator;
@@ -117,11 +121,11 @@ namespace mrHelper.Client.Updates
       }
 
       private UserDefinedSettings Settings { get; }
-      private List<Label> _cachedLabels { get; set; }
+      private List<string> _cachedLabels { get; set; }
 
       private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
 
-      private readonly System.Timers.Timer Timer { get; } = new System.Timers.Timer
+      private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {
             Interval = mergeRequestCheckTimerInterval
          };

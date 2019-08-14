@@ -10,9 +10,12 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Core;
-using mrHelper.Client;
-using mrHelper.Forms;
+using mrHelper.Client.Git;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
+using mrHelper.Client.Workflow;
+using mrHelper.Client.Discussions;
+using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
@@ -38,22 +41,22 @@ namespace mrHelper.App.Forms
          InitializeComponent();
       }
 
-      internal string GetCurrentHostName()
+      public string GetCurrentHostName()
       {
          return _workflow.State.HostName;
       }
 
-      internal string GetCurrentAccessToken()
+      public string GetCurrentAccessToken()
       {
          return Tools.GetAccessToken(_workflow.State.HostName, _settings);
       }
 
-      internal string GetCurrentProjectName()
+      public string GetCurrentProjectName()
       {
          return _workflow.State.Project.Path_With_Namespace;
       }
 
-      internal int GetCurrentMergeRequestIId()
+      public int GetCurrentMergeRequestIId()
       {
          return _workflow.State.MergeRequest.IId;
       }

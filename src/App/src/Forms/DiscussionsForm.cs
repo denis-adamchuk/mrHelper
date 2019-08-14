@@ -12,6 +12,10 @@ using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
 using mrHelper.Core.Context;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Discussions;
+using mrHelper.Common.Interfaces;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -86,7 +90,7 @@ namespace mrHelper.App.Forms
                   HostName = State.HostName,
                   ProjectName = State.Project.Path_With_Namespace,
                   MergeRequestIId = State.MergeRequest.IId
-               };
+               });
          }
          catch (DiscussionManagerException)
          {

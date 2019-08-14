@@ -83,11 +83,12 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         Operator = new WorkflowDataOperator(hostName, Tools.GetAccessToken(hostName, Settings));
+         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
 
+         List<Project> projects = null;
          try
          {
-            List<Project> projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
+            projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }
          catch (OperatorException)
          {
@@ -97,26 +98,29 @@ namespace mrHelper.Client.Workflow
          State = new WorkflowState();
          State.HostName = hostName;
          State.Projects = projects;
-         HostSwitched?.Invoke(State);
+         HostSwitched?.Invoke(this, State);
 
          string projectName = selectProjectFromList();
-         if (projectName != null)
+         if (projectName != String.Empty)
          {
             await switchProjectAsync(projectName);
          }
       }
 
-      async private Task<Project> switchProjectAsync(string projectName)
+      async private Task switchProjectAsync(string projectName)
       {
          if (projectName == String.Empty)
          {
             return;
          }
 
+         Project project = new Project();
+         List<MergeRequest> mergeRequests = null;
          try
          {
-            Project project = await Operator.GetProjectAsync(projectName);
-            List<MergeRequest> mergeRequests = await Operator.GetMergeRequestsAsync(project, Settings.CheckedLabelsFilter);
+            project = await Operator.GetProjectAsync(projectName);
+            mergeRequests = await Operator.GetMergeRequestsAsync(
+               project.Path_With_Namespace, Settings.CheckedLabelsFilter ? _cachedLabels : null);
          }
          catch (OperatorException)
          {
@@ -125,7 +129,7 @@ namespace mrHelper.Client.Workflow
 
          State.Project = project;
          State.MergeRequests = mergeRequests;
-         ProjectSwitched?.Invoke(State);
+         ProjectSwitched?.Invoke(this, State);
 
          int? iid = selectMergeRequestFromList();
          if (iid.HasValue)
@@ -134,12 +138,14 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async private Task<MergeRequest> switchMergeRequestAsync(int mergeRequestIId)
+      async private Task switchMergeRequestAsync(int mergeRequestIId)
       {
+         MergeRequest mergeRequest = new MergeRequest();
+         List<GitLabSharp.Entities.Version> versions = null;
          try
          {
-            MergeRequest mergeRequest = await Operator.GetMergeRequestAsync(mergeRequestIId);
-            List<Version> versions = await Operator.GetVersionsAsync(mergeRequestIId);
+            mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
+            versions = await Operator.GetVersionsAsync(State.Project.Path_With_Namespace, mergeRequestIId);
          }
          catch (OperatorException)
          {
@@ -148,29 +154,29 @@ namespace mrHelper.Client.Workflow
 
          State.MergeRequest = mergeRequest;
          State.Versions = versions;
-         MergeRequestSwitched?.Invoke(State);
+         MergeRequestSwitched?.Invoke(this, State);
       }
 
       private string selectProjectFromList()
       {
          foreach (var project in State.Projects)
          {
-            if (project.Path_With_Namespace == _settings.LastSelectedProject)
+            if (project.Path_With_Namespace == Settings.LastSelectedProject)
             {
                return project.Path_With_Namespace;
             }
          }
-         return State.Projects.Count > 0 ? State.Projects[0] : null;
+         return State.Projects.Count > 0 ? State.Projects[0].Path_With_Namespace : String.Empty;
       }
 
       private int? selectMergeRequestFromList()
       {
          // TODO We may remember IID of a MR on Project switch and then restore it here
-         return State.MergeRequests.Count > 0 ? State.MergeRequests[0] : null;
+         return State.MergeRequests.Count > 0 ? State.MergeRequests[0].IId : new Nullable<int>();
       }
 
       private UserDefinedSettings Settings { get; }
-      private WorkflowDataOperator Operator{ get; }
+      private WorkflowDataOperator Operator{ get; set; }
 
       private List<string> _cachedLabels = null;
    }

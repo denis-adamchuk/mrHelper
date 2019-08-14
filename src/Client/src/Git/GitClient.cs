@@ -307,7 +307,7 @@ namespace mrHelper.Client.Git
 
       private void startTimer()
       {
-         Timer.Elapsed += new System.EventHandler(onTimer);
+         Timer.Elapsed += new System.Timers.ElapsedEventHandler(onTimer);
          Timer.Interval = 60000;
          Timer.Start();
       }

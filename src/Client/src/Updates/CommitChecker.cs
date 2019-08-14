@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
@@ -21,9 +23,9 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Checkes for commits newer than the given timestamp
       /// </summary>
-      bool AreNewCommits(DateTime timestamp)
+      async Task<bool> AreNewCommits(DateTime timestamp)
       {
-         List<Versions> versions = updateOperator.GetVersions(MergeRequestDescriptor);
+         List<GitLabSharp.Entities.Version> versions = await UpdateOperator.GetVersions(MergeRequestDescriptor);
          return versions != null && versions.Count > 0
             && versions[0].Created_At.ToLocalTime() > timestamp;
       }

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.Core.Interprocess;
-using mrHelper.Forms;
+using mrHelper.App.Forms;
 
 namespace mrHelper.App
 {

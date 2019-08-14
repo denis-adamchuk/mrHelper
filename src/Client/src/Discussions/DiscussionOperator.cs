@@ -50,7 +50,7 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task ReplyAsync(MergeRequestDescriptor mrd, int discussionId, string body)
+      async internal Task ReplyAsync(MergeRequestDescriptor mrd, string discussionId, string body)
       {
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
@@ -155,7 +155,7 @@ namespace mrHelper.Client.Discussions
          {
             await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
-                  Discussions.CreateNew(parameters));
+                  Discussions.CreateNewTaskAsync(parameters));
          }
          catch (GitLabRequestException ex)
          {

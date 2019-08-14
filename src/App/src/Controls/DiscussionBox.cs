@@ -11,7 +11,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Discussions;
 using mrHelper.Core.Context;
-using mrHelper.Forms;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.App.Controls
 {

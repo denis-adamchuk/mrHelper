@@ -69,7 +69,7 @@ namespace mrHelper.Client.Discussions
 
          Trace.TraceInformation("Reporting a discussion without Position (fallback)");
 
-         parameters.Body = getFallbackInfo(parameters.Position) + "<br>" + parameters.Body;
+         parameters.Body = getFallbackInfo(parameters.Position.Value) + "<br>" + parameters.Body;
          parameters.Position = null;
 
          try
@@ -102,7 +102,7 @@ namespace mrHelper.Client.Discussions
 
          int deletedCount = 0;
 
-         List<Discussion> discussions = DiscussionOperator.GetDiscussionsAsync(MergeRequestDescriptor);
+         List<Discussion> discussions = await DiscussionOperator.GetDiscussionsAsync(MergeRequestDescriptor);
          if (discussions == null)
          {
             Trace.TraceWarning(String.Format("No discussions found"));
@@ -120,7 +120,7 @@ namespace mrHelper.Client.Discussions
                      " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
-                  await DiscussionOperator.DeleteNoteAsync(note.Id);
+                  await DiscussionOperator.DeleteNoteAsync(MergeRequestDescriptor, note.Id);
                   ++deletedCount;
                }
             }
