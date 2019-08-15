@@ -138,7 +138,9 @@ namespace mrHelper.Client.Updates
          {
             Interval = mergeRequestCheckTimerInterval
          };
-      private DateTime _lastCheckTimeStamp = DateTime.MinValue;
+
+      // Using 'Now' to gather only those MR which are created during the application lifetime
+      private DateTime _lastCheckTimeStamp = DateTime.Now;
    }
 }
 

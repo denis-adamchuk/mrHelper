@@ -74,8 +74,8 @@ namespace mrHelper.Client.Tools
 
       private class HostInProjectsFile
       {
-         internal string Name = null;
-         internal List<Project> Projects = null;
+         public string Name = null;
+         public List<Project> Projects = null;
       }
 
       /// <summary>

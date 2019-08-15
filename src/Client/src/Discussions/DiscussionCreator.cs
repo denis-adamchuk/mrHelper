@@ -45,19 +45,22 @@ namespace mrHelper.Client.Discussions
 
       async private Task<bool> handleGitlabError(NewDiscussionParameters parameters, OperatorException ex)
       {
-         var webException = ex.GitLabRequestException.WebException;
-         var response = ((System.Net.HttpWebResponse)webException.Response);
+         if (ex.InternalException is GitLabRequestException rex)
+         {
+            var webException = rex.WebException;
+            var response = ((System.Net.HttpWebResponse)webException.Response);
 
-         if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-         {
-            // Something went wrong at the GitLab site, let's report a discussion without Position
-            return await createMergeRequestWithoutPosition(parameters);
-         }
-         else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-         {
-            // Something went wrong at the GitLab site, let's report a discussion without Position
-            await cleanupBadNotes(parameters);
-            return await createMergeRequestWithoutPosition(parameters);
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+               // Something went wrong at the GitLab site, let's report a discussion without Position
+               return await createMergeRequestWithoutPosition(parameters);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+            {
+               // Something went wrong at the GitLab site, let's report a discussion without Position
+               await cleanupBadNotes(parameters);
+               return await createMergeRequestWithoutPosition(parameters);
+            }
          }
 
          return false;

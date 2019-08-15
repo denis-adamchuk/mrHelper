@@ -31,7 +31,7 @@ namespace mrHelper.App.Forms
          {
             HostComboBoxItem hostItem = new HostComboBoxItem
             {
-               Host = "https://" + item.Text,
+               Host = item.Text,
                AccessToken = item.SubItems[1].Text
             };
             comboBoxHost.Items.Add(hostItem);
@@ -103,6 +103,12 @@ namespace mrHelper.App.Forms
             }
          }
 
+         // Add prefix automatically
+         if (!host.StartsWith("http://") && !host.StartsWith("https://"))
+         {
+            host = "https://" + host;
+         }
+
          var item = new ListViewItem(host);
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
@@ -139,16 +145,22 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void prepareComboBoxToAsyncLoading(SelectionPreservingComboBox comboBox)
+      private void prepareComboBoxToAsyncLoading(SelectionPreservingComboBox comboBox, bool changeText)
       {
          Debug.Assert(!comboBox.IsDisposed);
 
-         comboBox.DroppedDown = false;
+         if (changeText)
+         {
+            comboBox.DroppedDown = false;
+         }
          comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
          comboBox.DropDownStyle = ComboBoxStyle.DropDown;
          comboBox.Enabled = false;
-         comboBox.Text = "Loading...";
+         if (changeText)
+         {
+            comboBox.Text = "Loading...";
+         }
       }
 
       private void fixComboBoxAfterAsyncLoading(SelectionPreservingComboBox comboBox)
@@ -225,6 +237,9 @@ namespace mrHelper.App.Forms
          VersionComboBoxItem targetBranch =
             new VersionComboBoxItem(mrBaseSha, mrTargetBranch, null);
          comboBoxRightVersion.Items.Add(targetBranch);
+
+         comboBoxLeftVersion.SelectedIndex = 0;
+         comboBoxRightVersion.SelectedIndex = 0;
       }
 
       private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)

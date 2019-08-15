@@ -21,13 +21,27 @@ namespace mrHelper.Client.Workflow
             if (property.PropertyName == "ShowPublicOnly")
             {
                // emulate host change to reload project list
-               await switchHostAsync(State.HostName);
+               try
+               {
+                  await switchHostAsync(State.HostName);
+               }
+               catch (WorkflowException)
+               {
+                  // just do nothing
+               }
             }
             else if (property.PropertyName == "LastUsedLabels")
             {
                _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
                // emulate project change to reload merge request list
-               await switchProjectAsync(State.Project.Path_With_Namespace);
+               try
+               {
+                  await switchProjectAsync(State.Project.Path_With_Namespace);
+               }
+               catch (WorkflowException)
+               {
+                  // just do nothing
+               }
             }
          };
          _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
@@ -70,9 +84,17 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      public EventHandler<WorkflowState> HostSwitched;
-      public EventHandler<WorkflowState> ProjectSwitched;
-      public EventHandler<WorkflowState> MergeRequestSwitched;
+      public EventHandler BeforeSwitchHost;
+      public EventHandler<WorkflowState> AfterHostSwitched;
+      public EventHandler FailedSwitchHost;
+
+      public EventHandler BeforeSwitchProject;
+      public EventHandler<WorkflowState> AfterProjectSwitched;
+      public EventHandler FailedSwitchProject;
+
+      public EventHandler BeforeSwitchMergeRequest;
+      public EventHandler<WorkflowState> AfterMergeRequestSwitched;
+      public EventHandler FailedSwitchMergeRequest;
 
       public WorkflowState State { get; private set; } = new WorkflowState();
 
@@ -83,6 +105,8 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
+         BeforeSwitchHost?.Invoke(this, null);
+
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
 
          List<Project> projects = null;
@@ -92,13 +116,15 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException)
          {
+            FailedSwitchHost?.Invoke(this, null);
             throw new WorkflowException();
          }
 
          State = new WorkflowState();
          State.HostName = hostName;
          State.Projects = projects;
-         HostSwitched?.Invoke(this, State);
+
+         AfterHostSwitched?.Invoke(this, State);
 
          string projectName = selectProjectFromList();
          if (projectName != String.Empty)
@@ -114,6 +140,8 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
+         BeforeSwitchProject?.Invoke(this, null);
+
          Project project = new Project();
          List<MergeRequest> mergeRequests = null;
          try
@@ -124,12 +152,14 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException)
          {
+            FailedSwitchProject(this, null);
             throw new WorkflowException();
          }
 
          State.Project = project;
          State.MergeRequests = mergeRequests;
-         ProjectSwitched?.Invoke(this, State);
+
+         AfterProjectSwitched?.Invoke(this, State);
 
          int? iid = selectMergeRequestFromList();
          if (iid.HasValue)
@@ -140,6 +170,8 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchMergeRequestAsync(int mergeRequestIId)
       {
+         BeforeSwitchMergeRequest?.Invoke(this, null);
+
          MergeRequest mergeRequest = new MergeRequest();
          List<GitLabSharp.Entities.Version> versions = null;
          try
@@ -149,12 +181,14 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException)
          {
+            FailedSwitchMergeRequest(this, null);
             throw new WorkflowException();
          }
 
          State.MergeRequest = mergeRequest;
          State.Versions = versions;
-         MergeRequestSwitched?.Invoke(this, State);
+
+         AfterMergeRequestSwitched?.Invoke(this, State);
       }
 
       private string selectProjectFromList()

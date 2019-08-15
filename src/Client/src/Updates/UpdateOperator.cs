@@ -26,10 +26,14 @@ namespace mrHelper.Client.Updates
            return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
               await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -41,10 +45,14 @@ namespace mrHelper.Client.Updates
             return (List<GitLabSharp.Entities.Version>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync()));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot check GitLab for updates");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot check GitLab for updates");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 

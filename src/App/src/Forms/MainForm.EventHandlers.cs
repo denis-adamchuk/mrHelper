@@ -113,29 +113,31 @@ namespace mrHelper.App.Forms
          _settings.ColorSchemeFileName = (sender as ComboBox).Text;
       }
 
-      async private void ComboBoxHost_SelectedIndexChanged(object sender, EventArgs e)
+      async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
          updateGitStatusText(this, String.Empty);
 
          string hostname = (sender as ComboBox).Text;
          _settings.LastSelectedHost = hostname;
-         await onChangeHost(hostname);
+
+         Debug.WriteLine("Update projects dropdown list");
+         await changeHostAsync(hostname);
       }
 
-      async private void ComboBoxProjects_SelectedIndexChanged(object sender, EventArgs e)
+      async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
       {
          updateGitStatusText(this, String.Empty);
 
          string projectname = (sender as ComboBox).Text;
          _settings.LastSelectedProject = projectname;
-         await onChangeProject(projectname);
+         await changeProjectAsync(projectname);
       }
 
-      async private void ComboBoxFilteredMergeRequests_SelectedIndexChanged(object sender, EventArgs e)
+      async private void ComboBoxFilteredMergeRequests_SelectionChangeCommited(object sender, EventArgs e)
       {
          ComboBox comboBox = (sender as ComboBox);
          MergeRequest mergeRequest = (MergeRequest)comboBox.SelectedItem;
-         await onChangeMergeRequest(mergeRequest.IId);
+         await changeMergeRequestAsync(mergeRequest.IId);
       }
 
       private void ButtonApplyLabels_Click(object sender, EventArgs e)

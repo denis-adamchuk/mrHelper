@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using GitLabSharp;
 using GitLabSharp.Accessors;
 using mrHelper.Common.Exceptions;
 
@@ -11,9 +12,18 @@ namespace mrHelper.Client.Tools
       {
          if (exception is OperatorException ex0)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nNested GitLabRequestException:",
+            Trace.TraceError("[{0}] {1}: {2}\nNested Exception:",
                   ex0.GetType().ToString(), meaning, ex0.Message);
-            Handle(ex0.GitLabRequestException, meaning);
+            Handle(ex0.InternalException, meaning);
+         }
+         else if (exception is GitLabSharpException ex00)
+         {
+            Trace.TraceError("[{0}] {1}: {2}\nNested Exception: {3}",
+                  ex00.GetType().ToString(), meaning, ex00.Message, ex00.InternalException?.Message ?? "null");
+         }
+         else if (exception is GitLabClientCancelled ex01)
+         {
+            Trace.TraceInformation("GitLab request was cancelled by a subsequent request");
          }
          else if (exception is GitLabRequestException ex1)
          {

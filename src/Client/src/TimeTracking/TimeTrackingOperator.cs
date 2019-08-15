@@ -34,10 +34,14 @@ namespace mrHelper.Client.TimeTracking
                      Span = span
                   }));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 

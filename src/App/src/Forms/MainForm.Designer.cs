@@ -652,7 +652,7 @@ namespace mrHelper.App.Forms
          this.comboBoxProjects.Size = new System.Drawing.Size(272, 21);
          this.comboBoxProjects.Sorted = true;
          this.comboBoxProjects.TabIndex = 2;
-         this.comboBoxProjects.SelectedIndexChanged += new System.EventHandler(this.ComboBoxProjects_SelectedIndexChanged);
+         this.comboBoxProjects.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxProjects_SelectionChangeCommited);
          this.comboBoxProjects.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProjects_Format);
          // 
          // comboBoxFilteredMergeRequests
@@ -663,7 +663,7 @@ namespace mrHelper.App.Forms
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
          this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(498, 21);
          this.comboBoxFilteredMergeRequests.TabIndex = 6;
-         this.comboBoxFilteredMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectedIndexChanged);
+         this.comboBoxFilteredMergeRequests.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectionChangeCommited);
          this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
          // 
          // comboBoxHost
@@ -674,7 +674,7 @@ namespace mrHelper.App.Forms
          this.comboBoxHost.Name = "comboBoxHost";
          this.comboBoxHost.Size = new System.Drawing.Size(205, 21);
          this.comboBoxHost.TabIndex = 1;
-         this.comboBoxHost.SelectedIndexChanged += new System.EventHandler(this.ComboBoxHost_SelectedIndexChanged);
+         this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
          // comboBoxRightVersion

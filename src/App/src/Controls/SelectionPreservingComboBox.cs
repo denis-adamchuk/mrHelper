@@ -95,6 +95,23 @@ namespace mrHelper.App.Controls
          }
       }
 
+      new internal ComboBoxStyle DropDownStyle
+      {
+         get
+         {
+            return base.DropDownStyle;
+         }
+         set
+         {
+            if (base.DropDownStyle == value)
+            {
+               return;
+            }
+            base.DropDownStyle = value;
+            base.Text = Text;
+         }
+      }
+
       private int _selectedIndex = -1;
       private string _customText;
    }

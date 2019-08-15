@@ -82,12 +82,22 @@ namespace mrHelper.App.Forms
          {
             listViewKnownHosts.Items.RemoveAt(iListViewItem);
          }
+         List<string> newKnownHosts = new List<string>();
          for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
          {
             string host = _settings.KnownHosts[iKnownHost];
+
+            // Old versions did not have prefix
+            if (!host.StartsWith("http://") && !host.StartsWith("https://"))
+            {
+               host = "https://" + host;
+            }
+            newKnownHosts.Add(host);
+
             string accessToken = _settings.KnownAccessTokens[iKnownHost];
             addKnownHost(host, accessToken);
          }
+         _settings.KnownHosts = newKnownHosts;
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
          checkBoxRequireTimer.Checked = _settings.RequireTimeTracking;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;

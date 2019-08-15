@@ -11,7 +11,7 @@ namespace mrHelper.Client.Updates
    {
       public UpdateManager(UserDefinedSettings settings)
       {
-         UpdateOperator UpdateOperator = new UpdateOperator(settings);
+         UpdateOperator = new UpdateOperator(settings);
          Settings = settings;
       }
 

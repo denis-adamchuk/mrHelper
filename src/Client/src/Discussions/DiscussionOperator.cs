@@ -27,10 +27,14 @@ namespace mrHelper.Client.Discussions
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.LoadAllTaskAsync()));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -43,10 +47,14 @@ namespace mrHelper.Client.Discussions
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.Get(discussionId).LoadTaskAsync()));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot load discussion from GitLab");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load discussion from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -63,10 +71,14 @@ namespace mrHelper.Client.Discussions
                         Body = body
                      }));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -84,10 +96,14 @@ namespace mrHelper.Client.Discussions
                         Body = body
                      }));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot update discussion text");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot update discussion text");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -100,10 +116,14 @@ namespace mrHelper.Client.Discussions
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Notes.Get(noteId).DeleteTaskAsync());
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot delete a note");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot delete a note");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -121,10 +141,14 @@ namespace mrHelper.Client.Discussions
                         Resolved = resolved
                      }));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a note");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a note");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -141,10 +165,14 @@ namespace mrHelper.Client.Discussions
                         Resolve = resolved
                      }));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
@@ -157,10 +185,14 @@ namespace mrHelper.Client.Discussions
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
                   Discussions.CreateNewTaskAsync(parameters));
          }
-         catch (GitLabRequestException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a discussion");
-            throw new OperatorException(ex);
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot create a discussion");
+               throw new OperatorException(ex);
+            }
+            throw;
          }
       }
 
