@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms
          _workflow.AfterProjectSwitched += (sender, state) => onProjectChanged(state);
          _workflow.FailedSwitchProject += (sender, e) => onFailedChangeProject();
 
-         _workflow.BeforeSwitchMergeRequest += (sender, e) => onChangeMergeRequest();
+         _workflow.BeforeSwitchMergeRequest += (sender, e) => onChangeMergeRequest(e);
          _workflow.AfterMergeRequestSwitched += (sender, state) => onMergeRequestChanged(state);
          _workflow.FailedSwitchMergeRequest += (sender, e) => onFailedChangeMergeRequest();
 
@@ -207,8 +207,17 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onChangeMergeRequest()
+      private void onChangeMergeRequest(int mergeRequestIId)
       {
+         Debug.WriteLine("onMergeRequestChanged(): Update selected item in the list of Merge Requests immediately");
+         foreach (MergeRequest mergeRequest in comboBoxFilteredMergeRequests.Items.Cast<MergeRequest>())
+         {
+            if (mergeRequest.IId == mergeRequestIId)
+            {
+               comboBoxFilteredMergeRequests.SelectedItem = mergeRequest;
+            }
+         }
+
          Debug.WriteLine("onChangeMergeRequest(): Disable UI buttons and clean up text boxes related to current merge request");
          enableControlsOnChangedMergeRequest(null);
 
@@ -240,10 +249,6 @@ namespace mrHelper.App.Forms
       {
          Debug.WriteLine("onMergeRequestChanged(): Finished loading MR. Current selected MR is " + _workflow.State.MergeRequest.IId);
 
-         Debug.WriteLine("onMergeRequestChanged(): Update selected item in the list of Merge Requests");
-         Debug.Assert(comboBoxFilteredMergeRequests.SelectedItem == null);
-         comboBoxFilteredMergeRequests.SelectedItem = state.MergeRequest;
-
          Debug.WriteLine("onMergeRequestChanged(): Enable UI buttons and fill text boxes related to current merge request");
          enableControlsOnChangedMergeRequest(state.MergeRequest);
 
@@ -254,6 +259,9 @@ namespace mrHelper.App.Forms
          Debug.WriteLine("onMergeRequestChanged(): Enable combo boxes with lists of versions");
          fixComboBoxAfterAsyncLoading(comboBoxLeftVersion);
          fixComboBoxAfterAsyncLoading(comboBoxRightVersion);
+
+         Debug.WriteLine("onFailedChangeMergeRequest(): Update status bar");
+         labelWorkflowStatus.Text = String.Empty;
 
          _commitChecker = _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor);
       }

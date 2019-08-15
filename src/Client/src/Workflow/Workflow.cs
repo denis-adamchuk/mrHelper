@@ -1,12 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Workflow
 {
-   public class WorkflowException : Exception {}
+   public class WorkflowException : Exception { }
 
    /// <summary>
    /// Client workflow related to Hosts/Projects/Merge Requests
@@ -52,14 +53,18 @@ namespace mrHelper.Client.Workflow
          await switchHostAsync(hostName);
       }
 
-      async public Task<User> GetCurrentUser()
+      async public Task<User?> GetCurrentUser()
       {
          try
          {
             return await Operator?.GetCurrentUser();
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
+            if (ex.InternalException is GitLabClientCancelled)
+            {
+               return null; // silent return
+            }
             throw new WorkflowException();
          }
       }
@@ -92,7 +97,7 @@ namespace mrHelper.Client.Workflow
       public EventHandler<WorkflowState> AfterProjectSwitched;
       public EventHandler FailedSwitchProject;
 
-      public EventHandler BeforeSwitchMergeRequest;
+      public EventHandler<int> BeforeSwitchMergeRequest;
       public EventHandler<WorkflowState> AfterMergeRequestSwitched;
       public EventHandler FailedSwitchMergeRequest;
 
@@ -114,9 +119,13 @@ namespace mrHelper.Client.Workflow
          {
             projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
             FailedSwitchHost?.Invoke(this, null);
+            if (ex.InternalException is GitLabClientCancelled)
+            {
+               return; // silent return
+            }
             throw new WorkflowException();
          }
 
@@ -150,9 +159,13 @@ namespace mrHelper.Client.Workflow
             mergeRequests = await Operator.GetMergeRequestsAsync(
                project.Path_With_Namespace, Settings.CheckedLabelsFilter ? _cachedLabels : null);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
             FailedSwitchProject(this, null);
+            if (ex.InternalException is GitLabClientCancelled)
+            {
+               return; // silent return
+            }
             throw new WorkflowException();
          }
 
@@ -170,7 +183,7 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchMergeRequestAsync(int mergeRequestIId)
       {
-         BeforeSwitchMergeRequest?.Invoke(this, null);
+         BeforeSwitchMergeRequest?.Invoke(this, mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
          List<GitLabSharp.Entities.Version> versions = null;
@@ -179,9 +192,13 @@ namespace mrHelper.Client.Workflow
             mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
             versions = await Operator.GetVersionsAsync(State.Project.Path_With_Namespace, mergeRequestIId);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
             FailedSwitchMergeRequest(this, null);
+            if (ex.InternalException is GitLabClientCancelled)
+            {
+               return; // silent return
+            }
             throw new WorkflowException();
          }
 
@@ -210,7 +227,7 @@ namespace mrHelper.Client.Workflow
       }
 
       private UserDefinedSettings Settings { get; }
-      private WorkflowDataOperator Operator{ get; set; }
+      private WorkflowDataOperator Operator { get; set; }
 
       private List<string> _cachedLabels = null;
    }

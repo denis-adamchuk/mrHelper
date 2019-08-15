@@ -132,7 +132,7 @@ namespace mrHelper.Client.Updates
       private UserDefinedSettings Settings { get; }
       private List<string> _cachedLabels { get; set; }
 
-      private static readonly int mergeRequestCheckTimerInterval = 60000; // ms
+      private static readonly int mergeRequestCheckTimerInterval = 600000; // ms >>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {

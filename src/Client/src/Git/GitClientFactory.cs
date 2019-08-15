@@ -39,7 +39,7 @@ namespace mrHelper.Client.Git
          public string HostName;
          public string ProjectName;
       }
-      private Dictionary<Key, GitClient> Clients { get; set; }
+      private Dictionary<Key, GitClient> Clients { get; set; } = new Dictionary<Key, GitClient>();
    }
 }
 

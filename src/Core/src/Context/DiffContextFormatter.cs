@@ -51,7 +51,7 @@ namespace mrHelper.Core.Context
 
       private string loadStylesFromCSS()
       {
-         return Properties.Resources.DiffContextCSS;
+         return mrHelper.Core.Properties.Resources.DiffContextCSS;
       }
 
       private string getCustomStyle(int fontSizePx, int rowsVPaddingPx)
