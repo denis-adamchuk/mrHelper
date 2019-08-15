@@ -81,7 +81,10 @@ namespace mrHelper.Client.Workflow
 
       async public Task CancelAsync()
       {
-         await Operator?.CancelAsync();
+         if (Operator != null)
+         {
+            await Operator.CancelAsync();
+         }
       }
 
       public void Dispose()
@@ -89,11 +92,11 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      public EventHandler BeforeSwitchHost;
+      public EventHandler<string> BeforeSwitchHost;
       public EventHandler<WorkflowState> AfterHostSwitched;
       public EventHandler FailedSwitchHost;
 
-      public EventHandler BeforeSwitchProject;
+      public EventHandler<string> BeforeSwitchProject;
       public EventHandler<WorkflowState> AfterProjectSwitched;
       public EventHandler FailedSwitchProject;
 
@@ -110,7 +113,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         BeforeSwitchHost?.Invoke(this, null);
+         BeforeSwitchHost?.Invoke(this, hostName);
 
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
 
@@ -149,7 +152,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         BeforeSwitchProject?.Invoke(this, null);
+         BeforeSwitchProject?.Invoke(this, projectName);
 
          Project project = new Project();
          List<MergeRequest> mergeRequests = null;

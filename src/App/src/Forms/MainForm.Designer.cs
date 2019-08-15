@@ -417,6 +417,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowPublicOnly.TabIndex = 6;
          this.checkBoxShowPublicOnly.Text = "Show projects with public visibility only";
          this.checkBoxShowPublicOnly.UseVisualStyleBackColor = true;
+         this.checkBoxShowPublicOnly.CheckedChanged += new System.EventHandler(this.CheckBoxShowPublicOnly_CheckedChanged);
          // 
          // checkBoxRequireTimer
          // 

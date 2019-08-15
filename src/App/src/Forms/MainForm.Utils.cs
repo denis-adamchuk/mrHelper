@@ -193,7 +193,9 @@ namespace mrHelper.App.Forms
       {
          bool success = mergeRequest.HasValue;
          richTextBoxMergeRequestDescription.Text = mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
+         richTextBoxMergeRequestDescription.Update();
          textBoxMergeRequestName.Text = mergeRequest.HasValue ? mergeRequest.Value.Title : String.Empty;
+         textBoxMergeRequestName.Update();
          linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
          linkLabelConnectedTo.Visible = success;
          buttonDiscussions.Enabled = success;

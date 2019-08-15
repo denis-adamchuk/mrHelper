@@ -25,11 +25,11 @@ namespace mrHelper.App.Forms
          Debug.WriteLine("Initializing workflow");
 
          _workflow = _workflowManager.CreateWorkflow();
-         _workflow.BeforeSwitchHost += (sender, e) => onChangeHost();
+         _workflow.BeforeSwitchHost += (sender, e) => onChangeHost(e);
          _workflow.AfterHostSwitched += (sender, state) => onHostChanged(state);
          _workflow.FailedSwitchHost += (sender, e) => onFailedChangeHost();
 
-         _workflow.BeforeSwitchProject += (sender, e) => onChangeProject();
+         _workflow.BeforeSwitchProject += (sender, e) => onChangeProject(e);
          _workflow.AfterProjectSwitched += (sender, state) => onProjectChanged(state);
          _workflow.FailedSwitchProject += (sender, e) => onFailedChangeProject();
 
@@ -80,8 +80,16 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onChangeHost()
+      private void onChangeHost(string hostname)
       {
+         Debug.WriteLine("onChangeHost(): Update selected item in the list of Hosts");
+         //Debug.Assert(comboBoxHost.SelectedItem == null);
+         comboBoxHost.SelectedItem = new HostComboBoxItem
+         {
+            Host = hostname,
+            AccessToken = Tools.GetAccessToken(hostname, _settings)
+         };
+
          Debug.WriteLine("onChangeHost(): Disable projects combo box and change its text to Loading...");
          prepareComboBoxToAsyncLoading(comboBoxProjects, true);
 
@@ -110,14 +118,6 @@ namespace mrHelper.App.Forms
 
       private void onHostChanged(WorkflowState state)
       {
-         Debug.WriteLine("onHostChanged(): Update selected item in the list of Hosts");
-         Debug.Assert(comboBoxHost.SelectedItem == null);
-         comboBoxHost.SelectedItem = new HostComboBoxItem
-         {
-            Host = state.HostName,
-            AccessToken = Tools.GetAccessToken(state.HostName, _settings)
-         };
-
          Debug.WriteLine("onHostChanged(): Update lists of Projects");
          Debug.Assert(comboBoxProjects.Items.Count == 0);
          foreach (var project in state.Projects)
@@ -149,8 +149,18 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onChangeProject()
+      private void onChangeProject(string projectName)
       {
+         Debug.WriteLine("onChangeProject(): Update selected item in the list of Projects");
+         //Debug.Assert(comboBoxProjects.SelectedItem == null);
+         foreach (Project project in comboBoxProjects.Items.Cast<Project>())
+         {
+            if (project.Path_With_Namespace == projectName)
+            {
+               comboBoxProjects.SelectedItem = project;
+            }
+         }
+
          Debug.WriteLine("onChangeProject(): Disable UI buttons and clean up text boxes related to current merge request");
          enableControlsOnChangedMergeRequest(null);
 
@@ -175,10 +185,6 @@ namespace mrHelper.App.Forms
 
       private void onProjectChanged(WorkflowState state)
       {
-         Debug.WriteLine("onProjectChanged(): Update selected item in the list of Projects");
-         //Debug.Assert(comboBoxProjects.SelectedItem == null);
-         comboBoxProjects.SelectedItem = state.Project;
-
          Debug.WriteLine("onProjectChanged(): Update lists of Merge Requests");
          Debug.Assert(comboBoxFilteredMergeRequests.Items.Count == 0);
          foreach (var mergeRequest in state.MergeRequests)
