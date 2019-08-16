@@ -28,9 +28,10 @@ namespace mrHelper.Client.Updates
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests on auto-update");
+               ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -47,9 +48,10 @@ namespace mrHelper.Client.Updates
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot check GitLab for updates");
+               ExceptionHandlers.Handle(ex, "Cannot load versions from GitLab");
                throw new OperatorException(ex);
             }
             throw;

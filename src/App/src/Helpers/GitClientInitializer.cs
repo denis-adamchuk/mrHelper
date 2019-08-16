@@ -28,8 +28,9 @@ namespace mrHelper.App.Helpers
       async internal Task InitAsync(GitClient client, string path, string hostName,
          string projectName, CommitChecker commitChecker)
       {
-         if (!isCloneAllowed(path))
+         if (client.DoesRequireClone() && !isCloneAllowed(path))
          {
+            OnInitializationStatusChange?.Invoke(this, "Clone rejected");
             throw new CancelledByUserException();
          }
 
@@ -46,17 +47,29 @@ namespace mrHelper.App.Helpers
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private Task initClientAsync(GitClient client, string path, string hostName,
-         string projectName, CommitChecker commitChecker)
+      async private Task initClientAsync(GitClient client, string path, string projectName,
+         string hostName, CommitChecker commitChecker)
       {
-         if (isCloneNeeded(path))
+         if (client.DoesRequireClone())
          {
-            await runAsync(async () => await client.CloneAsync(hostName, projectName, path, true), "clone");
-            Debug.Assert(GitClient.IsGitClient(client.Path));
+            OnInitializationStatusChange?.Invoke(this, "Cloning git repository...");
+            await runAsync(async () => await client.Updater.ForceUpdateAsync(), "clone");
+            OnInitializationStatusChange?.Invoke(this, "git repository cloned");
+            return;
          }
-         else if (await checkForRepositoryUpdatesAsync(client, commitChecker))
+
+         OnInitializationStatusChange?.Invoke(this, "Checking for new commits...");
+         bool needFetch = await checkForRepositoryUpdatesAsync(client, commitChecker);
+
+         if (needFetch)
          {
-            await runAsync(async () => await client.FetchAsync(true), "fetch");
+            OnInitializationStatusChange?.Invoke(this, "Found new commits, fetching them...");
+            await runAsync(async () => await client.Updater.ForceUpdateAsync(), "fetch");
+            OnInitializationStatusChange?.Invoke(this, "New commits fetched");
+         }
+         else
+         {
+            OnInitializationStatusChange?.Invoke(this, "New commits are not found, fetch is not needed");
          }
       }
 
@@ -68,22 +81,14 @@ namespace mrHelper.App.Helpers
       {
          if (!System.IO.Directory.Exists(path))
          {
-            if (MessageBox.Show("There is no git repository at \"" + path + "\". "
-               + "Do you want to run 'git clone'?", "Information", MessageBoxButtons.YesNo,
+            if (MessageBox.Show(String.Format("There is no git repository at \"{0}\"."
+               + "Do you want to run 'git clone'?", path), "Information", MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.No)
             {
                return false;
             }
          }
          return true;
-      }
-
-      /// <summary>
-      /// Check if Path exists and it is a valid git repository
-      /// </summary>
-      private bool isCloneNeeded(string path)
-      {
-         return !System.IO.Directory.Exists(path) || !GitClient.IsGitClient(path);
       }
 
       private delegate Task Command();
@@ -116,6 +121,7 @@ namespace mrHelper.App.Helpers
 
             if (isSSLCertificateProblem(ex as GitOperationException))
             {
+               OnInitializationStatusChange?.Invoke(this, "Cannot clone due to SSL verification error");
                if (handleSSLCertificateProblem())
                {
                   throw new RepeatOperationException();
@@ -125,8 +131,6 @@ namespace mrHelper.App.Helpers
 
             throw;
          }
-
-         OnInitializationStatusChange?.Invoke(this, String.Empty);
       }
 
       /// <summary>

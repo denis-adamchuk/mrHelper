@@ -28,7 +28,16 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async public Task<bool> AreNewCommitsAsync(DateTime timestamp)
       {
-         List<GitLabSharp.Entities.Version> versions = await UpdateOperator.GetVersions(MergeRequestDescriptor);
+         List<GitLabSharp.Entities.Version> versions = null;
+         try
+         {
+            versions = await UpdateOperator.GetVersions(MergeRequestDescriptor);
+         }
+         catch (OperatorException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot check for versions");
+            return false;
+         }
          return versions != null && versions.Count > 0 && versions[0].Created_At.ToLocalTime() > timestamp;
       }
 

@@ -171,7 +171,7 @@ namespace mrHelper.App.Forms
          _discussionManager = new DiscussionManager(_settings);
          _gitClientFactory = new GitClientFactory();
          _gitClientInitializer = new GitClientInitializer();
-         _gitClientInitializer.OnInitializationStatusChange += (sender, e) => updateGitStatusText(sender, e);
+         _gitClientInitializer.OnInitializationStatusChange += (sender, e) => labelWorkflowStatus.Text = e;
 
          updateHostsDropdownList();
 

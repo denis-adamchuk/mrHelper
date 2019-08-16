@@ -14,6 +14,7 @@ using mrHelper.Core;
 using mrHelper.Client;
 using mrHelper.App.Controls;
 using mrHelper.Client.Updates;
+using mrHelper.Client.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -171,7 +172,7 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void prepareToAsyncGitOperation()
+      private void preGitClientInitialize()
       {
          linkLabelAbortGit.Visible = true;
          buttonDiffTool.Enabled = false;
@@ -180,13 +181,14 @@ namespace mrHelper.App.Forms
          comboBoxProjects.Enabled = false;
       }
 
-      private void fixAfterAsyncGitOperation()
+      private void postGitClientInitialize()
       {
          linkLabelAbortGit.Visible = false;
          buttonDiffTool.Enabled = true;
          buttonDiscussions.Enabled = true;
          comboBoxHost.Enabled = true;
          comboBoxProjects.Enabled = true;
+         updateGitStatusText(this, String.Empty);
       }
 
       private void enableControlsOnChangedMergeRequest(MergeRequest? mergeRequest)
@@ -306,8 +308,9 @@ namespace mrHelper.App.Forms
             {
                Directory.CreateDirectory(localFolder);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+               ExceptionHandlers.Handle(ex, String.Format("Cannot create \"{0}\"", localFolder));
                MessageBox.Show("Invalid path to \"Parent folder for git repositories\"",
                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                _gitClient = null;
@@ -315,7 +318,19 @@ namespace mrHelper.App.Forms
             }
          }
 
-         _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName(), true);
+         try
+         {
+            _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName(), true);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle(ex, String.Format("Path exists but it is not a git repository \"{0}\"", path));
+            MessageBox.Show(String.Format("Path \"{0}\" already exists but it is not a valid git repository", path),
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
+         Debug.Assert(_gitClient != null);
          _gitClient.Updater?.SetCommitChecker(_commitChecker);
          _gitClient.OnOperationStatusChange += updateGitStatusText;
       }

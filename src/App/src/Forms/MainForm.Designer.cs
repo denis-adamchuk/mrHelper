@@ -83,7 +83,6 @@ namespace mrHelper.App.Forms
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
          this.label3 = new System.Windows.Forms.Label();
          this.label4 = new System.Windows.Forms.Label();
-         this.labelAutoUpdate = new System.Windows.Forms.Label();
          this.comboBoxProjects = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxFilteredMergeRequests = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
@@ -444,7 +443,6 @@ namespace mrHelper.App.Forms
          // 
          // tabPageMR
          // 
-         this.tabPageMR.Controls.Add(this.labelAutoUpdate);
          this.tabPageMR.Controls.Add(this.linkLabelAbortGit);
          this.tabPageMR.Controls.Add(this.labelWorkflowStatus);
          this.tabPageMR.Controls.Add(this.labelGitStatus);
@@ -634,16 +632,6 @@ namespace mrHelper.App.Forms
          this.label4.TabIndex = 15;
          this.label4.Text = "Changes between";
          // 
-         // labelAutoUpdate
-         // 
-         this.labelAutoUpdate.AutoSize = true;
-         this.labelAutoUpdate.Location = new System.Drawing.Point(273, 542);
-         this.labelAutoUpdate.Name = "labelAutoUpdate";
-         this.labelAutoUpdate.Size = new System.Drawing.Size(152, 13);
-         this.labelAutoUpdate.TabIndex = 26;
-         this.labelAutoUpdate.Text = "Checking for updates...";
-         this.labelAutoUpdate.Visible = false;
-         // 
          // comboBoxProjects
          // 
          this.comboBoxProjects.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -797,7 +785,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Label labelGitStatus;
       private System.Windows.Forms.Label labelWorkflowStatus;
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
-      private System.Windows.Forms.Label labelAutoUpdate;
    }
 }
 

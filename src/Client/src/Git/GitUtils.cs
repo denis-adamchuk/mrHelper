@@ -107,11 +107,11 @@ namespace mrHelper.Client.Git
          {
             int cmdnamelen = fullCommand.IndexOf(' ');
             string cmdName = fullCommand.Substring(0, cmdnamelen >= 0 ? cmdnamelen : fullCommand.Length);
-            return String.Format("git {0} is in progress {1}{2}",
+            return String.Format("git {0}{1}{2}",
                cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
-         progress?.Report(getStatus(arguments, String.Empty));
+         //progress?.Report(getStatus(arguments, String.Empty));
 
          process.OutputDataReceived +=
             (sender, args) =>

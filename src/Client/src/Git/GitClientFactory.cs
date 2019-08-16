@@ -21,17 +21,9 @@ namespace mrHelper.Client.Git
             return Clients[key];
          }
 
-         GitClient client = isCloneNeeded(path) ? new GitClient() : new GitClient(path, enableUpdates);
+         GitClient client = new GitClient(hostName, projectName, path);
          Clients[key] = client;
          return client;
-      }
-
-      /// <summary>
-      /// Check if Path exists and it is a valid git repository
-      /// </summary>
-      private bool isCloneNeeded(string path)
-      {
-         return !System.IO.Directory.Exists(path) || !GitClient.IsGitClient(path);
       }
 
       private struct Key

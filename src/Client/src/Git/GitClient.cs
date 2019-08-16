@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,114 +9,62 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Git
 {
-   public class NoGitRepository : Exception {}
-
    /// <summary>
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
-   /// All methods throw NoGitRepository if default constructor is called without succeeding Clone.
    /// </summary>
    public class GitClient : IGitRepository
    {
-      // Timestamp of the most recent fetch/clone, by default it is empty
-      public DateTime? LastUpdateTime { get; private set; }
+      // Path of this git repository
+      public string Path { get; set; }
+
+      // Object which keeps this git repository up-to-date
+      public GitClientUpdater Updater { get; }
 
       public event EventHandler<string> OnOperationStatusChange;
 
       /// <summary>
-      /// Constructor that creates an object that cannot be user before running Clone.
-      /// On attempt to use such an object, NoGitRepository is thrown.
+      /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
+      /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal GitClient()
+      internal GitClient(string hostname, string projectname, string path)
       {
-      }
-
-      /// <summary>
-      /// Constructor that expects a valid git repository as input argument.
-      /// Throws ArgumentException
-      /// </summary>
-      internal GitClient(string path, bool enableUpdates)
-      {
-         if (!IsGitClient(path))
+         if (!canClone(path) && !isValidRepository(path))
          {
-            throw new ArgumentException("There is no a valid repository at path " + path);
+            throw new ArgumentException();
          }
 
+         _hostName = hostname;
+         _projectName = projectname;
          Path = path;
-
-         if (enableUpdates)
+         Updater = new GitClientUpdater(async () =>
          {
-            Updater = new GitClientUpdater(this);
-         }
+            if (_descriptor != null)
+            {
+               Debug.Assert(false);
+               return;
+            }
+
+            string arguments = canClone(Path) ? "clone --progress " + _hostName + "/" + _projectName + " " + Path
+                                              : "fetch --progress";
+            await run_async(arguments, null, true);
+         });
       }
 
       /// <summary>
-      /// Create an asynchronous task for 'git close' command
-      /// Throws:
-      /// InvalidOperationException if another async operation is running
+      /// Check if this repository needs cloning before use
       /// </summary>
-      async public Task CloneAsync(string host, string project, string path, bool enableUpdates)
+      public bool DoesRequireClone()
       {
-         if (IsGitClient(Path))
-         {
-            throw new InvalidOperationException("Multiple Clone not supported");
-         }
-
-         if (_descriptor != null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         string arguments = "clone --progress " + host + "/" + project + " " + path;
-         await run_async(arguments, null, true, true);
-
-         Debug.Assert(IsGitClient(path));
-         Path = path;
-
-         if (enableUpdates)
-         {
-            Updater = new GitClientUpdater(this);
-         }
-      }
-
-      /// <summary>
-      /// Create an asyncronous task for 'git fetch' command
-      /// Throws:
-      /// InvalidOperationException if another async operation is running
-      /// </summary>
-      async public Task FetchAsync(bool reportProgress)
-      {
-         if (!IsGitClient(Path))
-         {
-            throw new NoGitRepository();
-         }
-
-         if (_descriptor != null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         await (Task)run_inPath(() =>
-         {
-            string arguments = "fetch --progress";
-            return run_async(arguments, null, true, reportProgress);
-         }, Path);
+         Debug.Assert(canClone(Path) || isValidRepository(Path));
+         return !isValidRepository(Path);
       }
 
       /// <summary>
       /// Create an asyncronous task for 'git difftool --dir-diff' command
-      /// Throws:
-      /// InvalidOperationException if another async operation is running
       /// </summary>
       async public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
-         if (!IsGitClient(Path))
-         {
-            throw new NoGitRepository();
-         }
-
          if (_descriptor != null)
          {
             Debug.Assert(false);
@@ -125,13 +74,12 @@ namespace mrHelper.Client.Git
          await (Task)run_inPath(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-            return run_async(arguments, 500, false, false);
+            return run_async(arguments, 500, false);
          }, Path);
       }
 
       /// <summary>
       /// Cancel currently running git async operation
-      /// Throws:
       /// InvalidOperationException if no async operation is running
       /// </summary>
       public void CancelAsyncOperation()
@@ -177,11 +125,6 @@ namespace mrHelper.Client.Git
       // 'null' filename strings will be replaced with empty strings
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
-         if (!IsGitClient(Path))
-         {
-            throw new NoGitRepository();
-         }
-
          DiffCacheKey key = new DiffCacheKey
          {
             sha1 = leftcommit,
@@ -210,11 +153,6 @@ namespace mrHelper.Client.Git
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         if (!IsGitClient(Path))
-         {
-            throw new NoGitRepository();
-         }
-
          return (List<string>)run_inPath(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
@@ -224,11 +162,6 @@ namespace mrHelper.Client.Git
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
-         if (!IsGitClient(Path))
-         {
-            throw new NoGitRepository();
-         }
-
          RevisionCacheKey key = new RevisionCacheKey
          {
             filename = filename,
@@ -250,13 +183,18 @@ namespace mrHelper.Client.Git
          return result;
       }
 
-      static public bool IsGitClient(string dir)
-      {
-         if (dir == null || !Directory.Exists(dir))
-         {
-            return false;
-         }
+      private delegate object command();
 
+      /// <summary>
+      /// Check if Clone can be called for this GitClient
+      /// </summary>
+      static private bool canClone(string path)
+      {
+         return !Directory.Exists(path) || !Directory.EnumerateFileSystemEntries(path).Any();
+      }
+
+      static private bool isValidRepository(string path)
+      {
          return (bool)run_inPath(() =>
          {
             try
@@ -269,13 +207,8 @@ namespace mrHelper.Client.Git
             {
                return false;
             }
-         }, dir);
+         }, path);
       }
-
-      public string Path { get; set; }
-      public GitClientUpdater Updater { get => _updater; private set => _updater = value; }
-
-      private delegate object command();
 
       static private object run_inPath(command cmd, string path)
       {
@@ -294,7 +227,7 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task run_async(string arguments, int? timeout, bool updateTimeStamp, bool reportProgress)
+      async private Task run_async(string arguments, int? timeout, bool reportProgress)
       {
          Progress<string> progress = reportProgress ? new Progress<string>() : null;
          if (reportProgress)
@@ -306,12 +239,13 @@ namespace mrHelper.Client.Git
          }
 
          _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
-         await _descriptor.TaskCompletionSource.Task;
-         _descriptor = null;
-
-         if (updateTimeStamp)
+         try
          {
-            LastUpdateTime = DateTime.Now;
+            await _descriptor.TaskCompletionSource.Task;
+         }
+         finally
+         {
+            _descriptor = null;
          }
       }
 
@@ -337,7 +271,9 @@ namespace mrHelper.Client.Git
          new Dictionary<RevisionCacheKey, List<string>>();
 
       private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
-      private GitClientUpdater _updater;
+
+      private string _hostName { get; }
+      private string _projectName { get; }
    }
 }
 

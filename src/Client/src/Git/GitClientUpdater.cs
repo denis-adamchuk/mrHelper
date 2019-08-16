@@ -6,6 +6,7 @@ using System.IO;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Git
 {
@@ -14,13 +15,14 @@ namespace mrHelper.Client.Git
    /// </summary>
    public class GitClientUpdater
    {
+      public delegate Task OnUpdate();
+
       /// <summary>
       /// Bind to the specific GitClient object
       /// </summary>
-      internal GitClientUpdater(GitClient gitClient)
+      internal GitClientUpdater(OnUpdate onUpdate)
       {
-         GitClient = gitClient;
-
+         _onUpdate = onUpdate;
          startTimer();
       }
 
@@ -29,19 +31,39 @@ namespace mrHelper.Client.Git
       /// </summary>
       public void SetCommitChecker(CommitChecker commitChecker)
       {
-         CommitChecker = commitChecker;
+         _commitChecker = commitChecker;
+      }
+
+      async public Task ForceUpdateAsync()
+      {
+         await doUpdate();
+      }
+
+      async private Task doUpdate()
+      {
+         try
+         {
+            await _onUpdate();
+         }
+         catch (GitOperationException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot update git repository");
+            return;
+         }
+
+         _lastUpdateTime = DateTime.Now;
       }
 
       async private void onTimer(object sender, EventArgs e)
       {
-         if (!GitClient.LastUpdateTime.HasValue)
+         if (!_lastUpdateTime.HasValue)
          {
             return;
          }
 
-         if (CommitChecker != null && await CommitChecker.AreNewCommitsAsync(GitClient.LastUpdateTime.Value))
+         if (_commitChecker != null && await _commitChecker.AreNewCommitsAsync(_lastUpdateTime.Value))
          {
-            await GitClient.FetchAsync(false);
+            await doUpdate();
          }
       }
 
@@ -51,8 +73,10 @@ namespace mrHelper.Client.Git
          Timer.Start();
       }
 
-      private GitClient GitClient { get; }
-      private CommitChecker CommitChecker { get; set; }
+      // Timestamp of the most recent update, by default it is empty
+      private OnUpdate _onUpdate { get; }
+      private CommitChecker _commitChecker { get; set; }
+      private DateTime? _lastUpdateTime { get; set; }
 
       private static readonly int TimerInterval = 60000; // ms
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer

@@ -94,16 +94,16 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      public EventHandler<string> BeforeSwitchHost;
-      public EventHandler<WorkflowState> AfterHostSwitched;
+      public EventHandler<string> PreSwitchHost;
+      public EventHandler<WorkflowState> PostSwitchHost;
       public EventHandler<bool> FailedSwitchHost;
 
-      public EventHandler<string> BeforeSwitchProject;
-      public EventHandler<WorkflowState> AfterProjectSwitched;
+      public EventHandler<string> PreSwitchProject;
+      public EventHandler<WorkflowState> PostSwitchProject;
       public EventHandler<bool> FailedSwitchProject;
 
-      public EventHandler<int> BeforeSwitchMergeRequest;
-      public EventHandler<WorkflowState> AfterMergeRequestSwitched;
+      public EventHandler<int> PreSwitchMergeRequest;
+      public EventHandler<WorkflowState> PostSwitchMergeRequest;
       public EventHandler<bool> FailedSwitchMergeRequest;
 
       public WorkflowState State { get; private set; } = new WorkflowState();
@@ -115,7 +115,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         BeforeSwitchHost?.Invoke(this, hostName);
+         PreSwitchHost?.Invoke(this, hostName);
 
          Operator?.CancelAsync();
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
@@ -140,7 +140,7 @@ namespace mrHelper.Client.Workflow
          State.HostName = hostName;
          State.Projects = projects;
 
-         AfterHostSwitched?.Invoke(this, State);
+         PostSwitchHost?.Invoke(this, State);
 
          string projectName = selectProjectFromList();
          if (projectName != String.Empty)
@@ -156,7 +156,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         BeforeSwitchProject?.Invoke(this, projectName);
+         PreSwitchProject?.Invoke(this, projectName);
 
          Project project = new Project();
          List<MergeRequest> mergeRequests = null;
@@ -182,7 +182,7 @@ namespace mrHelper.Client.Workflow
 
          _lastProjectsByHosts[State.HostName] = State.Project.Path_With_Namespace;
 
-         AfterProjectSwitched?.Invoke(this, State);
+         PostSwitchProject?.Invoke(this, State);
 
          int? iid = selectMergeRequestFromList();
          if (iid.HasValue)
@@ -193,7 +193,7 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchMergeRequestAsync(int mergeRequestIId)
       {
-         BeforeSwitchMergeRequest?.Invoke(this, mergeRequestIId);
+         PreSwitchMergeRequest?.Invoke(this, mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
          List<GitLabSharp.Entities.Version> versions = null;
@@ -219,7 +219,7 @@ namespace mrHelper.Client.Workflow
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;
 
-         AfterMergeRequestSwitched?.Invoke(this, State);
+         PostSwitchMergeRequest?.Invoke(this, State);
       }
 
       private string selectProjectFromList()

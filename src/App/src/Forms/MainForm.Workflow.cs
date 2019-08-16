@@ -25,16 +25,16 @@ namespace mrHelper.App.Forms
          Debug.WriteLine("Initializing workflow");
 
          _workflow = _workflowManager.CreateWorkflow();
-         _workflow.BeforeSwitchHost += (sender, e) => onChangeHost(e);
-         _workflow.AfterHostSwitched += (sender, state) => onHostChanged(state);
+         _workflow.PreSwitchHost += (sender, e) => onChangeHost(e);
+         _workflow.PostSwitchHost += (sender, state) => onHostChanged(state);
          _workflow.FailedSwitchHost += (sender, e) => onFailedChangeHost(e);
 
-         _workflow.BeforeSwitchProject += (sender, e) => onChangeProject(e);
-         _workflow.AfterProjectSwitched += (sender, state) => onProjectChanged(state);
+         _workflow.PreSwitchProject += (sender, e) => onChangeProject(e);
+         _workflow.PostSwitchProject += (sender, state) => onProjectChanged(state);
          _workflow.FailedSwitchProject += (sender, e) => onFailedChangeProject(e);
 
-         _workflow.BeforeSwitchMergeRequest += (sender, e) => onChangeMergeRequest(e);
-         _workflow.AfterMergeRequestSwitched += (sender, state) => onMergeRequestChanged(state);
+         _workflow.PreSwitchMergeRequest += (sender, e) => onChangeMergeRequest(e);
+         _workflow.PostSwitchMergeRequest += (sender, state) => onMergeRequestChanged(state);
          _workflow.FailedSwitchMergeRequest += (sender, e) => onFailedChangeMergeRequest(e);
 
          _workflowUpdateChecker = _updateManager.GetWorkflowUpdateChecker(_workflow, this);

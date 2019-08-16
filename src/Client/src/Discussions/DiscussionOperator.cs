@@ -29,7 +29,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
                throw new OperatorException(ex);
@@ -49,7 +50,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot load discussion from GitLab");
                throw new OperatorException(ex);
@@ -73,7 +75,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
                throw new OperatorException(ex);
@@ -98,7 +101,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot update discussion text");
                throw new OperatorException(ex);
@@ -118,7 +122,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot delete a note");
                throw new OperatorException(ex);
@@ -143,7 +148,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a note");
                throw new OperatorException(ex);
@@ -167,7 +173,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
                throw new OperatorException(ex);
@@ -187,7 +194,8 @@ namespace mrHelper.Client.Discussions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                ExceptionHandlers.Handle(ex, "Cannot create a discussion");
                throw new OperatorException(ex);
