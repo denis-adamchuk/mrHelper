@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</ProjectGuid>
+    <ProjectGuid>{4FC6E6EA-32F4-486A-A6D5-A30D72651D15}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>mrHelper.Client</RootNamespace>
@@ -60,7 +60,7 @@
     <Compile Include="src\Tools\MergeRequestDescriptor.cs" />
     <Compile Include="src\Tools\OperatorException.cs" />
     <Compile Include="src\Tools\Tools.cs" />
-    <Compile Include="src\Updates\CommitChecker.cs" />
+    <Compile Include="src\Updates\GitClientUpdater.cs" />
     <Compile Include="src\Updates\UpdateManager.cs" />
     <Compile Include="src\Updates\UpdateOperator.cs" />
     <Compile Include="src\Updates\WorkflowUpdateChecker.cs" />
