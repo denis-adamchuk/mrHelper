@@ -27,17 +27,17 @@ namespace mrHelper.App.Forms
          _workflow = _workflowManager.CreateWorkflow();
          _workflow.BeforeSwitchHost += (sender, e) => onChangeHost(e);
          _workflow.AfterHostSwitched += (sender, state) => onHostChanged(state);
-         _workflow.FailedSwitchHost += (sender, e) => onFailedChangeHost();
+         _workflow.FailedSwitchHost += (sender, e) => onFailedChangeHost(e);
 
          _workflow.BeforeSwitchProject += (sender, e) => onChangeProject(e);
          _workflow.AfterProjectSwitched += (sender, state) => onProjectChanged(state);
-         _workflow.FailedSwitchProject += (sender, e) => onFailedChangeProject();
+         _workflow.FailedSwitchProject += (sender, e) => onFailedChangeProject(e);
 
          _workflow.BeforeSwitchMergeRequest += (sender, e) => onChangeMergeRequest(e);
          _workflow.AfterMergeRequestSwitched += (sender, state) => onMergeRequestChanged(state);
-         _workflow.FailedSwitchMergeRequest += (sender, e) => onFailedChangeMergeRequest();
+         _workflow.FailedSwitchMergeRequest += (sender, e) => onFailedChangeMergeRequest(e);
 
-         _workflowUpdateChecker = _updateManager.GetWorkflowUpdateChecker(_workflow);
+         _workflowUpdateChecker = _updateManager.GetWorkflowUpdateChecker(_workflow, this);
          _workflowUpdateChecker.OnUpdate += async (sender, updates) =>
          {
             notifyOnMergeRequestUpdates(updates);
@@ -106,8 +106,13 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Loading projects...";
       }
 
-      private void onFailedChangeHost()
+      private void onFailedChangeHost(bool cancelled)
       {
+         if (cancelled)
+         {
+            return;
+         }
+
          Debug.WriteLine("onFailedChangeHost(): Update status bar");
          labelWorkflowStatus.Text = String.Empty;
 
@@ -174,8 +179,13 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Loading merge requests...";
       }
 
-      private void onFailedChangeProject()
+      private void onFailedChangeProject(bool cancelled)
       {
+         if (cancelled)
+         {
+            return;
+         }
+
          Debug.WriteLine("onFailedChangeProject(): Update status bar");
          labelWorkflowStatus.Text = String.Empty;
 
@@ -242,8 +252,13 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Loading merge request...";
       }
 
-      private void onFailedChangeMergeRequest()
+      private void onFailedChangeMergeRequest(bool cancelled)
       {
+         if (cancelled)
+         {
+            return;
+         }
+
          Debug.WriteLine("onFailedChangeMergeRequest(): Update status bar");
          labelWorkflowStatus.Text = String.Empty;
 

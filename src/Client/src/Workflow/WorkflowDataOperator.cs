@@ -28,6 +28,8 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<User> GetCurrentUser()
       {
+         Debug.WriteLine("Loading current user asynchronously");
+
          try
          {
             return (User)(await Client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
@@ -73,7 +75,7 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<Project> GetProjectAsync(string projectName)
       {
-         Debug.WriteLine("Loading project asynchronously");
+         Debug.WriteLine("Loading project asynchronously: " + projectName);
 
          try
          {
@@ -124,7 +126,7 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
       {
-         Debug.WriteLine("Loading merge request asynchronously");
+         Debug.WriteLine("Loading merge request asynchronously: " + projectName + "  " + iid.ToString());
 
          try
          {
@@ -144,7 +146,7 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<List<GitLabSharp.Entities.Version>> GetVersionsAsync(string projectName, int iid)
       {
-         Debug.WriteLine("Loading versions asynchronously");
+         Debug.WriteLine("Loading versions asynchronously: " + projectName + "  " + iid.ToString());
 
          try
          {

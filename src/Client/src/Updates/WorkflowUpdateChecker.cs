@@ -6,6 +6,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
+using System.ComponentModel;
 
 namespace mrHelper.Client.Updates
 {
@@ -20,7 +21,8 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class WorkflowUpdateChecker
    {
-      internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator, Workflow.Workflow workflow)
+      internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator,
+         Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke)
       {
          Settings = settings;
          Settings.PropertyChanged += (sender, property) =>
@@ -33,6 +35,7 @@ namespace mrHelper.Client.Updates
          _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
 
          Timer.Elapsed += onTimer;
+         Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
          UpdateOperator = updateOperator;
@@ -76,12 +79,24 @@ namespace mrHelper.Client.Updates
             UpdatedMergeRequests = new List<MergeRequest>()
          };
 
-         if (Workflow.State.HostName == null || Workflow.State.Projects == null)
+         if (Workflow.State.HostName == null)
          {
             return updates;
          }
 
-         foreach (var project in Workflow.State.Projects)
+         List<Project> projectsToCheck = Tools.Tools.LoadProjectsFromFile(Workflow.State.HostName);
+         if (projectsToCheck == null && Workflow.State.Project.Path_With_Namespace != null)
+         {
+            projectsToCheck = new List<Project>();
+            projectsToCheck.Add(Workflow.State.Project);
+         }
+
+         if (projectsToCheck == null)
+         {
+            return updates;
+         }
+
+         foreach (var project in projectsToCheck)
          {
             List<MergeRequest> mergeRequests =
                await UpdateOperator.GetMergeRequests(Workflow.State.HostName, project.Path_With_Namespace);
@@ -92,7 +107,7 @@ namespace mrHelper.Client.Updates
 
             foreach (var mergeRequest in mergeRequests)
             {
-               if (_cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
+               if (Settings.CheckedLabelsFilter && _cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
                {
                   continue;
                }
@@ -132,7 +147,7 @@ namespace mrHelper.Client.Updates
       private UserDefinedSettings Settings { get; }
       private List<string> _cachedLabels { get; set; }
 
-      private static readonly int mergeRequestCheckTimerInterval = 600000; // ms >>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<
+      private static readonly int mergeRequestCheckTimerInterval = 6000; // ms
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {

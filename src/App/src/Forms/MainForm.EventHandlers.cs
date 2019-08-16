@@ -120,7 +120,7 @@ namespace mrHelper.App.Forms
          string hostname = (sender as ComboBox).Text;
          _settings.LastSelectedHost = hostname;
 
-         Debug.WriteLine("Update projects dropdown list");
+         Debug.WriteLine("UI: Selected host " + hostname);
          await changeHostAsync(hostname);
       }
 
@@ -130,6 +130,8 @@ namespace mrHelper.App.Forms
 
          string projectname = (sender as ComboBox).Text;
          _settings.LastSelectedProject = projectname;
+
+         Debug.WriteLine("UI: Selected project " + projectname);
          await changeProjectAsync(projectname);
       }
 
@@ -137,6 +139,8 @@ namespace mrHelper.App.Forms
       {
          ComboBox comboBox = (sender as ComboBox);
          MergeRequest mergeRequest = (MergeRequest)comboBox.SelectedItem;
+
+         Debug.WriteLine("UI: Selected mr iid " + mergeRequest.IId.ToString());
          await changeMergeRequestAsync(mergeRequest.IId);
       }
 

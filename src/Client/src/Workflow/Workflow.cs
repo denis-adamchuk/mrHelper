@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
@@ -61,7 +62,8 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            if (ex.InternalException is GitLabClientCancelled)
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            if (cancelled)
             {
                return null; // silent return
             }
@@ -94,15 +96,15 @@ namespace mrHelper.Client.Workflow
 
       public EventHandler<string> BeforeSwitchHost;
       public EventHandler<WorkflowState> AfterHostSwitched;
-      public EventHandler FailedSwitchHost;
+      public EventHandler<bool> FailedSwitchHost;
 
       public EventHandler<string> BeforeSwitchProject;
       public EventHandler<WorkflowState> AfterProjectSwitched;
-      public EventHandler FailedSwitchProject;
+      public EventHandler<bool> FailedSwitchProject;
 
       public EventHandler<int> BeforeSwitchMergeRequest;
       public EventHandler<WorkflowState> AfterMergeRequestSwitched;
-      public EventHandler FailedSwitchMergeRequest;
+      public EventHandler<bool> FailedSwitchMergeRequest;
 
       public WorkflowState State { get; private set; } = new WorkflowState();
 
@@ -115,6 +117,7 @@ namespace mrHelper.Client.Workflow
 
          BeforeSwitchHost?.Invoke(this, hostName);
 
+         Operator?.CancelAsync();
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
 
          List<Project> projects = null;
@@ -124,8 +127,9 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            FailedSwitchHost?.Invoke(this, null);
-            if (ex.InternalException is GitLabClientCancelled)
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            FailedSwitchHost?.Invoke(this, cancelled);
+            if (cancelled)
             {
                return; // silent return
             }
@@ -164,8 +168,9 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            FailedSwitchProject(this, null);
-            if (ex.InternalException is GitLabClientCancelled)
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            FailedSwitchProject(this, cancelled);
+            if (cancelled)
             {
                return; // silent return
             }
@@ -174,6 +179,8 @@ namespace mrHelper.Client.Workflow
 
          State.Project = project;
          State.MergeRequests = mergeRequests;
+
+         _lastProjectsByHosts[State.HostName] = State.Project.Path_With_Namespace;
 
          AfterProjectSwitched?.Invoke(this, State);
 
@@ -197,8 +204,9 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            FailedSwitchMergeRequest(this, null);
-            if (ex.InternalException is GitLabClientCancelled)
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            FailedSwitchMergeRequest(this, cancelled);
+            if (cancelled)
             {
                return; // silent return
             }
@@ -208,11 +216,23 @@ namespace mrHelper.Client.Workflow
          State.MergeRequest = mergeRequest;
          State.Versions = versions;
 
+         HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
+         _lastMergeRequestsByProjects[key] = mergeRequestIId;
+
          AfterMergeRequestSwitched?.Invoke(this, State);
       }
 
       private string selectProjectFromList()
       {
+         string key = State.HostName;
+         // if we remember a project selected for the given host before...
+         if (_lastProjectsByHosts.ContainsKey(key)
+            // ... and if such project still exists in a list of Projects
+            && State.Projects.Any((x) => x.Path_With_Namespace == _lastProjectsByHosts[key]))
+         {
+            return _lastProjectsByHosts[key];
+         }
+
          foreach (var project in State.Projects)
          {
             if (project.Path_With_Namespace == Settings.LastSelectedProject)
@@ -220,12 +240,21 @@ namespace mrHelper.Client.Workflow
                return project.Path_With_Namespace;
             }
          }
+
          return State.Projects.Count > 0 ? State.Projects[0].Path_With_Namespace : String.Empty;
       }
 
       private int? selectMergeRequestFromList()
       {
-         // TODO We may remember IID of a MR on Project switch and then restore it here
+         HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
+         // if we remember MR selected for the given host/project before...
+         if (_lastMergeRequestsByProjects.ContainsKey(key)
+            // ... and if such MR still exists in a list of MRs
+            && State.MergeRequests.Any((x) => x.IId == _lastMergeRequestsByProjects[key]))
+         {
+            return _lastMergeRequestsByProjects[key];
+         }
+
          return State.MergeRequests.Count > 0 ? State.MergeRequests[0].IId : new Nullable<int>();
       }
 
@@ -233,6 +262,14 @@ namespace mrHelper.Client.Workflow
       private WorkflowDataOperator Operator { get; set; }
 
       private List<string> _cachedLabels = null;
+
+      private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
+      private struct HostAndProjectId
+      {
+         public string Host;
+         public int ProjectId;
+      }
+      private Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects = new Dictionary<HostAndProjectId, int>();
    }
 }
 

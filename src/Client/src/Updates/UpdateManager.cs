@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 
@@ -15,9 +16,10 @@ namespace mrHelper.Client.Updates
          Settings = settings;
       }
 
-      public WorkflowUpdateChecker GetWorkflowUpdateChecker(Workflow.Workflow workflow)
+      public WorkflowUpdateChecker GetWorkflowUpdateChecker(Workflow.Workflow workflow,
+         ISynchronizeInvoke synchronizeInvoke)
       {
-         return new WorkflowUpdateChecker(Settings, UpdateOperator, workflow);
+         return new WorkflowUpdateChecker(Settings, UpdateOperator, workflow, synchronizeInvoke);
       }
 
       public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
