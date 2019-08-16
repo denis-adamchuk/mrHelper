@@ -316,6 +316,7 @@ namespace mrHelper.App.Forms
          }
 
          _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName(), true);
+         _gitClient.Updater?.SetCommitChecker(_commitChecker);
          _gitClient.OnOperationStatusChange += updateGitStatusText;
       }
 

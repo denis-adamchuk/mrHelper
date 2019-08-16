@@ -13,7 +13,7 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Create a GitClient object or return it if already cached.
       /// </summary>
-      public GitClient GetClient(string path, string hostName, string projectName, bool needUpdates = true)
+      public GitClient GetClient(string path, string hostName, string projectName, bool enableUpdates = true)
       {
          Key key = new Key{ HostName = hostName, ProjectName = projectName };
          if (Clients.ContainsKey(key))
@@ -21,7 +21,7 @@ namespace mrHelper.Client.Git
             return Clients[key];
          }
 
-         GitClient client = isCloneNeeded(path) ? new GitClient() : new GitClient(path, needUpdates);
+         GitClient client = isCloneNeeded(path) ? new GitClient() : new GitClient(path, enableUpdates);
          Clients[key] = client;
          return client;
       }

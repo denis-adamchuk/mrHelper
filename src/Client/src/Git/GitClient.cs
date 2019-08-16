@@ -43,7 +43,10 @@ namespace mrHelper.Client.Git
 
          Path = path;
 
-         startTimer();
+         if (enableUpdates)
+         {
+            Updater = new GitClientUpdater(this);
+         }
       }
 
       /// <summary>
@@ -51,7 +54,7 @@ namespace mrHelper.Client.Git
       /// Throws:
       /// InvalidOperationException if another async operation is running
       /// </summary>
-      async public Task CloneAsync(string host, string project, string path, bool enableUpdates = false)
+      async public Task CloneAsync(string host, string project, string path, bool enableUpdates)
       {
          if (IsGitClient(Path))
          {
@@ -60,7 +63,8 @@ namespace mrHelper.Client.Git
 
          if (_descriptor != null)
          {
-            throw new InvalidOperationException("Another acync operation is running");
+            Debug.Assert(false);
+            return;
          }
 
          string arguments = "clone --progress " + host + "/" + project + " " + path;
@@ -69,7 +73,10 @@ namespace mrHelper.Client.Git
          Debug.Assert(IsGitClient(path));
          Path = path;
 
-         startTimer();
+         if (enableUpdates)
+         {
+            Updater = new GitClientUpdater(this);
+         }
       }
 
       /// <summary>
@@ -77,7 +84,7 @@ namespace mrHelper.Client.Git
       /// Throws:
       /// InvalidOperationException if another async operation is running
       /// </summary>
-      public Task FetchAsync()
+      async public Task FetchAsync(bool reportProgress)
       {
          if (!IsGitClient(Path))
          {
@@ -86,13 +93,14 @@ namespace mrHelper.Client.Git
 
          if (_descriptor != null)
          {
-            throw new InvalidOperationException("Another acync operation is running");
+            Debug.Assert(false);
+            return;
          }
 
-         return (Task)run_inPath(() =>
+         await (Task)run_inPath(() =>
          {
             string arguments = "fetch --progress";
-            return run_async(arguments, null, true, true);
+            return run_async(arguments, null, true, reportProgress);
          }, Path);
       }
 
@@ -101,7 +109,7 @@ namespace mrHelper.Client.Git
       /// Throws:
       /// InvalidOperationException if another async operation is running
       /// </summary>
-      public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
+      async public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
       {
          if (!IsGitClient(Path))
          {
@@ -110,10 +118,11 @@ namespace mrHelper.Client.Git
 
          if (_descriptor != null)
          {
-            throw new InvalidOperationException("Another acync operation is running");
+            Debug.Assert(false);
+            return;
          }
 
-         return (Task)run_inPath(() =>
+         await (Task)run_inPath(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
             return run_async(arguments, 500, false, false);
@@ -129,7 +138,8 @@ namespace mrHelper.Client.Git
       {
          if (_descriptor == null)
          {
-            throw new InvalidOperationException("No acync operation is running");
+            Debug.Assert(false);
+            return;
          }
 
          Process process = null;
@@ -263,6 +273,7 @@ namespace mrHelper.Client.Git
       }
 
       public string Path { get; set; }
+      public GitClientUpdater Updater { get => _updater; private set => _updater = value; }
 
       private delegate object command();
 
@@ -283,10 +294,10 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task run_async(string arguments, int? timeout, bool updateTimeStamp, bool trackProgress)
+      async private Task run_async(string arguments, int? timeout, bool updateTimeStamp, bool reportProgress)
       {
-         Progress<string> progress = trackProgress ? new Progress<string>() : null;
-         if (trackProgress)
+         Progress<string> progress = reportProgress ? new Progress<string>() : null;
+         if (reportProgress)
          {
             progress.ProgressChanged += (sender, status) =>
             {
@@ -326,6 +337,7 @@ namespace mrHelper.Client.Git
          new Dictionary<RevisionCacheKey, List<string>>();
 
       private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
+      private GitClientUpdater _updater;
    }
 }
 

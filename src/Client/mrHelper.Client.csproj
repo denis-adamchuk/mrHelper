@@ -60,7 +60,8 @@
     <Compile Include="src\Tools\MergeRequestDescriptor.cs" />
     <Compile Include="src\Tools\OperatorException.cs" />
     <Compile Include="src\Tools\Tools.cs" />
-    <Compile Include="src\Updates\GitClientUpdater.cs" />
+    <Compile Include="src\Updates\CommitChecker.cs" />
+    <Compile Include="src\Git\GitClientUpdater.cs" />
     <Compile Include="src\Updates\UpdateManager.cs" />
     <Compile Include="src\Updates\UpdateOperator.cs" />
     <Compile Include="src\Updates\WorkflowUpdateChecker.cs" />

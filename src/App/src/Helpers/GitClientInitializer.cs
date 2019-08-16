@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async internal Task InitAsync(GitClient client, string path, string hostName,
-         string projectName, GitClientUpdater commitChecker)
+         string projectName, CommitChecker commitChecker)
       {
          if (!isCloneAllowed(path))
          {
@@ -47,16 +47,16 @@ namespace mrHelper.App.Helpers
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async private Task initClientAsync(GitClient client, string path, string hostName,
-         string projectName, GitClientUpdater commitChecker)
+         string projectName, CommitChecker commitChecker)
       {
          if (isCloneNeeded(path))
          {
-            await runAsync(async () => await client.CloneAsync(hostName, projectName, path), "clone");
+            await runAsync(async () => await client.CloneAsync(hostName, projectName, path, true), "clone");
             Debug.Assert(GitClient.IsGitClient(client.Path));
          }
          else if (await checkForRepositoryUpdatesAsync(client, commitChecker))
          {
-            await runAsync(async () => await client.FetchAsync(), "fetch");
+            await runAsync(async () => await client.FetchAsync(true), "fetch");
          }
       }
 
@@ -185,7 +185,7 @@ namespace mrHelper.App.Helpers
       /// Checks if there is a version in GitLab which is newer than latest Git Repository update.
       /// Returns 'true' if there is a newer version.
       /// </summary>
-      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, GitClientUpdater commitChecker)
+      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CommitChecker commitChecker)
       {
          if (!client.LastUpdateTime.HasValue)
          {

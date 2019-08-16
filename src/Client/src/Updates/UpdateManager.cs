@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using mrHelper.Client.Git;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 
@@ -22,9 +23,14 @@ namespace mrHelper.Client.Updates
          return new WorkflowUpdateChecker(Settings, UpdateOperator, workflow, synchronizeInvoke);
       }
 
-      public GitClientUpdater GetCommitChecker(MergeRequestDescriptor mrd)
+      public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
       {
-         return new GitClientUpdater(mrd, UpdateOperator);
+         return new CommitChecker(mrd, UpdateOperator);
+      }
+
+      public GitClientUpdater GetGitClientUpdater(GitClient gitClient)
+      {
+         return new GitClientUpdater(gitClient);
       }
 
       private UpdateOperator UpdateOperator { get; }
