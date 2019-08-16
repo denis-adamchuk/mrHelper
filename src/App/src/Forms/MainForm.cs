@@ -81,7 +81,7 @@ namespace mrHelper.App.Forms
       private GitClient _gitClient;
       private Workflow _workflow;
       private WorkflowUpdateChecker _workflowUpdateChecker;
-      private CommitChecker _commitChecker;
+      private GitClientUpdater _commitChecker;
       private TimeTracker _timeTracker;
 
       // Arguments passed to the last launched instance of a diff tool

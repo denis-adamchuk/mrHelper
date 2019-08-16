@@ -257,7 +257,7 @@ namespace mrHelper.App.Forms
          if (labelGitStatus.InvokeRequired)
          {
             UpdateTextCallback fn = new UpdateTextCallback(updateGitStatusText);
-            Invoke(fn, new object [] { text });
+            Invoke(fn, new object [] { sender, text });
          }
          else
          {

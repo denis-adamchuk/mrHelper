@@ -22,9 +22,9 @@ namespace mrHelper.Client.Updates
          return new WorkflowUpdateChecker(Settings, UpdateOperator, workflow, synchronizeInvoke);
       }
 
-      public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
+      public GitClientUpdater GetCommitChecker(MergeRequestDescriptor mrd)
       {
-         return new CommitChecker(mrd, UpdateOperator);
+         return new GitClientUpdater(mrd, UpdateOperator);
       }
 
       private UpdateOperator UpdateOperator { get; }

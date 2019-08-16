@@ -46,9 +46,8 @@ namespace mrHelper.Client.Git
          startTimer();
       }
 
-      // TOOD - Subsequent clone support
       /// <summary>
-      /// Create an asyncronous task for 'git close' command
+      /// Create an asynchronous task for 'git close' command
       /// Throws:
       /// InvalidOperationException if another async operation is running
       /// </summary>
@@ -305,17 +304,6 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private void startTimer()
-      {
-         Timer.Elapsed += new System.Timers.ElapsedEventHandler(onTimer);
-         Timer.Start();
-      }
-
-      async private void onTimer(object sender, EventArgs e)
-      {
-         await FetchAsync();
-      }
-
       private struct DiffCacheKey
       {
          public string sha1;
@@ -338,12 +326,6 @@ namespace mrHelper.Client.Git
          new Dictionary<RevisionCacheKey, List<string>>();
 
       private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
-
-      private static readonly int TimerInterval = 60000; // ms
-      private System.Timers.Timer Timer { get; } = new System.Timers.Timer
-         {
-            Interval = TimerInterval
-         };
    }
 }
 

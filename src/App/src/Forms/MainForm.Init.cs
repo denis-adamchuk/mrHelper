@@ -170,7 +170,7 @@ namespace mrHelper.App.Forms
          _timeTrackingManager = new TimeTrackingManager(_settings);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientFactory = new GitClientFactory();
-         _gitClientInitializer = new GitClientInitializer(_gitClientFactory);
+         _gitClientInitializer = new GitClientInitializer();
          _gitClientInitializer.OnInitializationStatusChange += (sender, e) => updateGitStatusText(sender, e);
 
          updateHostsDropdownList();

@@ -16,9 +16,8 @@ namespace mrHelper.App.Helpers
    {
       internal event EventHandler<string> OnInitializationStatusChange;
 
-      internal GitClientInitializer(GitClientFactory factory)
+      internal GitClientInitializer()
       {
-         GitClientFactory = factory;
       }
 
       /// <summary>
@@ -27,7 +26,7 @@ namespace mrHelper.App.Helpers
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async internal Task InitAsync(GitClient client, string path, string hostName,
-         string projectName, CommitChecker commitChecker)
+         string projectName, GitClientUpdater commitChecker)
       {
          if (!isCloneAllowed(path))
          {
@@ -48,7 +47,7 @@ namespace mrHelper.App.Helpers
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async private Task initClientAsync(GitClient client, string path, string hostName,
-         string projectName, CommitChecker commitChecker)
+         string projectName, GitClientUpdater commitChecker)
       {
          if (isCloneNeeded(path))
          {
@@ -127,7 +126,7 @@ namespace mrHelper.App.Helpers
             throw;
          }
 
-         //OnInitializationStatusChange?.Invoke(sender, String.Empty);
+         OnInitializationStatusChange?.Invoke(this, String.Empty);
       }
 
       /// <summary>
@@ -186,7 +185,7 @@ namespace mrHelper.App.Helpers
       /// Checks if there is a version in GitLab which is newer than latest Git Repository update.
       /// Returns 'true' if there is a newer version.
       /// </summary>
-      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CommitChecker commitChecker)
+      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, GitClientUpdater commitChecker)
       {
          if (!client.LastUpdateTime.HasValue)
          {
@@ -196,7 +195,6 @@ namespace mrHelper.App.Helpers
          return await commitChecker.AreNewCommitsAsync(client.LastUpdateTime.Value);
       }
 
-      private GitClientFactory GitClientFactory { get; }
       private GitClient GitClient { get; set; }
    }
 }

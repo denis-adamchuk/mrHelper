@@ -137,18 +137,13 @@ namespace mrHelper.App.Forms
                MessageBox.Show("Cannot initialize git repository",
                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            return;
-         }
-         finally
-         {
+
             fixAfterAsyncGitOperation();
+            return;
          }
 
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
-
-         buttonDiffTool.Enabled = false;
-         buttonDiscussions.Enabled = false;
 
          try
          {
@@ -160,6 +155,10 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
             MessageBox.Show("Cannot launch diff tool", "Error",
                   MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         finally
+         {
+            fixAfterAsyncGitOperation();
          }
 
          _diffToolArgs = new DiffToolArguments
