@@ -25,12 +25,11 @@ namespace mrHelper.Client.Updates
 
       public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
       {
+         if (mrd.IId == default(MergeRequestDescriptor).IId || mrd.HostName == String.Empty || mrd.ProjectName == String.Empty)
+         {
+            return null;
+         }
          return new CommitChecker(mrd, UpdateOperator);
-      }
-
-      public GitClientUpdater GetGitClientUpdater(GitClient gitClient)
-      {
-         return new GitClientUpdater(gitClient);
       }
 
       private UpdateOperator UpdateOperator { get; }

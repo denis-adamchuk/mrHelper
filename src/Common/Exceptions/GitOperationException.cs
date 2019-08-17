@@ -14,6 +14,7 @@ namespace mrHelper.Common.Exceptions
 
       public string Details { get; }
       public int ExitCode { get; }
+      public bool Cancelled { get; set; } = false;
    }
 }
 

@@ -117,7 +117,7 @@
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\CustomTraceListener.cs" />
-    <Compile Include="src\Helpers\GitClientInitializer.cs" />
+    <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />
     <EmbeddedResource Include="src\Forms\NewDiscussionItemForm.resx">
       <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
     </EmbeddedResource>

@@ -25,6 +25,7 @@ namespace mrHelper.Client.Updates
 
       /// <summary>
       /// Check for commits newer than the given timestamp
+      /// Throws nothing
       /// </summary>
       async public Task<bool> AreNewCommitsAsync(DateTime timestamp)
       {

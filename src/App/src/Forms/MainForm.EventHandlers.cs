@@ -81,13 +81,17 @@ namespace mrHelper.App.Forms
          localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
          {
-            textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
-            _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
+            string newFolder = localGitFolderBrowser.SelectedPath;
+            if (getGitClientFactory(newFolder) != null)
+            {
+               textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
+               _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
 
-            MessageBox.Show("Git folder is changed, but it will not affect already opened Diff Tool and Discussions views",
-               "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+               MessageBox.Show("Git folder is changed, but it will not affect already opened Diff Tool and Discussions views",
+                  "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            updateGitStatusText(this, String.Empty);
+               updateGitStatusText(this, String.Empty);
+            }
          }
       }
 
@@ -247,7 +251,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         _gitClient?.CancelAsyncOperation();
+         getGitClient()?.CancelAsyncOperation();
       }
 
       private static void formatMergeRequestListItem(ListControlConvertEventArgs e)

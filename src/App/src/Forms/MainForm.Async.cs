@@ -17,6 +17,7 @@ using mrHelper.Core.Interprocess;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
+using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -24,15 +25,14 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
-         string path = Path.Combine(_settings.LocalGitFolder, GetCurrentProjectName().Split('/')[1]);
-         createGitClient(_settings.LocalGitFolder, path);
-         if (_gitClient != null)
+         GitClient client = getGitClient();
+         if (client != null)
          {
+            setCommitChecker();
             preGitClientInitialize();
             try
             {
-               await _gitClientInitializer.InitAsync(_gitClient, path, GetCurrentHostName(),
-                  GetCurrentProjectName(), _commitChecker);
+               await _gitClientUpdater.UpdateAsync(client);
             }
             catch (Exception ex)
             {
@@ -84,7 +84,7 @@ namespace mrHelper.App.Forms
          try
          {
             form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Author,
-               _gitClient, int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
+               client, int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
                currentUser.Value);
          }
          catch (NoDiscussionsToShow)
@@ -112,41 +112,42 @@ namespace mrHelper.App.Forms
          _diffToolArgs = null;
          updateInterprocessSnapshot(); // to purge serialized snapshot
 
-         string path = Path.Combine(_settings.LocalGitFolder, GetCurrentProjectName().Split('/')[1]);
-         createGitClient(_settings.LocalGitFolder, path);
-         if (_gitClient == null)
+         GitClient client = getGitClient();
+         if (client != null)
+         {
+            setCommitChecker();
+            preGitClientInitialize();
+            try
+            {
+               await _gitClientUpdater.UpdateAsync(client);
+            }
+            catch (Exception ex)
+            {
+               if (ex is CancelledByUserException)
+               {
+                  // User declined to create a repository
+                  MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               }
+               else if (!(ex is RepeatOperationException))
+               {
+                  Debug.Assert(ex is ArgumentException || ex is GitOperationException);
+                  ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+                  MessageBox.Show("Cannot initialize git repository",
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
+               return;
+            }
+            finally
+            {
+               postGitClientInitialize();
+            }
+         }
+         else
          {
             MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
                MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
-         }
-
-         preGitClientInitialize();
-         try
-         {
-            await _gitClientInitializer.InitAsync(_gitClient, path, GetCurrentHostName(),
-               GetCurrentProjectName(), _commitChecker);
-         }
-         catch (Exception ex)
-         {
-            if (ex is CancelledByUserException)
-            {
-               // User declined to create a repository
-               MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            else if (!(ex is RepeatOperationException))
-            {
-               Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-               ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
-               MessageBox.Show("Cannot initialize git repository",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return;
-         }
-         finally
-         {
-            postGitClientInitialize();
          }
 
          string leftSHA = getGitTag(true /* left */);
@@ -154,7 +155,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _gitClient.DiffToolAsync(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
+            client.DiffTool(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
                leftSHA, rightSHA);
          }
          catch (GitOperationException ex)

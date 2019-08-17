@@ -5,6 +5,7 @@ using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Updates
 {

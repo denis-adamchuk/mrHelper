@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Timers;
 using mrHelper.Common.Exceptions;
@@ -34,14 +35,21 @@ namespace mrHelper.Client.Git
       public class GitAsyncTaskDescriptor
       {
          public TaskCompletionSource<int> TaskCompletionSource;
-         public int ProcessId;
+         public Process Process;
+         public bool Cancelled;
+      }
+
+      public struct GitOutput
+      {
+         public List<string> Output;
+         public List<string> Errors;
       }
 
       /// <summary>
       /// Launch 'git' with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static internal List<string> git(string arguments)
+      static internal GitOutput git(string arguments, bool wait = true)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
@@ -53,6 +61,7 @@ namespace mrHelper.Client.Git
                FileName = "git",
                Arguments = arguments,
                UseShellExecute = false,
+               RedirectStandardInput = true,
                RedirectStandardOutput = true,
                RedirectStandardError = true,
                CreateNoWindow = true
@@ -67,18 +76,30 @@ namespace mrHelper.Client.Git
          process.BeginOutputReadLine();
          process.BeginErrorReadLine();
 
-         process.WaitForExit();
-
-         if (process.ExitCode != 0)
+         int exitcode = 0;
+         if (wait)
          {
-            throw new GitOperationException(arguments, process.ExitCode, errors);
+            process.WaitForExit();
+         }
+         else
+         {
+            System.Threading.Thread.Sleep(500); // ms
+            if (process.HasExited)
+            {
+               exitcode = process.ExitCode;
+            }
+         }
+
+         if (exitcode != 0)
+         {
+            throw new GitOperationException(arguments, exitcode, errors);
          }
          else if (errors.Count > 0)
          {
             Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
                arguments, String.Join("\n", errors)));
          }
-         return output;
+         return new GitOutput { Output = output, Errors = errors };
       }
 
       /// <summary>
@@ -96,6 +117,7 @@ namespace mrHelper.Client.Git
                FileName = "git",
                Arguments = arguments,
                UseShellExecute = false,
+               RedirectStandardInput = true,
                RedirectStandardOutput = true,
                RedirectStandardError = true,
                CreateNoWindow = true
@@ -110,8 +132,6 @@ namespace mrHelper.Client.Git
             return String.Format("git {0}{1}{2}",
                cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
-
-         //progress?.Report(getStatus(arguments, String.Empty));
 
          process.OutputDataReceived +=
             (sender, args) =>
@@ -180,10 +200,54 @@ namespace mrHelper.Client.Git
          GitAsyncTaskDescriptor d = new GitAsyncTaskDescriptor
          {
             TaskCompletionSource = tcs,
-            ProcessId = process.Id
+            Process = process
          };
          return d;
       }
+
+      /// <summary>
+      /// from https://stackoverflow.com/questions/283128/how-do-i-send-ctrlc-to-a-process-in-c
+      /// </summary>
+      public static void cancelGit(Process process)
+      {
+         Debug.WriteLine("cancelGit -- begin");
+         if (AttachConsole((uint)process.Id))
+         {
+            Debug.WriteLine("cancelGit -- attached");
+            SetConsoleCtrlHandler(null, true);
+            Debug.WriteLine("cancelGit -- control handler set");
+            try
+            {
+               if (!GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0))
+               {
+                  Debug.WriteLine("cancelGit -- GenerateConsleCtrlEvent() returned false");
+                  return;
+               }
+               Debug.WriteLine("cancelGit -- GenerateConsleCtrlEvent() returned true");
+               process.WaitForExit(2000);
+               Debug.WriteLine("cancelGit -- exited");
+            }
+            finally
+            {
+               FreeConsole();
+               Debug.WriteLine("cancelGit -- console is free");
+               SetConsoleCtrlHandler(null, false);
+               Debug.WriteLine("cancelGit -- end");
+            }
+         }
+      }
+
+      internal const int CTRL_C_EVENT = 0;
+      [DllImport("kernel32.dll")]
+      internal static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProcessGroupId);
+      [DllImport("kernel32.dll", SetLastError = true)]
+      internal static extern bool AttachConsole(uint dwProcessId);
+      [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+      internal static extern bool FreeConsole();
+      [DllImport("kernel32.dll")]
+      static extern bool SetConsoleCtrlHandler(ConsoleCtrlDelegate HandlerRoutine, bool Add);
+      // Delegate type to be used as the Handler Routine for SCCH
+      delegate Boolean ConsoleCtrlDelegate(uint CtrlType);
    }
 }
 

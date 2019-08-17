@@ -19,6 +19,7 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+         _gitClientFactory?.Dispose();
          base.Dispose(disposing);
       }
 

@@ -14,7 +14,7 @@ namespace mrHelper.Common.Interfaces
 
       List<string> ShowFileByRevision(string filename, string sha);
 
-      string Path { get; set; }
+      string Path { get; }
    }
 }
 

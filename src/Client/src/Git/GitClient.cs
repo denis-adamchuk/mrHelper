@@ -13,15 +13,15 @@ namespace mrHelper.Client.Git
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
    /// </summary>
-   public class GitClient : IGitRepository
+   public class GitClient : IGitRepository, IDisposable
    {
       // Path of this git repository
-      public string Path { get; set; }
+      public string Path { get; }
 
       // Object which keeps this git repository up-to-date
       public GitClientUpdater Updater { get; }
 
-      public event EventHandler<string> OnOperationStatusChange;
+      public event EventHandler<string> OperationStatusChange;
 
       /// <summary>
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
@@ -31,24 +31,38 @@ namespace mrHelper.Client.Git
       {
          if (!canClone(path) && !isValidRepository(path))
          {
-            throw new ArgumentException();
+            throw new ArgumentException("Path \"" + path + "\" already exists but it is not a valid git repository");
          }
 
          _hostName = hostname;
          _projectName = projectname;
          Path = path;
-         Updater = new GitClientUpdater(async () =>
+         Updater = new GitClientUpdater(async (reportProgress) =>
          {
+            Debug.WriteLine("GitClient update lambda -- starts");
             if (_descriptor != null)
             {
-               Debug.Assert(false);
+               Debug.WriteLine("GitClient update lambda -- _descriptor is not null");
+               CancelAsyncOperation();
+
+               Debug.WriteLine("GitClient update lambda -- spinning a while, see run_async() for details");
+               while (_descriptor != null)
+               {
+                  await Task.Delay(50);
+               }
                return;
             }
 
             string arguments = canClone(Path) ? "clone --progress " + _hostName + "/" + _projectName + " " + Path
                                               : "fetch --progress";
-            await run_async(arguments, null, true);
+            await run_async(arguments, null, reportProgress);
          });
+      }
+
+      public void Dispose()
+      {
+         CancelAsyncOperation();
+         Updater.Dispose();
       }
 
       /// <summary>
@@ -61,20 +75,14 @@ namespace mrHelper.Client.Git
       }
 
       /// <summary>
-      /// Create an asyncronous task for 'git difftool --dir-diff' command
+      /// Launches 'git difftool --dir-diff' command
       /// </summary>
-      async public Task DiffToolAsync(string name, string leftCommit, string rightCommit)
+      public void DiffTool(string name, string leftCommit, string rightCommit)
       {
-         if (_descriptor != null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         await (Task)run_inPath(() =>
+         run_in_path(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-            return run_async(arguments, 500, false);
+            return GitUtils.git(arguments, false);
          }, Path);
       }
 
@@ -84,42 +92,26 @@ namespace mrHelper.Client.Git
       /// </summary>
       public void CancelAsyncOperation()
       {
+         Debug.WriteLine("GitClient.CancelAsyncOperation() called");
+
          if (_descriptor == null)
          {
-            Debug.Assert(false);
             return;
          }
 
-         Process process = null;
+         Process p = _descriptor.Process;
+         _descriptor.Cancelled = true;
          try
          {
-            process = Process.GetProcessById(_descriptor.ProcessId);
-         }
-         catch (ArgumentException)
-         {
-            // no longer running, nothing to do
-            return;
+            GitUtils.cancelGit(_descriptor.Process);
          }
          catch (InvalidOperationException)
          {
-            Debug.Assert(false);
-            Trace.TraceWarning(String.Format("[InvalidOperationException] Bad git PID {0}", _descriptor.ProcessId));
-            return;
-         }
-         finally
-         {
-            _descriptor = null;
+            // already exited
          }
 
-         try
-         {
-            process.Kill();
-            process.WaitForExit();
-         }
-         catch (Exception)
-         {
-            // most likely the process already exited, nothing to do
-         }
+         Debug.WriteLine("GitClient.CancelAsyncOperation() exits and _desriptor is null: " + (_descriptor == null ? "Yes" : "No"));
+         p.Dispose();
       }
 
       // 'null' filename strings will be replaced with empty strings
@@ -139,12 +131,12 @@ namespace mrHelper.Client.Git
             return _cachedDiffs[key];
          }
 
-         List<string> result = (List<string>)run_inPath(() =>
+         List<string> result = (List<string>)run_in_path(() =>
          {
             string arguments =
                "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
                + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
-            return GitUtils.git(arguments);
+            return GitUtils.git(arguments).Output;
          }, Path);
 
          _cachedDiffs[key] = result;
@@ -153,10 +145,10 @@ namespace mrHelper.Client.Git
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)run_inPath(() =>
+         return (List<string>)run_in_path(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
-            return GitUtils.git(arguments);
+            return GitUtils.git(arguments).Output;
          }, Path);
       }
 
@@ -173,10 +165,10 @@ namespace mrHelper.Client.Git
             return _cachedRevisions[key];
          }
 
-         List<string> result = (List<string>)run_inPath(() =>
+         List<string> result = (List<string>)run_in_path(() =>
          {
             string arguments = "show " + sha + ":" + filename;
-            return GitUtils.git(arguments);
+            return GitUtils.git(arguments).Output;
          }, Path);
 
          _cachedRevisions[key] = result;
@@ -195,13 +187,18 @@ namespace mrHelper.Client.Git
 
       static private bool isValidRepository(string path)
       {
-         return (bool)run_inPath(() =>
+         if (!Directory.Exists(path))
+         {
+            return false;
+         }
+
+         return (bool)run_in_path(() =>
          {
             try
             {
                var arguments = "rev-parse --is-inside-work-tree";
-               GitUtils.git(arguments);
-               return true;
+               GitUtils.GitOutput output = GitUtils.git(arguments);
+               return output.Errors.Count == 0;
             }
             catch (GitOperationException)
             {
@@ -210,7 +207,7 @@ namespace mrHelper.Client.Git
          }, path);
       }
 
-      static private object run_inPath(command cmd, string path)
+      static private object run_in_path(command cmd, string path)
       {
          var cwd = Directory.GetCurrentDirectory();
          try
@@ -234,17 +231,27 @@ namespace mrHelper.Client.Git
          {
             progress.ProgressChanged += (sender, status) =>
             {
-               OnOperationStatusChange?.Invoke(sender, status);
+               OperationStatusChange?.Invoke(sender, status);
             };
          }
+
+         Debug.WriteLine("GitClient.run_async() called with arguments " + arguments);
 
          _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
          try
          {
             await _descriptor.TaskCompletionSource.Task;
+            Debug.WriteLine("GitClient.run_async() Task completed " + arguments);
+         }
+         catch (GitOperationException ex)
+         {
+            Debug.WriteLine("GitClient.run_async() Task completed with Exception " + arguments);
+            ex.Cancelled = true;
+            throw ex;
          }
          finally
          {
+            Debug.WriteLine("GitClient resets descriptor");
             _descriptor = null;
          }
       }

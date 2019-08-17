@@ -207,6 +207,8 @@ namespace mrHelper.App.Forms
 
          Debug.WriteLine("onProjectChanged(): Enable merge requests combo box");
          fixComboBoxAfterAsyncLoading(comboBoxFilteredMergeRequests);
+
+         setCommitChecker();
       }
 
       async private Task changeMergeRequestAsync(int mergeRequestIId)
@@ -284,8 +286,7 @@ namespace mrHelper.App.Forms
          Debug.WriteLine("onFailedChangeMergeRequest(): Update status bar");
          labelWorkflowStatus.Text = String.Empty;
 
-         _commitChecker = _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor);
-         _gitClient?.Updater?.SetCommitChecker(_commitChecker);
+         setCommitChecker();
       }
    }
 }

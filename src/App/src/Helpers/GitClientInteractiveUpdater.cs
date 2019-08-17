@@ -12,65 +12,37 @@ namespace mrHelper.App.Helpers
    public class CancelledByUserException : Exception {}
    public class RepeatOperationException : Exception {}
 
-   internal class GitClientInitializer
+   /// <summary>
+   /// Prepares GitClient to use. It is essentially a wrapper over GitClientUpdater.
+   /// </summary>
+   internal class GitClientInteractiveUpdater
    {
-      internal event EventHandler<string> OnInitializationStatusChange;
+      internal event EventHandler<string> InitializationStatusChange;
 
-      internal GitClientInitializer()
+      internal GitClientInteractiveUpdater()
       {
       }
 
       /// <summary>
-      /// Initializes passed GitClient object.
+      /// Update passed GitClient object.
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task InitAsync(GitClient client, string path, string hostName,
-         string projectName, CommitChecker commitChecker)
+      async internal Task UpdateAsync(GitClient client)
       {
-         if (client.DoesRequireClone() && !isCloneAllowed(path))
+         Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync is called");
+         if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
          {
-            OnInitializationStatusChange?.Invoke(this, "Clone rejected");
+            InitializationStatusChange?.Invoke(this, "Clone rejected");
             throw new CancelledByUserException();
          }
 
-         await initClientAsync(client, path, projectName, hostName, commitChecker);
-      }
+         Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync is going to run async update");
+         InitializationStatusChange?.Invoke(this, "Updating git repository...");
 
-      internal void CancelAsyncOperation()
-      {
-         GitClient?.CancelAsyncOperation();
-      }
-
-      /// <summary>
-      /// Initializes passed GitClient object.
-      /// Throw GitOperationException on unrecoverable errors.
-      /// Throw CancelledByUserException and RepeatOperationException.
-      /// </summary>
-      async private Task initClientAsync(GitClient client, string path, string projectName,
-         string hostName, CommitChecker commitChecker)
-      {
-         if (client.DoesRequireClone())
-         {
-            OnInitializationStatusChange?.Invoke(this, "Cloning git repository...");
-            await runAsync(async () => await client.Updater.ForceUpdateAsync(), "clone");
-            OnInitializationStatusChange?.Invoke(this, "git repository cloned");
-            return;
-         }
-
-         OnInitializationStatusChange?.Invoke(this, "Checking for new commits...");
-         bool needFetch = await checkForRepositoryUpdatesAsync(client, commitChecker);
-
-         if (needFetch)
-         {
-            OnInitializationStatusChange?.Invoke(this, "Found new commits, fetching them...");
-            await runAsync(async () => await client.Updater.ForceUpdateAsync(), "fetch");
-            OnInitializationStatusChange?.Invoke(this, "New commits fetched");
-         }
-         else
-         {
-            OnInitializationStatusChange?.Invoke(this, "New commits are not found, fetch is not needed");
-         }
+         Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync is going to run async update (after Invoke)");
+         await runAsync(async () => await client.Updater.ForceUpdateAsync());
+         InitializationStatusChange?.Invoke(this, "Git repository updated");
       }
 
       /// <summary>
@@ -98,10 +70,11 @@ namespace mrHelper.App.Helpers
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private Task runAsync(Command command, string name)
+      async private Task runAsync(Command command)
       {
          try
          {
+            Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync starts async update");
             await command();
          }
          catch (Exception ex)
@@ -112,7 +85,8 @@ namespace mrHelper.App.Helpers
             bool cancelledByUser = isCancelledByUser(ex);
 
             string result = cancelledByUser ? "cancelled by user" : "failed";
-            OnInitializationStatusChange?.Invoke(this, String.Format("git {0} {1}", name, result));
+            InitializationStatusChange?.Invoke(this,
+               String.Format("Git repository update {0}", result));
 
             if (cancelledByUser)
             {
@@ -121,7 +95,7 @@ namespace mrHelper.App.Helpers
 
             if (isSSLCertificateProblem(ex as GitOperationException))
             {
-               OnInitializationStatusChange?.Invoke(this, "Cannot clone due to SSL verification error");
+               InitializationStatusChange?.Invoke(this, "Cannot clone due to SSL verification error");
                if (handleSSLCertificateProblem())
                {
                   throw new RepeatOperationException();
@@ -135,11 +109,11 @@ namespace mrHelper.App.Helpers
 
       /// <summary>
       /// Check exit code.
-      /// git returns exit code -1 if user cancels operation.
+      /// git returns exit code 128 if user cancels operation.
       /// </summary>
       private bool isCancelledByUser(Exception ex)
       {
-         return ex is GitOperationException && (ex as GitOperationException).ExitCode == -1;
+         return ex is GitOperationException && (ex as GitOperationException).Cancelled;
       }
 
       ///<summary>
@@ -162,7 +136,7 @@ namespace mrHelper.App.Helpers
             throw;
          }
 
-         OnInitializationStatusChange?.Invoke(this,
+         InitializationStatusChange?.Invoke(this,
                "SSL certificate verification disabled. Please repeat git operation.");
          return true;
       }
@@ -184,22 +158,6 @@ namespace mrHelper.App.Helpers
             + "Do you want to disable certificate verification in global git config?",
             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
-
-      /// <summary>
-      /// Checks if there is a version in GitLab which is newer than latest Git Repository update.
-      /// Returns 'true' if there is a newer version.
-      /// </summary>
-      async static private Task<bool> checkForRepositoryUpdatesAsync(GitClient client, CommitChecker commitChecker)
-      {
-         if (!client.LastUpdateTime.HasValue)
-         {
-            return true;
-         }
-
-         return await commitChecker.AreNewCommitsAsync(client.LastUpdateTime.Value);
-      }
-
-      private GitClient GitClient { get; set; }
    }
 }
 

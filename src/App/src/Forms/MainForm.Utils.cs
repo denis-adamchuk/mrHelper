@@ -15,6 +15,7 @@ using mrHelper.Client;
 using mrHelper.App.Controls;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -174,15 +175,21 @@ namespace mrHelper.App.Forms
 
       private void preGitClientInitialize()
       {
+         Debug.WriteLine("preGitClientInitialize");
+
          linkLabelAbortGit.Visible = true;
          buttonDiffTool.Enabled = false;
          buttonDiscussions.Enabled = false;
          comboBoxHost.Enabled = false;
          comboBoxProjects.Enabled = false;
+         updateGitStatusText(this, String.Empty);
+         labelWorkflowStatus.Text = String.Empty;
       }
 
       private void postGitClientInitialize()
       {
+         Debug.WriteLine("postGitClientInitialize");
+
          linkLabelAbortGit.Visible = false;
          buttonDiffTool.Enabled = true;
          buttonDiscussions.Enabled = true;
@@ -300,39 +307,78 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createGitClient(string localFolder, string path)
+      private GitClientFactory getGitClientFactory(string localFolder)
       {
-         if (!Directory.Exists(localFolder))
+         if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
          {
+            _gitClientFactory?.Dispose();
+
             try
             {
-               Directory.CreateDirectory(localFolder);
+               _gitClientFactory = new GitClientFactory(localFolder);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot create \"{0}\"", localFolder));
-               MessageBox.Show("Invalid path to \"Parent folder for git repositories\"",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               _gitClient = null;
-               return;
+               ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClientFactory"));
+
+               try
+               {
+                  Directory.CreateDirectory(localFolder);
+               }
+               catch (Exception ex2)
+               {
+                  string message = String.Format("Cannot create folder \"{0}\"", localFolder);
+                  ExceptionHandlers.Handle(ex2, message);
+                  MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return null;
+               }
             }
          }
+         return _gitClientFactory;
+      }
 
+      /// <summary>
+      /// Make some checks and create a Client
+      /// </summary>
+      /// <returns>null if could not create a GitClient</returns>
+      private GitClient getGitClient()
+      {
+         GitClientFactory factory = getGitClientFactory(_settings.LocalGitFolder);
+         if (factory == null)
+         {
+            return null;
+         }
+
+         GitClient client = null;
          try
          {
-            _gitClient = _gitClientFactory.GetClient(path, GetCurrentHostName(), GetCurrentProjectName(), true);
+            client = factory.GetClient(GetCurrentHostName(), GetCurrentProjectName());
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, String.Format("Path exists but it is not a git repository \"{0}\"", path));
-            MessageBox.Show(String.Format("Path \"{0}\" already exists but it is not a valid git repository", path),
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClient"));
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return null;
+         }
+
+         Debug.Assert(client != null);
+         client.OperationStatusChange += updateGitStatusText;
+
+         return client;
+      }
+
+      /// <summary>
+      /// Bind GitClient to the selected merge request
+      /// </summary>
+      private void setCommitChecker()
+      {
+         if (_gitClientFactory == null)
+         {
             return;
          }
 
-         Debug.Assert(_gitClient != null);
-         _gitClient.Updater?.SetCommitChecker(_commitChecker);
-         _gitClient.OnOperationStatusChange += updateGitStatusText;
+         getGitClient()?.Updater.SetCommitChecker(
+            _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
       }
 
       private string getInitialHostName()

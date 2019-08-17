@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using mrHelper.Client.Git;
 
 namespace mrHelper.Client.Git
@@ -10,11 +12,31 @@ namespace mrHelper.Client.Git
    ///<summary>
    public class GitClientFactory
    {
+      public string ParentFolder { get; }
+
+      /// <summary>
+      /// Create a factory
+      /// Throws ArgumentException if passed ParentFolder does not exist
+      /// </summary>
+      public GitClientFactory(string parentFolder)
+      {
+         if (!Directory.Exists(parentFolder))
+         {
+            throw new ArgumentException("Bad \"" + parentFolder + "\" argument");
+         }
+         
+         ParentFolder = parentFolder;
+         Debug.WriteLine("Created GitClientFactory with ParentFolder \"" + ParentFolder + "\"");
+      }
+
       /// <summary>
       /// Create a GitClient object or return it if already cached.
+      /// Throws if 
       /// </summary>
-      public GitClient GetClient(string path, string hostName, string projectName, bool enableUpdates = true)
+      public GitClient GetClient(string hostName, string projectName)
       {
+         string path = Path.Combine(ParentFolder, projectName.Split('/')[1]);
+
          Key key = new Key{ HostName = hostName, ProjectName = projectName };
          if (Clients.ContainsKey(key))
          {
@@ -24,6 +46,19 @@ namespace mrHelper.Client.Git
          GitClient client = new GitClient(hostName, projectName, path);
          Clients[key] = client;
          return client;
+      }
+
+      public void Dispose()
+      {
+         disposeClients();
+      }
+
+      private void disposeClients()
+      {
+         foreach (KeyValuePair<Key, GitClient> client in Clients)
+         {
+            client.Value.Dispose();
+         }
       }
 
       private struct Key
