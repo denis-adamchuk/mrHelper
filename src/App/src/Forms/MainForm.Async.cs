@@ -112,10 +112,8 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = "Cannot show Discussions";
             return;
          }
-         finally
-         {
-            labelWorkflowStatus.Text = "Discussions opened";
-         }
+
+         labelWorkflowStatus.Text = "Discussions opened";
 
          form.Show();
       }
@@ -166,6 +164,8 @@ namespace mrHelper.App.Forms
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
+         labelWorkflowStatus.Text = "Launching diff tool...";
+
          try
          {
             client.DiffTool(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
@@ -173,9 +173,13 @@ namespace mrHelper.App.Forms
          }
          catch (GitOperationException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot launch diff tool");
-            MessageBox.Show("Cannot launch diff tool", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Could not launch diff tool";
+            ExceptionHandlers.Handle(ex, message);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
          }
+
+         labelWorkflowStatus.Text = "Diff tool launched";
 
          _diffToolArgs = new DiffToolArguments
          {

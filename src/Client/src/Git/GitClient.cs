@@ -53,9 +53,18 @@ namespace mrHelper.Client.Git
                return;
             }
 
-            string arguments = canClone(Path) ? "clone --progress " + _hostName + "/" + _projectName + " " + Path
-                                              : "fetch --progress";
-            await run_async(arguments, null, reportProgress);
+            if (canClone(Path))
+            {
+               string arguments = "clone --progress " + _hostName + "/" + _projectName + " " + Path;
+               await run_async(arguments, null, reportProgress);
+               return;
+            }
+
+            await (Task)run_in_path(() =>
+            {
+               string arguments = "fetch --progress";
+               return run_async(arguments, null, reportProgress);
+            }, Path);
          });
       }
 

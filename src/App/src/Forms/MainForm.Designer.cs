@@ -477,10 +477,9 @@ namespace mrHelper.App.Forms
          // labelWorkflowStatus
          // 
          this.labelWorkflowStatus.AutoEllipsis = true;
-         this.labelWorkflowStatus.AutoSize = true;
          this.labelWorkflowStatus.Location = new System.Drawing.Point(3, 518);
          this.labelWorkflowStatus.Name = "labelWorkflowStatus";
-         this.labelWorkflowStatus.Size = new System.Drawing.Size(0, 13);
+         this.labelWorkflowStatus.Size = new System.Drawing.Size(500, 13);
          this.labelWorkflowStatus.TabIndex = 24;
          // 
          // labelGitStatus

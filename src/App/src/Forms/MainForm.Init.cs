@@ -171,7 +171,12 @@ namespace mrHelper.App.Forms
          _timeTrackingManager = new TimeTrackingManager(_settings);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
-         _gitClientUpdater.InitializationStatusChange += (sender, e) => labelWorkflowStatus.Text = e;
+         _gitClientUpdater.InitializationStatusChange +=
+            (sender, e) =>
+         {
+            labelWorkflowStatus.Text = e;
+            labelWorkflowStatus.Update();
+         };
 
          updateHostsDropdownList();
 

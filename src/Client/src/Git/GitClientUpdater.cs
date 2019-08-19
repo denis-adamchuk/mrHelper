@@ -88,6 +88,7 @@ namespace mrHelper.Client.Git
             return;
          }
 
+         if (await _commitChecker.AreNewCommitsAsync(_lastUpdateTime.Value))
          {
             try
             {
