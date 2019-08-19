@@ -78,7 +78,6 @@ namespace mrHelper.App.Forms
          this.buttonToggleTimer = new System.Windows.Forms.Button();
          this.labelSpentTimeLabel = new System.Windows.Forms.Label();
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
-         this.textBoxMergeRequestName = new System.Windows.Forms.TextBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
@@ -466,7 +465,7 @@ namespace mrHelper.App.Forms
          // linkLabelAbortGit
          // 
          this.linkLabelAbortGit.AutoSize = true;
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(484, 518);
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(484, 542);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
          this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
          this.linkLabelAbortGit.TabIndex = 25;
@@ -479,7 +478,7 @@ namespace mrHelper.App.Forms
          // 
          this.labelWorkflowStatus.AutoEllipsis = true;
          this.labelWorkflowStatus.AutoSize = true;
-         this.labelWorkflowStatus.Location = new System.Drawing.Point(3, 542);
+         this.labelWorkflowStatus.Location = new System.Drawing.Point(3, 518);
          this.labelWorkflowStatus.Name = "labelWorkflowStatus";
          this.labelWorkflowStatus.Size = new System.Drawing.Size(0, 13);
          this.labelWorkflowStatus.TabIndex = 24;
@@ -487,7 +486,7 @@ namespace mrHelper.App.Forms
          // labelGitStatus
          // 
          this.labelGitStatus.AutoEllipsis = true;
-         this.labelGitStatus.Location = new System.Drawing.Point(6, 518);
+         this.labelGitStatus.Location = new System.Drawing.Point(6, 542);
          this.labelGitStatus.Name = "labelGitStatus";
          this.labelGitStatus.Size = new System.Drawing.Size(472, 13);
          this.labelGitStatus.TabIndex = 23;
@@ -564,7 +563,6 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxDescription
          // 
-         this.groupBoxDescription.Controls.Add(this.textBoxMergeRequestName);
          this.groupBoxDescription.Controls.Add(this.richTextBoxMergeRequestDescription);
          this.groupBoxDescription.Location = new System.Drawing.Point(4, 157);
          this.groupBoxDescription.Name = "groupBoxDescription";
@@ -573,21 +571,12 @@ namespace mrHelper.App.Forms
          this.groupBoxDescription.TabStop = false;
          this.groupBoxDescription.Text = "Merge Request";
          // 
-         // textBoxMergeRequestName
-         // 
-         this.textBoxMergeRequestName.Location = new System.Drawing.Point(6, 19);
-         this.textBoxMergeRequestName.Name = "textBoxMergeRequestName";
-         this.textBoxMergeRequestName.ReadOnly = true;
-         this.textBoxMergeRequestName.Size = new System.Drawing.Size(500, 20);
-         this.textBoxMergeRequestName.TabIndex = 0;
-         this.textBoxMergeRequestName.TabStop = false;
-         // 
          // richTextBoxMergeRequestDescription
          // 
-         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(6, 45);
+         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(6, 19);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.ReadOnly = true;
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(500, 110);
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(500, 130);
          this.richTextBoxMergeRequestDescription.TabIndex = 1;
          this.richTextBoxMergeRequestDescription.TabStop = false;
          this.richTextBoxMergeRequestDescription.Text = "";
@@ -750,7 +739,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxDiff;
       private System.Windows.Forms.GroupBox groupBoxDescription;
       private System.Windows.Forms.RichTextBox richTextBoxMergeRequestDescription;
-      private System.Windows.Forms.TextBox textBoxMergeRequestName;
       private System.Windows.Forms.CheckBox checkBoxLabels;
       private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.Label labelSpentTime;

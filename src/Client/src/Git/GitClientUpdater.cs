@@ -124,7 +124,7 @@ namespace mrHelper.Client.Git
       private CommitChecker _commitChecker { get; set; }
       private DateTime? _lastUpdateTime { get; set; } = DateTime.MinValue;
 
-      private static readonly int TimerInterval = 1000; // ms
+      private static readonly int TimerInterval = 60000; // ms
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {
             Interval = TimerInterval

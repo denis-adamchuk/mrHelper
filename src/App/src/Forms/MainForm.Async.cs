@@ -48,6 +48,10 @@ namespace mrHelper.App.Forms
                   {
                      return;
                   }
+                  else
+                  {
+                     client = null;
+                  }
                }
                else
                {
@@ -63,11 +67,18 @@ namespace mrHelper.App.Forms
                postGitClientInitialize();
             }
          }
-         else if (MessageBox.Show("Without git repository, context code snippets will be missing. "
+         else
+         {
+            if (MessageBox.Show("Without git repository, context code snippets will be missing. "
                + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
                   DialogResult.No)
-         {
-            return;
+            {
+               return;
+            }
+            else
+            {
+               client = null;
+            }
          }
 
          User? currentUser = await loadCurrentUserAsync();
@@ -91,17 +102,19 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("No discussions to show.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            labelWorkflowStatus.Text = "No discussions to show";
             return;
          }
          catch (ArgumentException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot show Discussions form");
             MessageBox.Show("Cannot show Discussions form", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            labelWorkflowStatus.Text = "Cannot show Discussions";
             return;
          }
          finally
          {
-            labelWorkflowStatus.Text = String.Empty;
+            labelWorkflowStatus.Text = "Discussions opened";
          }
 
          form.Show();
@@ -207,9 +220,12 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException)
          {
-            MessageBox.Show("Cannot load current user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot load current user details from GitLab";
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            labelWorkflowStatus.Text = message;
+            return null;
          }
-         labelWorkflowStatus.Text = String.Empty;
+         labelWorkflowStatus.Text = "Loaded current user details";
          return currentUser;
       }
 
@@ -223,9 +239,12 @@ namespace mrHelper.App.Forms
          }
          catch (DiscussionManagerException)
          {
-            MessageBox.Show("Cannot load discussions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot load discussions from GitLab";
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            labelWorkflowStatus.Text = message;
+            return null;
          }
-         labelWorkflowStatus.Text = String.Empty;
+         labelWorkflowStatus.Text = "Loaded discussions";
          return discussions;
       }
    }

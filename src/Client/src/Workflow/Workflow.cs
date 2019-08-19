@@ -110,12 +110,15 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchHostAsync(string hostName)
       {
+         PreSwitchHost?.Invoke(this, hostName);
+
+         State = new WorkflowState();
+         State.HostName = hostName;
+
          if (hostName == String.Empty)
          {
             return;
          }
-
-         PreSwitchHost?.Invoke(this, hostName);
 
          Operator?.CancelAsync();
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
@@ -136,8 +139,6 @@ namespace mrHelper.Client.Workflow
             throw new WorkflowException();
          }
 
-         State = new WorkflowState();
-         State.HostName = hostName;
          State.Projects = projects;
 
          PostSwitchHost?.Invoke(this, State);
@@ -151,12 +152,12 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchProjectAsync(string projectName)
       {
+         PreSwitchProject?.Invoke(this, projectName);
+
          if (projectName == String.Empty)
          {
             return;
          }
-
-         PreSwitchProject?.Invoke(this, projectName);
 
          Project project = new Project();
          List<MergeRequest> mergeRequests = null;

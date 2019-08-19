@@ -38,6 +38,8 @@ namespace mrHelper.App.Forms
             };
             comboBoxHost.Items.Add(hostItem);
          }
+
+         comboBoxHost.Enabled = comboBoxHost.Items.Count > 0;
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
@@ -151,16 +153,12 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(!comboBox.IsDisposed);
 
-         if (changeText)
-         {
-            comboBox.DroppedDown = false;
-         }
          comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
-         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
          comboBox.Enabled = false;
          if (changeText)
          {
+            comboBox.DropDownStyle = ComboBoxStyle.DropDown;
             comboBox.Text = "Loading...";
          }
       }
@@ -182,8 +180,6 @@ namespace mrHelper.App.Forms
          buttonDiscussions.Enabled = false;
          comboBoxHost.Enabled = false;
          comboBoxProjects.Enabled = false;
-         updateGitStatusText(this, String.Empty);
-         labelWorkflowStatus.Text = String.Empty;
       }
 
       private void postGitClientInitialize()
@@ -201,10 +197,11 @@ namespace mrHelper.App.Forms
       private void enableControlsOnChangedMergeRequest(MergeRequest? mergeRequest)
       {
          bool success = mergeRequest.HasValue;
-         richTextBoxMergeRequestDescription.Text = mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
+         toolTip.SetToolTip(comboBoxFilteredMergeRequests,
+            mergeRequest.HasValue ? formatMergeRequestForDropdown(mergeRequest.Value) : String.Empty);
+         richTextBoxMergeRequestDescription.Text =
+            mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
          richTextBoxMergeRequestDescription.Update();
-         textBoxMergeRequestName.Text = mergeRequest.HasValue ? mergeRequest.Value.Title : String.Empty;
-         textBoxMergeRequestName.Update();
          linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
          linkLabelConnectedTo.Visible = success;
          buttonDiscussions.Enabled = success;

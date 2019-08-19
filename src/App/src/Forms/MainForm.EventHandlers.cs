@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
                MessageBox.Show("Git folder is changed, but it will not affect already opened Diff Tool and Discussions views",
                   "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-               updateGitStatusText(this, String.Empty);
+               labelWorkflowStatus.Text = "Parent folder for git repositories changed";
             }
          }
       }
@@ -119,8 +119,6 @@ namespace mrHelper.App.Forms
 
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
-         updateGitStatusText(this, String.Empty);
-
          string hostname = (sender as ComboBox).Text;
          _settings.LastSelectedHost = hostname;
 
@@ -130,8 +128,6 @@ namespace mrHelper.App.Forms
 
       async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
       {
-         updateGitStatusText(this, String.Empty);
-
          string projectname = (sender as ComboBox).Text;
          _settings.LastSelectedProject = projectname;
 
@@ -197,7 +193,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ButtonAddKnownHost_Click(object sender, EventArgs e)
+      async private void ButtonAddKnownHost_Click(object sender, EventArgs e)
       {
          AddKnownHostForm form = new AddKnownHostForm();
          if (form.ShowDialog() == DialogResult.OK)
@@ -206,16 +202,26 @@ namespace mrHelper.App.Forms
             {
                MessageBox.Show("Such host is already in the list", "Host will not be added",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               return;
             }
             _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
             _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
                .Select(i => i.SubItems[1].Text).ToList();
+
+            await changeHostAsync(getInitialHostName());
          }
       }
 
-      private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
+      async private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
       {
-         onRemoveKnownHost();
+         if (onRemoveKnownHost())
+         {
+            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+               .Select(i => i.SubItems[1].Text).ToList();
+
+            await changeHostAsync(getInitialHostName());
+         }
       }
 
       private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
@@ -321,13 +327,15 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private void onRemoveKnownHost()
+      private bool onRemoveKnownHost()
       {
          if (listViewKnownHosts.SelectedItems.Count > 0)
          {
             listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
+            updateHostsDropdownList();
+            return true;
          }
-         updateHostsDropdownList();
+         return false;
       }
 
       private void onStartTimer()
@@ -365,8 +373,13 @@ namespace mrHelper.App.Forms
             catch (TimeTrackerException)
             {
                status = "Error occurred. Tracked time is not sent!";
+               MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             labelWorkflowStatus.Text = status;
+         }
+         else
+         {
+            labelWorkflowStatus.Text = "Tracked time less than 1 second is ignored";
          }
          _timeTracker = null;
 

@@ -64,6 +64,7 @@ namespace mrHelper.App.Forms
                {
                   ExceptionHandlers.Handle(ex, "Custom action failed");
                   MessageBox.Show("Custom action failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  labelWorkflowStatus.Text = "Command " + name + " failed";
                   return;
                }
                labelWorkflowStatus.Text = "Command " + name + " completed";
