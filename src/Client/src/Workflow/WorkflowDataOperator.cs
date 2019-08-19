@@ -28,8 +28,6 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<User> GetCurrentUser()
       {
-         Debug.WriteLine("Loading current user asynchronously");
-
          try
          {
             return (User)(await Client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
@@ -51,11 +49,8 @@ namespace mrHelper.Client.Workflow
          if (projects != null && projects.Count != 0)
          {
             await Client.CancelAsync();
-            Debug.WriteLine("Project list is read from file");
             return projects;
          }
-
-         Debug.WriteLine("Loading projects asynchronously for host " + hostName);
 
          try
          {
@@ -75,8 +70,6 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<Project> GetProjectAsync(string projectName)
       {
-         Debug.WriteLine("Loading project asynchronously: " + projectName);
-
          try
          {
             return (Project)(await Client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
@@ -94,8 +87,6 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName, List<string> labels)
       {
-         Debug.WriteLine("Loading project merge requests asynchronously for project " + projectName);
-
          List<MergeRequest> mergeRequests = null;
          try
          {
@@ -126,8 +117,6 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
       {
-         Debug.WriteLine("Loading merge request asynchronously: " + projectName + "  " + iid.ToString());
-
          try
          {
             return (MergeRequest)(await Client.RunAsync(async (gl) =>
@@ -146,8 +135,6 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<List<GitLabSharp.Entities.Version>> GetVersionsAsync(string projectName, int iid)
       {
-         Debug.WriteLine("Loading versions asynchronously: " + projectName + "  " + iid.ToString());
-
          try
          {
             return (List<GitLabSharp.Entities.Version>)(await Client.RunAsync(async (gl) =>

@@ -39,13 +39,10 @@ namespace mrHelper.Client.Git
          Path = path;
          Updater = new GitClientUpdater(async (reportProgress) =>
          {
-            Debug.WriteLine("GitClient update lambda -- starts");
             if (_descriptor != null)
             {
-               Debug.WriteLine("GitClient update lambda -- _descriptor is not null");
                CancelAsyncOperation();
 
-               Debug.WriteLine("GitClient update lambda -- spinning a while, see run_async() for details");
                while (_descriptor != null)
                {
                   await Task.Delay(50);
@@ -101,8 +98,6 @@ namespace mrHelper.Client.Git
       /// </summary>
       public void CancelAsyncOperation()
       {
-         Debug.WriteLine("GitClient.CancelAsyncOperation() called");
-
          if (_descriptor == null)
          {
             return;
@@ -119,7 +114,6 @@ namespace mrHelper.Client.Git
             // already exited
          }
 
-         Debug.WriteLine("GitClient.CancelAsyncOperation() exits and _desriptor is null: " + (_descriptor == null ? "Yes" : "No"));
          p.Dispose();
       }
 
@@ -244,23 +238,18 @@ namespace mrHelper.Client.Git
             };
          }
 
-         Debug.WriteLine("GitClient.run_async() called with arguments " + arguments);
-
          _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
          try
          {
             await _descriptor.TaskCompletionSource.Task;
-            Debug.WriteLine("GitClient.run_async() Task completed " + arguments);
          }
          catch (GitOperationException ex)
          {
-            Debug.WriteLine("GitClient.run_async() Task completed with Exception " + arguments);
             ex.Cancelled = true;
             throw ex;
          }
          finally
          {
-            Debug.WriteLine("GitClient resets descriptor");
             _descriptor = null;
          }
       }

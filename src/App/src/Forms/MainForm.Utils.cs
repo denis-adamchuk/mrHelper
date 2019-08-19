@@ -26,6 +26,12 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void updateHostsDropdownList()
       {
+         if (listViewKnownHosts.Items.Count == 0)
+         {
+            disableComboBox(comboBoxHost, String.Empty);
+            return;
+         }
+
          comboBoxHost.SelectedIndex = -1;
          comboBoxHost.Items.Clear();
 
@@ -38,8 +44,6 @@ namespace mrHelper.App.Forms
             };
             comboBoxHost.Items.Add(hostItem);
          }
-
-         comboBoxHost.Enabled = comboBoxHost.Items.Count > 0;
       }
 
       private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
@@ -149,32 +153,24 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void prepareComboBoxToAsyncLoading(SelectionPreservingComboBox comboBox, bool changeText)
+      private void disableComboBox(SelectionPreservingComboBox comboBox, string text)
       {
-         Debug.Assert(!comboBox.IsDisposed);
-
          comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
          comboBox.Enabled = false;
-         if (changeText)
-         {
-            comboBox.DropDownStyle = ComboBoxStyle.DropDown;
-            comboBox.Text = "Loading...";
-         }
+
+         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
+         comboBox.Text = text;
       }
 
-      private void fixComboBoxAfterAsyncLoading(SelectionPreservingComboBox comboBox)
+      private void enableComboBox(SelectionPreservingComboBox comboBox)
       {
-         Debug.Assert(!comboBox.IsDisposed);
-
          comboBox.Enabled = true;
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
       private void preGitClientInitialize()
       {
-         Debug.WriteLine("preGitClientInitialize");
-
          linkLabelAbortGit.Visible = true;
          buttonDiffTool.Enabled = false;
          buttonDiscussions.Enabled = false;
@@ -184,8 +180,6 @@ namespace mrHelper.App.Forms
 
       private void postGitClientInitialize()
       {
-         Debug.WriteLine("postGitClientInitialize");
-
          linkLabelAbortGit.Visible = false;
          buttonDiffTool.Enabled = true;
          buttonDiscussions.Enabled = true;
@@ -194,20 +188,30 @@ namespace mrHelper.App.Forms
          updateGitStatusText(this, String.Empty);
       }
 
-      private void enableControlsOnChangedMergeRequest(MergeRequest? mergeRequest)
+      private void enableMergeRequestFilterControls(bool enabled)
       {
-         bool success = mergeRequest.HasValue;
+         buttonApplyLabels.Enabled = enabled;
+         checkBoxLabels.Enabled = enabled;
+         textBoxLabels.Enabled = enabled;
+      }
+
+      private void updateMergeRequestDetails(MergeRequest? mergeRequest)
+      {
          toolTip.SetToolTip(comboBoxFilteredMergeRequests,
             mergeRequest.HasValue ? formatMergeRequestForDropdown(mergeRequest.Value) : String.Empty);
          richTextBoxMergeRequestDescription.Text =
             mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
          richTextBoxMergeRequestDescription.Update();
          linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
-         linkLabelConnectedTo.Visible = success;
-         buttonDiscussions.Enabled = success;
-         buttonToggleTimer.Enabled = success;
-         buttonDiffTool.Enabled = success;
-         enableCustomActions(success);
+      }
+
+      private void enableMergeRequestActions(bool enabled)
+      {
+         linkLabelConnectedTo.Visible = enabled;
+         buttonDiscussions.Enabled = enabled;
+         buttonToggleTimer.Enabled = enabled;
+         buttonDiffTool.Enabled = enabled;
+         enableCustomActions(enabled);
       }
 
       private void enableCustomActions(bool flag)
@@ -220,13 +224,6 @@ namespace mrHelper.App.Forms
 
       private void addVersionsToComboBoxes(List<GitLabSharp.Entities.Version> versions, string mrBaseSha, string mrTargetBranch)
       {
-         if (versions == null || versions.Count == 0)
-         {
-            comboBoxLeftVersion.Items.Clear();
-            comboBoxRightVersion.Items.Clear();
-            return;
-         }
-
          var latest = new VersionComboBoxItem(versions[0]);
          latest.IsLatest = true;
          comboBoxLeftVersion.Items.Add(latest);

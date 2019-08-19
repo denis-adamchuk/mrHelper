@@ -8,7 +8,10 @@ using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Workflow
 {
-   public class WorkflowException : Exception { }
+   public class WorkflowException : Exception
+   {
+      internal WorkflowException(string message) : base(message) { }
+   }
 
    /// <summary>
    /// Client workflow related to Hosts/Projects/Merge Requests
@@ -67,7 +70,7 @@ namespace mrHelper.Client.Workflow
             {
                return null; // silent return
             }
-            throw new WorkflowException();
+            throw new WorkflowException("Cannot load current user");
          }
       }
 
@@ -115,12 +118,13 @@ namespace mrHelper.Client.Workflow
          State = new WorkflowState();
          State.HostName = hostName;
 
+         Operator?.CancelAsync();
+
          if (hostName == String.Empty)
          {
             return;
          }
 
-         Operator?.CancelAsync();
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
 
          List<Project> projects = null;
@@ -136,7 +140,7 @@ namespace mrHelper.Client.Workflow
             {
                return; // silent return
             }
-            throw new WorkflowException();
+            throw new WorkflowException(String.Format("Cannot load projects from host {0}", hostName));
          }
 
          State.Projects = projects;
@@ -175,7 +179,7 @@ namespace mrHelper.Client.Workflow
             {
                return; // silent return
             }
-            throw new WorkflowException();
+            throw new WorkflowException(String.Format("Cannot load project {0}", projectName));
          }
 
          State.Project = project;
@@ -211,7 +215,7 @@ namespace mrHelper.Client.Workflow
             {
                return; // silent return
             }
-            throw new WorkflowException();
+            throw new WorkflowException(String.Format("Cannot load merge request with IId {0}", mergeRequestIId));
          }
 
          State.MergeRequest = mergeRequest;

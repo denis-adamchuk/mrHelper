@@ -210,29 +210,21 @@ namespace mrHelper.Client.Git
       /// </summary>
       public static void cancelGit(Process process)
       {
-         Debug.WriteLine("cancelGit -- begin");
          if (AttachConsole((uint)process.Id))
          {
-            Debug.WriteLine("cancelGit -- attached");
             SetConsoleCtrlHandler(null, true);
-            Debug.WriteLine("cancelGit -- control handler set");
             try
             {
                if (!GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0))
                {
-                  Debug.WriteLine("cancelGit -- GenerateConsleCtrlEvent() returned false");
                   return;
                }
-               Debug.WriteLine("cancelGit -- GenerateConsleCtrlEvent() returned true");
                process.WaitForExit(2000);
-               Debug.WriteLine("cancelGit -- exited");
             }
             finally
             {
                FreeConsole();
-               Debug.WriteLine("cancelGit -- console is free");
                SetConsoleCtrlHandler(null, false);
-               Debug.WriteLine("cancelGit -- end");
             }
          }
       }

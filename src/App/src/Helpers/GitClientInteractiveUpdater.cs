@@ -30,17 +30,14 @@ namespace mrHelper.App.Helpers
       /// </summary>
       async internal Task UpdateAsync(GitClient client)
       {
-         Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync is called");
          if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
          {
             InitializationStatusChange?.Invoke(this, "Clone rejected");
             throw new CancelledByUserException();
          }
 
-         Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync is going to run async update");
          InitializationStatusChange?.Invoke(this, "Updating git repository...");
 
-         Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync is going to run async update (after Invoke)");
          await runAsync(async () => await client.Updater.ForceUpdateAsync());
          InitializationStatusChange?.Invoke(this, "Git repository updated");
       }
@@ -74,7 +71,6 @@ namespace mrHelper.App.Helpers
       {
          try
          {
-            Debug.WriteLine("GitClientInteractiveUpdater.UpdateAsync starts async update");
             await command();
          }
          catch (Exception ex)

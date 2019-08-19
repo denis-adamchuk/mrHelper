@@ -41,7 +41,6 @@ namespace mrHelper.Client.Git
 
       async public Task ForceUpdateAsync()
       {
-         Debug.WriteLine("GitClientUpdater.ForceUpdateAsync is called");
          _updating = true;
          try
          {
@@ -63,7 +62,6 @@ namespace mrHelper.Client.Git
             return;
          }
 
-         Debug.WriteLine("GitClientUpdater.onTimer -- begin");
          _updating = true;
          try
          {
@@ -77,7 +75,6 @@ namespace mrHelper.Client.Git
          finally
          {
             _updating = false;
-            Debug.WriteLine("GitClientUpdater.onTimer -- end");
          }
       }
 

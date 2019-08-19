@@ -29,12 +29,6 @@ namespace mrHelper.App.Controls
          {
             SelectedIndexChanged?.Invoke(sender, args);
          };
-
-         base.Disposed +=
-            (sender, args) =>
-         {
-            System.Diagnostics.Debug.WriteLine("Disposing " + this.ToString());
-         };
       }
 
       new internal int SelectedIndex

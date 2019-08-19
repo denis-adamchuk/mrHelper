@@ -22,8 +22,6 @@ namespace mrHelper.App.Forms
    {
       async private Task initializeWorkflow()
       {
-         Debug.WriteLine("Initializing workflow");
-
          _workflow = _workflowManager.CreateWorkflow();
          _workflow.PreSwitchHost += (sender, e) => onChangeHost(e);
          _workflow.PostSwitchHost += (sender, state) => onHostChanged(state);
@@ -66,8 +64,6 @@ namespace mrHelper.App.Forms
 
       async private Task changeHostAsync(string hostName)
       {
-         Debug.WriteLine("changeHostAsync(): Let's load host " + hostName);
-
          try
          {
             await _workflow.SwitchHostAsync(hostName);
@@ -75,42 +71,34 @@ namespace mrHelper.App.Forms
          catch (WorkflowException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot switch host");
-            MessageBox.Show(String.Format("Cannot select host \"{0}\"", hostName), "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
       private void onChangeHost(string hostname)
       {
-         Debug.WriteLine("onChangeHost(): Update selected item in the list of Hosts");
-         comboBoxHost.SelectedItem = new HostComboBoxItem
+         if (hostname != String.Empty)
          {
-            Host = hostname,
-            AccessToken = Tools.GetAccessToken(hostname, _settings)
-         };
+            comboBoxHost.SelectedItem = new HostComboBoxItem
+            {
+               Host = hostname,
+               AccessToken = Tools.GetAccessToken(hostname, _settings)
+            };
 
-         Debug.WriteLine("onChangeHost(): Disable projects combo box and change its text to Loading...");
-         prepareComboBoxToAsyncLoading(comboBoxProjects, comboBoxHost.SelectedItem != null);
-
-         Debug.WriteLine("onChangeHost(): Disable merge requests combo box");
-         prepareComboBoxToAsyncLoading(comboBoxFilteredMergeRequests, false);
-
-         Debug.WriteLine("onChangeHost(): Disable combo boxes with Versions...");
-         prepareComboBoxToAsyncLoading(comboBoxLeftVersion, false);
-         prepareComboBoxToAsyncLoading(comboBoxRightVersion, false);
-
-         Debug.WriteLine("onChangeHost(): Disable UI buttons and clean up text boxes related to current merge request");
-         buttonApplyLabels.Enabled = false;
-         enableControlsOnChangedMergeRequest(null);
-
-         Debug.WriteLine("onChangeHost(): Clean up comboboxes with lists of versions");
-         addVersionsToComboBoxes(null, null, null);
-
-         if (comboBoxHost.SelectedItem != null)
-         {
-            Debug.WriteLine("onChangeHost(): Update status bar");
+            disableComboBox(comboBoxProjects, "Loading...");
             labelWorkflowStatus.Text = "Loading projects...";
          }
+         else
+         {
+            disableComboBox(comboBoxProjects, String.Empty);
+         }
+
+         enableMergeRequestFilterControls(false);
+         enableMergeRequestActions(false);
+         updateMergeRequestDetails(null);
+         disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
+         disableComboBox(comboBoxLeftVersion, String.Empty);
+         disableComboBox(comboBoxRightVersion, String.Empty);
       }
 
       private void onFailedChangeHost(bool cancelled)
@@ -120,36 +108,28 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.WriteLine("onFailedChangeHost(): Update status bar");
+         disableComboBox(comboBoxProjects, String.Empty);
          labelWorkflowStatus.Text = "Failed to change host";
-
-         Debug.WriteLine("onFailedChangeHost(): Projects combo box remains disabled");
-         Debug.WriteLine("onFailedChangeHost(): Merge Requests combo box remains disabled");
-         Debug.WriteLine("onFailedChangeHost(): UI buttons remain disabled");
       }
 
       private void onHostChanged(WorkflowState state)
       {
-         Debug.WriteLine("onHostChanged(): Update lists of Projects");
          Debug.Assert(comboBoxProjects.Items.Count == 0);
          foreach (var project in state.Projects)
          {
             comboBoxProjects.Items.Add(project);
          }
 
-         Debug.WriteLine("onHostChanged(): Update status bar");
+         if (comboBoxProjects.Items.Count > 0)
+         {
+            enableComboBox(comboBoxProjects);
+         }
+
          labelWorkflowStatus.Text = String.Format("Selected host {0}", state.HostName);
-
-         Debug.WriteLine("onHostChanged(): Enable combo box with Projects");
-         fixComboBoxAfterAsyncLoading(comboBoxProjects);
-
-         Debug.WriteLine("onHostChanged(): Merge Requests combo box remains disabled");
       }
 
       async private Task changeProjectAsync(string projectName)
       {
-         Debug.WriteLine("changeProjectsAsync(): Let's load project " + projectName);
-
          try
          {
             await _workflow.SwitchProjectAsync(projectName);
@@ -157,13 +137,12 @@ namespace mrHelper.App.Forms
          catch (WorkflowException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot switch project");
-            MessageBox.Show("Cannot select this project", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
       private void onChangeProject(string projectName)
       {
-         Debug.WriteLine("onChangeProject(): Update selected item in the list of Projects");
          foreach (Project project in comboBoxProjects.Items.Cast<Project>())
          {
             if (project.Path_With_Namespace == projectName)
@@ -172,25 +151,21 @@ namespace mrHelper.App.Forms
             }
          }
 
-         Debug.WriteLine("onChangeProject(): Disable UI buttons and clean up text boxes related to current merge request");
-         buttonApplyLabels.Enabled = false;
-         enableControlsOnChangedMergeRequest(null);
-
-         Debug.WriteLine("onChangeProject(): Clean up comboboxes with lists of versions");
-         addVersionsToComboBoxes(null, null, null);
-
-         Debug.WriteLine("onChangeProject(): Disable combo box with Merge Requests and change its text to Loading...");
-         prepareComboBoxToAsyncLoading(comboBoxFilteredMergeRequests, comboBoxProjects.SelectedItem != null);
-
-         Debug.WriteLine("onChangeProject(): Disable combo boxes with Versions...");
-         prepareComboBoxToAsyncLoading(comboBoxLeftVersion, false);
-         prepareComboBoxToAsyncLoading(comboBoxRightVersion, false);
-
          if (comboBoxProjects.SelectedItem != null)
          {
-            Debug.WriteLine("onChangeProject(): Update status bar");
+            disableComboBox(comboBoxFilteredMergeRequests, "Loading...");
             labelWorkflowStatus.Text = "Loading merge requests...";
          }
+         else
+         {
+            disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
+         }
+
+         enableMergeRequestFilterControls(false);
+         enableMergeRequestActions(false);
+         updateMergeRequestDetails(null);
+         disableComboBox(comboBoxLeftVersion, String.Empty);
+         disableComboBox(comboBoxRightVersion, String.Empty);
       }
 
       private void onFailedChangeProject(bool cancelled)
@@ -200,16 +175,12 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.WriteLine("onFailedChangeProject(): Update status bar");
+         disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
          labelWorkflowStatus.Text = "Failed to change project";
-
-         Debug.WriteLine("onFailedChangeProject(): Merge Requests combo box remains disabled");
-         Debug.WriteLine("onFailedChangeProject(): UI buttons remain disabled");
       }
 
       private void onProjectChanged(WorkflowState state)
       {
-         Debug.WriteLine("onProjectChanged(): Update lists of Merge Requests");
          Debug.Assert(comboBoxFilteredMergeRequests.Items.Count == 0);
          foreach (var mergeRequest in state.MergeRequests)
          {
@@ -218,21 +189,21 @@ namespace mrHelper.App.Forms
 
          if (state.MergeRequests.Count > 0)
          {
-            buttonApplyLabels.Enabled = true;
+            enableMergeRequestFilterControls(true);
+            enableComboBox(comboBoxFilteredMergeRequests);
+         }
+         else
+         {
+            disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
          }
 
-         Debug.WriteLine("onProjectChanged(): Update status bar");
          labelWorkflowStatus.Text = String.Format("Selected project {0}", state.Project.Path_With_Namespace);
-
-         Debug.WriteLine("onProjectChanged(): Enable merge requests combo box");
-         fixComboBoxAfterAsyncLoading(comboBoxFilteredMergeRequests);
 
          setCommitChecker();
       }
 
       async private Task changeMergeRequestAsync(int mergeRequestIId)
       {
-         Debug.WriteLine("changeMergeRequestAsync(): Let's load merge request with Id " + mergeRequestIId.ToString());
          try
          {
             await _workflow.SwitchMergeRequestAsync(mergeRequestIId);
@@ -240,13 +211,12 @@ namespace mrHelper.App.Forms
          catch (WorkflowException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot switch merge request");
-            MessageBox.Show("Cannot select this merge request", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
       private void onChangeMergeRequest(int mergeRequestIId)
       {
-         Debug.WriteLine("onMergeRequestChanged(): Update selected item in the list of Merge Requests immediately");
          foreach (MergeRequest mergeRequest in comboBoxFilteredMergeRequests.Items.Cast<MergeRequest>())
          {
             if (mergeRequest.IId == mergeRequestIId)
@@ -255,23 +225,19 @@ namespace mrHelper.App.Forms
             }
          }
 
-         Debug.WriteLine("onChangeMergeRequest(): Disable UI buttons and clean up text boxes related to current merge request");
-         enableControlsOnChangedMergeRequest(null);
-
-         Debug.WriteLine("onChangeMergeRequest(): Clean up comboboxes with lists of versions");
-         addVersionsToComboBoxes(null, null, null);
-
-         Debug.WriteLine("onChangeMergeRequest(): Change text in textboxes to Loading...");
-         richTextBoxMergeRequestDescription.Text = "Loading...";
-
-         Debug.WriteLine("onChangeMergeRequest(): Disable combo boxes with Versions and change their texts to Loading...");
-         prepareComboBoxToAsyncLoading(comboBoxLeftVersion, comboBoxFilteredMergeRequests.SelectedItem != null);
-         prepareComboBoxToAsyncLoading(comboBoxRightVersion, comboBoxFilteredMergeRequests.SelectedItem != null);
-
+         enableMergeRequestActions(false);
+         updateMergeRequestDetails(null);
          if (comboBoxFilteredMergeRequests.SelectedItem != null)
          {
-            Debug.WriteLine("onChangeMergeRequest(): Update status bar");
+            disableComboBox(comboBoxLeftVersion, "Loading...");
+            disableComboBox(comboBoxRightVersion, "Loading...");
+            richTextBoxMergeRequestDescription.Text = "Loading...";
             labelWorkflowStatus.Text = "Loading merge request...";
+         }
+         else
+         {
+            disableComboBox(comboBoxLeftVersion, String.Empty);
+            disableComboBox(comboBoxRightVersion, String.Empty);
          }
       }
 
@@ -282,29 +248,33 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.WriteLine("onFailedChangeMergeRequest(): Update status bar");
+         disableComboBox(comboBoxLeftVersion, String.Empty);
+         disableComboBox(comboBoxRightVersion, String.Empty);
+         richTextBoxMergeRequestDescription.Text = String.Empty;
          labelWorkflowStatus.Text = "Failed to change merge request";
-
-         Debug.WriteLine("onFailedChangeMergeRequest(): Comboboxes with Versions remain disabled");
-         Debug.WriteLine("onFailedChangeMergeRequest(): UI buttons remain disabled");
       }
 
       private void onMergeRequestChanged(WorkflowState state)
       {
-         Debug.WriteLine("onMergeRequestChanged(): Finished loading MR. Current selected MR is " + _workflow.State.MergeRequest.IId);
+         Debug.Assert(state.MergeRequest.IId != default(MergeRequest).IId);
 
-         Debug.WriteLine("onMergeRequestChanged(): Enable UI buttons and fill text boxes related to current merge request");
-         enableControlsOnChangedMergeRequest(state.MergeRequest);
+         enableMergeRequestActions(true);
+         updateMergeRequestDetails(state.MergeRequest);
 
-         Debug.WriteLine("onMergeRequestChanged(): Fill comboboxes with lists of versions");
-         addVersionsToComboBoxes(state.Versions,
-            state.MergeRequest.Diff_Refs.Base_SHA, state.MergeRequest.Target_Branch);
+         if (state.Versions.Count > 0)
+         {
+            addVersionsToComboBoxes(state.Versions,
+               state.MergeRequest.Diff_Refs.Base_SHA, state.MergeRequest.Target_Branch);
 
-         Debug.WriteLine("onMergeRequestChanged(): Enable combo boxes with lists of versions");
-         fixComboBoxAfterAsyncLoading(comboBoxLeftVersion);
-         fixComboBoxAfterAsyncLoading(comboBoxRightVersion);
+            enableComboBox(comboBoxLeftVersion);
+            enableComboBox(comboBoxRightVersion);
+         }
+         else
+         {
+            disableComboBox(comboBoxLeftVersion, String.Empty);
+            disableComboBox(comboBoxRightVersion, String.Empty);
+         }
 
-         Debug.WriteLine("onMergeRequestChanged(): Update status bar");
          labelWorkflowStatus.Text = String.Format("Selected merge request #{0}", state.MergeRequest.IId);
 
          setCommitChecker();

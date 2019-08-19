@@ -176,6 +176,7 @@ namespace mrHelper.App.Forms
             string message = "Could not launch diff tool";
             ExceptionHandlers.Handle(ex, message);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            labelWorkflowStatus.Text = message;
             return;
          }
 

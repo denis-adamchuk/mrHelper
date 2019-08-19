@@ -47,8 +47,6 @@ namespace mrHelper.Client.Updates
 
       async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         Debug.WriteLine("WorkflowUpdateChecker.onTimer -- begin");
-
          MergeRequestUpdates updates = new MergeRequestUpdates();
          try
          {
@@ -57,13 +55,12 @@ namespace mrHelper.Client.Updates
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle(ex, "Auto-update failed");
+            return;
          }
-         finally
-         {
-            _lastCheckTimeStamp = DateTime.Now;
-            Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- timestamp updated to {0}",
-               _lastCheckTimeStamp.ToLocalTime().ToString()));
-         }
+
+         _lastCheckTimeStamp = DateTime.Now;
+         Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- timestamp updated to {0}",
+            _lastCheckTimeStamp.ToLocalTime().ToString()));
 
          Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- New: {0}, Updated: {1}",
             updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count));
@@ -72,8 +69,6 @@ namespace mrHelper.Client.Updates
          {
             OnUpdate?.Invoke(this, updates);
          }
-
-         Debug.WriteLine("WorkflowUpdateChecker.onTimer -- end");
       }
 
       /// <summary>

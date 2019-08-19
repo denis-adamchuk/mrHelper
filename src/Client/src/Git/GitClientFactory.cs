@@ -26,7 +26,6 @@ namespace mrHelper.Client.Git
          }
          
          ParentFolder = parentFolder;
-         Debug.WriteLine("Created GitClientFactory with ParentFolder \"" + ParentFolder + "\"");
       }
 
       /// <summary>
