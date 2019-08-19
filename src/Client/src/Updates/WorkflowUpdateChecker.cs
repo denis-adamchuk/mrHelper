@@ -7,6 +7,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Updates
 {
@@ -46,6 +47,8 @@ namespace mrHelper.Client.Updates
 
       async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+         Debug.WriteLine("WorkflowUpdateChecker.onTimer -- begin");
+
          MergeRequestUpdates updates = new MergeRequestUpdates();
          try
          {
@@ -58,12 +61,19 @@ namespace mrHelper.Client.Updates
          finally
          {
             _lastCheckTimeStamp = DateTime.Now;
+            Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- timestamp updated to {0}",
+               _lastCheckTimeStamp.ToLocalTime().ToString()));
          }
+
+         Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- New: {0}, Updated: {1}",
+            updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count));
 
          if (updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
          {
             OnUpdate?.Invoke(this, updates);
          }
+
+         Debug.WriteLine("WorkflowUpdateChecker.onTimer -- end");
       }
 
       /// <summary>
@@ -73,6 +83,9 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private Task<MergeRequestUpdates> getUpdatesAsync(DateTime timestamp)
       {
+         Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- begin -- timestamp {0}",
+            timestamp.ToLocalTime().ToString()));
+
          MergeRequestUpdates updates = new MergeRequestUpdates
          {
             NewMergeRequests = new List<MergeRequest>(),
@@ -96,14 +109,23 @@ namespace mrHelper.Client.Updates
             return updates;
          }
 
+         Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- checking {0} projects",
+            projectsToCheck.Count));
+
          foreach (var project in projectsToCheck)
          {
+            Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- checking project {0}",
+               project.Path_With_Namespace));
+
             List<MergeRequest> mergeRequests =
                await UpdateOperator.GetMergeRequests(Workflow.State.HostName, project.Path_With_Namespace);
             if (mergeRequests == null)
             {
                continue;
             }
+
+            Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- project {0} has {1} merge requests",
+               project.Path_With_Namespace, mergeRequests.Count));
 
             foreach (var mergeRequest in mergeRequests)
             {
@@ -112,12 +134,21 @@ namespace mrHelper.Client.Updates
                   continue;
                }
 
+               Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- merge request {0} matches our Labels",
+                  mergeRequest.Title));
+
                if (mergeRequest.Created_At.ToLocalTime() > timestamp)
                {
+                  Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request is new (created_at = {0})",
+                     mergeRequest.Created_At.ToLocalTime().ToString()));
+
                   updates.NewMergeRequests.Add(mergeRequest);
                }
                else if (mergeRequest.Updated_At.ToLocalTime() > timestamp)
                {
+                  Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request is updated (updated_at = {0})",
+                     mergeRequest.Updated_At.ToLocalTime().ToString()));
+
                   List<GitLabSharp.Entities.Version> versions = await UpdateOperator.GetVersions(
                      new MergeRequestDescriptor
                      {
@@ -133,6 +164,9 @@ namespace mrHelper.Client.Updates
                   GitLabSharp.Entities.Version latestVersion = versions[0];
                   if (latestVersion.Created_At.ToLocalTime() > timestamp)
                   {
+                     Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request has a new version -- created_at {0}",
+                        latestVersion.Created_At.ToLocalTime().ToString()));
+
                      updates.UpdatedMergeRequests.Add(mergeRequest);
                   }
                }
