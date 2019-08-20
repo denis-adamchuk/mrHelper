@@ -73,6 +73,8 @@ namespace mrHelper.App
                Trace.Listeners.Add(listener);
                Trace.AutoFlush = true;
 
+               int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
+
                try
                {
                   DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
@@ -82,12 +84,13 @@ namespace mrHelper.App
                   Snapshot? snapshot = null;
                   try
                   {
-                     snapshot = serializer.DeserializeFromDisk();
+                     snapshot = serializer.DeserializeFromDisk(gitPID);
                   }
                   catch (System.IO.IOException ex)
                   {
                      ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-                     MessageBox.Show("Cannot create a discussion. Make sure that timer is started in the main application.");
+                     MessageBox.Show("Cannot create a discussion. "
+                        + "Make sure that you use diff tool instance launched from mrHelper and mrHelper is still running.");
                      return;
                   }
 

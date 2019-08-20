@@ -64,7 +64,6 @@ namespace mrHelper.App.Forms
          this.labelDepth = new System.Windows.Forms.Label();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
-         this.checkBoxRequireTimer = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
@@ -360,7 +359,6 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Controls.Add(this.checkBoxShowPublicOnly);
-         this.groupBoxOther.Controls.Add(this.checkBoxRequireTimer);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 222);
          this.groupBoxOther.Name = "groupBoxOther";
          this.groupBoxOther.Size = new System.Drawing.Size(513, 144);
@@ -417,17 +415,6 @@ namespace mrHelper.App.Forms
          this.checkBoxShowPublicOnly.Text = "Show projects with public visibility only";
          this.checkBoxShowPublicOnly.UseVisualStyleBackColor = true;
          this.checkBoxShowPublicOnly.CheckedChanged += new System.EventHandler(this.CheckBoxShowPublicOnly_CheckedChanged);
-         // 
-         // checkBoxRequireTimer
-         // 
-         this.checkBoxRequireTimer.AutoSize = true;
-         this.checkBoxRequireTimer.Location = new System.Drawing.Point(6, 19);
-         this.checkBoxRequireTimer.Name = "checkBoxRequireTimer";
-         this.checkBoxRequireTimer.Size = new System.Drawing.Size(259, 17);
-         this.checkBoxRequireTimer.TabIndex = 5;
-         this.checkBoxRequireTimer.Text = "Require started timer for creating new discussions";
-         this.checkBoxRequireTimer.UseVisualStyleBackColor = true;
-         this.checkBoxRequireTimer.CheckedChanged += new System.EventHandler(this.CheckBoxRequireTimer_CheckedChanged);
          // 
          // groupBoxGit
          // 
@@ -754,7 +741,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxTimeTracking;
       private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBoxOther;
-      private System.Windows.Forms.CheckBox checkBoxRequireTimer;
       private System.Windows.Forms.Button buttonRemoveKnownHost;
       private System.Windows.Forms.Button buttonAddKnownHost;
       private System.Windows.Forms.ListView listViewKnownHosts;

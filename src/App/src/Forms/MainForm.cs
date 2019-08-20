@@ -82,14 +82,6 @@ namespace mrHelper.App.Forms
       private WorkflowUpdateChecker _workflowUpdateChecker;
       private TimeTracker _timeTracker;
 
-      // Arguments passed to the last launched instance of a diff tool
-      private struct DiffToolArguments
-      {
-         internal string LeftSHA;
-         internal string RightSHA;
-      }
-      DiffToolArguments? _diffToolArgs;
-
       private ColorScheme _colorScheme = new ColorScheme();
 
       private struct HostComboBoxItem

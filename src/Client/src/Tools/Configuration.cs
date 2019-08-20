@@ -18,9 +18,6 @@ namespace mrHelper.Client.Tools
       private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
-      private static readonly string RequireTimeTrackingKeyName = "RequireTimeTracking";
-      private static readonly string RequireTimeTrackingDefaultValue = "true";
-
       private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
       private static readonly string CheckedLabelsFilterDefaultValue = "false";
 
@@ -92,16 +89,6 @@ namespace mrHelper.Client.Tools
          {
             setValue(LocalGitFolderKeyName, value);
             OnPropertyChanged(LocalGitFolderKeyName);
-         }
-      }
-
-      public bool RequireTimeTracking
-      {
-         get { return bool.Parse(getValue(RequireTimeTrackingKeyName, RequireTimeTrackingDefaultValue)); }
-         set
-         {
-            setValue(RequireTimeTrackingKeyName, value.ToString().ToLower());
-            OnPropertyChanged(RequireTimeTrackingKeyName);
          }
       }
 

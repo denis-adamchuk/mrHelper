@@ -9,25 +9,26 @@ namespace mrHelper.Core.Interprocess
    public class SnapshotSerializer
    {
       private static readonly string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
-      private static readonly string SnapshotFileName = "snapshot.json";
 
       /// <summary>
       /// Serializes snapshot to disk.
       /// </summary>
-      public void SerializeToDisk(Snapshot snapshot)
+      public void SerializeToDisk(Snapshot snapshot, int pid)
       {
          JavaScriptSerializer serializer = new JavaScriptSerializer();
          string json = serializer.Serialize(snapshot);
-         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, SnapshotFileName), json);
+         string filename = String.Format("mrHelper.snapshot.{0}.json", pid);
+         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, filename), json);
       }
 
       /// <summary>
       /// Loads snapshot from disk and de-serializes it.
       /// Throws FileNotFoundException if snapshot is missing.
       /// </summary>
-      public Snapshot DeserializeFromDisk()
+      public Snapshot DeserializeFromDisk(int pid)
       {
-         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, SnapshotFileName);
+         string filename = String.Format("mrHelper.snapshot.{0}.json", pid);
+         string fullSnapshotName = System.IO.Path.Combine(snapshotPath, filename);
          if (!System.IO.File.Exists(fullSnapshotName))
          {
             throw new System.IO.FileNotFoundException(
@@ -41,11 +42,14 @@ namespace mrHelper.Core.Interprocess
       }
 
       /// <summary>
-      /// Erases snapshot from disk.
+      /// Erases snapshots from disk.
       /// </summary>
-      public void PurgeSerialized()
+      public static void CleanUpSnapshots()
       {
-         System.IO.File.Delete(System.IO.Path.Combine(snapshotPath, SnapshotFileName));
+         foreach (string f in System.IO.Directory.EnumerateFiles(snapshotPath, "mrHelper.snapshot.*.json"))
+         {
+            System.IO.File.Delete(f);
+         }
       }
    }
 }

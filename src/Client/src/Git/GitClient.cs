@@ -83,12 +83,12 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Launches 'git difftool --dir-diff' command
       /// </summary>
-      public void DiffTool(string name, string leftCommit, string rightCommit)
+      public int DiffTool(string name, string leftCommit, string rightCommit)
       {
-         run_in_path(() =>
+         return (int)run_in_path(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-            return GitUtils.git(arguments, false);
+            return GitUtils.git(arguments, false).PID;
          }, Path);
       }
 

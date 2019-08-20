@@ -120,9 +120,6 @@ namespace mrHelper.App.Forms
 
       async private void onLaunchDiffTool()
       {
-         _diffToolArgs = null;
-         updateInterprocessSnapshot(); // to purge serialized snapshot
-
          GitClient client = getGitClient();
          if (client != null)
          {
@@ -166,9 +163,10 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Launching diff tool...";
 
+         int pid = -1;
          try
          {
-            client.DiffTool(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
+            pid = client.DiffTool(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
                leftSHA, rightSHA);
          }
          catch (GitOperationException ex)
@@ -182,37 +180,22 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Diff tool launched";
 
-         _diffToolArgs = new DiffToolArguments
-         {
-            LeftSHA = leftSHA,
-            RightSHA = rightSHA
-         };
-
-         updateInterprocessSnapshot();
+         saveInterprocessSnapshot(pid, leftSHA, rightSHA);
       }
 
-      private void updateInterprocessSnapshot()
+      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA)
       {
-         // first of all, delete old snapshot
-         SnapshotSerializer serializer = new SnapshotSerializer();
-         serializer.PurgeSerialized();
-
-         bool allowReportingIssues = !checkBoxRequireTimer.Checked || _timeTrackingTimer.Enabled;
-         if (!allowReportingIssues || !_diffToolArgs.HasValue)
-         {
-            return;
-         }
-
          Snapshot snapshot;
          snapshot.AccessToken = GetCurrentAccessToken();
-         snapshot.Refs.LeftSHA = _diffToolArgs.Value.LeftSHA;     // Base commit SHA in the source branch
-         snapshot.Refs.RightSHA = _diffToolArgs.Value.RightSHA;   // SHA referencing HEAD of this merge request
+         snapshot.Refs.LeftSHA = leftSHA;     // Base commit SHA in the source branch
+         snapshot.Refs.RightSHA = rightSHA;   // SHA referencing HEAD of this merge request
          snapshot.Host = GetCurrentHostName();
          snapshot.MergeRequestIId = GetCurrentMergeRequestIId();
          snapshot.Project = GetCurrentProjectName();
          snapshot.TempFolder = textBoxLocalGitFolder.Text;
 
-         serializer.SerializeToDisk(snapshot);
+         SnapshotSerializer serializer = new SnapshotSerializer();
+         serializer.SerializeToDisk(snapshot, pid);
       }
 
       async private Task<User?> loadCurrentUserAsync()

@@ -43,6 +43,7 @@ namespace mrHelper.Client.Git
       {
          public List<string> Output;
          public List<string> Errors;
+         public int PID;
       }
 
       /// <summary>
@@ -99,7 +100,7 @@ namespace mrHelper.Client.Git
             Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
                arguments, String.Join("\n", errors)));
          }
-         return new GitOutput { Output = output, Errors = errors };
+         return new GitOutput { Output = output, Errors = errors, PID = process.HasExited ? -1 : process.Id };
       }
 
       /// <summary>

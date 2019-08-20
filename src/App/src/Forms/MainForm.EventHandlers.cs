@@ -36,14 +36,19 @@ namespace mrHelper.App.Forms
          {
             onHideToTray(e);
          }
-         else if (_workflow != null)
+         else
          {
-            Hide();
-            e.Cancel = true;
-            await _workflow.CancelAsync();
-            _workflow.Dispose();
-            _workflow = null;
-            Close();
+            Core.Interprocess.SnapshotSerializer.CleanUpSnapshots();
+
+            if (_workflow != null)
+            {
+               Hide();
+               e.Cancel = true;
+               await _workflow.CancelAsync();
+               _workflow.Dispose();
+               _workflow = null;
+               Close();
+            }
          }
       }
 
@@ -226,12 +231,6 @@ namespace mrHelper.App.Forms
          _settings.ShowPublicOnly = (sender as CheckBox).Checked;
       }
 
-      private void CheckBoxRequireTimer_CheckedChanged(object sender, EventArgs e)
-      {
-         _settings.RequireTimeTracking = (sender as CheckBox).Checked;
-         updateInterprocessSnapshot();
-      }
-
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
       {
          _settings.MinimizeOnClose = (sender as CheckBox).Checked;
@@ -349,9 +348,6 @@ namespace mrHelper.App.Forms
          // 4. Reset and start stopwatch
          _timeTracker = _timeTrackingManager.GetTracker(_workflow.State.MergeRequestDescriptor);
          _timeTracker.Start();
-
-         // 5. Update information available to other instances
-         updateInterprocessSnapshot();
       }
 
       async private Task onStopTimer()
@@ -383,13 +379,10 @@ namespace mrHelper.App.Forms
          // 2. Stop timer
          _timeTrackingTimer.Stop();
 
-         // 3. Update information available to other instances
-         updateInterprocessSnapshot();
-
-         // 4. Set default text to tracked time label
+         // 3. Set default text to tracked time label
          labelSpentTime.Text = labelSpentTimeDefaultText;
 
-         // 5. Update button text
+         // 4. Update button text
          buttonToggleTimer.Text = buttonStartTimerDefaultText;
       }
    }

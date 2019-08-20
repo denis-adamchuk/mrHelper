@@ -100,7 +100,6 @@ namespace mrHelper.App.Forms
          }
          _settings.KnownHosts = newKnownHosts;
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
-         checkBoxRequireTimer.Checked = _settings.RequireTimeTracking;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
          checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
