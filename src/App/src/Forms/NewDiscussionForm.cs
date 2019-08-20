@@ -17,6 +17,7 @@ using mrHelper.Core.Interprocess;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Core.Git;
+using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
@@ -51,9 +52,9 @@ namespace mrHelper.App.Forms
          onApplicationStarted();
       }
 
-      private void ButtonOK_Click(object sender, EventArgs e)
+      async private void ButtonOK_Click(object sender, EventArgs e)
       {
-         if (submitDiscussion())
+         if (await submitDiscussion())
          {
             Close();
          }
@@ -183,7 +184,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Throws GitLabRequestException in case of fatal GitLab problems.
       /// </summary>
-      private bool submitDiscussion()
+      async private Task<bool> submitDiscussion()
       {
          if (textBoxDiscussionBody.Text.Length == 0)
          {
@@ -195,7 +196,7 @@ namespace mrHelper.App.Forms
          Hide(); // things below may take some time but we no longer need to show the form
 
          NewDiscussionParameters parameters = prepareDiscussionParameters();
-         createDiscussionAtGitlab(parameters);
+         await createDiscussionAtGitlab(parameters);
          return true;
       }
 
@@ -224,7 +225,7 @@ namespace mrHelper.App.Forms
          };
       }
 
-      private void createDiscussionAtGitlab(NewDiscussionParameters parameters)
+      async private Task createDiscussionAtGitlab(NewDiscussionParameters parameters)
       {
          UserDefinedSettings settings = new UserDefinedSettings(false);
          DiscussionManager manager = new DiscussionManager(settings);
@@ -238,7 +239,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            creator.CreateDiscussionAsync(parameters);
+            await creator.CreateDiscussionAsync(parameters);
          }
          catch (DiscussionCreatorException ex)
          {

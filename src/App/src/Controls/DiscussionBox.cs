@@ -539,9 +539,11 @@ namespace mrHelper.App.Controls
             return;
          }
 
+         note.Body = textBox.Text;
+
          try
          {
-            await _editor.ModifyNoteBodyAsync(note.Id, textBox.Text);
+            await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
          }
          catch (DiscussionEditorException)
          {
