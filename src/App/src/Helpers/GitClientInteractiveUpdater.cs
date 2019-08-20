@@ -38,7 +38,7 @@ namespace mrHelper.App.Helpers
 
          InitializationStatusChange?.Invoke(this, "Updating git repository...");
 
-         await runAsync(async () => await client.Updater.ForceUpdateAsync());
+         await runAsync(async () => await client.Updater.ManualUpdateAsync());
          InitializationStatusChange?.Invoke(this, "Git repository updated");
       }
 

@@ -13,22 +13,19 @@ namespace mrHelper.Client.Git
    /// <summary>
    /// Updates attached GitClient object
    /// </summary>
-   public class GitClientUpdater: IDisposable
+   public class GitClientUpdater : IDisposable
    {
       public delegate Task OnUpdate(bool reportProgress);
+      public delegate bool IsMyProject(string hostname, string projectname);
 
       /// <summary>
       /// Bind to the specific GitClient object
       /// </summary>
-      internal GitClientUpdater(OnUpdate onUpdate)
+      internal GitClientUpdater(IProjectWatcher projectWatcher, OnUpdate onUpdate, IsMyProject isMyProject)
       {
          _onUpdate = onUpdate;
-      }
-
-      public void Dispose()
-      {
-         stopTimer();
-         Timer.Dispose();
+         _isMyProject = isMyProject;
+         _projectWatcher = projectWatcher;
       }
 
       /// <summary>
@@ -37,14 +34,24 @@ namespace mrHelper.Client.Git
       public void SetCommitChecker(CommitChecker commitChecker)
       {
          _commitChecker = commitChecker;
+         Debug.WriteLine(String.Format("GitClientUpdater.SetCommitChecker -- {0}",
+            (commitChecker?.ToString() ?? "null")));
       }
 
-      async public Task ForceUpdateAsync()
+      public void Dispose()
       {
+         Debug.WriteLine(String.Format("GitClientUpdater disposes and unsubscribes from projectwatcher"));
+         _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
+      }
+
+      async public Task ManualUpdateAsync()
+      {
+         Debug.WriteLine("GitClientUpdater.ManualUpdateAsync -- begin");
+
          _updating = true;
          try
          {
-            await doUpdate(true); // this may cancel currently running onTimer update
+            await doUpdate(false); // this may cancel currently running onTimer update
          }
          finally
          {
@@ -52,20 +59,47 @@ namespace mrHelper.Client.Git
          }
 
          // if doUpdate succeeded, it is ok to start periodic updates
-         startTimer();
+         if (!_subscribed)
+         {
+            Debug.WriteLine(String.Format("GitClientUpdater subscribes to projectwatcher"));
+            _projectWatcher.OnProjectUpdate += onProjectWatcherUpdate;
+            _subscribed = true;
+         }
       }
 
-      async private void onTimer(object sender, EventArgs e)
+      async private void onProjectWatcherUpdate(object sender, List<ProjectUpdate> updates)
       {
-         if (!_lastUpdateTime.HasValue || !EnablePeriodicUpdates || _updating)
+         Debug.WriteLine("GitClientUpdater.onProjectWatcherUpdate -- begin");
+         Debug.Assert(_subscribed);
+
+         if (!_lastUpdateTime.HasValue || _updating)
          {
+            Debug.WriteLine(
+               String.Format("GitClientUpdater.onProjectWatcherUpdate -- early return. timestamp={0}, updating={2}",
+                  _lastUpdateTime.ToString(), _updating.ToString()));
+            return;
+         }
+
+         bool needUpdateGitClient = false;
+         foreach (ProjectUpdate update in updates)
+         {
+            if (_isMyProject(update.HostName, update.ProjectName))
+            {
+               needUpdateGitClient = true;
+               break;
+            }
+         }
+
+         if (!needUpdateGitClient)
+         {
+            Debug.WriteLine("GitClientUpdater.onProjectWatcherUpdate -- early return. needUpdateClient = false");
             return;
          }
 
          _updating = true;
          try
          {
-            await doUpdate(false);
+            await doUpdate(true);
          }
          catch (GitOperationException ex)
          {
@@ -78,18 +112,23 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task doUpdate(bool reportProgress)
+      async private Task doUpdate(bool autoupdate)
       {
-         if (_commitChecker == null)
+         if (_commitChecker == null && !autoupdate)
          {
+            Debug.WriteLine(String.Format("GitClientUpdater.doUpdate -- early return"));
+            Debug.Assert(false);
             return;
          }
 
-         if (await _commitChecker.AreNewCommitsAsync(_lastUpdateTime.Value))
+         if (autoupdate || await _commitChecker.AreNewCommitsAsync(_lastUpdateTime.Value))
          {
+            Debug.WriteLine(String.Format("GitClientUpdater.doUpdate -- obligatoryUpdate={0}, timestamp={1}",
+               autoupdate, _lastUpdateTime.ToString()));
+
             try
             {
-               await _onUpdate(reportProgress);
+               await _onUpdate(!autoupdate);
             }
             catch (GitOperationException ex)
             {
@@ -99,36 +138,17 @@ namespace mrHelper.Client.Git
          }
 
          _lastUpdateTime = DateTime.Now;
+         Debug.WriteLine(String.Format("GitClientUpdater.doUpdate -- timestamp updated to {0}", _lastUpdateTime));
       }
 
-      private void startTimer()
-      {
-         if (!EnablePeriodicUpdates)
-         {
-            Timer.Elapsed += new System.Timers.ElapsedEventHandler(onTimer);
-            Timer.Start();
-            EnablePeriodicUpdates = true;
-         }
-      }
-
-      private void stopTimer()
-      {
-         EnablePeriodicUpdates = false;
-         Timer.Stop();
-      }
-
-      // Timestamp of the most recent update, by default it is empty
       private OnUpdate _onUpdate { get; }
+      private IsMyProject _isMyProject { get; }
       private CommitChecker _commitChecker { get; set; }
+      private IProjectWatcher _projectWatcher { get; }
       private DateTime? _lastUpdateTime { get; set; } = DateTime.MinValue;
 
-      private static readonly int TimerInterval = 60000; // ms
-      private System.Timers.Timer Timer { get; } = new System.Timers.Timer
-         {
-            Interval = TimerInterval
-         };
-      private bool EnablePeriodicUpdates { get; set; } = false;
       private bool _updating = false;
+      private bool _subscribed = false;
    }
 }
 

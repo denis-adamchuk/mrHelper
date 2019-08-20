@@ -20,7 +20,7 @@ namespace mrHelper.Client.Updates
    /// <summary>
    /// Implements periodic checks for updates of Merge Requests and their Versions
    /// </summary>
-   public class WorkflowUpdateChecker
+   public class WorkflowUpdateChecker : IProjectWatcher
    {
       internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator,
          Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke)
@@ -44,13 +44,22 @@ namespace mrHelper.Client.Updates
       }
 
       public event EventHandler<MergeRequestUpdates> OnUpdate;
+      public event EventHandler<List<ProjectUpdate>> OnProjectUpdate;
+
+      private struct AllUpdates
+      {
+         public MergeRequestUpdates MRUpdates;
+         public List<ProjectUpdate> ProjectUpdates;
+      }
 
       async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         MergeRequestUpdates updates = new MergeRequestUpdates();
+         AllUpdates allUpdates;
+         MergeRequestUpdates updates;
          try
          {
-            updates = await getUpdatesAsync(_lastCheckTimeStamp);
+            allUpdates = await getUpdatesAsync(_lastCheckTimeStamp);
+            updates = allUpdates.MRUpdates;
          }
          catch (OperatorException ex)
          {
@@ -69,6 +78,14 @@ namespace mrHelper.Client.Updates
          {
             OnUpdate?.Invoke(this, updates);
          }
+
+         Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- Updated projects: {0}",
+            allUpdates.ProjectUpdates.Count));
+
+         if (allUpdates.ProjectUpdates.Count > 0)
+         {
+            OnProjectUpdate?.Invoke(this, allUpdates.ProjectUpdates);
+         }
       }
 
       /// <summary>
@@ -76,7 +93,7 @@ namespace mrHelper.Client.Updates
       /// By 'updated' we mean that 'merge request has a version with a timestamp later than ...'.
       /// Includes only those merge requests that match Labels filters.
       /// </summary>
-      async private Task<MergeRequestUpdates> getUpdatesAsync(DateTime timestamp)
+      async private Task<AllUpdates> getUpdatesAsync(DateTime timestamp)
       {
          Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- begin -- timestamp {0}",
             timestamp.ToLocalTime().ToString()));
@@ -89,7 +106,7 @@ namespace mrHelper.Client.Updates
 
          if (Workflow.State.HostName == null)
          {
-            return updates;
+            return new AllUpdates();
          }
 
          List<Project> projectsToCheck = Tools.Tools.LoadProjectsFromFile(Workflow.State.HostName);
@@ -101,8 +118,10 @@ namespace mrHelper.Client.Updates
 
          if (projectsToCheck == null)
          {
-            return updates;
+            return new AllUpdates();
          }
+
+         List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
          Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- checking {0} projects",
             projectsToCheck.Count));
@@ -122,6 +141,7 @@ namespace mrHelper.Client.Updates
             Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- project {0} has {1} merge requests",
                project.Path_With_Namespace, mergeRequests.Count));
 
+            bool changedProject = false;
             foreach (var mergeRequest in mergeRequests)
             {
                if (Settings.CheckedLabelsFilter && _cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
@@ -138,6 +158,7 @@ namespace mrHelper.Client.Updates
                      mergeRequest.Created_At.ToLocalTime().ToString()));
 
                   updates.NewMergeRequests.Add(mergeRequest);
+                  changedProject = true;
                }
                else if (mergeRequest.Updated_At.ToLocalTime() > timestamp)
                {
@@ -163,12 +184,26 @@ namespace mrHelper.Client.Updates
                         latestVersion.Created_At.ToLocalTime().ToString()));
 
                      updates.UpdatedMergeRequests.Add(mergeRequest);
+                     changedProject = true;
                   }
                }
             }
+
+            if (changedProject)
+            {
+               projectUpdates.Add(new ProjectUpdate
+               {
+                  HostName = Workflow.State.HostName,
+                  ProjectName = project.Path_With_Namespace
+               });
+            }
          }
 
-         return updates;
+         return new AllUpdates
+         {
+            MRUpdates = updates,
+            ProjectUpdates = projectUpdates
+         };
       }
 
       private Workflow.Workflow Workflow { get; }

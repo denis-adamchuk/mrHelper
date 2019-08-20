@@ -31,7 +31,7 @@ namespace mrHelper.App.Forms
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
 
-         GitClientFactory factory = new GitClientFactory(snapshot.TempFolder);
+         GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null);
          _gitRepository = factory.GetClient(_interprocessSnapshot.Host, _interprocessSnapshot.Project);
          _renameChecker = new GitRenameDetector(_gitRepository);
          _matcher = new RefToLineMatcher(_gitRepository);

@@ -309,7 +309,7 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new GitClientFactory(localFolder);
+               _gitClientFactory = new GitClientFactory(localFolder, _workflowUpdateChecker);
             }
             catch (ArgumentException ex)
             {
@@ -357,22 +357,9 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(client != null);
          client.OperationStatusChange += updateGitStatusText;
+         client.Updater.SetCommitChecker(_updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
 
          return client;
-      }
-
-      /// <summary>
-      /// Bind GitClient to the selected merge request
-      /// </summary>
-      private void setCommitChecker()
-      {
-         if (_gitClientFactory == null)
-         {
-            return;
-         }
-
-         getGitClient()?.Updater.SetCommitChecker(
-            _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
       }
 
       private string getInitialHostName()

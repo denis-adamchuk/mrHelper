@@ -42,6 +42,12 @@ namespace mrHelper.Client.Updates
          return versions != null && versions.Count > 0 && versions[0].Created_At.ToLocalTime() > timestamp;
       }
 
+      public override string ToString()
+      {
+         return String.Format("MRD: HostName={0}, ProjectName={1}, IId={2}",
+            MergeRequestDescriptor.HostName, MergeRequestDescriptor.ProjectName, MergeRequestDescriptor.IId);
+      }
+
       private MergeRequestDescriptor MergeRequestDescriptor { get; }
       private UpdateOperator UpdateOperator { get; }
    }

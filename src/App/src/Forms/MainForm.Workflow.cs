@@ -187,9 +187,13 @@ namespace mrHelper.App.Forms
             comboBoxFilteredMergeRequests.Items.Add(mergeRequest);
          }
 
-         if (state.MergeRequests.Count > 0)
+         if (state.MergeRequests.Count > 0 || _settings.CheckedLabelsFilter)
          {
             enableMergeRequestFilterControls(true);
+         }
+
+         if (state.MergeRequests.Count > 0)
+         {
             enableComboBox(comboBoxFilteredMergeRequests);
          }
          else
@@ -198,8 +202,6 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Selected project {0}", state.Project.Path_With_Namespace);
-
-         setCommitChecker();
       }
 
       async private Task changeMergeRequestAsync(int mergeRequestIId)
@@ -276,8 +278,6 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Selected merge request #{0}", state.MergeRequest.IId);
-
-         setCommitChecker();
       }
    }
 }

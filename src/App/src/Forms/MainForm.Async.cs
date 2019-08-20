@@ -28,7 +28,6 @@ namespace mrHelper.App.Forms
          GitClient client = getGitClient();
          if (client != null)
          {
-            setCommitChecker();
             preGitClientInitialize();
             try
             {
@@ -123,7 +122,6 @@ namespace mrHelper.App.Forms
          GitClient client = getGitClient();
          if (client != null)
          {
-            setCommitChecker();
             preGitClientInitialize();
             try
             {

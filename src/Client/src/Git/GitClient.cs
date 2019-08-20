@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.Git
 {
@@ -27,7 +28,7 @@ namespace mrHelper.Client.Git
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal GitClient(string hostname, string projectname, string path)
+      internal GitClient(string hostname, string projectname, string path, IProjectWatcher projectWatcher)
       {
          if (!canClone(path) && !isValidRepository(path))
          {
@@ -37,7 +38,8 @@ namespace mrHelper.Client.Git
          _hostName = hostname;
          _projectName = projectname;
          Path = path;
-         Updater = new GitClientUpdater(async (reportProgress) =>
+         Updater = new GitClientUpdater(projectWatcher,
+            async (reportProgress) =>
          {
             if (_descriptor != null)
             {
@@ -62,6 +64,10 @@ namespace mrHelper.Client.Git
                string arguments = "fetch --progress";
                return run_async(arguments, null, reportProgress);
             }, Path);
+         },
+            (hostName, projectName) =>
+         {
+            return _hostName == hostName && _projectName == projectname;
          });
       }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using mrHelper.Client.Git;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.Git
 {
@@ -18,14 +19,15 @@ namespace mrHelper.Client.Git
       /// Create a factory
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
-      public GitClientFactory(string parentFolder)
+      public GitClientFactory(string parentFolder, IProjectWatcher projectWatcher)
       {
          if (!Directory.Exists(parentFolder))
          {
             throw new ArgumentException("Bad \"" + parentFolder + "\" argument");
          }
-         
+
          ParentFolder = parentFolder;
+         ProjectWatcher = projectWatcher;
       }
 
       /// <summary>
@@ -42,7 +44,7 @@ namespace mrHelper.Client.Git
             return Clients[key];
          }
 
-         GitClient client = new GitClient(hostName, projectName, path);
+         GitClient client = new GitClient(hostName, projectName, path, ProjectWatcher);
          Clients[key] = client;
          return client;
       }
@@ -66,6 +68,8 @@ namespace mrHelper.Client.Git
          public string ProjectName;
       }
       private Dictionary<Key, GitClient> Clients { get; set; } = new Dictionary<Key, GitClient>();
+
+      private IProjectWatcher ProjectWatcher { get; }
    }
 }
 
