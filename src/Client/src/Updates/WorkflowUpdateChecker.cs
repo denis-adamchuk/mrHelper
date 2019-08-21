@@ -74,6 +74,9 @@ namespace mrHelper.Client.Updates
          Debug.WriteLine(String.Format("WorkflowUpdateChecker.onTimer -- New: {0}, Updated: {1}",
             updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count));
 
+         applyLabelFilter(updates.NewMergeRequests);
+         applyLabelFilter(updates.UpdatedMergeRequests);
+
          if (updates.NewMergeRequests.Count > 0 || updates.UpdatedMergeRequests.Count > 0)
          {
             OnUpdate?.Invoke(this, updates);
@@ -85,6 +88,22 @@ namespace mrHelper.Client.Updates
          if (allUpdates.ProjectUpdates.Count > 0)
          {
             OnProjectUpdate?.Invoke(this, allUpdates.ProjectUpdates);
+         }
+      }
+
+      private void applyLabelFilter(List<MergeRequest> mergeRequests)
+      {
+         for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --iMergeRequest)
+         {
+            MergeRequest mergeRequest = mergeRequests[iMergeRequest];
+            if (Settings.CheckedLabelsFilter && _cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
+            {
+               Debug.WriteLine(String.Format(
+                  "WorkflowUpdateChecker.getUpdatesAsync -- merge request {0} does not maatch labels",
+                     mergeRequest.Title));
+
+               mergeRequests.RemoveAt(iMergeRequest);
+            }
          }
       }
 
@@ -144,14 +163,6 @@ namespace mrHelper.Client.Updates
             bool changedProject = false;
             foreach (var mergeRequest in mergeRequests)
             {
-               if (Settings.CheckedLabelsFilter && _cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
-               {
-                  continue;
-               }
-
-               Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- merge request {0} matches our Labels",
-                  mergeRequest.Title));
-
                if (mergeRequest.Created_At.ToLocalTime() > timestamp)
                {
                   Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request is new (created_at = {0})",

@@ -60,6 +60,7 @@ namespace mrHelper.Client.Git
          {
             client.Value.Dispose();
          }
+         Clients.Clear();
       }
 
       private struct Key
