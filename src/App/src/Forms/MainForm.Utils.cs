@@ -205,11 +205,28 @@ namespace mrHelper.App.Forms
          linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
       }
 
+      private void updateTimeTrackingMergeRequestDetails(MergeRequest? mergeRequest)
+      {
+         if (isTrackingTime())
+         {
+            return;
+         }
+
+         labelTimeTrackingMergeRequestName.Visible = mergeRequest.HasValue;
+         labelTimeTrackingProjectName.Visible = mergeRequest.HasValue;
+         buttonTimeTrackingStart.Enabled = mergeRequest.HasValue;
+
+         if (mergeRequest.HasValue)
+         {
+            labelTimeTrackingMergeRequestName.Text = mergeRequest.Value.Title;
+            labelTimeTrackingProjectName.Text = _workflow.State.Project.Path_With_Namespace;
+         }
+      }
+
       private void enableMergeRequestActions(bool enabled)
       {
          linkLabelConnectedTo.Visible = enabled;
          buttonDiscussions.Enabled = enabled;
-         buttonToggleTimer.Enabled = enabled;
          buttonDiffTool.Enabled = enabled;
          enableCustomActions(enabled);
       }
@@ -374,6 +391,11 @@ namespace mrHelper.App.Forms
             }
          }
          return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
+      }
+
+      private bool isTrackingTime()
+      {
+         return _timeTracker != null;
       }
    }
 }

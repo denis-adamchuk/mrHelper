@@ -63,16 +63,22 @@ namespace mrHelper.App.Forms
          onLaunchDiffTool();
       }
 
-      async private void ButtonToggleTimer_Click(object sender, EventArgs e)
+      async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
-         if (_timeTrackingTimer.Enabled)
+         if (isTrackingTime())
          {
-            await onStopTimer();
+            await onStopTimer(true);
          }
          else
          {
             onStartTimer();
          }
+      }
+
+      async private void ButtonTimeTrackingCancel_Click(object sender, EventArgs e)
+      {
+         Debug.Assert(isTrackingTime());
+         await onStopTimer(false);
       }
 
       private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -309,7 +315,7 @@ namespace mrHelper.App.Forms
 
       private void onTimer(object sender, EventArgs e)
       {
-         labelSpentTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
+         labelTimeTrackingTrackedTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
       }
 
       private bool onAddKnownHost(string host, string accessToken)
@@ -336,43 +342,55 @@ namespace mrHelper.App.Forms
 
       private void onStartTimer()
       {
-         // 1. Update button text
-         buttonToggleTimer.Text = buttonStartTimerTrackingText;
+         // 1. Update button text and enabled state
+         buttonTimeTrackingStart.Text = buttonStartTimerTrackingText;
+         buttonTimeTrackingCancel.Enabled = true;
 
          // 2. Set default text to tracked time label
-         labelSpentTime.Text = labelSpentTimeDefaultText;
+         labelTimeTrackingTrackedLabel.Visible = true;
+         labelTimeTrackingTrackedTime.Visible = true;
+         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
 
          // 3. Start timer
          _timeTrackingTimer.Start();
 
          // 4. Reset and start stopwatch
+         Debug.Assert(_workflow.State.MergeRequestDescriptor.IId != default(MergeRequest).IId);
          _timeTracker = _timeTrackingManager.GetTracker(_workflow.State.MergeRequestDescriptor);
          _timeTracker.Start();
       }
 
-      async private Task onStopTimer()
+      async private Task onStopTimer(bool send)
       {
          // 1. Stop stopwatch and send tracked time
-         TimeSpan span = _timeTracker.Elapsed;
-         if (span.Seconds > 1)
+         if (send)
          {
-            labelWorkflowStatus.Text = "Sending tracked time...";
-            string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
-            string status = String.Format("Tracked time {0} sent successfully", duration);
-            try
+            TimeSpan span = _timeTracker.Elapsed;
+            if (span.Seconds > 1)
             {
-               await _timeTracker.StopAsync();
+               labelWorkflowStatus.Text = "Sending tracked time...";
+               string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
+               string status = String.Format("Tracked time {0} sent successfully", duration);
+               try
+               {
+                  await _timeTracker.StopAsync();
+               }
+               catch (TimeTrackerException)
+               {
+                  status = "Error occurred. Tracked time is not sent!";
+                  MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
+               labelWorkflowStatus.Text = status;
             }
-            catch (TimeTrackerException)
+            else
             {
-               status = "Error occurred. Tracked time is not sent!";
-               MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               labelWorkflowStatus.Text = "Tracked time less than 1 second is ignored";
             }
-            labelWorkflowStatus.Text = status;
          }
          else
          {
-            labelWorkflowStatus.Text = "Tracked time less than 1 second is ignored";
+            _timeTracker.Cancel();
+            labelWorkflowStatus.Text = "Time tracking cancelled";
          }
          _timeTracker = null;
 
@@ -380,10 +398,18 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Stop();
 
          // 3. Set default text to tracked time label
-         labelSpentTime.Text = labelSpentTimeDefaultText;
+         labelTimeTrackingTrackedLabel.Visible = false;
+         labelTimeTrackingTrackedTime.Visible = false;
+         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
 
-         // 4. Update button text
-         buttonToggleTimer.Text = buttonStartTimerDefaultText;
+         // 4. Update button text and enabled state
+         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
+         buttonTimeTrackingCancel.Enabled = false;
+
+         // 5. Show actual merge request details
+         bool isMergeRequestSelected = _workflow.State.MergeRequest.IId != default(MergeRequest).IId;
+         updateTimeTrackingMergeRequestDetails(
+            isMergeRequestSelected ? _workflow.State.MergeRequest : new Nullable<MergeRequest>());
       }
    }
 }

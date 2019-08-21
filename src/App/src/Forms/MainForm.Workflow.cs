@@ -96,6 +96,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestFilterControls(false);
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(null);
          disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
          disableComboBox(comboBoxLeftVersion, String.Empty);
          disableComboBox(comboBoxRightVersion, String.Empty);
@@ -164,6 +165,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestFilterControls(false);
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(null);
          disableComboBox(comboBoxLeftVersion, String.Empty);
          disableComboBox(comboBoxRightVersion, String.Empty);
       }
@@ -229,6 +231,7 @@ namespace mrHelper.App.Forms
 
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(null);
          if (comboBoxFilteredMergeRequests.SelectedItem != null)
          {
             disableComboBox(comboBoxLeftVersion, "Loading...");
@@ -262,6 +265,7 @@ namespace mrHelper.App.Forms
 
          enableMergeRequestActions(true);
          updateMergeRequestDetails(state.MergeRequest);
+         updateTimeTrackingMergeRequestDetails(state.MergeRequest);
 
          if (state.Versions.Count > 0)
          {

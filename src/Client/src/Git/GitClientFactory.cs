@@ -11,7 +11,7 @@ namespace mrHelper.Client.Git
    /// Creates GitClient objects.
    /// This factory is helpful because GitClient objects may have internal state that is expensive to fill up.
    ///<summary>
-   public class GitClientFactory
+   public class GitClientFactory : IDisposable
    {
       public string ParentFolder { get; }
 

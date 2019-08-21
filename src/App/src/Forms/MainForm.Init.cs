@@ -145,8 +145,10 @@ namespace mrHelper.App.Forms
          loadConfiguration();
          _settings.PropertyChanged += onSettingsPropertyChanged;
 
-         labelSpentTime.Text = labelSpentTimeDefaultText;
-         buttonToggleTimer.Text = buttonStartTimerDefaultText;
+         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
+         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
+         labelWorkflowStatus.Text = String.Empty;
+         labelGitStatus.Text = String.Empty;
          this.Text += " (" + Application.ProductVersion + ")";
 
          bool configured = listViewKnownHosts.Items.Count > 0

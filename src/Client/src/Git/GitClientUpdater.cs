@@ -75,7 +75,7 @@ namespace mrHelper.Client.Git
          if (!_lastUpdateTime.HasValue || _updating)
          {
             Debug.WriteLine(
-               String.Format("GitClientUpdater.onProjectWatcherUpdate -- early return. timestamp={0}, updating={2}",
+               String.Format("GitClientUpdater.onProjectWatcherUpdate -- early return. timestamp={0}, updating={1}",
                   _lastUpdateTime.ToString(), _updating.ToString()));
             return;
          }
