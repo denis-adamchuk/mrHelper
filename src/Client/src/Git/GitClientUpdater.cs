@@ -86,6 +86,8 @@ namespace mrHelper.Client.Git
             if (_isMyProject(update.HostName, update.ProjectName))
             {
                needUpdateGitClient = true;
+               Debug.WriteLine(String.Format("GitClientUpdater.onProjectWatcherUpdate -- will update my project {0}",
+                  update.ProjectName));
                break;
             }
          }

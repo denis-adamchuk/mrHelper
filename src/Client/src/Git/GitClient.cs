@@ -65,9 +65,9 @@ namespace mrHelper.Client.Git
                return run_async(arguments, null, reportProgress);
             }, Path);
          },
-            (hostName, projectName) =>
+            (hostNameToCheck, projectNameToCheck) =>
          {
-            return _hostName == hostName && _projectName == projectname;
+            return _hostName == hostNameToCheck && _projectName == projectNameToCheck;
          });
       }
 
