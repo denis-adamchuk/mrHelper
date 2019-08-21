@@ -21,7 +21,7 @@ using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class mrHelperForm
+   internal partial class MainForm
    {
       async private Task showDiscussionsFormAsync()
       {
@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Rendering Discussions Form...";
          labelWorkflowStatus.Update();
 
-         DiscussionsForm form = null;
+         DiscussionsForm form;
          try
          {
             form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Author,
@@ -161,7 +161,7 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Launching diff tool...";
 
-         int pid = -1;
+         int pid;
          try
          {
             pid = client.DiffTool(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName,
@@ -199,7 +199,7 @@ namespace mrHelper.App.Forms
       async private Task<User?> loadCurrentUserAsync()
       {
          labelWorkflowStatus.Text = "Loading current user...";
-         User? currentUser = null;
+         User? currentUser;
          try
          {
             currentUser = await _workflow.GetCurrentUser();
@@ -218,7 +218,7 @@ namespace mrHelper.App.Forms
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
          labelWorkflowStatus.Text = "Loading discussions...";
-         List<Discussion> discussions = null;
+         List<Discussion> discussions;
          try
          {
             discussions = await _discussionManager.GetDiscussionsAsync(_workflow.State.MergeRequestDescriptor);

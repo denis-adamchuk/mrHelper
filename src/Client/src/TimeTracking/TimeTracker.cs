@@ -48,7 +48,7 @@ namespace mrHelper.Client.TimeTracking
 
       private MergeRequestDescriptor MergeRequestDescriptor { get; }
       private Stopwatch Stopwatch { get; }
-      private TimeTrackingOperator TimeTrackingOperator;
+      private readonly TimeTrackingOperator TimeTrackingOperator;
    }
 }
 

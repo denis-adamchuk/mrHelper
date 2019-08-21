@@ -17,7 +17,6 @@ namespace mrHelper.Client.Discussions
    {
       public DiscussionManager(UserDefinedSettings settings)
       {
-         Settings = settings;
          DiscussionOperator = new DiscussionOperator(settings);
       }
 
@@ -43,7 +42,6 @@ namespace mrHelper.Client.Discussions
          return new DiscussionEditor(mrd, discussionId, DiscussionOperator);
       }
 
-      private UserDefinedSettings Settings { get; }
       private DiscussionOperator DiscussionOperator { get; }
    }
 }

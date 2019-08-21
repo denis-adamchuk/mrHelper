@@ -142,7 +142,7 @@ namespace mrHelper.DiffTool
          return getInstallPath(diffTool.GetToolRegistryNames());
       }
 
-      private IGlobalGitConfiguration _globalGitConfiguration;
+      private readonly IGlobalGitConfiguration _globalGitConfiguration;
    }
 }
 

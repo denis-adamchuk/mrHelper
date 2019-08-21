@@ -18,7 +18,7 @@ using mrHelper.Client.Workflow;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class mrHelperForm
+   internal partial class MainForm
    {
       async private Task initializeWorkflow()
       {

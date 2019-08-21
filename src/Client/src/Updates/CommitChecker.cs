@@ -29,7 +29,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async public Task<bool> AreNewCommitsAsync(DateTime timestamp)
       {
-         List<Commit> commits = null;
+         List<Commit> commits;
          try
          {
             commits = await UpdateOperator.GetCommits(MergeRequestDescriptor);

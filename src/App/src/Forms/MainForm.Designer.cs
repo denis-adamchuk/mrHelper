@@ -2,7 +2,7 @@
 
 namespace mrHelper.App.Forms
 {
-   internal partial class mrHelperForm
+   internal partial class MainForm
    {
       /// <summary>
       /// Required designer variable.
@@ -32,7 +32,7 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(mrHelperForm));
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
@@ -84,6 +84,11 @@ namespace mrHelper.App.Forms
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
          this.label3 = new System.Windows.Forms.Label();
+         this.comboBoxProjects = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxFilteredMergeRequests = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();

@@ -151,7 +151,7 @@ namespace mrHelper.Core.Matching
             diffRefs.LeftSHA, diffRefs.RightSHA,
             difftoolInfo.Left?.FileName ?? null, difftoolInfo.Right?.FileName ?? null);
 
-         MatchResult result = MatchResult.Undefined;
+         MatchResult result;
          if (!difftoolInfo.IsLeftSideCurrent && matchRightSide(difftoolInfo, gitDiffAnalyzer, out result))
          {
             return result;

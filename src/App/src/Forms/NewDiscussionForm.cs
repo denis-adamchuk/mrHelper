@@ -78,9 +78,8 @@ namespace mrHelper.App.Forms
       private void onApplicationStarted()
       {
          this.ActiveControl = textBoxDiscussionBody;
-
-         string anotherName = String.Empty;
-         bool fileRenamed = false;
+         string anotherName;
+         bool fileRenamed;
          try
          {
             fileRenamed = checkForRenamedFile(out anotherName);

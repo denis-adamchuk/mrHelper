@@ -92,7 +92,7 @@ namespace mrHelper.Client.Tools
 
          JavaScriptSerializer serializer = new JavaScriptSerializer();
 
-         List<HostInProjectsFile> hosts = null;
+         List<HostInProjectsFile> hosts;
          try
          {
             hosts = serializer.Deserialize<List<HostInProjectsFile>>(json);

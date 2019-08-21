@@ -17,7 +17,7 @@ using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class mrHelperForm
+   internal partial class MainForm
    {
       /// <summary>
       /// All exceptions thrown within this method are fatal errors, just pass them to upper level handler

@@ -47,16 +47,20 @@ namespace mrHelper.App.Controls
 
          _onSizeChanged = onSizeChanged;
 
-         _toolTip = new ToolTip();
-         _toolTip.AutoPopDelay = 5000;
-         _toolTip.InitialDelay = 500;
-         _toolTip.ReshowDelay = 100;
+         _toolTip = new ToolTip
+         {
+            AutoPopDelay = 5000,
+            InitialDelay = 500,
+            ReshowDelay = 100
+         };
 
          _toolTipNotifier = new ToolTip();
 
-         _htmlToolTip = new HtmlToolTip();
-         _htmlToolTip.AutoPopDelay = 10000; // 10s
-         _htmlToolTip.BaseStylesheet = ".htmltooltip { padding: 1px; }";
+         _htmlToolTip = new HtmlToolTip
+         {
+            AutoPopDelay = 10000, // 10s
+            BaseStylesheet = ".htmltooltip { padding: 1px; }"
+         };
 
          onCreate(discussion);
       }
@@ -780,8 +784,8 @@ namespace mrHelper.App.Controls
 
       private readonly OnBoxEvent _onSizeChanged;
 
-      private System.Windows.Forms.ToolTip _toolTip;
-      private System.Windows.Forms.ToolTip _toolTipNotifier;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlToolTip;
+      private readonly System.Windows.Forms.ToolTip _toolTip;
+      private readonly System.Windows.Forms.ToolTip _toolTipNotifier;
+      private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlToolTip;
    }
 }

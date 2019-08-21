@@ -19,7 +19,7 @@ using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class mrHelperForm
+   internal partial class MainForm
    {
       /// <summary>
       /// Populates host list with list of known hosts from Settings
@@ -242,8 +242,10 @@ namespace mrHelper.App.Forms
 
       private void addCommitsToComboBoxes(List<Commit> commits, string mrBaseSha, string mrTargetBranch)
       {
-         var latest = new CommitComboBoxItem(commits[0]);
-         latest.IsLatest = true;
+         var latest = new CommitComboBoxItem(commits[0])
+         {
+            IsLatest = true
+         };
          comboBoxLeftCommit.Items.Add(latest);
          for (int i = 1; i < commits.Count; i++)
          {

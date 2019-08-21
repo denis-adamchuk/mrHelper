@@ -23,7 +23,7 @@ namespace mrHelper.Client.Workflow
          set
          {
             _projects = value;
-            _project = default(Project);
+            _project = default;
          }
       }
 
@@ -43,7 +43,7 @@ namespace mrHelper.Client.Workflow
          set
          {
             _mergeRequests = value;
-            _mergeRequest = default(MergeRequest);
+            _mergeRequest = default;
          }
       }
 

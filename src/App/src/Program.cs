@@ -11,8 +11,8 @@ namespace mrHelper.App
 {
    internal static class Program
    {
-      static string mutex1_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
-      static string mutex2_guid = "{08c448dc-8635-42d0-89bd-75c14837aaa1}";
+      static readonly string mutex1_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
+      static readonly string mutex2_guid = "{08c448dc-8635-42d0-89bd-75c14837aaa1}";
 
       private static void HandleUnhandledException(Exception ex)
       {
@@ -46,7 +46,7 @@ namespace mrHelper.App
                Trace.AutoFlush = true;
                try
                {
-                  Application.Run(new mrHelperForm());
+                  Application.Run(new MainForm());
                }
                catch (Exception ex) // whatever unhandled exception
                {

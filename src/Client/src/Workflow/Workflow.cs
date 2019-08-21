@@ -115,8 +115,10 @@ namespace mrHelper.Client.Workflow
       {
          PreSwitchHost?.Invoke(this, hostName);
 
-         State = new WorkflowState();
-         State.HostName = hostName;
+         State = new WorkflowState
+         {
+            HostName = hostName
+         };
 
          Operator?.CancelAsync();
 
@@ -125,7 +127,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
+         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings));
 
          List<Project> projects = null;
          try
@@ -268,13 +270,13 @@ namespace mrHelper.Client.Workflow
 
       private List<string> _cachedLabels = null;
 
-      private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
+      private readonly Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
       private struct HostAndProjectId
       {
          public string Host;
          public int ProjectId;
       }
-      private Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects = new Dictionary<HostAndProjectId, int>();
+      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects = new Dictionary<HostAndProjectId, int>();
    }
 }
 

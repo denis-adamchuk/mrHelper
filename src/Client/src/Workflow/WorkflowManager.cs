@@ -30,8 +30,8 @@ namespace mrHelper.Client.Workflow
          return w;
       }
 
-      private UserDefinedSettings Settings;
-      private List<Workflow> Workflows = new List<Workflow>();
+      private readonly UserDefinedSettings Settings;
+      private readonly List<Workflow> Workflows = new List<Workflow>();
    }
 }
 

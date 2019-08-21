@@ -190,7 +190,7 @@ namespace mrHelper.App.Forms
       private readonly ColorScheme _colorScheme;
 
       private User _currentUser;
-      private DiscussionManager _manager;
+      private readonly DiscussionManager _manager;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

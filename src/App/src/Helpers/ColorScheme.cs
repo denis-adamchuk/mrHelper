@@ -37,7 +37,7 @@ namespace mrHelper.App.Helpers
 
          JavaScriptSerializer serializer = new JavaScriptSerializer();
 
-         Dictionary<string, object> colors = null;
+         Dictionary<string, object> colors;
          try
          {
             colors = (Dictionary<string, object>)serializer.DeserializeObject(json);
@@ -55,8 +55,9 @@ namespace mrHelper.App.Helpers
                continue;
             }
 
-            int r = 0, g = 0, b = 0;
-            if (!int.TryParse(rgbs[0], out r) || !int.TryParse(rgbs[1], out g) || !int.TryParse(rgbs[2], out b))
+            if (!int.TryParse(rgbs[0], out int r)
+             || !int.TryParse(rgbs[1], out int g)
+             || !int.TryParse(rgbs[2], out int b))
             {
                continue;
             }
@@ -89,7 +90,7 @@ namespace mrHelper.App.Helpers
          _colors[name] = color;
       }
 
-      private Dictionary<string, Color> _colors = new Dictionary<string, Color>();
+      private readonly Dictionary<string, Color> _colors = new Dictionary<string, Color>();
    }
 }
 

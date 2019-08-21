@@ -36,11 +36,11 @@ namespace mrHelper.Client.Tools
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
 
-      private static string MinimizeOnCloseKeyName = "MinimizeOnClose";
-      private static string MinimizeOnCloseDefaultValue = "false";
+      private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
+      private static readonly string MinimizeOnCloseDefaultValue = "false";
 
-      private static string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
-      private static string ColorSchemeFileNameDefaultValue = "";
+      private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
+      private static readonly string ColorSchemeFileNameDefaultValue = "";
 
       public event PropertyChangedEventHandler PropertyChanged;
 

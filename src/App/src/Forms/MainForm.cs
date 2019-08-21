@@ -22,7 +22,7 @@ namespace mrHelper.App.Forms
 {
    delegate void UpdateTextCallback(object sender, string text);
 
-   internal partial class mrHelperForm : Form, ICommandCallback
+   internal partial class MainForm : Form, ICommandCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -37,13 +37,8 @@ namespace mrHelper.App.Forms
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
-      internal mrHelperForm()
+      internal MainForm()
       {
-         this.comboBoxProjects = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxFilteredMergeRequests = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
          InitializeComponent();
       }
 
@@ -67,7 +62,7 @@ namespace mrHelper.App.Forms
          return _workflow.State.MergeRequest.IId;
       }
 
-      private System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
+      private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
          {
             Interval = timeTrackingTimerInterval
          };

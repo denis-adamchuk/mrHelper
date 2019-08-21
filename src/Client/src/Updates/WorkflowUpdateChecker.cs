@@ -130,8 +130,10 @@ namespace mrHelper.Client.Updates
          List<Project> projectsToCheck = Tools.Tools.LoadProjectsFromFile(Workflow.State.HostName);
          if (projectsToCheck == null && Workflow.State.Project.Path_With_Namespace != null)
          {
-            projectsToCheck = new List<Project>();
-            projectsToCheck.Add(Workflow.State.Project);
+            projectsToCheck = new List<Project>
+            {
+               Workflow.State.Project
+            };
          }
 
          if (projectsToCheck == null)

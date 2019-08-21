@@ -23,7 +23,7 @@ using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class mrHelperForm
+   internal partial class MainForm
    {
       private void addCustomActions()
       {

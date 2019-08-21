@@ -21,7 +21,7 @@ namespace mrHelper.Client.Tools
             Trace.TraceError("[{0}] {1}: {2}\nNested Exception: {3}",
                   ex00.GetType().ToString(), meaning, ex00.Message, ex00.InternalException?.Message ?? "null");
          }
-         else if (exception is GitLabClientCancelled ex01)
+         else if (exception is GitLabClientCancelled)
          {
             Trace.TraceInformation("GitLab request was cancelled by a subsequent request");
          }
