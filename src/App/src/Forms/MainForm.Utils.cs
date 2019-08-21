@@ -155,6 +155,7 @@ namespace mrHelper.App.Forms
 
       private void disableComboBox(SelectionPreservingComboBox comboBox, string text)
       {
+         comboBox.DroppedDown = false;
          comboBox.SelectedIndex = -1;
          comboBox.Items.Clear();
          comboBox.Enabled = false;
