@@ -39,6 +39,11 @@ namespace mrHelper.App.Forms
 
       internal mrHelperForm()
       {
+         this.comboBoxProjects = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxFilteredMergeRequests = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
          InitializeComponent();
       }
 
@@ -90,7 +95,7 @@ namespace mrHelper.App.Forms
          internal string AccessToken;
       }
 
-      private struct VersionComboBoxItem
+      private struct CommitComboBoxItem
       {
          internal string SHA;
          internal string Text;
@@ -102,7 +107,7 @@ namespace mrHelper.App.Forms
             return Text;
          }
 
-         internal VersionComboBoxItem(string sha, string text, DateTime? timeStamp)
+         internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp)
          {
             SHA = sha;
             Text = text;
@@ -110,8 +115,8 @@ namespace mrHelper.App.Forms
             IsLatest = false;
          }
 
-         internal VersionComboBoxItem(GitLabSharp.Entities.Version ver)
-            : this(ver.Head_Commit_SHA, ver.Head_Commit_SHA.Substring(0, 10), ver.Created_At)
+         internal CommitComboBoxItem(Commit commit)
+            : this(commit.Id, commit.Id.Substring(0, 10), commit.Created_At)
          {
          }
       }

@@ -45,7 +45,7 @@ namespace mrHelper.App.Forms
              || updates.UpdatedMergeRequests.Any(x => x.Project_Id == state.Project.Id))
             {
                // emulate project change to reload merge request list
-               // This will automatically update version list (if there are new ones).
+               // This will automatically update commit list (if there are new ones).
                // This will also remove merged merge requests from the list.
                try
                {
@@ -98,8 +98,8 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(null);
          disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
-         disableComboBox(comboBoxLeftVersion, String.Empty);
-         disableComboBox(comboBoxRightVersion, String.Empty);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
       }
 
       private void onFailedChangeHost(bool cancelled)
@@ -166,8 +166,8 @@ namespace mrHelper.App.Forms
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(null);
-         disableComboBox(comboBoxLeftVersion, String.Empty);
-         disableComboBox(comboBoxRightVersion, String.Empty);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
       }
 
       private void onFailedChangeProject(bool cancelled)
@@ -234,15 +234,15 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(null);
          if (comboBoxFilteredMergeRequests.SelectedItem != null)
          {
-            disableComboBox(comboBoxLeftVersion, "Loading...");
-            disableComboBox(comboBoxRightVersion, "Loading...");
+            disableComboBox(comboBoxLeftCommit, "Loading...");
+            disableComboBox(comboBoxRightCommit, "Loading...");
             richTextBoxMergeRequestDescription.Text = "Loading...";
             labelWorkflowStatus.Text = "Loading merge request...";
          }
          else
          {
-            disableComboBox(comboBoxLeftVersion, String.Empty);
-            disableComboBox(comboBoxRightVersion, String.Empty);
+            disableComboBox(comboBoxLeftCommit, String.Empty);
+            disableComboBox(comboBoxRightCommit, String.Empty);
          }
       }
 
@@ -253,8 +253,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         disableComboBox(comboBoxLeftVersion, String.Empty);
-         disableComboBox(comboBoxRightVersion, String.Empty);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
          richTextBoxMergeRequestDescription.Text = String.Empty;
          labelWorkflowStatus.Text = "Failed to change merge request";
       }
@@ -267,18 +267,18 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(state.MergeRequest);
          updateTimeTrackingMergeRequestDetails(state.MergeRequest);
 
-         if (state.Versions.Count > 0)
+         if (state.Commits.Count > 0)
          {
-            addVersionsToComboBoxes(state.Versions,
+            addCommitsToComboBoxes(state.Commits,
                state.MergeRequest.Diff_Refs.Base_SHA, state.MergeRequest.Target_Branch);
 
-            enableComboBox(comboBoxLeftVersion);
-            enableComboBox(comboBoxRightVersion);
+            enableComboBox(comboBoxLeftCommit);
+            enableComboBox(comboBoxRightCommit);
          }
          else
          {
-            disableComboBox(comboBoxLeftVersion, String.Empty);
-            disableComboBox(comboBoxRightVersion, String.Empty);
+            disableComboBox(comboBoxLeftCommit, String.Empty);
+            disableComboBox(comboBoxRightCommit, String.Empty);
          }
 
          labelWorkflowStatus.Text = String.Format("Selected merge request #{0}", state.MergeRequest.IId);

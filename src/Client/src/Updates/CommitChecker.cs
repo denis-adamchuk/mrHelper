@@ -29,17 +29,17 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async public Task<bool> AreNewCommitsAsync(DateTime timestamp)
       {
-         List<GitLabSharp.Entities.Version> versions = null;
+         List<Commit> commits = null;
          try
          {
-            versions = await UpdateOperator.GetVersions(MergeRequestDescriptor);
+            commits = await UpdateOperator.GetCommits(MergeRequestDescriptor);
          }
          catch (OperatorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot check for versions");
+            ExceptionHandlers.Handle(ex, "Cannot check for commits");
             return false;
          }
-         return versions != null && versions.Count > 0 && versions[0].Created_At.ToLocalTime() > timestamp;
+         return commits != null && commits.Count > 0 && commits[0].Created_At.ToLocalTime() > timestamp;
       }
 
       public override string ToString()

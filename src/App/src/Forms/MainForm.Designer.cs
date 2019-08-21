@@ -84,11 +84,6 @@ namespace mrHelper.App.Forms
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.groupBoxDiff = new System.Windows.Forms.GroupBox();
          this.label3 = new System.Windows.Forms.Label();
-         this.comboBoxProjects = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxFilteredMergeRequests = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxRightVersion = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxLeftVersion = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -656,8 +651,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxDiff
          // 
-         this.groupBoxDiff.Controls.Add(this.comboBoxRightVersion);
-         this.groupBoxDiff.Controls.Add(this.comboBoxLeftVersion);
+         this.groupBoxDiff.Controls.Add(this.comboBoxRightCommit);
+         this.groupBoxDiff.Controls.Add(this.comboBoxLeftCommit);
          this.groupBoxDiff.Controls.Add(this.label3);
          this.groupBoxDiff.Location = new System.Drawing.Point(6, 326);
          this.groupBoxDiff.Name = "groupBoxDiff";
@@ -666,27 +661,27 @@ namespace mrHelper.App.Forms
          this.groupBoxDiff.TabStop = false;
          this.groupBoxDiff.Text = "Changes between";
          // 
-         // comboBoxRightVersion
+         // comboBoxRightCommit
          // 
-         this.comboBoxRightVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxRightVersion.FormattingEnabled = true;
-         this.comboBoxRightVersion.Location = new System.Drawing.Point(320, 19);
-         this.comboBoxRightVersion.Name = "comboBoxRightVersion";
-         this.comboBoxRightVersion.Size = new System.Drawing.Size(267, 21);
-         this.comboBoxRightVersion.TabIndex = 9;
-         this.comboBoxRightVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightVersion_SelectedIndexChanged);
-         this.comboBoxRightVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
+         this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxRightCommit.FormattingEnabled = true;
+         this.comboBoxRightCommit.Location = new System.Drawing.Point(320, 19);
+         this.comboBoxRightCommit.Name = "comboBoxRightCommit";
+         this.comboBoxRightCommit.Size = new System.Drawing.Size(267, 21);
+         this.comboBoxRightCommit.TabIndex = 9;
+         this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
+         this.comboBoxRightCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxCommit_Format);
          // 
-         // comboBoxLeftVersion
+         // comboBoxLeftCommit
          // 
-         this.comboBoxLeftVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLeftVersion.FormattingEnabled = true;
-         this.comboBoxLeftVersion.Location = new System.Drawing.Point(4, 19);
-         this.comboBoxLeftVersion.Name = "comboBoxLeftVersion";
-         this.comboBoxLeftVersion.Size = new System.Drawing.Size(266, 21);
-         this.comboBoxLeftVersion.TabIndex = 8;
-         this.comboBoxLeftVersion.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftVersion_SelectedIndexChanged);
-         this.comboBoxLeftVersion.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxVersion_Format);
+         this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxLeftCommit.FormattingEnabled = true;
+         this.comboBoxLeftCommit.Location = new System.Drawing.Point(4, 19);
+         this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
+         this.comboBoxLeftCommit.Size = new System.Drawing.Size(266, 21);
+         this.comboBoxLeftCommit.TabIndex = 8;
+         this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
+         this.comboBoxLeftCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxCommit_Format);
          // 
          // label3
          // 
@@ -762,8 +757,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Label labelTimeTrackingTrackedTime;
       private System.Windows.Forms.Label labelTimeTrackingTrackedLabel;
       private System.Windows.Forms.Button buttonTimeTrackingStart;
-      private SelectionPreservingComboBox comboBoxLeftVersion;
-      private SelectionPreservingComboBox comboBoxRightVersion;
+      private SelectionPreservingComboBox comboBoxLeftCommit;
+      private SelectionPreservingComboBox comboBoxRightCommit;
       private System.Windows.Forms.Label label3;
       private System.Windows.Forms.Button buttonDiffTool;
       private SelectionPreservingComboBox comboBoxHost;

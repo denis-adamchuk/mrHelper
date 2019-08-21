@@ -133,18 +133,18 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<GitLabSharp.Entities.Version>> GetVersionsAsync(string projectName, int iid)
+      async internal Task<List<Commit>> GetCommitsAsync(string projectName, int iid)
       {
          try
          {
-            return (List<GitLabSharp.Entities.Version>)(await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync()));
+            return (List<Commit>)(await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Commits.LoadAllTaskAsync()));
          }
          catch (Exception ex)
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge request versions from GitLab");
+               ExceptionHandlers.Handle(ex, "Cannot load merge request commits from GitLab");
                throw new OperatorException(ex);
             }
             throw;

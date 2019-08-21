@@ -201,11 +201,11 @@ namespace mrHelper.Client.Workflow
          PreSwitchMergeRequest?.Invoke(this, mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
-         List<GitLabSharp.Entities.Version> versions = null;
+         List<Commit> commits = null;
          try
          {
             mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
-            versions = await Operator.GetVersionsAsync(State.Project.Path_With_Namespace, mergeRequestIId);
+            commits = await Operator.GetCommitsAsync(State.Project.Path_With_Namespace, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
@@ -219,7 +219,7 @@ namespace mrHelper.Client.Workflow
          }
 
          State.MergeRequest = mergeRequest;
-         State.Versions = versions;
+         State.Commits = commits;
 
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;

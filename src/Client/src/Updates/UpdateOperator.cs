@@ -39,20 +39,20 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      async internal Task<List<GitLabSharp.Entities.Version>> GetVersions(MergeRequestDescriptor mrd)
+      async internal Task<List<Commit>> GetCommits(MergeRequestDescriptor mrd)
       {
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return (List<GitLabSharp.Entities.Version>)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync()));
+            return (List<Commit>)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.LoadAllTaskAsync()));
          }
          catch (Exception ex)
          {
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load versions from GitLab");
+               ExceptionHandlers.Handle(ex, "Cannot load commits from GitLab");
                throw new OperatorException(ex);
             }
             throw;

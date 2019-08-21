@@ -18,7 +18,7 @@ namespace mrHelper.Client.Updates
    }
 
    /// <summary>
-   /// Implements periodic checks for updates of Merge Requests and their Versions
+   /// Implements periodic checks for updates of Merge Requests and their Commits
    /// </summary>
    public class WorkflowUpdateChecker : IProjectWatcher
    {
@@ -109,8 +109,7 @@ namespace mrHelper.Client.Updates
 
       /// <summary>
       /// Collects requests that have been created or updated later than timestamp.
-      /// By 'updated' we mean that 'merge request has a version with a timestamp later than ...'.
-      /// Includes only those merge requests that match Labels filters.
+      /// By 'updated' we mean that 'merge request has a commit with a timestamp later than ...'.
       /// </summary>
       async private Task<AllUpdates> getUpdatesAsync(DateTime timestamp)
       {
@@ -176,23 +175,23 @@ namespace mrHelper.Client.Updates
                   Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request is updated (updated_at = {0})",
                      mergeRequest.Updated_At.ToLocalTime().ToString()));
 
-                  List<GitLabSharp.Entities.Version> versions = await UpdateOperator.GetVersions(
+                  List<Commit> commits = await UpdateOperator.GetCommits(
                      new MergeRequestDescriptor
                      {
                         HostName = Workflow.State.HostName,
                         ProjectName = project.Path_With_Namespace,
                         IId = mergeRequest.IId
                      });
-                  if (versions == null || versions.Count == 0)
+                  if (commits == null || commits.Count == 0)
                   {
                      continue;
                   }
 
-                  GitLabSharp.Entities.Version latestVersion = versions[0];
-                  if (latestVersion.Created_At.ToLocalTime() > timestamp)
+                  Commit latestCommit = commits[0];
+                  if (latestCommit.Created_At.ToLocalTime() > timestamp)
                   {
-                     Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request has a new version -- created_at {0}",
-                        latestVersion.Created_At.ToLocalTime().ToString()));
+                     Debug.WriteLine(String.Format("WorkflowUpdateChecker.getUpdatesAsync -- this merge request has a new commit -- created_at {0}",
+                        latestCommit.Created_At.ToLocalTime().ToString()));
 
                      updates.UpdatedMergeRequests.Add(mergeRequest);
                      changedProject = true;

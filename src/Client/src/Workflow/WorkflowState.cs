@@ -53,14 +53,14 @@ namespace mrHelper.Client.Workflow
          set
          {
             _mergeRequest = value;
-            _versions = null;
+            _commits = null;
          }
       }
 
-      public List<GitLabSharp.Entities.Version> Versions
+      public List<Commit> Commits
       {
-         get { return _versions; }
-         set { _versions = value; }
+         get { return _commits; }
+         set { _commits = value; }
       }
 
       public MergeRequestDescriptor MergeRequestDescriptor
@@ -81,7 +81,7 @@ namespace mrHelper.Client.Workflow
       private Project _project = new Project();
       private List<MergeRequest> _mergeRequests = new List<MergeRequest>();
       private MergeRequest _mergeRequest = new MergeRequest();
-      private List<GitLabSharp.Entities.Version> _versions = new List<GitLabSharp.Entities.Version>();
+      private List<Commit> _commits = new List<Commit>();
    }
 }
 

@@ -157,14 +157,14 @@ namespace mrHelper.App.Forms
          _settings.LastUsedLabels = textBoxLabels.Text;
       }
 
-      private void ComboBoxLeftVersion_SelectedIndexChanged(object sender, EventArgs e)
+      private void ComboBoxLeftCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         checkComboboxVersionsOrder(true /* I'm left one */);
+         checkComboboxCommitsOrder(true /* I'm left one */);
       }
 
-      private void ComboBoxRightVersion_SelectedIndexChanged(object sender, EventArgs e)
+      private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         checkComboboxVersionsOrder(false /* because I'm the right one */);
+         checkComboboxCommitsOrder(false /* because I'm the right one */);
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -182,9 +182,9 @@ namespace mrHelper.App.Forms
          formatMergeRequestListItem(e);
       }
 
-      private void ComboBoxVersion_Format(object sender, ListControlConvertEventArgs e)
+      private void ComboBoxCommit_Format(object sender, ListControlConvertEventArgs e)
       {
-         formatVersionComboboxItem(e);
+         formatCommitComboboxItem(e);
       }
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -268,11 +268,11 @@ namespace mrHelper.App.Forms
          e.Value = formatMergeRequestForDropdown(item);
       }
 
-      private static void formatVersionComboboxItem(ListControlConvertEventArgs e)
+      private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
       {
-         VersionComboBoxItem item = (VersionComboBoxItem)(e.ListItem);
+         CommitComboBoxItem item = (CommitComboBoxItem)(e.ListItem);
          e.Value = item.Text;
-         if(item.IsLatest)
+         if (item.IsLatest)
          {
             e.Value = "Latest";
          }

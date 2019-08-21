@@ -46,36 +46,36 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void checkComboboxVersionsOrder(bool shouldReorderRightCombobox)
+      private void checkComboboxCommitsOrder(bool shouldReorderRightCombobox)
       {
-         if (comboBoxLeftVersion.SelectedItem == null || comboBoxRightVersion.SelectedItem == null)
+         if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
          {
             return;
          }
 
-         // Left combobox cannot select a version older than in right combobox (replicating gitlab web ui behavior)
-         VersionComboBoxItem leftItem = (VersionComboBoxItem)(comboBoxLeftVersion.SelectedItem);
-         VersionComboBoxItem rightItem = (VersionComboBoxItem)(comboBoxRightVersion.SelectedItem);
+         // Left combobox cannot select a commit older than in right combobox (replicating gitlab web ui behavior)
+         CommitComboBoxItem leftItem = (CommitComboBoxItem)(comboBoxLeftCommit.SelectedItem);
+         CommitComboBoxItem rightItem = (CommitComboBoxItem)(comboBoxRightCommit.SelectedItem);
          Debug.Assert(leftItem.TimeStamp.HasValue);
 
          if (rightItem.TimeStamp.HasValue)
          {
             // Check if order is broken
-            if (leftItem.TimeStamp.Value < rightItem.TimeStamp.Value)
+            if (leftItem.TimeStamp.Value <= rightItem.TimeStamp.Value)
             {
                if (shouldReorderRightCombobox)
                {
-                  comboBoxRightVersion.SelectedIndex = comboBoxLeftVersion.SelectedIndex;
+                  comboBoxRightCommit.SelectedIndex = comboBoxLeftCommit.SelectedIndex;
                }
                else
                {
-                  comboBoxLeftVersion.SelectedIndex = comboBoxRightVersion.SelectedIndex;
+                  comboBoxLeftCommit.SelectedIndex = comboBoxRightCommit.SelectedIndex;
                }
             }
          }
          else
          {
-            // It is ok because a version w/o timestamp is the oldest one
+            // It is ok because a commit w/o timestamp is the oldest one
          }
       }
 
@@ -84,13 +84,13 @@ namespace mrHelper.App.Forms
          // swap sides to be consistent with gitlab web ui
          if (!left)
          {
-            Debug.Assert(comboBoxLeftVersion.SelectedItem != null);
-            return ((VersionComboBoxItem)comboBoxLeftVersion.SelectedItem).SHA;
+            Debug.Assert(comboBoxLeftCommit.SelectedItem != null);
+            return ((CommitComboBoxItem)comboBoxLeftCommit.SelectedItem).SHA;
          }
          else
          {
-            Debug.Assert(comboBoxRightVersion.SelectedItem != null);
-            return ((VersionComboBoxItem)comboBoxRightVersion.SelectedItem).SHA;
+            Debug.Assert(comboBoxRightCommit.SelectedItem != null);
+            return ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).SHA;
          }
       }
 
@@ -240,29 +240,29 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addVersionsToComboBoxes(List<GitLabSharp.Entities.Version> versions, string mrBaseSha, string mrTargetBranch)
+      private void addCommitsToComboBoxes(List<Commit> commits, string mrBaseSha, string mrTargetBranch)
       {
-         var latest = new VersionComboBoxItem(versions[0]);
+         var latest = new CommitComboBoxItem(commits[0]);
          latest.IsLatest = true;
-         comboBoxLeftVersion.Items.Add(latest);
-         for (int i = 1; i < versions.Count; i++)
+         comboBoxLeftCommit.Items.Add(latest);
+         for (int i = 1; i < commits.Count; i++)
          {
-            VersionComboBoxItem item = new VersionComboBoxItem(versions[i]);
-            if (comboBoxLeftVersion.Items.Cast<VersionComboBoxItem>().Any(x => x.SHA == item.SHA))
+            CommitComboBoxItem item = new CommitComboBoxItem(commits[i]);
+            if (comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
             {
                continue;
             }
-            comboBoxLeftVersion.Items.Add(item);
-            comboBoxRightVersion.Items.Add(item);
+            comboBoxLeftCommit.Items.Add(item);
+            comboBoxRightCommit.Items.Add(item);
          }
 
          // Add target branch to the right combo-box
-         VersionComboBoxItem targetBranch =
-            new VersionComboBoxItem(mrBaseSha, mrTargetBranch, null);
-         comboBoxRightVersion.Items.Add(targetBranch);
+         CommitComboBoxItem targetBranch =
+            new CommitComboBoxItem(mrBaseSha, mrTargetBranch, null);
+         comboBoxRightCommit.Items.Add(targetBranch);
 
-         comboBoxLeftVersion.SelectedIndex = 0;
-         comboBoxRightVersion.SelectedIndex = 0;
+         comboBoxLeftCommit.SelectedIndex = 0;
+         comboBoxRightCommit.SelectedIndex = 0;
       }
 
       private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)
