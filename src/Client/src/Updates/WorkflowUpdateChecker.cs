@@ -99,7 +99,7 @@ namespace mrHelper.Client.Updates
             if (Settings.CheckedLabelsFilter && _cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
             {
                Debug.WriteLine(String.Format(
-                  "WorkflowUpdateChecker.getUpdatesAsync -- merge request {0} does not maatch labels",
+                  "WorkflowUpdateChecker.getUpdatesAsync -- merge request {0} does not match labels",
                      mergeRequest.Title));
 
                mergeRequests.RemoveAt(iMergeRequest);
