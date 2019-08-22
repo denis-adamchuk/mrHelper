@@ -31,6 +31,7 @@ namespace mrHelper.App.Forms
             disableComboBox(comboBoxHost, String.Empty);
             return;
          }
+         enableComboBox(comboBoxHost);
 
          comboBoxHost.SelectedIndex = -1;
          comboBoxHost.Items.Clear();
