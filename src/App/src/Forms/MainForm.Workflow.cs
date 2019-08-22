@@ -42,11 +42,12 @@ namespace mrHelper.App.Forms
 
             WorkflowState state = _workflow.State;
             if (updates.NewMergeRequests.Any(x => x.Project_Id == state.Project.Id)
-             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == state.Project.Id))
+             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == state.Project.Id)
+             || updates.ClosedMergeRequests.Any(x => x.Project_Id == state.Project.Id))
             {
                // emulate project change to reload merge request list
                // This will automatically update commit list (if there are new ones).
-               // This will also remove merged merge requests from the list.
+               // This will also remove closed merge requests from the list.
                try
                {
                   await _workflow.SwitchProjectAsync(state.Project.Path_With_Namespace);

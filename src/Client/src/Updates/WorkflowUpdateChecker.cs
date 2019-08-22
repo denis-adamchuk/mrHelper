@@ -49,6 +49,15 @@ namespace mrHelper.Client.Updates
 
          UpdateOperator = updateOperator;
          Workflow = workflow;
+         Workflow.PostSwitchProject += async (sender, state) =>
+         {
+            // On initial update we need to create caches.
+            // When files are not listed in file, we updates only selected project and also might need to create caches.
+            if (isInitialUpdate() || !areProjectsListedInFile())
+            {
+               await doUpdate();
+            }
+         };
       }
 
       public event EventHandler<MergeRequestUpdates> OnUpdate;
@@ -65,6 +74,11 @@ namespace mrHelper.Client.Updates
       /// Process a timer event
       /// </summary>
       async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
+      {
+         await doUpdate();
+      }
+
+      async public Task doUpdate()
       {
          MergeRequestUpdates updates = new MergeRequestUpdates
          {
@@ -173,8 +187,7 @@ namespace mrHelper.Client.Updates
             };
          }
 
-         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking {0} projects",
-            (projectsToCheck?.Count ?? 0)));
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking {0} projects", (projectsToCheck?.Count ?? 0)));
 
          if (projectsToCheck == null)
          {
@@ -183,35 +196,21 @@ namespace mrHelper.Client.Updates
 
          foreach (var project in projectsToCheck)
          {
-            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking merge requests for project {0}",
-               project.Path_With_Namespace));
+            List<MergeRequest> previouslyCachedMergeRequests =
+               _cachedMergeRequests.ContainsKey(project.Path_With_Namespace) ?
+                  _cachedMergeRequests[project.Path_With_Namespace] : null;
 
-            List<MergeRequest> mergeRequests =
-               await UpdateOperator.GetMergeRequests(Workflow.State.HostName, project.Path_With_Namespace);
+            await cacheMergeRequestsAsync(project.Path_With_Namespace);
 
-            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This project has {0} merge requests at GitLab",
-               (mergeRequests?.Count ?? 0)));
+            Debug.Assert(_cachedMergeRequests.ContainsKey(project.Path_With_Namespace));
 
-            if (mergeRequests == null)
+            if (previouslyCachedMergeRequests != null)
             {
-               continue;
+               List<MergeRequest> newCachedMergeRequests = _cachedMergeRequests[project.Path_With_Namespace];
+               diff.FirstOnly.AddRange(previouslyCachedMergeRequests.Except(newCachedMergeRequests).ToList());
+               diff.SecondOnly.AddRange(newCachedMergeRequests.Except(previouslyCachedMergeRequests).ToList());
+               diff.Common.AddRange(previouslyCachedMergeRequests.Intersect(newCachedMergeRequests).ToList());
             }
-
-            if (_cachedMergeRequests.ContainsKey(project.Path_With_Namespace))
-            {
-               List<MergeRequest> cachedMergeRequests = _cachedMergeRequests[project.Path_With_Namespace];
-
-               Debug.WriteLine(String.Format("[WorkflowUpdateChecker] {0} merge requests for this project were cached before",
-                  cachedMergeRequests.Count));
-
-               diff.FirstOnly.AddRange(cachedMergeRequests.Except(mergeRequests).ToList());
-               diff.SecondOnly.AddRange(mergeRequests.Except(cachedMergeRequests).ToList());
-               diff.Common.AddRange(cachedMergeRequests.Intersect(mergeRequests).ToList());
-            }
-
-            Debug.WriteLine("[WorkflowUpdateChecker] Caching merge requests for this project");
-
-            _cachedMergeRequests[project.Path_With_Namespace] = mergeRequests;
          }
 
          return diff;
@@ -229,53 +228,121 @@ namespace mrHelper.Client.Updates
             ClosedMergeRequests = diff.FirstOnly
          };
 
+         foreach (MergeRequest mergeRequest in updates.NewMergeRequests)
+         {
+            await cacheCommitsAsync(mergeRequest);
+         }
+
          foreach (MergeRequest mergeRequest in diff.Common)
          {
-            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking commits for merge request {0} from project {1}",
-               mergeRequest.IId, getMergeRequestProjectName(mergeRequest)));
+            int? previouslyCachedCommitsCount = _cachedCommits.ContainsKey(mergeRequest.Id) ?
+               _cachedCommits[mergeRequest.Id].Count : new Nullable<int>();
 
-            List<Commit> commits = await UpdateOperator.GetCommits(
-               new MergeRequestDescriptor
-               {
-                  HostName = Workflow.State.HostName,
-                  ProjectName = getMergeRequestProjectName(mergeRequest),
-                  IId = mergeRequest.IId
-               });
+            await cacheCommitsAsync(mergeRequest);
 
-            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This merge request has {0} commits at GitLab",
-               (commits?.Count ?? 0)));
+            Debug.Assert(_cachedCommits.ContainsKey(mergeRequest.Id));
 
-            if (commits == null)
+            if (previouslyCachedCommitsCount != null)
             {
-               continue;
-            }
-
-            if (_cachedCommits.ContainsKey(mergeRequest.IId))
-            {
-               Debug.WriteLine(String.Format("[WorkflowUpdateChecker] {0} Commits for this merge request were cached before",
-                  _cachedCommits[mergeRequest.IId].Count));
-
-               if (commits.Count > _cachedCommits[mergeRequest.IId].Count)
+               int newCachedCommitsCount = _cachedCommits[mergeRequest.Id].Count;
+               if (newCachedCommitsCount > previouslyCachedCommitsCount)
                {
                   updates.UpdatedMergeRequests.Add(mergeRequest);
                }
             }
-
-            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Caching commits for this merge request"));
-
-            _cachedCommits[mergeRequest.IId] = commits;
          }
 
          foreach (MergeRequest mergeRequest in updates.ClosedMergeRequests)
          {
             Debug.WriteLine(String.Format(
-               "[WorkflowUpdateChecker] Removing commits of merge request {0} from project {1} from cache",
+               "[WorkflowUpdateChecker] Removing commits of merge request {0} (project {1}) from cache",
                   mergeRequest.IId, getMergeRequestProjectName(mergeRequest)));
 
-            _cachedCommits.Remove(mergeRequest.IId);
+            _cachedCommits.Remove(mergeRequest.Id);
          }
 
          return updates;
+      }
+
+      /// <summary>
+      /// Load merge requests from GitLab and cache them
+      /// </summary>
+      async private Task cacheMergeRequestsAsync(string projectname)
+      {
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking merge requests for project {0}",
+            projectname));
+
+         List<MergeRequest> mergeRequests =
+            await UpdateOperator.GetMergeRequests(Workflow.State.HostName, projectname);
+
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This project has {0} merge requests at GitLab",
+            mergeRequests.Count));
+
+         if (_cachedMergeRequests.ContainsKey(projectname))
+         {
+            List<MergeRequest> previouslyCachedMergeRequests = _cachedMergeRequests[projectname];
+
+            Debug.WriteLine(String.Format(
+               "[WorkflowUpdateChecker] {0} merge requests for this project were cached before",
+                  previouslyCachedMergeRequests.Count));
+
+            Debug.WriteLine("[WorkflowUpdateChecker] Updating cached merge requests for this project");
+
+            _cachedMergeRequests[projectname] = mergeRequests;
+         }
+         else
+         {
+            Debug.WriteLine(String.Format(
+               "[WorkflowUpdateChecker] Merge requests for this project were not cached before"));
+            Debug.WriteLine("[WorkflowUpdateChecker] Caching them now");
+
+            _cachedMergeRequests[projectname] = mergeRequests;
+
+            foreach (MergeRequest mergeRequest in mergeRequests)
+            {
+               await cacheCommitsAsync(mergeRequest);
+            }
+         }
+      }
+
+      /// <summary>
+      /// Load commits from GitLab and cache them
+      /// </summary>
+      async private Task cacheCommitsAsync(MergeRequest mergeRequest)
+      {
+         Debug.WriteLine(String.Format(
+            "[WorkflowUpdateChecker] Checking commits for merge request {0} from project {1}",
+               mergeRequest.IId, getMergeRequestProjectName(mergeRequest)));
+
+         List<Commit> commits = await UpdateOperator.GetCommits(
+            new MergeRequestDescriptor
+            {
+               HostName = Workflow.State.HostName,
+               ProjectName = getMergeRequestProjectName(mergeRequest),
+               IId = mergeRequest.IId
+            });
+
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This merge request has {0} commits at GitLab",
+            commits.Count));
+
+         if (_cachedCommits.ContainsKey(mergeRequest.Id))
+         {
+            Debug.WriteLine(String.Format(
+               "[WorkflowUpdateChecker] {0} Commits for this merge request were cached before",
+                  _cachedCommits[mergeRequest.Id].Count));
+
+            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Updating cached commits for this merge request"));
+
+            _cachedCommits[mergeRequest.Id] = commits;
+         }
+         else
+         {
+            Debug.WriteLine(String.Format(
+               "[WorkflowUpdateChecker] Commits for this merge request were not cached before"));
+            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Caching them now"));
+
+            _cachedCommits[mergeRequest.Id] = commits;
+         }
       }
 
       /// <summary>
@@ -332,6 +399,16 @@ namespace mrHelper.Client.Updates
          }
       }
 
+      private bool isInitialUpdate()
+      {
+         return _cachedMergeRequests.Count == 0 && _cachedCommits.Count == 0;
+      }
+
+      private bool areProjectsListedInFile()
+      {
+         return Workflow.State.HostName != null && Tools.Tools.LoadProjectsFromFile(Workflow.State.HostName) != null;
+      }
+
       private Workflow.Workflow Workflow { get; }
       private UpdateOperator UpdateOperator { get; }
       private UserDefinedSettings Settings { get; }
@@ -342,7 +419,10 @@ namespace mrHelper.Client.Updates
          };
 
       private List<string> _cachedLabels;
-      private Dictionary<string, List<MergeRequest>> _cachedMergeRequests = new Dictionary<string, List<MergeRequest>>();
+      private Dictionary<string, List<MergeRequest>> _cachedMergeRequests =
+         new Dictionary<string, List<MergeRequest>>();
+
+      // maps unique Merge Request Id (not IId) to a list of commits
       private Dictionary<int, List<Commit>> _cachedCommits = new Dictionary<int, List<Commit>>();
    }
 }

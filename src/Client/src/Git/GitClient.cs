@@ -244,7 +244,7 @@ namespace mrHelper.Client.Git
             };
          }
 
-         Trace.TraceInformation(String.Format("[GitClient] async operation on -- begin -- {0}: {1}",
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             _projectName, arguments));
          _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
          try
