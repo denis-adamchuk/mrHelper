@@ -34,19 +34,19 @@ namespace mrHelper.Client.Git
       public void SetCommitChecker(CommitChecker commitChecker)
       {
          _commitChecker = commitChecker;
-         Debug.WriteLine(String.Format("GitClientUpdater.SetCommitChecker -- {0}",
+         Debug.WriteLine(String.Format("[GitClientUpdater] Setting commit checker to {0}",
             (commitChecker?.ToString() ?? "null")));
       }
 
       public void Dispose()
       {
-         Debug.WriteLine(String.Format("GitClientUpdater disposes and unsubscribes from projectwatcher"));
+         Trace.TraceInformation(String.Format("[GitClientUpdater] Dispose and unsubscribe from Project Watcher"));
          _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
       }
 
       async public Task ManualUpdateAsync()
       {
-         Debug.WriteLine("GitClientUpdater.ManualUpdateAsync -- begin");
+         Trace.TraceInformation("[GitClientUpdater] Processing manual update");
 
          _updating = true;
          try
@@ -61,7 +61,7 @@ namespace mrHelper.Client.Git
          // if doUpdate succeeded, it is ok to start periodic updates
          if (!_subscribed)
          {
-            Debug.WriteLine(String.Format("GitClientUpdater subscribes to projectwatcher"));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Subscribe to Project Watcher"));
             _projectWatcher.OnProjectUpdate += onProjectWatcherUpdate;
             _subscribed = true;
          }
@@ -69,14 +69,13 @@ namespace mrHelper.Client.Git
 
       async private void onProjectWatcherUpdate(object sender, List<ProjectUpdate> updates)
       {
-         Debug.WriteLine("GitClientUpdater.onProjectWatcherUpdate -- begin");
+         Debug.WriteLine("[GitClientUpdater ] Processing an update from Project Watcher");
          Debug.Assert(_subscribed);
 
-         if (!_lastUpdateTime.HasValue || _updating)
+         if (_updating)
          {
-            Debug.WriteLine(
-               String.Format("GitClientUpdater.onProjectWatcherUpdate -- early return. timestamp={0}, updating={1}",
-                  _lastUpdateTime.ToString(), _updating.ToString()));
+            Debug.WriteLine(String.Format("[GitClientUpdater] Update cancelled. timestamp={0}, updating={1}",
+               _lastUpdateTime.ToString(), _updating.ToString()));
             return;
          }
 
@@ -86,7 +85,7 @@ namespace mrHelper.Client.Git
             if (_isMyProject(update.HostName, update.ProjectName))
             {
                needUpdateGitClient = true;
-               Debug.WriteLine(String.Format("GitClientUpdater.onProjectWatcherUpdate -- will update my project {0}",
+               Trace.TraceInformation(String.Format("[GitClientUpdater] Auto-updating git repository {0}",
                   update.ProjectName));
                break;
             }
@@ -94,7 +93,7 @@ namespace mrHelper.Client.Git
 
          if (!needUpdateGitClient)
          {
-            Debug.WriteLine("GitClientUpdater.onProjectWatcherUpdate -- early return. needUpdateClient = false");
+            Debug.WriteLine("[GitClientUpdater] Received update does not affect me");
             return;
          }
 
@@ -118,15 +117,15 @@ namespace mrHelper.Client.Git
       {
          if (_commitChecker == null && !autoupdate)
          {
-            Debug.WriteLine(String.Format("GitClientUpdater.doUpdate -- early return"));
+            Debug.WriteLine(String.Format("[GitClientUpdater] Unexpected case, manual update w/o commit checker"));
             Debug.Assert(false);
             return;
          }
 
-         if (autoupdate || await _commitChecker.AreNewCommitsAsync(_lastUpdateTime.Value))
+         if (autoupdate || await _commitChecker.AreNewCommitsAsync(_lastUpdateTime))
          {
-            Debug.WriteLine(String.Format("GitClientUpdater.doUpdate -- obligatoryUpdate={0}, timestamp={1}",
-               autoupdate, _lastUpdateTime.ToString()));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] autoupdate={0}, timestamp={1} (Local Time)",
+               autoupdate, _lastUpdateTime.ToLocalTime().ToString()));
 
             try
             {
@@ -140,14 +139,14 @@ namespace mrHelper.Client.Git
          }
 
          _lastUpdateTime = DateTime.Now;
-         Debug.WriteLine(String.Format("GitClientUpdater.doUpdate -- timestamp updated to {0}", _lastUpdateTime));
+         Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _lastUpdateTime));
       }
 
       private OnUpdate _onUpdate { get; }
       private IsMyProject _isMyProject { get; }
       private CommitChecker _commitChecker { get; set; }
       private IProjectWatcher _projectWatcher { get; }
-      private DateTime? _lastUpdateTime { get; set; } = DateTime.MinValue;
+      private DateTime _lastUpdateTime { get; set; } = DateTime.MinValue;
 
       private bool _updating = false;
       private bool _subscribed = false;

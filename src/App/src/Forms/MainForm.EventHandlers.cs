@@ -102,6 +102,8 @@ namespace mrHelper.App.Forms
                   "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                labelWorkflowStatus.Text = "Parent folder for git repositories changed";
+               Trace.TraceInformation(String.Format("[MainForm] Parent folder changed to {0}",
+                  newFolder));
             }
          }
       }

@@ -244,13 +244,19 @@ namespace mrHelper.Client.Git
             };
          }
 
+         Trace.TraceInformation(String.Format("[GitClient] async operation on -- begin -- {0}: {1}",
+            _projectName, arguments));
          _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
          try
          {
             await _descriptor.TaskCompletionSource.Task;
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- end --  {0}: {1}",
+               _projectName, arguments));
          }
          catch (GitOperationException ex)
          {
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- cancel --  {0}: {1}",
+               _projectName, arguments));
             ex.Cancelled = true;
             throw ex;
          }
