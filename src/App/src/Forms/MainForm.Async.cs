@@ -156,6 +156,12 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
+         {
+            // State changed during async git client update
+            return;
+         }
+
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
