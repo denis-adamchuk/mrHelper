@@ -15,6 +15,7 @@ using mrHelper.Core;
 using mrHelper.Client;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
@@ -58,6 +59,9 @@ namespace mrHelper.App.Forms
                }
             }
          };
+
+         _timeTrackingManager = new TimeTrackingManager(_settings, _workflow);
+         _timeTrackingManager.TrackedTimeLoaded += (sender, span) => onTrackedTimeLoaded(span);
 
          string hostname = getInitialHostName();
          await changeHostAsync(hostname);

@@ -18,12 +18,7 @@ namespace mrHelper.Client.TimeTracking
          Settings = settings;
       }
 
-      internal Task<TimeSpan> GetSpanAsync(MergeRequestDescriptor mrd)
-      {
-         throw new NotImplementedException();
-      }
-
-      async internal Task AddSpanAsync(TimeSpan span, MergeRequestDescriptor mrd)
+      async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestDescriptor mrd)
       {
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
@@ -32,6 +27,7 @@ namespace mrHelper.Client.TimeTracking
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).AddSpentTimeAsync(
                   new AddSpentTimeParameters
                   {
+                     Add = add,
                      Span = span
                   }));
          }

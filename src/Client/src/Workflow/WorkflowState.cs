@@ -14,7 +14,14 @@ namespace mrHelper.Client.Workflow
          {
             _hostName = value;
             _projects = null;
+            _currentUser = default(User);
          }
+      }
+
+      public User CurrentUser
+      {
+         get { return _currentUser; }
+         set { _currentUser = value; }
       }
 
       public List<Project> Projects
@@ -54,6 +61,7 @@ namespace mrHelper.Client.Workflow
          {
             _mergeRequest = value;
             _commits = null;
+            _systemSystemNotes = null;
          }
       }
 
@@ -61,6 +69,12 @@ namespace mrHelper.Client.Workflow
       {
          get { return _commits; }
          set { _commits = value; }
+      }
+
+      public List<Note> SystemNotes
+      {
+         get { return _systemSystemNotes; }
+         set { _systemSystemNotes = value; }
       }
 
       public MergeRequestDescriptor MergeRequestDescriptor
@@ -77,11 +91,13 @@ namespace mrHelper.Client.Workflow
       }
 
       private string _hostName = String.Empty;
+      private User _currentUser = new User();
       private List<Project> _projects = new List<Project>();
       private Project _project = new Project();
       private List<MergeRequest> _mergeRequests = new List<MergeRequest>();
       private MergeRequest _mergeRequest = new MergeRequest();
       private List<Commit> _commits = new List<Commit>();
+      private List<Note> _systemSystemNotes = new List<Note>();
    }
 }
 

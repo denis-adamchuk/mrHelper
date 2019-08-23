@@ -413,6 +413,13 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(
             isMergeRequestSelected ? _workflow.State.MergeRequest : new Nullable<MergeRequest>());
       }
+
+      private void onTrackedTimeLoaded(TimeSpan span)
+      {
+         // TODO Display in UI
+         Debug.WriteLine(String.Format("Tracked time at Server: {0}. Tracked time at Client: {1}",
+            span.ToString(@"hh\:mm\:ss"), _timeTracker?.Elapsed.ToString(@"hh\:mm\:ss") ?? "null"));
+      }
    }
 }
 

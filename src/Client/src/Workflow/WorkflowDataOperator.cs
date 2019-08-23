@@ -15,9 +15,10 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    internal class WorkflowDataOperator : IDisposable
    {
-      internal WorkflowDataOperator(string host, string token)
+      internal WorkflowDataOperator(string host, string token, UserDefinedSettings settings)
       {
          Client = new GitLabClient(host, token);
+         HostName = host;
       }
 
       public void Dispose()
@@ -25,7 +26,7 @@ namespace mrHelper.Client.Workflow
          Client.Dispose();
       }
 
-      async internal Task<User> GetCurrentUser()
+      async internal Task<User> GetCurrentUserAsync()
       {
          try
          {
@@ -150,12 +151,34 @@ namespace mrHelper.Client.Workflow
          }
       }
 
+      async internal Task<List<Note>> GetSystemNotesAsync(string projectName, int iid)
+      {
+         List<Note> allNotes;
+         try
+         {
+            allNotes = (List<Note>)(await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Notes.LoadAllTaskAsync()));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load merge request notes from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+         return allNotes.Where((x) => x.System == true).ToList();
+      }
+
       public Task CancelAsync()
       {
          return Client.CancelAsync();
       }
 
       private GitLabClient Client { get; }
+      private User? CurrentUser { get; }
+      private string HostName { get; }
    }
 }
 

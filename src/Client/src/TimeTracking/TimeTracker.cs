@@ -31,7 +31,7 @@ namespace mrHelper.Client.TimeTracking
          Stopwatch.Stop();
          try
          {
-            await TimeTrackingOperator.AddSpanAsync(Stopwatch.Elapsed, MergeRequestDescriptor);
+            await TimeTrackingOperator.AddSpanAsync(true, Stopwatch.Elapsed, MergeRequestDescriptor);
          }
          catch (OperatorException)
          {

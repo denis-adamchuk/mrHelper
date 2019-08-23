@@ -57,23 +57,6 @@ namespace mrHelper.Client.Workflow
          await switchHostAsync(hostName);
       }
 
-      async public Task<User?> GetCurrentUser()
-      {
-         try
-         {
-            return await Operator?.GetCurrentUser();
-         }
-         catch (OperatorException ex)
-         {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               return null; // silent return
-            }
-            throw new WorkflowException("Cannot load current user");
-         }
-      }
-
       async public Task SwitchProjectAsync(string projectName)
       {
          await switchProjectAsync(projectName);
@@ -127,11 +110,13 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings));
+         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
 
-         List<Project> projects = null;
+         User currentUser;
+         List<Project> projects;
          try
          {
+            currentUser = await Operator.GetCurrentUserAsync();
             projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }
          catch (OperatorException ex)
@@ -145,6 +130,7 @@ namespace mrHelper.Client.Workflow
             throw new WorkflowException(String.Format("Cannot load projects from host {0}", hostName));
          }
 
+         State.CurrentUser = currentUser;
          State.Projects = projects;
 
          PostSwitchHost?.Invoke(this, State);
@@ -203,11 +189,13 @@ namespace mrHelper.Client.Workflow
          PreSwitchMergeRequest?.Invoke(this, mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
-         List<Commit> commits = null;
+         List<Commit> commits;
+         List<Note> notes;
          try
          {
             mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
             commits = await Operator.GetCommitsAsync(State.Project.Path_With_Namespace, mergeRequestIId);
+            notes = await Operator.GetSystemNotesAsync(State.Project.Path_With_Namespace, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
@@ -222,6 +210,7 @@ namespace mrHelper.Client.Workflow
 
          State.MergeRequest = mergeRequest;
          State.Commits = commits;
+         State.SystemNotes = notes;
 
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;

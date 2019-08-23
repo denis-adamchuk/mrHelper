@@ -169,7 +169,6 @@ namespace mrHelper.App.Forms
 
          _workflowManager = new WorkflowManager(_settings);
          _updateManager = new UpdateManager(_settings);
-         _timeTrackingManager = new TimeTrackingManager(_settings);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
