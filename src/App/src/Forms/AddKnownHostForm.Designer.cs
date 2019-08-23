@@ -61,6 +61,7 @@
          this.textBoxHost.Name = "textBoxHost";
          this.textBoxHost.Size = new System.Drawing.Size(193, 20);
          this.textBoxHost.TabIndex = 0;
+         this.textBoxHost.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
          // textBoxAccessToken
          // 
@@ -68,7 +69,7 @@
          this.textBoxAccessToken.Name = "textBoxAccessToken";
          this.textBoxAccessToken.Size = new System.Drawing.Size(193, 20);
          this.textBoxAccessToken.TabIndex = 1;
-         this.textBoxAccessToken.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAccessToken_KeyDown);
+         this.textBoxAccessToken.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
          // buttonCancel
          // 

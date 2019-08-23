@@ -65,111 +65,67 @@ namespace mrHelper.Client.Tools
       public List<string> KnownHosts
       {
          get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue); }
-         set
-         {
-            setValues(KnownHostsKeyName, value);
-            OnPropertyChanged(KnownHostsKeyName);
-         }
+         set { setValues(KnownHostsKeyName, value); }
       }
 
       public List<string> KnownAccessTokens
       {
          get { return getValues(KnownAccessTokensKeyName, KnownAccessTokensDefaultValue); }
-         set
-         {
-            setValues(KnownAccessTokensKeyName, value);
-            OnPropertyChanged(KnownAccessTokensKeyName);
-         }
+         set { setValues(KnownAccessTokensKeyName, value); }
       }
 
       public string LocalGitFolder
       {
          get { return getValue(LocalGitFolderKeyName, LocalGitFolderDefaultValue); }
-         set
-         {
-            setValue(LocalGitFolderKeyName, value);
-            OnPropertyChanged(LocalGitFolderKeyName);
-         }
+         set { setValue(LocalGitFolderKeyName, value); }
       }
 
       public bool CheckedLabelsFilter
       {
          get { return bool.Parse(getValue(CheckedLabelsFilterKeyName, CheckedLabelsFilterDefaultValue)); }
-         set
-         {
-            setValue(CheckedLabelsFilterKeyName, value.ToString().ToLower());
-            OnPropertyChanged(CheckedLabelsFilterKeyName);
-         }
+         set { setValue(CheckedLabelsFilterKeyName, value.ToString().ToLower()); }
       }
 
       public string LastUsedLabels
       {
          get { return getValue(LastUsedLabelsKeyName, LastUsedLabelsDefaultValue); }
-         set
-         {
-            setValue(LastUsedLabelsKeyName, value);
-            OnPropertyChanged(LastUsedLabelsKeyName);
-         }
+         set { setValue(LastUsedLabelsKeyName, value); }
       }
 
       public string LastSelectedProject
       {
          get { return getValue(LastSelectedProjectKeyName, LastSelectedProjectDefaultValue); }
-         set
-         {
-            setValue(LastSelectedProjectKeyName, value);
-            OnPropertyChanged(LastSelectedProjectKeyName);
-         }
+         set { setValue(LastSelectedProjectKeyName, value); }
       }
 
       public string LastSelectedHost
       {
          get { return getValue(LastSelectedHostKeyName, LastSelectedHostDefaultValue); }
-         set
-         {
-            setValue(LastSelectedHostKeyName, value);
-            OnPropertyChanged(LastSelectedHostKeyName);
-         }
+         set { setValue(LastSelectedHostKeyName, value); }
       }
 
       public bool ShowPublicOnly
       {
          get { return bool.Parse(getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue)); }
-         set
-         {
-            setValue(ShowPublicOnlyKeyName, value.ToString().ToLower());
-            OnPropertyChanged(ShowPublicOnlyKeyName);
-         }
+         set { setValue(ShowPublicOnlyKeyName, value.ToString().ToLower()); }
       }
 
       public bool MinimizeOnClose
       {
          get { return bool.Parse(getValue(MinimizeOnCloseKeyName, MinimizeOnCloseDefaultValue)); }
-         set
-         {
-            setValue(MinimizeOnCloseKeyName, value.ToString().ToLower());
-            OnPropertyChanged(MinimizeOnCloseKeyName);
-         }
+         set { setValue(MinimizeOnCloseKeyName, value.ToString().ToLower()); }
       }
 
       public string DiffContextDepth
       {
          get { return getValue(DiffContextDepthKeyName, DiffContextDepthDefaultValue); }
-         set
-         {
-            setValue(DiffContextDepthKeyName, value);
-            OnPropertyChanged(DiffContextDepthKeyName);
-         }
+         set { setValue(DiffContextDepthKeyName, value); }
       }
 
       public string ColorSchemeFileName
       {
          get { return getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue); }
-         set
-         {
-            setValue(ColorSchemeFileNameKeyName, value);
-            OnPropertyChanged(ColorSchemeFileNameKeyName);
-         }
+         set { setValue(ColorSchemeFileNameKeyName, value); }
       }
 
       private string getValue(string key, string defaultValue)
@@ -192,11 +148,16 @@ namespace mrHelper.Client.Tools
 
          if (_config.AppSettings.Settings[key] != null)
          {
-            _config.AppSettings.Settings[key].Value = value;
+            if (_config.AppSettings.Settings[key].Value != value)
+            {
+               _config.AppSettings.Settings[key].Value = value;
+               OnPropertyChanged(key);
+            }
             return;
          }
 
          _config.AppSettings.Settings.Add(key, value);
+         OnPropertyChanged(key);
       }
 
       private List<string> getValues(string key, List<string> defaultValues)
@@ -219,15 +180,15 @@ namespace mrHelper.Client.Tools
          return defaultValues;
       }
 
-      private void OnPropertyChanged(string name)
-      {
-         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-      }
-
       private void setValues(string key, List<string> values)
       {
          string valuesString = string.Join(";", values);
          setValue(key, valuesString);
+      }
+
+      private void OnPropertyChanged(string name)
+      {
+         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
       }
 
       private readonly Configuration _config;

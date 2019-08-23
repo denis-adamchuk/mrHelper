@@ -83,26 +83,30 @@ namespace mrHelper.App.Forms
          {
             listViewKnownHosts.Items.RemoveAt(iListViewItem);
          }
+
          List<string> newKnownHosts = new List<string>();
          for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
          {
-            string host = _settings.KnownHosts[iKnownHost];
-
-            // Old versions did not have prefix
-            if (!host.StartsWith("http://") && !host.StartsWith("https://"))
-            {
-               host = "https://" + host;
-            }
-            newKnownHosts.Add(host);
-
+            // Upgrade from old versions which did not have prefix
+            string host = getHostWithPrefix(_settings.KnownHosts[iKnownHost]);
             string accessToken = _settings.KnownAccessTokens[iKnownHost];
             addKnownHost(host, accessToken);
+            newKnownHosts.Add(host);
          }
          _settings.KnownHosts = newKnownHosts;
+
+         if (_settings.LastSelectedHost != String.Empty)
+         {
+            // Upgrade from old versions which did not have prefix
+            _settings.LastSelectedHost = getHostWithPrefix(_settings.LastSelectedHost);
+         }
+
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
          checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
+         checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
+
          if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
          {
             comboBoxDCDepth.Text = _settings.DiffContextDepth;
@@ -111,7 +115,7 @@ namespace mrHelper.App.Forms
          {
             comboBoxDCDepth.SelectedIndex = 0;
          }
-         checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
+
          fillColorSchemesList();
       }
 
@@ -142,8 +146,8 @@ namespace mrHelper.App.Forms
       private void loadSettings()
       {
          _settings = new UserDefinedSettings(true);
-         loadConfiguration();
          _settings.PropertyChanged += onSettingsPropertyChanged;
+         loadConfiguration();
 
          labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
