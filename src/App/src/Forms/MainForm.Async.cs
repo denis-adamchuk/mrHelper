@@ -210,7 +210,7 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = message;
             return null;
          }
-         labelWorkflowStatus.Text = "Loaded discussions";
+         labelWorkflowStatus.Text = "Discussions loaded";
          return discussions;
       }
    }

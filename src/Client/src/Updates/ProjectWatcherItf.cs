@@ -12,7 +12,7 @@ namespace mrHelper.Client.Updates
 
    public interface IProjectWatcher
    {
-      event EventHandler<List<ProjectUpdate>> OnProjectUpdate;
+      event Action<List<ProjectUpdate>> OnProjectUpdate;
    }
 }
 

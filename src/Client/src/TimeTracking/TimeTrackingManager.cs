@@ -18,18 +18,30 @@ namespace mrHelper.Client.TimeTracking
       {
          Settings = settings;
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
-         workflow.PostSwitchMergeRequest +=
-            (sender, state) => onSystemNotesAvailable(state.CurrentUser, state.SystemNotes);
+         workflow.PreLoadSystemNotes += () => PreLoadTotalTime?.Invoke();
+         workflow.FailedLoadSystemNotes += () => FailedLoadTotalTime?.Invoke();
+         workflow.PostLoadSystemNotes +=
+            (state, notes) => processSystemNotes(state.MergeRequestDescriptor, state.CurrentUser, notes);
+      }
+
+      public event Action PreLoadTotalTime;
+      public event Action FailedLoadTotalTime;
+      public event Action<MergeRequestDescriptor> PostLoadTotalTime;
+
+      public TimeSpan GetTotalTime(MergeRequestDescriptor mrd)
+      {
+         return MergeRequestTimes[mrd];
       }
 
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestDescriptor mrd)
       {
          await TimeTrackingOperator.AddSpanAsync(add, span, mrd);
+         MergeRequestTimes[mrd] += span;
       }
 
       public TimeTracker GetTracker(MergeRequestDescriptor mrd)
       {
-         return new TimeTracker(mrd, TimeTrackingOperator);
+         return new TimeTracker(mrd, async (span, descriptor) => { await AddSpanAsync(true, span, descriptor); });
       }
 
       private static readonly Regex spentTimeRe =
@@ -37,7 +49,7 @@ namespace mrHelper.Client.TimeTracking
             @"^(?'operation'added|subtracted)\s(?>(?'hours'\d*)h\s)?(?>(?'minutes'\d*)m\s)?(?>(?'seconds'\d*)s\s)?of time spent.*",
                RegexOptions.Compiled);
 
-      private void onSystemNotesAvailable(User currentUser, List<Note> notes)
+      private void processSystemNotes(MergeRequestDescriptor mrd, User currentUser, List<Note> notes)
       {
          TimeSpan span = TimeSpan.Zero;
          foreach (Note note in notes)
@@ -64,11 +76,15 @@ namespace mrHelper.Client.TimeTracking
                }
             }
          }
-         TrackedTimeLoaded?.Invoke(this, span);
+
+         MergeRequestTimes[mrd] = span;
+         PostLoadTotalTime?.Invoke(mrd);
       }
 
       private UserDefinedSettings Settings { get; }
       private TimeTrackingOperator TimeTrackingOperator { get; }
+      private Dictionary<MergeRequestDescriptor, TimeSpan> MergeRequestTimes { get; } =
+         new Dictionary<MergeRequestDescriptor, TimeSpan>();
    }
 }
 

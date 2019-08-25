@@ -67,7 +67,7 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private void onProjectWatcherUpdate(object sender, List<ProjectUpdate> updates)
+      async private void onProjectWatcherUpdate(List<ProjectUpdate> updates)
       {
          Debug.WriteLine("[GitClientUpdater ] Processing an update from Project Watcher");
          Debug.Assert(_subscribed);

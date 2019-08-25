@@ -172,9 +172,9 @@ namespace mrHelper.App.Forms
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
-            (sender, e) =>
+            (status) =>
          {
-            labelWorkflowStatus.Text = e;
+            labelWorkflowStatus.Text = status;
             labelWorkflowStatus.Update();
          };
 

@@ -187,7 +187,7 @@ namespace mrHelper.App.Forms
          buttonDiscussions.Enabled = true;
          comboBoxHost.Enabled = true;
          comboBoxProjects.Enabled = true;
-         updateGitStatusText(this, String.Empty);
+         updateGitStatusText(String.Empty);
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -215,13 +215,37 @@ namespace mrHelper.App.Forms
          }
 
          labelTimeTrackingMergeRequestName.Visible = mergeRequest.HasValue;
-         labelTimeTrackingProjectName.Visible = mergeRequest.HasValue;
          buttonTimeTrackingStart.Enabled = mergeRequest.HasValue;
 
          if (mergeRequest.HasValue)
          {
-            labelTimeTrackingMergeRequestName.Text = mergeRequest.Value.Title;
-            labelTimeTrackingProjectName.Text = _workflow.State.Project.Path_With_Namespace;
+            labelTimeTrackingMergeRequestName.Text =
+               mergeRequest.Value.Title + "   " + "[" + _workflow.State.Project.Path_With_Namespace + "]";
+         }
+      }
+
+      private void updateTotalTime(MergeRequestDescriptor? mrd)
+      {
+         if (isTrackingTime())
+         {
+            labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
+            labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
+            buttonEditTime.Enabled = false;
+            return;
+         }
+
+         if (!mrd.HasValue)
+         {
+            labelTimeTrackingTrackedLabel.Text = String.Empty;
+            labelTimeTrackingTrackedTime.Text = String.Empty;
+            buttonEditTime.Enabled = false;
+         }
+         else
+         {
+            labelTimeTrackingTrackedLabel.Text = "Total Time:";
+            labelTimeTrackingTrackedTime.Text =
+               _timeTrackingManager.GetTotalTime(mrd.Value).ToString(@"hh\:mm\:ss");
+            buttonEditTime.Enabled = true;
          }
       }
 
@@ -229,6 +253,10 @@ namespace mrHelper.App.Forms
       {
          linkLabelConnectedTo.Visible = enabled;
          buttonDiscussions.Enabled = enabled;
+      }
+
+      private void enableCommitActions(bool enabled)
+      {
          buttonDiffTool.Enabled = enabled;
          enableCustomActions(enabled);
       }
@@ -276,12 +304,12 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Typically called from another thread
       /// </summary>
-      private void updateGitStatusText(object sender, string text)
+      private void updateGitStatusText(string text)
       {
          if (labelGitStatus.InvokeRequired)
          {
             UpdateTextCallback fn = new UpdateTextCallback(updateGitStatusText);
-            Invoke(fn, new object [] { sender, text });
+            Invoke(fn, new object [] { text });
          }
          else
          {

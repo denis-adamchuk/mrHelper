@@ -80,23 +80,31 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      public EventHandler<string> PreSwitchHost;
-      public EventHandler<WorkflowState> PostSwitchHost;
-      public EventHandler<bool> FailedSwitchHost;
+      public event Action<string> PreSwitchHost;
+      public event Action<WorkflowState, List<Project>> PostSwitchHost;
+      public event Action FailedSwitchHost;
 
-      public EventHandler<string> PreSwitchProject;
-      public EventHandler<WorkflowState> PostSwitchProject;
-      public EventHandler<bool> FailedSwitchProject;
+      public event Action<string> PreSwitchProject;
+      public event Action<WorkflowState, List<MergeRequest>> PostSwitchProject;
+      public event Action FailedSwitchProject;
 
-      public EventHandler<int> PreSwitchMergeRequest;
-      public EventHandler<WorkflowState> PostSwitchMergeRequest;
-      public EventHandler<bool> FailedSwitchMergeRequest;
+      public event Action<int> PreSwitchMergeRequest;
+      public event Action<WorkflowState> PostSwitchMergeRequest;
+      public event Action FailedSwitchMergeRequest;
+
+      public event Action PreLoadCommits;
+      public event Action<WorkflowState, List<Commit>> PostLoadCommits;
+      public event Action FailedLoadCommits;
+
+      public event Action PreLoadSystemNotes;
+      public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
+      public event Action FailedLoadSystemNotes;
 
       public WorkflowState State { get; private set; } = new WorkflowState();
 
       async private Task switchHostAsync(string hostName)
       {
-         PreSwitchHost?.Invoke(this, hostName);
+         PreSwitchHost?.Invoke(hostName);
 
          State = new WorkflowState
          {
@@ -122,7 +130,7 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedSwitchHost?.Invoke(this, cancelled);
+            FailedSwitchHost?.Invoke();
             if (cancelled)
             {
                return; // silent return
@@ -131,11 +139,10 @@ namespace mrHelper.Client.Workflow
          }
 
          State.CurrentUser = currentUser;
-         State.Projects = projects;
 
-         PostSwitchHost?.Invoke(this, State);
+         PostSwitchHost?.Invoke(State, projects);
 
-         string projectName = selectProjectFromList();
+         string projectName = selectProjectFromList(projects);
          if (projectName != String.Empty)
          {
             await switchProjectAsync(projectName);
@@ -144,7 +151,7 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchProjectAsync(string projectName)
       {
-         PreSwitchProject?.Invoke(this, projectName);
+         PreSwitchProject?.Invoke(projectName);
 
          if (projectName == String.Empty)
          {
@@ -162,7 +169,7 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedSwitchProject(this, cancelled);
+            FailedSwitchProject?.Invoke();
             if (cancelled)
             {
                return; // silent return
@@ -171,13 +178,12 @@ namespace mrHelper.Client.Workflow
          }
 
          State.Project = project;
-         State.MergeRequests = mergeRequests;
 
          _lastProjectsByHosts[State.HostName] = State.Project.Path_With_Namespace;
 
-         PostSwitchProject?.Invoke(this, State);
+         PostSwitchProject?.Invoke(State, mergeRequests);
 
-         int? iid = selectMergeRequestFromList();
+         int? iid = selectMergeRequestFromList(mergeRequests);
          if (iid.HasValue)
          {
             await switchMergeRequestAsync(iid.Value);
@@ -186,21 +192,17 @@ namespace mrHelper.Client.Workflow
 
       async private Task switchMergeRequestAsync(int mergeRequestIId)
       {
-         PreSwitchMergeRequest?.Invoke(this, mergeRequestIId);
+         PreSwitchMergeRequest?.Invoke(mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
-         List<Commit> commits;
-         List<Note> notes;
          try
          {
             mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
-            commits = await Operator.GetCommitsAsync(State.Project.Path_With_Namespace, mergeRequestIId);
-            notes = await Operator.GetSystemNotesAsync(State.Project.Path_With_Namespace, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedSwitchMergeRequest(this, cancelled);
+            FailedSwitchMergeRequest?.Invoke();
             if (cancelled)
             {
                return; // silent return
@@ -209,27 +211,72 @@ namespace mrHelper.Client.Workflow
          }
 
          State.MergeRequest = mergeRequest;
-         State.Commits = commits;
-         State.SystemNotes = notes;
 
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;
 
-         PostSwitchMergeRequest?.Invoke(this, State);
+         PostSwitchMergeRequest?.Invoke(State);
+
+         await loadCommitsAsync();
+         await loadSystemNotesAsync();
       }
 
-      private string selectProjectFromList()
+      async private Task loadCommitsAsync()
+      {
+         PreLoadCommits?.Invoke();
+         List<Commit> commits;
+         try
+         {
+            commits = await Operator.GetCommitsAsync(State.Project.Path_With_Namespace, State.MergeRequest.IId);
+         }
+         catch (OperatorException ex)
+         {
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            FailedLoadCommits?.Invoke();
+            if (cancelled)
+            {
+               return; // silent return
+            }
+            throw new WorkflowException(String.Format(
+               "Cannot load commits for merge request with IId {0}", State.MergeRequest.IId));
+         }
+         PostLoadCommits?.Invoke(State, commits);
+      }
+
+      async private Task loadSystemNotesAsync()
+      {
+         PreLoadSystemNotes?.Invoke();
+         List<Note> notes;
+         try
+         {
+            notes = await Operator.GetSystemNotesAsync(State.Project.Path_With_Namespace, State.MergeRequest.IId);
+         }
+         catch (OperatorException ex)
+         {
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            FailedLoadSystemNotes?.Invoke();
+            if (cancelled)
+            {
+               return; // silent return
+            }
+            throw new WorkflowException(String.Format(
+               "Cannot load system notes for merge request with IId {0}", State.MergeRequest.IId));
+         }
+         PostLoadSystemNotes?.Invoke(State, notes);
+      }
+
+      private string selectProjectFromList(List<Project> projects)
       {
          string key = State.HostName;
          // if we remember a project selected for the given host before...
          if (_lastProjectsByHosts.ContainsKey(key)
             // ... and if such project still exists in a list of Projects
-            && State.Projects.Any((x) => x.Path_With_Namespace == _lastProjectsByHosts[key]))
+            && projects.Any((x) => x.Path_With_Namespace == _lastProjectsByHosts[key]))
          {
             return _lastProjectsByHosts[key];
          }
 
-         foreach (var project in State.Projects)
+         foreach (var project in projects)
          {
             if (project.Path_With_Namespace == Settings.LastSelectedProject)
             {
@@ -237,21 +284,21 @@ namespace mrHelper.Client.Workflow
             }
          }
 
-         return State.Projects.Count > 0 ? State.Projects[0].Path_With_Namespace : String.Empty;
+         return projects.Count > 0 ? projects[0].Path_With_Namespace : String.Empty;
       }
 
-      private int? selectMergeRequestFromList()
+      private int? selectMergeRequestFromList(List<MergeRequest> mergeRequests)
       {
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
             // ... and if such MR still exists in a list of MRs
-            && State.MergeRequests.Any((x) => x.IId == _lastMergeRequestsByProjects[key]))
+            && mergeRequests.Any((x) => x.IId == _lastMergeRequestsByProjects[key]))
          {
             return _lastMergeRequestsByProjects[key];
          }
 
-         return State.MergeRequests.Count > 0 ? State.MergeRequests[0].IId : new Nullable<int>();
+         return mergeRequests.Count > 0 ? mergeRequests[0].IId : new Nullable<int>();
       }
 
       private UserDefinedSettings Settings { get; }

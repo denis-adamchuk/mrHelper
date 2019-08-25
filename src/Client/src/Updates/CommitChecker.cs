@@ -29,17 +29,17 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async public Task<bool> AreNewCommitsAsync(DateTime timestamp)
       {
-         List<Commit> commits;
+         Commit commit;
          try
          {
-            commits = await UpdateOperator.GetCommits(MergeRequestDescriptor);
+            commit = await UpdateOperator.GetLatestCommitAsync(MergeRequestDescriptor);
          }
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot check for commits");
             return false;
          }
-         return commits != null && commits.Count > 0 && commits[0].Created_At.ToLocalTime() > timestamp;
+         return commit.Created_At.ToLocalTime() > timestamp;
       }
 
       public override string ToString()

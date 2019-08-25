@@ -17,7 +17,7 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitClientInteractiveUpdater
    {
-      internal event EventHandler<string> InitializationStatusChange;
+      internal event Action<string> InitializationStatusChange;
 
       internal GitClientInteractiveUpdater()
       {
@@ -32,14 +32,14 @@ namespace mrHelper.App.Helpers
       {
          if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
          {
-            InitializationStatusChange?.Invoke(this, "Clone rejected");
+            InitializationStatusChange?.Invoke("Clone rejected");
             throw new CancelledByUserException();
          }
 
-         InitializationStatusChange?.Invoke(this, "Updating git repository...");
+         InitializationStatusChange?.Invoke("Updating git repository...");
 
          await runAsync(async () => await client.Updater.ManualUpdateAsync());
-         InitializationStatusChange?.Invoke(this, "Git repository updated");
+         InitializationStatusChange?.Invoke("Git repository updated");
       }
 
       /// <summary>
@@ -81,8 +81,7 @@ namespace mrHelper.App.Helpers
             bool cancelledByUser = isCancelledByUser(ex);
 
             string result = cancelledByUser ? "cancelled by user" : "failed";
-            InitializationStatusChange?.Invoke(this,
-               String.Format("Git repository update {0}", result));
+            InitializationStatusChange?.Invoke(String.Format("Git repository update {0}", result));
 
             if (cancelledByUser)
             {
@@ -91,7 +90,7 @@ namespace mrHelper.App.Helpers
 
             if (isSSLCertificateProblem(ex as GitOperationException))
             {
-               InitializationStatusChange?.Invoke(this, "Cannot clone due to SSL verification error");
+               InitializationStatusChange?.Invoke("Cannot clone due to SSL verification error");
                if (handleSSLCertificateProblem())
                {
                   throw new RepeatOperationException();
@@ -132,8 +131,7 @@ namespace mrHelper.App.Helpers
             throw;
          }
 
-         InitializationStatusChange?.Invoke(this,
-               "SSL certificate verification disabled. Please repeat git operation.");
+         InitializationStatusChange?.Invoke("SSL certificate verification disabled. Please repeat git operation.");
          return true;
       }
 
