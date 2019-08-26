@@ -130,11 +130,11 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedSwitchHost?.Invoke();
             if (cancelled)
             {
                return; // silent return
             }
+            FailedSwitchHost?.Invoke();
             throw new WorkflowException(String.Format("Cannot load projects from host {0}", hostName));
          }
 
@@ -169,11 +169,11 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedSwitchProject?.Invoke();
             if (cancelled)
             {
                return; // silent return
             }
+            FailedSwitchProject?.Invoke();
             throw new WorkflowException(String.Format("Cannot load project {0}", projectName));
          }
 
@@ -202,11 +202,11 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedSwitchMergeRequest?.Invoke();
             if (cancelled)
             {
                return; // silent return
             }
+            FailedSwitchMergeRequest?.Invoke();
             throw new WorkflowException(String.Format("Cannot load merge request with IId {0}", mergeRequestIId));
          }
 
@@ -235,11 +235,11 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedLoadCommits?.Invoke();
             if (cancelled)
             {
                return false; // silent return
             }
+            FailedLoadCommits?.Invoke();
             throw new WorkflowException(String.Format(
                "Cannot load commits for merge request with IId {0}", State.MergeRequest.IId));
          }
@@ -258,11 +258,11 @@ namespace mrHelper.Client.Workflow
          catch (OperatorException ex)
          {
             bool cancelled = ex.InternalException is GitLabClientCancelled;
-            FailedLoadSystemNotes?.Invoke();
             if (cancelled)
             {
                return; // silent return
             }
+            FailedLoadSystemNotes?.Invoke();
             throw new WorkflowException(String.Format(
                "Cannot load system notes for merge request with IId {0}", State.MergeRequest.IId));
          }
