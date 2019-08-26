@@ -91,6 +91,7 @@ namespace mrHelper.App.Forms
             bool add = newSpan > oldSpan;
             TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
             await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
+            updateTotalTime(_workflow.State.MergeRequestDescriptor);
          }
       }
 
@@ -371,6 +372,7 @@ namespace mrHelper.App.Forms
 
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(null);
+         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
       }
 
       async private Task onStopTimer(bool send)

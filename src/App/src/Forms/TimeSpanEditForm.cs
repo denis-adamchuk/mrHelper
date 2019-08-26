@@ -20,7 +20,7 @@ namespace mrHelper.App.Forms
          numericUpDownS.Value = span.Seconds;
       }
 
-      private void TextBox_KeyDown(object sender, KeyEventArgs e)
+      private void NumericUpDown_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
          {

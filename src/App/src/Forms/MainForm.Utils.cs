@@ -229,7 +229,6 @@ namespace mrHelper.App.Forms
          if (isTrackingTime())
          {
             labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
-            labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
             buttonEditTime.Enabled = false;
             return;
          }

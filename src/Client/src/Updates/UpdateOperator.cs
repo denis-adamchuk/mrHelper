@@ -64,9 +64,10 @@ namespace mrHelper.Client.Updates
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return (Commit)(await client.RunAsync(async (gitlab) =>
+            List<Commit> commits = (List<Commit>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.LoadTaskAsync(
                   new PageFilter { PageNumber = 1, PerPage = 1 })));
+            return commits.Count > 0 ? commits[0] : new Commit();
          }
          catch (Exception ex)
          {

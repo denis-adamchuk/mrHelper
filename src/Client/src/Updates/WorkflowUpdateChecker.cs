@@ -231,17 +231,17 @@ namespace mrHelper.Client.Updates
 
          foreach (MergeRequest mergeRequest in diff.Common)
          {
-            int? previouslyCachedCommitsCount = _cachedCommits.ContainsKey(mergeRequest.Id) ?
-               _cachedCommits[mergeRequest.Id] : new Nullable<int>();
+            DateTime? previouslyCachedCommitTimestamp = _cachedCommits.ContainsKey(mergeRequest.Id) ?
+               _cachedCommits[mergeRequest.Id] : new Nullable<DateTime>();
 
             await cacheCommitsAsync(mergeRequest);
 
             Debug.Assert(_cachedCommits.ContainsKey(mergeRequest.Id));
 
-            if (previouslyCachedCommitsCount != null)
+            if (previouslyCachedCommitTimestamp != null)
             {
-               int newCachedCommitsCount = _cachedCommits[mergeRequest.Id];
-               if (newCachedCommitsCount > previouslyCachedCommitsCount)
+               DateTime newCachedCommitTimestamp = _cachedCommits[mergeRequest.Id];
+               if (newCachedCommitTimestamp > previouslyCachedCommitTimestamp)
                {
                   updates.UpdatedMergeRequests.Add(mergeRequest);
                }
@@ -310,26 +310,27 @@ namespace mrHelper.Client.Updates
             "[WorkflowUpdateChecker] Checking commits for merge request {0} from project {1}",
                mergeRequest.IId, getMergeRequestProjectName(mergeRequest)));
 
-         int commitsCount = await UpdateOperator.GetCommitsCountAsync(
-            new MergeRequestDescriptor
+         MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
                HostName = Workflow.State.HostName,
                ProjectName = getMergeRequestProjectName(mergeRequest),
                IId = mergeRequest.IId
-            });
+            };
 
-         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This merge request has {0} commits at GitLab",
-            commitsCount));
+         Commit latestCommit = await UpdateOperator.GetLatestCommitAsync(mrd);
+
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This merge request has commit with Created_At={0}",
+            latestCommit.Created_At));
 
          if (_cachedCommits.ContainsKey(mergeRequest.Id))
          {
             Debug.WriteLine(String.Format(
-               "[WorkflowUpdateChecker] {0} Commits for this merge request were cached before",
+               "[WorkflowUpdateChecker] Previously cached commit timestamp for this merge request is {0}",
                   _cachedCommits[mergeRequest.Id]));
 
             Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Updating cached commits for this merge request"));
 
-            _cachedCommits[mergeRequest.Id] = commitsCount;
+            _cachedCommits[mergeRequest.Id] = latestCommit.Created_At;
          }
          else
          {
@@ -337,7 +338,7 @@ namespace mrHelper.Client.Updates
                "[WorkflowUpdateChecker] Commits for this merge request were not cached before"));
             Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Caching them now"));
 
-            _cachedCommits[mergeRequest.Id] = commitsCount;
+            _cachedCommits[mergeRequest.Id] = latestCommit.Created_At;
          }
       }
 
@@ -348,13 +349,27 @@ namespace mrHelper.Client.Updates
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
+         DateTime latestChange = DateTime.MinValue;
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
+            string projectName = getMergeRequestProjectName(mergeRequest);
+            for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
+            {
+               if (projectUpdates[iUpdate].ProjectName == projectName)
+               {
+                  projectUpdates.RemoveAt(iUpdate);
+               }
+            }
+
+            latestChange = _cachedCommits[mergeRequest.Id] > latestChange ?
+               _cachedCommits[mergeRequest.Id] : latestChange;
+
             projectUpdates.Add(
                new ProjectUpdate
                {
                   HostName = Workflow.State.HostName,
-                  ProjectName = getMergeRequestProjectName(mergeRequest)
+                  ProjectName = projectName,
+                  LatestChange = latestChange
                });
          }
 
@@ -420,8 +435,8 @@ namespace mrHelper.Client.Updates
       private readonly Dictionary<int, List<MergeRequest>> _cachedMergeRequests =
          new Dictionary<int, List<MergeRequest>>();
 
-      // maps unique Merge Request Id (not IId) to a number of commits
-      private readonly Dictionary<int, int> _cachedCommits = new Dictionary<int, int>();
+      // maps unique Merge Request Id (not IId) to a timestamp of its latest commit
+      private readonly Dictionary<int, DateTime> _cachedCommits = new Dictionary<int, DateTime>();
    }
 }
 

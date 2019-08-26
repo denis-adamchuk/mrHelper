@@ -100,6 +100,7 @@
          this.numericUpDownH.Name = "numericUpDownH";
          this.numericUpDownH.Size = new System.Drawing.Size(42, 20);
          this.numericUpDownH.TabIndex = 6;
+         this.numericUpDownH.KeyDown += new System.Windows.Forms.KeyEventHandler(NumericUpDown_KeyDown);
          // 
          // numericUpDownM
          // 
@@ -112,6 +113,7 @@
          this.numericUpDownM.Name = "numericUpDownM";
          this.numericUpDownM.Size = new System.Drawing.Size(42, 20);
          this.numericUpDownM.TabIndex = 7;
+         this.numericUpDownM.KeyDown += new System.Windows.Forms.KeyEventHandler(NumericUpDown_KeyDown);
          // 
          // numericUpDownS
          // 
@@ -124,6 +126,7 @@
          this.numericUpDownS.Name = "numericUpDownS";
          this.numericUpDownS.Size = new System.Drawing.Size(42, 20);
          this.numericUpDownS.TabIndex = 8;
+         this.numericUpDownS.KeyDown += new System.Windows.Forms.KeyEventHandler(NumericUpDown_KeyDown);
          // 
          // EditTimeForm
          // 
@@ -139,6 +142,7 @@
          this.Controls.Add(this.labelS);
          this.Controls.Add(this.labelM);
          this.Controls.Add(this.labelH);
+         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MaximizeBox = false;
          this.MinimizeBox = false;

@@ -8,6 +8,7 @@ namespace mrHelper.Client.Updates
    {
       public string HostName;
       public string ProjectName;
+      public DateTime LatestChange;
    }
 
    public interface IProjectWatcher

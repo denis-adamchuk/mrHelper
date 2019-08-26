@@ -27,19 +27,17 @@ namespace mrHelper.Client.Updates
       /// Check for commits newer than the given timestamp
       /// Throws nothing
       /// </summary>
-      async public Task<bool> AreNewCommitsAsync(DateTime timestamp)
+      async public Task<Commit> GetLatestCommitAsync()
       {
-         Commit commit;
          try
          {
-            commit = await UpdateOperator.GetLatestCommitAsync(MergeRequestDescriptor);
+            return await UpdateOperator.GetLatestCommitAsync(MergeRequestDescriptor);
          }
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot check for commits");
-            return false;
          }
-         return commit.Created_At.ToLocalTime() > timestamp;
+         return new Commit();
       }
 
       public override string ToString()

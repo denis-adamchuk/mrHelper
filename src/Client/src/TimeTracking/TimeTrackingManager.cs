@@ -36,7 +36,14 @@ namespace mrHelper.Client.TimeTracking
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestDescriptor mrd)
       {
          await TimeTrackingOperator.AddSpanAsync(add, span, mrd);
-         MergeRequestTimes[mrd] += span;
+         if (add)
+         {
+            MergeRequestTimes[mrd] += span;
+         }
+         else
+         {
+            MergeRequestTimes[mrd] -= span;
+         }
       }
 
       public TimeTracker GetTracker(MergeRequestDescriptor mrd)
