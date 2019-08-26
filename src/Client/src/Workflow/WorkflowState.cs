@@ -29,6 +29,7 @@ namespace mrHelper.Client.Workflow
          set
          {
             _project = value;
+            _mergeRequest = default(MergeRequest);
          }
       }
 

@@ -90,8 +90,12 @@ namespace mrHelper.App.Forms
             TimeSpan newSpan = form.GetTimeSpan();
             bool add = newSpan > oldSpan;
             TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
-            await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
-            updateTotalTime(_workflow.State.MergeRequestDescriptor);
+            if (diff != TimeSpan.Zero)
+            {
+               await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
+               updateTotalTime(_workflow.State.MergeRequestDescriptor);
+               labelWorkflowStatus.Text = "Total spent time updated";
+            }
          }
       }
 
@@ -422,7 +426,8 @@ namespace mrHelper.App.Forms
             isMergeRequestSelected ? _workflow.State.MergeRequest : new Nullable<MergeRequest>());
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(_workflow.State.MergeRequestDescriptor);
+         updateTotalTime(isMergeRequestSelected ?
+            _workflow.State.MergeRequestDescriptor : new Nullable<MergeRequestDescriptor>());
       }
    }
 }

@@ -242,8 +242,7 @@ namespace mrHelper.App.Forms
          else
          {
             labelTimeTrackingTrackedLabel.Text = "Total Time:";
-            labelTimeTrackingTrackedTime.Text =
-               _timeTrackingManager.GetTotalTime(mrd.Value).ToString(@"hh\:mm\:ss");
+            labelTimeTrackingTrackedTime.Text = _timeTrackingManager.GetTotalTime(mrd.Value).ToString(@"hh\:mm\:ss");
             buttonEditTime.Enabled = true;
          }
       }

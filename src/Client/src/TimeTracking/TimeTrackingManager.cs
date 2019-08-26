@@ -30,7 +30,7 @@ namespace mrHelper.Client.TimeTracking
 
       public TimeSpan GetTotalTime(MergeRequestDescriptor mrd)
       {
-         return MergeRequestTimes[mrd];
+         return MergeRequestTimes.ContainsKey(mrd) ? MergeRequestTimes[mrd] : default(TimeSpan);
       }
 
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestDescriptor mrd)
