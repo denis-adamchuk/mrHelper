@@ -13,7 +13,7 @@ namespace mrHelper.App.Forms
 
       internal string AccessToken => textBoxAccessToken.Text;
 
-      private void textBoxAccessToken_KeyDown(object sender, KeyEventArgs e)
+      private void textBox_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
          {

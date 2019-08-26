@@ -112,16 +112,19 @@ namespace mrHelper.App.Forms
             }
          }
 
-         // Add prefix automatically
-         if (!host.StartsWith("http://") && !host.StartsWith("https://"))
-         {
-            host = "https://" + host;
-         }
-
-         var item = new ListViewItem(host);
+         var item = new ListViewItem(getHostWithPrefix(host));
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
          return true;
+      }
+
+      private string getHostWithPrefix(string host)
+      {
+         if (!host.StartsWith("http://") && !host.StartsWith("https://"))
+         {
+            return "https://" + host;
+         }
+         return host;
       }
 
       private void fillColorSchemesList()

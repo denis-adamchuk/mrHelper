@@ -49,11 +49,11 @@ namespace mrHelper.Client.Updates
 
          UpdateOperator = updateOperator;
          Workflow = workflow;
-         Workflow.PostSwitchProject += async (sender, state) =>
+         Workflow.PostSwitchProject += async (state, _) =>
          {
             // On initial update we need to create caches.
             // When files are not listed in file, we updates only selected project and also might need to create caches.
-            if (isInitialUpdate() || !areProjectsListedInFile())
+            if (isInitialUpdate() || !areProjectsListedInFile(state))
             {
                await doUpdate();
             }
@@ -82,10 +82,12 @@ namespace mrHelper.Client.Updates
       {
          MergeRequestUpdates updates;
 
+         // Save current state because it may be changed while we're awaiting things
+         WorkflowState state = Workflow.State;
          try
          {
-            TwoListDifference<MergeRequest> diff = await getMergeRequestDiffAsync();
-            updates = await getMergeRequestUpdatesAsync(diff);
+            TwoListDifference<MergeRequest> diff = await getMergeRequestDiffAsync(state);
+            updates = await getMergeRequestUpdatesAsync(state, diff);
          }
          catch (OperatorException ex)
          {
@@ -98,19 +100,19 @@ namespace mrHelper.Client.Updates
 
          // Need to gather projects before we filter out some MRs
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
-         projectUpdates.AddRange(getProjectUpdates(updates.NewMergeRequests));
-         projectUpdates.AddRange(getProjectUpdates(updates.UpdatedMergeRequests));
+         projectUpdates.AddRange(getProjectUpdates(state, updates.NewMergeRequests));
+         projectUpdates.AddRange(getProjectUpdates(state, updates.UpdatedMergeRequests));
 
          Debug.WriteLine("[WorkflowUpdateChecker] Filtering New MR");
-         applyLabelFilter(updates.NewMergeRequests);
+         applyLabelFilter(state, updates.NewMergeRequests);
          traceUpdates(updates.NewMergeRequests, "Filtered New");
 
          Debug.WriteLine("[WorkflowUpdateChecker] Filtering Updated MR");
-         applyLabelFilter(updates.UpdatedMergeRequests);
+         applyLabelFilter(state, updates.UpdatedMergeRequests);
          traceUpdates(updates.UpdatedMergeRequests, "Filtered Updated");
 
          Debug.WriteLine("[WorkflowUpdateChecker] Filtering Closed MR");
-         applyLabelFilter(updates.ClosedMergeRequests);
+         applyLabelFilter(state, updates.ClosedMergeRequests);
          traceUpdates(updates.ClosedMergeRequests, "Filtered Closed");
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Filtered : New: {0}, Updated: {1}, Closed: {2}",
@@ -133,7 +135,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Remove merge requests that don't match Label Filter from the passed list
       /// </summary>
-      private void applyLabelFilter(List<MergeRequest> mergeRequests)
+      private void applyLabelFilter(WorkflowState state, List<MergeRequest> mergeRequests)
       {
          if (!Settings.CheckedLabelsFilter)
          {
@@ -158,7 +160,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Calculate difference between current list of merge requests at GitLab and current list in the Workflow
       /// </summary>
-      async private Task<TwoListDifference<MergeRequest>> getMergeRequestDiffAsync()
+      async private Task<TwoListDifference<MergeRequest>> getMergeRequestDiffAsync(WorkflowState state)
       {
          TwoListDifference<MergeRequest> diff = new TwoListDifference<MergeRequest>
          {
@@ -167,18 +169,18 @@ namespace mrHelper.Client.Updates
             Common = new List<MergeRequest>()
          };
 
-         if (Workflow.State.HostName == null)
+         if (state.HostName == null)
          {
             Debug.WriteLine("[WorkflowUpdateChecker] Host name is null");
             return diff;
          }
 
-         List<Project> projectsToCheck = Tools.Tools.LoadProjectsFromFile(Workflow.State.HostName);
-         if (projectsToCheck == null && Workflow.State.Project.Path_With_Namespace != null)
+         List<Project> projectsToCheck = Tools.Tools.LoadProjectsFromFile(state.HostName);
+         if (projectsToCheck == null && state.Project.Path_With_Namespace != null)
          {
             projectsToCheck = new List<Project>
             {
-               Workflow.State.Project
+               state.Project
             };
          }
 
@@ -196,7 +198,16 @@ namespace mrHelper.Client.Updates
             List<MergeRequest> previouslyCachedMergeRequests =
                _cachedMergeRequests.ContainsKey(project.Id) ? _cachedMergeRequests[project.Id] : null;
 
-            await cacheMergeRequestsAsync(project.Id);
+            try
+            {
+               await cacheMergeRequestsAsync(state, project.Id);
+            }
+            catch (OperatorException ex)
+            {
+               ExceptionHandlers.Handle(ex, String.Format(
+                  "Cannot load merge requests for project {0}, skipping it", project.Path_With_Namespace));
+               continue;
+            }
 
             Debug.Assert(_cachedMergeRequests.ContainsKey(project.Id));
 
@@ -215,7 +226,8 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
-      async private Task<MergeRequestUpdates> getMergeRequestUpdatesAsync(TwoListDifference<MergeRequest> diff)
+      async private Task<MergeRequestUpdates> getMergeRequestUpdatesAsync(WorkflowState state,
+         TwoListDifference<MergeRequest> diff)
       {
          MergeRequestUpdates updates = new MergeRequestUpdates
          {
@@ -226,7 +238,7 @@ namespace mrHelper.Client.Updates
 
          foreach (MergeRequest mergeRequest in updates.NewMergeRequests)
          {
-            await cacheCommitsAsync(mergeRequest);
+            await cacheCommitsAsync(state, mergeRequest);
          }
 
          foreach (MergeRequest mergeRequest in diff.Common)
@@ -234,7 +246,7 @@ namespace mrHelper.Client.Updates
             DateTime? previouslyCachedCommitTimestamp = _cachedCommits.ContainsKey(mergeRequest.Id) ?
                _cachedCommits[mergeRequest.Id] : new Nullable<DateTime>();
 
-            await cacheCommitsAsync(mergeRequest);
+            await cacheCommitsAsync(state, mergeRequest);
 
             Debug.Assert(_cachedCommits.ContainsKey(mergeRequest.Id));
 
@@ -263,13 +275,13 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Load merge requests from GitLab and cache them
       /// </summary>
-      async private Task cacheMergeRequestsAsync(int projectId)
+      async private Task cacheMergeRequestsAsync(WorkflowState state, int projectId)
       {
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking merge requests for project {0} (id {1})",
             _cachedProjectNames[projectId], projectId));
 
          List<MergeRequest> mergeRequests =
-            await UpdateOperator.GetMergeRequestsAsync(Workflow.State.HostName, _cachedProjectNames[projectId]);
+            await UpdateOperator.GetMergeRequestsAsync(state.HostName, _cachedProjectNames[projectId]);
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This project has {0} merge requests at GitLab",
             mergeRequests.Count));
@@ -296,7 +308,7 @@ namespace mrHelper.Client.Updates
 
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               await cacheCommitsAsync(mergeRequest);
+               await cacheCommitsAsync(state, mergeRequest);
             }
          }
       }
@@ -304,7 +316,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Load commits from GitLab and cache them
       /// </summary>
-      async private Task cacheCommitsAsync(MergeRequest mergeRequest)
+      async private Task cacheCommitsAsync(WorkflowState state, MergeRequest mergeRequest)
       {
          Debug.WriteLine(String.Format(
             "[WorkflowUpdateChecker] Checking commits for merge request {0} from project {1}",
@@ -312,7 +324,7 @@ namespace mrHelper.Client.Updates
 
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
-               HostName = Workflow.State.HostName,
+               HostName = state.HostName,
                ProjectName = getMergeRequestProjectName(mergeRequest),
                IId = mergeRequest.IId
             };
@@ -345,7 +357,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates(List<MergeRequest> mergeRequests)
+      private List<ProjectUpdate> getProjectUpdates(WorkflowState state, List<MergeRequest> mergeRequests)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
@@ -367,8 +379,8 @@ namespace mrHelper.Client.Updates
             projectUpdates.Add(
                new ProjectUpdate
                {
-                  HostName = Workflow.State.HostName,
-                  ProjectName = projectName,
+                  HostName = state.HostName,
+                  ProjectName = getMergeRequestProjectName(mergeRequest),
                   LatestChange = latestChange
                });
          }
@@ -412,9 +424,9 @@ namespace mrHelper.Client.Updates
          return _cachedMergeRequests.Count == 0 && _cachedCommits.Count == 0;
       }
 
-      private bool areProjectsListedInFile()
+      private bool areProjectsListedInFile(WorkflowState state)
       {
-         return Workflow.State.HostName != null && Tools.Tools.LoadProjectsFromFile(Workflow.State.HostName) != null;
+         return state.HostName != null && Tools.Tools.LoadProjectsFromFile(state.HostName) != null;
       }
 
       private Workflow.Workflow Workflow { get; }
