@@ -73,7 +73,6 @@ namespace mrHelper.App.Forms
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
-         this.labelTimeTrackingProjectName = new System.Windows.Forms.Label();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
          this.buttonTimeTrackingCancel = new System.Windows.Forms.Button();
          this.labelTimeTrackingTrackedTime = new System.Windows.Forms.Label();
@@ -89,6 +88,7 @@ namespace mrHelper.App.Forms
          this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.buttonEditTime = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -538,7 +538,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxTimeTracking
          // 
-         this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingProjectName);
+         this.groupBoxTimeTracking.Controls.Add(this.buttonEditTime);
          this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingMergeRequestName);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingCancel);
          this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingTrackedTime);
@@ -550,16 +550,6 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.TabIndex = 10;
          this.groupBoxTimeTracking.TabStop = false;
          this.groupBoxTimeTracking.Text = "Time Tracking";
-         // 
-         // labelTimeTrackingProjectName
-         // 
-         this.labelTimeTrackingProjectName.Anchor = System.Windows.Forms.AnchorStyles.Right;
-         this.labelTimeTrackingProjectName.AutoEllipsis = true;
-         this.labelTimeTrackingProjectName.Location = new System.Drawing.Point(467, 49);
-         this.labelTimeTrackingProjectName.Name = "labelTimeTrackingProjectName";
-         this.labelTimeTrackingProjectName.Size = new System.Drawing.Size(121, 13);
-         this.labelTimeTrackingProjectName.TabIndex = 29;
-         this.labelTimeTrackingProjectName.Text = "<ProjectName>";
          // 
          // labelTimeTrackingMergeRequestName
          // 
@@ -590,7 +580,6 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedTime.Size = new System.Drawing.Size(61, 13);
          this.labelTimeTrackingTrackedTime.TabIndex = 24;
          this.labelTimeTrackingTrackedTime.Text = "<00:00:00>";
-         this.labelTimeTrackingTrackedTime.Visible = false;
          // 
          // buttonTimeTrackingStart
          // 
@@ -610,8 +599,7 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedLabel.Name = "labelTimeTrackingTrackedLabel";
          this.labelTimeTrackingTrackedLabel.Size = new System.Drawing.Size(76, 13);
          this.labelTimeTrackingTrackedLabel.TabIndex = 19;
-         this.labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
-         this.labelTimeTrackingTrackedLabel.Visible = false;
+         this.labelTimeTrackingTrackedLabel.Text = "<Total/Tracked Time:>";
          // 
          // groupBoxDescription
          // 
@@ -697,7 +685,18 @@ namespace mrHelper.App.Forms
          this.label3.TabIndex = 18;
          this.label3.Text = "and";
          // 
-         // mrHelperForm
+         // buttonEditTime
+         // 
+         this.buttonEditTime.Enabled = false;
+         this.buttonEditTime.Location = new System.Drawing.Point(505, 19);
+         this.buttonEditTime.Name = "buttonEditTime";
+         this.buttonEditTime.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditTime.TabIndex = 28;
+         this.buttonEditTime.Text = "Edit";
+         this.buttonEditTime.UseVisualStyleBackColor = true;
+         this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
+         // 
+         // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -707,7 +706,7 @@ namespace mrHelper.App.Forms
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MaximizeBox = false;
          this.MinimizeBox = false;
-         this.Name = "mrHelperForm";
+         this.Name = "MainForm";
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);
          this.Load += new System.EventHandler(this.MrHelperForm_Load);
@@ -792,7 +791,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
       private System.Windows.Forms.Button buttonTimeTrackingCancel;
       private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
-      private System.Windows.Forms.Label labelTimeTrackingProjectName;
+      private System.Windows.Forms.Button buttonEditTime;
    }
 }
 

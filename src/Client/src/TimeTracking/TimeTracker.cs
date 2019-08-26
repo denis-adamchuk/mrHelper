@@ -8,15 +8,17 @@ namespace mrHelper.Client.TimeTracking
 {
    public class TimeTrackerException : Exception {}
 
+   internal delegate Task OnTrackerStoppedAsync(TimeSpan timeSpan, MergeRequestDescriptor mrd);
+
    /// <summary>
    /// Implements a merge request time tracker with simple interface
    /// </summary>
    public class TimeTracker
    {
-      internal TimeTracker(MergeRequestDescriptor mrd, TimeTrackingOperator trackingOperator)
+      internal TimeTracker(MergeRequestDescriptor mrd, OnTrackerStoppedAsync onTrackerStopped)
       {
          MergeRequestDescriptor = mrd;
-         TimeTrackingOperator = trackingOperator;
+         OnStopped = onTrackerStopped;
          Stopwatch = new Stopwatch();
       }
 
@@ -31,7 +33,7 @@ namespace mrHelper.Client.TimeTracking
          Stopwatch.Stop();
          try
          {
-            await TimeTrackingOperator.AddSpanAsync(Stopwatch.Elapsed, MergeRequestDescriptor);
+            await OnStopped(Stopwatch.Elapsed, MergeRequestDescriptor);
          }
          catch (OperatorException)
          {
@@ -48,7 +50,7 @@ namespace mrHelper.Client.TimeTracking
 
       private MergeRequestDescriptor MergeRequestDescriptor { get; }
       private Stopwatch Stopwatch { get; }
-      private readonly TimeTrackingOperator TimeTrackingOperator;
+      private OnTrackerStoppedAsync OnStopped { get; }
    }
 }
 

@@ -8,11 +8,12 @@ namespace mrHelper.Client.Updates
    {
       public string HostName;
       public string ProjectName;
+      public DateTime LatestChange;
    }
 
    public interface IProjectWatcher
    {
-      event EventHandler<List<ProjectUpdate>> OnProjectUpdate;
+      event Action<List<ProjectUpdate>> OnProjectUpdate;
    }
 }
 

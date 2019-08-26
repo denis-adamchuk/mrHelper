@@ -20,7 +20,7 @@ using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
-   delegate void UpdateTextCallback(object sender, string text);
+   delegate void UpdateTextCallback(string text);
 
    internal partial class MainForm : Form, ICommandCallback
    {

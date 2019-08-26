@@ -19,7 +19,7 @@ namespace mrHelper.Client.Updates
          Settings = settings;
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequests(string host, string project)
+      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string host, string project)
       {
          GitLabClient client = new GitLabClient(host, Tools.Tools.GetAccessToken(host, Settings));
          try
@@ -39,20 +39,42 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      async internal Task<List<Commit>> GetCommits(MergeRequestDescriptor mrd)
+      async internal Task<int> GetCommitsCountAsync(MergeRequestDescriptor mrd)
       {
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            return (List<Commit>)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.LoadAllTaskAsync()));
+            return (int)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.CountTaskAsync()));
          }
          catch (Exception ex)
          {
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load commits from GitLab");
+               ExceptionHandlers.Handle(ex, "Cannot load commit count from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
+      async internal Task<Commit> GetLatestCommitAsync(MergeRequestDescriptor mrd)
+      {
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
+         try
+         {
+            List<Commit> commits = (List<Commit>)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.LoadTaskAsync(
+                  new PageFilter { PageNumber = 1, PerPage = 1 })));
+            return commits.Count > 0 ? commits[0] : new Commit();
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load the latest commit from GitLab");
                throw new OperatorException(ex);
             }
             throw;

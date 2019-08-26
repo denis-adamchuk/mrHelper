@@ -81,6 +81,24 @@ namespace mrHelper.App.Forms
          await onStopTimer(false);
       }
 
+      async private void ButtonTimeEdit_Click(object sender, EventArgs s)
+      {
+         TimeSpan oldSpan = TimeSpan.Parse(labelTimeTrackingTrackedTime.Text);
+         EditTimeForm form = new EditTimeForm(oldSpan);
+         if (form.ShowDialog() == DialogResult.OK)
+         {
+            TimeSpan newSpan = form.GetTimeSpan();
+            bool add = newSpan > oldSpan;
+            TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
+            if (diff != TimeSpan.Zero)
+            {
+               await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
+               updateTotalTime(_workflow.State.MergeRequestDescriptor);
+               labelWorkflowStatus.Text = "Total spent time updated";
+            }
+         }
+      }
+
       private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
       {
          _exiting = true;
@@ -344,27 +362,26 @@ namespace mrHelper.App.Forms
 
       private void onStartTimer()
       {
-         // 1. Update button text and enabled state
+         // Update button text and enabled state
          buttonTimeTrackingStart.Text = buttonStartTimerTrackingText;
          buttonTimeTrackingCancel.Enabled = true;
 
-         // 2. Set default text to tracked time label
-         labelTimeTrackingTrackedLabel.Visible = true;
-         labelTimeTrackingTrackedTime.Visible = true;
-         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
-
-         // 3. Start timer
+         // Start timer
          _timeTrackingTimer.Start();
 
-         // 4. Reset and start stopwatch
+         // Reset and start stopwatch
          Debug.Assert(_workflow.State.MergeRequestDescriptor.IId != default(MergeRequest).IId);
          _timeTracker = _timeTrackingManager.GetTracker(_workflow.State.MergeRequestDescriptor);
          _timeTracker.Start();
+
+         // Take care of controls that 'time tracking' mode shares with normal mode
+         updateTotalTime(null);
+         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
       }
 
       async private Task onStopTimer(bool send)
       {
-         // 1. Stop stopwatch and send tracked time
+         // Stop stopwatch and send tracked time
          if (send)
          {
             TimeSpan span = _timeTracker.Elapsed;
@@ -396,22 +413,21 @@ namespace mrHelper.App.Forms
          }
          _timeTracker = null;
 
-         // 2. Stop timer
+         // Stop timer
          _timeTrackingTimer.Stop();
 
-         // 3. Set default text to tracked time label
-         labelTimeTrackingTrackedLabel.Visible = false;
-         labelTimeTrackingTrackedTime.Visible = false;
-         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
-
-         // 4. Update button text and enabled state
+         // Update button text and enabled state
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          buttonTimeTrackingCancel.Enabled = false;
 
-         // 5. Show actual merge request details
+         // Show actual merge request details
          bool isMergeRequestSelected = _workflow.State.MergeRequest.IId != default(MergeRequest).IId;
          updateTimeTrackingMergeRequestDetails(
             isMergeRequestSelected ? _workflow.State.MergeRequest : new Nullable<MergeRequest>());
+
+         // Take care of controls that 'time tracking' mode shares with normal mode
+         updateTotalTime(isMergeRequestSelected ?
+            _workflow.State.MergeRequestDescriptor : new Nullable<MergeRequestDescriptor>());
       }
    }
 }

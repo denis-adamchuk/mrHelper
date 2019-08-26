@@ -61,6 +61,12 @@
     <Compile Include="src\Controls\TextBoxNoWheel.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Forms\TimeSpanEditForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\TimeSpanEditForm.Designer.cs">
+      <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\NewDiscussionItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -118,6 +124,9 @@
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\CustomTraceListener.cs" />
     <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />
+    <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
+      <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\NewDiscussionItemForm.resx">
       <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
     </EmbeddedResource>

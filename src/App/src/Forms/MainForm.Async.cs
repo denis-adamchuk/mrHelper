@@ -80,9 +80,8 @@ namespace mrHelper.App.Forms
             }
          }
 
-         User? currentUser = await loadCurrentUserAsync();
          List<Discussion> discussions = await loadDiscussionsAsync();
-         if (!currentUser.HasValue || discussions == null)
+         if (discussions == null)
          {
             return;
          }
@@ -95,7 +94,7 @@ namespace mrHelper.App.Forms
          {
             form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Author,
                client, int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
-               currentUser.Value);
+               _workflow.State.CurrentUser);
          }
          catch (NoDiscussionsToShow)
          {
@@ -202,25 +201,6 @@ namespace mrHelper.App.Forms
          serializer.SerializeToDisk(snapshot, pid);
       }
 
-      async private Task<User?> loadCurrentUserAsync()
-      {
-         labelWorkflowStatus.Text = "Loading current user...";
-         User? currentUser;
-         try
-         {
-            currentUser = await _workflow.GetCurrentUser();
-         }
-         catch (WorkflowException)
-         {
-            string message = "Cannot load current user details from GitLab";
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelWorkflowStatus.Text = message;
-            return null;
-         }
-         labelWorkflowStatus.Text = "Loaded current user details";
-         return currentUser;
-      }
-
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
          labelWorkflowStatus.Text = "Loading discussions...";
@@ -236,7 +216,7 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = message;
             return null;
          }
-         labelWorkflowStatus.Text = "Loaded discussions";
+         labelWorkflowStatus.Text = "Discussions loaded";
          return discussions;
       }
    }
