@@ -385,7 +385,7 @@ namespace mrHelper.App.Forms
          if (send)
          {
             TimeSpan span = _timeTracker.Elapsed;
-            if (span.Seconds > 1)
+            if (span.TotalSeconds > 1)
             {
                labelWorkflowStatus.Text = "Sending tracked time...";
                string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
