@@ -217,11 +217,14 @@ namespace mrHelper.Client.Workflow
 
          PostSwitchMergeRequest?.Invoke(State);
 
-         await loadCommitsAsync();
+         if (!await loadCommitsAsync())
+         {
+            return; // silent return
+         }
          await loadSystemNotesAsync();
       }
 
-      async private Task loadCommitsAsync()
+      async private Task<bool> loadCommitsAsync()
       {
          PreLoadCommits?.Invoke();
          List<Commit> commits;
@@ -235,12 +238,13 @@ namespace mrHelper.Client.Workflow
             FailedLoadCommits?.Invoke();
             if (cancelled)
             {
-               return; // silent return
+               return false; // silent return
             }
             throw new WorkflowException(String.Format(
                "Cannot load commits for merge request with IId {0}", State.MergeRequest.IId));
          }
          PostLoadCommits?.Invoke(State, commits);
+         return true;
       }
 
       async private Task loadSystemNotesAsync()
