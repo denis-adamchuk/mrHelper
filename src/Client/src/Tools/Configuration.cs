@@ -89,7 +89,15 @@ namespace mrHelper.Client.Tools
       public string LastUsedLabels
       {
          get { return getValue(LastUsedLabelsKeyName, LastUsedLabelsDefaultValue); }
-         set { setValue(LastUsedLabelsKeyName, value); }
+         set
+         {
+            setValue(LastUsedLabelsKeyName, value);
+
+            // TODO This is needed to notify listeners if even the value has not changed.
+            // To avoid it here we need ability to subscribe for someone else than Configuration to listen
+            // filter changes.
+            OnPropertyChanged(LastUsedLabelsKeyName);
+         }
       }
 
       public string LastSelectedProject
