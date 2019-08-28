@@ -73,17 +73,8 @@ namespace mrHelper.Core.Context
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
          int endLineNumber = linenumber + depth.Down;
 
-         calculateNullLinesCount(startLineNumber, isRightSideContext, context,
-            out int nullsAtLeft, out int nullsAtRight);
-         if ((isRightSideContext && startLineNumber + nullsAtRight > context.Right.Count)
-         || (!isRightSideContext && startLineNumber + nullsAtLeft > context.Left.Count))
-         {
-            Debug.Assert(false);
-         }
-
-         // counters of null-lines that we encounter within the loop below
-         int extraNullsAtLeft = 0;
-         int extraNullsAtRight = 0;
+         TwoListIterator<string> iterator =
+            new TwoListIterator<string>(context.Left, context.Right, startLineNumber - 1, isRightSideContext);
 
          DiffContext diffContext = new DiffContext
          {
@@ -93,50 +84,31 @@ namespace mrHelper.Core.Context
          int iContextLine = 0;
          while (true)
          {
-            // one-base line number within a requested context
-            int ctxLineNumber = startLineNumber + iContextLine;
+            int? leftLineNumber = iterator.LeftLineNumber() != null ? iterator.LeftLineNumber() + 1 : null;
+            int? rightLineNumber = iterator.RightLineNumber() != null ? iterator.RightLineNumber() + 1 : null;
 
-            // zero-based line number in 'full context diff' lists
-            int absLineNumber = ctxLineNumber - 1 + (isRightSideContext ? nullsAtRight : nullsAtLeft);
-            if (absLineNumber >= context.Left.Count)
+            DiffContext.Line line =
+               getLineContext(leftLineNumber, rightLineNumber, iterator.LeftLine(), iterator.RightLine());
+            diffContext.Lines.Add(line);
+
+            if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber == linenumber)
+            || (rightLineNumber.HasValue && isRightSideContext && rightLineNumber == linenumber))
             {
-               // we've just reached the end
-               break;
+               // zero-based index of a selected line in DiffContext.Lines
+               diffContext.SelectedIndex = iContextLine;
             }
 
-            // one-based line number in sha1 file
-            int leftLineNumber =
-               ctxLineNumber - extraNullsAtLeft + (isRightSideContext ? nullsAtRight - nullsAtLeft : 0);
-
-            // one-based line number in sha2 file
-            int rightLineNumber =
-               ctxLineNumber - extraNullsAtRight + (isRightSideContext ? 0 : nullsAtLeft - nullsAtRight);
-
-            if ((isRightSideContext && rightLineNumber > endLineNumber)
-            || (!isRightSideContext && leftLineNumber > endLineNumber))
+            if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber >= endLineNumber)
+            || (rightLineNumber.HasValue && isRightSideContext && rightLineNumber >= endLineNumber))
             {
                // we've just reached a line that should not be included in the context
                break;
             }
 
-            DiffContext.Line line =
-               getLineContext(absLineNumber, leftLineNumber, rightLineNumber, context,
-                  ref extraNullsAtLeft, ref extraNullsAtRight);
-            diffContext.Lines.Add(line);
-
-            if (iContextLine == 0)
+            if (!iterator.Next())
             {
-               // discard increments of extra null lines at the first iteration because these null lines
-               // are included in nullsAtLeft and nullsAtRight
-               extraNullsAtLeft = 0;
-               extraNullsAtRight = 0;
-            }
-
-            if ((isRightSideContext && rightLineNumber == linenumber)
-            || (!isRightSideContext && leftLineNumber == linenumber))
-            {
-               // zero-based index of a selected line in DiffContext.Lines
-               diffContext.SelectedIndex = iContextLine;
+               // we've just reached the end
+               break;
             }
 
             ++iContextLine;
@@ -145,31 +117,28 @@ namespace mrHelper.Core.Context
          return diffContext;
       }
 
-      // absLineNumber is zero-based
       // leftLineNumber and rightLineNumber are one-based
-      private static DiffContext.Line getLineContext(int absLineNumber, int leftLineNumber, int rightLineNumber,
-         FullContextDiff context, ref int extraNullsAtLeft, ref int extraNullsAtRight)
+      private static DiffContext.Line getLineContext(int? leftLineNumber, int? rightLineNumber,
+         string leftLine, string rightLine)
       {
          DiffContext.Line line = new DiffContext.Line();
 
-         if (context.Left[absLineNumber] != null && context.Right[absLineNumber] != null)
+         if (leftLineNumber.HasValue && rightLineNumber.HasValue)
          {
-            Debug.Assert(context.Left[absLineNumber] == context.Right[absLineNumber]);
-            line.Left = getSide(leftLineNumber, DiffContext.Line.State.Unchanged);
-            line.Right = getSide(rightLineNumber, DiffContext.Line.State.Unchanged);
-            line.Text = context.Left[absLineNumber];
+            Debug.Assert(leftLine == rightLine);
+            line.Left = getSide(leftLineNumber.Value, DiffContext.Line.State.Unchanged);
+            line.Right = getSide(rightLineNumber.Value, DiffContext.Line.State.Unchanged);
+            line.Text = leftLine;
          }
-         else if (context.Left[absLineNumber] != null)
+         else if (leftLineNumber.HasValue)
          {
-            ++extraNullsAtRight;
-            line.Left = getSide(leftLineNumber, DiffContext.Line.State.Changed);
-            line.Text = context.Left[absLineNumber];
+            line.Left = getSide(leftLineNumber.Value, DiffContext.Line.State.Changed);
+            line.Text = leftLine;
          }
-         else if (context.Right[absLineNumber] != null)
+         else if (rightLineNumber.HasValue)
          {
-            ++extraNullsAtLeft;
-            line.Right = getSide(rightLineNumber, DiffContext.Line.State.Changed);
-            line.Text = context.Right[absLineNumber];
+            line.Right = getSide(rightLineNumber.Value, DiffContext.Line.State.Changed);
+            line.Text = rightLine;
          }
          else
          {
@@ -187,40 +156,6 @@ namespace mrHelper.Core.Context
             State = state
          };
          return side;
-      }
-
-      // linenumber is one-based
-      private static void calculateNullLinesCount(int linenumber, bool isRightSideContext, FullContextDiff context,
-         out int nullsAtLeft, out int nullsAtRight)
-      {
-         int lineCount = 0; // counts lines at the right side if isRightSideContext is true
-         nullsAtLeft = 0;
-         nullsAtRight = 0;
-
-         // calculate number of 'null' lines at each side
-         for (int iLine = 0; iLine < context.Left.Count; ++iLine)
-         {
-            if (context.Left[iLine] == null)
-            {
-               nullsAtLeft++;
-            }
-
-            if (context.Right[iLine] == null)
-            {
-               nullsAtRight++;
-            }
-
-            if ((isRightSideContext && context.Right[iLine] != null)
-            || (!isRightSideContext && context.Left[iLine] != null))
-            {
-               ++lineCount;
-               if (lineCount == linenumber)
-               {
-                  // we're finishing to calculate 'null' lines when passed linenumber is reached
-                  break;
-               }
-            }
-         }
       }
 
       private readonly IGitRepository _gitRepository;
