@@ -73,8 +73,18 @@ namespace mrHelper.Core.Context
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
          int endLineNumber = linenumber + depth.Down;
 
-         TwoListIterator<string> iterator =
-            new TwoListIterator<string>(context.Left, context.Right, startLineNumber - 1, isRightSideContext);
+         SparsedListIterator<string> itLeft = context.Left.Begin();
+         SparsedListIterator<string> itRight = context.Right.Begin();
+         if (isRightSideContext)
+         {
+            itRight = SparsedListUtils.FindNth(itRight, startLineNumber - 1);
+            itLeft = SparsedListUtils.Advance(itLeft, itRight.Position);
+         }
+         else
+         {
+            itLeft = SparsedListUtils.FindNth(itLeft, startLineNumber - 1);
+            itRight = SparsedListUtils.Advance(itRight, itLeft.Position);
+         }
 
          DiffContext diffContext = new DiffContext
          {
@@ -84,11 +94,10 @@ namespace mrHelper.Core.Context
          int iContextLine = 0;
          while (true)
          {
-            int? leftLineNumber = iterator.LeftLineNumber() != null ? iterator.LeftLineNumber() + 1 : null;
-            int? rightLineNumber = iterator.RightLineNumber() != null ? iterator.RightLineNumber() + 1 : null;
+            int? leftLineNumber = itLeft.LineNumber != null ? itLeft.LineNumber + 1 : null;
+            int? rightLineNumber = itRight.LineNumber != null ? itRight.LineNumber + 1 : null;
 
-            DiffContext.Line line =
-               getLineContext(leftLineNumber, rightLineNumber, iterator.LeftLine(), iterator.RightLine());
+            DiffContext.Line line = getLineContext(leftLineNumber, rightLineNumber, itLeft.Current, itRight.Current);
             diffContext.Lines.Add(line);
 
             if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber == linenumber)
@@ -105,7 +114,7 @@ namespace mrHelper.Core.Context
                break;
             }
 
-            if (!iterator.Next())
+            if (!itLeft.Next() || !itRight.Next())
             {
                // we've just reached the end
                break;

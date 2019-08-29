@@ -12,8 +12,8 @@ namespace mrHelper.Core.Context
    /// </summary>
    public struct FullContextDiff
    {
-      public List<string> Left;
-      public List<string> Right;
+      public SparsedList<string> Left;
+      public SparsedList<string> Right;
    }
 
    /// <summary>
@@ -37,8 +37,8 @@ namespace mrHelper.Core.Context
       {
          FullContextDiff fullContextDiff = new FullContextDiff
          {
-            Left = new List<string>(),
-            Right = new List<string>()
+            Left = new SparsedList<string>(),
+            Right = new SparsedList<string>()
          };
          List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName, maxDiffContext);
          bool skip = true;
