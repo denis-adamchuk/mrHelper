@@ -435,7 +435,7 @@ namespace mrHelper.Client.Updates
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {
-            Interval = 60000 // ms
+            Interval = 5 * 60000 // five minutes in ms
          };
 
       private List<string> _cachedLabels;
