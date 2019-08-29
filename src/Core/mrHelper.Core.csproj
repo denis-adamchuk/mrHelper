@@ -58,9 +58,9 @@
     <Compile Include="src\Context\OldCombinedContextMaker.cs" />
     <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="src\Context\DiffContextFormatter.cs" />
-    <Compile Include="src\Context\SparsedList.cs" />
-    <Compile Include="src\Context\SparsedListIterator.cs" />
-    <Compile Include="src\Context\SparsedListUtils.cs" />
+    <Compile Include="src\Tools\SparsedList.cs" />
+    <Compile Include="src\Tools\SparsedListIterator.cs" />
+    <Compile Include="src\Tools\SparsedListUtils.cs" />
     <Compile Include="src\Git\GitRenameDetector.cs" />
     <Compile Include="src\Git\GitDiffAnalyzer.cs" />
     <Compile Include="src\Interprocess\Snapshot.cs" />
@@ -69,6 +69,7 @@
     <Compile Include="src\Interprocess\DiffToolInfo.cs" />
     <Compile Include="src\Interprocess\ParentProcessUtilities.cs" />
     <Compile Include="src\Interprocess\Helpers.cs" />
+    <Compile Include="src\Matching\OldRefToLineMatcher.cs" />
     <Compile Include="src\Matching\RefToLineMatcher.cs" />
     <Compile Include="src\Matching\Types.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

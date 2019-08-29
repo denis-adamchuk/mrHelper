@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using mrHelper.Core.Tools;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Core.Context

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.Core.Context
+namespace mrHelper.Core.Tools
 {
    public class SparsedList<T> : List<T> where T: class
    {

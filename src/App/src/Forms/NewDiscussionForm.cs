@@ -103,19 +103,11 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         try
-         {
-            _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         }
-         catch (MatchException)
-         {
-            // Some kind of special handling
-            MessageBox.Show(
-               "Line numbers from diff tool do not match line numbers from git diff. " +
-               "Make sure that you use correct instance of diff tool.",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            throw; // fatal error
-         }
+         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
+
+         OldRefToLineMatcher oldMatcher = new OldRefToLineMatcher(_gitRepository);
+         var position2 = oldMatcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
+         Debug.Assert(_position.ToString() == position2.ToString());
 
          showDiscussionContext(htmlPanel, textBoxFileName);
       }
