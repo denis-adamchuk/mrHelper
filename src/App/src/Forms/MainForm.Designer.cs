@@ -556,7 +556,7 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingMergeRequestName.AutoEllipsis = true;
          this.labelTimeTrackingMergeRequestName.Location = new System.Drawing.Point(9, 49);
          this.labelTimeTrackingMergeRequestName.Name = "labelTimeTrackingMergeRequestName";
-         this.labelTimeTrackingMergeRequestName.Size = new System.Drawing.Size(449, 13);
+         this.labelTimeTrackingMergeRequestName.Size = new System.Drawing.Size(577, 13);
          this.labelTimeTrackingMergeRequestName.TabIndex = 27;
          this.labelTimeTrackingMergeRequestName.Text = "<Merge Request Name Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed " +
     "do eiusmod tempor>";
