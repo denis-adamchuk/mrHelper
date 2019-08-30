@@ -103,19 +103,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         try
-         {
-            _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         }
-         catch (MatchException)
-         {
-            // Some kind of special handling
-            MessageBox.Show(
-               "Line numbers from diff tool do not match line numbers from git diff. " +
-               "Make sure that you use correct instance of diff tool.",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            throw; // fatal error
-         }
+         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
 
          showDiscussionContext(htmlPanel, textBoxFileName);
       }

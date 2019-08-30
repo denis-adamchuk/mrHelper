@@ -57,6 +57,9 @@
     <Compile Include="src\Context\EnhancedContextMaker.cs" />
     <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="src\Context\DiffContextFormatter.cs" />
+    <Compile Include="src\Tools\SparsedList.cs" />
+    <Compile Include="src\Tools\SparsedListIterator.cs" />
+    <Compile Include="src\Tools\SparsedListUtils.cs" />
     <Compile Include="src\Git\GitRenameDetector.cs" />
     <Compile Include="src\Git\GitDiffAnalyzer.cs" />
     <Compile Include="src\Interprocess\Snapshot.cs" />
