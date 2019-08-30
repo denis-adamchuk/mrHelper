@@ -42,7 +42,6 @@ namespace mrHelper.App.Controls
          {
             _panelContextMaker = new EnhancedContextMaker(gitRepository);
             _tooltipContextMaker = new CombinedContextMaker(gitRepository);
-            _tooltipContextMakerOld = new OldCombinedContextMaker(gitRepository);
          }
          _colorScheme = colorScheme;
 
@@ -234,16 +233,6 @@ namespace mrHelper.App.Controls
             _diffContextDepth, fontSizePx, rowsVPaddingPx);
          _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
             _tooltipContextDepth, fontSizePx, rowsVPaddingPx));
-
-         var ctx1 = _tooltipContextMaker.GetContext(position, _tooltipContextDepth);
-         var ctx2 = _tooltipContextMakerOld.GetContext(position, _tooltipContextDepth);
-
-         Debug.Assert(ctx1.Lines.Count == ctx2.Lines.Count);
-         for (int iLine = 0; iLine < ctx1.Lines.Count; ++iLine)
-         {
-            Debug.Assert(ctx1.Lines[iLine].ToString() == ctx2.Lines[iLine].ToString());
-            Debug.Assert(ctx1.SelectedIndex == ctx2.SelectedIndex);
-         }
 
          return htmlPanel;
       }
@@ -788,7 +777,6 @@ namespace mrHelper.App.Controls
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
-      private readonly IContextMaker _tooltipContextMakerOld;
       private readonly DiffContextFormatter _formatter;
       private readonly DiscussionEditor _editor;
 

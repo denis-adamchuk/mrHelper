@@ -105,10 +105,6 @@ namespace mrHelper.App.Forms
 
          _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
 
-         OldRefToLineMatcher oldMatcher = new OldRefToLineMatcher(_gitRepository);
-         var position2 = oldMatcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-         Debug.Assert(_position.ToString() == position2.ToString());
-
          showDiscussionContext(htmlPanel, textBoxFileName);
       }
 
