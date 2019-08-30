@@ -92,9 +92,9 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Author,
-               client, int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
-               _workflow.State.CurrentUser);
+            form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Title,
+               _workflow.State.MergeRequest.Author, client, int.Parse(comboBoxDCDepth.Text), _colorScheme,
+               discussions, _discussionManager, _workflow.State.CurrentUser);
          }
          catch (NoDiscussionsToShow)
          {

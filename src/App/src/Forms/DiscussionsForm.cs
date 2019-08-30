@@ -26,11 +26,12 @@ namespace mrHelper.App.Forms
       /// Throws:
       /// ArgumentException
       /// </summary>
-      internal DiscussionsForm(MergeRequestDescriptor mrd, User mergeRequestAuthor, IGitRepository gitRepository,
-         int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions, DiscussionManager manager,
-         User currentUser)
+      internal DiscussionsForm(MergeRequestDescriptor mrd, string mrTitle, User mergeRequestAuthor,
+         IGitRepository gitRepository, int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions,
+         DiscussionManager manager, User currentUser)
       {
          _mergeRequestDescriptor = mrd;
+         _mergeRequestTitle = mrTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
          _gitRepository = gitRepository;
@@ -178,12 +179,13 @@ namespace mrHelper.App.Forms
       {
          get
          {
-            return String.Format("Discussions for merge request #{0} with code repository in \"{1}\"",
-               _mergeRequestDescriptor.IId, _gitRepository?.Path ?? "no repository");
+            return String.Format("Discussions for merge request \"{0}\" with code repository in \"{1}\"",
+               _mergeRequestTitle, _gitRepository?.Path ?? "no repository");
          }
       }
 
       private readonly MergeRequestDescriptor _mergeRequestDescriptor;
+      private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
       private readonly IGitRepository _gitRepository;
       private readonly int _diffContextDepth;
