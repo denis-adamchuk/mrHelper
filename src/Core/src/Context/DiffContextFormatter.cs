@@ -120,7 +120,7 @@ namespace mrHelper.Core.Context
             return "<br";
          }
 
-         string trimmed = System.Net.WebUtility.HtmlEncode(line.Text).TrimStart();
+         string trimmed = line.Text.TrimStart();
          int leadingSpaces = line.Text.Length - trimmed.Length;
 
          string spaces = string.Empty;
@@ -129,7 +129,7 @@ namespace mrHelper.Core.Context
             spaces += "&nbsp;";
          }
 
-         return spaces + trimmed;
+         return spaces + System.Net.WebUtility.HtmlEncode(trimmed);
       }
 
       private readonly string _css;
