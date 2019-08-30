@@ -46,7 +46,15 @@ namespace mrHelper.Client.Tools
 
       public UserDefinedSettings(bool changesAllowed)
       {
-         _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+         string configFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+               "mrHelper", "mrHelper.exe.config");
+
+         ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap();
+         configFileMap.ExeConfigFilename = configFilePath;
+
+         _config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+
          _changesAllowed = changesAllowed;
       }
 
