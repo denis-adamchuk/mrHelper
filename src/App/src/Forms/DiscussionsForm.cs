@@ -39,8 +39,6 @@ namespace mrHelper.App.Forms
 
          _colorScheme = colorScheme;
 
-         InitializeComponent();
-
          _manager = manager;
 
          _currentUser = currentUser;
@@ -48,6 +46,17 @@ namespace mrHelper.App.Forms
          {
             throw new ArgumentException("Bad user Id");
          }
+
+         InitializeComponent();
+
+         Filter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
+            new DiscussionFilterState
+            {
+               ByCurrentUserOnly = false,
+               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered
+            });
+         FilterPanel = new DiscussionFilterPanel(Filter.Filter, async () => onRefresh(await loadDiscussionsAsync()) );
+         Controls.Add(FilterPanel);
 
          if (!onRefresh(discussions))
          {
@@ -70,7 +79,7 @@ namespace mrHelper.App.Forms
 
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
       {
-         repositionDiscussionBoxes();
+         repositionControls();
       }
 
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
@@ -112,7 +121,13 @@ namespace mrHelper.App.Forms
          SuspendLayout();
 
          // Clean up the form
-         Controls.Clear();
+         for (int iBox = Controls.Count - 1; iBox >= 0; --iBox)
+         {
+            if (Controls[iBox] is DiscussionBox)
+            {
+               Controls.RemoveAt(iBox);
+            }
+         }
 
          // Load updated data and create controls for it
          this.Text = DefaultCaption + "   (Rendering Discussions Form)";
@@ -130,9 +145,11 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionBoxes(List<Discussion> discussions)
       {
+         Filter.Filter = FilterPanel.Filter;
+
          foreach (var discussion in discussions)
          {
-            if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
+            if (!Filter.DoesMatchFilter(discussion))
             {
                continue;
             }
@@ -141,22 +158,27 @@ namespace mrHelper.App.Forms
             Control control = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
                _diffContextDepth, _gitRepository, _colorScheme,
                () => {
-                  repositionDiscussionBoxes();
+                  repositionControls();
                });
             Controls.Add(control);
          }
       }
 
-      private void repositionDiscussionBoxes()
+      private void repositionControls()
       {
          int groupBoxMarginLeft = 5;
          int groupBoxMarginTop = 5;
 
-         Point previousBoxLocation = new Point();
+         this.FilterPanel.Location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+
+         Point previousBoxLocation = new Point(0, FilterPanel.Location.Y + FilterPanel.Size.Height);
          Size previousBoxSize = new Size();
          foreach (Control control in Controls)
          {
-            Debug.Assert(control is DiscussionBox);
+            if (!(control is DiscussionBox))
+            {
+               continue;
+            }
 
             Point location = new Point
             {
@@ -193,6 +215,9 @@ namespace mrHelper.App.Forms
 
       private User _currentUser;
       private readonly DiscussionManager _manager;
+
+      private readonly DiscussionFilterPanel FilterPanel;
+      private readonly DiscussionFilter Filter;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

@@ -55,6 +55,12 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\Controls\DiscussionFilterPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DiscussionFilterPanel.Designer.cs">
+      <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\SelectionPreservingComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -120,10 +126,14 @@
     <Compile Include="src\Forms\NewDiscussionForm.Designer.cs">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Helpers\DiscussionFilter.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\CustomTraceListener.cs" />
     <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />
+    <EmbeddedResource Include="src\Controls\DiscussionFilterPanel.resx">
+      <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </EmbeddedResource>
