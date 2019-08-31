@@ -18,6 +18,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Git;
+using GitLabSharp.Accessors;
 
 namespace mrHelper.App.Forms
 {
@@ -116,7 +117,7 @@ namespace mrHelper.App.Forms
          form.Show();
       }
 
-      async private void onLaunchDiffTool()
+      async private Task onLaunchDiffToolAsync()
       {
          GitClient client = getGitClient();
          if (client != null)
@@ -184,6 +185,29 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Diff tool launched";
 
          saveInterprocessSnapshot(pid, leftSHA, rightSHA);
+      }
+
+      async private Task onAddCommentAsync()
+      {
+         string caption = String.Format("Add comment to merge request \"{0}\"",
+            _workflow.State.MergeRequest.Title);
+         NewDiscussionItemForm form = new NewDiscussionItemForm(caption);
+         if (form.ShowDialog() == DialogResult.OK)
+         {
+            if (form.Body.Length == 0)
+            {
+               MessageBox.Show("Comment body cannot be empty", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               return;
+            }
+
+            DiscussionCreator creator =
+               _discussionManager.GetDiscussionCreator(_workflow.State.MergeRequestDescriptor);
+
+            labelWorkflowStatus.Text = "Adding a comment...";
+            await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
+            labelWorkflowStatus.Text = "Comment added";
+         }
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA)

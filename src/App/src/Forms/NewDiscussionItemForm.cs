@@ -12,9 +12,10 @@ namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionItemForm : Form
    {
-      internal NewDiscussionItemForm()
+      internal NewDiscussionItemForm(string caption)
       {
          InitializeComponent();
+         this.Text = caption;
       }
 
       internal string Body => textBox.Text;

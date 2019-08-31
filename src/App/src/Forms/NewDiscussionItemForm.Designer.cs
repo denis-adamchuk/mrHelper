@@ -73,7 +73,7 @@
          this.Controls.Add(this.textBox);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.Name = "NewDiscussionItemForm";
-         this.Text = "Reply to Discussion";
+         this.Text = "Dialog caption";
          this.Load += new System.EventHandler(this.NewDiscussionItemForm_Load);
          this.ResumeLayout(false);
          this.PerformLayout();

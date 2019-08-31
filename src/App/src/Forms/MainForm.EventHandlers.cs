@@ -58,9 +58,14 @@ namespace mrHelper.App.Forms
          Show();
       }
 
-      private void ButtonDifftool_Click(object sender, EventArgs e)
+      async private void ButtonDifftool_Click(object sender, EventArgs e)
       {
-         onLaunchDiffTool();
+         await onLaunchDiffToolAsync();
+      }
+
+      async private void ButtonAddComment_Click(object sender, EventArgs e)
+      {
+         await onAddCommentAsync();
       }
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)

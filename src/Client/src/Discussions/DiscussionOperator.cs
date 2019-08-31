@@ -205,6 +205,27 @@ namespace mrHelper.Client.Discussions
          }
       }
 
+      async internal Task CreateNoteAsync(MergeRequestDescriptor mrd, CreateNewNoteParameters parameters)
+      {
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
+         try
+         {
+            await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).
+                  Notes.CreateNewTaskAsync(parameters));
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot create a note");
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       private UserDefinedSettings Settings { get; }
    }
 }

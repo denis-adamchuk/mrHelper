@@ -30,6 +30,18 @@ namespace mrHelper.Client.Discussions
          MergeRequestDescriptor = mrd;
       }
 
+      async public Task CreateNoteAsync(CreateNewNoteParameters parameters)
+      {
+         try
+         {
+            await DiscussionOperator.CreateNoteAsync(MergeRequestDescriptor, parameters);
+         }
+         catch (OperatorException)
+         {
+            throw new DiscussionCreatorException(false);
+         }
+      }
+
       async public Task CreateDiscussionAsync(NewDiscussionParameters parameters)
       {
          try

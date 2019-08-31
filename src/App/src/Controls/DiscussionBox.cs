@@ -116,7 +116,7 @@ namespace mrHelper.App.Controls
 
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
-         NewDiscussionItemForm form = new NewDiscussionItemForm();
+         NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion");
          if (form.ShowDialog() == DialogResult.OK)
          {
             if (form.Body.Length == 0)

@@ -217,12 +217,12 @@ namespace mrHelper.App.Forms
          UserDefinedSettings settings = new UserDefinedSettings(false);
          DiscussionManager manager = new DiscussionManager(settings);
          DiscussionCreator creator = manager.GetDiscussionCreator(
-               new MergeRequestDescriptor
-               {
+            new MergeRequestDescriptor
+            {
                HostName = _interprocessSnapshot.Host,
                ProjectName = _interprocessSnapshot.Project,
                IId = _interprocessSnapshot.MergeRequestIId
-               });
+            });
 
          try
          {

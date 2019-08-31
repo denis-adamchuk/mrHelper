@@ -51,6 +51,7 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool = new System.Windows.Forms.Button();
          this.buttonDiscussions = new System.Windows.Forms.Button();
          this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
+         this.buttonAddComment = new System.Windows.Forms.Button();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -73,6 +74,7 @@ namespace mrHelper.App.Forms
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
+         this.buttonEditTime = new System.Windows.Forms.Button();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
          this.buttonTimeTrackingCancel = new System.Windows.Forms.Button();
          this.labelTimeTrackingTrackedTime = new System.Windows.Forms.Label();
@@ -88,7 +90,6 @@ namespace mrHelper.App.Forms
          this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.buttonEditTime = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -267,7 +268,7 @@ namespace mrHelper.App.Forms
          // buttonDiffTool
          // 
          this.buttonDiffTool.Enabled = false;
-         this.buttonDiffTool.Location = new System.Drawing.Point(24, 19);
+         this.buttonDiffTool.Location = new System.Drawing.Point(118, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(83, 27);
          this.buttonDiffTool.TabIndex = 11;
@@ -279,7 +280,7 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(135, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(219, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(83, 27);
          this.buttonDiscussions.TabIndex = 12;
@@ -304,6 +305,18 @@ namespace mrHelper.App.Forms
          this.comboBoxDCDepth.TabIndex = 8;
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
+         // 
+         // buttonAddComment
+         // 
+         this.buttonAddComment.Enabled = false;
+         this.buttonAddComment.Location = new System.Drawing.Point(16, 19);
+         this.buttonAddComment.Name = "buttonAddComment";
+         this.buttonAddComment.Size = new System.Drawing.Size(83, 27);
+         this.buttonAddComment.TabIndex = 13;
+         this.buttonAddComment.Text = "Add Comment";
+         this.toolTip.SetToolTip(this.buttonAddComment, "Press Alt-K to create a new discussion");
+         this.buttonAddComment.UseVisualStyleBackColor = true;
+         this.buttonAddComment.Click += new System.EventHandler(this.ButtonAddComment_Click);
          // 
          // contextMenuStrip
          // 
@@ -520,18 +533,19 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxActions.Location = new System.Drawing.Point(6, 388);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(346, 55);
+         this.groupBoxActions.Size = new System.Drawing.Size(270, 55);
          this.groupBoxActions.TabIndex = 22;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
          // 
          // groupBoxReview
          // 
+         this.groupBoxReview.Controls.Add(this.buttonAddComment);
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
          this.groupBoxReview.Controls.Add(this.buttonDiffTool);
-         this.groupBoxReview.Location = new System.Drawing.Point(358, 388);
+         this.groupBoxReview.Location = new System.Drawing.Point(282, 388);
          this.groupBoxReview.Name = "groupBoxReview";
-         this.groupBoxReview.Size = new System.Drawing.Size(243, 55);
+         this.groupBoxReview.Size = new System.Drawing.Size(319, 55);
          this.groupBoxReview.TabIndex = 11;
          this.groupBoxReview.TabStop = false;
          this.groupBoxReview.Text = "Review";
@@ -550,6 +564,17 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.TabIndex = 10;
          this.groupBoxTimeTracking.TabStop = false;
          this.groupBoxTimeTracking.Text = "Time Tracking";
+         // 
+         // buttonEditTime
+         // 
+         this.buttonEditTime.Enabled = false;
+         this.buttonEditTime.Location = new System.Drawing.Point(505, 19);
+         this.buttonEditTime.Name = "buttonEditTime";
+         this.buttonEditTime.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditTime.TabIndex = 28;
+         this.buttonEditTime.Text = "Edit";
+         this.buttonEditTime.UseVisualStyleBackColor = true;
+         this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
          // 
          // labelTimeTrackingMergeRequestName
          // 
@@ -597,7 +622,7 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedLabel.AutoSize = true;
          this.labelTimeTrackingTrackedLabel.Location = new System.Drawing.Point(356, 26);
          this.labelTimeTrackingTrackedLabel.Name = "labelTimeTrackingTrackedLabel";
-         this.labelTimeTrackingTrackedLabel.Size = new System.Drawing.Size(76, 13);
+         this.labelTimeTrackingTrackedLabel.Size = new System.Drawing.Size(117, 13);
          this.labelTimeTrackingTrackedLabel.TabIndex = 19;
          this.labelTimeTrackingTrackedLabel.Text = "<Total/Tracked Time:>";
          // 
@@ -685,17 +710,6 @@ namespace mrHelper.App.Forms
          this.label3.TabIndex = 18;
          this.label3.Text = "and";
          // 
-         // buttonEditTime
-         // 
-         this.buttonEditTime.Enabled = false;
-         this.buttonEditTime.Location = new System.Drawing.Point(505, 19);
-         this.buttonEditTime.Name = "buttonEditTime";
-         this.buttonEditTime.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditTime.TabIndex = 28;
-         this.buttonEditTime.Text = "Edit";
-         this.buttonEditTime.UseVisualStyleBackColor = true;
-         this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -705,7 +719,6 @@ namespace mrHelper.App.Forms
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MaximizeBox = false;
-         this.MinimizeBox = true;
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);
@@ -792,6 +805,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonTimeTrackingCancel;
       private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
       private System.Windows.Forms.Button buttonEditTime;
+      private System.Windows.Forms.Button buttonAddComment;
    }
 }
 
