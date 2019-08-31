@@ -255,9 +255,11 @@ namespace mrHelper.Client.Git
          }
          catch (GitOperationException ex)
          {
-            Trace.TraceInformation(String.Format("[GitClient] async operation -- cancel --  {0}: {1}",
-               _projectName, arguments));
-            ex.Cancelled = true;
+            int cancellationExitCode = 130;
+            string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
+               _projectName, arguments, status));
+            ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw ex;
          }
          finally
