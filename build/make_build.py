@@ -158,16 +158,20 @@ class PreBuilder:
    def _write_version(self):
       version_rex = re.compile(r'(\s*\"ProductVersion\"\s*=\s*\"8)(?:\:[0-9\.]+\")')
       product_code_rex = re.compile(r'(\s*\"ProductCode\"\s*=\s*\"8:)(?:{[0-9A-F\-]+})(\")')
+      assembly_version_rex = re.compile(r'(\s*\"AssemblyAsmDisplayName\".*\"8:mrHelper.*Version)(?:=[0-9\.]+,)(.*)')
 
       lines = []
       with open (self.installer_project, 'r') as f:
          for line in f:
             if re.match(version_rex, line):
-               lines.append(version_rex.sub(r'\1:{0}"'.format(self.version[:-2]), line))
+               three_digit_version = self.version[:-2]
+               lines.append(version_rex.sub(r'\1:{0}"'.format(three_digit_version), line))
             elif re.match(product_code_rex, line):
                guid = str(uuid.uuid4())
                guid = guid.upper()
                lines.append(product_code_rex.sub(r'\1{{{0}}}\2'.format(guid), line))
+            elif re.match(assembly_version_rex, line):
+               lines.append(assembly_version_rex.sub(r'\1={0},\2'.format(self.version), line))
             else:
                lines.append(line)
 
