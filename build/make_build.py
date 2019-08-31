@@ -167,7 +167,6 @@ class PreBuilder:
             elif re.match(product_code_rex, line):
                guid = str(uuid.uuid4())
                guid = guid.upper()
-               print(guid)
                lines.append(product_code_rex.sub(r'\1{{{0}}}\2'.format(guid), line))
             else:
                lines.append(line)
