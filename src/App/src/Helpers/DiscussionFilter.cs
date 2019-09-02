@@ -18,12 +18,23 @@ namespace mrHelper.App.Helpers
    };
 
    /// <summary>
+   /// Possible choices of filtering discussion list by resolved/not-resolved criteria
+   /// </summary>
+   [Flags]
+   public enum FilterByResolution
+   {
+      Resolved   = 1,
+      NotResolved = 2
+   };
+
+   /// <summary>
    /// Current state of discussion filter
    /// </summary>
    public struct DiscussionFilterState
    {
       public bool ByCurrentUserOnly;
       public FilterByAnswers ByAnswers;
+      public FilterByResolution ByResolution;
    }
 
    /// <summary>
@@ -54,8 +65,24 @@ namespace mrHelper.App.Helpers
 
          bool isLastNoteFromMergeRequestAuthor =
             discussion.Notes[discussion.Notes.Count - 1].Author.Id == MergeRequestAuthor.Id;
-         return (Filter.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
+         bool matchByAnswers =
+                (Filter.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
              || (Filter.ByAnswers.HasFlag(FilterByAnswers.Unanswered) && !isLastNoteFromMergeRequestAuthor);
+         if (!matchByAnswers)
+         {
+            return false;
+         }
+
+         bool isDiscussionResolved = discussion.Notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
+         bool matchByResolved =
+                (Filter.ByResolution.HasFlag(FilterByResolution.Resolved) && isDiscussionResolved)
+             || (Filter.ByResolution.HasFlag(FilterByResolution.NotResolved) && !isDiscussionResolved);
+         if (!matchByResolved)
+         {
+            return false;
+         }
+
+         return true;
       }
 
       private User CurrentUser;

@@ -53,7 +53,8 @@ namespace mrHelper.App.Forms
             new DiscussionFilterState
             {
                ByCurrentUserOnly = false,
-               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered
+               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
+               ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
             });
          FilterPanel = new DiscussionFilterPanel(Filter.Filter, async () => onRefresh(await loadDiscussionsAsync()) );
          Controls.Add(FilterPanel);
