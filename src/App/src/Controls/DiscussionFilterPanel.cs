@@ -23,11 +23,11 @@ namespace mrHelper.App.Controls
          _onFilterChanged = onFilterChanged;
 
          InitializeComponent();
-         initializeControlToFlags();
+         bindRadioToFlags();
 
          checkBoxCreatedByMe.Checked = initialFilter.ByCurrentUserOnly;
-         setFilter(_byAnswersToFlags, (int)initialFilter.ByAnswers);
-         setFilter(_byResolutionToFlags, (int)initialFilter.ByResolution);
+         setFilter(_byAnswersRadioToFlags, (int)initialFilter.ByAnswers);
+         setFilter(_byResolutionRadioToFlags, (int)initialFilter.ByResolution);
       }
 
       /// <summary>
@@ -40,8 +40,8 @@ namespace mrHelper.App.Controls
             return new DiscussionFilterState
             {
                ByCurrentUserOnly = checkBoxCreatedByMe.Checked,
-               ByAnswers = getFilter<FilterByAnswers>(_byAnswersToFlags),
-               ByResolution = getFilter<FilterByResolution>(_byResolutionToFlags)
+               ByAnswers = getFilter<FilterByAnswers>(_byAnswersRadioToFlags),
+               ByResolution = getFilter<FilterByResolution>(_byResolutionRadioToFlags)
             };
          }
       }
@@ -51,20 +51,20 @@ namespace mrHelper.App.Controls
          _onFilterChanged();
       }
 
-      private void initializeControlToFlags()
+      private void bindRadioToFlags()
       {
-         _byAnswersToFlags.Add(radioButtonNoFilterByAnswers,
+         _byAnswersRadioToFlags.Add(radioButtonNoFilterByAnswers,
             (int)(FilterByAnswers.Answered | FilterByAnswers.Unanswered));
-         _byAnswersToFlags.Add(radioButtonShowAnsweredOnly, (int)FilterByAnswers.Answered);
-         _byAnswersToFlags.Add(radioButtonShowUnansweredOnly, (int)FilterByAnswers.Unanswered);
+         _byAnswersRadioToFlags.Add(radioButtonShowAnsweredOnly, (int)FilterByAnswers.Answered);
+         _byAnswersRadioToFlags.Add(radioButtonShowUnansweredOnly, (int)FilterByAnswers.Unanswered);
 
-         _byResolutionToFlags.Add(radioButtonNoFilterByResolution,
+         _byResolutionRadioToFlags.Add(radioButtonNoFilterByResolution,
             (int)(FilterByResolution.Resolved | FilterByResolution.NotResolved));
-         _byResolutionToFlags.Add(radioButtonShowResolvedOnly, (int)FilterByResolution.Resolved);
-         _byResolutionToFlags.Add(radioButtonShowNotResolvedOnly, (int)FilterByResolution.NotResolved);
+         _byResolutionRadioToFlags.Add(radioButtonShowResolvedOnly, (int)FilterByResolution.Resolved);
+         _byResolutionRadioToFlags.Add(radioButtonShowNotResolvedOnly, (int)FilterByResolution.NotResolved);
       }
 
-      private void setFilter(Dictionary<RadioButton, int> flags, int value)
+      private static void setFilter(Dictionary<RadioButton, int> flags, int value)
       {
          foreach (var radio in flags)
          {
@@ -72,7 +72,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private T getFilter<T>(Dictionary<RadioButton, int> flags) where T: System.Enum
+      private static T getFilter<T>(Dictionary<RadioButton, int> flags) where T: System.Enum
       {
          foreach (var radio in flags)
          {
@@ -88,8 +88,8 @@ namespace mrHelper.App.Controls
 
       private readonly Action _onFilterChanged;
 
-      private Dictionary<RadioButton, int> _byAnswersToFlags = new Dictionary<RadioButton, int>();
-      private Dictionary<RadioButton, int> _byResolutionToFlags = new Dictionary<RadioButton, int>();
+      private readonly Dictionary<RadioButton, int> _byAnswersRadioToFlags = new Dictionary<RadioButton, int>();
+      private readonly Dictionary<RadioButton, int> _byResolutionRadioToFlags = new Dictionary<RadioButton, int>();
    }
 }
 
