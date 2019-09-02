@@ -72,7 +72,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private static T getFilter<T>(Dictionary<RadioButton, int> flags) where T: System.Enum
+      private static T getFilter<T>(Dictionary<RadioButton, int> flags)
       {
          foreach (var radio in flags)
          {
