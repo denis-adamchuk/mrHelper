@@ -79,24 +79,39 @@ namespace mrHelper.App.Forms
       {
          this.ActiveControl = textBoxDiscussionBody;
          string anotherName;
+         bool moved;
          bool fileRenamed;
          try
          {
-            fileRenamed = checkForRenamedFile(out anotherName);
+            fileRenamed = checkForRenamedFile(out anotherName, out moved);
          }
          catch (GitOperationException)
          {
             throw; // fatal error
          }
 
-         if (fileRenamed)
+         if (moved)
+         {
+            Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
+
+            MessageBox.Show(
+                  "We detected that this file is a moved version of "
+                  + "\"" + anotherName + "\""
+                  + ". GitLab does not allow to create discussions on moved files.",
+                  "Cannot create a discussion",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Close();
+            return;
+         }
+         else if (fileRenamed)
          {
             Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
 
             MessageBox.Show(
                   "We detected that this file is a renamed version of "
                   + "\"" + anotherName + "\""
-                  + ". GitLab will not accept such input. Please match files manually in the diff tool and try again.",
+                  + ". GitLab requires both files to be available to create discussions. "
+                  + "Please match files manually in the diff tool and try again.",
                   "Cannot create a discussion",
                   MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close();
@@ -111,14 +126,10 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      private bool checkForRenamedFile(out string anotherName)
+      private bool checkForRenamedFile(out string anotherName, out bool moved)
       {
          anotherName = String.Empty;
-         if (_difftoolInfo.Left.HasValue && _difftoolInfo.Right.HasValue)
-         {
-            // two file names are provided, nothing to check
-            return false;
-         }
+         moved = false;
 
          if (!_difftoolInfo.Left.HasValue)
          {
@@ -127,26 +138,37 @@ namespace mrHelper.App.Forms
                _interprocessSnapshot.Refs.LeftSHA,
                _interprocessSnapshot.Refs.RightSHA,
                _difftoolInfo.Right?.FileName,
-               false);
+               false, out moved);
             if (anotherName == _difftoolInfo.Right?.FileName)
             {
                // it is not a renamed but removed file
                return false;
             }
          }
-         if (!_difftoolInfo.Right.HasValue)
+         else if (!_difftoolInfo.Right.HasValue)
          {
             Debug.Assert(_difftoolInfo.Left.HasValue);
             anotherName = _renameChecker.IsRenamed(
                _interprocessSnapshot.Refs.LeftSHA,
                _interprocessSnapshot.Refs.RightSHA,
                _difftoolInfo.Left?.FileName,
-               true);
+               true, out moved);
             if (anotherName == _difftoolInfo.Left?.FileName)
             {
                // it is not a renamed but added file
                return false;
             }
+         }
+         else
+         {
+            // If even two names are given, we need to check here because use might selected manually two
+            // versions of a moved file
+            anotherName = _renameChecker.IsRenamed(
+               _interprocessSnapshot.Refs.LeftSHA,
+               _interprocessSnapshot.Refs.RightSHA,
+               _difftoolInfo.IsLeftSideCurrent ? _difftoolInfo.Left?.FileName : _difftoolInfo.Right?.FileName,
+               _difftoolInfo.IsLeftSideCurrent, out moved);
+            return moved;
          }
          return true;
       }
