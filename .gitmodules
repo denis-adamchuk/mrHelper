@@ -1,7 +1,3 @@
 [submodule "submodules/GitLabSharp"]
 	path = submodules/GitLabSharp
 	url = https://github.com/denis-adamchuk/GitLabSharp
-[submodule "submodules/mrHelper.Install"]
-	path = submodules/mrHelper.Install
-	url = https://github.com/denis-adamchuk/mrHelper.Install.git
-	branch = master
