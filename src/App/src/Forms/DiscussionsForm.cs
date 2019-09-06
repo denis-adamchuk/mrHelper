@@ -78,25 +78,35 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.Home)
          {
-            AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Minimum);
-            PerformLayout();
+            if (!(ActiveControl is TextBox))
+            {
+               AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Minimum);
+               PerformLayout();
+               e.Handled = true;
+            }
          }
          else if (e.KeyCode == Keys.End)
          {
-            AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Maximum);
-            PerformLayout();
+            if (!(ActiveControl is TextBox))
+            {
+               AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Maximum);
+               PerformLayout();
+               e.Handled = true;
+            }
          }
          else if (e.KeyCode == Keys.PageUp)
          {
             AutoScrollPosition = new Point(AutoScrollPosition.X,
                Math.Max(VerticalScroll.Minimum, VerticalScroll.Value - VerticalScroll.LargeChange));
             PerformLayout();
+            e.Handled = true;
          }
          else if (e.KeyCode == Keys.PageDown)
          {
             AutoScrollPosition = new Point(AutoScrollPosition.X,
                Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
             PerformLayout();
+            e.Handled = true;
          }
       }
 
