@@ -116,17 +116,19 @@ namespace mrHelper.App.Controls
 
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
-         NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion");
-         if (form.ShowDialog() == DialogResult.OK)
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
          {
-            if (form.Body.Length == 0)
+            if (form.ShowDialog() == DialogResult.OK)
             {
-               MessageBox.Show("Reply text cannot be empty", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-               return;
-            }
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Reply text cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
 
-            await onReplyAsync(form.Body);
+               await onReplyAsync(form.Body);
+            }
          }
       }
 
@@ -371,7 +373,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = canBeModified(note),
-            Text = "Edit Note"
+            Text = "Edit Note (F2)"
          };
          menuItemEditNote.Click += MenuItemEditNote_Click;
          contextMenu.MenuItems.Add(menuItemEditNote);

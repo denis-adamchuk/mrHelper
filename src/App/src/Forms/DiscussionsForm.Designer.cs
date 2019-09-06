@@ -17,6 +17,7 @@
          {
             components.Dispose();
          }
+         this.FilterPanel.Dispose();
          base.Dispose(disposing);
       }
 
