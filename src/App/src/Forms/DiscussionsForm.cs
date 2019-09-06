@@ -76,6 +76,28 @@ namespace mrHelper.App.Forms
                Close();
             }
          }
+         else if (e.KeyCode == Keys.Home)
+         {
+            AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Minimum);
+            PerformLayout();
+         }
+         else if (e.KeyCode == Keys.End)
+         {
+            AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Maximum);
+            PerformLayout();
+         }
+         else if (e.KeyCode == Keys.PageUp)
+         {
+            AutoScrollPosition = new Point(AutoScrollPosition.X,
+               Math.Max(VerticalScroll.Minimum, VerticalScroll.Value - VerticalScroll.LargeChange));
+            PerformLayout();
+         }
+         else if (e.KeyCode == Keys.PageDown)
+         {
+            AutoScrollPosition = new Point(AutoScrollPosition.X,
+               Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
+            PerformLayout();
+         }
       }
 
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
@@ -170,9 +192,14 @@ namespace mrHelper.App.Forms
          int groupBoxMarginLeft = 5;
          int groupBoxMarginTop = 5;
 
-         this.FilterPanel.Location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         FilterPanel.Location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
 
          Point previousBoxLocation = new Point(0, FilterPanel.Location.Y + FilterPanel.Size.Height);
+
+         FilterPanel.Location = new Point(
+            FilterPanel.Location.X - HorizontalScroll.Value,
+            FilterPanel.Location.Y - VerticalScroll.Value);
+
          Size previousBoxSize = new Size();
          foreach (Control control in Controls)
          {
