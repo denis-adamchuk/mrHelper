@@ -367,9 +367,13 @@ namespace mrHelper.App.Forms
 
       private void onStartTimer()
       {
+         Debug.Assert(!isTrackingTime());
+
          // Update button text and enabled state
          buttonTimeTrackingStart.Text = buttonStartTimerTrackingText;
+         buttonTimeTrackingStart.BackColor = System.Drawing.Color.LightGreen;
          buttonTimeTrackingCancel.Enabled = true;
+         buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Tomato;
 
          // Start timer
          _timeTrackingTimer.Start();
@@ -386,6 +390,11 @@ namespace mrHelper.App.Forms
 
       async private Task onStopTimer(bool send)
       {
+         if (!isTrackingTime())
+         {
+            return;
+         }
+
          // Stop stopwatch and send tracked time
          if (send)
          {
@@ -423,7 +432,9 @@ namespace mrHelper.App.Forms
 
          // Update button text and enabled state
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
+         buttonTimeTrackingStart.BackColor = System.Drawing.Color.Transparent;
          buttonTimeTrackingCancel.Enabled = false;
+         buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
          // Show actual merge request details
          bool isMergeRequestSelected = _workflow.State.MergeRequest.IId != default(MergeRequest).IId;

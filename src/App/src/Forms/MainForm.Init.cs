@@ -68,6 +68,9 @@ namespace mrHelper.App.Forms
                   return;
                }
                labelWorkflowStatus.Text = "Command " + name + " completed";
+
+               // TODO This may be unneeded in general case but so far it is ok for custom actions that I know
+               await onStopTimer(true);
             };
             groupBoxActions.Controls.Add(button);
             offSetFromGroupBoxTopLeft.X += typicalSize.Width + 10;
