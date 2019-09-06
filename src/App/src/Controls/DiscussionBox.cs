@@ -80,6 +80,7 @@ namespace mrHelper.App.Controls
          else if (!textBox.ReadOnly && e.KeyData == Keys.Escape)
          {
             onCancelEditNote(textBox);
+            updateTextboxHeight(textBox);
          }
       }
 
@@ -87,16 +88,16 @@ namespace mrHelper.App.Controls
       {
          TextBox textBox = (TextBox)(sender);
 
-         if (!textBox.ReadOnly && e.KeyData == Keys.Enter)
+         if (!textBox.ReadOnly)
          {
-            onNewLineAddedToNote(textBox);
+            updateTextboxHeight(textBox);
          }
       }
 
-      private void onNewLineAddedToNote(TextBox textBox)
+      private void updateTextboxHeight(Control textBox)
       {
          int newHeight = getTextBoxPreferredHeight(textBox);
-         if (newHeight > textBox.Height)
+         if (newHeight != textBox.Height)
          {
             textBox.Height = newHeight;
             _onSizeChanged();
@@ -264,26 +265,47 @@ namespace mrHelper.App.Controls
       }
 
       // Create a label that shows filename
-      private Label createLabelFilename(DiscussionNote firstNote)
+      private Control createLabelFilename(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
          {
             return null;
          }
 
-         string oldPath = firstNote.Position.Old_Path ?? String.Empty;
-         string newPath = firstNote.Position.New_Path ?? String.Empty;
-         string result = oldPath == newPath ? oldPath : (newPath + "\n(was " + oldPath + ")");
+         string oldPath = firstNote.Position.Old_Path + " (line " + firstNote.Position.Old_Line + ")";
+         string newPath = firstNote.Position.New_Path + " (line " + firstNote.Position.New_Line + ")";
 
-         Label labelFilename = new Label
+         string result;
+         if (firstNote.Position.Old_Line == null)
          {
+            result = newPath;
+         }
+         else if (firstNote.Position.New_Line == null)
+         {
+            result = oldPath;
+         }
+         else if (firstNote.Position.Old_Path == firstNote.Position.New_Path)
+         {
+            result = newPath;
+         }
+         else
+         {
+            result = newPath + "\r\n(was " + oldPath + ")";
+         }
+
+         TextBox labelFilename = new TextBoxNoWheel
+         {
+            ReadOnly = true,
             Text = result,
-            AutoSize = true
+            Multiline = true,
+            MinimumSize = new Size(300, 0)
          };
+         labelFilename.Height = getTextBoxPreferredHeight(labelFilename);
          return labelFilename;
       }
+
       // Create a label that shows discussion author
-      private Label createLabelAuthor(DiscussionNote firstNote)
+      private Control createLabelAuthor(DiscussionNote firstNote)
       {
          Label labelAuthor = new Label
          {
@@ -307,7 +329,7 @@ namespace mrHelper.App.Controls
                continue;
             }
 
-            TextBox textBox = createTextBox(note, discussionResolved);
+            Control textBox = createTextBox(note, discussionResolved);
             boxes.Add(textBox);
          }
          return boxes;
@@ -318,7 +340,7 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private TextBox createTextBox(DiscussionNote note, bool discussionResolved)
+      private Control createTextBox(DiscussionNote note, bool discussionResolved)
       {
          TextBox textBox = new TextBoxNoWheel();
          _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
@@ -389,7 +411,7 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-      private static int getTextBoxPreferredHeight(TextBox textBox)
+      private static int getTextBoxPreferredHeight(Control textBox)
       {
          var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
          return textBox.Font.Height * (numberOfLines + 1);
@@ -432,7 +454,7 @@ namespace mrHelper.App.Controls
          foreach (var textbox in _textboxesNotes)
          {
             textbox.Width = width * NotesWidth / 100;
-            textbox.Height = getTextBoxPreferredHeight(textbox as TextBox);
+            textbox.Height = getTextBoxPreferredHeight(textbox);
          }
 
          if (_panelContext != null)
@@ -444,6 +466,7 @@ namespace mrHelper.App.Controls
          if (_labelFileName != null)
          {
             _labelFileName.Width = width * LabelFilenameWidth / 100;
+            _labelFileName.Height = getTextBoxPreferredHeight(_labelFileName);
          }
       }
 
@@ -520,13 +543,6 @@ namespace mrHelper.App.Controls
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          textBox.Text = note.Body.Replace("\n", "\r\n");
-
-         int newHeight = getTextBoxPreferredHeight(textBox);
-         if (newHeight < textBox.Height)
-         {
-            textBox.Height = newHeight;
-            _onSizeChanged();
-         }
       }
 
       async private Task onSubmitNewBodyAsync(TextBox textBox)
@@ -560,7 +576,7 @@ namespace mrHelper.App.Controls
          _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
 
          // Create a new text box
-         TextBox newTextBox = createTextBox(note, isDiscussionResolved()); 
+         Control newTextBox = createTextBox(note, isDiscussionResolved()); 
 
          // By default place a new textbox at the same place as the old one. It may be changed if height changed.
          // It is better to change Location right now to avoid flickering during _onSizeChanged(). 
