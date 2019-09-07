@@ -26,11 +26,11 @@ namespace mrHelper.App.Controls
       [DllImport("user32", EntryPoint = "SendMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
       private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam);
 
-      internal delegate void OnBoxEvent();
-
       internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
-         int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme, OnBoxEvent onSizeChanged)
+         int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
+         Action<DiscussionBox> preContentChange, Action<DiscussionBox> onContentChanged)
       {
+         Discussion = discussion;
          _editor = editor;
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
@@ -45,7 +45,8 @@ namespace mrHelper.App.Controls
          }
          _colorScheme = colorScheme;
 
-         _onSizeChanged = onSizeChanged;
+         _preContentChange = preContentChange;
+         _onContentChanged = onContentChanged;
 
          _toolTip = new ToolTip
          {
@@ -62,8 +63,10 @@ namespace mrHelper.App.Controls
             BaseStylesheet = ".htmltooltip { padding: 1px; }"
          };
 
-         onCreate(discussion);
+         onCreate();
       }
+
+      internal Discussion Discussion { get; private set; }
 
       private void TextBox_KeyDown(object sender, KeyEventArgs e)
       {
@@ -100,7 +103,7 @@ namespace mrHelper.App.Controls
          if (newHeight != textBox.Height)
          {
             textBox.Height = newHeight;
-            _onSizeChanged();
+            _onContentChanged(this);
          }
       }
 
@@ -185,19 +188,16 @@ namespace mrHelper.App.Controls
          repositionBoxContent(width);
       }
 
-      private void onCreate(Discussion discussion)
+      private void onCreate()
       {
-         Debug.Assert(discussion.Notes.Count > 0);
+         Debug.Assert(Discussion.Notes.Count > 0);
 
-         var firstNote = discussion.Notes[0];
-         Debug.Assert(!firstNote.System);
-
-         _individual = discussion.Individual_Note;
+         var firstNote = Discussion.Notes[0];
 
          _labelAuthor = createLabelAuthor(firstNote);
          _labelFileName = createLabelFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
-         _textboxesNotes = createTextBoxes(discussion.Notes);
+         _textboxesNotes = createTextBoxes(Discussion.Notes);
 
          Controls.Add(_labelAuthor);
          Controls.Add(_labelFileName);
@@ -403,7 +403,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemReply = new MenuItem
          {
-            Enabled = !_individual,
+            Enabled = !Discussion.Individual_Note,
             Text = "Reply"
          };
          menuItemReply.Click += MenuItemReply_Click;
@@ -576,6 +576,8 @@ namespace mrHelper.App.Controls
 
          _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
 
+         _preContentChange(this);
+
          // Create a new text box
          Control newTextBox = createTextBox(note, isDiscussionResolved()); 
 
@@ -596,11 +598,8 @@ namespace mrHelper.App.Controls
          // Replace text box in Discussion Box
          replaceControlInParent(textBox, newTextBox);
 
-         if (oldHeight != newHeight)
-         {
-            // Notify parent that our size has changed
-            _onSizeChanged();
-         }
+         // Notify parent that our size has changed
+         _onContentChanged(this);
       }
 
       async private Task onDeleteNoteAsync(TextBox textBox)
@@ -617,11 +616,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         if (!await refreshDiscussion())
-         {
-            // Seems it was the only note in the discussion, remove ourselves from parents controls
-            Parent.Controls.Remove(this);
-         }
+         await refreshDiscussion();
       }
 
       async private Task onToggleResolveNoteAsync(TextBox textBox)
@@ -661,12 +656,14 @@ namespace mrHelper.App.Controls
          await refreshDiscussion();
       }
 
-      async private Task<bool> refreshDiscussion()
+      async private Task refreshDiscussion()
       {
+         _preContentChange(this);
+
          // Get rid of old text boxes
          for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
          {
-            if (Controls[iControl] is TextBox)
+            if (_textboxesNotes.IndexOf(Controls[iControl]) != -1)
             {
                Controls.Remove(Controls[iControl]);
             }
@@ -674,32 +671,37 @@ namespace mrHelper.App.Controls
          _textboxesNotes.Clear();
 
          // Load updated discussion
-         Discussion discussion;
          try
          {
-            discussion = await _editor.GetDiscussion();
+            Discussion = await _editor.GetDiscussion();
          }
          catch (DiscussionEditorException)
          {
             // it is not an error here, we treat it as 'last discussion item has been deleted'
-            return false;
+            // Seems it was the only note in the discussion, remove ourselves from parents controls
+            Parent.Controls.Remove(this);
+            _onContentChanged(this);
+            return;
          }
 
-         if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
+         if (Discussion.Notes.Count == 0 || Discussion.Notes[0].System)
          {
-            return false;
+            // It happens when Discussion has System notes like 'a line changed ...'
+            // along with a user note that has been just deleted
+            Parent.Controls.Remove(this);
+            _onContentChanged(this);
+            return;
          }
 
          // Create controls
-         _textboxesNotes = createTextBoxes(discussion.Notes);
+         _textboxesNotes = createTextBoxes(Discussion.Notes);
          foreach (var note in _textboxesNotes)
          {
             Controls.Add(note);
          }
 
          // To reposition new controls
-         _onSizeChanged();
-         return true;
+         _onContentChanged(this);
       }
 
       private bool isDiscussionResolved()
@@ -790,7 +792,6 @@ namespace mrHelper.App.Controls
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
-      private bool _individual;
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
@@ -801,7 +802,8 @@ namespace mrHelper.App.Controls
 
       private readonly ColorScheme _colorScheme;
 
-      private readonly OnBoxEvent _onSizeChanged;
+      private readonly Action<DiscussionBox> _preContentChange;
+      private readonly Action<DiscussionBox> _onContentChanged;
 
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;

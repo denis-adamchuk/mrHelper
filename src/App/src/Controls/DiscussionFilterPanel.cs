@@ -28,6 +28,8 @@ namespace mrHelper.App.Controls
          checkBoxCreatedByMe.Checked = initialFilter.ByCurrentUserOnly;
          setFilter(_byAnswersRadioToFlags, (int)initialFilter.ByAnswers);
          setFilter(_byResolutionRadioToFlags, (int)initialFilter.ByResolution);
+
+         subscribeToEvents();
       }
 
       /// <summary>
@@ -46,9 +48,12 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void ButtonApplyFilter_Click(object sender, EventArgs e)
+      private void FilterElement_CheckedChanged(object sender, EventArgs e)
       {
-         _onFilterChanged();
+         if (sender is RadioButton radioButton && radioButton.Checked || sender is CheckBox checkBox)
+         {
+            _onFilterChanged();
+         }
       }
 
       private void bindRadioToFlags()

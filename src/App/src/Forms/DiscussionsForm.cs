@@ -49,14 +49,22 @@ namespace mrHelper.App.Forms
 
          InitializeComponent();
 
-         Filter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
-            new DiscussionFilterState
+         DiscussionFilterState state = new DiscussionFilterState
             {
                ByCurrentUserOnly = false,
                ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
+            };
+
+         DisplayFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor, state);
+         SystemFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor, state);
+
+         FilterPanel = new DiscussionFilterPanel(DisplayFilter.Filter,
+            () =>
+            {
+               DisplayFilter.Filter = FilterPanel.Filter;
+               updateLayout(null);
             });
-         FilterPanel = new DiscussionFilterPanel(Filter.Filter, async () => onRefresh(await loadDiscussionsAsync()) );
          Controls.Add(FilterPanel);
 
          if (!onRefresh(discussions))
@@ -145,55 +153,77 @@ namespace mrHelper.App.Forms
 
       private bool onRefresh(List<Discussion> discussions)
       {
-         if (discussions == null || discussions.Count<Discussion>(x => x.Notes.Count > 0 && !x.Notes[0].System) == 0)
-         {
-            return false;
-         }
+         updateLayout(discussions);
+         Focus(); // Set focus to the Form
+         return discussions != null && Controls.Cast<Control>().Any((x) => x is DiscussionBox);
+      }
 
-         // Avoid scroll bar redraw on each added control
+      private void updateLayout(List<Discussion> discussions)
+      {
+         this.Text = DefaultCaption + "   (Rendering)";
+
          SuspendLayout();
 
-         // Clean up the form
-         for (int iBox = Controls.Count - 1; iBox >= 0; --iBox)
+         if (discussions != null)
          {
-            if (Controls[iBox] is DiscussionBox)
+            for (int iBox = Controls.Count - 1; iBox >= 0; --iBox)
             {
-               Controls.RemoveAt(iBox);
+               if (Controls[iBox] is DiscussionBox)
+               {
+                  Controls.RemoveAt(iBox);
+               }
             }
+
+            createDiscussionBoxes(discussions);
          }
 
-         // Load updated data and create controls for it
-         this.Text = DefaultCaption + "   (Rendering Discussions Form)";
-         createDiscussionBoxes(discussions);
+         // Reposition controls before updating their visiblity to avoid flickering
+         repositionControls();
 
-         // Put controls at their places
-         ResumeLayout();
+         // Un-hide controls that should be visible now
+         updateVisibilityOfBoxes();
+
+         AdjustFormScrollbars(true);
+
+         ResumeLayout(false /* don't need immediate re-layout, everything is already ok */);
+
          this.Text = DefaultCaption;
+      }
 
-         // Set focus to the Form
-         Focus();
-
-         return true;
+      private void updateVisibilityOfBoxes()
+      {
+         foreach (Control control in Controls)
+         {
+            if (control is DiscussionBox box)
+            {
+               box.Visible = DisplayFilter.DoesMatchFilter(box.Discussion);
+            }
+         }
       }
 
       private void createDiscussionBoxes(List<Discussion> discussions)
       {
-         Filter.Filter = FilterPanel.Filter;
-
          foreach (var discussion in discussions)
          {
-            if (!Filter.DoesMatchFilter(discussion))
+            if (!SystemFilter.DoesMatchFilter(discussion))
             {
                continue;
             }
 
             DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestDescriptor, discussion.Id);
-            Control control = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
+            DiscussionBox box = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
                _diffContextDepth, _gitRepository, _colorScheme,
-               () => {
-                  repositionControls();
-               });
-            Controls.Add(control);
+               (sender) =>
+               {
+                  SuspendLayout();
+                  sender.Visible = false; // to avoid flickering on repositioning
+               }, (sender) => updateLayout(null))
+            {
+
+               // Let new boxes be hidden to avoid flickering on repositioning
+               Visible = false
+            };
+            Controls.Add(box);
          }
       }
 
@@ -213,7 +243,14 @@ namespace mrHelper.App.Forms
          Size previousBoxSize = new Size();
          foreach (Control control in Controls)
          {
-            if (!(control is DiscussionBox))
+            if (!(control is DiscussionBox box))
+            {
+               continue;
+            }
+
+            // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
+            // Cannot check Visible property because it is not set so far, we're trying to avoid flickering.
+            if (!DisplayFilter.DoesMatchFilter(box.Discussion))
             {
                continue;
             }
@@ -225,13 +262,15 @@ namespace mrHelper.App.Forms
             };
 
             // Discussion box can take all the width except scroll bars and the left margin
-            (control as DiscussionBox).AdjustToWidth(ClientSize.Width - groupBoxMarginLeft);
+            // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
+            int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
+            box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
 
-            control.Location = new Point(
+            box.Location = new Point(
                location.X - HorizontalScroll.Value,
                location.Y - VerticalScroll.Value);
             previousBoxLocation = location;
-            previousBoxSize = control.Size;
+            previousBoxSize = box.Size;
          }
       }
 
@@ -255,7 +294,8 @@ namespace mrHelper.App.Forms
       private readonly DiscussionManager _manager;
 
       private readonly DiscussionFilterPanel FilterPanel;
-      private readonly DiscussionFilter Filter;
+      private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences
+      private readonly DiscussionFilter SystemFilter; // filters out discussions with System notes
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

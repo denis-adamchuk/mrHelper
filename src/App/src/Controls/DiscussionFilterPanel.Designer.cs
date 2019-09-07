@@ -20,6 +20,17 @@
          base.Dispose(disposing);
       }
 
+      private void subscribeToEvents()
+      {
+         this.radioButtonShowNotResolvedOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+         this.radioButtonShowResolvedOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+         this.radioButtonNoFilterByResolution.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+         this.radioButtonShowUnansweredOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+         this.radioButtonShowAnsweredOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+         this.radioButtonNoFilterByAnswers.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+         this.checkBoxCreatedByMe.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
+      }
+
       #region Component Designer generated code
 
       /// <summary> 
@@ -29,19 +40,18 @@
       private void InitializeComponent()
       {
          this.groupBoxFilter = new System.Windows.Forms.GroupBox();
-         this.buttonApplyFilter = new System.Windows.Forms.Button();
+         this.groupBox2 = new System.Windows.Forms.GroupBox();
+         this.radioButtonShowNotResolvedOnly = new System.Windows.Forms.RadioButton();
+         this.radioButtonShowResolvedOnly = new System.Windows.Forms.RadioButton();
+         this.radioButtonNoFilterByResolution = new System.Windows.Forms.RadioButton();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.radioButtonShowUnansweredOnly = new System.Windows.Forms.RadioButton();
          this.radioButtonShowAnsweredOnly = new System.Windows.Forms.RadioButton();
          this.radioButtonNoFilterByAnswers = new System.Windows.Forms.RadioButton();
          this.checkBoxCreatedByMe = new System.Windows.Forms.CheckBox();
-         this.groupBox2 = new System.Windows.Forms.GroupBox();
-         this.radioButtonShowNotResolvedOnly = new System.Windows.Forms.RadioButton();
-         this.radioButtonShowResolvedOnly = new System.Windows.Forms.RadioButton();
-         this.radioButtonNoFilterByResolution = new System.Windows.Forms.RadioButton();
          this.groupBoxFilter.SuspendLayout();
-         this.groupBox1.SuspendLayout();
          this.groupBox2.SuspendLayout();
+         this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxFilter
@@ -50,7 +60,6 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxFilter.Controls.Add(this.groupBox2);
-         this.groupBoxFilter.Controls.Add(this.buttonApplyFilter);
          this.groupBoxFilter.Controls.Add(this.groupBox1);
          this.groupBoxFilter.Controls.Add(this.checkBoxCreatedByMe);
          this.groupBoxFilter.Location = new System.Drawing.Point(3, 3);
@@ -60,15 +69,50 @@
          this.groupBoxFilter.TabStop = false;
          this.groupBoxFilter.Text = "Discussion Filter";
          // 
-         // buttonApplyFilter
+         // groupBox2
          // 
-         this.buttonApplyFilter.Location = new System.Drawing.Point(377, 13);
-         this.buttonApplyFilter.Name = "buttonApplyFilter";
-         this.buttonApplyFilter.Size = new System.Drawing.Size(75, 23);
-         this.buttonApplyFilter.TabIndex = 2;
-         this.buttonApplyFilter.Text = "Apply";
-         this.buttonApplyFilter.UseVisualStyleBackColor = true;
-         this.buttonApplyFilter.Click += new System.EventHandler(this.ButtonApplyFilter_Click);
+         this.groupBox2.Controls.Add(this.radioButtonShowNotResolvedOnly);
+         this.groupBox2.Controls.Add(this.radioButtonShowResolvedOnly);
+         this.groupBox2.Controls.Add(this.radioButtonNoFilterByResolution);
+         this.groupBox2.Location = new System.Drawing.Point(232, 42);
+         this.groupBox2.Name = "groupBox2";
+         this.groupBox2.Size = new System.Drawing.Size(220, 94);
+         this.groupBox2.TabIndex = 3;
+         this.groupBox2.TabStop = false;
+         this.groupBox2.Text = "Filter by resolution";
+         // 
+         // radioButtonShowNotResolvedOnly
+         // 
+         this.radioButtonShowNotResolvedOnly.AutoSize = true;
+         this.radioButtonShowNotResolvedOnly.Location = new System.Drawing.Point(6, 65);
+         this.radioButtonShowNotResolvedOnly.Name = "radioButtonShowNotResolvedOnly";
+         this.radioButtonShowNotResolvedOnly.Size = new System.Drawing.Size(192, 17);
+         this.radioButtonShowNotResolvedOnly.TabIndex = 2;
+         this.radioButtonShowNotResolvedOnly.TabStop = true;
+         this.radioButtonShowNotResolvedOnly.Text = "Show not resolved discussions only";
+         this.radioButtonShowNotResolvedOnly.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonShowResolvedOnly
+         // 
+         this.radioButtonShowResolvedOnly.AutoSize = true;
+         this.radioButtonShowResolvedOnly.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonShowResolvedOnly.Name = "radioButtonShowResolvedOnly";
+         this.radioButtonShowResolvedOnly.Size = new System.Drawing.Size(174, 17);
+         this.radioButtonShowResolvedOnly.TabIndex = 1;
+         this.radioButtonShowResolvedOnly.TabStop = true;
+         this.radioButtonShowResolvedOnly.Text = "Show resolved discussions only";
+         this.radioButtonShowResolvedOnly.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonNoFilterByResolution
+         // 
+         this.radioButtonNoFilterByResolution.AutoSize = true;
+         this.radioButtonNoFilterByResolution.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonNoFilterByResolution.Name = "radioButtonNoFilterByResolution";
+         this.radioButtonNoFilterByResolution.Size = new System.Drawing.Size(66, 17);
+         this.radioButtonNoFilterByResolution.TabIndex = 0;
+         this.radioButtonNoFilterByResolution.TabStop = true;
+         this.radioButtonNoFilterByResolution.Text = "Show All";
+         this.radioButtonNoFilterByResolution.UseVisualStyleBackColor = true;
          // 
          // groupBox1
          // 
@@ -125,51 +169,6 @@
          this.checkBoxCreatedByMe.Text = "Show discussions started by me only";
          this.checkBoxCreatedByMe.UseVisualStyleBackColor = true;
          // 
-         // groupBox2
-         // 
-         this.groupBox2.Controls.Add(this.radioButtonShowNotResolvedOnly);
-         this.groupBox2.Controls.Add(this.radioButtonShowResolvedOnly);
-         this.groupBox2.Controls.Add(this.radioButtonNoFilterByResolution);
-         this.groupBox2.Location = new System.Drawing.Point(232, 42);
-         this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(220, 94);
-         this.groupBox2.TabIndex = 3;
-         this.groupBox2.TabStop = false;
-         this.groupBox2.Text = "Filter by resolution";
-         // 
-         // radioButtonShowNotResolvedOnly
-         // 
-         this.radioButtonShowNotResolvedOnly.AutoSize = true;
-         this.radioButtonShowNotResolvedOnly.Location = new System.Drawing.Point(6, 65);
-         this.radioButtonShowNotResolvedOnly.Name = "radioButtonShowNotResolvedOnly";
-         this.radioButtonShowNotResolvedOnly.Size = new System.Drawing.Size(192, 17);
-         this.radioButtonShowNotResolvedOnly.TabIndex = 2;
-         this.radioButtonShowNotResolvedOnly.TabStop = true;
-         this.radioButtonShowNotResolvedOnly.Text = "Show not resolved discussions only";
-         this.radioButtonShowNotResolvedOnly.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonShowResolvedOnly
-         // 
-         this.radioButtonShowResolvedOnly.AutoSize = true;
-         this.radioButtonShowResolvedOnly.Location = new System.Drawing.Point(6, 42);
-         this.radioButtonShowResolvedOnly.Name = "radioButtonShowResolvedOnly";
-         this.radioButtonShowResolvedOnly.Size = new System.Drawing.Size(174, 17);
-         this.radioButtonShowResolvedOnly.TabIndex = 1;
-         this.radioButtonShowResolvedOnly.TabStop = true;
-         this.radioButtonShowResolvedOnly.Text = "Show resolved discussions only";
-         this.radioButtonShowResolvedOnly.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonNoFilterByResolution
-         // 
-         this.radioButtonNoFilterByResolution.AutoSize = true;
-         this.radioButtonNoFilterByResolution.Location = new System.Drawing.Point(6, 19);
-         this.radioButtonNoFilterByResolution.Name = "radioButtonNoFilterByResolution";
-         this.radioButtonNoFilterByResolution.Size = new System.Drawing.Size(66, 17);
-         this.radioButtonNoFilterByResolution.TabIndex = 0;
-         this.radioButtonNoFilterByResolution.TabStop = true;
-         this.radioButtonNoFilterByResolution.Text = "Show All";
-         this.radioButtonNoFilterByResolution.UseVisualStyleBackColor = true;
-         // 
          // DiscussionFilterPanel
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -179,10 +178,10 @@
          this.Size = new System.Drawing.Size(463, 151);
          this.groupBoxFilter.ResumeLayout(false);
          this.groupBoxFilter.PerformLayout();
-         this.groupBox1.ResumeLayout(false);
-         this.groupBox1.PerformLayout();
          this.groupBox2.ResumeLayout(false);
          this.groupBox2.PerformLayout();
+         this.groupBox1.ResumeLayout(false);
+         this.groupBox1.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -190,7 +189,6 @@
       #endregion
 
       private System.Windows.Forms.GroupBox groupBoxFilter;
-      private System.Windows.Forms.Button buttonApplyFilter;
       private System.Windows.Forms.GroupBox groupBox1;
       private System.Windows.Forms.RadioButton radioButtonShowUnansweredOnly;
       private System.Windows.Forms.RadioButton radioButtonShowAnsweredOnly;
