@@ -16,5 +16,10 @@ namespace mrHelper.Common.Exceptions
       public int ExitCode { get; }
       public bool Cancelled { get; set; } = false;
    }
+
+   public class GitObjectException : Exception
+   {
+      public GitObjectException(string message) : base(message) { }
+   }
 }
 

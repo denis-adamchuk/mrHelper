@@ -124,7 +124,7 @@ namespace mrHelper.App.Forms
       }
 
       /// <summary>
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws GitOperationException and GitObjectException in case of problems with git.
       /// </summary>
       private bool checkForRenamedFile(out string anotherName, out bool moved)
       {
@@ -175,7 +175,7 @@ namespace mrHelper.App.Forms
 
       /// <summary>
       /// Throws ArgumentException.
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws GitOperationException and GitObjectException in case of problems with git.
       /// </summary>
       private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
       {
