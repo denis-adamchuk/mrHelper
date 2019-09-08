@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms
             try
             {
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
+                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -127,7 +127,7 @@ namespace mrHelper.App.Forms
             try
             {
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
+                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor), updateGitStatusText);
             }
             catch (Exception ex)
             {

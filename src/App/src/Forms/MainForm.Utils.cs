@@ -407,8 +407,6 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(client != null);
-         client.OperationStatusChange += updateGitStatusText;
-
          return client;
       }
 

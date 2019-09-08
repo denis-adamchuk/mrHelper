@@ -15,13 +15,11 @@ namespace mrHelper.Client.Git
    /// </summary>
    public class GitClientUpdater : IDisposable
    {
-      public delegate Task OnUpdate(bool reportProgress);
-      public delegate bool IsMyProject(string hostname, string projectname);
-
       /// <summary>
       /// Bind to the specific GitClient object
       /// </summary>
-      internal GitClientUpdater(IProjectWatcher projectWatcher, OnUpdate onUpdate, IsMyProject isMyProject)
+      internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, Task> onUpdate,
+         Func<string, string, bool> isMyProject)
       {
          _onUpdate = onUpdate;
          _isMyProject = isMyProject;
@@ -34,7 +32,7 @@ namespace mrHelper.Client.Git
          _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
       }
 
-      async public Task ManualUpdateAsync(CommitChecker commitChecker)
+      async public Task ManualUpdateAsync(CommitChecker commitChecker, Action<string> onProgressChange)
       {
          Trace.TraceInformation("[GitClientUpdater] Processing manual update");
 
@@ -61,7 +59,7 @@ namespace mrHelper.Client.Git
                   latestChange.ToLocalTime().ToString()));
                latestChange = commit.Created_At;
 
-               await doUpdate(true); // this may cancel currently running onTimer update
+               await doUpdate(onProgressChange); // this may cancel currently running onTimer update
 
                _latestChange = latestChange;
                Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
@@ -115,7 +113,7 @@ namespace mrHelper.Client.Git
          _updating = true;
          try
          {
-            await doUpdate(false);
+            await doUpdate(null);
 
             _latestChange = latestChange;
             Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
@@ -131,11 +129,11 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task doUpdate(bool reportProgress)
+      async private Task doUpdate(Action<string> onProgressChange)
       {
          try
          {
-            await _onUpdate(reportProgress);
+            await _onUpdate(onProgressChange);
          }
          catch (GitOperationException ex)
          {
@@ -144,8 +142,8 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private OnUpdate _onUpdate { get; }
-      private IsMyProject _isMyProject { get; }
+      private Func<Action<string>, Task> _onUpdate { get; }
+      private Func<string, string, bool> _isMyProject { get; }
       private IProjectWatcher _projectWatcher { get; }
       private DateTime _latestChange { get; set; } = DateTime.MinValue;
 

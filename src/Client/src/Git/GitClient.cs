@@ -233,10 +233,10 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task run_async(string arguments, int? timeout, bool reportProgress)
+      async private Task run_async(string arguments, int? timeout, Action<string> onProgressChange)
       {
-         Progress<string> progress = reportProgress ? new Progress<string>() : null;
-         if (reportProgress)
+         Progress<string> progress = onProgressChange != null ? new Progress<string>() : null;
+         if (onProgressChange != null)
          {
             progress.ProgressChanged += (sender, status) =>
             {

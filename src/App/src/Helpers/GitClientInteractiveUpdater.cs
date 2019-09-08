@@ -28,7 +28,7 @@ namespace mrHelper.App.Helpers
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(GitClient client, CommitChecker commitChecker)
+      async internal Task UpdateAsync(GitClient client, CommitChecker commitChecker, Action<string> onProgressChange)
       {
          if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
          {
@@ -38,7 +38,7 @@ namespace mrHelper.App.Helpers
 
          InitializationStatusChange?.Invoke("Updating git repository...");
 
-         await runAsync(async () => await client.Updater.ManualUpdateAsync(commitChecker));
+         await runAsync(async () => await client.Updater.ManualUpdateAsync(commitChecker, onProgressChange));
          InitializationStatusChange?.Invoke("Git repository updated");
       }
 
