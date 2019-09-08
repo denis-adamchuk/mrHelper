@@ -254,17 +254,27 @@ namespace mrHelper.App.Forms
          // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
          int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
 
+         // Temporary variables to avoid changing control Location more than once
+         Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point actionsPanelLocation = new Point(
+            filterPanelLocation.X + FilterPanel.Size.Width + groupBoxMarginLeft, groupBoxMarginTop);
+
          // Stack panels horizontally
-         FilterPanel.Location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         FilterPanel.Location = new Point(
+            filterPanelLocation.X - HorizontalScroll.Value,
+            filterPanelLocation.Y - VerticalScroll.Value);
+
          ActionsPanel.Location = new Point(
-            FilterPanel.Location.X + FilterPanel.Size.Width + groupBoxMarginLeft, groupBoxMarginTop);
+            actionsPanelLocation.X - HorizontalScroll.Value,
+            actionsPanelLocation.Y - VerticalScroll.Value);
+
+         // Prepare to stack boxes vertically
+         Size previousBoxSize = new Size();
+         Point previousBoxLocation = new Point(0,
+            Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,
+                     actionsPanelLocation.Y + ActionsPanel.Size.Height));
 
          // Stack boxes vertically
-         Point previousBoxLocation = new Point(0,
-            Math.Max(FilterPanel.Location.Y + FilterPanel.Size.Height,
-                     ActionsPanel.Location.Y + ActionsPanel.Size.Height));
-         Size previousBoxSize = new Size();
-
          foreach (Control control in Controls)
          {
             if (!(control is DiscussionBox box))
@@ -279,26 +289,21 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            box.Location = new Point
+            // Temporary variable to void changingbox Location more than once
+            Point location = new Point
             {
                X = groupBoxMarginLeft,
                Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop
             };
 
-            previousBoxLocation = box.Location;
-
             // Discussion box can take all the width except scroll bars and the left margin
-            previousBoxSize = box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
-         }
+            box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
 
-         // Apply scroll bar offset
-         foreach (Control control in Controls)
-         {
-            control.Location = new Point
-            {
-               X = control.Location.X - HorizontalScroll.Value,
-               Y = control.Location.Y - VerticalScroll.Value
-            };
+            box.Location = new Point(
+               location.X - HorizontalScroll.Value,
+               location.Y - VerticalScroll.Value);
+            previousBoxLocation = location;
+            previousBoxSize = box.Size;
          }
       }
 

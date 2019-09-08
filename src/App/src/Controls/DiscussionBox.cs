@@ -721,6 +721,8 @@ namespace mrHelper.App.Controls
 
       private void replaceControlInParent(Control oldControl, Control newControl)
       {
+         var tabIndex = oldControl.TabIndex;
+         var tabStop = oldControl.TabStop;
          var index = oldControl.Parent.Controls.IndexOf(oldControl);
          var parent = oldControl.Parent;
          oldControl.Parent.Controls.Remove(oldControl);
@@ -728,6 +730,8 @@ namespace mrHelper.App.Controls
          {
             parent.Controls.Add(newControl);
             parent.Controls.SetChildIndex(newControl, index);
+            newControl.TabIndex = tabIndex;
+            newControl.TabStop = tabStop;
          }
 
          if (parent is DiscussionBox)
