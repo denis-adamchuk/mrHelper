@@ -32,7 +32,8 @@ namespace mrHelper.App.Forms
             preGitClientInitialize();
             try
             {
-               await _gitClientUpdater.UpdateAsync(client);
+               await _gitClientUpdater.UpdateAsync(client,
+                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
             }
             catch (Exception ex)
             {
@@ -125,7 +126,8 @@ namespace mrHelper.App.Forms
             preGitClientInitialize();
             try
             {
-               await _gitClientUpdater.UpdateAsync(client);
+               await _gitClientUpdater.UpdateAsync(client,
+                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
             }
             catch (Exception ex)
             {

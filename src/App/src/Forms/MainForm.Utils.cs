@@ -408,7 +408,6 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(client != null);
          client.OperationStatusChange += updateGitStatusText;
-         client.Updater.SetCommitChecker(_updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor));
 
          return client;
       }

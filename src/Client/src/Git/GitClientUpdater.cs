@@ -28,38 +28,33 @@ namespace mrHelper.Client.Git
          _projectWatcher = projectWatcher;
       }
 
-      /// <summary>
-      /// Set an object that allows to check for updates
-      /// </summary>
-      public void SetCommitChecker(CommitChecker commitChecker)
-      {
-         _commitChecker = commitChecker;
-         Debug.WriteLine(String.Format("[GitClientUpdater] Setting commit checker to {0}",
-            (commitChecker?.ToString() ?? "null")));
-      }
-
       public void Dispose()
       {
          Trace.TraceInformation(String.Format("[GitClientUpdater] Dispose and unsubscribe from Project Watcher"));
          _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
       }
 
-      async public Task ManualUpdateAsync()
+      async public Task ManualUpdateAsync(CommitChecker commitChecker)
       {
          Trace.TraceInformation("[GitClientUpdater] Processing manual update");
 
-         if (_commitChecker == null)
+         if (commitChecker == null)
          {
             Debug.WriteLine(String.Format("[GitClientUpdater] Unexpected case, manual update w/o commit checker"));
             Debug.Assert(false);
             return;
+         }
+         else
+         {
+            Debug.WriteLine(String.Format("[GitClientUpdater] Using commit checker {0}",
+               (commitChecker?.ToString() ?? "null")));
          }
 
          _updating = true;
          DateTime latestChange = _latestChange;
          try
          {
-            Commit commit = await _commitChecker.GetLatestCommitAsync();
+            Commit commit = await commitChecker.GetLatestCommitAsync();
             if (commit.Created_At > latestChange)
             {
                Trace.TraceInformation(String.Format("[GitClientUpdater] Manual update detected commits newer than {0}",
@@ -151,7 +146,6 @@ namespace mrHelper.Client.Git
 
       private OnUpdate _onUpdate { get; }
       private IsMyProject _isMyProject { get; }
-      private CommitChecker _commitChecker { get; set; }
       private IProjectWatcher _projectWatcher { get; }
       private DateTime _latestChange { get; set; } = DateTime.MinValue;
 
