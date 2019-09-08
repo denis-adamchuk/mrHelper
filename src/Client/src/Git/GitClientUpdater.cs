@@ -34,7 +34,9 @@ namespace mrHelper.Client.Git
 
       async public Task ManualUpdateAsync(CommitChecker commitChecker, Action<string> onProgressChange)
       {
-         Trace.TraceInformation("[GitClientUpdater] Processing manual update");
+         Trace.TraceInformation(
+            String.Format("[GitClientUpdater] Processing manual update. LatestChange: {0}. CommitChecker: {1}",
+               _latestChange.ToLocalTime().ToString(), (commitChecker?.ToString() ?? "null")));
 
          if (commitChecker == null)
          {

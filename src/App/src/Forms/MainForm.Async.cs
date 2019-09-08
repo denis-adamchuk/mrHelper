@@ -26,7 +26,7 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
-         GitClient client = getGitClient();
+         GitClient client = getGitClient(_workflow.State.HostName, _workflow.State.Project.Path_With_Namespace);
          if (client != null)
          {
             preGitClientInitialize();
@@ -96,7 +96,22 @@ namespace mrHelper.App.Forms
          {
             form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Title,
                _workflow.State.MergeRequest.Author, client, int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               discussions, _discussionManager, _workflow.State.CurrentUser);
+               discussions, _discussionManager, _workflow.State.CurrentUser,
+               async (mrd) =>
+               {
+                  try
+                  {
+                     if (!getGitClient(mrd.HostName, mrd.ProjectName).DoesRequireClone())
+                     {
+                        await getGitClient(mrd.HostName, mrd.ProjectName).Updater.ManualUpdateAsync(
+                           _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor), null);
+                     }
+                  }
+                  catch (GitOperationException ex)
+                  {
+                     ExceptionHandlers.Handle(ex, "Cannot update git repository on refreshing discussions");
+                  }
+               });
          }
          catch (NoDiscussionsToShow)
          {
@@ -120,7 +135,7 @@ namespace mrHelper.App.Forms
 
       async private Task onLaunchDiffToolAsync()
       {
-         GitClient client = getGitClient();
+         GitClient client = getGitClient(_workflow.State.HostName, _workflow.State.Project.Path_With_Namespace);
          if (client != null)
          {
             preGitClientInitialize();
@@ -193,22 +208,24 @@ namespace mrHelper.App.Forms
       {
          string caption = String.Format("Add comment to merge request \"{0}\"",
             _workflow.State.MergeRequest.Title);
-         NewDiscussionItemForm form = new NewDiscussionItemForm(caption);
-         if (form.ShowDialog() == DialogResult.OK)
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
          {
-            if (form.Body.Length == 0)
+            if (form.ShowDialog() == DialogResult.OK)
             {
-               MessageBox.Show("Comment body cannot be empty", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-               return;
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Comment body cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
+
+               DiscussionCreator creator =
+                  _discussionManager.GetDiscussionCreator(_workflow.State.MergeRequestDescriptor);
+
+               labelWorkflowStatus.Text = "Adding a comment...";
+               await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
+               labelWorkflowStatus.Text = "Comment added";
             }
-
-            DiscussionCreator creator =
-               _discussionManager.GetDiscussionCreator(_workflow.State.MergeRequestDescriptor);
-
-            labelWorkflowStatus.Text = "Adding a comment...";
-            await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
-            labelWorkflowStatus.Text = "Comment added";
          }
       }
 

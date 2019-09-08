@@ -18,6 +18,7 @@
             components.Dispose();
          }
          this.FilterPanel.Dispose();
+         this.ActionsPanel.Dispose();
          base.Dispose(disposing);
       }
 

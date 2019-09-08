@@ -55,6 +55,12 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\Controls\DiscussionActionsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DiscussionActionsPanel.Designer.cs">
+      <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\DiscussionFilterPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -131,6 +137,9 @@
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\CustomTraceListener.cs" />
     <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />
+    <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
+      <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionFilterPanel.resx">
       <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
     </EmbeddedResource>

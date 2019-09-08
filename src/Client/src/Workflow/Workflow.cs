@@ -118,7 +118,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings), Settings);
+         Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings));
 
          User currentUser;
          List<Project> projects;

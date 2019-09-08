@@ -386,7 +386,7 @@ namespace mrHelper.App.Forms
       /// Make some checks and create a Client
       /// </summary>
       /// <returns>null if could not create a GitClient</returns>
-      private GitClient getGitClient()
+      private GitClient getGitClient(string hostname, string projectname)
       {
          GitClientFactory factory = getGitClientFactory(_settings.LocalGitFolder);
          if (factory == null)
@@ -394,10 +394,10 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         GitClient client = null;
+         GitClient client;
          try
          {
-            client = factory.GetClient(GetCurrentHostName(), GetCurrentProjectName());
+            client = factory.GetClient(hostname, projectname);
          }
          catch (ArgumentException ex)
          {

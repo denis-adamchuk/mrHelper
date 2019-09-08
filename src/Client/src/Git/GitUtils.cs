@@ -113,7 +113,7 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Create a task to 'git' with arguments passed asynchronously
       /// </summary>
-      static internal GitAsyncTaskDescriptor gitAsync(string arguments, int? timeout, IProgress<string> progress)
+      static internal GitAsyncTaskDescriptor gitAsync(string arguments, IProgress<string> progress)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
@@ -181,24 +181,6 @@ namespace mrHelper.Client.Git
                process.Dispose();
             }
          };
-
-         if (timeout.HasValue)
-         {
-            Timer timer = new Timer { Interval = timeout.Value };
-            timer.Elapsed +=
-               (sender, args) =>
-            {
-               timer.Stop();
-               if (!tcs.Task.IsCompleted)
-               {
-                  process.CancelOutputRead();
-                  process.CancelErrorRead();
-                  tcs.SetResult(0);
-                  process.Dispose();
-               }
-            };
-            timer.Start();
-         }
 
          process.Start();
 

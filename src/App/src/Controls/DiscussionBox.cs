@@ -182,10 +182,11 @@ namespace mrHelper.App.Controls
          await onToggleResolveDiscussionAsync();
       }
 
-      internal void AdjustToWidth(int width)
+      internal Size AdjustToWidth(int width)
       {
          resizeBoxContent(width);
          repositionBoxContent(width);
+         return Size;
       }
 
       private void onCreate()

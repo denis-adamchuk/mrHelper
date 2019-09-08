@@ -23,7 +23,7 @@ namespace mrHelper.App.Forms
    {
       async private Task initializeWorkflow()
       {
-         _workflow = _workflowManager.CreateWorkflow();
+         _workflow = _workflowFactory.CreateWorkflow();
          _workflow.PreSwitchHost += (hostname) => onChangeHost(hostname);
          _workflow.PostSwitchHost += (state, projects) => onHostChanged(state, projects);
          _workflow.FailedSwitchHost += () => onFailedChangeHost();

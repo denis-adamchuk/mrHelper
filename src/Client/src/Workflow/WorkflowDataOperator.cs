@@ -15,10 +15,9 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    internal class WorkflowDataOperator : IDisposable
    {
-      internal WorkflowDataOperator(string host, string token, UserDefinedSettings settings)
+      internal WorkflowDataOperator(string host, string token)
       {
          Client = new GitLabClient(host, token);
-         HostName = host;
       }
 
       public void Dispose()
@@ -177,8 +176,6 @@ namespace mrHelper.Client.Workflow
       }
 
       private GitLabClient Client { get; }
-      private User? CurrentUser { get; }
-      private string HostName { get; }
    }
 }
 

@@ -28,7 +28,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       internal DiscussionsForm(MergeRequestDescriptor mrd, string mrTitle, User mergeRequestAuthor,
          IGitRepository gitRepository, int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions,
-         DiscussionManager manager, User currentUser)
+         DiscussionManager manager, User currentUser, Func<MergeRequestDescriptor, Task> updateGitRepository)
       {
          _mergeRequestDescriptor = mrd;
          _mergeRequestTitle = mrTitle;
@@ -40,6 +40,7 @@ namespace mrHelper.App.Forms
          _colorScheme = colorScheme;
 
          _manager = manager;
+         _updateGitRepository = updateGitRepository;
 
          _currentUser = currentUser;
          if (_currentUser.Id == 0)
@@ -65,9 +66,12 @@ namespace mrHelper.App.Forms
                DisplayFilter.Filter = FilterPanel.Filter;
                updateLayout(null);
             });
-         Controls.Add(FilterPanel);
+         ActionsPanel = new DiscussionActionsPanel(async () => await onRefresh());
 
-         if (!onRefresh(discussions))
+         Controls.Add(FilterPanel);
+         Controls.Add(ActionsPanel);
+
+         if (!renderDiscussions(discussions))
          {
             throw new NoDiscussionsToShow();
          }
@@ -77,12 +81,7 @@ namespace mrHelper.App.Forms
       {
          if (e.KeyCode == Keys.F5)
          {
-            if (!onRefresh(await loadDiscussionsAsync()))
-            {
-               MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
-                  MessageBoxButtons.OK, MessageBoxIcon.Information);
-               Close();
-            }
+            await onRefresh();
          }
          else if (e.KeyCode == Keys.Home)
          {
@@ -118,6 +117,18 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private async Task onRefresh()
+      {
+         Trace.TraceInformation("[DiscussionsForm] Refreshing by user request");
+
+         if (!renderDiscussions(await loadDiscussionsAsync()))
+         {
+            MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
+               MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Close();
+         }
+      }
+
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
       {
          repositionControls();
@@ -133,8 +144,16 @@ namespace mrHelper.App.Forms
 
       async private Task<List<Discussion>> loadDiscussionsAsync()
       {
-         List<Discussion> discussions = null;
+         Trace.TraceInformation(String.Format(
+            "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
+               _mergeRequestDescriptor.HostName, _mergeRequestDescriptor.ProjectName, _mergeRequestDescriptor.IId));
+
+         this.Text = DefaultCaption + "   (Checking for new commits)";
+         await _updateGitRepository(_mergeRequestDescriptor);
+
          this.Text = DefaultCaption + "   (Loading discussions)";
+
+         List<Discussion> discussions = null;
          try
          {
             discussions = await _manager.GetDiscussionsAsync(_mergeRequestDescriptor);
@@ -151,7 +170,7 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      private bool onRefresh(List<Discussion> discussions)
+      private bool renderDiscussions(List<Discussion> discussions)
       {
          updateLayout(discussions);
          Focus(); // Set focus to the Form
@@ -232,15 +251,20 @@ namespace mrHelper.App.Forms
          int groupBoxMarginLeft = 5;
          int groupBoxMarginTop = 5;
 
+         // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
+         int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
+
+         // Stack panels horizontally
          FilterPanel.Location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         ActionsPanel.Location = new Point(
+            FilterPanel.Location.X + FilterPanel.Size.Width + groupBoxMarginLeft, groupBoxMarginTop);
 
-         Point previousBoxLocation = new Point(0, FilterPanel.Location.Y + FilterPanel.Size.Height);
-
-         FilterPanel.Location = new Point(
-            FilterPanel.Location.X - HorizontalScroll.Value,
-            FilterPanel.Location.Y - VerticalScroll.Value);
-
+         // Stack boxes vertically
+         Point previousBoxLocation = new Point(0,
+            Math.Max(FilterPanel.Location.Y + FilterPanel.Size.Height,
+                     ActionsPanel.Location.Y + ActionsPanel.Size.Height));
          Size previousBoxSize = new Size();
+
          foreach (Control control in Controls)
          {
             if (!(control is DiscussionBox box))
@@ -255,22 +279,26 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            Point location = new Point
+            box.Location = new Point
             {
                X = groupBoxMarginLeft,
                Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop
             };
 
-            // Discussion box can take all the width except scroll bars and the left margin
-            // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
-            int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
-            box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
+            previousBoxLocation = box.Location;
 
-            box.Location = new Point(
-               location.X - HorizontalScroll.Value,
-               location.Y - VerticalScroll.Value);
-            previousBoxLocation = location;
-            previousBoxSize = box.Size;
+            // Discussion box can take all the width except scroll bars and the left margin
+            previousBoxSize = box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
+         }
+
+         // Apply scroll bar offset
+         foreach (Control control in Controls)
+         {
+            control.Location = new Point
+            {
+               X = control.Location.X - HorizontalScroll.Value,
+               Y = control.Location.Y - VerticalScroll.Value
+            };
          }
       }
 
@@ -292,10 +320,13 @@ namespace mrHelper.App.Forms
 
       private User _currentUser;
       private readonly DiscussionManager _manager;
+      private readonly Func<MergeRequestDescriptor, Task> _updateGitRepository;
 
       private readonly DiscussionFilterPanel FilterPanel;
       private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences
       private readonly DiscussionFilter SystemFilter; // filters out discussions with System notes
+
+      private readonly DiscussionActionsPanel ActionsPanel;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

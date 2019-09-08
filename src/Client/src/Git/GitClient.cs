@@ -55,14 +55,14 @@ namespace mrHelper.Client.Git
             if (canClone(Path))
             {
                string arguments = "clone --progress " + _hostName + "/" + _projectName + " " + Path;
-               await run_async(arguments, null, reportProgress);
+               await run_async(arguments, reportProgress);
                return;
             }
 
             await (Task)run_in_path(() =>
             {
                string arguments = "fetch --progress";
-               return run_async(arguments, null, reportProgress);
+               return run_async(arguments, reportProgress);
             }, Path);
          },
             (hostNameToCheck, projectNameToCheck) =>
@@ -233,7 +233,7 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task run_async(string arguments, int? timeout, Action<string> onProgressChange)
+      async private Task run_async(string arguments, Action<string> onProgressChange)
       {
          Progress<string> progress = onProgressChange != null ? new Progress<string>() : null;
          if (onProgressChange != null)
@@ -246,7 +246,7 @@ namespace mrHelper.Client.Git
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             _projectName, arguments));
-         _descriptor = GitUtils.gitAsync(arguments, timeout, progress);
+         _descriptor = GitUtils.gitAsync(arguments, progress);
          try
          {
             await _descriptor.TaskCompletionSource.Task;

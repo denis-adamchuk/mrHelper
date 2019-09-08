@@ -71,7 +71,7 @@ namespace mrHelper.App.Forms
       private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
 
-      private WorkflowManager _workflowManager;
+      private WorkflowFactory _workflowFactory;
       private UpdateManager _updateManager;
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;

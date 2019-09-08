@@ -89,17 +89,19 @@ namespace mrHelper.App.Forms
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
          TimeSpan oldSpan = TimeSpan.Parse(labelTimeTrackingTrackedTime.Text);
-         EditTimeForm form = new EditTimeForm(oldSpan);
-         if (form.ShowDialog() == DialogResult.OK)
+         using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
-            TimeSpan newSpan = form.GetTimeSpan();
-            bool add = newSpan > oldSpan;
-            TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
-            if (diff != TimeSpan.Zero)
+            if (form.ShowDialog() == DialogResult.OK)
             {
-               await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
-               updateTotalTime(_workflow.State.MergeRequestDescriptor);
-               labelWorkflowStatus.Text = "Total spent time updated";
+               TimeSpan newSpan = form.GetTimeSpan();
+               bool add = newSpan > oldSpan;
+               TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
+               if (diff != TimeSpan.Zero)
+               {
+                  await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
+                  updateTotalTime(_workflow.State.MergeRequestDescriptor);
+                  labelWorkflowStatus.Text = "Total spent time updated";
+               }
             }
          }
       }
@@ -228,20 +230,22 @@ namespace mrHelper.App.Forms
 
       async private void ButtonAddKnownHost_Click(object sender, EventArgs e)
       {
-         AddKnownHostForm form = new AddKnownHostForm();
-         if (form.ShowDialog() == DialogResult.OK)
+         using (AddKnownHostForm form = new AddKnownHostForm())
          {
-            if (!onAddKnownHost(form.Host, form.AccessToken))
+            if (form.ShowDialog() == DialogResult.OK)
             {
-               MessageBox.Show("Such host is already in the list", "Host will not be added",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               return;
-            }
-            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-               .Select(i => i.SubItems[1].Text).ToList();
+               if (!onAddKnownHost(form.Host, form.AccessToken))
+               {
+                  MessageBox.Show("Such host is already in the list", "Host will not be added",
+                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                  return;
+               }
+               _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+               _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+                  .Select(i => i.SubItems[1].Text).ToList();
 
-            await changeHostAsync(getInitialHostName());
+               await changeHostAsync(getInitialHostName());
+            }
          }
       }
 
@@ -284,7 +288,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         getGitClient()?.CancelAsyncOperation();
+         getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
       }
 
       private static void formatMergeRequestListItem(ListControlConvertEventArgs e)
