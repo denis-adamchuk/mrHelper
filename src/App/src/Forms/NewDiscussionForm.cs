@@ -78,12 +78,13 @@ namespace mrHelper.App.Forms
       private void onApplicationStarted()
       {
          this.ActiveControl = textBoxDiscussionBody;
+         string currentName;
          string anotherName;
          bool moved;
          bool fileRenamed;
          try
          {
-            fileRenamed = checkForRenamedFile(out anotherName, out moved);
+            fileRenamed = checkForRenamedFile(out currentName, out anotherName, out moved);
          }
          catch (GitOperationException)
          {
@@ -95,9 +96,12 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
 
             MessageBox.Show(
-                  "We detected that this file is a moved version of "
-                  + "\"" + anotherName + "\""
-                  + ". GitLab does not allow to create discussions on moved files.",
+                  "Merge Request Helper detected that current file is a moved version of another file. "
+                + "GitLab does not allow to create discussions on moved files.\n\n"
+                + "Current file:\n"
+                + currentName + "\n\n"
+                + "Another file:\n"
+                + anotherName,
                   "Cannot create a discussion",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             Close();
@@ -108,10 +112,13 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
 
             MessageBox.Show(
-                  "We detected that this file is a renamed version of "
-                  + "\"" + anotherName + "\""
-                  + ". GitLab requires both files to be available to create discussions. "
-                  + "Please match files manually in the diff tool and try again.",
+                  "Merge Request Helper detected that current file is a renamed version of another file. "
+                + "Current application version requires line numbers from both files to create discussions. "
+                + "Please match files manually in the diff tool and try again.\n\n"
+                + "Current file:\n"
+                + currentName + "\n\n"
+                + "Another file:\n"
+                + anotherName,
                   "Cannot create a discussion",
                   MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close();
@@ -126,7 +133,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Throws GitOperationException and GitObjectException in case of problems with git.
       /// </summary>
-      private bool checkForRenamedFile(out string anotherName, out bool moved)
+      private bool checkForRenamedFile(out string currentName, out string anotherName, out bool moved)
       {
          anotherName = String.Empty;
          moved = false;
@@ -134,6 +141,7 @@ namespace mrHelper.App.Forms
          if (!_difftoolInfo.Left.HasValue)
          {
             Debug.Assert(_difftoolInfo.Right.HasValue);
+            currentName = _difftoolInfo.Right?.FileName;
             anotherName = _renameChecker.IsRenamed(
                _interprocessSnapshot.Refs.LeftSHA,
                _interprocessSnapshot.Refs.RightSHA,
@@ -148,6 +156,7 @@ namespace mrHelper.App.Forms
          else if (!_difftoolInfo.Right.HasValue)
          {
             Debug.Assert(_difftoolInfo.Left.HasValue);
+            currentName = _difftoolInfo.Left?.FileName;
             anotherName = _renameChecker.IsRenamed(
                _interprocessSnapshot.Refs.LeftSHA,
                _interprocessSnapshot.Refs.RightSHA,
@@ -163,11 +172,13 @@ namespace mrHelper.App.Forms
          {
             // If even two names are given, we need to check here because use might selected manually two
             // versions of a moved file
+            bool isLeftSide = _difftoolInfo.IsLeftSideCurrent;
+            currentName = isLeftSide ? _difftoolInfo.Left?.FileName : _difftoolInfo.Right?.FileName;
             anotherName = _renameChecker.IsRenamed(
                _interprocessSnapshot.Refs.LeftSHA,
                _interprocessSnapshot.Refs.RightSHA,
-               _difftoolInfo.IsLeftSideCurrent ? _difftoolInfo.Left?.FileName : _difftoolInfo.Right?.FileName,
-               _difftoolInfo.IsLeftSideCurrent, out moved);
+               currentName,
+               isLeftSide, out moved);
             return moved;
          }
          return true;
