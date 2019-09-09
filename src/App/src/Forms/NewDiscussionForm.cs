@@ -26,30 +26,22 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      internal NewDiscussionForm(Snapshot snapshot, DiffToolInfo difftoolInfo)
+      internal NewDiscussionForm(Snapshot snapshot, DiffToolInfo difftoolInfo, DiffPosition position,
+         IGitRepository gitRepository)
       {
          _interprocessSnapshot = snapshot;
          _difftoolInfo = difftoolInfo;
-
-         GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null);
-         _gitRepository = factory.GetClient(_interprocessSnapshot.Host, _interprocessSnapshot.Project);
-         _renameChecker = new GitRenameDetector(_gitRepository);
-         _matcher = new RefToLineMatcher(_gitRepository);
+         _position = position;
+         _gitRepository = gitRepository;
 
          InitializeComponent();
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
          htmlPanel.Location = new Point(12, 73);
          htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
-      }
 
-      /// <summary>
-      /// Creates a form and fill its content.
-      /// Throws different types of ecxeptions, all of them are considered fatal and passed to the upper-level handler
-      /// </summary>
-      private void NewDiscussionForm_Load(object sender, EventArgs e)
-      {
-         onApplicationStarted();
+         this.ActiveControl = textBoxDiscussionBody;
+         showDiscussionContext(htmlPanel, textBoxFileName);
       }
 
       async private void ButtonOK_Click(object sender, EventArgs e)
@@ -75,115 +67,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onApplicationStarted()
-      {
-         this.ActiveControl = textBoxDiscussionBody;
-         string currentName;
-         string anotherName;
-         bool moved;
-         bool fileRenamed;
-         try
-         {
-            fileRenamed = checkForRenamedFile(out currentName, out anotherName, out moved);
-         }
-         catch (GitOperationException)
-         {
-            throw; // fatal error
-         }
-
-         if (moved)
-         {
-            Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
-
-            MessageBox.Show(
-                  "Merge Request Helper detected that current file is a moved version of another file. "
-                + "GitLab does not allow to create discussions on moved files.\n\n"
-                + "Current file:\n"
-                + currentName + "\n\n"
-                + "Another file:\n"
-                + anotherName,
-                  "Cannot create a discussion",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            Close();
-            return;
-         }
-         else if (fileRenamed)
-         {
-            Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", _difftoolInfo);
-
-            MessageBox.Show(
-                  "Merge Request Helper detected that current file is a renamed version of another file. "
-                + "Current application version requires line numbers from both files to create discussions. "
-                + "Please match files manually in the diff tool and try again.\n\n"
-                + "Current file:\n"
-                + currentName + "\n\n"
-                + "Another file:\n"
-                + anotherName,
-                  "Cannot create a discussion",
-                  MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Close();
-            return;
-         }
-
-         _position = _matcher.Match(_interprocessSnapshot.Refs, _difftoolInfo);
-
-         showDiscussionContext(htmlPanel, textBoxFileName);
-      }
-
-      /// <summary>
-      /// Throws GitOperationException and GitObjectException in case of problems with git.
-      /// </summary>
-      private bool checkForRenamedFile(out string currentName, out string anotherName, out bool moved)
-      {
-         anotherName = String.Empty;
-         moved = false;
-
-         if (!_difftoolInfo.Left.HasValue)
-         {
-            Debug.Assert(_difftoolInfo.Right.HasValue);
-            currentName = _difftoolInfo.Right?.FileName;
-            anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.LeftSHA,
-               _interprocessSnapshot.Refs.RightSHA,
-               _difftoolInfo.Right?.FileName,
-               false, out moved);
-            if (anotherName == _difftoolInfo.Right?.FileName)
-            {
-               // it is not a renamed but removed file
-               return false;
-            }
-         }
-         else if (!_difftoolInfo.Right.HasValue)
-         {
-            Debug.Assert(_difftoolInfo.Left.HasValue);
-            currentName = _difftoolInfo.Left?.FileName;
-            anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.LeftSHA,
-               _interprocessSnapshot.Refs.RightSHA,
-               _difftoolInfo.Left?.FileName,
-               true, out moved);
-            if (anotherName == _difftoolInfo.Left?.FileName)
-            {
-               // it is not a renamed but added file
-               return false;
-            }
-         }
-         else
-         {
-            // If even two names are given, we need to check here because use might selected manually two
-            // versions of a moved file
-            bool isLeftSide = _difftoolInfo.IsLeftSideCurrent;
-            currentName = isLeftSide ? _difftoolInfo.Left?.FileName : _difftoolInfo.Right?.FileName;
-            anotherName = _renameChecker.IsRenamed(
-               _interprocessSnapshot.Refs.LeftSHA,
-               _interprocessSnapshot.Refs.RightSHA,
-               currentName,
-               isLeftSide, out moved);
-            return moved;
-         }
-         return true;
-      }
-
       /// <summary>
       /// Throws ArgumentException.
       /// Throws GitOperationException and GitObjectException in case of problems with git.
@@ -198,7 +81,7 @@ namespace mrHelper.App.Forms
          htmlPanel.Text = formatter.FormatAsHTML(context);
 
          tbFileName.Text = "Left: " + (_difftoolInfo.Left?.FileName ?? "N/A")
-            + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
+                      + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
       }
 
       /// <summary>
@@ -285,10 +168,7 @@ namespace mrHelper.App.Forms
 
       private readonly Snapshot _interprocessSnapshot;
       private readonly DiffToolInfo _difftoolInfo;
-      private readonly RefToLineMatcher _matcher;
-      private readonly GitRenameDetector _renameChecker;
-
-      private DiffPosition _position;
+      private readonly DiffPosition _position;
       private readonly IGitRepository _gitRepository;
    }
 }

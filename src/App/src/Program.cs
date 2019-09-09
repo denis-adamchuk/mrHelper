@@ -6,6 +6,10 @@ using mrHelper.Core.Interprocess;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Git;
+using mrHelper.Common.Interfaces;
+using mrHelper.Forms.Helpers;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.App
 {
@@ -78,11 +82,8 @@ namespace mrHelper.App
 
                try
                {
-                  DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
-                  DiffToolInfo diffToolInfo = argumentsParser.Parse();
-
                   SnapshotSerializer serializer = new SnapshotSerializer();
-                  Snapshot? snapshot = null;
+                  Snapshot snapshot;
                   try
                   {
                      snapshot = serializer.DeserializeFromDisk(gitPID);
@@ -95,7 +96,27 @@ namespace mrHelper.App
                      return;
                   }
 
-                  Application.Run(new NewDiscussionForm(snapshot.Value, diffToolInfo));
+                  using (GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null))
+                  {
+                     IGitRepository gitRepository = factory.GetClient(snapshot.Host, snapshot.Project);
+
+                     DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
+                     DiffToolInfoProcessor processor = new DiffToolInfoProcessor(gitRepository);
+                     DiffToolInfo diffToolInfo;
+                     try
+                     {
+                        diffToolInfo = processor.Process(argumentsParser.Parse(), snapshot.Refs);
+                     }
+                     catch (DiffToolInfoProcessorException)
+                     {
+                        return; // don't continue
+                     }
+
+                     RefToLineMatcher matcher = new RefToLineMatcher(gitRepository);
+                     DiffPosition position = matcher.Match(snapshot.Refs, diffToolInfo);
+
+                     Application.Run(new NewDiscussionForm(snapshot, diffToolInfo, position, gitRepository));
+                  }
                }
                catch (Exception ex) // whatever unhandled exception
                {

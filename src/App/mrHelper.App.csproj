@@ -132,6 +132,7 @@
     <Compile Include="src\Forms\NewDiscussionForm.Designer.cs">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Helpers\DiffToolInfoProcessor.cs" />
     <Compile Include="src\Helpers\DiscussionFilter.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
