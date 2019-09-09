@@ -54,6 +54,9 @@ namespace mrHelper.Client.Git
          try
          {
             Commit commit = await commitChecker.GetLatestCommitAsync();
+            Trace.TraceInformation(
+               String.Format("[GitClientUpdater] Latest Commit details: SHA {0}, Created_At: {1}",
+                  commit.Id, commit.Created_At.ToLocalTime().ToString()));
             if (commit.Created_At > latestChange)
             {
                Trace.TraceInformation(String.Format("[GitClientUpdater] Manual update detected commits newer than {0}",
