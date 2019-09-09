@@ -196,15 +196,16 @@ namespace mrHelper.App.Forms
             createDiscussionBoxes(discussions);
          }
 
-         // Reposition controls before updating their visiblity to avoid flickering
+         // Reposition controls before updating their visibility to avoid flickering
          repositionControls();
 
          // Un-hide controls that should be visible now
          updateVisibilityOfBoxes();
 
+         // Updates Scroll Bars and also updates Location property of controls in accordance with new AutoScrollPosition
          AdjustFormScrollbars(true);
 
-         ResumeLayout(false /* don't need immediate re-layout, everything is already ok */);
+         ResumeLayout(false /* don't need immediate re-layout */);
 
          this.Text = DefaultCaption;
       }
@@ -256,23 +257,19 @@ namespace mrHelper.App.Forms
 
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
-         Point actionsPanelLocation = new Point(
-            filterPanelLocation.X + FilterPanel.Size.Width + groupBoxMarginLeft, groupBoxMarginTop);
+         Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         actionsPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
 
          // Stack panels horizontally
-         FilterPanel.Location = new Point(
-            filterPanelLocation.X - HorizontalScroll.Value,
-            filterPanelLocation.Y - VerticalScroll.Value);
-
-         ActionsPanel.Location = new Point(
-            actionsPanelLocation.X - HorizontalScroll.Value,
-            actionsPanelLocation.Y - VerticalScroll.Value);
+         FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
+         ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
 
          // Prepare to stack boxes vertically
+         int topOffset = Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,
+                                  actionsPanelLocation.Y + ActionsPanel.Size.Height);
          Size previousBoxSize = new Size();
-         Point previousBoxLocation = new Point(0,
-            Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,
-                     actionsPanelLocation.Y + ActionsPanel.Size.Height));
+         Point previousBoxLocation = new Point();
+         previousBoxLocation.Offset(0, topOffset);
 
          // Stack boxes vertically
          foreach (Control control in Controls)
@@ -289,19 +286,14 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            // Temporary variable to void changingbox Location more than once
-            Point location = new Point
-            {
-               X = groupBoxMarginLeft,
-               Y = previousBoxLocation.Y + previousBoxSize.Height + groupBoxMarginTop
-            };
+            // Temporary variable to void changing box Location more than once
+            Point location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+            location.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
 
             // Discussion box can take all the width except scroll bars and the left margin
             box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
 
-            box.Location = new Point(
-               location.X - HorizontalScroll.Value,
-               location.Y - VerticalScroll.Value);
+            box.Location = location + (Size)AutoScrollPosition;
             previousBoxLocation = location;
             previousBoxSize = box.Size;
          }

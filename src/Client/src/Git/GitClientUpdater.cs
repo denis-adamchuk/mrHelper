@@ -46,8 +46,7 @@ namespace mrHelper.Client.Git
          }
          else
          {
-            Debug.WriteLine(String.Format("[GitClientUpdater] Using commit checker {0}",
-               (commitChecker?.ToString() ?? "null")));
+            Debug.WriteLine(String.Format("[GitClientUpdater] Using commit checker {0}", commitChecker.ToString()));
          }
 
          _updating = true;
