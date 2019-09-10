@@ -29,7 +29,10 @@ namespace mrHelper.Client.Git
       public void Dispose()
       {
          Trace.TraceInformation(String.Format("[GitClientUpdater] Dispose and unsubscribe from Project Watcher"));
-         _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
+         if (_projectWatcher != null)
+         {
+            _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
+         }
       }
 
       async public Task ManualUpdateAsync(CommitChecker commitChecker, Action<string> onProgressChange)
