@@ -22,8 +22,6 @@ namespace mrHelper.Client.Git
       // Object which keeps this git repository up-to-date
       public GitClientUpdater Updater { get; }
 
-      public event Action<string> OperationStatusChange;
-
       /// <summary>
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
@@ -242,7 +240,7 @@ namespace mrHelper.Client.Git
          {
             progress.ProgressChanged += (sender, status) =>
             {
-               OperationStatusChange?.Invoke(status);
+               onProgressChange(status);
             };
          }
 

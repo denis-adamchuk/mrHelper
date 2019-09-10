@@ -370,7 +370,7 @@ namespace mrHelper.App.Forms
          if (listViewKnownHosts.SelectedItems.Count > 0)
          {
             Trace.TraceInformation(String.Format("[MainForm] Removing host name {0}",
-               listViewKnownHosts.SelectedItems[0]));
+               listViewKnownHosts.SelectedItems[0].ToString()));
 
             listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
             updateHostsDropdownList();
