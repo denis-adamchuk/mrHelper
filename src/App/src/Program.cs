@@ -69,45 +69,40 @@ namespace mrHelper.App
                Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
                setupTraceListener("mrHelper.diff.log");
 
-               int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
-
+               DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
+               DiffToolInfo diffToolInfo;
                try
                {
-                  SnapshotSerializer serializer = new SnapshotSerializer();
-                  Snapshot snapshot;
-                  try
-                  {
-                     snapshot = serializer.DeserializeFromDisk(gitPID);
-                  }
-                  catch (System.IO.IOException ex)
-                  {
-                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-                     MessageBox.Show("Cannot create a discussion. "
-                        + "Make sure that you use diff tool instance launched from mrHelper and mrHelper is still running.");
-                     return;
-                  }
+                  diffToolInfo = diffArgumentParser.Parse();
+               }
+               catch (ArgumentException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+                  MessageBox.Show("Bad arguments, see details in logs", "Error",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return;
+               }
 
-                  using (GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null))
-                  {
-                     IGitRepository gitRepository = factory.GetClient(snapshot.Host, snapshot.Project);
+               int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
 
-                     DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
-                     DiffToolInfoProcessor processor = new DiffToolInfoProcessor(gitRepository);
-                     DiffToolInfo diffToolInfo;
-                     try
-                     {
-                        diffToolInfo = processor.Process(argumentsParser.Parse(), snapshot.Refs);
-                     }
-                     catch (DiffToolInfoProcessorException)
-                     {
-                        return; // don't continue
-                     }
+               SnapshotSerializer serializer = new SnapshotSerializer();
+               Snapshot snapshot;
+               try
+               {
+                  snapshot = serializer.DeserializeFromDisk(gitPID);
+               }
+               catch (System.IO.IOException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+                  MessageBox.Show("Cannot create a discussion. "
+                     + "Make sure that you use diff tool instance launched from mrHelper and mrHelper is still running.");
+                  return;
+               }
 
-                     RefToLineMatcher matcher = new RefToLineMatcher(gitRepository);
-                     DiffPosition position = matcher.Match(snapshot.Refs, diffToolInfo);
-
-                     Application.Run(new NewDiscussionForm(snapshot, diffToolInfo, position, gitRepository));
-                  }
+               IInterprocessCallHandler diffCallHandler = new DiffCallHandler(diffToolInfo);
+               try
+               {
+                  diffCallHandler.Handle(snapshot);
                }
                catch (Exception ex) // whatever unhandled exception
                {

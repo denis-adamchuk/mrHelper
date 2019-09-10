@@ -24,7 +24,7 @@ namespace mrHelper.Forms.Helpers
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public DiffToolInfo Process(DiffToolInfo diffToolInfo, Core.Matching.DiffRefs refs)
+      public bool Process(DiffToolInfo source, Core.Matching.DiffRefs refs, out DiffToolInfo dest)
       {
          string currentName;
          string anotherName;
@@ -32,14 +32,21 @@ namespace mrHelper.Forms.Helpers
          bool renamed;
          try
          {
-            renamed = checkForRenamedFile(refs, diffToolInfo, out currentName, out anotherName, out moved);
+            renamed = checkForRenamedFile(refs, source, out currentName, out anotherName, out moved);
          }
          catch (GitOperationException)
          {
             throw; // fatal error
          }
 
-         return renamed ? handleFileRename(diffToolInfo, currentName, anotherName, moved) : diffToolInfo;
+         if (renamed)
+         {
+            Trace.TraceInformation("Detected file {0}. Git repository path: {1}. DiffRefs: {2}\nDiffToolInfo: {3}",
+               (moved ? "move" : "rename"), _gitRepository.Path, refs.ToString(), source.ToString());
+         }
+
+         dest = source;
+         return !renamed || handleFileRename(source, currentName, anotherName, moved, out dest);
       }
 
       /// <summary>
@@ -95,13 +102,13 @@ namespace mrHelper.Forms.Helpers
          return true;
       }
 
-      private DiffToolInfo handleFileRename(DiffToolInfo diffToolInfo,
-         string currentName, string anotherName, bool moved)
+      private static bool handleFileRename(DiffToolInfo source,
+         string currentName, string anotherName, bool moved, out DiffToolInfo dest)
       {
+         dest = source;
+
          if (moved)
          {
-            Trace.TraceInformation("Detected file move. DiffToolInfo: {0}", diffToolInfo);
-
             MessageBox.Show(
               "Merge Request Helper detected that current file is a moved version of another file. "
             + "GitLab does not allow to create discussions on moved files.\n\n"
@@ -112,12 +119,11 @@ namespace mrHelper.Forms.Helpers
               "Cannot create a discussion",
               MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-            throw new DiffToolInfoProcessorException();
+            return false;
          }
 
-         Trace.TraceInformation("Detected file rename. DiffToolInfo: {0}", diffToolInfo);
 
-         bool isLeftSide = diffToolInfo.IsLeftSideCurrent;
+         bool isLeftSide = source.IsLeftSideCurrent;
          string fileStatus = isLeftSide ? "new" : "deleted";
 
          if (MessageBox.Show(
@@ -129,18 +135,18 @@ namespace mrHelper.Forms.Helpers
              + "Another file:\n"
              + anotherName,
                "Cannot create a discussion",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+               MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.No)
          {
             Trace.TraceInformation("User decided to match files manually");
-            throw new DiffToolInfoProcessorException();
+            return false;
          }
 
-         DiffToolInfo result = createDiffToolInfoCloneWithFakeSide(diffToolInfo, anotherName);
-         Trace.TraceInformation("Updated DiffToolInfo: {0}", result);
-         return result;
+         dest = createDiffToolInfoCloneWithFakeSide(source, anotherName);
+         Trace.TraceInformation("Updated DiffToolInfo: {0}", dest.ToString());
+         return true;
       }
 
-      DiffToolInfo createDiffToolInfoCloneWithFakeSide(DiffToolInfo source, string anotherName)
+      private static DiffToolInfo createDiffToolInfoCloneWithFakeSide(DiffToolInfo source, string anotherName)
       {
          bool isLeftSide = source.IsLeftSideCurrent;
          return new DiffToolInfo

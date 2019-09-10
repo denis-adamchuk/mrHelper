@@ -73,6 +73,7 @@
     <Compile Include="src\Controls\TextBoxNoWheel.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\DiffCallHandler.cs" />
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
