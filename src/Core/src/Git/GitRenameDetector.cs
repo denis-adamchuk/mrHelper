@@ -49,7 +49,6 @@ namespace mrHelper.Core.Git
 
             int added = int.Parse(m.Groups["added"].Value);
             int deleted = int.Parse(m.Groups["deleted"].Value);
-            moved = (added + deleted == 0);
 
             string leftName = m.Groups["left_name"].Value;
             string rightName = m.Groups["right_name"].Value;

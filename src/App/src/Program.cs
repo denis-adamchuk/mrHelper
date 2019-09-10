@@ -45,12 +45,8 @@ namespace mrHelper.App
                }
 
                Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
+               setupTraceListener("mrHelper.main.log");
 
-               string logFilePath = System.IO.Path.Combine(
-                  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                     "mrHelper", "mrHelper.main.log");
-               Trace.Listeners.Add(new CustomTraceListener(logFilePath));
-               Trace.AutoFlush = true;
                try
                {
                   Application.Run(new MainForm());
@@ -71,12 +67,7 @@ namespace mrHelper.App
                }
 
                Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
-
-               string logFilePath = System.IO.Path.Combine(
-                  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                     "mrHelper", "mrHelper.diff.log");
-               Trace.Listeners.Add(new CustomTraceListener(logFilePath));
-               Trace.AutoFlush = true;
+               setupTraceListener("mrHelper.diff.log");
 
                int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
 
@@ -124,6 +115,14 @@ namespace mrHelper.App
                }
             }
          }
+      }
+
+      private static void setupTraceListener(string logfilename)
+      {
+         string logFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mrHelper", logfilename);
+         Trace.Listeners.Add(new CustomTraceListener(logFilePath));
+         Trace.AutoFlush = true;
       }
    }
 }
