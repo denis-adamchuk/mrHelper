@@ -244,7 +244,7 @@ namespace mrHelper.App.Forms
 
       async private Task changeMergeRequestAsync(int mergeRequestIId)
       {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId ",
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             mergeRequestIId.ToString()));
 
          try
