@@ -182,6 +182,7 @@ namespace mrHelper.Client.Git
             }
          };
 
+         progress?.Report(getStatus(arguments, "is in progress..."));
          process.Start();
 
          process.BeginOutputReadLine();

@@ -28,6 +28,8 @@ namespace mrHelper.Client.Git
 
          ParentFolder = parentFolder;
          ProjectWatcher = projectWatcher;
+
+         Trace.TraceInformation(String.Format("Created GitClientFactory for parentFolder {0}", parentFolder));
       }
 
       /// <summary>
@@ -51,6 +53,7 @@ namespace mrHelper.Client.Git
 
       public void Dispose()
       {
+         Trace.TraceInformation(String.Format("Disposing GitClientFactory for parentFolder {0}", ParentFolder));
          disposeClients();
       }
 

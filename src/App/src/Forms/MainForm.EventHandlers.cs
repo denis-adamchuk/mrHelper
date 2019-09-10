@@ -98,9 +98,15 @@ namespace mrHelper.App.Forms
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
                if (diff != TimeSpan.Zero)
                {
-                  await _timeTrackingManager.AddSpanAsync(add, diff, _workflow.State.MergeRequestDescriptor);
+                  MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+
+                  await _timeTrackingManager.AddSpanAsync(add, diff, mrd);
+
                   updateTotalTime(_workflow.State.MergeRequestDescriptor);
                   labelWorkflowStatus.Text = "Total spent time updated";
+
+                  Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
+                     mrd.IId, mrd.ProjectName, diff.ToString()));
                }
             }
          }
@@ -240,6 +246,7 @@ namespace mrHelper.App.Forms
                      MessageBoxButtons.OK, MessageBoxIcon.Warning);
                   return;
                }
+
                _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
                _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
                   .Select(i => i.SubItems[1].Text).ToList();
@@ -362,6 +369,9 @@ namespace mrHelper.App.Forms
       {
          if (listViewKnownHosts.SelectedItems.Count > 0)
          {
+            Trace.TraceInformation(String.Format("[MainForm] Removing host name {0}",
+               listViewKnownHosts.SelectedItems[0]));
+
             listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
             updateHostsDropdownList();
             return true;

@@ -81,6 +81,9 @@ namespace mrHelper.App.Forms
 
       async private Task changeHostAsync(string hostName)
       {
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}",
+            hostName));
+
          try
          {
             await _workflow.SwitchHostAsync(hostName);
@@ -119,12 +122,17 @@ namespace mrHelper.App.Forms
          disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Changing host to {0}",
+            hostname));
       }
 
       private void onFailedChangeHost()
       {
          disableComboBox(comboBoxProjects, String.Empty);
          labelWorkflowStatus.Text = "Failed to load projects";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change host"));
       }
 
       private void onHostChanged(WorkflowState state, List<Project> projects)
@@ -141,10 +149,19 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = "Projects loaded";
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] Host changed. Loaded {0} projects", projects.Count));
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] Current user details: Id: {0}, Name: {1}, Username: {2}",
+            state.CurrentUser.Id.ToString(), state.CurrentUser.Name, state.CurrentUser.Username));
       }
 
       async private Task changeProjectAsync(string projectName)
       {
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change project to {0}",
+            projectName));
+
          try
          {
             await _workflow.SwitchProjectAsync(projectName);
@@ -184,12 +201,17 @@ namespace mrHelper.App.Forms
          updateTotalTime(null);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Changing project to {0}",
+            projectName));
       }
 
       private void onFailedChangeProject()
       {
          disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
          labelWorkflowStatus.Text = "Failed to change project";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change project"));
       }
 
       private void onProjectChanged(WorkflowState state, List<MergeRequest> mergeRequests)
@@ -215,10 +237,16 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Project {0} selected", state.Project.Path_With_Namespace);
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] Project changed. Loaded {0} merge requests", mergeRequests.Count));
       }
 
       async private Task changeMergeRequestAsync(int mergeRequestIId)
       {
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId ",
+            mergeRequestIId.ToString()));
+
          try
          {
             await _workflow.SwitchMergeRequestAsync(mergeRequestIId);
@@ -253,12 +281,17 @@ namespace mrHelper.App.Forms
          updateTotalTime(null);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Changing merge request to IId {0}",
+            mergeRequestIId.ToString()));
       }
 
       private void onFailedChangeMergeRequest()
       {
          richTextBoxMergeRequestDescription.Text = String.Empty;
          labelWorkflowStatus.Text = "Failed to load merge request";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change merge request"));
       }
 
       private void onMergeRequestChanged(WorkflowState state)
@@ -270,6 +303,8 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(state.MergeRequest);
 
          labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", state.MergeRequest.IId);
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Merge request changed"));
       }
 
       private void onLoadCommits()
@@ -285,6 +320,8 @@ namespace mrHelper.App.Forms
             disableComboBox(comboBoxLeftCommit, String.Empty);
             disableComboBox(comboBoxRightCommit, String.Empty);
          }
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading commits"));
       }
 
       private void onFailedLoadCommits()
@@ -292,6 +329,8 @@ namespace mrHelper.App.Forms
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
          labelWorkflowStatus.Text = "Failed to load commits";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load commits"));
       }
 
       private void onCommitsLoaded(WorkflowState state, List<Commit> commits)
@@ -308,6 +347,8 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count));
       }
 
       private void onLoadTotalTime()
@@ -320,18 +361,24 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = "Loading total spent time";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading total spent time"));
       }
 
       private void onFailedLoadTotalTime()
       {
          updateTotalTime(null);
          labelWorkflowStatus.Text = "Failed to load total spent time";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load total spent time"));
       }
 
       private void onTotalTimeLoaded(MergeRequestDescriptor mrd)
       {
          updateTotalTime(mrd);
          labelWorkflowStatus.Text = "Total spent time loaded";
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Total spent time loaded"));
       }
    }
 }

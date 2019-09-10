@@ -69,7 +69,9 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Command " + name + " completed";
 
-               // TODO This may be unneeded in general case but so far it is ok for custom actions that I know
+               Trace.TraceInformation(String.Format("Custom action {0} completed", name));
+
+               // TODO This may be unneeded in general case but so far it is ok for current list of custom actions
                await onStopTimer(true);
             };
             groupBoxActions.Controls.Add(button);

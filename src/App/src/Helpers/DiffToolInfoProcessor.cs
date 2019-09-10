@@ -122,7 +122,6 @@ namespace mrHelper.Forms.Helpers
             return false;
          }
 
-
          bool isLeftSide = source.IsLeftSideCurrent;
          string fileStatus = isLeftSide ? "new" : "deleted";
 

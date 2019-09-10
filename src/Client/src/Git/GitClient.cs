@@ -69,10 +69,14 @@ namespace mrHelper.Client.Git
          {
             return _hostName == hostNameToCheck && _projectName == projectNameToCheck;
          });
+
+         Trace.TraceInformation(String.Format("Created GitClient at path {0} for host {1} and project {2}",
+            path, hostname, projectname));
       }
 
       public void Dispose()
       {
+         Trace.TraceInformation(String.Format("Disposing GitClient at path {0}", Path));
          CancelAsyncOperation();
          Updater.Dispose();
       }
@@ -184,8 +188,6 @@ namespace mrHelper.Client.Git
          return result;
       }
 
-      private delegate object command();
-
       /// <summary>
       /// Check if Clone can be called for this GitClient
       /// </summary>
@@ -216,7 +218,7 @@ namespace mrHelper.Client.Git
          }, path);
       }
 
-      static private object run_in_path(command cmd, string path)
+      static private object run_in_path(Func<object> cmd, string path)
       {
          var cwd = Directory.GetCurrentDirectory();
          try

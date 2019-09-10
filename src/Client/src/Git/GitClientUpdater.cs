@@ -47,10 +47,6 @@ namespace mrHelper.Client.Git
             Debug.Assert(false);
             return;
          }
-         else
-         {
-            Debug.WriteLine(String.Format("[GitClientUpdater] Using commit checker {0}", commitChecker.ToString()));
-         }
 
          _updating = true;
          DateTime latestChange = _latestChange;
@@ -69,7 +65,7 @@ namespace mrHelper.Client.Git
                await doUpdate(onProgressChange); // this may cancel currently running onTimer update
 
                _latestChange = latestChange;
-               Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
+               Trace.TraceInformation(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
             }
          }
          finally
@@ -93,7 +89,7 @@ namespace mrHelper.Client.Git
 
          if (_updating)
          {
-            Debug.WriteLine(String.Format("[GitClientUpdater] Update cancelled due to a pending update"));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Update cancelled due to a pending update"));
             return;
          }
 
@@ -123,7 +119,7 @@ namespace mrHelper.Client.Git
             await doUpdate(null);
 
             _latestChange = latestChange;
-            Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
          }
          catch (GitOperationException ex)
          {
