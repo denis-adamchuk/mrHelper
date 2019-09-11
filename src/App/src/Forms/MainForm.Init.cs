@@ -69,7 +69,9 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Command " + name + " completed";
 
-               // TODO This may be unneeded in general case but so far it is ok for custom actions that I know
+               Trace.TraceInformation(String.Format("Custom action {0} completed", name));
+
+               // TODO This may be unneeded in general case but so far it is ok for current list of custom actions
                await onStopTimer(true);
             };
             groupBoxActions.Controls.Add(button);
@@ -80,6 +82,8 @@ namespace mrHelper.App.Forms
 
       private void loadConfiguration()
       {
+         Trace.TraceInformation("[MainForm] Loading configuration");
+
          Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
          // Remove all items except header
          for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
@@ -120,6 +124,8 @@ namespace mrHelper.App.Forms
          }
 
          fillColorSchemesList();
+
+         Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 
       private void integrateInTools()

@@ -57,7 +57,6 @@
          this.buttonCancel.TabIndex = 4;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
-         this.buttonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
          // 
          // buttonOK
          // 
@@ -68,7 +67,6 @@
          this.buttonOK.TabIndex = 3;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
-         this.buttonOK.Click += new System.EventHandler(this.ButtonOK_Click);
          // 
          // textBoxFileName
          // 
@@ -137,7 +135,6 @@
          this.MinimizeBox = false;
          this.Name = "NewDiscussionForm";
          this.Text = "New Discussion";
-         this.Load += new System.EventHandler(this.NewDiscussionForm_Load);
          this.ResumeLayout(false);
          this.PerformLayout();
 

@@ -12,6 +12,8 @@ namespace mrHelper.Core.Interprocess
    {
       public struct Side
       {
+         public static int UninitializedLineNumber = -1;
+
          public string FileName;
          public int LineNumber;
 
@@ -55,3 +57,4 @@ namespace mrHelper.Core.Interprocess
       public bool IsLeftSideCurrent;
    }
 }
+

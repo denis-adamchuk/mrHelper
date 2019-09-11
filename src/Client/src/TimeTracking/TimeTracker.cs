@@ -26,6 +26,10 @@ namespace mrHelper.Client.TimeTracking
       {
          Stopwatch.Reset();
          Stopwatch.Start();
+
+         Trace.TraceInformation(String.Format(
+            "[TimeTracker] Starting time tracking for MR IId {0} (project {1}",
+            MergeRequestDescriptor.IId, MergeRequestDescriptor.ProjectName));
       }
 
       async public Task StopAsync()
@@ -33,7 +37,13 @@ namespace mrHelper.Client.TimeTracking
          Stopwatch.Stop();
          try
          {
-            await OnStopped(Stopwatch.Elapsed, MergeRequestDescriptor);
+            TimeSpan span = Stopwatch.Elapsed;
+
+            Trace.TraceInformation(String.Format(
+               "[TimeTracker] Time tracking stopped. Sending {0} for MR IId {1} (project {2})",
+               span.ToString(), MergeRequestDescriptor.IId, MergeRequestDescriptor.ProjectName));
+
+            await OnStopped(span, MergeRequestDescriptor);
          }
          catch (OperatorException)
          {
@@ -43,6 +53,10 @@ namespace mrHelper.Client.TimeTracking
 
       public void Cancel()
       {
+         Trace.TraceInformation(String.Format(
+            "[TimeTracker] Time tracking for MR IId {0} (project {1}) cancelled",
+            MergeRequestDescriptor.IId, MergeRequestDescriptor.ProjectName));
+
          Stopwatch.Stop();
       }
 

@@ -128,6 +128,13 @@ namespace mrHelper.Client.Updates
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Updating {0} projects", projectUpdates.Count));
          if (projectUpdates.Count > 0)
          {
+            foreach (ProjectUpdate projectUpdate in projectUpdates)
+            {
+               Trace.TraceInformation(String.Format(
+                  "[WorkflowUpdateChecker] Updating project: Host {0}, Name {1}, TimeStamp {2}",
+                  projectUpdate.HostName, projectUpdate.ProjectName,
+                  projectUpdate.LatestChange.ToLocalTime().ToString()));
+            }
             OnProjectUpdate?.Invoke(projectUpdates);
          }
       }

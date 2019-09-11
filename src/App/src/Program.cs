@@ -6,6 +6,10 @@ using mrHelper.Core.Interprocess;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Git;
+using mrHelper.Common.Interfaces;
+using mrHelper.Forms.Helpers;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.App
 {
@@ -41,12 +45,8 @@ namespace mrHelper.App
                }
 
                Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
+               setupTraceListener("mrHelper.main.log");
 
-               string logFilePath = System.IO.Path.Combine(
-                  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                     "mrHelper", "mrHelper.main.log");
-               Trace.Listeners.Add(new CustomTraceListener(logFilePath));
-               Trace.AutoFlush = true;
                try
                {
                   Application.Run(new MainForm());
@@ -67,35 +67,42 @@ namespace mrHelper.App
                }
 
                Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
+               setupTraceListener("mrHelper.diff.log");
 
-               string logFilePath = System.IO.Path.Combine(
-                  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                     "mrHelper", "mrHelper.diff.log");
-               Trace.Listeners.Add(new CustomTraceListener(logFilePath));
-               Trace.AutoFlush = true;
+               DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
+               DiffToolInfo diffToolInfo;
+               try
+               {
+                  diffToolInfo = diffArgumentParser.Parse();
+               }
+               catch (ArgumentException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+                  MessageBox.Show("Bad arguments, see details in logs", "Error",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return;
+               }
 
                int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
 
+               SnapshotSerializer serializer = new SnapshotSerializer();
+               Snapshot snapshot;
                try
                {
-                  DiffArgumentParser argumentsParser = new DiffArgumentParser(arguments);
-                  DiffToolInfo diffToolInfo = argumentsParser.Parse();
+                  snapshot = serializer.DeserializeFromDisk(gitPID);
+               }
+               catch (System.IO.IOException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+                  MessageBox.Show("Cannot create a discussion. "
+                     + "Make sure that you use diff tool instance launched from mrHelper and mrHelper is still running.");
+                  return;
+               }
 
-                  SnapshotSerializer serializer = new SnapshotSerializer();
-                  Snapshot? snapshot = null;
-                  try
-                  {
-                     snapshot = serializer.DeserializeFromDisk(gitPID);
-                  }
-                  catch (System.IO.IOException ex)
-                  {
-                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-                     MessageBox.Show("Cannot create a discussion. "
-                        + "Make sure that you use diff tool instance launched from mrHelper and mrHelper is still running.");
-                     return;
-                  }
-
-                  Application.Run(new NewDiscussionForm(snapshot.Value, diffToolInfo));
+               IInterprocessCallHandler diffCallHandler = new DiffCallHandler(diffToolInfo);
+               try
+               {
+                  diffCallHandler.Handle(snapshot);
                }
                catch (Exception ex) // whatever unhandled exception
                {
@@ -103,6 +110,14 @@ namespace mrHelper.App
                }
             }
          }
+      }
+
+      private static void setupTraceListener(string logfilename)
+      {
+         string logFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mrHelper", logfilename);
+         Trace.Listeners.Add(new CustomTraceListener(logFilePath));
+         Trace.AutoFlush = true;
       }
    }
 }

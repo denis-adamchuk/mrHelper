@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Workflow
 {
@@ -132,6 +133,7 @@ namespace mrHelper.Client.Workflow
             bool cancelled = ex.InternalException is GitLabClientCancelled;
             if (cancelled)
             {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled switch host to {0}", hostName));
                return; // silent return
             }
             FailedSwitchHost?.Invoke();
@@ -171,6 +173,7 @@ namespace mrHelper.Client.Workflow
             bool cancelled = ex.InternalException is GitLabClientCancelled;
             if (cancelled)
             {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled switch project to {0}", projectName));
                return; // silent return
             }
             FailedSwitchProject?.Invoke();
@@ -204,6 +207,8 @@ namespace mrHelper.Client.Workflow
             bool cancelled = ex.InternalException is GitLabClientCancelled;
             if (cancelled)
             {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled switch MR IID to {0}",
+                  mergeRequestIId.ToString()));
                return; // silent return
             }
             FailedSwitchMergeRequest?.Invoke();
@@ -237,6 +242,7 @@ namespace mrHelper.Client.Workflow
             bool cancelled = ex.InternalException is GitLabClientCancelled;
             if (cancelled)
             {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading commits"));
                return false; // silent return
             }
             FailedLoadCommits?.Invoke();
@@ -260,6 +266,7 @@ namespace mrHelper.Client.Workflow
             bool cancelled = ex.InternalException is GitLabClientCancelled;
             if (cancelled)
             {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading system notes"));
                return; // silent return
             }
             FailedLoadSystemNotes?.Invoke();

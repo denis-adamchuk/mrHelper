@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Tools
 {
@@ -168,12 +169,16 @@ namespace mrHelper.Client.Tools
             {
                _config.AppSettings.Settings[key].Value = value;
                OnPropertyChanged(key);
+
+               Trace.TraceInformation(String.Format("[Configuration] Changed property {0} value to {1}", key, value));
             }
             return;
          }
 
          _config.AppSettings.Settings.Add(key, value);
          OnPropertyChanged(key);
+
+         Trace.TraceInformation(String.Format("[Configuration] Added a new property {0} with value {1}", key, value));
       }
 
       private List<string> getValues(string key, List<string> defaultValues)

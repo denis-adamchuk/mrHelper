@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using mrHelper.Core.Tools;
 using mrHelper.Common.Interfaces;
+using System.Diagnostics;
 
 namespace mrHelper.Core.Context
 {
@@ -42,6 +43,13 @@ namespace mrHelper.Core.Context
             Right = new SparsedList<string>()
          };
          List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName, maxDiffContext);
+         if (fullDiff.Count == 0)
+         {
+            Trace.TraceWarning(String.Format(
+               "[FullContextDiffProvider] Context size is zero. LeftSHA: {0}, Right SHA: {1}, Left file: {2}, Right file: {3}",
+               leftSHA, rightSHA, leftFileName, rightFileName));
+         }
+
          bool skip = true;
          foreach (string line in fullDiff)
          {

@@ -28,8 +28,11 @@ namespace mrHelper.Client.Git
 
       public void Dispose()
       {
-         Trace.TraceInformation(String.Format("[GitClientUpdater] Dispose and unsubscribe from Project Watcher"));
-         _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
+         if (_projectWatcher != null)
+         {
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Dispose and unsubscribe from Project Watcher"));
+            _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
+         }
       }
 
       async public Task ManualUpdateAsync(CommitChecker commitChecker, Action<string> onProgressChange)
@@ -43,10 +46,6 @@ namespace mrHelper.Client.Git
             Debug.WriteLine(String.Format("[GitClientUpdater] Unexpected case, manual update w/o commit checker"));
             Debug.Assert(false);
             return;
-         }
-         else
-         {
-            Debug.WriteLine(String.Format("[GitClientUpdater] Using commit checker {0}", commitChecker.ToString()));
          }
 
          _updating = true;
@@ -66,7 +65,7 @@ namespace mrHelper.Client.Git
                await doUpdate(onProgressChange); // this may cancel currently running onTimer update
 
                _latestChange = latestChange;
-               Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
+               Trace.TraceInformation(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
             }
          }
          finally
@@ -90,7 +89,7 @@ namespace mrHelper.Client.Git
 
          if (_updating)
          {
-            Debug.WriteLine(String.Format("[GitClientUpdater] Update cancelled due to a pending update"));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Update cancelled due to a pending update"));
             return;
          }
 
@@ -120,7 +119,7 @@ namespace mrHelper.Client.Git
             await doUpdate(null);
 
             _latestChange = latestChange;
-            Debug.WriteLine(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
          }
          catch (GitOperationException ex)
          {

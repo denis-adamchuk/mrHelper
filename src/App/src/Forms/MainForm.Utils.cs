@@ -100,14 +100,20 @@ namespace mrHelper.App.Forms
          notifyIcon.BalloonTipTitle = title;
          notifyIcon.BalloonTipText = text;
          notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
+
+         Trace.TraceInformation(String.Format("Tooltip: Title \"{0}\" Text \"{1}\"", title, text)); 
       }
 
       private bool addKnownHost(string host, string accessToken)
       {
+         Trace.TraceInformation(String.Format("[MainForm] Adding host {0} with token {1}",
+            host, accessToken));
+
          foreach (ListViewItem listItem in listViewKnownHosts.Items)
          {
             if (listItem.Text == host)
             {
+               Trace.TraceInformation(String.Format("[MainForm] Host name already exists"));
                return false;
             }
          }
