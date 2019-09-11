@@ -68,13 +68,13 @@ namespace mrHelper.Client.Git
             return _hostName == hostNameToCheck && _projectName == projectNameToCheck;
          });
 
-         Trace.TraceInformation(String.Format("Created GitClient at path {0} for host {1} and project {2}",
+         Trace.TraceInformation(String.Format("[GitClient] Created GitClient at path {0} for host {1} and project {2}",
             path, hostname, projectname));
       }
 
       public void Dispose()
       {
-         Trace.TraceInformation(String.Format("Disposing GitClient at path {0}", Path));
+         Trace.TraceInformation(String.Format("[GitClient] Disposing GitClient at path {0}", Path));
          CancelAsyncOperation();
          Updater.Dispose();
       }

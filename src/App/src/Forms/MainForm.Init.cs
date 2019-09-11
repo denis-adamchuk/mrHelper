@@ -82,6 +82,8 @@ namespace mrHelper.App.Forms
 
       private void loadConfiguration()
       {
+         Trace.TraceInformation("[MainForm] Loading configuration");
+
          Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
          // Remove all items except header
          for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
@@ -122,6 +124,8 @@ namespace mrHelper.App.Forms
          }
 
          fillColorSchemesList();
+
+         Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 
       private void integrateInTools()

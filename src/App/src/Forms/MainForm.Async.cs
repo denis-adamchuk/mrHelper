@@ -130,6 +130,9 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Discussions opened";
 
+         Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
+            _workflow.State.MergeRequestDescriptor.IId, client.Path));
+
          form.Show();
       }
 
@@ -200,6 +203,9 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = "Diff tool launched";
+
+         Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
+            leftSHA, rightSHA, client.Path, pid.ToString()));
 
          saveInterprocessSnapshot(pid, leftSHA, rightSHA);
       }
