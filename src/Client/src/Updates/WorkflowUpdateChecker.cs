@@ -49,19 +49,36 @@ namespace mrHelper.Client.Updates
 
          UpdateOperator = updateOperator;
          Workflow = workflow;
+
          Workflow.PostSwitchProject += async (state, _) =>
          {
             Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Start handling PostSwitchProject. Host: {0}, Project: {1}",
                state.HostName, state.Project.Path_With_Namespace));
 
-            await updateCacheAsync(state.HostName, state.Project);
+            await cacheMergeRequestsAsync(state.HostName, state.Project);
 
             Debug.WriteLine(String.Format("[WorkflowUpdateChecker] End handling PostSwitchProject."));
+         };
+
+         Workflow.PostSwitchMergeRequest += async (state) =>
+         {
+            Debug.WriteLine(String.Format(
+               "[WorkflowUpdateChecker] Start handling PostSwitchMergeRequest. Host: {0}, Project: {1}, IId: {2}",
+                  state.HostName, state.Project.Path_With_Namespace, state.MergeRequest.IId));
+
+            await cacheCommitsAsync(state.HostName, state.MergeRequest);
+
+            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] End handling PostSwitchMergeRequest."));
          };
       }
 
       public event Action<MergeRequestUpdates> OnUpdate;
       public event Action<List<ProjectUpdate>> OnProjectUpdate;
+
+      public DateTime GetLatestCommitTimestamp(int mergeRequestId)
+      {
+         return _cachedCommits[mergeRequestId];
+      }
 
       private struct TwoListDifference<T>
       {
@@ -73,12 +90,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Process a timer event
       /// </summary>
-      async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
-      {
-         await doUpdateAsync();
-      }
-
-      async public Task doUpdateAsync()
+      async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
          MergeRequestUpdates updates;
 
@@ -203,7 +215,7 @@ namespace mrHelper.Client.Updates
             List<MergeRequest> previouslyCachedMergeRequests =
                _cachedMergeRequests.ContainsKey(project.Id) ? _cachedMergeRequests[project.Id] : null;
 
-            await updateCacheAsync(state.HostName, project);
+            await cacheMergeRequestsAsync(state.HostName, project);
 
             Debug.Assert(_cachedMergeRequests.ContainsKey(project.Id));
 
@@ -217,24 +229,6 @@ namespace mrHelper.Client.Updates
          }
 
          return diff;
-      }
-
-      async private Task updateCacheAsync(string hostname, Project project)
-      {
-         _cachedProjectNames[project.Id] = project.Path_With_Namespace;
-
-         try
-         {
-            await cacheMergeRequestsAsync(hostname, project.Id);
-         }
-         catch (OperatorException ex)
-         {
-            ExceptionHandlers.Handle(ex, String.Format(
-               "Cannot load merge requests for project {0}, skipping it", project.Path_With_Namespace));
-            return;
-         }
-
-         Debug.Assert(_cachedMergeRequests.ContainsKey(project.Id));
       }
 
       /// <summary>
@@ -289,20 +283,31 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Load merge requests from GitLab and cache them
       /// </summary>
-      async private Task cacheMergeRequestsAsync(string hostname, int projectId)
+      async private Task cacheMergeRequestsAsync(string hostname, Project project)
       {
-         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking merge requests for project {0} (id {1})",
-            _cachedProjectNames[projectId], projectId));
+         _cachedProjectNames[project.Id] = project.Path_With_Namespace;
 
-         List<MergeRequest> mergeRequests =
-            await UpdateOperator.GetMergeRequestsAsync(hostname, _cachedProjectNames[projectId]);
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking merge requests for project {0} (id {1})",
+            _cachedProjectNames[project.Id], project.Id));
+
+         List<MergeRequest> mergeRequests;
+         try
+         {
+            mergeRequests = await UpdateOperator.GetMergeRequestsAsync(hostname, _cachedProjectNames[project.Id]);
+         }
+         catch (OperatorException ex)
+         {
+            ExceptionHandlers.Handle(ex, String.Format("Cannot load merge requests for project Id {0}",
+               project.Id));
+            return;
+         }
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This project has {0} merge requests at GitLab",
             mergeRequests.Count));
 
-         if (_cachedMergeRequests.ContainsKey(projectId))
+         if (_cachedMergeRequests.ContainsKey(project.Id))
          {
-            List<MergeRequest> previouslyCachedMergeRequests = _cachedMergeRequests[projectId];
+            List<MergeRequest> previouslyCachedMergeRequests = _cachedMergeRequests[project.Id];
 
             Debug.WriteLine(String.Format(
                "[WorkflowUpdateChecker] {0} merge requests for this project were cached before",
@@ -310,7 +315,7 @@ namespace mrHelper.Client.Updates
 
             Debug.WriteLine("[WorkflowUpdateChecker] Updating cached merge requests for this project");
 
-            _cachedMergeRequests[projectId] = mergeRequests;
+            _cachedMergeRequests[project.Id] = mergeRequests;
          }
          else
          {
@@ -318,7 +323,7 @@ namespace mrHelper.Client.Updates
                "[WorkflowUpdateChecker] Merge requests for this project were not cached before"));
             Debug.WriteLine("[WorkflowUpdateChecker] Caching them now");
 
-            _cachedMergeRequests[projectId] = mergeRequests;
+            _cachedMergeRequests[project.Id] = mergeRequests;
 
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
@@ -343,7 +348,16 @@ namespace mrHelper.Client.Updates
                IId = mergeRequest.IId
             };
 
-         Commit latestCommit = await UpdateOperator.GetLatestCommitAsync(mrd);
+         Commit latestCommit;
+         try
+         {
+            latestCommit = await UpdateOperator.GetLatestCommitAsync(mrd);
+         }
+         catch (OperatorException ex)
+         {
+            ExceptionHandlers.Handle(ex, String.Format("Cannot load commits for mr Id {0}", mergeRequest.Id));
+            return;
+         }
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This merge request has commit with Created_At={0}",
             latestCommit.Created_At));

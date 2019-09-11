@@ -17,37 +17,28 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Binds to the specific MergeRequestDescriptor
       /// </summary>
-      internal CommitChecker(MergeRequestDescriptor mrd, UpdateOperator updateOperator)
+      internal CommitChecker(int mergeRequestId, WorkflowUpdateChecker updateChecker)
       {
-         MergeRequestDescriptor = mrd;
-         UpdateOperator = updateOperator;
+         MergeRequestId = mergeRequestId;
+         UpdateChecker = updateChecker;
       }
 
       /// <summary>
       /// Check for commits newer than the given timestamp
       /// Throws nothing
       /// </summary>
-      async public Task<Commit> GetLatestCommitAsync()
+      public DateTime GetLatestCommitTimestamp()
       {
-         try
-         {
-            return await UpdateOperator.GetLatestCommitAsync(MergeRequestDescriptor);
-         }
-         catch (OperatorException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot check for commits");
-         }
-         return new Commit();
+         return UpdateChecker.GetLatestCommitTimestamp(MergeRequestId);
       }
 
       public override string ToString()
       {
-         return String.Format("MRD: HostName={0}, ProjectName={1}, IId={2}",
-            MergeRequestDescriptor.HostName, MergeRequestDescriptor.ProjectName, MergeRequestDescriptor.IId);
+         return String.Format("MergeRequest Id: {0}", MergeRequestId);
       }
 
-      private MergeRequestDescriptor MergeRequestDescriptor { get; }
-      private UpdateOperator UpdateOperator { get; }
+      private int MergeRequestId { get; }
+      private WorkflowUpdateChecker UpdateChecker { get; }
    }
 }
 

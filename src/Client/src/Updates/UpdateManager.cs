@@ -11,29 +11,24 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class UpdateManager
    {
-      public UpdateManager(UserDefinedSettings settings)
+      public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+         UserDefinedSettings settings)
       {
-         UpdateOperator = new UpdateOperator(settings);
-         Settings = settings;
+         UpdateOperator updateOperator = new UpdateOperator(settings);
+         WorkflowUpdateChecker = new WorkflowUpdateChecker(settings, updateOperator, workflow, synchronizeInvoke);
       }
 
-      public WorkflowUpdateChecker GetWorkflowUpdateChecker(Workflow.Workflow workflow,
-         ISynchronizeInvoke synchronizeInvoke)
+      public WorkflowUpdateChecker GetWorkflowUpdateChecker()
       {
-         return new WorkflowUpdateChecker(Settings, UpdateOperator, workflow, synchronizeInvoke);
+         return WorkflowUpdateChecker;
       }
 
-      public CommitChecker GetCommitChecker(MergeRequestDescriptor mrd)
+      public CommitChecker GetCommitChecker(int mergeRequestId)
       {
-         if (mrd.IId == default(MergeRequestDescriptor).IId || mrd.HostName == String.Empty || mrd.ProjectName == String.Empty)
-         {
-            return null;
-         }
-         return new CommitChecker(mrd, UpdateOperator);
+         return new CommitChecker(mergeRequestId, WorkflowUpdateChecker);
       }
 
-      private UpdateOperator UpdateOperator { get; }
-      private UserDefinedSettings Settings { get; }
+      private WorkflowUpdateChecker WorkflowUpdateChecker { get; }
    }
 }
 

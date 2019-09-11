@@ -14,6 +14,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.TimeTracking;
 
@@ -40,7 +41,8 @@ namespace mrHelper.App.Forms
          _workflow.PostLoadCommits += (state, commits) => onCommitsLoaded(state, commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
 
-         _workflowUpdateChecker = _updateManager.GetWorkflowUpdateChecker(_workflow, this);
+         _updateManager = new UpdateManager(_workflow, this, _settings);
+         _workflowUpdateChecker = _updateManager.GetWorkflowUpdateChecker();
          _workflowUpdateChecker.OnUpdate += async (updates) =>
          {
             notifyOnMergeRequestUpdates(updates);

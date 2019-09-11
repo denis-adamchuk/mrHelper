@@ -181,7 +181,6 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          _workflowFactory = new WorkflowFactory(_settings);
-         _updateManager = new UpdateManager(_settings);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=

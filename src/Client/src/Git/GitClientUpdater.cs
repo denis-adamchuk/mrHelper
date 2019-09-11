@@ -52,15 +52,15 @@ namespace mrHelper.Client.Git
          DateTime latestChange = _latestChange;
          try
          {
-            Commit commit = await commitChecker.GetLatestCommitAsync();
+            DateTime createdAt = commitChecker.GetLatestCommitTimestamp();
             Trace.TraceInformation(
-               String.Format("[GitClientUpdater] Latest Commit details: SHA {0}, Created_At: {1}",
-                  commit.Id, commit.Created_At.ToLocalTime().ToString()));
-            if (commit.Created_At > latestChange)
+               String.Format("[GitClientUpdater] Latest Commit details: Created_At: {0}",
+                  createdAt.ToLocalTime().ToString()));
+            if (createdAt > latestChange)
             {
                Trace.TraceInformation(String.Format("[GitClientUpdater] Manual update detected commits newer than {0}",
                   latestChange.ToLocalTime().ToString()));
-               latestChange = commit.Created_At;
+               latestChange = createdAt;
 
                await doUpdate(onProgressChange); // this may cancel currently running onTimer update
 
