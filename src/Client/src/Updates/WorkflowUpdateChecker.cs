@@ -51,12 +51,12 @@ namespace mrHelper.Client.Updates
          Workflow = workflow;
          Workflow.PostSwitchProject += async (state, _) =>
          {
-            // On initial update we need to create caches.
-            // When files are not listed in file, we updates only selected project and also might need to create caches.
-            if (isInitialUpdate() || !areProjectsListedInFile(state))
-            {
-               await doUpdate();
-            }
+            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Start handling PostSwitchProject. Host: {0}, Project: {1}",
+               state.HostName, state.Project.Path_With_Namespace));
+
+            await updateCacheAsync(state.HostName, state.Project);
+
+            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] End handling PostSwitchProject."));
          };
       }
 
@@ -75,10 +75,10 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         await doUpdate();
+         await doUpdateAsync();
       }
 
-      async public Task doUpdate()
+      async public Task doUpdateAsync()
       {
          MergeRequestUpdates updates;
 
@@ -87,7 +87,7 @@ namespace mrHelper.Client.Updates
          try
          {
             TwoListDifference<MergeRequest> diff = await getMergeRequestDiffAsync(state);
-            updates = await getMergeRequestUpdatesAsync(state, diff);
+            updates = await getMergeRequestUpdatesAsync(state.HostName, diff);
          }
          catch (OperatorException ex)
          {
@@ -200,21 +200,10 @@ namespace mrHelper.Client.Updates
 
          foreach (var project in projectsToCheck)
          {
-            _cachedProjectNames[project.Id] = project.Path_With_Namespace;
-
             List<MergeRequest> previouslyCachedMergeRequests =
                _cachedMergeRequests.ContainsKey(project.Id) ? _cachedMergeRequests[project.Id] : null;
 
-            try
-            {
-               await cacheMergeRequestsAsync(state, project.Id);
-            }
-            catch (OperatorException ex)
-            {
-               ExceptionHandlers.Handle(ex, String.Format(
-                  "Cannot load merge requests for project {0}, skipping it", project.Path_With_Namespace));
-               continue;
-            }
+            await updateCacheAsync(state.HostName, project);
 
             Debug.Assert(_cachedMergeRequests.ContainsKey(project.Id));
 
@@ -230,10 +219,28 @@ namespace mrHelper.Client.Updates
          return diff;
       }
 
+      async private Task updateCacheAsync(string hostname, Project project)
+      {
+         _cachedProjectNames[project.Id] = project.Path_With_Namespace;
+
+         try
+         {
+            await cacheMergeRequestsAsync(hostname, project.Id);
+         }
+         catch (OperatorException ex)
+         {
+            ExceptionHandlers.Handle(ex, String.Format(
+               "Cannot load merge requests for project {0}, skipping it", project.Path_With_Namespace));
+            return;
+         }
+
+         Debug.Assert(_cachedMergeRequests.ContainsKey(project.Id));
+      }
+
       /// <summary>
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
-      async private Task<MergeRequestUpdates> getMergeRequestUpdatesAsync(WorkflowState state,
+      async private Task<MergeRequestUpdates> getMergeRequestUpdatesAsync(string hostname,
          TwoListDifference<MergeRequest> diff)
       {
          MergeRequestUpdates updates = new MergeRequestUpdates
@@ -245,7 +252,7 @@ namespace mrHelper.Client.Updates
 
          foreach (MergeRequest mergeRequest in updates.NewMergeRequests)
          {
-            await cacheCommitsAsync(state, mergeRequest);
+            await cacheCommitsAsync(hostname, mergeRequest);
          }
 
          foreach (MergeRequest mergeRequest in diff.Common)
@@ -253,7 +260,7 @@ namespace mrHelper.Client.Updates
             DateTime? previouslyCachedCommitTimestamp = _cachedCommits.ContainsKey(mergeRequest.Id) ?
                _cachedCommits[mergeRequest.Id] : new Nullable<DateTime>();
 
-            await cacheCommitsAsync(state, mergeRequest);
+            await cacheCommitsAsync(hostname, mergeRequest);
 
             Debug.Assert(_cachedCommits.ContainsKey(mergeRequest.Id));
 
@@ -282,13 +289,13 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Load merge requests from GitLab and cache them
       /// </summary>
-      async private Task cacheMergeRequestsAsync(WorkflowState state, int projectId)
+      async private Task cacheMergeRequestsAsync(string hostname, int projectId)
       {
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking merge requests for project {0} (id {1})",
             _cachedProjectNames[projectId], projectId));
 
          List<MergeRequest> mergeRequests =
-            await UpdateOperator.GetMergeRequestsAsync(state.HostName, _cachedProjectNames[projectId]);
+            await UpdateOperator.GetMergeRequestsAsync(hostname, _cachedProjectNames[projectId]);
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This project has {0} merge requests at GitLab",
             mergeRequests.Count));
@@ -315,7 +322,7 @@ namespace mrHelper.Client.Updates
 
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               await cacheCommitsAsync(state, mergeRequest);
+               await cacheCommitsAsync(hostname, mergeRequest);
             }
          }
       }
@@ -323,7 +330,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Load commits from GitLab and cache them
       /// </summary>
-      async private Task cacheCommitsAsync(WorkflowState state, MergeRequest mergeRequest)
+      async private Task cacheCommitsAsync(string hostname, MergeRequest mergeRequest)
       {
          Debug.WriteLine(String.Format(
             "[WorkflowUpdateChecker] Checking commits for merge request {0} from project {1}",
@@ -331,7 +338,7 @@ namespace mrHelper.Client.Updates
 
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
-               HostName = state.HostName,
+               HostName = hostname,
                ProjectName = getMergeRequestProjectName(mergeRequest),
                IId = mergeRequest.IId
             };

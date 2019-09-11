@@ -52,6 +52,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            // check if currently selected project is affected by update
             if (updates.NewMergeRequests.Any(x => x.Project_Id == state.Project.Id)
              || updates.UpdatedMergeRequests.Any(x => x.Project_Id == state.Project.Id)
              || updates.ClosedMergeRequests.Any(x => x.Project_Id == state.Project.Id))
