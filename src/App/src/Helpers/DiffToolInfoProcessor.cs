@@ -59,13 +59,13 @@ namespace mrHelper.Forms.Helpers
          if (!diffToolInfo.Left.HasValue)
          {
             Debug.Assert(diffToolInfo.Right.HasValue);
-            currentName = diffToolInfo.Right?.FileName;
+            currentName = diffToolInfo.Right.Value.FileName;
             anotherName = renameChecker.IsRenamed(
                refs.LeftSHA,
                refs.RightSHA,
-               diffToolInfo.Right?.FileName,
+               diffToolInfo.Right.Value.FileName,
                false, out moved);
-            if (anotherName == diffToolInfo.Right?.FileName)
+            if (anotherName == diffToolInfo.Right.Value.FileName)
             {
                // it is not a renamed but removed file
                return false;
@@ -74,13 +74,13 @@ namespace mrHelper.Forms.Helpers
          else if (!diffToolInfo.Right.HasValue)
          {
             Debug.Assert(diffToolInfo.Left.HasValue);
-            currentName = diffToolInfo.Left?.FileName;
+            currentName = diffToolInfo.Left.Value.FileName;
             anotherName = renameChecker.IsRenamed(
                refs.LeftSHA,
                refs.RightSHA,
-               diffToolInfo.Left?.FileName,
+               diffToolInfo.Left.Value.FileName,
                true, out moved);
-            if (anotherName == diffToolInfo.Left?.FileName)
+            if (anotherName == diffToolInfo.Left.Value.FileName)
             {
                // it is not a renamed but added file
                return false;
@@ -91,7 +91,7 @@ namespace mrHelper.Forms.Helpers
             // If even two names are given, we need to check here because use might selected manually two
             // versions of a moved file
             bool isLeftSide = diffToolInfo.IsLeftSideCurrent;
-            currentName = isLeftSide ? diffToolInfo.Left?.FileName : diffToolInfo.Right?.FileName;
+            currentName = isLeftSide ? diffToolInfo.Left.Value.FileName : diffToolInfo.Right.Value.FileName;
             anotherName = renameChecker.IsRenamed(
                refs.LeftSHA,
                refs.RightSHA,

@@ -260,7 +260,7 @@ namespace mrHelper.Client.Git
             Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
                _projectName, arguments, status));
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
-            throw ex;
+            throw;
          }
          finally
          {
