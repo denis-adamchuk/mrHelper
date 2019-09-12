@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
          GitClient client = getGitClient(_workflow.State.HostName, _workflow.State.Project.Path_With_Namespace);
          if (client != null)
          {
-            preGitClientInitialize();
+            enableControlsOnGitAsyncOperation(false);
             try
             {
                await _gitClientUpdater.UpdateAsync(client,
@@ -65,7 +65,7 @@ namespace mrHelper.App.Forms
             }
             finally
             {
-               postGitClientInitialize();
+               enableControlsOnGitAsyncOperation(true);
             }
          }
          else
@@ -141,7 +141,7 @@ namespace mrHelper.App.Forms
          GitClient client = getGitClient(_workflow.State.HostName, _workflow.State.Project.Path_With_Namespace);
          if (client != null)
          {
-            preGitClientInitialize();
+            enableControlsOnGitAsyncOperation(false);
             try
             {
                await _gitClientUpdater.UpdateAsync(client,
@@ -166,7 +166,7 @@ namespace mrHelper.App.Forms
             }
             finally
             {
-               postGitClientInitialize();
+               enableControlsOnGitAsyncOperation(true);
             }
          }
          else

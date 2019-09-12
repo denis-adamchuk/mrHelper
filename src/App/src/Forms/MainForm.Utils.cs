@@ -180,27 +180,21 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void preGitClientInitialize()
+      private void enableControlsOnGitAsyncOperation(bool enabled)
       {
-         linkLabelAbortGit.Visible = true;
-         buttonDiffTool.Enabled = false;
-         buttonDiscussions.Enabled = false;
-         comboBoxHost.Enabled = false;
-         comboBoxProjects.Enabled = false;
-         comboBoxFilteredMergeRequests.Enabled = false;
-         buttonApplyLabels.Enabled = false;
-      }
+         linkLabelAbortGit.Visible = !enabled;
+         buttonDiffTool.Enabled = enabled;
+         buttonDiscussions.Enabled = enabled;
+         comboBoxHost.Enabled = enabled;
+         comboBoxProjects.Enabled = enabled;
+         comboBoxFilteredMergeRequests.Enabled = enabled;
+         buttonApplyLabels.Enabled = enabled;
+         tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
 
-      private void postGitClientInitialize()
-      {
-         linkLabelAbortGit.Visible = false;
-         buttonDiffTool.Enabled = true;
-         buttonDiscussions.Enabled = true;
-         comboBoxHost.Enabled = true;
-         comboBoxProjects.Enabled = true;
-         comboBoxFilteredMergeRequests.Enabled = true;
-         buttonApplyLabels.Enabled = true;
-         updateGitStatusText(String.Empty);
+         if (enabled)
+         {
+            updateGitStatusText(String.Empty);
+         }
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -270,15 +264,7 @@ namespace mrHelper.App.Forms
       private void enableCommitActions(bool enabled)
       {
          buttonDiffTool.Enabled = enabled;
-         enableCustomActions(enabled);
-      }
-
-      private void enableCustomActions(bool flag)
-      {
-         foreach (Control control in groupBoxActions.Controls)
-         {
-            control.Enabled = flag;
-         }
+         groupBoxActions.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
       }
 
       private void addCommitsToComboBoxes(List<Commit> commits, string mrBaseSha, string mrTargetBranch)
