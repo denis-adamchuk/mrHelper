@@ -17,10 +17,10 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Binds to the specific MergeRequestDescriptor
       /// </summary>
-      internal CommitChecker(int mergeRequestId, WorkflowUpdateChecker updateChecker)
+      internal CommitChecker(int mergeRequestId, IWorkflowDetailsCache detailsCache)
       {
          MergeRequestId = mergeRequestId;
-         UpdateChecker = updateChecker;
+         DetailsCache = detailsCache;
       }
 
       /// <summary>
@@ -29,7 +29,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public DateTime GetLatestCommitTimestamp()
       {
-         return UpdateChecker.GetLatestCommitTimestamp(MergeRequestId);
+         return DetailsCache.GetLatestCommitTimestamp(MergeRequestId);
       }
 
       public override string ToString()
@@ -38,7 +38,7 @@ namespace mrHelper.Client.Updates
       }
 
       private int MergeRequestId { get; }
-      private WorkflowUpdateChecker UpdateChecker { get; }
+      private IWorkflowDetailsCache DetailsCache { get; }
    }
 }
 

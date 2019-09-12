@@ -81,6 +81,11 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
+      public List<Project> GetEnabledProjects()
+      {
+         return getEnabledProjects();
+      }
+
       public event Action<string> PreSwitchHost;
       public event Action<WorkflowState, List<Project>> PostSwitchHost;
       public event Action FailedSwitchHost;
@@ -121,12 +126,20 @@ namespace mrHelper.Client.Workflow
 
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings));
 
+         List<Project> enabledProjects = getEnabledProjects();
+         bool hasEnabledProjects = enabledProjects?.Count != 0;
+
          User currentUser;
          List<Project> projects;
          try
          {
             currentUser = await Operator.GetCurrentUserAsync();
-            projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
+            if (hasEnabledProjects)
+            {
+               await Operator.CancelAsync();
+            }
+            projects = hasEnabledProjects ?
+               enabledProjects : await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }
          catch (OperatorException ex)
          {
@@ -312,6 +325,11 @@ namespace mrHelper.Client.Workflow
          return mergeRequests.Count > 0 ? mergeRequests[0].IId : new Nullable<int>();
       }
 
+      private List<Project> getEnabledProjects()
+      {
+         return Tools.Tools.LoadProjectsFromFile(State.HostName);
+      }
+
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
 
@@ -323,7 +341,8 @@ namespace mrHelper.Client.Workflow
          public string Host;
          public int ProjectId;
       }
-      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects = new Dictionary<HostAndProjectId, int>();
+      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects =
+         new Dictionary<HostAndProjectId, int>();
    }
 }
 

@@ -366,7 +366,7 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new GitClientFactory(localFolder, _workflowUpdateChecker);
+               _gitClientFactory = new GitClientFactory(localFolder, _updateManager.GetProjectWatcher());
             }
             catch (ArgumentException ex)
             {

@@ -44,13 +44,6 @@ namespace mrHelper.Client.Workflow
 
       async internal Task<List<Project>> GetProjectsAsync(string hostName, bool publicOnly)
       {
-         List<Project> projects = Tools.Tools.LoadProjectsFromFile(hostName);
-         if (projects != null && projects.Count != 0)
-         {
-            await Client.CancelAsync();
-            return projects;
-         }
-
          try
          {
             return (List<Project>)(await Client.RunAsync(async (gl) =>

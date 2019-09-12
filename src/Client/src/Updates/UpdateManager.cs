@@ -23,9 +23,19 @@ namespace mrHelper.Client.Updates
          return WorkflowUpdateChecker;
       }
 
+      public IProjectWatcher GetProjectWatcher()
+      {
+         return WorkflowUpdateChecker;
+      }
+
       public CommitChecker GetCommitChecker(int mergeRequestId)
       {
-         return new CommitChecker(mergeRequestId, WorkflowUpdateChecker);
+         return new CommitChecker(mergeRequestId, getDetailsCache());
+      }
+
+      private IWorkflowDetailsCache getDetailsCache()
+      {
+         return WorkflowUpdateChecker;
       }
 
       private WorkflowUpdateChecker WorkflowUpdateChecker { get; }

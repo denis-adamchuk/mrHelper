@@ -66,6 +66,7 @@
     <Compile Include="src\Updates\UpdateManager.cs" />
     <Compile Include="src\Updates\UpdateOperator.cs" />
     <Compile Include="src\Updates\WorkflowUpdateChecker.cs" />
+    <Compile Include="src\Updates\WorkflowDetailsCacheItf.cs" />
     <Compile Include="src\Workflow\Workflow.cs" />
     <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
     <Compile Include="src\Workflow\WorkflowFactory.cs" />

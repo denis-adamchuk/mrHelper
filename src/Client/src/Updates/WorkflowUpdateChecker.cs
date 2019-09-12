@@ -21,7 +21,7 @@ namespace mrHelper.Client.Updates
    /// <summary>
    /// Implements periodic checks for updates of Merge Requests and their Commits
    /// </summary>
-   public class WorkflowUpdateChecker : IProjectWatcher
+   public class WorkflowUpdateChecker : IProjectWatcher, IWorkflowDetailsCache
    {
       internal WorkflowUpdateChecker(UserDefinedSettings settings, UpdateOperator updateOperator,
          Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke)
@@ -52,8 +52,9 @@ namespace mrHelper.Client.Updates
 
          Workflow.PostSwitchProject += async (state, _) =>
          {
-            Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Start handling PostSwitchProject. Host: {0}, Project: {1}",
-               state.HostName, state.Project.Path_With_Namespace));
+            Debug.WriteLine(String.Format(
+               "[WorkflowUpdateChecker] Start handling PostSwitchProject. Host: {0}, Project: {1}",
+                  state.HostName, state.Project.Path_With_Namespace));
 
             await cacheMergeRequestsAsync(state.HostName, state.Project);
 
@@ -75,9 +76,14 @@ namespace mrHelper.Client.Updates
       public event Action<MergeRequestUpdates> OnUpdate;
       public event Action<List<ProjectUpdate>> OnProjectUpdate;
 
+      public List<MergeRequest> GetProjectMergeRequests(int projectId)
+      {
+         return _cachedMergeRequests.ContainsKey(projectId) ? _cachedMergeRequests[projectId] : null;
+      }
+
       public DateTime GetLatestCommitTimestamp(int mergeRequestId)
       {
-         return _cachedCommits[mergeRequestId];
+         return _cachedCommits.ContainsKey(mergeRequestId) ? _cachedCommits[mergeRequestId] : DateTime.MinValue;
       }
 
       private struct TwoListDifference<T>
@@ -96,9 +102,10 @@ namespace mrHelper.Client.Updates
 
          // Save current state because it may be changed while we're awaiting things
          WorkflowState state = Workflow.State;
+         List<Project> enabledProjects = Workflow.GetEnabledProjects();
          try
          {
-            TwoListDifference<MergeRequest> diff = await getMergeRequestDiffAsync(state);
+            TwoListDifference<MergeRequest> diff = await getMergeRequestDiffAsync(state, enabledProjects);
             updates = await getMergeRequestUpdatesAsync(state.HostName, diff);
          }
          catch (OperatorException ex)
@@ -179,7 +186,8 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Calculate difference between current list of merge requests at GitLab and current list in the Workflow
       /// </summary>
-      async private Task<TwoListDifference<MergeRequest>> getMergeRequestDiffAsync(WorkflowState state)
+      async private Task<TwoListDifference<MergeRequest>> getMergeRequestDiffAsync(
+         WorkflowState state, List<Project> enabledProjects)
       {
          TwoListDifference<MergeRequest> diff = new TwoListDifference<MergeRequest>
          {
@@ -193,24 +201,14 @@ namespace mrHelper.Client.Updates
             Debug.WriteLine("[WorkflowUpdateChecker] Host name is null");
             return diff;
          }
-
-         List<Project> projectsToCheck = Tools.Tools.LoadProjectsFromFile(state.HostName);
-         if (projectsToCheck == null && state.Project.Path_With_Namespace != null)
+         if (enabledProjects == null)
          {
-            projectsToCheck = new List<Project>
-            {
-               state.Project
-            };
-         }
-
-         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking {0} projects", (projectsToCheck?.Count ?? 0)));
-
-         if (projectsToCheck == null)
-         {
+            Debug.WriteLine("[WorkflowUpdateChecker] Enabled project list is null");
             return diff;
          }
 
-         foreach (var project in projectsToCheck)
+         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Checking {0} projects", enabledProjects.Count));
+         foreach (var project in enabledProjects)
          {
             List<MergeRequest> previouslyCachedMergeRequests =
                _cachedMergeRequests.ContainsKey(project.Id) ? _cachedMergeRequests[project.Id] : null;
@@ -302,9 +300,6 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This project has {0} merge requests at GitLab",
-            mergeRequests.Count));
-
          if (_cachedMergeRequests.ContainsKey(project.Id))
          {
             List<MergeRequest> previouslyCachedMergeRequests = _cachedMergeRequests[project.Id];
@@ -330,6 +325,10 @@ namespace mrHelper.Client.Updates
                await cacheCommitsAsync(hostname, mergeRequest);
             }
          }
+
+         Trace.TraceInformation(String.Format(
+            "[WorkflowUpdateChecker] Cached {0} merge requests (unfiltered) for project {1} at {2}",
+               mergeRequests.Count, project.Path_With_Namespace, hostname));
       }
 
       /// <summary>
@@ -359,9 +358,6 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         Debug.WriteLine(String.Format("[WorkflowUpdateChecker] This merge request has commit with Created_At={0}",
-            latestCommit.Created_At));
-
          if (_cachedCommits.ContainsKey(mergeRequest.Id))
          {
             Debug.WriteLine(String.Format(
@@ -380,6 +376,10 @@ namespace mrHelper.Client.Updates
 
             _cachedCommits[mergeRequest.Id] = latestCommit.Created_At;
          }
+
+         Trace.TraceInformation(String.Format(
+            "[WorkflowUpdateChecker] Latest commit for merge request with Id {0} has timestamp {1}. Cached.",
+               mergeRequest.Id, latestCommit.Created_At));
       }
 
       /// <summary>
@@ -445,16 +445,6 @@ namespace mrHelper.Client.Updates
          {
             Debug.WriteLine(String.Format("[WorkflowUpdateChecker] IId: {0}, Title: {1}", mr.IId, mr.Title));
          }
-      }
-
-      private bool isInitialUpdate()
-      {
-         return _cachedMergeRequests.Count == 0 && _cachedCommits.Count == 0;
-      }
-
-      private bool areProjectsListedInFile(WorkflowState state)
-      {
-         return state.HostName != null && Tools.Tools.LoadProjectsFromFile(state.HostName) != null;
       }
 
       private Workflow.Workflow Workflow { get; }
