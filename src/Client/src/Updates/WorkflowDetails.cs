@@ -11,10 +11,13 @@ using System.Diagnostics;
 
 namespace mrHelper.Client.Updates
 {
-   internal interface IWorkflowDetailsCache
+   internal struct WorkflowDetails
    {
-      List<MergeRequest> GetProjectMergeRequests(int projectId);
-      DateTime GetLatestCommitTimestamp(int mergeRequestId);
+      // maps unique project id to list of merge requests
+      public Dictionary<int, List<MergeRequest>> MergeRequests;
+
+      // maps unique Merge Request Id (not IId) to a timestamp of its latest commit
+      public Dictionary<int, DateTime> Commits;
    }
 }
 
