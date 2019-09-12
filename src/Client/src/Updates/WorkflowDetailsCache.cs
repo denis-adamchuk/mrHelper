@@ -11,21 +11,22 @@ using System.Diagnostics;
 
 namespace mrHelper.Client.Updates
 {
+   // TODO: Cleanup Closed merge requests
+
    internal class WorkflowDetailsCache
    {
       internal WorkflowDetailsCache(UpdateOperator updateOperator, Workflow workflow)
       {
          UpdateOperator = updateOperator;
-         Workflow = workflow;
       }
 
-      internal async void UpdateAsync()
+      internal async void UpdateAsync(string hostname)
       {
-         await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
+         await cacheMergeRequestsAsync(hostname, Workflow.State.Project);
 
-         foreach (MergeRequest mergeRequest in CachedMergeRequests[Workflow.State.Project.Id])
+         foreach (MergeRequest mergeRequest in Details.GetMergeRequests(Workflow.State.Project.Id))
          {
-            await cacheCommitsAsync(Workflow.state.HostName, mergeRequest);
+            await cacheCommitsAsync(hostname, mergeRequest);
          }
       }
 
@@ -36,15 +37,20 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private Task cacheMergeRequestsAsync(string hostname, Project project)
       {
-         _cachedProjectNames[project.Id] = project.Path_With_Namespace;
+         Details.SetProjectName(project.Id, project.Path_With_Namespace);
 
          Debug.WriteLine(String.Format("[WorkflowDetailsCache] Checking merge requests for project {0} (id {1})",
-            _cachedProjectNames[project.Id], project.Id));
+            Details.GetProjectName(project.Id), project.Id));
+
+         List<MergeRequest> previouslyCachedMergeRequests = Details.GetMergeRequests(project.Id);
+         Debug.WriteLine(String.Format(
+            "[WorkflowDetailsCache] {0} merge requests for this project were cached before",
+            previouslyCachedMergeRequests.Count));
 
          List<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await UpdateOperator.GetMergeRequestsAsync(hostname, _cachedProjectNames[project.Id]);
+            mergeRequests = await UpdateOperator.GetMergeRequestsAsync(hostname, Details.GetProjectName(project.Id));
          }
          catch (OperatorException ex)
          {
@@ -53,29 +59,13 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         if (_cachedMergeRequests.ContainsKey(project.Id))
+         foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            List<MergeRequest> previouslyCachedMergeRequests = _cachedMergeRequests[project.Id];
-
-            Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] {0} merge requests for this project were cached before",
-                  previouslyCachedMergeRequests.Count));
-
-            Debug.WriteLine("[WorkflowDetailsCache] Updating cached merge requests for this project");
-
-            _cachedMergeRequests[project.Id] = mergeRequests;
-         }
-         else
-         {
-            Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] Merge requests for this project were not cached before"));
-            Debug.WriteLine("[WorkflowDetailsCache] Caching them now");
-
-            _cachedMergeRequests[project.Id] = mergeRequests;
+            Details.AddMergeRequest(project.Id, mergeRequest);
          }
 
          Trace.TraceInformation(String.Format(
-            "[WorkflowDetailsCache] Cached {0} merge requests (unfiltered) for project {1} at {2}",
+            "[WorkflowDetailsCache] Cached {0} merge requests (labels not applied) for project {1} at {2}",
                mergeRequests.Count, project.Path_With_Namespace, hostname));
       }
 
@@ -86,12 +76,16 @@ namespace mrHelper.Client.Updates
       {
          Debug.WriteLine(String.Format(
             "[WorkflowDetailsCache] Checking commits for merge request {0} from project {1}",
-               mergeRequest.IId, getMergeRequestProjectName(mergeRequest)));
+               mergeRequest.IId, Details.GetProjectName(mergeRequest.Project.Id)));
+
+         Debug.WriteLine(String.Format(
+            "[WorkflowDetailsCache] Previously cached commit timestamp for this merge request is {0}",
+               Details.GetLatestCommitAsync(mergeRequest.Id)));
 
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
                HostName = hostname,
-               ProjectName = getMergeRequestProjectName(mergeRequest),
+               ProjectName = Details.GetProjectName(mergeRequest.Project.Id),
                IId = mergeRequest.IId
             };
 
@@ -106,45 +100,12 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         if (_cachedCommits.ContainsKey(mergeRequest.Id))
-         {
-            Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] Previously cached commit timestamp for this merge request is {0}",
-                  _cachedCommits[mergeRequest.Id]));
-
-            Debug.WriteLine(String.Format("[WorkflowDetailsCache] Updating cached commits for this merge request"));
-
-            _cachedCommits[mergeRequest.Id] = latestCommit.Created_At;
-         }
-         else
-         {
-            Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] Commits for this merge request were not cached before"));
-            Debug.WriteLine(String.Format("[WorkflowDetailsCache] Caching them now"));
-
-            _cachedCommits[mergeRequest.Id] = latestCommit.Created_At;
-         }
+         Details.SetLatestCommitTimestamp(mergeRequest.Id, latestCommit.Created_At);
 
          Trace.TraceInformation(String.Format(
             "[WorkflowDetailsCache] Latest commit for merge request with Id {0} has timestamp {1}. Cached.",
                mergeRequest.Id, latestCommit.Created_At));
       }
-
-      /// <summary>
-      /// Find a project name for a passed merge request
-      /// </summary>
-      private string getMergeRequestProjectName(MergeRequest mergeRequest)
-      {
-         if (_cachedProjectNames.ContainsKey(mergeRequest.Project_Id))
-         {
-            return _cachedProjectNames[mergeRequest.Project_Id];
-         }
-
-         return String.Empty;
-      }
-
-      // maps unique project id to project's Path with Namespace property
-      private readonly Dictionary<int, string> _cachedProjectNames = new Dictionary<int, string>();
 
       private readonly UpdateOperator UpdateOperator { get; }
       private readonly Workflow Workflow { get; }

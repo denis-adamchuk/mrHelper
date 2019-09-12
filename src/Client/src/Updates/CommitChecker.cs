@@ -29,7 +29,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public DateTime GetLatestCommitTimestamp()
       {
-         return Details.Commits[MergeRequestId];
+         return Details.GetLatestCommitTimestamp(MergeRequestId);
       }
 
       public override string ToString()

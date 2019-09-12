@@ -81,9 +81,18 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      public List<Project> GetEnabledProjects()
+      /// <summary>
+      /// Return projects at the current Host that are allowed to be checked for updates
+      /// </summary>
+      public List<Project> GetProjectsToUpdate()
       {
-         return getEnabledProjects();
+         List<Project> enabledProjects = getEnabledProjects();
+         if (enabledProject.Count != 0)
+         {
+            return enabledProjects;
+         }
+
+         return State.Project != default(Project) ? new List<Project>{ State.Project } : new List<Project>();
       }
 
       public event Action<string> PreSwitchHost;

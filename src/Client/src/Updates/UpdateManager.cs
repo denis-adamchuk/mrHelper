@@ -16,6 +16,7 @@ namespace mrHelper.Client.Updates
       public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings)
       {
+         Workflow = workflow;
          UpdateOperator updateOperator = new UpdateOperator(settings);
          WorkflowUpdateChecker = new WorkflowUpdateChecker(settings, updateOperator, workflow, synchronizeInvoke);
          ProjectWatcher = new ProjectWatcher(settings);
@@ -30,7 +31,7 @@ namespace mrHelper.Client.Updates
                "[UpdateManager] Start handling PostSwitchMergeRequest. Host: {0}, Project: {1}, IId: {2}",
                   state.HostName, state.Project.Path_With_Namespace, state.MergeRequest.IId));
 
-            await Cache.UpdateAsync();
+            await Cache.UpdateAsync(state.HostName);
 
             Debug.WriteLine(String.Format("[UpdateManager] End handling PostSwitchMergeRequest."));
          };
@@ -71,12 +72,12 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         List<Project> enabledProjects = Workflow.GetEnabledProjects();
-         WorkflowDetails prevState = Cache.Details;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         WorkflowDetails oldDetails = Cache.Details;
 
          try
          {
-            await Cache.UpdateAsync();
+            await Cache.UpdateAsync(Workflow.State.HostName);
          }
          catch (OperatorException ex)
          {
@@ -84,22 +85,22 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         MergeRequestUpdates updates = WorkflowUpdateChecker.CheckForUpdates(enabledProjects, prevState, Cache.Details);
+         MergeRequestUpdates updates = WorkflowUpdateChecker.CheckForUpdates(enabledProjects, oldDetails, Cache.Details);
          projectWatcher.ProcessUpdates(updates);
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Found: New: {0}, Updated: {1}, Closed: {2}",
             updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
 
          Debug.WriteLine("[ProjectWatcher] Filtering New MR");
-         applyLabelFilter(updates.NewMergeRequests);
+         applyLabelFilter(updates.NewMergeRequests, Cache.Details);
          traceUpdates(updates.NewMergeRequests, "Filtered New");
 
          Debug.WriteLine("[ProjectWatcher] Filtering Updated MR");
-         applyLabelFilter(updates.UpdatedMergeRequests);
+         applyLabelFilter(updates.UpdatedMergeRequests, Cache.Details);
          traceUpdates(updates.UpdatedMergeRequests, "Filtered Updated");
 
          Debug.WriteLine("[ProjectWatcher] Filtering Closed MR");
-         applyLabelFilter(updates.ClosedMergeRequests);
+         applyLabelFilter(updates.ClosedMergeRequests, Cache.Details);
          traceUpdates(updates.ClosedMergeRequests, "Filtered Closed");
 
          Debug.WriteLine(String.Format("[WorkflowUpdateChecker] Filtered : New: {0}, Updated: {1}, Closed: {2}",
@@ -116,7 +117,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Remove merge requests that don't match Label Filter from the passed list
       /// </summary>
-      private void applyLabelFilter(List<MergeRequest> mergeRequests)
+      private void applyLabelFilter(List<MergeRequest> mergeRequests, WorkflowDetails details)
       {
          if (!Settings.CheckedLabelsFilter)
          {
@@ -131,7 +132,7 @@ namespace mrHelper.Client.Updates
             {
                Debug.WriteLine(String.Format(
                   "[UpdateManager] Merge request {0} from project {1} does not match labels",
-                     mergeRequest.Title, getMergeRequestProjectName(mergeRequest)));
+                     mergeRequest.Title, details.GetProjectName(mergeRequest.Project.Id)));
 
                mergeRequests.RemoveAt(iMergeRequest);
             }
@@ -163,6 +164,7 @@ namespace mrHelper.Client.Updates
 
       private List<string> _cachedLabels;
 
+      private Workflow Workflow { get; }
       private WorkflowUpdateChecker WorkflowUpdateChecker { get; }
       private ProjectWatcher ProjectWatcher { get; }
    }

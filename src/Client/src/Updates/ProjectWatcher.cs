@@ -6,6 +6,9 @@ using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.Updates
 {
+   /// <summary>
+   /// Converts MergeRequestUpdates into ProjectUpdates and notifies subscribers
+   /// </summary>
    internal class ProjectWatcher : IProjectWatcher
    {
       internal ProjectWatcher(UserDefinedSettings settings)
@@ -15,11 +18,14 @@ namespace mrHelper.Client.Updates
 
       public event Action<List<ProjectUpdate>> OnProjectUpdate;
 
-      internal void ProcessUpdates(MergeRequestUpdates updates)
+      /// <summary>
+      /// Convert passed updates to ProjectUpdates and notify subscribers
+      /// </summary>
+      internal void ProcessUpdates(string MergeRequestUpdates updates, string hostname, WorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
-         projectUpdates.AddRange(getProjectUpdates(state.HostName, updates.NewMergeRequests));
-         projectUpdates.AddRange(getProjectUpdates(state.HostName, updates.UpdatedMergeRequests));
+         projectUpdates.AddRange(getProjectUpdates(updates.NewMergeRequests, hostname, details));
+         projectUpdates.AddRange(getProjectUpdates(updates.UpdatedMergeRequests, hostname, details));
 
          Debug.WriteLine(String.Format("[ProjectWatcher] Updating {0} projects", projectUpdates.Count));
          if (projectUpdates.Count > 0)
@@ -38,14 +44,17 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates(string hostname, List<MergeRequest> mergeRequests)
+      private List<ProjectUpdate> getProjectUpdates(List<MergeRequest> mergeRequests, string hostname,
+         WorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
          DateTime latestChange = DateTime.MinValue;
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            string projectName = getMergeRequestProjectName(mergeRequest);
+            string projectName = details.GetProjectName(mergeRequest.Project.Id);
+
+            // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
                if (projectUpdates[iUpdate].ProjectName == projectName)
@@ -54,14 +63,14 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            latestChange = _cachedCommits[mergeRequest.Id] > latestChange ?
-               _cachedCommits[mergeRequest.Id] : latestChange;
+            latestChange = details.GetLatestCommitAsync(mergeRequest.Id) > latestChange ?
+               details.GetLatestCommitAsync(mergeRequest.Id) : latestChange;
 
             projectUpdates.Add(
                new ProjectUpdate
                {
                   HostName = hostname,
-                  ProjectName = getMergeRequestProjectName(mergeRequest),
+                  ProjectName = projectName,
                   LatestChange = latestChange
                });
          }

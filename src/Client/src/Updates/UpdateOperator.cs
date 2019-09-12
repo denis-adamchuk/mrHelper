@@ -39,26 +39,6 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      async internal Task<int> GetCommitsCountAsync(MergeRequestDescriptor mrd)
-      {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
-         try
-         {
-            return (int)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.CountTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load commit count from GitLab");
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
-      }
-
       async internal Task<Commit> GetLatestCommitAsync(MergeRequestDescriptor mrd)
       {
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
