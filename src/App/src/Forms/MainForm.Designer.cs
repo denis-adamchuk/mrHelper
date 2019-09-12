@@ -21,6 +21,7 @@ namespace mrHelper.App.Forms
          }
          _gitClientFactory?.Dispose();
          _timeTrackingTimer?.Dispose();
+         _workflow?.Dispose();
          base.Dispose(disposing);
       }
 
