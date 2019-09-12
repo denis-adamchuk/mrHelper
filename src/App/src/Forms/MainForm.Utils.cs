@@ -187,6 +187,8 @@ namespace mrHelper.App.Forms
          buttonDiscussions.Enabled = false;
          comboBoxHost.Enabled = false;
          comboBoxProjects.Enabled = false;
+         comboBoxFilteredMergeRequests.Enabled = false;
+         buttonApplyLabels.Enabled = false;
       }
 
       private void postGitClientInitialize()
@@ -196,6 +198,8 @@ namespace mrHelper.App.Forms
          buttonDiscussions.Enabled = true;
          comboBoxHost.Enabled = true;
          comboBoxProjects.Enabled = true;
+         comboBoxFilteredMergeRequests.Enabled = true;
+         buttonApplyLabels.Enabled = true;
          updateGitStatusText(String.Empty);
       }
 

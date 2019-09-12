@@ -120,6 +120,13 @@ namespace mrHelper.App.Controls
 
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
+         MenuItem menuItem = (MenuItem)(sender);
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
+         {
+            return;
+         }
+
          using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -140,6 +147,11 @@ namespace mrHelper.App.Controls
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
+         {
+            return;
+         }
+
          onStartEditNote(textBox);
       }
 
@@ -147,6 +159,11 @@ namespace mrHelper.App.Controls
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
+         {
+            return;
+         }
+
          textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
 
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
@@ -162,6 +179,11 @@ namespace mrHelper.App.Controls
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
+         {
+            return;
+         }
+
          textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
@@ -174,6 +196,11 @@ namespace mrHelper.App.Controls
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
+         {
+            return;
+         }
+
          textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
@@ -404,6 +431,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemReply = new MenuItem
          {
+            Tag = textBox,
             Enabled = !Discussion.Individual_Note,
             Text = "Reply"
          };
@@ -549,6 +577,8 @@ namespace mrHelper.App.Controls
 
       async private Task onSubmitNewBodyAsync(TextBox textBox)
       {
+         textBox.ReadOnly = true;
+
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          if (textBox.Text == note.Body)
          {
@@ -575,32 +605,10 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
-
-         _preContentChange(this);
-
-         // Create a new text box
-         Control newTextBox = createTextBox(note, isDiscussionResolved()); 
-
-         // By default place a new textbox at the same place as the old one. It may be changed if height changed.
-         // It is better to change Location right now to avoid flickering during _onSizeChanged(). 
-         newTextBox.Location = textBox.Location;
-
-         // By default, let the new textbox to have the same size as the old one.
-         newTextBox.Width = textBox.Width;
-
-         // Measure heights
-         int oldHeight = textBox.Height;
-         int newHeight = getTextBoxPreferredHeight(newTextBox);
-
-         // Update Height, because initial one was measured for a wrong width
-         newTextBox.Height = newHeight;
-
-         // Replace text box in Discussion Box
-         replaceControlInParent(textBox, newTextBox);
-
-         // Notify parent that our size has changed
-         _onContentChanged(this);
+         if (!textBox.IsDisposed)
+         {
+            _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
+         }
       }
 
       async private Task onDeleteNoteAsync(TextBox textBox)
@@ -659,6 +667,11 @@ namespace mrHelper.App.Controls
 
       async private Task refreshDiscussion()
       {
+         if (Parent == null)
+         {
+            return;
+         }
+
          _preContentChange(this);
 
          // Get rid of old text boxes
@@ -717,54 +730,6 @@ namespace mrHelper.App.Controls
             }
          }
          return result;
-      }
-
-      private void replaceControlInParent(Control oldControl, Control newControl)
-      {
-         var tabIndex = oldControl.TabIndex;
-         var tabStop = oldControl.TabStop;
-         var index = oldControl.Parent.Controls.IndexOf(oldControl);
-         var parent = oldControl.Parent;
-         oldControl.Parent.Controls.Remove(oldControl);
-         if (newControl != null)
-         {
-            parent.Controls.Add(newControl);
-            parent.Controls.SetChildIndex(newControl, index);
-            newControl.TabIndex = tabIndex;
-            newControl.TabStop = tabStop;
-         }
-
-         if (parent is DiscussionBox)
-         {
-            replaceControl(oldControl, newControl);
-         }
-      }
-
-      private void replaceControl(Control oldControl, Control newControl)
-      {
-         if (_labelAuthor == oldControl)
-         {
-            _labelAuthor = newControl;
-         }
-         else if (_labelFileName == oldControl)
-         {
-            _labelFileName = newControl;
-         }
-         else if (_panelContext == oldControl)
-         {
-            _panelContext = newControl;
-         }
-         else
-         {
-            for (int iNote = 0; iNote < _textboxesNotes.Count; ++iNote)
-            {
-               if (_textboxesNotes[iNote] == oldControl)
-               {
-                  _textboxesNotes[iNote] = newControl;
-                  break;
-               }
-            }
-         }
       }
 
       private DiffPosition convertToDiffPosition(Position position)

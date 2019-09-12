@@ -47,7 +47,6 @@ namespace mrHelper.Client.Git
                {
                   await Task.Delay(50);
                }
-               return;
             }
 
             if (canClone(Path))

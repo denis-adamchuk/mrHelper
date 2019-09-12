@@ -131,7 +131,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Discussions opened";
 
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
-            _workflow.State.MergeRequestDescriptor.IId, client.Path));
+            _workflow.State.MergeRequestDescriptor.IId, (client?.Path ?? "null")));
 
          form.Show();
       }
