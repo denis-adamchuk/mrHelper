@@ -15,6 +15,13 @@ namespace mrHelper.Client.Updates
 
    internal class WorkflowDetails
    {
+      internal WorkflowDetails()
+      {
+         ProjectNames = new Dictionary<int, string>();
+         MergeRequests = new Dictionary<int, List<MergeRequest>>();
+         Changes = new Dictionary<int, DateTime>();
+      }
+
       internal WorkflowDetails(WorkflowDetails details)
       {
          ProjectNames = new Dictionary<int, string>(details.ProjectNames);
@@ -52,7 +59,17 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void AddMergeRequest(int projectId, MergeRequest mergeRequest)
       {
-         GetMergeRequests(projectId).Add(mergeRequest);
+         if (MergeRequests.ContainsKey(projectId))
+         {
+            if (!MergeRequests[projectId].Any((x) => x.Id == mergeRequest.Id))
+            {
+               MergeRequests[projectId].Add(mergeRequest);
+            }
+         }
+         else
+         {
+            MergeRequests[projectId] = new List<MergeRequest> { mergeRequest };
+         }
       }
 
       /// <summary>
@@ -60,7 +77,6 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal DateTime GetLatestChangeTimestamp(int mergeRequestId)
       {
-         Debug.Assert(Changes.ContainsKey(mergeRequestId));
          return Changes.ContainsKey(mergeRequestId) ? Changes[mergeRequestId] : DateTime.MinValue;
       }
 
@@ -73,13 +89,13 @@ namespace mrHelper.Client.Updates
       }
 
       // maps unique project id to project's Path with Namespace property
-      private Dictionary<int, string> ProjectNames = new Dictionary<int, string>();
+      private Dictionary<int, string> ProjectNames;
 
       // maps unique project id to list of merge requests
-      private Dictionary<int, List<MergeRequest>> MergeRequests = new Dictionary<int, List<MergeRequest>>();
+      private Dictionary<int, List<MergeRequest>> MergeRequests;
 
       // maps unique Merge Request Id (not IId) to a timestamp of its latest version
-      private Dictionary<int, DateTime> Changes  = new Dictionary<int, DateTime>();
+      private Dictionary<int, DateTime> Changes;
    }
 }
 

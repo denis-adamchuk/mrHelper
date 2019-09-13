@@ -22,16 +22,6 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task initializeWorkflow()
-      {
-         createWorkflow();
-
-         string hostname = getInitialHostName();
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
-
-         await _workflow.Initialize(hostname);
-      }
-
       private void createWorkflow()
       {
          _workflow = _workflowFactory.CreateWorkflow();
@@ -50,6 +40,14 @@ namespace mrHelper.App.Forms
          _workflow.PreLoadCommits += () => onLoadCommits();
          _workflow.PostLoadCommits += (state, commits) => onCommitsLoaded(state, commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
+      }
+
+      async private Task initializeWorkflow()
+      {
+         string hostname = getInitialHostName();
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
+
+         await _workflow.Initialize(hostname);
       }
 
       async private Task changeHostAsync(string hostName)

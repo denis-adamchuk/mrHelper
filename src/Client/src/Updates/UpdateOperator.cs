@@ -15,16 +15,17 @@ namespace mrHelper.Client.Updates
    /// </summary>
    internal class UpdateOperator
    {
-      internal UpdateOperator(string host, string token)
+      internal UpdateOperator(UserDefinedSettings settings)
       {
-         Client = new GitLabClient(host, token);
+         Settings = settings;
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string project)
+      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string host, string project)
       {
+         GitLabClient client = new GitLabClient(host, Tools.Tools.GetAccessToken(host, Settings));
          try
          {
-           return (List<MergeRequest>)(await Client.RunAsync(async (gitlab) =>
+           return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
               await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
          }
          catch (Exception ex)
@@ -41,9 +42,10 @@ namespace mrHelper.Client.Updates
 
       async internal Task<Version> GetLatestVersionAsync(MergeRequestDescriptor mrd)
       {
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            List<Version> versions = (List<Version>)(await Client.RunAsync(async (gitlab) =>
+            List<Version> versions = (List<Version>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync()));
             return versions.Count > 0 ? versions[0] : new Version();
          }
@@ -59,12 +61,7 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      internal Task CancelAsync()
-      {
-         return Client.CancelAsync();
-      }
-
-      private GitLabClient Client { get; }
+      private UserDefinedSettings Settings { get; }
    }
 }
 

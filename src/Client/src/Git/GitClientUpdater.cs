@@ -38,34 +38,30 @@ namespace mrHelper.Client.Git
       async public Task ManualUpdateAsync(InstantProjectChecker instantChecker, Action<string> onProgressChange)
       {
          Trace.TraceInformation(
-            String.Format("[GitClientUpdater] Processing manual update. LatestChange: {0}. InstantProjectChecker: {1}",
+            String.Format("[GitClientUpdater] Processing manual update. Stored LatestChange: {0}. InstantProjectChecker: {1}",
                _latestChange.ToLocalTime().ToString(), (instantChecker?.ToString() ?? "null")));
 
          if (instantChecker == null)
          {
-            Debug.WriteLine(String.Format("[GitClientUpdater] Unexpected case, manual update w/o commit checker"));
+            Trace.TraceError(String.Format("[GitClientUpdater] Unexpected case, manual update w/o instant checker"));
             Debug.Assert(false);
             return;
          }
 
          _updating = true;
-         DateTime latestChange = _latestChange;
          try
          {
-            DateTime createdAt = instantChecker.GetLatestChangeTimestamp();
-            Trace.TraceInformation(
-               String.Format("[GitClientUpdater] Latest Commit details: Created_At: {0}",
-                  createdAt.ToLocalTime().ToString()));
-            if (createdAt > latestChange)
-            {
-               Trace.TraceInformation(String.Format("[GitClientUpdater] Manual update detected commits newer than {0}",
-                  latestChange.ToLocalTime().ToString()));
-               latestChange = createdAt;
+            DateTime newLatestChange = instantChecker.GetLatestChangeTimestamp();
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Repository Latest Change: {0}",
+               newLatestChange.ToLocalTime().ToString()));
 
+            if (newLatestChange > _latestChange)
+            {
                await doUpdate(onProgressChange); // this may cancel currently running onTimer update
 
-               _latestChange = latestChange;
-               Trace.TraceInformation(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
+               _latestChange = newLatestChange;
+               Trace.TraceInformation(String.Format("[GitClientUpdater] Updating LatestChange timestamp to {0}",
+                  _latestChange.ToLocalTime().ToString()));
             }
          }
          finally
@@ -84,7 +80,6 @@ namespace mrHelper.Client.Git
 
       async private void onProjectWatcherUpdate(List<ProjectUpdate> updates)
       {
-         Debug.WriteLine("[GitClientUpdater ] Processing an update from Project Watcher");
          Debug.Assert(_subscribed);
 
          if (_updating)
@@ -109,7 +104,6 @@ namespace mrHelper.Client.Git
 
          if (!needUpdateGitClient)
          {
-            Debug.WriteLine("[GitClientUpdater] Received update does not affect me");
             return;
          }
 
@@ -119,7 +113,8 @@ namespace mrHelper.Client.Git
             await doUpdate(null);
 
             _latestChange = latestChange;
-            Trace.TraceInformation(String.Format("[GitClientUpdater] Timestamp updated to {0}", _latestChange));
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Updating LatestChange timestamp to {0}",
+               _latestChange.ToLocalTime().ToString()));
          }
          catch (GitOperationException ex)
          {

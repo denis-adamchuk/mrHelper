@@ -194,6 +194,9 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
+         subscribeToUpdates();
+         createTimeTrackingManager();
+
          try
          {
             await initializeWorkflow();
@@ -203,11 +206,7 @@ namespace mrHelper.App.Forms
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
-            return;
          }
-
-         subscribeToUpdates();
-         createTimeTrackingManager();
       }
 
       private void subscribeToUpdates()
@@ -231,6 +230,8 @@ namespace mrHelper.App.Forms
                // emulate project change to reload merge request list
                // This will automatically update commit list (if there are new ones).
                // This will also remove closed merge requests from the list.
+               Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
+
                try
                {
                   await _workflow.SwitchProjectAsync(_workflow.State.Project.Path_With_Namespace);

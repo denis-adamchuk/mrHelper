@@ -21,15 +21,14 @@ namespace mrHelper.Client.Updates
          projectUpdates.AddRange(getProjectUpdates(updates.NewMergeRequests, hostname, details));
          projectUpdates.AddRange(getProjectUpdates(updates.UpdatedMergeRequests, hostname, details));
 
-         Debug.WriteLine(String.Format("[ProjectWatcher] Updating {0} projects", projectUpdates.Count));
          if (projectUpdates.Count > 0)
          {
             foreach (ProjectUpdate projectUpdate in projectUpdates)
             {
-               Trace.TraceInformation(String.Format(
-                  "[ProjectWatcher] Updating project: Host {0}, Name {1}, TimeStamp {2}",
-                  projectUpdate.HostName, projectUpdate.ProjectName,
-                  projectUpdate.LatestChange.ToLocalTime().ToString()));
+               Trace.TraceInformation(
+                  String.Format("[ProjectWatcher] Updating project: Host {0}, Name {1}, TimeStamp {2}",
+                     projectUpdate.HostName, projectUpdate.ProjectName,
+                     projectUpdate.LatestChange.ToLocalTime().ToString()));
             }
             OnProjectUpdate?.Invoke(projectUpdates);
          }

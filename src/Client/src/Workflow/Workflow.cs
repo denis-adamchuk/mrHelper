@@ -89,7 +89,10 @@ namespace mrHelper.Client.Workflow
 
       async public Task CancelAsync()
       {
-         await Operator?.CancelAsync();
+         if (Operator != null)
+         {
+            await Operator.CancelAsync();
+         }
       }
 
       public void Dispose()
@@ -110,7 +113,7 @@ namespace mrHelper.Client.Workflow
          }
 
          List<Project> enabledProjects = getEnabledProjects();
-         if (enabledProjects.Count != 0)
+         if ((enabledProjects?.Count ?? 0) != 0)
          {
             return enabledProjects;
          }
@@ -159,7 +162,7 @@ namespace mrHelper.Client.Workflow
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings));
 
          List<Project> enabledProjects = getEnabledProjects();
-         bool hasEnabledProjects = enabledProjects?.Count != 0;
+         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
 
          User currentUser;
          List<Project> projects;

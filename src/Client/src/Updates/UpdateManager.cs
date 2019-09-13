@@ -77,23 +77,22 @@ namespace mrHelper.Client.Updates
             enabledProjects, oldDetails, Cache.Details);
          ProjectWatcher.ProcessUpdates(updates, Workflow.State.HostName, Cache.Details);
 
-         Debug.WriteLine(String.Format("[UpdateManager] Found: New: {0}, Updated: {1}, Closed: {2}",
-            updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
+         int unfilteredNewMergeRequestsCount = updates.NewMergeRequests.Count;
+         int unfilteredUpdatedMergeRequestsCount = updates.UpdatedMergeRequests.Count;
+         int unfilteredClosedMergeRequestCount = updates.ClosedMergeRequests.Count;
 
-         Debug.WriteLine("[UpdateManager] Filtering New MR");
-         applyLabelFilter(updates.NewMergeRequests, Cache.Details);
-         traceUpdates(updates.NewMergeRequests, "Filtered New");
+         if (Settings.CheckedLabelsFilter)
+         {
+            applyLabelFilter(updates.NewMergeRequests, Cache.Details);
+            applyLabelFilter(updates.UpdatedMergeRequests, Cache.Details);
+            applyLabelFilter(updates.ClosedMergeRequests, Cache.Details);
+         }
 
-         Debug.WriteLine("[UpdateManager] Filtering Updated MR");
-         applyLabelFilter(updates.UpdatedMergeRequests, Cache.Details);
-         traceUpdates(updates.UpdatedMergeRequests, "Filtered Updated");
-
-         Debug.WriteLine("[UpdateManager] Filtering Closed MR");
-         applyLabelFilter(updates.ClosedMergeRequests, Cache.Details);
-         traceUpdates(updates.ClosedMergeRequests, "Filtered Closed");
-
-         Debug.WriteLine(String.Format("[UpdateManager] Filtered : New: {0}, Updated: {1}, Closed: {2}",
-            updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
+         Trace.TraceInformation(
+            String.Format("[UpdateManager] Merge Request Updates: New {0}/{1}, Updated {2}/{3}, Closed {4}/{5}",
+               updates.NewMergeRequests.Count, unfilteredNewMergeRequestsCount,
+               updates.UpdatedMergeRequests.Count, unfilteredUpdatedMergeRequestsCount,
+               updates.ClosedMergeRequests.Count, unfilteredClosedMergeRequestCount));
 
          if (updates.NewMergeRequests.Count > 0
           || updates.UpdatedMergeRequests.Count > 0
@@ -108,41 +107,13 @@ namespace mrHelper.Client.Updates
       /// </summary>
       private void applyLabelFilter(List<MergeRequest> mergeRequests, WorkflowDetails details)
       {
-         if (!Settings.CheckedLabelsFilter)
-         {
-            Debug.WriteLine("[UpdateManager] Label Filter is off");
-            return;
-         }
-
          for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --iMergeRequest)
          {
             MergeRequest mergeRequest = mergeRequests[iMergeRequest];
             if (_cachedLabels.Intersect(mergeRequest.Labels).Count() == 0)
             {
-               Debug.WriteLine(String.Format(
-                  "[UpdateManager] Merge request {0} from project {1} does not match labels",
-                     mergeRequest.Title, details.GetProjectName(mergeRequest.Project_Id)));
-
                mergeRequests.RemoveAt(iMergeRequest);
             }
-         }
-      }
-
-      /// <summary>
-      /// Debug trace
-      /// </summary>
-      private void traceUpdates(List<MergeRequest> mergeRequests, string name)
-      {
-         if (mergeRequests.Count == 0)
-         {
-            return;
-         }
-
-         Debug.WriteLine(String.Format("[UpdateManager] {0} Merge Requests:", name));
-
-         foreach (MergeRequest mr in mergeRequests)
-         {
-            Debug.WriteLine(String.Format("[UpdateManager] IId: {0}, Title: {1}", mr.IId, mr.Title));
          }
       }
 
