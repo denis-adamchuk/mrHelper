@@ -8,6 +8,7 @@ using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using System.ComponentModel;
 using System.Diagnostics;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Updates
 {
@@ -37,7 +38,7 @@ namespace mrHelper.Client.Updates
 
             _updating = true;
             await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
-            await cacheCommitsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
+            await cacheVersionsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
             _updating = false;
 
             Debug.WriteLine(String.Format("[WorkflowDetailsCache] End handling PostSwitchProject."));
@@ -55,7 +56,7 @@ namespace mrHelper.Client.Updates
             await Operator.CancelAsync();
 
             _updating = true;
-            await cacheCommitsAsync(Workflow.State.HostName, Workflow.State.MergeRequest);
+            await cacheVersionsAsync(Workflow.State.HostName, Workflow.State.MergeRequest);
             _updating = false;
 
             Debug.WriteLine(String.Format("[WorkflowDetailsCache] End handling PostSwitchMergeRequest."));
@@ -72,7 +73,7 @@ namespace mrHelper.Client.Updates
          }
 
          await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
-         await cacheCommitsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
+         await cacheVersionsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
       }
 
       internal WorkflowDetails Details { get; private set; }
@@ -114,26 +115,26 @@ namespace mrHelper.Client.Updates
                mergeRequests.Count, project.Path_With_Namespace, hostname));
       }
 
-      async private Task cacheCommitsAsync(string hostname, List<MergeRequest> mergeRequests)
+      async private Task cacheVersionsAsync(string hostname, List<MergeRequest> mergeRequests)
       {
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            await cacheCommitsAsync(hostname, mergeRequest);
+            await cacheVersionsAsync(hostname, mergeRequest);
          }
       }
 
       /// <summary>
-      /// Load commits from GitLab and cache them
+      /// Load Versions from GitLab and cache them
       /// </summary>
-      async private Task cacheCommitsAsync(string hostname, MergeRequest mergeRequest)
+      async private Task cacheVersionsAsync(string hostname, MergeRequest mergeRequest)
       {
          Debug.WriteLine(String.Format(
-            "[WorkflowDetailsCache] Checking commits for merge request {0} from project {1}",
+            "[WorkflowDetailsCache] Checking Versions for merge request {0} from project {1}",
                mergeRequest.IId, Details.GetProjectName(mergeRequest.Project_Id)));
 
          Debug.WriteLine(String.Format(
-            "[WorkflowDetailsCache] Previously cached commit timestamp for this merge request is {0}",
-               Details.GetLatestCommitTimestamp(mergeRequest.Id)));
+            "[WorkflowDetailsCache] Previously cached Version timestamp for this merge request is {0}",
+               Details.GetLatestChangeTimestamp(mergeRequest.Id)));
 
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
@@ -142,22 +143,22 @@ namespace mrHelper.Client.Updates
                IId = mergeRequest.IId
             };
 
-         Commit latestCommit;
+         Version latestVersion;
          try
          {
-            latestCommit = await Operator.GetLatestCommitAsync(mrd);
+            latestVersion = await Operator.GetLatestVersionAsync(mrd);
          }
          catch (OperatorException ex)
          {
-            ExceptionHandlers.Handle(ex, String.Format("Cannot load commits for mr Id {0}", mergeRequest.Id));
+            ExceptionHandlers.Handle(ex, String.Format("Cannot load a version for mr Id {0}", mergeRequest.Id));
             return;
          }
 
-         Details.SetLatestCommitTimestamp(mergeRequest.Id, latestCommit.Created_At);
+         Details.SetLatestChangeTimestamp(mergeRequest.Id, latestVersion.Created_At);
 
          Trace.TraceInformation(String.Format(
-            "[WorkflowDetailsCache] Latest commit for merge request with Id {0} has timestamp {1}. Cached.",
-               mergeRequest.Id, latestCommit.Created_At));
+            "[WorkflowDetailsCache] Latest version for merge request with Id {0} has timestamp {1}. Cached.",
+               mergeRequest.Id, latestVersion.Created_At));
       }
 
       private void createOperator(UserDefinedSettings settings)

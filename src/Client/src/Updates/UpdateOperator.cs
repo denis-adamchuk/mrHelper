@@ -6,6 +6,7 @@ using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using System.Diagnostics;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Updates
 {
@@ -38,21 +39,20 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      async internal Task<Commit> GetLatestCommitAsync(MergeRequestDescriptor mrd)
+      async internal Task<Version> GetLatestVersionAsync(MergeRequestDescriptor mrd)
       {
          try
          {
-            List<Commit> commits = (List<Commit>)(await Client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.LoadTaskAsync(
-                  new PageFilter { PageNumber = 1, PerPage = 1 })));
-            return commits.Count > 0 ? commits[0] : new Commit();
+            List<Version> versions = (List<Version>)(await Client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions.LoadAllTaskAsync()));
+            return versions.Count > 0 ? versions[0] : new Version();
          }
          catch (Exception ex)
          {
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load the latest commit from GitLab");
+               ExceptionHandlers.Handle(ex, "Cannot load the latest version from GitLab");
                throw new OperatorException(ex);
             }
             throw;

@@ -81,10 +81,10 @@ namespace mrHelper.Client.Updates
 
          foreach (MergeRequest mergeRequest in diff.Common)
          {
-            DateTime previouslyCachedCommitTimestamp = oldDetails.GetLatestCommitTimestamp(mergeRequest.Id);
-            DateTime newCachedCommitTimestamp = newDetails.GetLatestCommitTimestamp(mergeRequest.Id);
+            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestChangeTimestamp(mergeRequest.Id);
+            DateTime newCachedChangeTimestamp = newDetails.GetLatestChangeTimestamp(mergeRequest.Id);
 
-            if (newCachedCommitTimestamp > previouslyCachedCommitTimestamp)
+            if (newCachedChangeTimestamp > previouslyCachedChangeTimestamp)
             {
                updates.UpdatedMergeRequests.Add(mergeRequest);
             }

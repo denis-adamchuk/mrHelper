@@ -35,13 +35,13 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async public Task ManualUpdateAsync(CommitChecker commitChecker, Action<string> onProgressChange)
+      async public Task ManualUpdateAsync(InstantProjectChecker instantChecker, Action<string> onProgressChange)
       {
          Trace.TraceInformation(
-            String.Format("[GitClientUpdater] Processing manual update. LatestChange: {0}. CommitChecker: {1}",
-               _latestChange.ToLocalTime().ToString(), (commitChecker?.ToString() ?? "null")));
+            String.Format("[GitClientUpdater] Processing manual update. LatestChange: {0}. InstantProjectChecker: {1}",
+               _latestChange.ToLocalTime().ToString(), (instantChecker?.ToString() ?? "null")));
 
-         if (commitChecker == null)
+         if (instantChecker == null)
          {
             Debug.WriteLine(String.Format("[GitClientUpdater] Unexpected case, manual update w/o commit checker"));
             Debug.Assert(false);
@@ -52,7 +52,7 @@ namespace mrHelper.Client.Git
          DateTime latestChange = _latestChange;
          try
          {
-            DateTime createdAt = commitChecker.GetLatestCommitTimestamp();
+            DateTime createdAt = instantChecker.GetLatestChangeTimestamp();
             Trace.TraceInformation(
                String.Format("[GitClientUpdater] Latest Commit details: Created_At: {0}",
                   createdAt.ToLocalTime().ToString()));

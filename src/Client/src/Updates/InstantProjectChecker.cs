@@ -10,26 +10,26 @@ using mrHelper.Client.Git;
 namespace mrHelper.Client.Updates
 {
    /// <summary>
-   /// Checks for new commits
+   /// Checks for changes in GitLab projects
    /// </summary>
-   public class CommitChecker
+   public class InstantProjectChecker
    {
       /// <summary>
       /// Binds to the specific MergeRequestDescriptor
       /// </summary>
-      internal CommitChecker(int mergeRequestId, WorkflowDetails details)
+      internal InstantProjectChecker(int mergeRequestId, WorkflowDetails details)
       {
          MergeRequestId = mergeRequestId;
          Details = details;
       }
 
       /// <summary>
-      /// Check for commits newer than the given timestamp
+      /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      public DateTime GetLatestCommitTimestamp()
+      public DateTime GetLatestChangeTimestamp()
       {
-         return Details.GetLatestCommitTimestamp(MergeRequestId);
+         return Details.GetLatestChangeTimestamp(MergeRequestId);
       }
 
       public override string ToString()

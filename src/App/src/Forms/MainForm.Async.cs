@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms
             try
             {
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetCommitChecker(_workflow.State.MergeRequest.Id), updateGitStatusText);
+                  _updateManager.GetInstantProjectChecker(_workflow.State.MergeRequest.Id), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -104,7 +104,7 @@ namespace mrHelper.App.Forms
                      if (!getGitClient(mrd.HostName, mrd.ProjectName).DoesRequireClone())
                      {
                         await getGitClient(mrd.HostName, mrd.ProjectName).Updater.ManualUpdateAsync(
-                           _updateManager.GetCommitChecker(_workflow.State.MergeRequest.Id), null);
+                           _updateManager.GetInstantProjectChecker(_workflow.State.MergeRequest.Id), null);
                      }
                   }
                   catch (GitOperationException ex)
@@ -145,7 +145,7 @@ namespace mrHelper.App.Forms
             try
             {
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetCommitChecker(_workflow.State.MergeRequest.Id), updateGitStatusText);
+                  _updateManager.GetInstantProjectChecker(_workflow.State.MergeRequest.Id), updateGitStatusText);
             }
             catch (Exception ex)
             {

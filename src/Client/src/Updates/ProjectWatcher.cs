@@ -57,8 +57,8 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            latestChange = details.GetLatestCommitTimestamp(mergeRequest.Id) > latestChange ?
-               details.GetLatestCommitTimestamp(mergeRequest.Id) : latestChange;
+            latestChange = details.GetLatestChangeTimestamp(mergeRequest.Id) > latestChange ?
+               details.GetLatestChangeTimestamp(mergeRequest.Id) : latestChange;
 
             projectUpdates.Add(
                new ProjectUpdate

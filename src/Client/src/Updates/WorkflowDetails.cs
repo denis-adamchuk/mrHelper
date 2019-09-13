@@ -19,7 +19,7 @@ namespace mrHelper.Client.Updates
       {
          ProjectNames = new Dictionary<int, string>(details.ProjectNames);
          MergeRequests = new Dictionary<int, List<MergeRequest>>(details.MergeRequests);
-         Commits = new Dictionary<int, DateTime>(details.Commits);
+         Changes = new Dictionary<int, DateTime>(details.Changes);
       }
 
       /// <summary>
@@ -56,20 +56,20 @@ namespace mrHelper.Client.Updates
       }
 
       /// <summary>
-      /// Return a timestamp of the most recent commit of a specified merge request
+      /// Return a timestamp of the most recent version of a specified merge request
       /// </summary>
-      internal DateTime GetLatestCommitTimestamp(int mergeRequestId)
+      internal DateTime GetLatestChangeTimestamp(int mergeRequestId)
       {
-         Debug.Assert(Commits.ContainsKey(mergeRequestId));
-         return Commits.ContainsKey(mergeRequestId) ? Commits[mergeRequestId] : DateTime.MinValue;
+         Debug.Assert(Changes.ContainsKey(mergeRequestId));
+         return Changes.ContainsKey(mergeRequestId) ? Changes[mergeRequestId] : DateTime.MinValue;
       }
 
       /// <summary>
-      /// Update a timestamp of the most recent commit of a specified merge request
+      /// Update a timestamp of the most recent version of a specified merge request
       /// </summary>
-      internal void SetLatestCommitTimestamp(int mergeRequestId, DateTime timestamp)
+      internal void SetLatestChangeTimestamp(int mergeRequestId, DateTime timestamp)
       {
-         Commits[mergeRequestId] = timestamp;
+         Changes[mergeRequestId] = timestamp;
       }
 
       // maps unique project id to project's Path with Namespace property
@@ -78,8 +78,8 @@ namespace mrHelper.Client.Updates
       // maps unique project id to list of merge requests
       private Dictionary<int, List<MergeRequest>> MergeRequests = new Dictionary<int, List<MergeRequest>>();
 
-      // maps unique Merge Request Id (not IId) to a timestamp of its latest commit
-      private Dictionary<int, DateTime> Commits = new Dictionary<int, DateTime>();
+      // maps unique Merge Request Id (not IId) to a timestamp of its latest version
+      private Dictionary<int, DateTime> Changes  = new Dictionary<int, DateTime>();
    }
 }
 

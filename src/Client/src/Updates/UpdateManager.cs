@@ -50,9 +50,9 @@ namespace mrHelper.Client.Updates
          return ProjectWatcher;
       }
 
-      public CommitChecker GetCommitChecker(int mergeRequestId)
+      public InstantProjectChecker GetInstantProjectChecker(int mergeRequestId)
       {
-         return new CommitChecker(mergeRequestId, new WorkflowDetails(Cache.Details));
+         return new InstantProjectChecker(mergeRequestId, new WorkflowDetails(Cache.Details));
       }
 
       /// <summary>
