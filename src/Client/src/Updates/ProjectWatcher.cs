@@ -1,8 +1,7 @@
 using System;
-using System.ComponentModel;
-using mrHelper.Client.Git;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Workflow;
+using System.Collections.Generic;
+using System.Diagnostics;
+using GitLabSharp.Entities;
 
 namespace mrHelper.Client.Updates
 {
@@ -11,17 +10,12 @@ namespace mrHelper.Client.Updates
    /// </summary>
    internal class ProjectWatcher : IProjectWatcher
    {
-      internal ProjectWatcher(UserDefinedSettings settings)
-      {
-         Settings = settings;
-      }
-
       public event Action<List<ProjectUpdate>> OnProjectUpdate;
 
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(string MergeRequestUpdates updates, string hostname, WorkflowDetails details)
+      internal void ProcessUpdates(MergeRequestUpdates updates, string hostname, WorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
          projectUpdates.AddRange(getProjectUpdates(updates.NewMergeRequests, hostname, details));
@@ -52,7 +46,7 @@ namespace mrHelper.Client.Updates
          DateTime latestChange = DateTime.MinValue;
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            string projectName = details.GetProjectName(mergeRequest.Project.Id);
+            string projectName = details.GetProjectName(mergeRequest.Project_Id);
 
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
@@ -63,8 +57,8 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            latestChange = details.GetLatestCommitAsync(mergeRequest.Id) > latestChange ?
-               details.GetLatestCommitAsync(mergeRequest.Id) : latestChange;
+            latestChange = details.GetLatestCommitTimestamp(mergeRequest.Id) > latestChange ?
+               details.GetLatestCommitTimestamp(mergeRequest.Id) : latestChange;
 
             projectUpdates.Add(
                new ProjectUpdate
@@ -77,8 +71,6 @@ namespace mrHelper.Client.Updates
 
          return projectUpdates;
       }
-
-      private UserDefinedSettings Settings { get; }
    }
 }
 

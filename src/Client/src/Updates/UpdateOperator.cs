@@ -14,17 +14,16 @@ namespace mrHelper.Client.Updates
    /// </summary>
    internal class UpdateOperator
    {
-      internal UpdateOperator(UserDefinedSettings settings)
+      internal UpdateOperator(string host, string token)
       {
-         Settings = settings;
+         Client = new GitLabClient(host, token);
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string host, string project)
+      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string project)
       {
-         GitLabClient client = new GitLabClient(host, Tools.Tools.GetAccessToken(host, Settings));
          try
          {
-           return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
+           return (List<MergeRequest>)(await Client.RunAsync(async (gitlab) =>
               await gitlab.Projects.Get(project).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
          }
          catch (Exception ex)
@@ -41,10 +40,9 @@ namespace mrHelper.Client.Updates
 
       async internal Task<Commit> GetLatestCommitAsync(MergeRequestDescriptor mrd)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
          try
          {
-            List<Commit> commits = (List<Commit>)(await client.RunAsync(async (gitlab) =>
+            List<Commit> commits = (List<Commit>)(await Client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Commits.LoadTaskAsync(
                   new PageFilter { PageNumber = 1, PerPage = 1 })));
             return commits.Count > 0 ? commits[0] : new Commit();
@@ -61,7 +59,12 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      private UserDefinedSettings Settings { get; }
+      internal Task CancelAsync()
+      {
+         return Client.CancelAsync();
+      }
+
+      private GitLabClient Client { get; }
    }
 }
 

@@ -19,9 +19,9 @@ namespace mrHelper.Client.Updates
    }
 
    /// <summary>
-   /// Implements periodic checks for updates of Merge Requests and their Commits
+   /// Checks WorkflowDetails for updates
    /// </summary>
-   public class WorkflowUpdateChecker
+   internal class WorkflowDetailsChecker
    {
       private struct TwoListDifference<T>
       {
@@ -33,7 +33,8 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Process a timer event
       /// </summary>
-      private void CheckForUpdates(List<Project> enabledProjects, WorkflowDetails oldDetails, WorkflowDetails newDetails)
+      internal MergeRequestUpdates CheckForUpdates(List<Project> enabledProjects,
+         WorkflowDetails oldDetails, WorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequest> diff = getMergeRequestDiff(enabledProjects, oldDetails, newDetails);
          return getMergeRequestUpdates(diff, oldDetails, newDetails);
@@ -42,7 +43,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Calculate difference between two WorkflowDetails objects
       /// </summary>
-      private Task<TwoListDifference<MergeRequest>> getMergeRequestDiff(
+      private TwoListDifference<MergeRequest> getMergeRequestDiff(
          List<Project> enabledProjects, WorkflowDetails oldDetails, WorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequest> diff = new TwoListDifference<MergeRequest>
@@ -54,18 +55,12 @@ namespace mrHelper.Client.Updates
 
          foreach (var project in enabledProjects)
          {
-            List<MergeRequest> previouslyCachedMergeRequests =
-               oldDetails.MergeRequests.ContainsKey(project.Id) ? oldDetails.MergeRequests[project.Id] : null;
+            List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(project.Id);
+            List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(project.Id);
 
-            if (previouslyCachedMergeRequests != null)
-            {
-               Debug.Assert(newDetails.MergeRequests.ContainsKey(project.Id));
-
-               List<MergeRequest> newCachedMergeRequests = newDetails.MergeRequests[project.Id];
-               diff.FirstOnly.AddRange(previouslyCachedMergeRequests.Except(newCachedMergeRequests).ToList());
-               diff.SecondOnly.AddRange(newCachedMergeRequests.Except(previouslyCachedMergeRequests).ToList());
-               diff.Common.AddRange(previouslyCachedMergeRequests.Intersect(newCachedMergeRequests).ToList());
-            }
+            diff.FirstOnly.AddRange(previouslyCachedMergeRequests.Except(newCachedMergeRequests).ToList());
+            diff.SecondOnly.AddRange(newCachedMergeRequests.Except(previouslyCachedMergeRequests).ToList());
+            diff.Common.AddRange(previouslyCachedMergeRequests.Intersect(newCachedMergeRequests).ToList());
          }
 
          return diff;
@@ -74,7 +69,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
-      private Task<MergeRequestUpdates> getMergeRequestUpdates(
+      private MergeRequestUpdates getMergeRequestUpdates(
          TwoListDifference<MergeRequest> diff, WorkflowDetails oldDetails, WorkflowDetails newDetails)
       {
          MergeRequestUpdates updates = new MergeRequestUpdates
@@ -86,18 +81,12 @@ namespace mrHelper.Client.Updates
 
          foreach (MergeRequest mergeRequest in diff.Common)
          {
-            DateTime? previouslyCachedCommitTimestamp = oldDetails.Commits.ContainsKey(mergeRequest.Id) ?
-               oldDetails.Commits[mergeRequest.Id] : new Nullable<DateTime>();
+            DateTime previouslyCachedCommitTimestamp = oldDetails.GetLatestCommitTimestamp(mergeRequest.Id);
+            DateTime newCachedCommitTimestamp = newDetails.GetLatestCommitTimestamp(mergeRequest.Id);
 
-            if (previouslyCachedCommitTimestamp != null)
+            if (newCachedCommitTimestamp > previouslyCachedCommitTimestamp)
             {
-               Debug.Assert(newDetails.Commits.ContainsKey(mergeRequest.Id));
-
-               DateTime newCachedCommitTimestamp = newDetails.Commits[mergeRequest.Id];
-               if (newCachedCommitTimestamp > previouslyCachedCommitTimestamp)
-               {
-                  updates.UpdatedMergeRequests.Add(mergeRequest);
-               }
+               updates.UpdatedMergeRequests.Add(mergeRequest);
             }
          }
 

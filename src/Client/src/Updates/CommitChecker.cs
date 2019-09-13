@@ -38,7 +38,7 @@ namespace mrHelper.Client.Updates
       }
 
       private int MergeRequestId { get; }
-      private IWorkflowDetailsCache DetailsCache { get; }
+      private WorkflowDetails Details { get; }
    }
 }
 

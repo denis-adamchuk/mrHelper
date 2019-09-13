@@ -192,6 +192,8 @@ namespace mrHelper.App.Forms
 
          updateHostsDropdownList();
 
+         createWorkflow();
+
          try
          {
             await initializeWorkflow();
@@ -200,7 +202,54 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+            return;
          }
+
+         subscribeToUpdates();
+         createTimeTrackingManager();
+      }
+
+      private void subscribeToUpdates()
+      {
+         _updateManager = new UpdateManager(_workflow, this, _settings);
+         _updateManager.OnUpdate += async (updates) =>
+         {
+            notifyOnMergeRequestUpdates(updates);
+
+            if (_workflow.State.Project.Id == default(Project).Id)
+            {
+               // state changed 
+               return;
+            }
+
+            // check if currently selected project is affected by update
+            if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+             || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
+            {
+               // emulate project change to reload merge request list
+               // This will automatically update commit list (if there are new ones).
+               // This will also remove closed merge requests from the list.
+               try
+               {
+                  await _workflow.SwitchProjectAsync(_workflow.State.Project.Path_With_Namespace);
+               }
+               catch (WorkflowException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
+               }
+            }
+         };
+      }
+
+      private void createTimeTrackingManager()
+      {
+         _timeTrackingManager = new TimeTrackingManager(_settings, _workflow);
+         _timeTrackingManager.PreLoadTotalTime += () => onLoadTotalTime();
+         _timeTrackingManager.PostLoadTotalTime += (e) => onTotalTimeLoaded(e);
+         _timeTrackingManager.FailedLoadTotalTime += () => onFailedLoadTotalTime();
       }
    }
 }
+

@@ -79,7 +79,6 @@ namespace mrHelper.App.Forms
       private GitClientInteractiveUpdater _gitClientUpdater;
 
       private Workflow _workflow;
-      private WorkflowUpdateChecker _workflowUpdateChecker;
       private TimeTracker _timeTracker;
 
       private ColorScheme _colorScheme = new ColorScheme();

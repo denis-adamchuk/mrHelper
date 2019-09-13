@@ -13,12 +13,19 @@ namespace mrHelper.Client.Updates
 {
    // TODO: It is not enough to have unique project id because of multiple hosts
 
-   internal struct WorkflowDetails
+   internal class WorkflowDetails
    {
+      internal WorkflowDetails(WorkflowDetails details)
+      {
+         ProjectNames = new Dictionary<int, string>(details.ProjectNames);
+         MergeRequests = new Dictionary<int, List<MergeRequest>>(details.MergeRequests);
+         Commits = new Dictionary<int, DateTime>(details.Commits);
+      }
+
       /// <summary>
       /// Return project name (Path_With_Namespace) by unique project Id
       /// </summary>
-      public string GetProjectName(int projectId)
+      internal string GetProjectName(int projectId)
       {
          Debug.Assert(ProjectNames.ContainsKey(projectId));
          return ProjectNames.ContainsKey(projectId) ? ProjectNames[projectId] : String.Empty;
@@ -27,7 +34,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Add a project name/id pair to the cache
       /// </summary>
-      public void SetProjectName(int projectId, string name)
+      internal void SetProjectName(int projectId, string name)
       {
          ProjectNames[projectId] = name;
       }
@@ -35,7 +42,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
-      public List<MergeRequest> GetMergeRequests(int project Id)
+      internal List<MergeRequest> GetMergeRequests(int projectId)
       {
          return MergeRequests.ContainsKey(projectId) ? MergeRequests[projectId] : new List<MergeRequest>();
       }
@@ -43,7 +50,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Add a merge request to a list of merge requests for the given project
       /// </summary>
-      public void AddMergeRequest(int projectId, MergeRequest mergeRequest)
+      internal void AddMergeRequest(int projectId, MergeRequest mergeRequest)
       {
          GetMergeRequests(projectId).Add(mergeRequest);
       }
@@ -51,7 +58,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return a timestamp of the most recent commit of a specified merge request
       /// </summary>
-      public DateTime GetLatestCommitTimestamp(int mergeRequestId)
+      internal DateTime GetLatestCommitTimestamp(int mergeRequestId)
       {
          Debug.Assert(Commits.ContainsKey(mergeRequestId));
          return Commits.ContainsKey(mergeRequestId) ? Commits[mergeRequestId] : DateTime.MinValue;
@@ -60,7 +67,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Update a timestamp of the most recent commit of a specified merge request
       /// </summary>
-      public void SetLatestCommitTimestamp(int mergeRequestId, DateTime timestamp)
+      internal void SetLatestCommitTimestamp(int mergeRequestId, DateTime timestamp)
       {
          Commits[mergeRequestId] = timestamp;
       }

@@ -24,6 +24,16 @@ namespace mrHelper.App.Forms
    {
       async private Task initializeWorkflow()
       {
+         createWorkflow();
+
+         string hostname = getInitialHostName();
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
+
+         await _workflow.Initialize(hostname);
+      }
+
+      private void createWorkflow()
+      {
          _workflow = _workflowFactory.CreateWorkflow();
          _workflow.PreSwitchHost += (hostname) => onChangeHost(hostname);
          _workflow.PostSwitchHost += (state, projects) => onHostChanged(state, projects);
@@ -40,46 +50,6 @@ namespace mrHelper.App.Forms
          _workflow.PreLoadCommits += () => onLoadCommits();
          _workflow.PostLoadCommits += (state, commits) => onCommitsLoaded(state, commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
-
-         _updateManager = new UpdateManager(_workflow, this, _settings);
-         _workflowUpdateChecker = _updateManager.GetWorkflowUpdateChecker();
-         _workflowUpdateChecker.OnUpdate += async (updates) =>
-         {
-            notifyOnMergeRequestUpdates(updates);
-
-            WorkflowState state = _workflow.State;
-            if (state.Project.Id == default(Project).Id)
-            {
-               // state changed 
-               return;
-            }
-
-            // check if currently selected project is affected by update
-            if (updates.NewMergeRequests.Any(x => x.Project_Id == state.Project.Id)
-             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == state.Project.Id)
-             || updates.ClosedMergeRequests.Any(x => x.Project_Id == state.Project.Id))
-            {
-               // emulate project change to reload merge request list
-               // This will automatically update commit list (if there are new ones).
-               // This will also remove closed merge requests from the list.
-               try
-               {
-                  await _workflow.SwitchProjectAsync(state.Project.Path_With_Namespace);
-               }
-               catch (WorkflowException ex)
-               {
-                  ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
-               }
-            }
-         };
-
-         _timeTrackingManager = new TimeTrackingManager(_settings, _workflow);
-         _timeTrackingManager.PreLoadTotalTime += () => onLoadTotalTime();
-         _timeTrackingManager.PostLoadTotalTime += (e) => onTotalTimeLoaded(e);
-         _timeTrackingManager.FailedLoadTotalTime += () => onFailedLoadTotalTime();
-
-         string initialHostname = getInitialHostName();
-         await changeHostAsync(initialHostname);
       }
 
       async private Task changeHostAsync(string hostName)

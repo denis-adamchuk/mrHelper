@@ -53,6 +53,11 @@ namespace mrHelper.Client.Workflow
          _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
       }
 
+      async public Task Initialize(string hostname)
+      {
+         await SwitchHostAsync(hostname);
+      }
+
       async public Task SwitchHostAsync(string hostName)
       {
          await switchHostAsync(hostName);
@@ -60,20 +65,31 @@ namespace mrHelper.Client.Workflow
 
       async public Task SwitchProjectAsync(string projectName)
       {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return;
+         }
+
          await switchProjectAsync(projectName);
       }
 
       async public Task SwitchMergeRequestAsync(int mergeRequestIId)
       {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return;
+         }
+
          await switchMergeRequestAsync(mergeRequestIId);
       }
 
       async public Task CancelAsync()
       {
-         if (Operator != null)
-         {
-            await Operator.CancelAsync();
-         }
+         await Operator?.CancelAsync();
       }
 
       public void Dispose()
@@ -86,13 +102,20 @@ namespace mrHelper.Client.Workflow
       /// </summary>
       public List<Project> GetProjectsToUpdate()
       {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return null;
+         }
+
          List<Project> enabledProjects = getEnabledProjects();
-         if (enabledProject.Count != 0)
+         if (enabledProjects.Count != 0)
          {
             return enabledProjects;
          }
 
-         return State.Project != default(Project) ? new List<Project>{ State.Project } : new List<Project>();
+         return State.Project.Id != default(Project).Id ? new List<Project>{ State.Project } : new List<Project>();
       }
 
       public event Action<string> PreSwitchHost;
@@ -115,7 +138,7 @@ namespace mrHelper.Client.Workflow
       public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
 
-      public WorkflowState State { get; private set; } = new WorkflowState();
+      public WorkflowState State { get; private set; }
 
       async private Task switchHostAsync(string hostName)
       {
@@ -143,10 +166,6 @@ namespace mrHelper.Client.Workflow
          try
          {
             currentUser = await Operator.GetCurrentUserAsync();
-            if (hasEnabledProjects)
-            {
-               await Operator.CancelAsync();
-            }
             projects = hasEnabledProjects ?
                enabledProjects : await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }

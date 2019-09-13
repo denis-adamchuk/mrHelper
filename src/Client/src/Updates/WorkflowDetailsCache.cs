@@ -15,19 +15,64 @@ namespace mrHelper.Client.Updates
 
    internal class WorkflowDetailsCache
    {
-      internal WorkflowDetailsCache(UpdateOperator updateOperator, Workflow workflow)
+      internal WorkflowDetailsCache(UserDefinedSettings settings, Workflow.Workflow workflow)
       {
-         UpdateOperator = updateOperator;
+         Workflow = workflow;
+
+         Workflow.PostSwitchHost += (_, __) =>
+         {
+            createOperator(settings);
+         };
+
+         Workflow.PostSwitchProject += async (_, __) =>
+         {
+            List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+            Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.Project.Id));
+
+            Debug.WriteLine(String.Format(
+               "[WorkflowDetailsCache] Start handling PostSwitchProject. Host: {0}, Project: {1}",
+                  Workflow.State.HostName, Workflow.State.Project.Path_With_Namespace));
+
+            await Operator.CancelAsync();
+
+            _updating = true;
+            await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
+            await cacheCommitsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
+            _updating = false;
+
+            Debug.WriteLine(String.Format("[WorkflowDetailsCache] End handling PostSwitchProject."));
+         };
+
+         Workflow.PostSwitchMergeRequest += async (_) =>
+         {
+            List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+            Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.MergeRequest.Project_Id));
+
+            Debug.WriteLine(String.Format(
+               "[WorkflowDetailsCache] Start handling PostSwitchMergeRequest. Host: {0}, Project: {1}, IId: {2}",
+                  Workflow.State.HostName, Workflow.State.Project.Path_With_Namespace, Workflow.State.MergeRequest.IId));
+
+            await Operator.CancelAsync();
+
+            _updating = true;
+            await cacheCommitsAsync(Workflow.State.HostName, Workflow.State.MergeRequest);
+            _updating = false;
+
+            Debug.WriteLine(String.Format("[WorkflowDetailsCache] End handling PostSwitchMergeRequest."));
+         };
+
+         createOperator(settings);
       }
 
-      internal async void UpdateAsync(string hostname)
+      internal async Task UpdateAsync()
       {
-         await cacheMergeRequestsAsync(hostname, Workflow.State.Project);
-
-         foreach (MergeRequest mergeRequest in Details.GetMergeRequests(Workflow.State.Project.Id))
+         if (_updating)
          {
-            await cacheCommitsAsync(hostname, mergeRequest);
+            return;
          }
+
+         await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
+         await cacheCommitsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
       }
 
       internal WorkflowDetails Details { get; private set; }
@@ -50,7 +95,7 @@ namespace mrHelper.Client.Updates
          List<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await UpdateOperator.GetMergeRequestsAsync(hostname, Details.GetProjectName(project.Id));
+            mergeRequests = await Operator.GetMergeRequestsAsync(Details.GetProjectName(project.Id));
          }
          catch (OperatorException ex)
          {
@@ -69,6 +114,14 @@ namespace mrHelper.Client.Updates
                mergeRequests.Count, project.Path_With_Namespace, hostname));
       }
 
+      async private Task cacheCommitsAsync(string hostname, List<MergeRequest> mergeRequests)
+      {
+         foreach (MergeRequest mergeRequest in mergeRequests)
+         {
+            await cacheCommitsAsync(hostname, mergeRequest);
+         }
+      }
+
       /// <summary>
       /// Load commits from GitLab and cache them
       /// </summary>
@@ -76,23 +129,23 @@ namespace mrHelper.Client.Updates
       {
          Debug.WriteLine(String.Format(
             "[WorkflowDetailsCache] Checking commits for merge request {0} from project {1}",
-               mergeRequest.IId, Details.GetProjectName(mergeRequest.Project.Id)));
+               mergeRequest.IId, Details.GetProjectName(mergeRequest.Project_Id)));
 
          Debug.WriteLine(String.Format(
             "[WorkflowDetailsCache] Previously cached commit timestamp for this merge request is {0}",
-               Details.GetLatestCommitAsync(mergeRequest.Id)));
+               Details.GetLatestCommitTimestamp(mergeRequest.Id)));
 
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
                HostName = hostname,
-               ProjectName = Details.GetProjectName(mergeRequest.Project.Id),
+               ProjectName = Details.GetProjectName(mergeRequest.Project_Id),
                IId = mergeRequest.IId
             };
 
          Commit latestCommit;
          try
          {
-            latestCommit = await UpdateOperator.GetLatestCommitAsync(mrd);
+            latestCommit = await Operator.GetLatestCommitAsync(mrd);
          }
          catch (OperatorException ex)
          {
@@ -107,8 +160,17 @@ namespace mrHelper.Client.Updates
                mergeRequest.Id, latestCommit.Created_At));
       }
 
-      private readonly UpdateOperator UpdateOperator { get; }
-      private readonly Workflow Workflow { get; }
+      private void createOperator(UserDefinedSettings settings)
+      {
+         Operator?.CancelAsync();
+
+         string host = Workflow.State.HostName;
+         Operator = new UpdateOperator(host, Tools.Tools.GetAccessToken(host, settings));
+      }
+
+      private UpdateOperator Operator { get; set; }
+      private Workflow.Workflow Workflow { get; }
+      private bool _updating = false;
    }
 }
 
