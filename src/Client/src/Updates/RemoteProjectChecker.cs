@@ -6,6 +6,7 @@ using System.IO;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Updates
 {
@@ -28,7 +29,9 @@ namespace mrHelper.Client.Updates
       {
          try
          {
-            return Operator.GetLatestVersionAsync(MergeRequestDescriptor).Result.Created_At;
+            Task<Version> task = Task.Run<Version>(
+               async () => await Operator.GetLatestVersionAsync(MergeRequestDescriptor));
+            return task.Result.Created_At;
          }
          catch (OperatorException ex)
          {
