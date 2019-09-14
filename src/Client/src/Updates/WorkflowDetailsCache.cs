@@ -22,14 +22,14 @@ namespace mrHelper.Client.Updates
          Workflow = workflow;
          Operator = new UpdateOperator(settings);
 
-         Workflow.PostSwitchProject += async (_, __) =>
+         Workflow.PostSwitchProject += async (_, mergeRequests) =>
          {
             Trace.TraceInformation("[WorkflowDetailsCache] Processing project switch");
 
             List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
             Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.Project.Id));
 
-            await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
+            cacheMergeRequests(Workflow.State.HostName, Workflow.State.Project, mergeRequests);
             await cacheVersionsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
          };
 
@@ -50,6 +50,8 @@ namespace mrHelper.Client.Updates
 
          await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
          await cacheVersionsAsync(Workflow.State.HostName, Details.GetMergeRequests(Workflow.State.Project.Id));
+
+         Trace.TraceInformation("[WorkflowDetailsCache] External Update request processed");
       }
 
       internal WorkflowDetails Details { get; private set; } = new WorkflowDetails();
@@ -59,8 +61,6 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private Task cacheMergeRequestsAsync(string hostname, Project project)
       {
-         Details.SetProjectName(project.Id, project.Path_With_Namespace);
-
          List<MergeRequest> mergeRequests;
          try
          {
@@ -71,6 +71,16 @@ namespace mrHelper.Client.Updates
             ExceptionHandlers.Handle(ex, String.Format("Cannot load merge requests for project Id {0}", project.Id));
             return; // silent return
          }
+
+         cacheMergeRequests(hostname, project, mergeRequests);
+      }
+
+      /// <summary>
+      /// Cache passed merge requests
+      /// </summary>
+      private void cacheMergeRequests(string hostname, Project project, List<MergeRequest> mergeRequests)
+      {
+         Details.SetProjectName(project.Id, project.Path_With_Namespace);
 
          List<MergeRequest> previouslyCachedMergeRequests = Details.GetMergeRequests(project.Id);
          foreach (MergeRequest mergeRequest in mergeRequests)
