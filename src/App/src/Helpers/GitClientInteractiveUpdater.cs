@@ -28,7 +28,8 @@ namespace mrHelper.App.Helpers
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(GitClient client, InstantProjectChecker instantChecker, Action<string> onProgressChange)
+      async internal Task UpdateAsync(GitClient client, IInstantProjectChecker instantChecker,
+         Action<string> onProgressChange)
       {
          if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
          {

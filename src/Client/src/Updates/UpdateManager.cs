@@ -50,9 +50,14 @@ namespace mrHelper.Client.Updates
          return ProjectWatcher;
       }
 
-      public InstantProjectChecker GetInstantProjectChecker(int mergeRequestId)
+      public IInstantProjectChecker GetLocalProjectChecker(int mergeRequestId)
       {
-         return new InstantProjectChecker(mergeRequestId, new WorkflowDetails(Cache.Details));
+         return new LocalProjectChecker(mergeRequestId, new WorkflowDetails(Cache.Details));
+      }
+
+      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestDescriptor mrd)
+      {
+         return new RemoteProjectChecker(mrd, new UpdateOperator(Settings));
       }
 
       /// <summary>

@@ -40,6 +40,33 @@ namespace mrHelper.Client.Updates
          }
       }
 
+      internal Version GetLatestVersion(MergeRequestDescriptor mrd)
+      {
+         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
+         try
+         {
+            Task<object> task = client.RunAsync(
+               async (gitlab) =>
+               {
+                  VersionAccessor accessor = gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).Versions;
+                  Task<List<Version>> nestedTask = accessor.LoadAllTaskAsync();
+                  return await nestedTask;
+               });
+            List<Version> versions = (List<Version>)task.Result;
+            return versions.Count > 0 ? versions[0] : new Version();
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load the latest version from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       async internal Task<Version> GetLatestVersionAsync(MergeRequestDescriptor mrd)
       {
          GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));

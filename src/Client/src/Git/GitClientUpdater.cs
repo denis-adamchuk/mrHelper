@@ -35,10 +35,10 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async public Task ManualUpdateAsync(InstantProjectChecker instantChecker, Action<string> onProgressChange)
+      async public Task ManualUpdateAsync(IInstantProjectChecker instantChecker, Action<string> onProgressChange)
       {
          Trace.TraceInformation(
-            String.Format("[GitClientUpdater] Processing manual update. Stored LatestChange: {0}. InstantProjectChecker: {1}",
+            String.Format("[GitClientUpdater] Processing manual update. Stored LatestChange: {0}. IInstantProjectChecker: {1}",
                _latestChange.ToLocalTime().ToString(), (instantChecker?.ToString() ?? "null")));
 
          if (instantChecker == null)

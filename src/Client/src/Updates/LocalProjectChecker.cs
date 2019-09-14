@@ -12,24 +12,36 @@ namespace mrHelper.Client.Updates
    /// <summary>
    /// Checks for changes in GitLab projects
    /// </summary>
-   public class InstantProjectChecker
+   public class LocalProjectChecker : IInstantProjectChecker
    {
       /// <summary>
       /// Binds to the specific MergeRequestDescriptor
       /// </summary>
-      internal InstantProjectChecker(int mergeRequestId, WorkflowDetails details)
+      internal LocalProjectChecker(int mergeRequestId, WorkflowDetails details)
       {
          MergeRequestId = mergeRequestId;
          Details = details;
       }
 
       /// <summary>
-      /// Get a timestamp of the most recent change of a project the merge request belongs to
+      /// 
       /// Throws nothing
       /// </summary>
       public DateTime GetLatestChangeTimestamp()
       {
-         return Details.GetLatestChangeTimestamp(MergeRequestId);
+         int projectId = Details.GetProjectId(MergeRequestId);
+         Debug.Assert(projectId != 0);
+
+         DateTime dateTime = DateTime.MinValue;
+
+         List<MergeRequest> mergeRequests = Details.GetMergeRequests(projectId);
+         foreach (MergeRequest mergeRequest in mergeRequests)
+         {
+            DateTime latestChange = Details.GetLatestChangeTimestamp(mergeRequest.Id);
+            dateTime = latestChange > dateTime ? latestChange : dateTime;
+         }
+
+         return dateTime;
       }
 
       public override string ToString()

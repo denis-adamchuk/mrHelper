@@ -88,6 +88,21 @@ namespace mrHelper.Client.Updates
          Changes[mergeRequestId] = timestamp;
       }
 
+      /// <summary>
+      /// Return project Id by merge request Id
+      /// </summary>
+      internal int GetProjectId(int mergeRequestId)
+      {
+         foreach (KeyValuePair<int, List<MergeRequest>> mergeRequests in MergeRequests)
+         {
+            if (mergeRequests.Value.Any((x) => x.Id == mergeRequestId))
+            {
+               return mergeRequests.Key;
+            }
+         }
+         return 0;
+      }
+
       // maps unique project id to project's Path with Namespace property
       private Dictionary<int, string> ProjectNames;
 
