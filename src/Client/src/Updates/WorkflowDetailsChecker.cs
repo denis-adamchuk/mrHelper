@@ -34,7 +34,7 @@ namespace mrHelper.Client.Updates
       /// Process a timer event
       /// </summary>
       internal MergeRequestUpdates CheckForUpdates(List<Project> enabledProjects,
-         WorkflowDetails oldDetails, WorkflowDetails newDetails)
+         IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequest> diff = getMergeRequestDiff(enabledProjects, oldDetails, newDetails);
          return getMergeRequestUpdates(diff, oldDetails, newDetails);
@@ -44,7 +44,7 @@ namespace mrHelper.Client.Updates
       /// Calculate difference between two WorkflowDetails objects
       /// </summary>
       private TwoListDifference<MergeRequest> getMergeRequestDiff(
-         List<Project> enabledProjects, WorkflowDetails oldDetails, WorkflowDetails newDetails)
+         List<Project> enabledProjects, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequest> diff = new TwoListDifference<MergeRequest>
          {
@@ -70,7 +70,7 @@ namespace mrHelper.Client.Updates
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
       private MergeRequestUpdates getMergeRequestUpdates(
-         TwoListDifference<MergeRequest> diff, WorkflowDetails oldDetails, WorkflowDetails newDetails)
+         TwoListDifference<MergeRequest> diff, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          MergeRequestUpdates updates = new MergeRequestUpdates
          {

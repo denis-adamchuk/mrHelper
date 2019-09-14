@@ -13,7 +13,7 @@ namespace mrHelper.Client.Updates
 {
    // TODO: It is not enough to have unique project id because of multiple hosts
 
-   internal class WorkflowDetails
+   internal class WorkflowDetails : IWorkflowDetails
    {
       internal WorkflowDetails()
       {
@@ -22,7 +22,7 @@ namespace mrHelper.Client.Updates
          Changes = new Dictionary<int, DateTime>();
       }
 
-      internal WorkflowDetails(WorkflowDetails details)
+      private WorkflowDetails(WorkflowDetails details)
       {
          ProjectNames = new Dictionary<int, string>(details.ProjectNames);
          MergeRequests = new Dictionary<int, List<MergeRequest>>(details.MergeRequests);
@@ -30,9 +30,17 @@ namespace mrHelper.Client.Updates
       }
 
       /// <summary>
+      /// Create a copy of object
+      /// </summary>
+      public IWorkflowDetails Clone()
+      {
+         return new WorkflowDetails(this);
+      }
+
+      /// <summary>
       /// Return project name (Path_With_Namespace) by unique project Id
       /// </summary>
-      internal string GetProjectName(int projectId)
+      public string GetProjectName(int projectId)
       {
          Debug.Assert(ProjectNames.ContainsKey(projectId));
          return ProjectNames.ContainsKey(projectId) ? ProjectNames[projectId] : String.Empty;
@@ -49,7 +57,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
-      internal List<MergeRequest> GetMergeRequests(int projectId)
+      public List<MergeRequest> GetMergeRequests(int projectId)
       {
          return MergeRequests.ContainsKey(projectId) ? MergeRequests[projectId] : new List<MergeRequest>();
       }
@@ -75,7 +83,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request
       /// </summary>
-      internal DateTime GetLatestChangeTimestamp(int mergeRequestId)
+      public DateTime GetLatestChangeTimestamp(int mergeRequestId)
       {
          return Changes.ContainsKey(mergeRequestId) ? Changes[mergeRequestId] : DateTime.MinValue;
       }
@@ -91,7 +99,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return project Id by merge request Id
       /// </summary>
-      internal int GetProjectId(int mergeRequestId)
+      public int GetProjectId(int mergeRequestId)
       {
          foreach (KeyValuePair<int, List<MergeRequest>> mergeRequests in MergeRequests)
          {

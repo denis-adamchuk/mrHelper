@@ -66,8 +66,9 @@
     <Compile Include="src\Updates\UpdateManager.cs" />
     <Compile Include="src\Updates\UpdateOperator.cs" />
     <Compile Include="src\Updates\WorkflowDetails.cs" />
-    <Compile Include="src\Updates\WorkflowDetailsChecker.cs" />
+    <Compile Include="src\Updates\WorkflowDetailsItf.cs" />
     <Compile Include="src\Updates\WorkflowDetailsCache.cs" />
+    <Compile Include="src\Updates\WorkflowDetailsChecker.cs" />
     <Compile Include="src\Updates\InstantProjectCheckerItf.cs" />
     <Compile Include="src\Updates\LocalProjectChecker.cs" />
     <Compile Include="src\Updates\RemoteProjectChecker.cs" />

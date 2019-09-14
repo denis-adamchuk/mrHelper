@@ -55,7 +55,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public IInstantProjectChecker GetLocalProjectChecker(int mergeRequestId)
       {
-         return new LocalProjectChecker(mergeRequestId, new WorkflowDetails(Cache.Details));
+         return new LocalProjectChecker(mergeRequestId, Cache.Details.Clone());
       }
 
       /// <summary>
@@ -72,7 +72,7 @@ namespace mrHelper.Client.Updates
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         WorkflowDetails oldDetails = new WorkflowDetails(Cache.Details);
+         IWorkflowDetails oldDetails = Cache.Details.Clone();
 
          try
          {
@@ -116,7 +116,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Remove merge requests that don't match Label Filter from the passed list
       /// </summary>
-      private void applyLabelFilter(List<MergeRequest> mergeRequests, WorkflowDetails details)
+      private void applyLabelFilter(List<MergeRequest> mergeRequests, IWorkflowDetails details)
       {
          for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --iMergeRequest)
          {

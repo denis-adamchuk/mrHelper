@@ -14,7 +14,7 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class LocalProjectChecker : IInstantProjectChecker
    {
-      internal LocalProjectChecker(int mergeRequestId, WorkflowDetails details)
+      internal LocalProjectChecker(int mergeRequestId, IWorkflowDetails details)
       {
          MergeRequestId = mergeRequestId;
          Details = details;
@@ -55,7 +55,7 @@ namespace mrHelper.Client.Updates
       }
 
       private int MergeRequestId { get; }
-      private WorkflowDetails Details { get; }
+      private IWorkflowDetails Details { get; }
    }
 }
 

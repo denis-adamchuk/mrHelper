@@ -15,7 +15,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(MergeRequestUpdates updates, string hostname, WorkflowDetails details)
+      internal void ProcessUpdates(MergeRequestUpdates updates, string hostname, IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
          projectUpdates.AddRange(getProjectUpdates(updates.NewMergeRequests, hostname, details));
@@ -38,7 +38,7 @@ namespace mrHelper.Client.Updates
       /// Convert a list of Project Id to list of Project names
       /// </summary>
       private List<ProjectUpdate> getProjectUpdates(List<MergeRequest> mergeRequests, string hostname,
-         WorkflowDetails details)
+         IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
