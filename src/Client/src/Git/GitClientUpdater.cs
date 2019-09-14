@@ -38,7 +38,7 @@ namespace mrHelper.Client.Git
       async public Task ManualUpdateAsync(IInstantProjectChecker instantChecker, Action<string> onProgressChange)
       {
          Trace.TraceInformation(
-            String.Format("[GitClientUpdater] Processing manual update. Stored LatestChange: {0}. IInstantProjectChecker: {1}",
+            String.Format("[GitClientUpdater] Processing manual update. Stored LatestChange: {0}. ProjectChecker: {1}",
                _latestChange.ToLocalTime().ToString(), (instantChecker?.ToString() ?? "null")));
 
          if (instantChecker == null)
@@ -56,7 +56,7 @@ namespace mrHelper.Client.Git
                newLatestChange.ToLocalTime().ToString()));
 
             // this may cancel currently running onTimer update
-            await checkTimestampAndUpdate(newLatestChange, onProgressChange, true);
+            await checkTimestampAndUpdate(newLatestChange, onProgressChange);
          }
          finally
          {
@@ -105,7 +105,7 @@ namespace mrHelper.Client.Git
          _updating = true;
          try
          {
-            await checkTimestampAndUpdate(updateTimestamp, null, false);
+            await checkTimestampAndUpdate(updateTimestamp, null);
          }
          catch (GitOperationException ex)
          {
@@ -118,8 +118,7 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task checkTimestampAndUpdate(DateTime newLatestChange, Action<string> onProgressChange,
-         bool errorIfNewIsOlder)
+      async private Task checkTimestampAndUpdate(DateTime newLatestChange, Action<string> onProgressChange)
       {
          if (newLatestChange > _latestChange)
          {
@@ -137,15 +136,7 @@ namespace mrHelper.Client.Git
          }
          else if (newLatestChange < _latestChange)
          {
-            if (errorIfNewIsOlder)
-            {
-               Debug.Assert(false);
-               Trace.TraceWarning("[GitClientUpdater] New LatestChange is older than a previous one");
-            }
-            else
-            {
-               Trace.TraceInformation("[GitClientUpdater] New LatestChange is older than a previous one");
-            }
+            Trace.TraceInformation("[GitClientUpdater] New LatestChange is older than a previous one");
          }
       }
 
