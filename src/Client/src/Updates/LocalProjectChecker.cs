@@ -51,7 +51,7 @@ namespace mrHelper.Client.Updates
 
       public override string ToString()
       {
-         return String.Format("MergeRequest Id: {0}", MergeRequestId);
+         return String.Format("LocalProjectChecker. MergeRequest Id: {0}", MergeRequestId);
       }
 
       private int MergeRequestId { get; }

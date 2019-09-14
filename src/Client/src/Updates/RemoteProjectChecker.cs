@@ -42,7 +42,7 @@ namespace mrHelper.Client.Updates
 
       public override string ToString()
       {
-         return String.Format("MRD: HostName={0}, ProjectName={1}, IId={2}",
+         return String.Format("RemoteProjectChecker. MRD: HostName={0}, ProjectName={1}, IId={2}",
             MergeRequestDescriptor.HostName, MergeRequestDescriptor.ProjectName, MergeRequestDescriptor.IId);
       }
 
