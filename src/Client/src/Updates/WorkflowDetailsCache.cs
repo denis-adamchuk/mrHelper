@@ -13,8 +13,6 @@ using GitLabSharp;
 
 namespace mrHelper.Client.Updates
 {
-   // TODO: Cleanup Closed merge requests
-
    internal class WorkflowDetailsCache
    {
       internal WorkflowDetailsCache(UserDefinedSettings settings, Workflow.Workflow workflow)
@@ -83,14 +81,13 @@ namespace mrHelper.Client.Updates
          InternalDetails.SetProjectName(project.Id, project.Path_With_Namespace);
 
          List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(project.Id);
-         foreach (MergeRequest mergeRequest in mergeRequests)
-         {
-            InternalDetails.AddMergeRequest(project.Id, mergeRequest);
-         }
+         InternalDetails.SetMergeRequests(project.Id, mergeRequests);
 
          Trace.TraceInformation(String.Format(
             "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                project.Path_With_Namespace, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
+
+         cleanupOldRecords(previouslyCachedMergeRequests, mergeRequests);
       }
 
       /// <summary>
@@ -109,6 +106,8 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private Task cacheVersionsAsync(string hostname, MergeRequest mergeRequest)
       {
+         Debug.Assert(InternalDetails.GetProjectId(mergeRequest.Id) != 0);
+
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
                HostName = hostname,
@@ -141,6 +140,17 @@ namespace mrHelper.Client.Updates
                mergeRequest.Id,
                latestVersion.Created_At.ToLocalTime().ToString(),
                previouslyCachedTimestamp.ToLocalTime().ToString()));
+      }
+
+      private void cleanupOldRecords(List<MergeRequest> oldRecords, List<MergeRequest> newRecords)
+      {
+         foreach (MergeRequest mergeRequest in oldRecords)
+         {
+            if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
+            {
+               InternalDetails.CleanupTimestamps(mergeRequest.Id);
+            }
+         }
       }
 
       private UpdateOperator Operator { get; set; }

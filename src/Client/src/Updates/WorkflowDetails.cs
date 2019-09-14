@@ -63,21 +63,11 @@ namespace mrHelper.Client.Updates
       }
 
       /// <summary>
-      /// Add a merge request to a list of merge requests for the given project
+      /// Sets a list of merge requests for the given project
       /// </summary>
-      internal void AddMergeRequest(int projectId, MergeRequest mergeRequest)
+      internal void SetMergeRequests(int projectId, List<MergeRequest> mergeRequests)
       {
-         if (MergeRequests.ContainsKey(projectId))
-         {
-            if (!MergeRequests[projectId].Any((x) => x.Id == mergeRequest.Id))
-            {
-               MergeRequests[projectId].Add(mergeRequest);
-            }
-         }
-         else
-         {
-            MergeRequests[projectId] = new List<MergeRequest> { mergeRequest };
-         }
+         MergeRequests[projectId] = mergeRequests;
       }
 
       /// <summary>
@@ -94,6 +84,14 @@ namespace mrHelper.Client.Updates
       internal void SetLatestChangeTimestamp(int mergeRequestId, DateTime timestamp)
       {
          Changes[mergeRequestId] = timestamp;
+      }
+
+      /// <summary>
+      /// Remove records from Changes collection
+      /// </summary>
+      internal void CleanupTimestamps(int mergeRequestId)
+      {
+         Changes.Remove(mergeRequestId);
       }
 
       /// <summary>
