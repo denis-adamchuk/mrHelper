@@ -38,7 +38,6 @@ namespace mrHelper.Client.Workflow
             }
             else if (property.PropertyName == "LastUsedLabels")
             {
-               _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
                // emulate project change to reload merge request list
                try
                {
@@ -50,7 +49,11 @@ namespace mrHelper.Client.Workflow
                }
             }
          };
-         _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
+      }
+
+      async public Task Initialize(string hostname)
+      {
+         await SwitchHostAsync(hostname);
       }
 
       async public Task SwitchHostAsync(string hostName)
@@ -60,11 +63,25 @@ namespace mrHelper.Client.Workflow
 
       async public Task SwitchProjectAsync(string projectName)
       {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return;
+         }
+
          await switchProjectAsync(projectName);
       }
 
       async public Task SwitchMergeRequestAsync(int mergeRequestIId)
       {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return;
+         }
+
          await switchMergeRequestAsync(mergeRequestIId);
       }
 
@@ -79,6 +96,27 @@ namespace mrHelper.Client.Workflow
       public void Dispose()
       {
          Operator?.Dispose();
+      }
+
+      /// <summary>
+      /// Return projects at the current Host that are allowed to be checked for updates
+      /// </summary>
+      public List<Project> GetProjectsToUpdate()
+      {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return null;
+         }
+
+         List<Project> enabledProjects = getEnabledProjects();
+         if ((enabledProjects?.Count ?? 0) != 0)
+         {
+            return enabledProjects;
+         }
+
+         return State.Project.Id != default(Project).Id ? new List<Project>{ State.Project } : new List<Project>();
       }
 
       public event Action<string> PreSwitchHost;
@@ -101,7 +139,7 @@ namespace mrHelper.Client.Workflow
       public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
 
-      public WorkflowState State { get; private set; } = new WorkflowState();
+      public WorkflowState State { get; private set; }
 
       async private Task switchHostAsync(string hostName)
       {
@@ -121,12 +159,16 @@ namespace mrHelper.Client.Workflow
 
          Operator = new WorkflowDataOperator(hostName, Tools.Tools.GetAccessToken(hostName, Settings));
 
+         List<Project> enabledProjects = getEnabledProjects();
+         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+
          User currentUser;
          List<Project> projects;
          try
          {
             currentUser = await Operator.GetCurrentUserAsync();
-            projects = await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
+            projects = hasEnabledProjects ?
+               enabledProjects : await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
          }
          catch (OperatorException ex)
          {
@@ -165,8 +207,7 @@ namespace mrHelper.Client.Workflow
          try
          {
             project = await Operator.GetProjectAsync(projectName);
-            mergeRequests = await Operator.GetMergeRequestsAsync(
-               project.Path_With_Namespace, Settings.CheckedLabelsFilter ? _cachedLabels : null);
+            mergeRequests = await Operator.GetMergeRequestsAsync(project.Path_With_Namespace);
          }
          catch (OperatorException ex)
          {
@@ -300,6 +341,8 @@ namespace mrHelper.Client.Workflow
 
       private int? selectMergeRequestFromList(List<MergeRequest> mergeRequests)
       {
+         mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
+
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
@@ -312,10 +355,13 @@ namespace mrHelper.Client.Workflow
          return mergeRequests.Count > 0 ? mergeRequests[0].IId : new Nullable<int>();
       }
 
+      private List<Project> getEnabledProjects()
+      {
+         return Tools.Tools.LoadProjectsFromFile(State.HostName);
+      }
+
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
-
-      private List<string> _cachedLabels = null;
 
       private readonly Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
       private struct HostAndProjectId
@@ -323,7 +369,8 @@ namespace mrHelper.Client.Workflow
          public string Host;
          public int ProjectId;
       }
-      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects = new Dictionary<HostAndProjectId, int>();
+      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects =
+         new Dictionary<HostAndProjectId, int>();
    }
 }
 

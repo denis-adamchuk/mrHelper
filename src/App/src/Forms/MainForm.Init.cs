@@ -181,7 +181,6 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          _workflowFactory = new WorkflowFactory(_settings);
-         _updateManager = new UpdateManager(_settings);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -193,6 +192,11 @@ namespace mrHelper.App.Forms
 
          updateHostsDropdownList();
 
+         createWorkflow();
+
+         subscribeToUpdates();
+         createTimeTrackingManager();
+
          try
          {
             await initializeWorkflow();
@@ -201,7 +205,52 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
          }
+      }
+
+      private void subscribeToUpdates()
+      {
+         _updateManager = new UpdateManager(_workflow, this, _settings);
+         _updateManager.OnUpdate += async (updates) =>
+         {
+            notifyOnMergeRequestUpdates(updates);
+
+            if (_workflow.State.Project.Id == default(Project).Id)
+            {
+               // state changed 
+               return;
+            }
+
+            // check if currently selected project is affected by update
+            if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+             || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
+            {
+               // emulate project change to reload merge request list
+               // This will automatically update commit list (if there are new ones).
+               // This will also remove closed merge requests from the list.
+               Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
+
+               try
+               {
+                  await _workflow.SwitchProjectAsync(_workflow.State.Project.Path_With_Namespace);
+               }
+               catch (WorkflowException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
+               }
+            }
+         };
+      }
+
+      private void createTimeTrackingManager()
+      {
+         _timeTrackingManager = new TimeTrackingManager(_settings, _workflow);
+         _timeTrackingManager.PreLoadTotalTime += () => onLoadTotalTime();
+         _timeTrackingManager.PostLoadTotalTime += (e) => onTotalTimeLoaded(e);
+         _timeTrackingManager.FailedLoadTotalTime += () => onFailedLoadTotalTime();
       }
    }
 }
+

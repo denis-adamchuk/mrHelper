@@ -8,7 +8,12 @@ namespace mrHelper.Client.Updates
    {
       public string HostName;
       public string ProjectName;
-      public DateTime LatestChange;
+
+      /// <summary>
+      /// Timestamp of an event within the given project that caused this update.
+      /// If there are multiple events, Timestamp belongs to the latest of them.
+      /// </summary>
+      public DateTime Timestamp;
    }
 
    public interface IProjectWatcher

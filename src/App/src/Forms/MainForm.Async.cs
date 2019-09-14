@@ -32,8 +32,9 @@ namespace mrHelper.App.Forms
             enableControlsOnGitAsyncOperation(false);
             try
             {
+               // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor), updateGitStatusText);
+                  _updateManager.GetRemoteProjectChecker(_workflow.State.MergeRequestDescriptor), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -103,8 +104,9 @@ namespace mrHelper.App.Forms
                   {
                      if (!getGitClient(mrd.HostName, mrd.ProjectName).DoesRequireClone())
                      {
+                        // Using remote checker because there are might be discussions reported by other users on newer commits
                         await getGitClient(mrd.HostName, mrd.ProjectName).Updater.ManualUpdateAsync(
-                           _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor), null);
+                           _updateManager.GetRemoteProjectChecker(_workflow.State.MergeRequestDescriptor), null);
                      }
                   }
                   catch (GitOperationException ex)
@@ -144,8 +146,11 @@ namespace mrHelper.App.Forms
             enableControlsOnGitAsyncOperation(false);
             try
             {
+               // Using local checker because it does not make a GitLab request and it is quite enough here because
+               // user may select only those commits that already loaded and cached and have timestamps less
+               // than latest merge request version
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetCommitChecker(_workflow.State.MergeRequestDescriptor), updateGitStatusText);
+                  _updateManager.GetLocalProjectChecker(_workflow.State.MergeRequest.Id), updateGitStatusText);
             }
             catch (Exception ex)
             {
