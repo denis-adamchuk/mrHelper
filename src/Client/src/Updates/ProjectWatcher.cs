@@ -28,7 +28,7 @@ namespace mrHelper.Client.Updates
                Trace.TraceInformation(
                   String.Format("[ProjectWatcher] Updating project: Host {0}, Name {1}, TimeStamp {2}",
                      projectUpdate.HostName, projectUpdate.ProjectName,
-                     projectUpdate.LatestChange.ToLocalTime().ToString()));
+                     projectUpdate.Timestamp.ToLocalTime().ToString()));
             }
             OnProjectUpdate?.Invoke(projectUpdates);
          }
@@ -42,7 +42,8 @@ namespace mrHelper.Client.Updates
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
-         DateTime latestChange = DateTime.MinValue;
+         // Check all the updated merge request to figure out the latest change among them
+         DateTime updateTimestamp = DateTime.MinValue;
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
             string projectName = details.GetProjectName(mergeRequest.Project_Id);
@@ -56,15 +57,15 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            latestChange = details.GetLatestChangeTimestamp(mergeRequest.Id) > latestChange ?
-               details.GetLatestChangeTimestamp(mergeRequest.Id) : latestChange;
+            updateTimestamp = details.GetLatestChangeTimestamp(mergeRequest.Id) > updateTimestamp ?
+               details.GetLatestChangeTimestamp(mergeRequest.Id) : updateTimestamp;
 
             projectUpdates.Add(
                new ProjectUpdate
                {
                   HostName = hostname,
                   ProjectName = projectName,
-                  LatestChange = latestChange
+                  Timestamp = updateTimestamp
                });
          }
 

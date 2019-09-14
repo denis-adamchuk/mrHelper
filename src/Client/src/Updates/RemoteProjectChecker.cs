@@ -10,13 +10,10 @@ using mrHelper.Client.Git;
 namespace mrHelper.Client.Updates
 {
    /// <summary>
-   /// Checks for changes in GitLab projects
+   /// Detects the latest change in a merge request by means of a request to GitLab
    /// </summary>
    public class RemoteProjectChecker : IInstantProjectChecker
    {
-      /// <summary>
-      /// Binds to the specific MergeRequestDescriptor
-      /// </summary>
       internal RemoteProjectChecker(MergeRequestDescriptor mrd, UpdateOperator updateOperator)
       {
          MergeRequestDescriptor = mrd;

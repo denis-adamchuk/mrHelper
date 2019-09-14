@@ -130,6 +130,12 @@ namespace mrHelper.Client.Updates
          DateTime previouslyCachedTimestamp = Details.GetLatestChangeTimestamp(mergeRequest.Id);
          Details.SetLatestChangeTimestamp(mergeRequest.Id, latestVersion.Created_At);
 
+         if (previouslyCachedTimestamp > latestVersion.Created_At)
+         {
+            Debug.Assert(false);
+            Trace.TraceWarning("[WorkflowDetailsCache] Latest version is older than a previous one");
+         }
+
          Trace.TraceInformation(String.Format(
             "[WorkflowDetailsCache] Latest version of merge request with Id {0} has timestamp {1} (was {2} before update)",
                mergeRequest.Id,

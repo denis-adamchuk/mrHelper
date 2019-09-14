@@ -55,14 +55,8 @@ namespace mrHelper.Client.Git
             Trace.TraceInformation(String.Format("[GitClientUpdater] Repository Latest Change: {0}",
                newLatestChange.ToLocalTime().ToString()));
 
-            if (newLatestChange > _latestChange)
-            {
-               await doUpdate(onProgressChange); // this may cancel currently running onTimer update
-
-               _latestChange = newLatestChange;
-               Trace.TraceInformation(String.Format("[GitClientUpdater] Updating LatestChange timestamp to {0}",
-                  _latestChange.ToLocalTime().ToString()));
-            }
+            // this may cancel currently running onTimer update
+            await checkTimestampAndUpdate(newLatestChange, onProgressChange, true);
          }
          finally
          {
@@ -89,15 +83,16 @@ namespace mrHelper.Client.Git
          }
 
          bool needUpdateGitClient = false;
-         DateTime latestChange = DateTime.MinValue;
+         DateTime updateTimestamp = DateTime.MinValue;
          foreach (ProjectUpdate update in updates)
          {
             if (_isMyProject(update.HostName, update.ProjectName))
             {
                needUpdateGitClient = true;
-               latestChange = update.LatestChange;
-               Trace.TraceInformation(String.Format("[GitClientUpdater] Auto-updating git repository {0}",
-                  update.ProjectName));
+               updateTimestamp = update.Timestamp;
+               Trace.TraceInformation(String.Format(
+                  "[GitClientUpdater] Auto-updating git repository {0}, update timestamp {1}",
+                     update.ProjectName, updateTimestamp.ToLocalTime().ToString()));
                break;
             }
          }
@@ -110,11 +105,7 @@ namespace mrHelper.Client.Git
          _updating = true;
          try
          {
-            await doUpdate(null);
-
-            _latestChange = latestChange;
-            Trace.TraceInformation(String.Format("[GitClientUpdater] Updating LatestChange timestamp to {0}",
-               _latestChange.ToLocalTime().ToString()));
+            await checkTimestampAndUpdate(updateTimestamp, null, false);
          }
          catch (GitOperationException ex)
          {
@@ -124,6 +115,37 @@ namespace mrHelper.Client.Git
          finally
          {
             _updating = false;
+         }
+      }
+
+      async private Task checkTimestampAndUpdate(DateTime newLatestChange, Action<string> onProgressChange,
+         bool errorIfNewIsOlder)
+      {
+         if (newLatestChange > _latestChange)
+         {
+            await doUpdate(null);
+
+            _latestChange = newLatestChange;
+
+            Trace.TraceInformation(String.Format(
+               "[GitClientUpdater] Repository updated. Updating LatestChange timestamp to {0}",
+                  _latestChange.ToLocalTime().ToString()));
+         }
+         else if (newLatestChange == _latestChange)
+         {
+            Trace.TraceInformation(String.Format("[GitClientUpdater] Repository is not updated"));
+         }
+         else if (newLatestChange < _latestChange)
+         {
+            if (errorIfNewIsOlder)
+            {
+               Debug.Assert(false);
+               Trace.TraceWarning("[GitClientUpdater] New LatestChange is older than a previous one");
+            }
+            else
+            {
+               Trace.TraceInformation("[GitClientUpdater] New LatestChange is older than a previous one");
+            }
          }
       }
 

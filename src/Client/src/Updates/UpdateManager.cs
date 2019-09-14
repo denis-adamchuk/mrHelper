@@ -50,11 +50,17 @@ namespace mrHelper.Client.Updates
          return ProjectWatcher;
       }
 
+      /// <summary>
+      /// Checks local cache to detect if there are project changes caused by new versions of a merge request
+      /// </summary>
       public IInstantProjectChecker GetLocalProjectChecker(int mergeRequestId)
       {
          return new LocalProjectChecker(mergeRequestId, new WorkflowDetails(Cache.Details));
       }
 
+      /// <summary>
+      /// Makes a request to GitLab to detect if there are project changes caused by new versions of a merge request
+      /// </summary>
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestDescriptor mrd)
       {
          return new RemoteProjectChecker(mrd, new UpdateOperator(Settings));

@@ -32,6 +32,7 @@ namespace mrHelper.App.Forms
             preGitClientInitialize();
             try
             {
+               // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(client,
                   _updateManager.GetRemoteProjectChecker(_workflow.State.MergeRequestDescriptor), updateGitStatusText);
             }
@@ -103,6 +104,7 @@ namespace mrHelper.App.Forms
                   {
                      if (!getGitClient(mrd.HostName, mrd.ProjectName).DoesRequireClone())
                      {
+                        // Using remote checker because there are might be discussions reported by other users on newer commits
                         await getGitClient(mrd.HostName, mrd.ProjectName).Updater.ManualUpdateAsync(
                            _updateManager.GetRemoteProjectChecker(_workflow.State.MergeRequestDescriptor), null);
                      }
@@ -144,6 +146,8 @@ namespace mrHelper.App.Forms
             preGitClientInitialize();
             try
             {
+               // Using local checker because it avoid a GitLab request and quite enough here because
+               // user may select only those commits that have timestamps less than latest merge request version
                await _gitClientUpdater.UpdateAsync(client,
                   _updateManager.GetLocalProjectChecker(_workflow.State.MergeRequest.Id), updateGitStatusText);
             }
