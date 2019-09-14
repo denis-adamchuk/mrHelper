@@ -28,7 +28,7 @@ namespace mrHelper.Client.Updates
       {
          try
          {
-            return Operator.GetLatestVersion(MergeRequestDescriptor).Created_At;
+            return Operator.GetLatestVersionAsync(MergeRequestDescriptor).Result.Created_At;
          }
          catch (OperatorException ex)
          {

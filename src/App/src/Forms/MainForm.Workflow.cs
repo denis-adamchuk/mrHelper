@@ -187,6 +187,8 @@ namespace mrHelper.App.Forms
 
       private void onProjectChanged(WorkflowState state, List<MergeRequest> mergeRequests)
       {
+         mergeRequests = Tools.FilterMergeRequests(mergeRequests, _settings);
+
          Debug.Assert(comboBoxFilteredMergeRequests.Items.Count == 0);
          foreach (var mergeRequest in mergeRequests)
          {

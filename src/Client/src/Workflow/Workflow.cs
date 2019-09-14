@@ -38,7 +38,6 @@ namespace mrHelper.Client.Workflow
             }
             else if (property.PropertyName == "LastUsedLabels")
             {
-               _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
                // emulate project change to reload merge request list
                try
                {
@@ -50,7 +49,6 @@ namespace mrHelper.Client.Workflow
                }
             }
          };
-         _cachedLabels = Tools.Tools.SplitLabels(Settings.LastUsedLabels);
       }
 
       async public Task Initialize(string hostname)
@@ -209,8 +207,7 @@ namespace mrHelper.Client.Workflow
          try
          {
             project = await Operator.GetProjectAsync(projectName);
-            mergeRequests = await Operator.GetMergeRequestsAsync(
-               project.Path_With_Namespace, Settings.CheckedLabelsFilter ? _cachedLabels : null);
+            mergeRequests = await Operator.GetMergeRequestsAsync(project.Path_With_Namespace);
          }
          catch (OperatorException ex)
          {
@@ -344,6 +341,8 @@ namespace mrHelper.Client.Workflow
 
       private int? selectMergeRequestFromList(List<MergeRequest> mergeRequests)
       {
+         mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
+
          HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
@@ -363,8 +362,6 @@ namespace mrHelper.Client.Workflow
 
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
-
-      private List<string> _cachedLabels = null;
 
       private readonly Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
       private struct HostAndProjectId

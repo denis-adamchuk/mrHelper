@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Configuration;
@@ -62,14 +63,31 @@ namespace mrHelper.Client.Tools
          return String.Empty;
       }
 
-      public static List<string> SplitLabels(string labels)
+      public static List<MergeRequest> FilterMergeRequests(List<MergeRequest> mergeRequests,
+         UserDefinedSettings settings)
       {
-         var result = new List<string>();
-         foreach (var item in labels.Split(','))
+         Func<MergeRequest, bool> DoesMatchLabels =
+            (x) =>
          {
-            result.Add(item.Trim(' '));
-         }
-         return result;
+            Func<string, List<string>> SplitLabels =
+               (labels) =>
+            {
+               List<string> result = new List<string>();
+               foreach (var item in labels.Split(','))
+               {
+                  result.Add(item.Trim(' '));
+               }
+               return result;
+            };
+
+            if (!settings.CheckedLabelsFilter)
+            {
+               return true;
+            }
+            return SplitLabels(settings.LastUsedLabels).Intersect(x.Labels).Count() != 0;
+         };
+
+         return mergeRequests.Where((x) => DoesMatchLabels(x)).ToList();
       }
 
       private class HostInProjectsFile

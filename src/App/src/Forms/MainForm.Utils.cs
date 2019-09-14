@@ -347,12 +347,14 @@ namespace mrHelper.App.Forms
 
       private void notifyOnMergeRequestUpdates(MergeRequestUpdates updates)
       {
-         foreach (MergeRequest mergeRequest in updates.NewMergeRequests)
+         List<MergeRequest> newMergeRequests = Tools.FilterMergeRequests(updates.NewMergeRequests, _settings);
+         foreach (MergeRequest mergeRequest in newMergeRequests)
          {
             notifyOnMergeRequestEvent(mergeRequest, "New merge request");
          }
 
-         foreach (MergeRequest mergeRequest in updates.UpdatedMergeRequests)
+         List<MergeRequest> updatedMergeRequests = Tools.FilterMergeRequests(updates.UpdatedMergeRequests, _settings);
+         foreach (MergeRequest mergeRequest in updatedMergeRequests)
          {
             notifyOnMergeRequestEvent(mergeRequest, "New commit in merge request");
          }

@@ -77,7 +77,7 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName, List<string> labels)
+      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName)
       {
          List<MergeRequest> mergeRequests = null;
          try
@@ -94,14 +94,6 @@ namespace mrHelper.Client.Workflow
                throw new OperatorException(ex);
             }
             throw;
-         }
-
-         for (int iMergeRequest = mergeRequests.Count - 1; iMergeRequest >= 0; --iMergeRequest)
-         {
-            if (labels != null && labels.Intersect(mergeRequests[iMergeRequest].Labels).Count() == 0)
-            {
-               mergeRequests.RemoveAt(iMergeRequest);
-            }
          }
 
          return mergeRequests;
