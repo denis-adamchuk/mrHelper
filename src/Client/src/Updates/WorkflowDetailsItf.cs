@@ -4,6 +4,12 @@ using GitLabSharp.Entities;
 
 namespace mrHelper.Client.Updates
 {
+   internal struct ProjectKey
+   {
+      public string HostName;
+      public int ProjectId;
+   }
+
    internal interface IWorkflowDetails
    {
       /// <summary>
@@ -14,12 +20,12 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return project name (Path_With_Namespace) by unique project Id
       /// </summary>
-      string GetProjectName(int projectId);
+      string GetProjectName(ProjectKey key);
 
       /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
-      List<MergeRequest> GetMergeRequests(int projectId);
+      List<MergeRequest> GetMergeRequests(ProjectKey key);
 
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request
@@ -29,7 +35,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return project Id by merge request Id
       /// </summary>
-      int GetProjectId(int mergeRequestId);
+      ProjectKey GetProjectKey(int mergeRequestId);
    }
 }
 

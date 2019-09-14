@@ -71,6 +71,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+         string hostname = Workflow.State.HostName;
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
@@ -84,7 +85,7 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(
+         MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(hostname,
             enabledProjects, oldDetails, Cache.Details);
          ProjectWatcher.ProcessUpdates(updates, Workflow.State.HostName, Cache.Details);
 

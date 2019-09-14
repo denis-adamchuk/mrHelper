@@ -11,21 +11,19 @@ using System.Diagnostics;
 
 namespace mrHelper.Client.Updates
 {
-   // TODO: It is not enough to have unique project id because of multiple hosts
-
    internal class WorkflowDetails : IWorkflowDetails
    {
       internal WorkflowDetails()
       {
-         ProjectNames = new Dictionary<int, string>();
-         MergeRequests = new Dictionary<int, List<MergeRequest>>();
+         ProjectNames = new Dictionary<ProjectKey, string>();
+         MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
          Changes = new Dictionary<int, DateTime>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
       {
-         ProjectNames = new Dictionary<int, string>(details.ProjectNames);
-         MergeRequests = new Dictionary<int, List<MergeRequest>>(details.MergeRequests);
+         ProjectNames = new Dictionary<ProjectKey, string>(details.ProjectNames);
+         MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details.MergeRequests);
          Changes = new Dictionary<int, DateTime>(details.Changes);
       }
 
@@ -40,34 +38,34 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return project name (Path_With_Namespace) by unique project Id
       /// </summary>
-      public string GetProjectName(int projectId)
+      public string GetProjectName(ProjectKey key)
       {
-         Debug.Assert(ProjectNames.ContainsKey(projectId));
-         return ProjectNames.ContainsKey(projectId) ? ProjectNames[projectId] : String.Empty;
+         Debug.Assert(ProjectNames.ContainsKey(key));
+         return ProjectNames.ContainsKey(key) ? ProjectNames[key] : String.Empty;
       }
 
       /// <summary>
       /// Add a project name/id pair to the cache
       /// </summary>
-      internal void SetProjectName(int projectId, string name)
+      internal void SetProjectName(ProjectKey key, string name)
       {
-         ProjectNames[projectId] = name;
+         ProjectNames[key] = name;
       }
 
       /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
-      public List<MergeRequest> GetMergeRequests(int projectId)
+      public List<MergeRequest> GetMergeRequests(ProjectKey key)
       {
-         return MergeRequests.ContainsKey(projectId) ? MergeRequests[projectId] : new List<MergeRequest>();
+         return MergeRequests.ContainsKey(key) ? MergeRequests[key] : new List<MergeRequest>();
       }
 
       /// <summary>
       /// Sets a list of merge requests for the given project
       /// </summary>
-      internal void SetMergeRequests(int projectId, List<MergeRequest> mergeRequests)
+      internal void SetMergeRequests(ProjectKey key, List<MergeRequest> mergeRequests)
       {
-         MergeRequests[projectId] = mergeRequests;
+         MergeRequests[key] = mergeRequests;
       }
 
       /// <summary>
@@ -97,23 +95,23 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return project Id by merge request Id
       /// </summary>
-      public int GetProjectId(int mergeRequestId)
+      public ProjectKey GetProjectKey(int mergeRequestId)
       {
-         foreach (KeyValuePair<int, List<MergeRequest>> mergeRequests in MergeRequests)
+         foreach (KeyValuePair<ProjectKey, List<MergeRequest>> mergeRequests in MergeRequests)
          {
             if (mergeRequests.Value.Any((x) => x.Id == mergeRequestId))
             {
                return mergeRequests.Key;
             }
          }
-         return 0;
+         return new ProjectKey { HostName = String.Empty, ProjectId = 0 };
       }
 
       // maps unique project id to project's Path with Namespace property
-      private Dictionary<int, string> ProjectNames;
+      private Dictionary<ProjectKey, string> ProjectNames;
 
       // maps unique project id to list of merge requests
-      private Dictionary<int, List<MergeRequest>> MergeRequests;
+      private Dictionary<ProjectKey, List<MergeRequest>> MergeRequests;
 
       // maps unique Merge Request Id (not IId) to a timestamp of its latest version
       private Dictionary<int, DateTime> Changes;

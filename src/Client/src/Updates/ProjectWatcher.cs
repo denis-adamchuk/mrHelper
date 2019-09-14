@@ -46,7 +46,8 @@ namespace mrHelper.Client.Updates
          DateTime updateTimestamp = DateTime.MinValue;
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            string projectName = details.GetProjectName(mergeRequest.Project_Id);
+            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = mergeRequest.Project_Id };
+            string projectName = details.GetProjectName(key);
 
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)

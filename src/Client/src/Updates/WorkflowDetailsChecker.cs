@@ -33,17 +33,17 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Process a timer event
       /// </summary>
-      internal MergeRequestUpdates CheckForUpdates(List<Project> enabledProjects,
+      internal MergeRequestUpdates CheckForUpdates(string hostname, List<Project> enabledProjects,
          IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
-         TwoListDifference<MergeRequest> diff = getMergeRequestDiff(enabledProjects, oldDetails, newDetails);
+         TwoListDifference<MergeRequest> diff = getMergeRequestDiff(hostname, enabledProjects, oldDetails, newDetails);
          return getMergeRequestUpdates(diff, oldDetails, newDetails);
       }
 
       /// <summary>
       /// Calculate difference between two WorkflowDetails objects
       /// </summary>
-      private TwoListDifference<MergeRequest> getMergeRequestDiff(
+      private TwoListDifference<MergeRequest> getMergeRequestDiff(string hostname,
          List<Project> enabledProjects, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequest> diff = new TwoListDifference<MergeRequest>
@@ -55,8 +55,9 @@ namespace mrHelper.Client.Updates
 
          foreach (var project in enabledProjects)
          {
-            List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(project.Id);
-            List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(project.Id);
+            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = project.Id };
+            List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(key);
+            List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(key);
 
             diff.FirstOnly.AddRange(previouslyCachedMergeRequests.Except(newCachedMergeRequests).ToList());
             diff.SecondOnly.AddRange(newCachedMergeRequests.Except(previouslyCachedMergeRequests).ToList());

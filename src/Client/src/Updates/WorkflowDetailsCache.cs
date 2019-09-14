@@ -28,7 +28,8 @@ namespace mrHelper.Client.Updates
             Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.Project.Id));
 
             cacheMergeRequests(Workflow.State.HostName, Workflow.State.Project, mergeRequests);
-            await cacheVersionsAsync(Workflow.State.HostName, InternalDetails.GetMergeRequests(Workflow.State.Project.Id));
+            await cacheVersionsAsync(Workflow.State.HostName,
+               InternalDetails.GetMergeRequests(getProjectKey(Workflow.State)));
          };
 
          Workflow.PostSwitchMergeRequest += async (_) =>
@@ -47,7 +48,8 @@ namespace mrHelper.Client.Updates
          Trace.TraceInformation("[WorkflowDetailsCache] Processing external Update request");
 
          await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
-         await cacheVersionsAsync(Workflow.State.HostName, InternalDetails.GetMergeRequests(Workflow.State.Project.Id));
+         await cacheVersionsAsync(Workflow.State.HostName,
+            InternalDetails.GetMergeRequests(getProjectKey(Workflow.State)));
 
          Trace.TraceInformation("[WorkflowDetailsCache] External Update request processed");
       }
@@ -59,10 +61,13 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private Task cacheMergeRequestsAsync(string hostname, Project project)
       {
+         ProjectKey key = getProjectKey(hostname, project.Id);
+         InternalDetails.SetProjectName(key, project.Path_With_Namespace);
+
          List<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await Operator.GetMergeRequestsAsync(hostname, InternalDetails.GetProjectName(project.Id));
+            mergeRequests = await Operator.GetMergeRequestsAsync(hostname, InternalDetails.GetProjectName(key));
          }
          catch (OperatorException ex)
          {
@@ -78,10 +83,11 @@ namespace mrHelper.Client.Updates
       /// </summary>
       private void cacheMergeRequests(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
-         InternalDetails.SetProjectName(project.Id, project.Path_With_Namespace);
+         ProjectKey key = getProjectKey(hostname, project.Id);
+         InternalDetails.SetProjectName(key, project.Path_With_Namespace);
 
-         List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(project.Id);
-         InternalDetails.SetMergeRequests(project.Id, mergeRequests);
+         List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
+         InternalDetails.SetMergeRequests(key, mergeRequests);
 
          Trace.TraceInformation(String.Format(
             "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
@@ -106,12 +112,12 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private Task cacheVersionsAsync(string hostname, MergeRequest mergeRequest)
       {
-         Debug.Assert(InternalDetails.GetProjectId(mergeRequest.Id) != 0);
+         Debug.Assert(InternalDetails.GetProjectKey(mergeRequest.Id).ProjectId != 0);
 
          MergeRequestDescriptor mrd = new MergeRequestDescriptor
             {
                HostName = hostname,
-               ProjectName = InternalDetails.GetProjectName(mergeRequest.Project_Id),
+               ProjectName = InternalDetails.GetProjectName(getProjectKey(hostname, mergeRequest.Project_Id)),
                IId = mergeRequest.IId
             };
 
@@ -151,6 +157,20 @@ namespace mrHelper.Client.Updates
                InternalDetails.CleanupTimestamps(mergeRequest.Id);
             }
          }
+      }
+
+      private ProjectKey getProjectKey(string hostname, int projectId)
+      {
+         return new ProjectKey
+         {
+            HostName = hostname,
+            ProjectId = projectId
+         };
+      }
+
+      private ProjectKey getProjectKey(WorkflowState state)
+      {
+         return getProjectKey(state.HostName, state.Project.Id);
       }
 
       private UpdateOperator Operator { get; set; }
