@@ -16,6 +16,7 @@ using mrHelper.App.Controls;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
+using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -149,6 +150,7 @@ namespace mrHelper.App.Forms
                if (scheme == _settings.ColorSchemeFileName)
                {
                   selectedScheme = scheme;
+                  break;
                }
             }
          }
@@ -295,7 +297,8 @@ namespace mrHelper.App.Forms
 
       private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)
       {
-         return mergeRequest.Title + "    " + "[" + mergeRequest.Author.Username + "]";
+         return String.Format("{0} [{1}] [{2}]",
+            mergeRequest.Title, mergeRequest.Author.Username, String.Join(", ", mergeRequest.Labels.ToArray()));
       }
 
       /// <summary>
@@ -424,6 +427,22 @@ namespace mrHelper.App.Forms
       private bool isTrackingTime()
       {
          return _timeTracker != null;
+      }
+
+      System.Drawing.Color getMergeRequestColor(MergeRequest mergeRequest)
+      {
+         foreach (KeyValuePair<string, Color> color in _colorScheme)
+         {
+            foreach (string label in mergeRequest.Labels)
+            {
+               string colorName = String.Format("MergeRequests_{{Label:{0}}}", label);
+               if (colorName == color.Key)
+               {
+                  return color.Value;
+               }
+            }
+         }
+         return System.Drawing.Color.Transparent;
       }
    }
 }

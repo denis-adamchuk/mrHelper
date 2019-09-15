@@ -61,6 +61,7 @@
     <Compile Include="src\Tools\OperatorException.cs" />
     <Compile Include="src\Tools\Tools.cs" />
     <Compile Include="src\Git\GitClientUpdater.cs" />
+    <Compile Include="src\Tools\ExpressionResolver.cs" />
     <Compile Include="src\Updates\ProjectWatcher.cs" />
     <Compile Include="src\Updates\ProjectWatcherItf.cs" />
     <Compile Include="src\Updates\UpdateManager.cs" />

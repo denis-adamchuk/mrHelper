@@ -123,8 +123,6 @@ namespace mrHelper.App.Forms
             comboBoxDCDepth.SelectedIndex = 0;
          }
 
-         fillColorSchemesList();
-
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 
@@ -193,6 +191,8 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
 
          createWorkflow();
+         _expressionResolver = new ExpressionResolver(_workflow);
+         fillColorSchemesList();
 
          subscribeToUpdates();
          createTimeTrackingManager();

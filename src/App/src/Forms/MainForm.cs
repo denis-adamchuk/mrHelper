@@ -79,9 +79,10 @@ namespace mrHelper.App.Forms
       private GitClientInteractiveUpdater _gitClientUpdater;
 
       private Workflow _workflow;
+      private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
-      private ColorScheme _colorScheme = new ColorScheme();
+      private ColorScheme _colorScheme;
 
       private struct HostComboBoxItem
       {

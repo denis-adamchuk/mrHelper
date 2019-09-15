@@ -14,6 +14,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client.Tools;
 using mrHelper.Client.TimeTracking;
+using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -143,13 +144,13 @@ namespace mrHelper.App.Forms
       {
          if (comboBoxColorSchemes.SelectedItem.ToString() == DefaultColorSchemeName)
          {
-            _colorScheme = new ColorScheme();
+            _colorScheme = new ColorScheme(_expressionResolver);
             return;
          }
 
          try
          {
-            _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString());
+            _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString(), _expressionResolver);
          }
          catch (Exception ex) // whatever de-serialization exception
          {
@@ -185,6 +186,45 @@ namespace mrHelper.App.Forms
          await changeMergeRequestAsync(mergeRequest.IId);
       }
 
+      private void ComboBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         ComboBox comboBox = sender as ComboBox;
+         MergeRequest mergeRequest = (MergeRequest)(comboBox.Items[e.Index]);
+         System.Drawing.Color itemBackground = getMergeRequestColor(mergeRequest);
+         string itemText = formatMergeRequestForDropdown(mergeRequest);
+
+         e.DrawBackground();
+
+         if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
+         {
+            using (Brush brush = new SolidBrush(Color.FromArgb(225, 225, 225)))
+            {
+               e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+            e.Graphics.DrawString(itemText, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+         }
+         else if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
+         {
+            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+            e.Graphics.DrawString(itemText, comboBox.Font, SystemBrushes.HighlightText, e.Bounds);
+         }
+         else
+         {
+            using (Brush brush = new SolidBrush(itemBackground))
+            {
+               e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+            e.Graphics.DrawString(itemText, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+         }
+
+         e.DrawFocusRectangle();
+      }
+
       private void ButtonApplyLabels_Click(object sender, EventArgs e)
       {
          _settings.LastUsedLabels = textBoxLabels.Text;
@@ -210,11 +250,6 @@ namespace mrHelper.App.Forms
       private void ComboBoxProjects_Format(object sender, ListControlConvertEventArgs e)
       {
          formatProjectsListItem(e);
-      }
-
-      private void ComboBoxFilteredMergeRequests_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatMergeRequestListItem(e);
       }
 
       private void ComboBoxCommit_Format(object sender, ListControlConvertEventArgs e)
@@ -298,12 +333,6 @@ namespace mrHelper.App.Forms
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
-      }
-
-      private static void formatMergeRequestListItem(ListControlConvertEventArgs e)
-      {
-         MergeRequest item = ((MergeRequest)e.ListItem);
-         e.Value = formatMergeRequestForDropdown(item);
       }
 
       private static void formatCommitComboboxItem(ListControlConvertEventArgs e)

@@ -223,14 +223,14 @@ namespace mrHelper.App.Forms
          // 
          // comboBoxFilteredMergeRequests
          // 
+         this.comboBoxFilteredMergeRequests.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxFilteredMergeRequests.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxFilteredMergeRequests.FormattingEnabled = true;
          this.comboBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 46);
          this.comboBoxFilteredMergeRequests.Name = "comboBoxFilteredMergeRequests";
          this.comboBoxFilteredMergeRequests.Size = new System.Drawing.Size(613, 21);
          this.comboBoxFilteredMergeRequests.TabIndex = 6;
          this.comboBoxFilteredMergeRequests.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxFilteredMergeRequests_SelectionChangeCommited);
-         this.comboBoxFilteredMergeRequests.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxFilteredMergeRequests_Format);
+         this.comboBoxFilteredMergeRequests.DrawItem += ComboBoxFilteredMergeRequests_DrawItem;
          // 
          // buttonBrowseLocalGitFolder
          // 
