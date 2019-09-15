@@ -193,11 +193,13 @@ namespace mrHelper.App.Forms
       private void ComboBoxLeftCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
          checkComboboxCommitsOrder(true /* I'm left one */);
+         setCommitComboboxTooltipText(sender as ComboBox, toolTip);
       }
 
       private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
          checkComboboxCommitsOrder(false /* because I'm the right one */);
+         setCommitComboboxTooltipText(sender as ComboBox, toolTip);
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -307,15 +309,28 @@ namespace mrHelper.App.Forms
       private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
       {
          CommitComboBoxItem item = (CommitComboBoxItem)(e.ListItem);
-         e.Value = item.Text;
-         if (item.IsLatest)
+         e.Value = item.Text + (item.IsLatest ? " [Latest]" : String.Empty);
+      }
+
+      private static void setCommitComboboxTooltipText(ComboBox comboBox, ToolTip tooltip)
+      {
+         if (comboBox.SelectedItem == null)
          {
-            e.Value = "Latest";
+            tooltip.SetToolTip(comboBox, String.Empty);
+            return;
          }
-         else if (item.TimeStamp.HasValue)
+
+         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
+
+         string timestampText = String.Empty;
+         if (item.TimeStamp != null)
          {
-            e.Value += " (" + item.TimeStamp.Value.ToLocalTime().ToString("g") + ")";
+            timestampText = String.Format("({0})", item.TimeStamp.Value.ToLocalTime().ToString());
          }
+         string tooltipText = String.Format("{0} {1} {2}",
+            item.Text, timestampText, (item.IsLatest ? "[Latest]" : String.Empty));
+
+         tooltip.SetToolTip(comboBox, tooltipText);
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)

@@ -110,7 +110,7 @@ namespace mrHelper.App.Forms
          }
 
          internal CommitComboBoxItem(Commit commit)
-            : this(commit.Id, commit.Id.Substring(0, 10), commit.Created_At)
+            : this(commit.Id, commit.Title, commit.Created_At)
          {
          }
       }

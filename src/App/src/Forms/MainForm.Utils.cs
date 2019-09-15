@@ -267,7 +267,7 @@ namespace mrHelper.App.Forms
          groupBoxActions.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
       }
 
-      private void addCommitsToComboBoxes(List<Commit> commits, string mrBaseSha, string mrTargetBranch)
+      private void addCommitsToComboBoxes(List<Commit> commits, string baseSha, string targetBranch)
       {
          var latest = new CommitComboBoxItem(commits[0])
          {
@@ -286,9 +286,8 @@ namespace mrHelper.App.Forms
          }
 
          // Add target branch to the right combo-box
-         CommitComboBoxItem targetBranch =
-            new CommitComboBoxItem(mrBaseSha, mrTargetBranch, null);
-         comboBoxRightCommit.Items.Add(targetBranch);
+         CommitComboBoxItem targetBranchItem = new CommitComboBoxItem(baseSha, targetBranch + " [Base]", null);
+         comboBoxRightCommit.Items.Add(targetBranchItem);
 
          comboBoxLeftCommit.SelectedIndex = 0;
          comboBoxRightCommit.SelectedIndex = 0;
