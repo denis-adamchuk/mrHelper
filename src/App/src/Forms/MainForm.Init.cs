@@ -201,9 +201,6 @@ namespace mrHelper.App.Forms
          fillColorSchemesList();
          initializeColorScheme();
 
-         subscribeToUpdates();
-         createTimeTrackingManager();
-
          try
          {
             await initializeWorkflow();
@@ -213,14 +210,24 @@ namespace mrHelper.App.Forms
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
+            return;
          }
+
+         _updateManager = new UpdateManager(_workflow, this, _settings);
+         await _updateManager.InitializeAsync();
+         subscribeToUpdates();
+         createTimeTrackingManager();
       }
 
       private void subscribeToUpdates()
       {
-         _updateManager = new UpdateManager(_workflow, this, _settings);
-         _updateManager.OnUpdate += async (updates) =>
+         _updateManager.OnUpdate += async (updates, autoupdate) =>
          {
+            if (!autoupdate)
+            {
+               return;
+            }
+
             notifyOnMergeRequestUpdates(updates);
 
             if (_workflow.State.Project.Id == default(Project).Id)

@@ -47,7 +47,7 @@ namespace mrHelper.App.Forms
          string hostname = getInitialHostName();
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
 
-         await _workflow.Initialize(hostname);
+         await _workflow.InitializeAsync(hostname);
       }
 
       async private Task changeHostAsync(string hostName)
