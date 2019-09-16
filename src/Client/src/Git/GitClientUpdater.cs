@@ -122,7 +122,7 @@ namespace mrHelper.Client.Git
       {
          if (newLatestChange > _latestChange)
          {
-            await doUpdate(null);
+            await doUpdate(onProgressChange);
 
             _latestChange = newLatestChange;
 
