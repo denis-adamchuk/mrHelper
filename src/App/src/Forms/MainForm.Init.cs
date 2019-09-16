@@ -20,6 +20,7 @@ using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Client.Persistence;
 
 namespace mrHelper.App.Forms
 {
@@ -102,12 +103,6 @@ namespace mrHelper.App.Forms
          }
          _settings.KnownHosts = newKnownHosts;
 
-         if (_settings.LastSelectedHost != String.Empty)
-         {
-            // Upgrade from old versions which did not have prefix
-            _settings.LastSelectedHost = getHostWithPrefix(_settings.LastSelectedHost);
-         }
-
          if (_settings.ColorSchemeFileName == String.Empty)
          {
             // Upgrade from old versions which did not have a separate file for Default color scheme
@@ -184,7 +179,22 @@ namespace mrHelper.App.Forms
       {
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
-         _workflowFactory = new WorkflowFactory(_settings);
+         _persistenceManager = new PersistenceManager();
+
+         _persistenceManager.OnDeserialize +=
+            (reader) =>
+         {
+            string hostname = (string)reader.Get("SelectedHost");
+            _initialHostName = hostname;
+         };
+
+         _persistenceManager.OnSerialize +=
+            (writer) =>
+         {
+            writer.Set("SelectedHost", _workflow.State.HostName);
+         };
+
+         _workflowFactory = new WorkflowFactory(_settings, _persistenceManager);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -197,12 +207,30 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
 
          createWorkflow();
+
+         // Time Tracking Manager requires Workflow
+         createTimeTrackingManager();
+
+         // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
+
+         // Color Scheme requires Expression Resolver
          fillColorSchemesList();
          initializeColorScheme();
 
+         // Now we can de-serialize the persistence state, Workflow subscribed to it
          try
          {
+            _persistenceManager.Deserialize();
+         }
+         catch (PersistenceStateDeserializationException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot deserialize the state");
+         }
+
+         try
+         {
+            // Connect
             await initializeWorkflow();
          }
          catch (WorkflowException)
@@ -213,10 +241,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         // Update manager indirectly subscribes to Workflow
          _updateManager = new UpdateManager(_workflow, this, _settings);
+
+         // Update manager initializes Details, Workflow must be initialized already
          await _updateManager.InitializeAsync();
+
+         // Event subscription
          subscribeToUpdates();
-         createTimeTrackingManager();
       }
 
       private void subscribeToUpdates()

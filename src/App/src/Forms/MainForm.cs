@@ -16,6 +16,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
+using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
@@ -77,7 +78,9 @@ namespace mrHelper.App.Forms
       private DiscussionManager _discussionManager;
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
+      private PersistenceManager _persistenceManager;
 
+      private string _initialHostName;
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;

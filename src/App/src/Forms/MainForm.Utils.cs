@@ -461,11 +461,14 @@ namespace mrHelper.App.Forms
       {
          // If Last Selected Host is in the list, select it as initial host.
          // Otherwise, select the first host from the list.
-         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         if (_initialHostName != null)
          {
-            if (_settings.KnownHosts[iKnownHost] == _settings.LastSelectedHost)
+            for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
             {
-               return _settings.LastSelectedHost;
+               if (_settings.KnownHosts[iKnownHost] == _initialHostName)
+               {
+                  return _initialHostName;
+               }
             }
          }
          return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;

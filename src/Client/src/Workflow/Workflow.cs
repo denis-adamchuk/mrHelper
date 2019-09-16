@@ -6,6 +6,7 @@ using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using System.Diagnostics;
+using mrHelper.Client.Persistence;
 
 namespace mrHelper.Client.Workflow
 {
@@ -19,7 +20,7 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      internal Workflow(UserDefinedSettings settings)
+      internal Workflow(UserDefinedSettings settings, PersistenceManager persistenceManager)
       {
          Settings = settings;
          Settings.PropertyChanged += async (sender, property) =>
@@ -49,11 +50,45 @@ namespace mrHelper.Client.Workflow
                }
             }
          };
+
+         persistenceManager.OnSerialize +=
+            (writer) =>
+         {
+            writer.Set("ProjectsByHosts", _lastProjectsByHosts);
+            Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.
+               ToDictionary(item => item.Key.Host + "|" + item.Key.ProjectId.ToString(), item => item.Value);
+            writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
+         };
+
+         persistenceManager.OnDeserialize +=
+            (reader) =>
+         {
+            Dictionary<string, object> projectsByHosts =
+               (Dictionary<string, object>)reader.Get("ProjectsByHosts");
+            if (projectsByHosts != null)
+            {
+               _lastProjectsByHosts = projectsByHosts.ToDictionary(item => item.Key, item => item.Value.ToString());
+            }
+
+            Dictionary<string, object> mergeRequestsByProjects =
+               (Dictionary<string, object>)reader.Get("MergeRequestsByProjects");
+            if (mergeRequestsByProjects != null)
+            {
+               _lastMergeRequestsByProjects = mergeRequestsByProjects.
+                  ToDictionary(item =>
+                  {
+                     string host = item.Key.Split('|')[0];
+                     string projectId = item.Key.Split('|')[1];
+                     HostAndProjectId key = new HostAndProjectId { Host = host, ProjectId = int.Parse(projectId) };
+                     return key;
+                  }, item => (int)item.Value);
+            }
+         };
       }
 
-      async public Task Initialize(string hostname)
+      async public Task InitializeAsync(string hostname)
       {
-         await SwitchHostAsync(hostname);
+         await switchHostAsync(hostname);
       }
 
       async public Task SwitchHostAsync(string hostName)
@@ -328,14 +363,6 @@ namespace mrHelper.Client.Workflow
             return _lastProjectsByHosts[key];
          }
 
-         foreach (var project in projects)
-         {
-            if (project.Path_With_Namespace == Settings.LastSelectedProject)
-            {
-               return project.Path_With_Namespace;
-            }
-         }
-
          return projects.Count > 0 ? projects[0].Path_With_Namespace : String.Empty;
       }
 
@@ -363,13 +390,13 @@ namespace mrHelper.Client.Workflow
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
 
-      private readonly Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
+      private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
       private struct HostAndProjectId
       {
          public string Host;
          public int ProjectId;
       }
-      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects =
+      private Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects =
          new Dictionary<HostAndProjectId, int>();
    }
 }

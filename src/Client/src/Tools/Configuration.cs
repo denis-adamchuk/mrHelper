@@ -25,12 +25,6 @@ namespace mrHelper.Client.Tools
       private static readonly string LastUsedLabelsKeyName = "LastUsedLabels";
       private static readonly string LastUsedLabelsDefaultValue = "";
 
-      private static readonly string LastSelectedProjectKeyName = "LastSelectedProject";
-      private static readonly string LastSelectedProjectDefaultValue = "";
-
-      private static readonly string LastSelectedHostKeyName = "LastSelectedHost";
-      private static readonly string LastSelectedHostDefaultValue = "";
-
       private static readonly string ShowPublicOnlyKeyName = "ShowPublicOnly";
       private static readonly string ShowPublicOnlyDefaultValue = "true";
 
@@ -107,18 +101,6 @@ namespace mrHelper.Client.Tools
             // filter changes.
             OnPropertyChanged(LastUsedLabelsKeyName);
          }
-      }
-
-      public string LastSelectedProject
-      {
-         get { return getValue(LastSelectedProjectKeyName, LastSelectedProjectDefaultValue); }
-         set { setValue(LastSelectedProjectKeyName, value); }
-      }
-
-      public string LastSelectedHost
-      {
-         get { return getValue(LastSelectedHostKeyName, LastSelectedHostDefaultValue); }
-         set { setValue(LastSelectedHostKeyName, value); }
       }
 
       public bool ShowPublicOnly

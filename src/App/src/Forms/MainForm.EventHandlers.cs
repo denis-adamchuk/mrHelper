@@ -15,6 +15,7 @@ using mrHelper.Core;
 using mrHelper.Client.Tools;
 using mrHelper.Client.TimeTracking;
 using System.Drawing;
+using mrHelper.Client.Persistence;
 
 namespace mrHelper.App.Forms
 {
@@ -39,10 +40,19 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            Core.Interprocess.SnapshotSerializer.CleanUpSnapshots();
-
             if (_workflow != null)
             {
+               try
+               {
+                  _persistenceManager.Serialize();
+               }
+               catch (PersistenceStateSerializationException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot serialize the state");
+               }
+
+               Core.Interprocess.SnapshotSerializer.CleanUpSnapshots();
+
                Hide();
                e.Cancel = true;
                await _workflow.CancelAsync();
@@ -149,16 +159,12 @@ namespace mrHelper.App.Forms
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
          string hostname = (sender as ComboBox).Text;
-         _settings.LastSelectedHost = hostname;
-
          await changeHostAsync(hostname);
       }
 
       async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
       {
          string projectname = (sender as ComboBox).Text;
-         _settings.LastSelectedProject = projectname;
-
          await changeProjectAsync(projectname);
       }
 
