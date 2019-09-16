@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -181,17 +182,40 @@ namespace mrHelper.App.Forms
 
          _persistenceManager = new PersistenceManager();
 
-         _persistenceManager.OnDeserialize +=
-            (reader) =>
-         {
-            string hostname = (string)reader.Get("SelectedHost");
-            _initialHostName = hostname;
-         };
-
          _persistenceManager.OnSerialize +=
             (writer) =>
          {
             writer.Set("SelectedHost", _workflow.State.HostName);
+
+            Dictionary<string, HashSet<string>> reviewedCommits =
+               _reviewedCommits.ToDictionary(item => item.Key.ToString(), item => item.Value);
+            writer.Set("ReviewedCommits", reviewedCommits);
+         };
+
+         _persistenceManager.OnDeserialize +=
+            (reader) =>
+         {
+            string hostname = (string)reader.Get("SelectedHost");
+            if (hostname != null)
+            {
+               _initialHostName = hostname;
+            }
+
+            Dictionary<string, object> reviewedCommits = (Dictionary<string, object>)reader.Get("ReviewedCommits");
+            if (reviewedCommits != null)
+            {
+               _reviewedCommits = reviewedCommits.ToDictionary(
+                  item => int.Parse(item.Key),
+                  item =>
+                  {
+                     HashSet<string> commits = new HashSet<string>();
+                     foreach (string commit in (ArrayList)item.Value)
+                     {
+                        commits.Add(commit);
+                     }
+                     return commits;
+                  });
+            }
          };
 
          _workflowFactory = new WorkflowFactory(_settings, _persistenceManager);

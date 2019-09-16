@@ -461,14 +461,11 @@ namespace mrHelper.App.Forms
       {
          // If Last Selected Host is in the list, select it as initial host.
          // Otherwise, select the first host from the list.
-         if (_initialHostName != null)
+         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
          {
-            for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+            if (_settings.KnownHosts[iKnownHost] == _initialHostName)
             {
-               if (_settings.KnownHosts[iKnownHost] == _initialHostName)
-               {
-                  return _initialHostName;
-               }
+               return _initialHostName;
             }
          }
          return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
@@ -501,6 +498,16 @@ namespace mrHelper.App.Forms
                   return color.Value;
                }
             }
+         }
+         return System.Drawing.Color.Transparent;
+      }
+
+      System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
+      {
+         int mergeRequestId = _workflow.State.MergeRequest.Id;
+         if (!_reviewedCommits.ContainsKey(mergeRequestId) || !_reviewedCommits[mergeRequestId].Contains(item.SHA))
+         {
+            return _colorScheme.GetColorOrDefault("Commits_NotReviewed", Color.Transparent);
          }
          return System.Drawing.Color.Transparent;
       }

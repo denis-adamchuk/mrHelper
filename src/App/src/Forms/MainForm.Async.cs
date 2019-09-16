@@ -213,6 +213,17 @@ namespace mrHelper.App.Forms
             leftSHA, rightSHA, client.Path, pid.ToString()));
 
          saveInterprocessSnapshot(pid, leftSHA, rightSHA);
+
+         if (!_reviewedCommits.ContainsKey(_workflow.State.MergeRequest.Id))
+         {
+            _reviewedCommits[_workflow.State.MergeRequest.Id] = new HashSet<string>();
+         }
+
+         _reviewedCommits[_workflow.State.MergeRequest.Id].Add(leftSHA);
+         _reviewedCommits[_workflow.State.MergeRequest.Id].Add(rightSHA);
+
+         comboBoxLeftCommit.Refresh();
+         comboBoxRightCommit.Refresh();
       }
 
       async private Task onAddCommentAsync()

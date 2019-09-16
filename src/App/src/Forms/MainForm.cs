@@ -80,7 +80,8 @@ namespace mrHelper.App.Forms
       private GitClientInteractiveUpdater _gitClientUpdater;
       private PersistenceManager _persistenceManager;
 
-      private string _initialHostName;
+      private string _initialHostName = String.Empty;
+      private Dictionary<int, HashSet<string>> _reviewedCommits = new Dictionary<int, HashSet<string>>();
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;

@@ -684,24 +684,24 @@ namespace mrHelper.App.Forms
          // comboBoxRightCommit
          // 
          this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxRightCommit.FormattingEnabled = true;
+         this.comboBoxRightCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxRightCommit.Location = new System.Drawing.Point(4, 46);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
          this.comboBoxRightCommit.Size = new System.Drawing.Size(526, 21);
          this.comboBoxRightCommit.TabIndex = 9;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
-         this.comboBoxRightCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxCommit_Format);
+         this.comboBoxRightCommit.DrawItem += ComboBoxCommits_DrawItem;
          // 
          // comboBoxLeftCommit
          // 
          this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLeftCommit.FormattingEnabled = true;
+         this.comboBoxLeftCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(4, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
          this.comboBoxLeftCommit.Size = new System.Drawing.Size(526, 21);
          this.comboBoxLeftCommit.TabIndex = 8;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
-         this.comboBoxLeftCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxCommit_Format);
+         this.comboBoxLeftCommit.DrawItem += ComboBoxCommits_DrawItem;
          // 
          // MainForm
          // 

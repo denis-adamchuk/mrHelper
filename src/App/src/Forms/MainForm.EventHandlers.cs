@@ -249,6 +249,56 @@ namespace mrHelper.App.Forms
          e.DrawFocusRectangle();
       }
 
+      private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         ComboBox comboBox = sender as ComboBox;
+         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.Items[e.Index]);
+
+         e.DrawBackground();
+
+         if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
+         {
+            Color comboBoxEditBackColor = getCommitComboBoxItemColor(item);
+            if (comboBoxEditBackColor == Color.Transparent)
+            {
+               comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
+;
+            }
+            using (Brush brush = new SolidBrush(comboBoxEditBackColor))
+            {
+               e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+
+            e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+         }
+         else
+         {
+            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+            if (isSelected)
+            {
+               e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+            }
+            else
+            {
+               System.Drawing.Color backColor = getCommitComboBoxItemColor(item);
+               using (Brush brush = new SolidBrush(backColor))
+               {
+                  e.Graphics.FillRectangle(brush, e.Bounds);
+               }
+            }
+
+            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+            e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
+         }
+
+         e.DrawFocusRectangle();
+      }
+
       private void ButtonApplyLabels_Click(object sender, EventArgs e)
       {
          _settings.LastUsedLabels = textBoxLabels.Text;
@@ -274,11 +324,6 @@ namespace mrHelper.App.Forms
       private void ComboBoxProjects_Format(object sender, ListControlConvertEventArgs e)
       {
          formatProjectsListItem(e);
-      }
-
-      private void ComboBoxCommit_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatCommitComboboxItem(e);
       }
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -359,10 +404,9 @@ namespace mrHelper.App.Forms
          getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
       }
 
-      private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
+      private static string formatCommitComboboxItem(CommitComboBoxItem item)
       {
-         CommitComboBoxItem item = (CommitComboBoxItem)(e.ListItem);
-         e.Value = item.Text + (item.IsLatest ? " [Latest]" : String.Empty);
+         return item.Text + (item.IsLatest ? " [Latest]" : String.Empty);
       }
 
       private static void setCommitComboboxTooltipText(ComboBox comboBox, ToolTip tooltip)
