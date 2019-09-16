@@ -140,25 +140,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ComboBoxColorSchemes_SelectedIndexChanged(object sender, EventArgs e)
+      private void ComboBoxColorSchemes_SelectionChangeCommited(object sender, EventArgs e)
       {
-         if (comboBoxColorSchemes.SelectedItem.ToString() == DefaultColorSchemeName)
-         {
-            _colorScheme = new ColorScheme(_expressionResolver);
-            return;
-         }
-
-         try
-         {
-            _colorScheme = new ColorScheme(comboBoxColorSchemes.SelectedItem.ToString(), _expressionResolver);
-         }
-         catch (Exception ex) // whatever de-serialization exception
-         {
-            ExceptionHandlers.Handle(ex, "Cannot change color scheme");
-            MessageBox.Show("Cannot change color scheme", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            comboBoxColorSchemes.SelectedIndex = 0; // recursive
-         }
-
+         initializeColorScheme();
          _settings.ColorSchemeFileName = (sender as ComboBox).Text;
       }
 

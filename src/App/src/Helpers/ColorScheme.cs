@@ -13,12 +13,10 @@ namespace mrHelper.App.Helpers
    internal class ColorScheme : IEnumerable<KeyValuePair<string, Color>>
    {
       /// <summary>
-      /// Create a default scheme
+      /// Create an empty scheme
       /// </summary>
-      internal ColorScheme(ExpressionResolver expressionResolver)
+      internal ColorScheme()
       {
-         ExpressionResolver = expressionResolver;
-         resetToDefault();
       }
 
       /// <summary>
@@ -30,7 +28,6 @@ namespace mrHelper.App.Helpers
       internal ColorScheme(string filename, ExpressionResolver expressionResolver)
       {
          ExpressionResolver = expressionResolver;
-         resetToDefault();
 
          if (!System.IO.File.Exists(filename))
          {
@@ -70,9 +67,9 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      internal Color GetColor(string name)
+      internal Color GetColorOrDefault(string name, Color defaultColor)
       {
-         return findColor<Color>(name, (x) => x, () => System.Drawing.Color.Black);
+         return findColor<Color>(name, (x) => x, () => defaultColor);
       }
 
       internal bool HasColor(string name)
@@ -108,17 +105,6 @@ namespace mrHelper.App.Helpers
          }
 
          return notFound();
-      }
-
-      private void resetToDefault()
-      {
-         setColor("Discussions_Comments", Color.FromArgb(202,199,243));
-         setColor("Discussions_Author_Notes_Resolved", Color.FromArgb(192,235,230));
-         setColor("Discussions_NonAuthor_Notes_Resolved", Color.FromArgb(247,249,202));
-         setColor("Discussions_Author_Notes_Unresolved", Color.FromArgb(148,218,207));
-         setColor("Discussions_NonAuthor_Notes_Unresolved", Color.FromArgb(233,210,122));
-         setColor("MergeRequests_{Label:@%CurrentUsername%-pending}", Color.FromArgb(255, 99, 71));
-         setColor("MergeRequests_{Label:@%CurrentUsername%}", Color.FromArgb(240,230,140));
       }
 
       private void setColor(string name, Color color)

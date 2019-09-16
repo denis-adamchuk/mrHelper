@@ -17,6 +17,7 @@ using mrHelper.Client.Updates;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
 using System.Drawing;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -134,23 +135,38 @@ namespace mrHelper.App.Forms
          return host;
       }
 
+      private string getDefaultColorSchemeFileName()
+      {
+         return String.Format("{0}.{1}", DefaultColorSchemeName, ColorSchemeFileNamePrefix);
+      }
+
       private void fillColorSchemesList()
       {
+         string defaultFileName = getDefaultColorSchemeFileName();
+         string defaultFilePath = Path.Combine(Directory.GetCurrentDirectory(), defaultFileName);
+
          comboBoxColorSchemes.Items.Clear();
-         comboBoxColorSchemes.Items.Add(DefaultColorSchemeName);
 
          string selectedScheme = null;
          string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
+         if (files.Contains(defaultFilePath))
+         {
+            // put Default scheme first in the list
+            comboBoxColorSchemes.Items.Add(defaultFileName);
+         }
+
          foreach (string file in files)
          {
             if (file.EndsWith(ColorSchemeFileNamePrefix))
             {
                string scheme = Path.GetFileName(file);
-               comboBoxColorSchemes.Items.Add(scheme);
+               if (file != defaultFilePath)
+               {
+                  comboBoxColorSchemes.Items.Add(scheme);
+               }
                if (scheme == _settings.ColorSchemeFileName)
                {
                   selectedScheme = scheme;
-                  break;
                }
             }
          }
@@ -159,9 +175,40 @@ namespace mrHelper.App.Forms
          {
             comboBoxColorSchemes.SelectedItem = selectedScheme;
          }
-         else
+         else if (comboBoxColorSchemes.Items.Count > 0)
          {
             comboBoxColorSchemes.SelectedIndex = 0;
+         }
+      }
+
+      private void initializeColorScheme()
+      {
+         Func<string, bool> createColorScheme =
+            (filename) =>
+         {
+            try
+            {
+               _colorScheme = new ColorScheme(filename, _expressionResolver);
+               return true;
+            }
+            catch (Exception ex) // whatever de-serialization exception
+            {
+               ExceptionHandlers.Handle(ex, "Cannot create a color scheme");
+            }
+            return false;
+         };
+
+         if (comboBoxColorSchemes.SelectedIndex < 0 || comboBoxColorSchemes.Items.Count < 1)
+         {
+            // nothing is selected or list is empty, create an empty scheme
+            _colorScheme = new ColorScheme();
+         }
+
+         // try to create a scheme for the selected item
+         else if (!createColorScheme(comboBoxColorSchemes.Text))
+         {
+            _colorScheme = new ColorScheme();
+            MessageBox.Show("Cannot initialize color scheme", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 

@@ -401,7 +401,7 @@ namespace mrHelper.App.Forms
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
          this.comboBoxColorSchemes.Size = new System.Drawing.Size(159, 21);
          this.comboBoxColorSchemes.TabIndex = 9;
-         this.comboBoxColorSchemes.SelectedIndexChanged += new System.EventHandler(this.ComboBoxColorSchemes_SelectedIndexChanged);
+         this.comboBoxColorSchemes.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxColorSchemes_SelectionChangeCommited);
          // 
          // labelColorScheme
          // 

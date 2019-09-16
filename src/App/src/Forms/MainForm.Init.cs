@@ -108,6 +108,12 @@ namespace mrHelper.App.Forms
             _settings.LastSelectedHost = getHostWithPrefix(_settings.LastSelectedHost);
          }
 
+         if (_settings.ColorSchemeFileName == String.Empty)
+         {
+            // Upgrade from old versions which did not have a separate file for Default color scheme
+            _settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
+         }
+
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
@@ -193,6 +199,7 @@ namespace mrHelper.App.Forms
          createWorkflow();
          _expressionResolver = new ExpressionResolver(_workflow);
          fillColorSchemesList();
+         initializeColorScheme();
 
          subscribeToUpdates();
          createTimeTrackingManager();

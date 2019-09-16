@@ -460,22 +460,26 @@ namespace mrHelper.App.Controls
 
       private Color getNoteColor(DiscussionNote note)
       {
+         Color defaultColor = Color.White;
+
          if (note.Resolvable)
          {
             if (note.Author.Id == _mergeRequestAuthor.Id)
             {
-               return note.Resolved ? _colorScheme.GetColor("Discussions_Author_Notes_Resolved")
-                                    : _colorScheme.GetColor("Discussions_Author_Notes_Unresolved");
+               return note.Resolved
+                  ? _colorScheme.GetColorOrDefault("Discussions_Author_Notes_Resolved", defaultColor)
+                  : _colorScheme.GetColorOrDefault("Discussions_Author_Notes_Unresolved", defaultColor);
             }
             else
             {
-               return note.Resolved ? _colorScheme.GetColor("Discussions_NonAuthor_Notes_Resolved")
-                                    : _colorScheme.GetColor("Discussions_NonAuthor_Notes_Unresolved");
+               return note.Resolved
+                  ? _colorScheme.GetColorOrDefault("Discussions_NonAuthor_Notes_Resolved", defaultColor)
+                  : _colorScheme.GetColorOrDefault("Discussions_NonAuthor_Notes_Unresolved", defaultColor);
             }
          }
          else
          {
-            return _colorScheme.GetColor("Discussions_Comments");
+            return _colorScheme.GetColorOrDefault("Discussions_Comments", defaultColor);
          }
       }
 
