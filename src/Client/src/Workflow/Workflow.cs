@@ -7,6 +7,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using System.Diagnostics;
 using mrHelper.Client.Persistence;
+using System.Collections;
 
 namespace mrHelper.Client.Workflow
 {
@@ -51,39 +52,8 @@ namespace mrHelper.Client.Workflow
             }
          };
 
-         persistenceManager.OnSerialize +=
-            (writer) =>
-         {
-            writer.Set("ProjectsByHosts", _lastProjectsByHosts);
-            Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.
-               ToDictionary(item => item.Key.Host + "|" + item.Key.ProjectId.ToString(), item => item.Value);
-            writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
-         };
-
-         persistenceManager.OnDeserialize +=
-            (reader) =>
-         {
-            Dictionary<string, object> projectsByHosts =
-               (Dictionary<string, object>)reader.Get("ProjectsByHosts");
-            if (projectsByHosts != null)
-            {
-               _lastProjectsByHosts = projectsByHosts.ToDictionary(item => item.Key, item => item.Value.ToString());
-            }
-
-            Dictionary<string, object> mergeRequestsByProjects =
-               (Dictionary<string, object>)reader.Get("MergeRequestsByProjects");
-            if (mergeRequestsByProjects != null)
-            {
-               _lastMergeRequestsByProjects = mergeRequestsByProjects.
-                  ToDictionary(item =>
-                  {
-                     string host = item.Key.Split('|')[0];
-                     string projectId = item.Key.Split('|')[1];
-                     HostAndProjectId key = new HostAndProjectId { Host = host, ProjectId = int.Parse(projectId) };
-                     return key;
-                  }, item => (int)item.Value);
-            }
-         };
+         persistenceManager.OnSerialize += (writer) => onPersistenceManagerSerialize(writer);
+         persistenceManager.OnDeserialize += (reader) => onPersistenceManagerDeserialize(reader);
       }
 
       async public Task InitializeAsync(string hostname)
@@ -385,6 +355,43 @@ namespace mrHelper.Client.Workflow
       private List<Project> getEnabledProjects()
       {
          return Tools.Tools.LoadProjectsFromFile(State.HostName);
+      }
+
+      private void onPersistenceManagerSerialize(IPersistentStateSetter writer)
+      {
+         writer.Set("ProjectsByHosts", _lastProjectsByHosts);
+
+         Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.ToDictionary(
+               item => item.Key.Host + "|" + item.Key.ProjectId.ToString(),
+               item => item.Value);
+         writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
+      }
+
+      private void onPersistenceManagerDeserialize(IPersistentStateGetter reader)
+      {
+         Dictionary<string, object> projectsByHosts = (Dictionary<string, object>)reader.Get("ProjectsByHosts");
+         if (projectsByHosts != null)
+         {
+            _lastProjectsByHosts = projectsByHosts.ToDictionary(item => item.Key, item => item.Value.ToString());
+         }
+
+         Dictionary<string, object> mergeRequestsByProjects =
+            (Dictionary<string, object>)reader.Get("MergeRequestsByProjects");
+         if (mergeRequestsByProjects != null)
+         {
+            _lastMergeRequestsByProjects = mergeRequestsByProjects.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+
+                  Debug.Assert(splitted.Length == 2);
+
+                  string host = splitted[0];
+                  string projectId = splitted[1];
+                  return new HostAndProjectId { Host = host, ProjectId = int.Parse(projectId) };
+               },
+               item => (int)item.Value);
+         }
       }
 
       private UserDefinedSettings Settings { get; }

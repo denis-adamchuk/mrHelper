@@ -16,6 +16,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.TimeTracking;
 using System.Drawing;
 using mrHelper.Client.Persistence;
+using System.Collections;
 
 namespace mrHelper.App.Forms
 {
@@ -570,6 +571,51 @@ namespace mrHelper.App.Forms
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(isMergeRequestSelected ?
             _workflow.State.MergeRequestDescriptor : new Nullable<MergeRequestDescriptor>());
+      }
+
+      private void onPersistenceManagerSerialize(IPersistentStateSetter writer)
+      {
+         writer.Set("SelectedHost", _workflow.State.HostName);
+
+         Dictionary<string, HashSet<string>> reviewedCommits = _reviewedCommits.ToDictionary(
+               item => item.Key.HostName + "|" + item.Key.ProjectName + "|" + item.Key.IId.ToString(),
+               item => item.Value);
+         writer.Set("ReviewedCommits", reviewedCommits);
+      }
+
+      private void onPersistenceManagerDeserialize(IPersistentStateGetter reader)
+      {
+         string hostname = (string)reader.Get("SelectedHost");
+         if (hostname != null)
+         {
+            _initialHostName = hostname;
+         }
+
+         Dictionary<string, object> reviewedCommits = (Dictionary<string, object>)reader.Get("ReviewedCommits");
+         if (reviewedCommits != null)
+         {
+            _reviewedCommits = reviewedCommits.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+
+                  Debug.Assert(splitted.Length == 3);
+
+                  string host = splitted[0];
+                  string projectName = splitted[1];
+                  int iid = int.Parse(splitted[2]);
+                  return new MergeRequestDescriptor{ HostName = host, ProjectName = projectName, IId = iid };
+               },
+               item =>
+               {
+                  HashSet<string> commits = new HashSet<string>();
+                  foreach (string commit in (ArrayList)item.Value)
+                  {
+                     commits.Add(commit);
+                  }
+                  return commits;
+               });
+         }
       }
    }
 }

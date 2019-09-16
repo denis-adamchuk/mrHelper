@@ -214,13 +214,14 @@ namespace mrHelper.App.Forms
 
          saveInterprocessSnapshot(pid, leftSHA, rightSHA);
 
-         if (!_reviewedCommits.ContainsKey(_workflow.State.MergeRequest.Id))
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         if (!_reviewedCommits.ContainsKey(mrd))
          {
-            _reviewedCommits[_workflow.State.MergeRequest.Id] = new HashSet<string>();
+            _reviewedCommits[mrd] = new HashSet<string>();
          }
 
-         _reviewedCommits[_workflow.State.MergeRequest.Id].Add(leftSHA);
-         _reviewedCommits[_workflow.State.MergeRequest.Id].Add(rightSHA);
+         _reviewedCommits[mrd].Add(leftSHA);
+         _reviewedCommits[mrd].Add(rightSHA);
 
          comboBoxLeftCommit.Refresh();
          comboBoxRightCommit.Refresh();

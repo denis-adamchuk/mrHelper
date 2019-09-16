@@ -318,11 +318,11 @@ namespace mrHelper.App.Forms
 
       private void addCommitsToComboBoxes(List<Commit> commits, string baseSha, string targetBranch)
       {
-         var latest = new CommitComboBoxItem(commits[0])
+         CommitComboBoxItem latestCommitItem = new CommitComboBoxItem(commits[0])
          {
             IsLatest = true
          };
-         comboBoxLeftCommit.Items.Add(latest);
+         comboBoxLeftCommit.Items.Add(latestCommitItem);
          for (int i = 1; i < commits.Count; i++)
          {
             CommitComboBoxItem item = new CommitComboBoxItem(commits[i]);
@@ -335,8 +335,9 @@ namespace mrHelper.App.Forms
          }
 
          // Add target branch to the right combo-box
-         CommitComboBoxItem targetBranchItem = new CommitComboBoxItem(baseSha, targetBranch + " [Base]", null);
-         comboBoxRightCommit.Items.Add(targetBranchItem);
+         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch + " [Base]", null);
+         baseCommitItem.IsBase = true;
+         comboBoxRightCommit.Items.Add(baseCommitItem);
 
          comboBoxLeftCommit.SelectedIndex = 0;
          comboBoxRightCommit.SelectedIndex = 0;
@@ -476,7 +477,7 @@ namespace mrHelper.App.Forms
          return _timeTracker != null;
       }
 
-      System.Drawing.Color getMergeRequestColor(MergeRequest mergeRequest)
+      private System.Drawing.Color getMergeRequestColor(MergeRequest mergeRequest)
       {
          foreach (KeyValuePair<string, Color> color in _colorScheme)
          {
@@ -502,14 +503,25 @@ namespace mrHelper.App.Forms
          return System.Drawing.Color.Transparent;
       }
 
-      System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
+      private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
-         int mergeRequestId = _workflow.State.MergeRequest.Id;
-         if (!_reviewedCommits.ContainsKey(mergeRequestId) || !_reviewedCommits[mergeRequestId].Contains(item.SHA))
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         bool wasReviewed = _reviewedCommits.ContainsKey(mrd) && _reviewedCommits[mrd].Contains(item.SHA);
+         return wasReviewed || item.IsBase ?  Color.Transparent :
+            _colorScheme.GetColorOrDefault("Commits_NotReviewed", Color.Transparent);
+      }
+
+      /// <summary>
+      /// Clean up records that correspond to merge requests that have been closed
+      /// </summary>
+      private void cleanupReviewedCommits(string hostname, string projectname, List<MergeRequest> mergeRequests)
+      {
+         MergeRequestDescriptor[] toRemove = _reviewedCommits.Keys.Where(
+            (x) => x.HostName == hostname && x.ProjectName == projectname && !mergeRequests.Any((y) => x.IId == y.IId)).ToArray();
+         foreach (MergeRequestDescriptor key in toRemove)
          {
-            return _colorScheme.GetColorOrDefault("Commits_NotReviewed", Color.Transparent);
+            _reviewedCommits.Remove(key);
          }
-         return System.Drawing.Color.Transparent;
       }
    }
 }

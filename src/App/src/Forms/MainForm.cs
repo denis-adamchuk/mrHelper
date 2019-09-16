@@ -81,7 +81,8 @@ namespace mrHelper.App.Forms
       private PersistenceManager _persistenceManager;
 
       private string _initialHostName = String.Empty;
-      private Dictionary<int, HashSet<string>> _reviewedCommits = new Dictionary<int, HashSet<string>>();
+      private Dictionary<MergeRequestDescriptor, HashSet<string>> _reviewedCommits =
+         new Dictionary<MergeRequestDescriptor, HashSet<string>>();
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
@@ -99,6 +100,7 @@ namespace mrHelper.App.Forms
          internal string SHA;
          internal string Text;
          internal bool IsLatest;
+         internal bool IsBase;
          internal DateTime? TimeStamp;
 
          public override string ToString()
@@ -112,6 +114,7 @@ namespace mrHelper.App.Forms
             Text = text;
             TimeStamp = timeStamp;
             IsLatest = false;
+            IsBase = false;
          }
 
          internal CommitComboBoxItem(Commit commit)

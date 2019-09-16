@@ -30,7 +30,12 @@ namespace mrHelper.App.Forms
          _workflow.FailedSwitchHost += () => onFailedChangeHost();
 
          _workflow.PreSwitchProject += (projectname) => onChangeProject(projectname);
-         _workflow.PostSwitchProject += (state, mergeRequests) => onProjectChanged(state, mergeRequests);
+         _workflow.PostSwitchProject +=
+            (state, mergeRequests) =>
+         {
+            onProjectChanged(state, mergeRequests);
+            cleanupReviewedCommits(state.HostName, state.Project.Path_With_Namespace, mergeRequests);
+         };
          _workflow.FailedSwitchProject += () => onFailedChangeProject();
 
          _workflow.PreSwitchMergeRequest += (iid) => onChangeMergeRequest(iid);
