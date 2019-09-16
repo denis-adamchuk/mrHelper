@@ -7,7 +7,6 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace mrHelper.Client.Updates
 {
@@ -16,7 +15,7 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class UpdateManager
    {
-      public event Action<MergeRequestUpdates, bool> OnUpdate;
+      public event Action<MergeRequestUpdates> OnUpdate;
 
       public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings)
@@ -26,16 +25,10 @@ namespace mrHelper.Client.Updates
          WorkflowDetailsChecker = new WorkflowDetailsChecker();
          ProjectWatcher = new ProjectWatcher();
          Cache = new WorkflowDetailsCache(settings, workflow);
-         Cache.OnUpdate += onCacheUpdated;
 
          Timer.Elapsed += onTimer;
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
-      }
-
-      async public Task InitializeAsync()
-      {
-         await Cache.InitializeAsync();
       }
 
       public IProjectWatcher GetProjectWatcher()
@@ -64,6 +57,10 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+         string hostname = Workflow.State.HostName;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         IWorkflowDetails oldDetails = Cache.Details.Clone();
+
          try
          {
             await Cache.UpdateAsync();
@@ -71,26 +68,18 @@ namespace mrHelper.Client.Updates
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle(ex, "Auto-update failed");
+            return;
          }
-      }
-
-      /// <summary>
-      /// Process a notification from Cache
-      /// </summary>
-      private void onCacheUpdated(IWorkflowDetails oldDetails, IWorkflowDetails newDetails, bool autoupdate)
-      {
-         string hostname = Workflow.State.HostName;
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
 
          MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(hostname,
-            enabledProjects, oldDetails, newDetails);
-         ProjectWatcher.ProcessUpdates(updates, Workflow.State.HostName, newDetails);
+            enabledProjects, oldDetails, Cache.Details);
+         ProjectWatcher.ProcessUpdates(updates, Workflow.State.HostName, Cache.Details);
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated {1}, Closed {2}",
                updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
 
-         OnUpdate?.Invoke(updates, autoupdate);
+         OnUpdate?.Invoke(updates);
       }
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer

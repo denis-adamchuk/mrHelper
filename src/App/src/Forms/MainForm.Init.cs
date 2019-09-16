@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -198,15 +197,18 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
-         // Time Tracking Manager requires Workflow
-         createTimeTrackingManager();
-
          // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
 
          // Color Scheme requires Expression Resolver
          fillColorSchemesList();
          initializeColorScheme();
+
+         // Update manager indirectly subscribes to Workflow
+         subscribeToUpdates();
+
+         // Time Tracking Manager requires Workflow
+         createTimeTrackingManager();
 
          // Now we can de-serialize the persistence state, Workflow subscribed to it
          try
@@ -228,28 +230,14 @@ namespace mrHelper.App.Forms
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
-            return;
          }
-
-         // Update manager indirectly subscribes to Workflow
-         _updateManager = new UpdateManager(_workflow, this, _settings);
-
-         // Update manager initializes Details, Workflow must be initialized already
-         await _updateManager.InitializeAsync();
-
-         // Event subscription
-         subscribeToUpdates();
       }
 
       private void subscribeToUpdates()
       {
-         _updateManager.OnUpdate += async (updates, autoupdate) =>
+         _updateManager = new UpdateManager(_workflow, this, _settings);
+         _updateManager.OnUpdate += async (updates) =>
          {
-            if (!autoupdate)
-            {
-               return;
-            }
-
             notifyOnMergeRequestUpdates(updates);
 
             if (_workflow.State.Project.Id == default(Project).Id)

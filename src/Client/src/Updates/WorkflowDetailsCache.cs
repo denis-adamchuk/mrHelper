@@ -15,8 +15,6 @@ namespace mrHelper.Client.Updates
 {
    internal class WorkflowDetailsCache
    {
-      internal Action<IWorkflowDetails, IWorkflowDetails, bool> OnUpdate;
-
       internal WorkflowDetailsCache(UserDefinedSettings settings, Workflow.Workflow workflow)
       {
          Workflow = workflow;
@@ -29,14 +27,9 @@ namespace mrHelper.Client.Updates
             List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
             Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.Project.Id));
 
-            IWorkflowDetails oldDetails = OnUpdate == null ? null : Details.Clone();
-
             cacheMergeRequests(Workflow.State.HostName, Workflow.State.Project, mergeRequests);
             await cacheVersionsAsync(Workflow.State.HostName,
                InternalDetails.GetMergeRequests(getProjectKey(Workflow.State)));
-
-            Debug.Assert(oldDetails != null);
-            OnUpdate?.Invoke(oldDetails, Details, false);
          };
 
          Workflow.PostSwitchMergeRequest += async (_) =>
@@ -46,49 +39,22 @@ namespace mrHelper.Client.Updates
             List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
             Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.MergeRequest.Project_Id));
 
-            IWorkflowDetails oldDetails = OnUpdate == null ? null : Details.Clone();
-
             await cacheVersionsAsync(Workflow.State.HostName, Workflow.State.MergeRequest);
-
-            Debug.Assert(oldDetails != null);
-            OnUpdate?.Invoke(oldDetails, Details, false);
          };
-      }
-
-      internal async Task InitializeAsync()
-      {
-         Trace.TraceInformation("[WorkflowDetailsCache] Initializing");
-
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         Debug.Assert(enabledProjects.Any((x) => x.Id == Workflow.State.Project.Id));
-
-         await cacheAllAsync();
-
-         Trace.TraceInformation("[WorkflowDetailsCache] Initialized");
       }
 
       internal async Task UpdateAsync()
       {
          Trace.TraceInformation("[WorkflowDetailsCache] Processing external Update request");
 
-         IWorkflowDetails oldDetails = OnUpdate == null ? null : Details.Clone();
-
-         await cacheAllAsync();
-
-         Debug.Assert(oldDetails != null);
-         OnUpdate?.Invoke(oldDetails, Details, true);
+         await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
+         await cacheVersionsAsync(Workflow.State.HostName,
+            InternalDetails.GetMergeRequests(getProjectKey(Workflow.State)));
 
          Trace.TraceInformation("[WorkflowDetailsCache] External Update request processed");
       }
 
       internal IWorkflowDetails Details { get { return InternalDetails; } }
-
-      async private Task cacheAllAsync()
-      {
-         await cacheMergeRequestsAsync(Workflow.State.HostName, Workflow.State.Project);
-         await cacheVersionsAsync(Workflow.State.HostName,
-            InternalDetails.GetMergeRequests(getProjectKey(Workflow.State)));
-      }
 
       /// <summary>
       /// Load merge requests from GitLab and cache them
