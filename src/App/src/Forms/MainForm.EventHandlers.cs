@@ -220,7 +220,7 @@ namespace mrHelper.App.Forms
             }
 
             string labels = String.Join(", ", mergeRequest.Labels.ToArray());
-            string authorText = "Author:" + mergeRequest.Author.Name;
+            string authorText = "Author: " + mergeRequest.Author.Name;
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
             using (Font boldFont = new Font(comboBox.Font, FontStyle.Bold))
@@ -235,7 +235,7 @@ namespace mrHelper.App.Forms
                e.Graphics.DrawString(authorText, comboBox.Font, textBrush,
                   new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / 2));
 
-               e.Graphics.DrawString("[" + labels + "]", comboBox.Font, textBrush,
+               e.Graphics.DrawString(" [" + labels + "]", comboBox.Font, textBrush,
                   new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / 2));
             }
          }

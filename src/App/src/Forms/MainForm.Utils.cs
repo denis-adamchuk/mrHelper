@@ -480,6 +480,16 @@ namespace mrHelper.App.Forms
       {
          foreach (KeyValuePair<string, Color> color in _colorScheme)
          {
+            // by author
+            {
+               string colorName = String.Format("MergeRequests_{{Author:{0}}}", mergeRequest.Author.Username);
+               if (colorName == color.Key)
+               {
+                  return color.Value;
+               }
+            }
+
+            // by labels
             foreach (string label in mergeRequest.Labels)
             {
                string colorName = String.Format("MergeRequests_{{Label:{0}}}", label);
