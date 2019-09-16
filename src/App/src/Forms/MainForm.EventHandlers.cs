@@ -170,6 +170,17 @@ namespace mrHelper.App.Forms
          await changeMergeRequestAsync(mergeRequest.IId);
       }
 
+      private void ComboBoxFilteredMergeRequests_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         ComboBox comboBox = sender as ComboBox;
+         e.ItemHeight = comboBox.Font.Height * 2 + 2;
+      }
+
       private void ComboBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
       {
          if (e.Index < 0)
@@ -179,31 +190,54 @@ namespace mrHelper.App.Forms
 
          ComboBox comboBox = sender as ComboBox;
          MergeRequest mergeRequest = (MergeRequest)(comboBox.Items[e.Index]);
-         System.Drawing.Color itemBackground = getMergeRequestColor(mergeRequest);
-         string itemText = formatMergeRequestForDropdown(mergeRequest);
 
          e.DrawBackground();
 
          if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
          {
-            using (Brush brush = new SolidBrush(Color.FromArgb(225, 225, 225)))
+            Color comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
+            using (Brush brush = new SolidBrush(comboBoxEditBackColor))
             {
                e.Graphics.FillRectangle(brush, e.Bounds);
             }
-            e.Graphics.DrawString(itemText, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
-         }
-         else if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
-         {
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-            e.Graphics.DrawString(itemText, comboBox.Font, SystemBrushes.HighlightText, e.Bounds);
+
+            e.Graphics.DrawString(mergeRequest.Title, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
          }
          else
          {
-            using (Brush brush = new SolidBrush(itemBackground))
+            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+            if (isSelected)
             {
-               e.Graphics.FillRectangle(brush, e.Bounds);
+               e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
             }
-            e.Graphics.DrawString(itemText, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+            else
+            {
+               System.Drawing.Color backColor = getMergeRequestColor(mergeRequest);
+               using (Brush brush = new SolidBrush(backColor))
+               {
+                  e.Graphics.FillRectangle(brush, e.Bounds);
+               }
+            }
+
+            string labels = String.Join(", ", mergeRequest.Labels.ToArray());
+            string authorText = "Author:" + mergeRequest.Author.Name;
+            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+
+            using (Font boldFont = new Font(comboBox.Font, FontStyle.Bold))
+            {
+               // first row
+               e.Graphics.DrawString(mergeRequest.Title, boldFont, textBrush,
+                  new PointF(e.Bounds.X, e.Bounds.Y));
+
+               // second row
+               SizeF authorTextSize = e.Graphics.MeasureString(authorText, comboBox.Font);
+
+               e.Graphics.DrawString(authorText, comboBox.Font, textBrush,
+                  new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / 2));
+
+               e.Graphics.DrawString("[" + labels + "]", comboBox.Font, textBrush,
+                  new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / 2));
+            }
          }
 
          e.DrawFocusRectangle();
