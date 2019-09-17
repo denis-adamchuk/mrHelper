@@ -8,6 +8,7 @@ using mrHelper.Client.Tools;
 using System.Diagnostics;
 using mrHelper.Client.Persistence;
 using System.Collections;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
 {
@@ -144,6 +145,10 @@ namespace mrHelper.Client.Workflow
       public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
 
+      public event Action PreLoadLatestVersion;
+      public event Action<WorkflowState, Version> PostLoadLatestVersion;
+      public event Action FailedLoadLatestVersion;
+
       public WorkflowState State { get; private set; }
 
       async private Task switchHostAsync(string hostName)
@@ -268,11 +273,11 @@ namespace mrHelper.Client.Workflow
 
          PostSwitchMergeRequest?.Invoke(State);
 
-         if (!await loadCommitsAsync())
+         if (!await loadCommitsAsync() || !await loadSystemNotesAsync())
          {
-            return; // silent return
+            return;
          }
-         await loadSystemNotesAsync();
+         await loadLatestVersionAsync();
       }
 
       async private Task<bool> loadCommitsAsync()
@@ -299,7 +304,7 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      async private Task loadSystemNotesAsync()
+      async private Task<bool> loadSystemNotesAsync()
       {
          PreLoadSystemNotes?.Invoke();
          List<Note> notes;
@@ -313,13 +318,39 @@ namespace mrHelper.Client.Workflow
             if (cancelled)
             {
                Trace.TraceInformation(String.Format("[Workflow] Cancelled loading system notes"));
-               return; // silent return
+               return false; // silent return
             }
             FailedLoadSystemNotes?.Invoke();
             throw new WorkflowException(String.Format(
                "Cannot load system notes for merge request with IId {0}", State.MergeRequest.IId));
          }
          PostLoadSystemNotes?.Invoke(State, notes);
+         return true;
+      }
+
+      async private Task<bool> loadLatestVersionAsync()
+      {
+         PreLoadLatestVersion?.Invoke();
+         Version latestVersion;
+         try
+         {
+            latestVersion = await Operator.GetLatestVersionAsync(
+               State.Project.Path_With_Namespace, State.MergeRequest.IId);
+         }
+         catch (OperatorException ex)
+         {
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            if (cancelled)
+            {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading latest version"));
+               return false; // silent return
+            }
+            FailedLoadLatestVersion?.Invoke();
+            throw new WorkflowException(String.Format(
+               "Cannot load latest version for merge request with IId {0}", State.MergeRequest.IId));
+         }
+         PostLoadLatestVersion?.Invoke(State, latestVersion);
+         return true;
       }
 
       private string selectProjectFromList(List<Project> projects)

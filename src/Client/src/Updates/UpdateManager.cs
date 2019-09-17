@@ -43,19 +43,14 @@ namespace mrHelper.Client.Updates
             Cache.UpdateMergeRequests(state.HostName, state.Project, mergeRequests);
          };
 
-         Workflow.PostSwitchMergeRequest += async (state) =>
+         Workflow.PostLoadLatestVersion += (state, version) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing merge request switch");
+            Trace.TraceInformation("[UpdateManager] Processing latest version load");
 
             List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
             Debug.Assert(enabledProjects.Any((x) => x.Id == state.MergeRequest.Project_Id));
 
-            int mergeRequestId = state.MergeRequest.Id;
-            Version? latestVersion = await loadLatestVersionAsync(state.MergeRequestDescriptor);
-            if (latestVersion != null)
-            {
-               Cache.UpdateLatestVersion(mergeRequestId, latestVersion.Value);
-            }
+            Cache.UpdateLatestVersion(state.MergeRequest.Id, version);
          };
       }
 
@@ -151,7 +146,7 @@ namespace mrHelper.Client.Updates
          catch (OperatorException ex)
          {
             string message = String.Format(
-               "UpdateManager. Cannot load merge requests. HostName={0}, ProjectName={1}", hostname, projectname);
+               "[UpdateManager] Cannot load merge requests. HostName={0}, ProjectName={1}", hostname, projectname);
             ExceptionHandlers.Handle(ex, message);
          }
          return null;
@@ -166,7 +161,7 @@ namespace mrHelper.Client.Updates
          catch (OperatorException ex)
          {
             string message = String.Format(
-               "UpdateManager. Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
+               "[UpdateManager] Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
                mrd.HostName, mrd.ProjectName, mrd.IId);
             ExceptionHandlers.Handle(ex, message);
          }
