@@ -45,6 +45,10 @@ namespace mrHelper.App.Forms
          _workflow.PreLoadCommits += () => onLoadCommits();
          _workflow.PostLoadCommits += (state, commits) => onCommitsLoaded(state, commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
+
+         _workflow.PreLoadLatestVersion += () => onLoadLatestVersion();
+         _workflow.PostLoadLatestVersion += (state, version) => onLatestVersionLoaded();
+         _workflow.FailedLoadLatestVersion += () => onFailedLoadLatestVersion();
       }
 
       async private Task initializeWorkflow()
@@ -327,6 +331,28 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count));
+      }
+
+      private void onLoadLatestVersion()
+      {
+         enableCommitActions(false);
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading latest version"));
+      }
+
+      private void onFailedLoadLatestVersion()
+      {
+         labelWorkflowStatus.Text = "Failed to load latest version";
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load latest version"));
+      }
+
+      private void onLatestVersionLoaded()
+      {
+         if (comboBoxLeftCommit.Enabled)
+         {
+            Debug.Assert(comboBoxRightCommit.Enabled);
+            enableCommitActions(true);
+         }
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
       }
 
       private void onLoadTotalTime()
