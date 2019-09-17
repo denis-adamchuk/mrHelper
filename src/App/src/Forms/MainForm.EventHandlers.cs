@@ -202,7 +202,11 @@ namespace mrHelper.App.Forms
 
          if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
          {
-            Color comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
+            Color comboBoxEditBackColor = getMergeRequestColor(mergeRequest);
+            if (comboBoxEditBackColor == Color.Transparent)
+            {
+               comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
+            }
             using (Brush brush = new SolidBrush(comboBoxEditBackColor))
             {
                e.Graphics.FillRectangle(brush, e.Bounds);
@@ -268,7 +272,6 @@ namespace mrHelper.App.Forms
             if (comboBoxEditBackColor == Color.Transparent)
             {
                comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
-;
             }
             using (Brush brush = new SolidBrush(comboBoxEditBackColor))
             {
