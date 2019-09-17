@@ -199,6 +199,7 @@ namespace mrHelper.App.Forms
             e.Graphics.FillRectangle(brush, e.Bounds);
          }
 
+         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
          e.Graphics.DrawString(text, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
       }
 
@@ -242,11 +243,11 @@ namespace mrHelper.App.Forms
             string authorText = "Author: " + mergeRequest.Author.Name;
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             using (Font boldFont = new Font(comboBox.Font, FontStyle.Bold))
             {
                // first row
-               e.Graphics.DrawString(mergeRequest.Title, boldFont, textBrush,
-                  new PointF(e.Bounds.X, e.Bounds.Y));
+               e.Graphics.DrawString(mergeRequest.Title, boldFont, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
 
                // second row
                SizeF authorTextSize = e.Graphics.MeasureString(authorText, comboBox.Font);
@@ -284,6 +285,7 @@ namespace mrHelper.App.Forms
             fillComboboxItemRectangle(e, getCommitComboBoxItemColor(item), isSelected);
 
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
          }
 
