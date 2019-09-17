@@ -240,10 +240,10 @@ namespace mrHelper.App.Forms
                SizeF authorTextSize = e.Graphics.MeasureString(authorText, comboBox.Font);
 
                e.Graphics.DrawString(authorText, comboBox.Font, textBrush,
-                  new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / 2));
+                  new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / (float)2));
 
                e.Graphics.DrawString(" [" + labels + "]", comboBox.Font, textBrush,
-                  new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / 2));
+                  new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / (float)2));
             }
          }
 
