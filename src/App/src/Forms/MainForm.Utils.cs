@@ -500,15 +500,15 @@ namespace mrHelper.App.Forms
                }
             }
          }
-         return System.Drawing.Color.Transparent;
+         return SystemColors.Window;
       }
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
          MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
          bool wasReviewed = _reviewedCommits.ContainsKey(mrd) && _reviewedCommits[mrd].Contains(item.SHA);
-         return wasReviewed || item.IsBase ?  Color.Transparent :
-            _colorScheme.GetColorOrDefault("Commits_NotReviewed", Color.Transparent);
+         return wasReviewed || item.IsBase ? SystemColors.Window :
+            _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);
       }
 
       /// <summary>

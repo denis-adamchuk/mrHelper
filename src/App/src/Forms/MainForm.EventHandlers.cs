@@ -190,7 +190,7 @@ namespace mrHelper.App.Forms
 
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
       {
-         if (backColor == Color.Transparent)
+         if (backColor == SystemColors.Window)
          {
             backColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
          }
