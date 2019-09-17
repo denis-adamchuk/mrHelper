@@ -232,12 +232,7 @@ namespace mrHelper.App.Forms
             Close();
          }
 
-         if (!await _updateManager.InitializeAsync())
-         {
-            MessageBox.Show("Cannot initialize Update Manager. Application cannot start. See logs for details",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Close();
-         }
+         await _updateManager.InitializeAsync();
       }
 
       private void subscribeToUpdates()
