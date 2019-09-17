@@ -255,9 +255,16 @@ namespace mrHelper.App.Forms
 
             // TODO This should use ProjectKey instead of ProjectId
             // check if currently selected project is affected by update
-            if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-             || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
+
+            // Below conditions are commented out to reload lists on each update
+            // This is needed to update merge request colors due to changed labels.
+            // This works around imperfect comparison logic inside WorkflowDetialsChecker.
+            // TODO Change WorkflowDetailsChecker comparison logic to have merge requests
+            // with changed labels among UpdatedMergeRequests
+
+            //if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+            // || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+            // || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
             {
                // emulate project change to reload merge request list
                // This will automatically update commit list (if there are new ones).
