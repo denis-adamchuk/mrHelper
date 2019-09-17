@@ -37,8 +37,7 @@ namespace mrHelper.Client.Updates
          {
             Trace.TraceInformation("[UpdateManager] Processing project switch");
 
-            List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-            Debug.Assert(enabledProjects.Any((x) => x.Id == state.Project.Id));
+            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.Project.Id));
 
             Cache.UpdateMergeRequests(state.HostName, state.Project, mergeRequests);
          };
@@ -47,11 +46,23 @@ namespace mrHelper.Client.Updates
          {
             Trace.TraceInformation("[UpdateManager] Processing latest version load");
 
-            List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-            Debug.Assert(enabledProjects.Any((x) => x.Id == state.MergeRequest.Project_Id));
+            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.MergeRequest.Project_Id));
 
             Cache.UpdateLatestVersion(state.MergeRequest.Id, version);
          };
+      }
+
+      async public Task<bool> InitializeAsync()
+      {
+         Trace.TraceInformation("[UpdateManager] Initializing");
+
+         string hostname = Workflow.State.HostName;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         bool result = await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
+
+         Trace.TraceInformation("[UpdateManager] Initialized");
+
+         return result;
       }
 
       public IProjectWatcher GetProjectWatcher()
@@ -80,13 +91,11 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         string hostname = Workflow.State.HostName;
-         Project project = Workflow.State.Project;
-
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
-         if (!await loadDataAndUpdateCacheAsync(hostname, project))
+         string hostname = Workflow.State.HostName;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         if (!await loadDataAndUpdateCacheAsync(hostname, enabledProjects))
          {
             Trace.TraceError("Auto-update failed");
             return;
@@ -103,35 +112,38 @@ namespace mrHelper.Client.Updates
          OnUpdate?.Invoke(updates);
       }
 
-      async private Task<bool> loadDataAndUpdateCacheAsync(string hostname, Project project)
+      async private Task<bool> loadDataAndUpdateCacheAsync(string hostname, List<Project> projects)
       {
-         List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
-         if (mergeRequests == null)
+         foreach (Project project in projects)
          {
-            return false;
-         }
+            List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
+            if (mergeRequests == null)
+            {
+               return false;
+            }
 
-         Dictionary<int, Version> latestVersions = new Dictionary<int, Version>();
-         foreach (MergeRequest mergeRequest in mergeRequests)
-         {
-            MergeRequestDescriptor mrd = new MergeRequestDescriptor
+            Dictionary<int, Version> latestVersions = new Dictionary<int, Version>();
+            foreach (MergeRequest mergeRequest in mergeRequests)
+            {
+               MergeRequestDescriptor mrd = new MergeRequestDescriptor
                {
                   HostName = hostname,
                   ProjectName = project.Path_With_Namespace,
                   IId = mergeRequest.IId
                };
 
-            Version? latestVersion = await loadLatestVersionAsync(mrd);
-            if (latestVersion != null)
-            {
-               latestVersions[mergeRequest.Id] = latestVersion.Value;
+               Version? latestVersion = await loadLatestVersionAsync(mrd);
+               if (latestVersion != null)
+               {
+                  latestVersions[mergeRequest.Id] = latestVersion.Value;
+               }
             }
-         }
 
-         Cache.UpdateMergeRequests(hostname, project, mergeRequests);
-         foreach (KeyValuePair<int, Version> latestVersion in latestVersions)
-         {
-            Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
+            Cache.UpdateMergeRequests(hostname, project, mergeRequests);
+            foreach (KeyValuePair<int, Version> latestVersion in latestVersions)
+            {
+               Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
+            }
          }
 
          return true;

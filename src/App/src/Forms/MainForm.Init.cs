@@ -231,6 +231,13 @@ namespace mrHelper.App.Forms
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
          }
+
+         if (!await _updateManager.InitializeAsync())
+         {
+            MessageBox.Show("Cannot initialize Update Manager. Application cannot start. See logs for details",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+         }
       }
 
       private void subscribeToUpdates()
