@@ -9,6 +9,7 @@ using System.Diagnostics;
 using mrHelper.Client.Persistence;
 using System.Collections;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Workflow
 {
@@ -268,7 +269,7 @@ namespace mrHelper.Client.Workflow
 
          State.MergeRequest = mergeRequest;
 
-         HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
+         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;
 
          PostSwitchMergeRequest?.Invoke(State);
@@ -371,7 +372,7 @@ namespace mrHelper.Client.Workflow
       {
          mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
 
-         HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
+         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
             // ... and if such MR still exists in a list of MRs
@@ -393,7 +394,7 @@ namespace mrHelper.Client.Workflow
          writer.Set("ProjectsByHosts", _lastProjectsByHosts);
 
          Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.ToDictionary(
-               item => item.Key.Host + "|" + item.Key.ProjectId.ToString(),
+               item => item.Key.HostName + "|" + item.Key.ProjectId.ToString(),
                item => item.Value);
          writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
       }
@@ -419,7 +420,7 @@ namespace mrHelper.Client.Workflow
 
                   string host = splitted[0];
                   string projectId = splitted[1];
-                  return new HostAndProjectId { Host = host, ProjectId = int.Parse(projectId) };
+                  return new ProjectKey { HostName = host, ProjectId = int.Parse(projectId) };
                },
                item => (int)item.Value);
          }
@@ -429,13 +430,7 @@ namespace mrHelper.Client.Workflow
       private WorkflowDataOperator Operator { get; set; }
 
       private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
-      private struct HostAndProjectId
-      {
-         public string Host;
-         public int ProjectId;
-      }
-      private Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects =
-         new Dictionary<HostAndProjectId, int>();
+      private Dictionary<ProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<ProjectKey, int>();
    }
 }
 

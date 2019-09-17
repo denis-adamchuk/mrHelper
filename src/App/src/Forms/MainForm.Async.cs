@@ -102,10 +102,11 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     if (!getGitClient(mrd.HostName, mrd.ProjectName).DoesRequireClone())
+                     GitClient gitClient = getGitClient(mrd.HostName, mrd.ProjectName);
+                     if (!gitClient.DoesRequireClone())
                      {
                         // Using remote checker because there are might be discussions reported by other users on newer commits
-                        await getGitClient(mrd.HostName, mrd.ProjectName).Updater.ManualUpdateAsync(
+                        await gitClient.Updater.ManualUpdateAsync(
                            _updateManager.GetRemoteProjectChecker(_workflow.State.MergeRequestDescriptor), null);
                      }
                   }

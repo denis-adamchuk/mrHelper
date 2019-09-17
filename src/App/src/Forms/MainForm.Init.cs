@@ -246,6 +246,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            // TODO This should use ProjectKey instead of ProjectId
             // check if currently selected project is affected by update
             if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
              || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)

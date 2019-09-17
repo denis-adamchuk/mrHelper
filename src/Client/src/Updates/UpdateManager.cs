@@ -86,7 +86,7 @@ namespace mrHelper.Client.Updates
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
-         if (!await updateCacheAsync(hostname, project))
+         if (!await loadDataAndUpdateCacheAsync(hostname, project))
          {
             Trace.TraceError("Auto-update failed");
             return;
@@ -103,7 +103,7 @@ namespace mrHelper.Client.Updates
          OnUpdate?.Invoke(updates);
       }
 
-      async private Task<bool> updateCacheAsync(string hostname, Project project)
+      async private Task<bool> loadDataAndUpdateCacheAsync(string hostname, Project project)
       {
          List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
          if (mergeRequests == null)
