@@ -7,8 +7,8 @@ using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
-using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Common;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
 {

@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using System.Diagnostics;
-using mrHelper.Client.Persistence;
-using System.Collections;
-using Version = GitLabSharp.Entities.Version;
 using mrHelper.Common.Types;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Persistence;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
 {

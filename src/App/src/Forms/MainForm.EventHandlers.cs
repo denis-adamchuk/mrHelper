@@ -1,4 +1,6 @@
 using System;
+using System.Drawing;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,10 +15,8 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client.Tools;
-using mrHelper.Client.TimeTracking;
-using System.Drawing;
 using mrHelper.Client.Persistence;
-using System.Collections;
+using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
 {
@@ -188,6 +188,35 @@ namespace mrHelper.App.Forms
          e.ItemHeight = comboBox.Font.Height * 2 + 2;
       }
 
+      private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
+      {
+         if (backColor == Color.Transparent)
+         {
+            backColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
+         }
+         using (Brush brush = new SolidBrush(backColor))
+         {
+            e.Graphics.FillRectangle(brush, e.Bounds);
+         }
+
+         e.Graphics.DrawString(text, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+      }
+
+      private void fillComboboxItemRectangle(DrawItemEventArgs e, Color backColor, bool isSelected)
+      {
+         if (isSelected)
+         {
+            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+         }
+         else
+         {
+            using (Brush brush = new SolidBrush(backColor))
+            {
+               e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+         }
+      }
+
       private void ComboBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
       {
          if (e.Index < 0)
@@ -202,33 +231,12 @@ namespace mrHelper.App.Forms
 
          if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
          {
-            Color comboBoxEditBackColor = getMergeRequestColor(mergeRequest);
-            if (comboBoxEditBackColor == Color.Transparent)
-            {
-               comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
-            }
-            using (Brush brush = new SolidBrush(comboBoxEditBackColor))
-            {
-               e.Graphics.FillRectangle(brush, e.Bounds);
-            }
-
-            e.Graphics.DrawString(mergeRequest.Title, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+            drawComboBoxEdit(e, comboBox, getMergeRequestColor(mergeRequest), mergeRequest.Title);
          }
          else
          {
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            if (isSelected)
-            {
-               e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-            }
-            else
-            {
-               System.Drawing.Color backColor = getMergeRequestColor(mergeRequest);
-               using (Brush brush = new SolidBrush(backColor))
-               {
-                  e.Graphics.FillRectangle(brush, e.Bounds);
-               }
-            }
+            fillComboboxItemRectangle(e, getMergeRequestColor(mergeRequest), isSelected);
 
             string labels = String.Join(", ", mergeRequest.Labels.ToArray());
             string authorText = "Author: " + mergeRequest.Author.Name;
@@ -268,33 +276,12 @@ namespace mrHelper.App.Forms
 
          if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
          {
-            Color comboBoxEditBackColor = getCommitComboBoxItemColor(item);
-            if (comboBoxEditBackColor == Color.Transparent)
-            {
-               comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
-            }
-            using (Brush brush = new SolidBrush(comboBoxEditBackColor))
-            {
-               e.Graphics.FillRectangle(brush, e.Bounds);
-            }
-
-            e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+            drawComboBoxEdit(e, comboBox, getCommitComboBoxItemColor(item), formatCommitComboboxItem(item));
          }
          else
          {
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            if (isSelected)
-            {
-               e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-            }
-            else
-            {
-               System.Drawing.Color backColor = getCommitComboBoxItemColor(item);
-               using (Brush brush = new SolidBrush(backColor))
-               {
-                  e.Graphics.FillRectangle(brush, e.Bounds);
-               }
-            }
+            fillComboboxItemRectangle(e, getCommitComboBoxItemColor(item), isSelected);
 
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
