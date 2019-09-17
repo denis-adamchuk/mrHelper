@@ -22,7 +22,7 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      internal Workflow(UserDefinedSettings settings, PersistenceManager persistenceManager)
+      internal Workflow(UserDefinedSettings settings, PersistentStorage persistentStorage)
       {
          Settings = settings;
          Settings.PropertyChanged += async (sender, property) =>
@@ -53,8 +53,8 @@ namespace mrHelper.Client.Workflow
             }
          };
 
-         persistenceManager.OnSerialize += (writer) => onPersistenceManagerSerialize(writer);
-         persistenceManager.OnDeserialize += (reader) => onPersistenceManagerDeserialize(reader);
+         persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
+         persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
       }
 
       async public Task InitializeAsync(string hostname)
@@ -388,7 +388,7 @@ namespace mrHelper.Client.Workflow
          return Tools.Tools.LoadProjectsFromFile(State.HostName);
       }
 
-      private void onPersistenceManagerSerialize(IPersistentStateSetter writer)
+      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
       {
          writer.Set("ProjectsByHosts", _lastProjectsByHosts);
 
@@ -398,7 +398,7 @@ namespace mrHelper.Client.Workflow
          writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
       }
 
-      private void onPersistenceManagerDeserialize(IPersistentStateGetter reader)
+      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
       {
          Dictionary<string, object> projectsByHosts = (Dictionary<string, object>)reader.Get("ProjectsByHosts");
          if (projectsByHosts != null)

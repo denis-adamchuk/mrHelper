@@ -45,7 +45,7 @@ namespace mrHelper.App.Forms
             {
                try
                {
-                  _persistenceManager.Serialize();
+                  _persistentStorage.Serialize();
                }
                catch (PersistenceStateSerializationException ex)
                {
@@ -573,7 +573,7 @@ namespace mrHelper.App.Forms
             _workflow.State.MergeRequestDescriptor : new Nullable<MergeRequestDescriptor>());
       }
 
-      private void onPersistenceManagerSerialize(IPersistentStateSetter writer)
+      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
       {
          writer.Set("SelectedHost", _workflow.State.HostName);
 
@@ -583,7 +583,7 @@ namespace mrHelper.App.Forms
          writer.Set("ReviewedCommits", reviewedCommits);
       }
 
-      private void onPersistenceManagerDeserialize(IPersistentStateGetter reader)
+      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
       {
          string hostname = (string)reader.Get("SelectedHost");
          if (hostname != null)

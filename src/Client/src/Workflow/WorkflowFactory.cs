@@ -11,19 +11,19 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class WorkflowFactory
    {
-      public WorkflowFactory(UserDefinedSettings settings, PersistenceManager persistenceManager)
+      public WorkflowFactory(UserDefinedSettings settings, PersistentStorage persistentStorage)
       {
          Settings = settings;
-         PersistenceManager = persistenceManager;
+         PersistentStorage = persistentStorage;
       }
 
       public Workflow CreateWorkflow()
       {
-         return new Workflow(Settings, PersistenceManager);
+         return new Workflow(Settings, PersistentStorage);
       }
 
       private readonly UserDefinedSettings Settings;
-      private readonly PersistenceManager PersistenceManager;
+      private readonly PersistentStorage PersistentStorage;
    }
 }
 

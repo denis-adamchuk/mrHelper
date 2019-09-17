@@ -179,11 +179,11 @@ namespace mrHelper.App.Forms
       {
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
-         _persistenceManager = new PersistenceManager();
-         _persistenceManager.OnSerialize += (writer) => onPersistenceManagerSerialize(writer);
-         _persistenceManager.OnDeserialize += (reader) => onPersistenceManagerDeserialize(reader);
+         _persistentStorage = new PersistentStorage();
+         _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
+         _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _workflowFactory = new WorkflowFactory(_settings, _persistenceManager);
+         _workflowFactory = new WorkflowFactory(_settings, _persistentStorage);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -210,10 +210,10 @@ namespace mrHelper.App.Forms
          // Time Tracking Manager requires Workflow
          createTimeTrackingManager();
 
-         // Now we can de-serialize the persistence state, Workflow subscribed to it
+         // Now we can de-serialize the persistence state, Workflow subscribed to Storage callbacks
          try
          {
-            _persistenceManager.Deserialize();
+            _persistentStorage.Deserialize();
          }
          catch (PersistenceStateDeserializationException ex)
          {

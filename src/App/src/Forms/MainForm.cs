@@ -78,7 +78,7 @@ namespace mrHelper.App.Forms
       private DiscussionManager _discussionManager;
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
-      private PersistenceManager _persistenceManager;
+      private PersistentStorage _persistentStorage;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestDescriptor, HashSet<string>> _reviewedCommits =

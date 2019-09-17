@@ -6,21 +6,15 @@ namespace mrHelper.Client.Persistence
 {
    public class PersistenceStateSerializationException : Exception
    {
-      internal PersistenceStateSerializationException(string message, Exception exception)
-         : base(message, exception)
-      {
-      }
+      internal PersistenceStateSerializationException(string msg, Exception exception) : base(msg, exception) { }
    }
 
    public class PersistenceStateDeserializationException : Exception
    {
-      internal PersistenceStateDeserializationException(string message, Exception exception)
-         : base(message, exception)
-      {
-      }
+      internal PersistenceStateDeserializationException(string msg, Exception exception) : base(msg, exception) { }
    }
 
-   public class PersistenceManager
+   public class PersistentStorage
    {
       public event Action<IPersistentStateSetter> OnSerialize;
       public event Action<IPersistentStateGetter> OnDeserialize;
@@ -31,9 +25,15 @@ namespace mrHelper.Client.Persistence
       public void Serialize()
       {
          PersistentState state = new PersistentState();
-         OnSerialize?.Invoke(state);
-
-         saveToFile(state);
+         try
+         {
+            OnSerialize?.Invoke(state);
+            saveToFile(state);
+         }
+         catch (Exception ex)
+         {
+            throw new PersistenceStateSerializationException("Cannot serialize state", ex);
+         }
       }
 
       /// <summary>
@@ -41,44 +41,32 @@ namespace mrHelper.Client.Persistence
       /// </summary>
       public void Deserialize()
       {
-         PersistentState state = loadFromFile();
-
-         OnDeserialize?.Invoke(state);
+         try
+         {
+            PersistentState state = loadFromFile();
+            OnDeserialize?.Invoke(state);
+         }
+         catch (Exception ex)
+         {
+            throw new PersistenceStateDeserializationException("Cannot deserialize state", ex);
+         }
       }
 
       private void saveToFile(PersistentState state)
       {
-         string json = String.Empty;
-         try
-         {
-            json = state.ToJson();
-         }
-         catch (Exception ex)
-         {
-            throw new PersistenceStateSerializationException("Cannot serialize state", ex);
-         }
-         System.IO.File.WriteAllText(getFilePath(), json);
+         System.IO.File.WriteAllText(getFilePath(), state.ToJson());
       }
 
       private PersistentState loadFromFile()
       {
-         if (!System.IO.File.Exists(getFilePath()))
+         string filePath = getFilePath();
+         if (!System.IO.File.Exists(filePath))
          {
             return new PersistentState();
          }
-         else
-         {
-            string json = System.IO.File.ReadAllText(getFilePath());
 
-            try
-            {
-               return new PersistentState(json);
-            }
-            catch (Exception ex)
-            {
-               throw new PersistenceStateDeserializationException("Cannot deserialize state", ex);
-            }
-         }
+         string json = System.IO.File.ReadAllText(filePath);
+         return new PersistentState(json);
       }
 
       private string getFilePath()
