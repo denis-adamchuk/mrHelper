@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
+using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Updates
 {
-   internal struct ProjectKey
-   {
-      public string HostName;
-      public int ProjectId;
-   }
-
    internal interface IWorkflowDetails
    {
       /// <summary>

@@ -30,7 +30,12 @@ namespace mrHelper.App.Forms
          _workflow.FailedSwitchHost += () => onFailedChangeHost();
 
          _workflow.PreSwitchProject += (projectname) => onChangeProject(projectname);
-         _workflow.PostSwitchProject += (state, mergeRequests) => onProjectChanged(state, mergeRequests);
+         _workflow.PostSwitchProject +=
+            (state, mergeRequests) =>
+         {
+            onProjectChanged(state, mergeRequests);
+            cleanupReviewedCommits(state.HostName, state.Project.Path_With_Namespace, mergeRequests);
+         };
          _workflow.FailedSwitchProject += () => onFailedChangeProject();
 
          _workflow.PreSwitchMergeRequest += (iid) => onChangeMergeRequest(iid);
@@ -40,6 +45,10 @@ namespace mrHelper.App.Forms
          _workflow.PreLoadCommits += () => onLoadCommits();
          _workflow.PostLoadCommits += (state, commits) => onCommitsLoaded(state, commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
+
+         _workflow.PreLoadLatestVersion += () => onLoadLatestVersion();
+         _workflow.PostLoadLatestVersion += (state, version) => onLatestVersionLoaded();
+         _workflow.FailedLoadLatestVersion += () => onFailedLoadLatestVersion();
       }
 
       async private Task initializeWorkflow()
@@ -47,7 +56,7 @@ namespace mrHelper.App.Forms
          string hostname = getInitialHostName();
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
 
-         await _workflow.Initialize(hostname);
+         await _workflow.InitializeAsync(hostname);
       }
 
       async private Task changeHostAsync(string hostName)
@@ -322,6 +331,28 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count));
+      }
+
+      private void onLoadLatestVersion()
+      {
+         enableCommitActions(false);
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading latest version"));
+      }
+
+      private void onFailedLoadLatestVersion()
+      {
+         labelWorkflowStatus.Text = "Failed to load latest version";
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load latest version"));
+      }
+
+      private void onLatestVersionLoaded()
+      {
+         if (comboBoxLeftCommit.Enabled)
+         {
+            Debug.Assert(comboBoxRightCommit.Enabled);
+            enableCommitActions(true);
+         }
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
       }
 
       private void onLoadTotalTime()

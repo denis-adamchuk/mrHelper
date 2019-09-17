@@ -7,6 +7,8 @@ using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Common;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
 {
@@ -77,26 +79,9 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName)
+      internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName)
       {
-         List<MergeRequest> mergeRequests = null;
-         try
-         {
-            mergeRequests = (List<MergeRequest>)(await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
-                  new MergeRequestsFilter())));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
-
-         return mergeRequests;
+         return CommonOperator.GetMergeRequestsAsync(Client, projectName);
       }
 
       async internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
@@ -153,6 +138,11 @@ namespace mrHelper.Client.Workflow
             throw;
          }
          return allNotes.Where((x) => x.System == true).ToList();
+      }
+
+      internal Task<Version> GetLatestVersionAsync(string projectName, int iid)
+      {
+         return CommonOperator.GetLatestVersionAsync(Client, projectName, iid);
       }
 
       public Task CancelAsync()

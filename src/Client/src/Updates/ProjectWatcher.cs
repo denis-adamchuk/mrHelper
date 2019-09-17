@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
+using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Updates
 {

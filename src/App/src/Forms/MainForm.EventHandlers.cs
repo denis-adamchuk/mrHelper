@@ -1,4 +1,6 @@
 using System;
+using System.Drawing;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,8 +15,8 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
-using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -39,10 +41,19 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            Core.Interprocess.SnapshotSerializer.CleanUpSnapshots();
-
             if (_workflow != null)
             {
+               try
+               {
+                  _persistentStorage.Serialize();
+               }
+               catch (PersistenceStateSerializationException ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot serialize the state");
+               }
+
+               Core.Interprocess.SnapshotSerializer.CleanUpSnapshots();
+
                Hide();
                e.Cancel = true;
                await _workflow.CancelAsync();
@@ -149,16 +160,12 @@ namespace mrHelper.App.Forms
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
          string hostname = (sender as ComboBox).Text;
-         _settings.LastSelectedHost = hostname;
-
          await changeHostAsync(hostname);
       }
 
       async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
       {
          string projectname = (sender as ComboBox).Text;
-         _settings.LastSelectedProject = projectname;
-
          await changeProjectAsync(projectname);
       }
 
@@ -181,6 +188,35 @@ namespace mrHelper.App.Forms
          e.ItemHeight = comboBox.Font.Height * 2 + 2;
       }
 
+      private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
+      {
+         if (backColor == Color.Transparent)
+         {
+            backColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
+         }
+         using (Brush brush = new SolidBrush(backColor))
+         {
+            e.Graphics.FillRectangle(brush, e.Bounds);
+         }
+
+         e.Graphics.DrawString(text, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+      }
+
+      private void fillComboboxItemRectangle(DrawItemEventArgs e, Color backColor, bool isSelected)
+      {
+         if (isSelected)
+         {
+            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+         }
+         else
+         {
+            using (Brush brush = new SolidBrush(backColor))
+            {
+               e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+         }
+      }
+
       private void ComboBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
       {
          if (e.Index < 0)
@@ -195,29 +231,12 @@ namespace mrHelper.App.Forms
 
          if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
          {
-            Color comboBoxEditBackColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
-            using (Brush brush = new SolidBrush(comboBoxEditBackColor))
-            {
-               e.Graphics.FillRectangle(brush, e.Bounds);
-            }
-
-            e.Graphics.DrawString(mergeRequest.Title, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
+            drawComboBoxEdit(e, comboBox, getMergeRequestColor(mergeRequest), mergeRequest.Title);
          }
          else
          {
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            if (isSelected)
-            {
-               e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-            }
-            else
-            {
-               System.Drawing.Color backColor = getMergeRequestColor(mergeRequest);
-               using (Brush brush = new SolidBrush(backColor))
-               {
-                  e.Graphics.FillRectangle(brush, e.Bounds);
-               }
-            }
+            fillComboboxItemRectangle(e, getMergeRequestColor(mergeRequest), isSelected);
 
             string labels = String.Join(", ", mergeRequest.Labels.ToArray());
             string authorText = "Author: " + mergeRequest.Author.Name;
@@ -233,11 +252,39 @@ namespace mrHelper.App.Forms
                SizeF authorTextSize = e.Graphics.MeasureString(authorText, comboBox.Font);
 
                e.Graphics.DrawString(authorText, comboBox.Font, textBrush,
-                  new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / 2));
+                  new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / (float)2));
 
                e.Graphics.DrawString(" [" + labels + "]", comboBox.Font, textBrush,
-                  new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / 2));
+                  new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / (float)2));
             }
+         }
+
+         e.DrawFocusRectangle();
+      }
+
+      private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         ComboBox comboBox = sender as ComboBox;
+         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.Items[e.Index]);
+
+         e.DrawBackground();
+
+         if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
+         {
+            drawComboBoxEdit(e, comboBox, getCommitComboBoxItemColor(item), formatCommitComboboxItem(item));
+         }
+         else
+         {
+            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+            fillComboboxItemRectangle(e, getCommitComboBoxItemColor(item), isSelected);
+
+            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+            e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
          }
 
          e.DrawFocusRectangle();
@@ -268,11 +315,6 @@ namespace mrHelper.App.Forms
       private void ComboBoxProjects_Format(object sender, ListControlConvertEventArgs e)
       {
          formatProjectsListItem(e);
-      }
-
-      private void ComboBoxCommit_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatCommitComboboxItem(e);
       }
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -353,10 +395,9 @@ namespace mrHelper.App.Forms
          getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
       }
 
-      private static void formatCommitComboboxItem(ListControlConvertEventArgs e)
+      private static string formatCommitComboboxItem(CommitComboBoxItem item)
       {
-         CommitComboBoxItem item = (CommitComboBoxItem)(e.ListItem);
-         e.Value = item.Text + (item.IsLatest ? " [Latest]" : String.Empty);
+         return item.Text + (item.IsLatest ? " [Latest]" : String.Empty);
       }
 
       private static void setCommitComboboxTooltipText(ComboBox comboBox, ToolTip tooltip)
@@ -520,6 +561,51 @@ namespace mrHelper.App.Forms
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(isMergeRequestSelected ?
             _workflow.State.MergeRequestDescriptor : new Nullable<MergeRequestDescriptor>());
+      }
+
+      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
+      {
+         writer.Set("SelectedHost", _workflow.State.HostName);
+
+         Dictionary<string, HashSet<string>> reviewedCommits = _reviewedCommits.ToDictionary(
+               item => item.Key.HostName + "|" + item.Key.ProjectName + "|" + item.Key.IId.ToString(),
+               item => item.Value);
+         writer.Set("ReviewedCommits", reviewedCommits);
+      }
+
+      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
+      {
+         string hostname = (string)reader.Get("SelectedHost");
+         if (hostname != null)
+         {
+            _initialHostName = hostname;
+         }
+
+         Dictionary<string, object> reviewedCommits = (Dictionary<string, object>)reader.Get("ReviewedCommits");
+         if (reviewedCommits != null)
+         {
+            _reviewedCommits = reviewedCommits.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+
+                  Debug.Assert(splitted.Length == 3);
+
+                  string host = splitted[0];
+                  string projectName = splitted[1];
+                  int iid = int.Parse(splitted[2]);
+                  return new MergeRequestDescriptor{ HostName = host, ProjectName = projectName, IId = iid };
+               },
+               item =>
+               {
+                  HashSet<string> commits = new HashSet<string>();
+                  foreach (string commit in (ArrayList)item.Value)
+                  {
+                     commits.Add(commit);
+                  }
+                  return commits;
+               });
+         }
       }
    }
 }

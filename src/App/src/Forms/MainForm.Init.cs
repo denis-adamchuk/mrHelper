@@ -20,6 +20,7 @@ using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Client.Persistence;
 
 namespace mrHelper.App.Forms
 {
@@ -102,12 +103,6 @@ namespace mrHelper.App.Forms
          }
          _settings.KnownHosts = newKnownHosts;
 
-         if (_settings.LastSelectedHost != String.Empty)
-         {
-            // Upgrade from old versions which did not have prefix
-            _settings.LastSelectedHost = getHostWithPrefix(_settings.LastSelectedHost);
-         }
-
          if (_settings.ColorSchemeFileName == String.Empty)
          {
             // Upgrade from old versions which did not have a separate file for Default color scheme
@@ -184,7 +179,11 @@ namespace mrHelper.App.Forms
       {
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
-         _workflowFactory = new WorkflowFactory(_settings);
+         _persistentStorage = new PersistentStorage();
+         _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
+         _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
+
+         _workflowFactory = new WorkflowFactory(_settings, _persistentStorage);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -197,20 +196,45 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
 
          createWorkflow();
+
+         // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
+
+         // Color Scheme requires Expression Resolver
          fillColorSchemesList();
          initializeColorScheme();
 
+         // Update manager indirectly subscribes to Workflow
          subscribeToUpdates();
+
+         // Time Tracking Manager requires Workflow
          createTimeTrackingManager();
+
+         // Now we can de-serialize the persistence state, Workflow subscribed to Storage callbacks
+         try
+         {
+            _persistentStorage.Deserialize();
+         }
+         catch (PersistenceStateDeserializationException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot deserialize the state");
+         }
 
          try
          {
+            // Connect
             await initializeWorkflow();
          }
          catch (WorkflowException)
          {
             MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+         }
+
+         if (!await _updateManager.InitializeAsync())
+         {
+            MessageBox.Show("Cannot initialize Update Manager. Application cannot start. See logs for details",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
          }
@@ -229,10 +253,18 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            // TODO This should use ProjectKey instead of ProjectId
             // check if currently selected project is affected by update
-            if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-             || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-             || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
+
+            // Below conditions are commented out to reload lists on each update
+            // This is needed to update merge request colors due to changed labels.
+            // This works around imperfect comparison logic inside WorkflowDetialsChecker.
+            // TODO Change WorkflowDetailsChecker comparison logic to have merge requests
+            // with changed labels among UpdatedMergeRequests
+
+            //if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+            // || updates.UpdatedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+            // || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
             {
                // emulate project change to reload merge request list
                // This will automatically update commit list (if there are new ones).

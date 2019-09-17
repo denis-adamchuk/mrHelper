@@ -1,11 +1,15 @@
 using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
+using mrHelper.Common.Types;
 using mrHelper.Client.Tools;
-using System.Diagnostics;
+using mrHelper.Client.Persistence;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
 {
@@ -19,7 +23,7 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      internal Workflow(UserDefinedSettings settings)
+      internal Workflow(UserDefinedSettings settings, PersistentStorage persistentStorage)
       {
          Settings = settings;
          Settings.PropertyChanged += async (sender, property) =>
@@ -49,11 +53,14 @@ namespace mrHelper.Client.Workflow
                }
             }
          };
+
+         persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
+         persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
       }
 
-      async public Task Initialize(string hostname)
+      async public Task InitializeAsync(string hostname)
       {
-         await SwitchHostAsync(hostname);
+         await switchHostAsync(hostname);
       }
 
       async public Task SwitchHostAsync(string hostName)
@@ -138,6 +145,10 @@ namespace mrHelper.Client.Workflow
       public event Action PreLoadSystemNotes;
       public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
+
+      public event Action PreLoadLatestVersion;
+      public event Action<WorkflowState, Version> PostLoadLatestVersion;
+      public event Action FailedLoadLatestVersion;
 
       public WorkflowState State { get; private set; }
 
@@ -258,16 +269,16 @@ namespace mrHelper.Client.Workflow
 
          State.MergeRequest = mergeRequest;
 
-         HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
+         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;
 
          PostSwitchMergeRequest?.Invoke(State);
 
-         if (!await loadCommitsAsync())
+         if (!await loadCommitsAsync() || !await loadSystemNotesAsync())
          {
-            return; // silent return
+            return;
          }
-         await loadSystemNotesAsync();
+         await loadLatestVersionAsync();
       }
 
       async private Task<bool> loadCommitsAsync()
@@ -294,7 +305,7 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      async private Task loadSystemNotesAsync()
+      async private Task<bool> loadSystemNotesAsync()
       {
          PreLoadSystemNotes?.Invoke();
          List<Note> notes;
@@ -308,13 +319,39 @@ namespace mrHelper.Client.Workflow
             if (cancelled)
             {
                Trace.TraceInformation(String.Format("[Workflow] Cancelled loading system notes"));
-               return; // silent return
+               return false; // silent return
             }
             FailedLoadSystemNotes?.Invoke();
             throw new WorkflowException(String.Format(
                "Cannot load system notes for merge request with IId {0}", State.MergeRequest.IId));
          }
          PostLoadSystemNotes?.Invoke(State, notes);
+         return true;
+      }
+
+      async private Task<bool> loadLatestVersionAsync()
+      {
+         PreLoadLatestVersion?.Invoke();
+         Version latestVersion;
+         try
+         {
+            latestVersion = await Operator.GetLatestVersionAsync(
+               State.Project.Path_With_Namespace, State.MergeRequest.IId);
+         }
+         catch (OperatorException ex)
+         {
+            bool cancelled = ex.InternalException is GitLabClientCancelled;
+            if (cancelled)
+            {
+               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading latest version"));
+               return false; // silent return
+            }
+            FailedLoadLatestVersion?.Invoke();
+            throw new WorkflowException(String.Format(
+               "Cannot load latest version for merge request with IId {0}", State.MergeRequest.IId));
+         }
+         PostLoadLatestVersion?.Invoke(State, latestVersion);
+         return true;
       }
 
       private string selectProjectFromList(List<Project> projects)
@@ -328,14 +365,6 @@ namespace mrHelper.Client.Workflow
             return _lastProjectsByHosts[key];
          }
 
-         foreach (var project in projects)
-         {
-            if (project.Path_With_Namespace == Settings.LastSelectedProject)
-            {
-               return project.Path_With_Namespace;
-            }
-         }
-
          return projects.Count > 0 ? projects[0].Path_With_Namespace : String.Empty;
       }
 
@@ -343,7 +372,7 @@ namespace mrHelper.Client.Workflow
       {
          mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
 
-         HostAndProjectId key = new HostAndProjectId { Host = State.HostName, ProjectId = State.Project.Id };
+         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
             // ... and if such MR still exists in a list of MRs
@@ -360,17 +389,48 @@ namespace mrHelper.Client.Workflow
          return Tools.Tools.LoadProjectsFromFile(State.HostName);
       }
 
+      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
+      {
+         writer.Set("ProjectsByHosts", _lastProjectsByHosts);
+
+         Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.ToDictionary(
+               item => item.Key.HostName + "|" + item.Key.ProjectId.ToString(),
+               item => item.Value);
+         writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
+      }
+
+      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
+      {
+         Dictionary<string, object> projectsByHosts = (Dictionary<string, object>)reader.Get("ProjectsByHosts");
+         if (projectsByHosts != null)
+         {
+            _lastProjectsByHosts = projectsByHosts.ToDictionary(item => item.Key, item => item.Value.ToString());
+         }
+
+         Dictionary<string, object> mergeRequestsByProjects =
+            (Dictionary<string, object>)reader.Get("MergeRequestsByProjects");
+         if (mergeRequestsByProjects != null)
+         {
+            _lastMergeRequestsByProjects = mergeRequestsByProjects.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+
+                  Debug.Assert(splitted.Length == 2);
+
+                  string host = splitted[0];
+                  string projectId = splitted[1];
+                  return new ProjectKey { HostName = host, ProjectId = int.Parse(projectId) };
+               },
+               item => (int)item.Value);
+         }
+      }
+
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
 
-      private readonly Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
-      private struct HostAndProjectId
-      {
-         public string Host;
-         public int ProjectId;
-      }
-      private readonly Dictionary<HostAndProjectId, int> _lastMergeRequestsByProjects =
-         new Dictionary<HostAndProjectId, int>();
+      private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
+      private Dictionary<ProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<ProjectKey, int>();
    }
 }
 

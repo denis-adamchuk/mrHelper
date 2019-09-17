@@ -44,6 +44,7 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Common\CommonOperator.cs" />
     <Compile Include="src\Discussions\DiscussionCreator.cs" />
     <Compile Include="src\Discussions\DiscussionEditor.cs" />
     <Compile Include="src\Discussions\DiscussionManager.cs" />
@@ -77,6 +78,9 @@
     <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
     <Compile Include="src\Workflow\WorkflowFactory.cs" />
     <Compile Include="src\Workflow\WorkflowState.cs" />
+    <Compile Include="src\Persistence\PersistentStorage.cs" />
+    <Compile Include="src\Persistence\PersistentState.cs" />
+    <Compile Include="src\Persistence\PersistentStateItf.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

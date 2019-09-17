@@ -7,6 +7,8 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Updates
 {
@@ -24,11 +26,43 @@ namespace mrHelper.Client.Updates
          Workflow = workflow;
          WorkflowDetailsChecker = new WorkflowDetailsChecker();
          ProjectWatcher = new ProjectWatcher();
-         Cache = new WorkflowDetailsCache(settings, workflow);
+         Cache = new WorkflowDetailsCache();
+         Operator = new UpdateOperator(Settings);
 
          Timer.Elapsed += onTimer;
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
+
+         Workflow.PostSwitchProject += (state, mergeRequests) =>
+         {
+            Trace.TraceInformation("[UpdateManager] Processing project switch");
+
+            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.Project.Id));
+
+            Cache.UpdateMergeRequests(state.HostName, state.Project, mergeRequests);
+         };
+
+         Workflow.PostLoadLatestVersion += (state, version) =>
+         {
+            Trace.TraceInformation("[UpdateManager] Processing latest version load");
+
+            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.MergeRequest.Project_Id));
+
+            Cache.UpdateLatestVersion(state.MergeRequest.Id, version);
+         };
+      }
+
+      async public Task<bool> InitializeAsync()
+      {
+         Trace.TraceInformation("[UpdateManager] Initializing");
+
+         string hostname = Workflow.State.HostName;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         bool result = await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
+
+         Trace.TraceInformation("[UpdateManager] Initialized");
+
+         return result;
       }
 
       public IProjectWatcher GetProjectWatcher()
@@ -49,7 +83,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestDescriptor mrd)
       {
-         return new RemoteProjectChecker(mrd, new UpdateOperator(Settings));
+         return new RemoteProjectChecker(mrd, Operator);
       }
 
       /// <summary>
@@ -57,29 +91,93 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         string hostname = Workflow.State.HostName;
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
-         try
+         string hostname = Workflow.State.HostName;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         if (!await loadDataAndUpdateCacheAsync(hostname, enabledProjects))
          {
-            await Cache.UpdateAsync();
-         }
-         catch (OperatorException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Auto-update failed");
+            Trace.TraceError("Auto-update failed");
             return;
          }
 
          MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(hostname,
             enabledProjects, oldDetails, Cache.Details);
-         ProjectWatcher.ProcessUpdates(updates, Workflow.State.HostName, Cache.Details);
+         ProjectWatcher.ProcessUpdates(updates, hostname, Cache.Details);
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated {1}, Closed {2}",
                updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
 
          OnUpdate?.Invoke(updates);
+      }
+
+      async private Task<bool> loadDataAndUpdateCacheAsync(string hostname, List<Project> projects)
+      {
+         foreach (Project project in projects)
+         {
+            List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
+            if (mergeRequests == null)
+            {
+               return false;
+            }
+
+            Dictionary<int, Version> latestVersions = new Dictionary<int, Version>();
+            foreach (MergeRequest mergeRequest in mergeRequests)
+            {
+               MergeRequestDescriptor mrd = new MergeRequestDescriptor
+               {
+                  HostName = hostname,
+                  ProjectName = project.Path_With_Namespace,
+                  IId = mergeRequest.IId
+               };
+
+               Version? latestVersion = await loadLatestVersionAsync(mrd);
+               if (latestVersion != null)
+               {
+                  latestVersions[mergeRequest.Id] = latestVersion.Value;
+               }
+            }
+
+            Cache.UpdateMergeRequests(hostname, project, mergeRequests);
+            foreach (KeyValuePair<int, Version> latestVersion in latestVersions)
+            {
+               Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
+            }
+         }
+
+         return true;
+      }
+
+      async private Task<List<MergeRequest>> loadMergeRequestsAsync(string hostname, string projectname)
+      {
+         try
+         {
+            return await Operator.GetMergeRequestsAsync(hostname, projectname);
+         }
+         catch (OperatorException ex)
+         {
+            string message = String.Format(
+               "[UpdateManager] Cannot load merge requests. HostName={0}, ProjectName={1}", hostname, projectname);
+            ExceptionHandlers.Handle(ex, message);
+         }
+         return null;
+      }
+
+      async private Task<Version?> loadLatestVersionAsync(MergeRequestDescriptor mrd)
+      {
+         try
+         {
+            return await Operator.GetLatestVersionAsync(mrd);
+         }
+         catch (OperatorException ex)
+         {
+            string message = String.Format(
+               "[UpdateManager] Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
+               mrd.HostName, mrd.ProjectName, mrd.IId);
+            ExceptionHandlers.Handle(ex, message);
+         }
+         return null;
       }
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
@@ -92,6 +190,7 @@ namespace mrHelper.Client.Updates
       private WorkflowDetailsChecker WorkflowDetailsChecker { get; }
       private ProjectWatcher ProjectWatcher { get; }
       private UserDefinedSettings Settings { get; }
+      private UpdateOperator Operator { get; }
    }
 }
 

@@ -102,10 +102,11 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     if (!getGitClient(mrd.HostName, mrd.ProjectName).DoesRequireClone())
+                     GitClient gitClient = getGitClient(mrd.HostName, mrd.ProjectName);
+                     if (!gitClient.DoesRequireClone())
                      {
                         // Using remote checker because there are might be discussions reported by other users on newer commits
-                        await getGitClient(mrd.HostName, mrd.ProjectName).Updater.ManualUpdateAsync(
+                        await gitClient.Updater.ManualUpdateAsync(
                            _updateManager.GetRemoteProjectChecker(_workflow.State.MergeRequestDescriptor), null);
                      }
                   }
@@ -213,6 +214,18 @@ namespace mrHelper.App.Forms
             leftSHA, rightSHA, client.Path, pid.ToString()));
 
          saveInterprocessSnapshot(pid, leftSHA, rightSHA);
+
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         if (!_reviewedCommits.ContainsKey(mrd))
+         {
+            _reviewedCommits[mrd] = new HashSet<string>();
+         }
+
+         _reviewedCommits[mrd].Add(leftSHA);
+         _reviewedCommits[mrd].Add(rightSHA);
+
+         comboBoxLeftCommit.Refresh();
+         comboBoxRightCommit.Refresh();
       }
 
       async private Task onAddCommentAsync()

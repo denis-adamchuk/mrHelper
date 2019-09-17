@@ -16,6 +16,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
+using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
 
 namespace mrHelper.App.Forms
@@ -77,7 +78,11 @@ namespace mrHelper.App.Forms
       private DiscussionManager _discussionManager;
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
+      private PersistentStorage _persistentStorage;
 
+      private string _initialHostName = String.Empty;
+      private Dictionary<MergeRequestDescriptor, HashSet<string>> _reviewedCommits =
+         new Dictionary<MergeRequestDescriptor, HashSet<string>>();
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
@@ -95,6 +100,7 @@ namespace mrHelper.App.Forms
          internal string SHA;
          internal string Text;
          internal bool IsLatest;
+         internal bool IsBase;
          internal DateTime? TimeStamp;
 
          public override string ToString()
@@ -108,6 +114,7 @@ namespace mrHelper.App.Forms
             Text = text;
             TimeStamp = timeStamp;
             IsLatest = false;
+            IsBase = false;
          }
 
          internal CommitComboBoxItem(Commit commit)
