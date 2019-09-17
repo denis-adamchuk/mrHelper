@@ -52,17 +52,15 @@ namespace mrHelper.Client.Updates
          };
       }
 
-      async public Task<bool> InitializeAsync()
+      async public Task InitializeAsync()
       {
          Trace.TraceInformation("[UpdateManager] Initializing");
 
          string hostname = Workflow.State.HostName;
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         bool result = await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
+         await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
 
          Trace.TraceInformation("[UpdateManager] Initialized");
-
-         return result;
       }
 
       public IProjectWatcher GetProjectWatcher()
@@ -95,11 +93,7 @@ namespace mrHelper.Client.Updates
 
          string hostname = Workflow.State.HostName;
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         if (!await loadDataAndUpdateCacheAsync(hostname, enabledProjects))
-         {
-            Trace.TraceError("Auto-update failed");
-            return;
-         }
+         await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
 
          MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(hostname,
             enabledProjects, oldDetails, Cache.Details);
@@ -112,14 +106,14 @@ namespace mrHelper.Client.Updates
          OnUpdate?.Invoke(updates);
       }
 
-      async private Task<bool> loadDataAndUpdateCacheAsync(string hostname, List<Project> projects)
+      async private Task loadDataAndUpdateCacheAsync(string hostname, List<Project> projects)
       {
          foreach (Project project in projects)
          {
             List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
             if (mergeRequests == null)
             {
-               return false;
+               continue;
             }
 
             Dictionary<int, Version> latestVersions = new Dictionary<int, Version>();
@@ -145,8 +139,6 @@ namespace mrHelper.Client.Updates
                Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
             }
          }
-
-         return true;
       }
 
       async private Task<List<MergeRequest>> loadMergeRequestsAsync(string hostname, string projectname)
