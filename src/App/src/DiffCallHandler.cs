@@ -83,7 +83,7 @@ namespace mrHelper.App
 
          try
          {
-            creator.CreateDiscussionAsync(parameters).Wait();
+            Task.Run(async () => await creator.CreateDiscussionAsync(parameters));
          }
          catch (DiscussionCreatorException ex)
          {

@@ -3,20 +3,15 @@ using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using mrHelper.App.Helpers;
-using mrHelper.CustomActions;
-using mrHelper.Common.Interfaces;
-using mrHelper.Core;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Core.Interprocess;
+using mrHelper.Client.Discussions;
 
 namespace mrHelper.App.Forms
 {
@@ -27,6 +22,8 @@ namespace mrHelper.App.Forms
       /// </summary>
       async private void MrHelperForm_Load(object sender, EventArgs e)
       {
+         Win32Tools.EnableCopyDataMessageHandling(this.Handle);
+
          loadSettings();
          addCustomActions();
          integrateInTools();
@@ -395,6 +392,63 @@ namespace mrHelper.App.Forms
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
+      }
+
+      protected override void WndProc(ref Message message)
+      {
+         if (message.Msg == NativeMethods.WM_COPYDATA)
+         {
+            string argumentsString = Win32Tools.HandleSentMessage(message.LParam);
+
+            string[] argumentsEx = argumentsString.Split('|');
+            int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
+
+            string[] arguments = new string[argumentsEx.Length - 1];
+            Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
+
+            DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
+            DiffCallHandler handler;
+            try
+            {
+               handler = new DiffCallHandler(diffArgumentParser.Parse());
+            }
+            catch (ArgumentException ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+               MessageBox.Show("Cannot create a discussion. Bad arguments passed from diff tool", "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return;
+            }
+
+            SnapshotSerializer serializer = new SnapshotSerializer();
+            Snapshot snapshot;
+            try
+            {
+               snapshot = serializer.DeserializeFromDisk(gitPID);
+            }
+            catch (System.IO.IOException ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+               MessageBox.Show("Cannot create a discussion",
+                  "Make sure that diff tool was launched from Merge Request Helper which is still running",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return;
+            }
+
+            try
+            {
+               handler.Handle(snapshot);
+            }
+            catch (DiscussionCreatorException ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+               MessageBox.Show("Cannot create a discussion",
+                  "Something went wrong at GitLab. See Merge Request Helper log files for details",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+         }
+
+         base.WndProc(ref message);
       }
 
       private static string formatCommitComboboxItem(CommitComboBoxItem item)

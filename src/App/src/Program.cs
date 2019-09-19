@@ -69,45 +69,22 @@ namespace mrHelper.App
                Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
                setupTraceListener("mrHelper.diff.log");
 
-               DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
-               DiffToolInfo diffToolInfo;
-               try
-               {
-                  diffToolInfo = diffArgumentParser.Parse();
-               }
-               catch (ArgumentException ex)
-               {
-                  ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
-                  MessageBox.Show("Bad arguments, see details in logs", "Error",
-                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return;
-               }
-
                int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
+               string[] argumentsEx = new string[arguments.Length + 1];
+               Array.Copy(arguments, 0, argumentsEx, 0, arguments.Length);
+               argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
 
-               SnapshotSerializer serializer = new SnapshotSerializer();
-               Snapshot snapshot;
-               try
+               int mainInstancePID = ParentProcessUtilities.GetParentProcess(gitPID).Id;
+               if (mainInstancePID == -1)
                {
-                  snapshot = serializer.DeserializeFromDisk(gitPID);
-               }
-               catch (System.IO.IOException ex)
-               {
-                  ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-                  MessageBox.Show("Cannot create a discussion. "
-                     + "Make sure that you use diff tool instance launched from mrHelper and mrHelper is still running.");
+                  Debug.Assert(false);
+                  MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                   return;
                }
 
-               IInterprocessCallHandler diffCallHandler = new DiffCallHandler(diffToolInfo);
-               try
-               {
-                  diffCallHandler.Handle(snapshot);
-               }
-               catch (Exception ex) // whatever unhandled exception
-               {
-                  HandleUnhandledException(ex);
-               }
+               string message = String.Join("|", argumentsEx);
+               Win32Tools.SendMessageToProcess(mainInstancePID, message);
             }
          }
       }
