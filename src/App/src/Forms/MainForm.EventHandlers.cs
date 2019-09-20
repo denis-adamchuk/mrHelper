@@ -394,61 +394,67 @@ namespace mrHelper.App.Forms
          getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
       }
 
-      protected override void WndProc(ref Message message)
+      protected override void WndProc(ref Message rMessage)
       {
-         if (message.Msg == NativeMethods.WM_COPYDATA)
+         if (rMessage.Msg == NativeMethods.WM_COPYDATA)
          {
-            string argumentsString = Win32Tools.HandleSentMessage(message.LParam);
+            string argumentsString = Win32Tools.HandleSentMessage(rMessage.LParam);
 
-            string[] argumentsEx = argumentsString.Split('|');
-            int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
+            BeginInvoke(new Action<string>(
+               async (argString) =>
+               {
+                  string[] argumentsEx = argString.Split('|');
+                  int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
 
-            string[] arguments = new string[argumentsEx.Length - 1];
-            Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
+                  string[] arguments = new string[argumentsEx.Length - 1];
+                  Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
 
-            DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
-            DiffCallHandler handler;
-            try
-            {
-               handler = new DiffCallHandler(diffArgumentParser.Parse());
-            }
-            catch (ArgumentException ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
-               MessageBox.Show("Cannot create a discussion. Bad arguments passed from diff tool", "Error",
-                  MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
-            }
+                  DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
+                  DiffCallHandler handler;
+                  try
+                  {
+                     handler = new DiffCallHandler(diffArgumentParser.Parse());
+                  }
+                  catch (ArgumentException ex)
+                  {
+                     ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+                     MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     return;
+                  }
 
-            SnapshotSerializer serializer = new SnapshotSerializer();
-            Snapshot snapshot;
-            try
-            {
-               snapshot = serializer.DeserializeFromDisk(gitPID);
-            }
-            catch (System.IO.IOException ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-               MessageBox.Show("Cannot create a discussion",
-                  "Make sure that diff tool was launched from Merge Request Helper which is still running",
-                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
-            }
+                  SnapshotSerializer serializer = new SnapshotSerializer();
+                  Snapshot snapshot;
+                  try
+                  {
+                     snapshot = serializer.DeserializeFromDisk(gitPID);
+                  }
+                  catch (System.IO.IOException ex)
+                  {
+                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+                     MessageBox.Show(
+                        "Make sure that diff tool was launched from Merge Request Helper which is still running",
+                        "Cannot create a discussion",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     return;
+                  }
 
-            try
-            {
-               handler.Handle(snapshot);
-            }
-            catch (DiscussionCreatorException ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-               MessageBox.Show("Cannot create a discussion",
-                  "Something went wrong at GitLab. See Merge Request Helper log files for details",
-                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+                  try
+                  {
+                     await handler.HandleAsync(snapshot);
+                  }
+                  catch (DiscussionCreatorException ex)
+                  {
+                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+                     MessageBox.Show(
+                        "Something went wrong at GitLab. See Merge Request Helper log files for details",
+                        "Cannot create a discussion",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  }
+               }), argumentsString);
          }
 
-         base.WndProc(ref message);
+         base.WndProc(ref rMessage);
       }
 
       private static string formatCommitComboboxItem(CommitComboBoxItem item)

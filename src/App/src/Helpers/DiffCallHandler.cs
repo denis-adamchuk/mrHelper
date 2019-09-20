@@ -1,44 +1,49 @@
-﻿using GitLabSharp.Accessors;
-using mrHelper.App.Forms;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.Git;
-using mrHelper.Client.Tools;
-using mrHelper.Common.Interfaces;
-using mrHelper.Core.Interprocess;
-using mrHelper.Core.Matching;
-using mrHelper.Forms.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp.Accessors;
+using mrHelper.App.Forms;
+using mrHelper.Client.Discussions;
+using mrHelper.Client.Git;
+using mrHelper.Client.Tools;
+using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
+using mrHelper.Core.Interprocess;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.App
 {
-   internal interface IInterprocessCallHandler
-   {
-      void Handle(Snapshot snapshot);
-   }
-
-   internal class DiffCallHandler : IInterprocessCallHandler
+   internal class DiffCallHandler
    {
       internal DiffCallHandler(DiffToolInfo diffToolInfo)
       {
          _diffToolInfo = diffToolInfo;
       }
 
-      public void Handle(Snapshot snapshot)
+      async public Task HandleAsync(Snapshot snapshot)
       {
          using (GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null))
          {
             IGitRepository gitRepository = factory.GetClient(snapshot.Host, snapshot.Project);
-
-            DiffToolInfoProcessor processor = new DiffToolInfoProcessor(gitRepository);
+            DiffToolInfoProcessor processor = getDiffToolInfoProcessor(gitRepository);
 
             LineMatchInfo lineMatchInfo;
-            if (!processor.Process(_diffToolInfo, snapshot.Refs, out lineMatchInfo))
+            bool processed;
+            try
+            {
+               processed = processor.Process(_diffToolInfo, snapshot.Refs, out lineMatchInfo);
+            }
+            catch (GitOperationException ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot create LineMatchInfo");
+               return;
+            }
+
+            if (!processed)
             {
                return;
             }
@@ -50,12 +55,50 @@ namespace mrHelper.App
                position, gitRepository);
             if (form.ShowDialog() == DialogResult.OK)
             {
-               submitDiscussion(snapshot, lineMatchInfo, position, form.Body, form.IncludeContext);
+               await submitDiscussionAsync(snapshot, lineMatchInfo, position, form.Body, form.IncludeContext);
             }
          }
       }
 
-      private static void submitDiscussion(Snapshot snapshot, LineMatchInfo lineMatchInfo, DiffPosition position,
+      private DiffToolInfoProcessor getDiffToolInfoProcessor(IGitRepository repository)
+      {
+         return new DiffToolInfoProcessor(repository,
+            (currentName, anotherName) =>
+         {
+            MessageBox.Show(
+              "Merge Request Helper detected that current file is a moved version of another file. "
+            + "GitLab does not allow to create discussions on moved files.\n\n"
+            + "Current file:\n"
+            + currentName + "\n\n"
+            + "Another file:\n"
+            + anotherName,
+              "Cannot create a discussion",
+              MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
+         },
+            (currentName, anotherName, isNew) =>
+         {
+            string fileStatus = isNew ? "new" : "deleted";
+            if (MessageBox.Show(
+                     "Merge Request Helper detected that current file is a renamed version of another file. "
+                     + "Do you really want to review this file as a " + fileStatus + " file? "
+                     + "It is recommended to press \"No\" and match files manually in the diff tool.\n"
+                     + "Current file:\n"
+                     + currentName + "\n\n"
+                     + "Another file:\n"
+                     + anotherName,
+                     "Cannot create a discussion",
+                     MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2)
+               == DialogResult.No)
+            {
+               Trace.TraceInformation("User decided to match files manually");
+               return false;
+            }
+            return true;
+         });
+      }
+
+      async private static Task submitDiscussionAsync(Snapshot snapshot, LineMatchInfo lineMatchInfo, DiffPosition position,
         string body, bool includeContext)
       {
          if (body.Length == 0)
@@ -85,7 +128,7 @@ namespace mrHelper.App
          try
          {
             // TODO Check this place and other similar places if exceptions are caught (they seem to be not)
-            Task.Run(async () => await creator.CreateDiscussionAsync(parameters));
+            await creator.CreateDiscussionAsync(parameters);
          }
          catch (DiscussionCreatorException ex)
          {

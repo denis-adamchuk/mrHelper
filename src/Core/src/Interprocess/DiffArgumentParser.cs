@@ -49,37 +49,22 @@ namespace mrHelper.Core.Interprocess
                String.Format("Bad argument \"{0}\" at position 1", _arguments[1]));
          }
 
+         GroupCollection groupCollection = parsePath(tempFolder, _arguments[0]);
          return new DiffToolInfo
          {
-            IsLeftSide = checkIfLeftSideFile(tempFolder, _arguments[0]),
-            FileName = convertToGitFileName(tempFolder, _arguments[0]),
+            IsLeftSide = groupCollection[1].Value == "left",
+            FileName = groupCollection[2].Value,
             LineNumber = currentLineNumber
          };
       }
 
-      static private bool checkIfLeftSideFile(string tempFolder, string fullFileName)
-      {
-         return parsePath(tempFolder, fullFileName)[1].Value == "left";
-      }
-
-      static private string convertToGitFileName(string tempFolder, string fullFileName)
-      {
-         return parsePath(tempFolder, fullFileName)[2].Value;
-      }
-
-      static private string trimTemporaryFolder(string tempFolder, string fullFileName)
+      static private GroupCollection parsePath(string tempFolder, string fullFileName)
       {
          string trimmedFileName = fullFileName
             .Substring(tempFolder.Length, fullFileName.Length - tempFolder.Length)
             .Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-         return trimmedFileName;
-      }
 
-      static private GroupCollection parsePath(string tempFolder, string fullFileName)
-      {
-         string trimmed = trimTemporaryFolder(tempFolder, fullFileName);
-
-         Match m = trimmedFileNameRe.Match(trimmed);
+         Match m = trimmedFileNameRe.Match(trimmedFileName);
          if (!m.Success || m.Groups.Count < 3 || !m.Groups[1].Success || !m.Groups[2].Success)
          {
             throw new ArgumentException(

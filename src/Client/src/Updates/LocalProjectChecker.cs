@@ -24,8 +24,10 @@ namespace mrHelper.Client.Updates
       /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      public DateTime GetLatestChangeTimestamp()
+      async public Task<DateTime> GetLatestChangeTimestampAsync()
       {
+         return await Task.FromResult(Details.GetLatestChangeTimestamp(MergeRequestId));
+
          /*
             Commented out: advanced algorithm of detecting the most latest timestamp
             It optimizes things in some cases but in case of big number of MRs it may become inefficient
@@ -45,8 +47,6 @@ namespace mrHelper.Client.Updates
 
             return dateTime;
          */
-
-         return Details.GetLatestChangeTimestamp(MergeRequestId);
       }
 
       public override string ToString()

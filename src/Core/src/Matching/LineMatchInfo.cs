@@ -11,14 +11,7 @@ namespace mrHelper.Core.Matching
    {
       public bool IsValid()
       {
-         if (IsLeftSideLineNumber)
-         {
-            return LeftFileName != String.Empty && LineNumber > 0;
-         }
-         else
-         {
-            return RightFileName != String.Empty && LineNumber > 0;
-         }
+         return LineNumber > 0 && (IsLeftSideLineNumber ? LeftFileName != String.Empty : RightFileName != String.Empty);
       }
 
       new public string ToString()

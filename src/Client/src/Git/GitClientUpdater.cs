@@ -51,7 +51,7 @@ namespace mrHelper.Client.Git
          _updating = true;
          try
          {
-            DateTime newLatestChange = instantChecker.GetLatestChangeTimestamp();
+            DateTime newLatestChange = await instantChecker.GetLatestChangeTimestampAsync();
             Trace.TraceInformation(String.Format("[GitClientUpdater] Repository Latest Change: {0}",
                newLatestChange.ToLocalTime().ToString()));
 
