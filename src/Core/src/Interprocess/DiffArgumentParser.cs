@@ -20,17 +20,7 @@ namespace mrHelper.Core.Interprocess
       {
          Debug.Assert(arguments[1] == "diff");
 
-         if (arguments.Length == 6)
-         {
-            // Expected arguments (when comparing two files):
-            // (0) Current-pane file name with path 
-            // (1) Current-pane line number 
-            // (2) Next-pane file name with path 
-            // (3) Next-pane line number
-            _arguments = new string[4];
-            Array.Copy(arguments, 2, _arguments, 0, 4);
-         }
-         else if (arguments.Length == 5)
+         if (arguments.Length == 4)
          {
             // Expected arguments (when a single file is opened in a diff tool):
             // (0) Current-pane file name with path 
@@ -41,7 +31,7 @@ namespace mrHelper.Core.Interprocess
          else
          {
             throw new ArgumentException(
-               String.Format("Bad number of arguments ({0} were given, 5 or 6 are expected)", arguments.Length));
+               String.Format("Bad number of arguments ({0} were given, 4 expected)", arguments.Length));
          }
       }
 
@@ -59,36 +49,12 @@ namespace mrHelper.Core.Interprocess
                String.Format("Bad argument \"{0}\" at position 1", _arguments[1]));
          }
 
-         int nextLineNumber = 0;
-         if (_arguments.Length > 2 && !int.TryParse(_arguments[3], out nextLineNumber))
+         return new DiffToolInfo
          {
-            throw new ArgumentException(
-               String.Format("Bad argument \"{0}\" at position 3", _arguments[3]));
-         }
-
-         DiffToolInfo.Side? current = new DiffToolInfo.Side(
-            convertToGitFileName(tempFolder, _arguments[0]), currentLineNumber);
-
-         DiffToolInfo.Side? next = _arguments.Length > 2
-            ? new DiffToolInfo.Side(convertToGitFileName(tempFolder, _arguments[2]), nextLineNumber)
-            : new Nullable<DiffToolInfo.Side>();
-
-         DiffToolInfo toolInfo;
-
-         if (checkIfLeftSideFile(tempFolder, _arguments[0]))
-         {
-            toolInfo.IsLeftSideCurrent = true;
-            toolInfo.Left = current;
-            toolInfo.Right = next;
-         }
-         else
-         {
-            toolInfo.IsLeftSideCurrent = false;
-            toolInfo.Left = next;
-            toolInfo.Right = current;
-         }
-
-         return toolInfo;
+            IsLeftSide = checkIfLeftSideFile(tempFolder, _arguments[0]),
+            FileName = convertToGitFileName(tempFolder, _arguments[0]),
+            LineNumber = currentLineNumber
+         };
       }
 
       static private bool checkIfLeftSideFile(string tempFolder, string fullFileName)

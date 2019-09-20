@@ -10,51 +10,14 @@ namespace mrHelper.Core.Interprocess
    /// </summary>
    public struct DiffToolInfo
    {
-      public struct Side
-      {
-         public static int UninitializedLineNumber = -1;
-
-         public string FileName;
-         public int LineNumber;
-
-         public Side(string filename, int linenumber)
-         {
-            FileName = filename;
-            LineNumber = linenumber;
-         }
-
-         new public string ToString()
-         {
-            return String.Format("\nFileName: {0}\nLineNumber: {1}", FileName, LineNumber.ToString());
-         }
-      }
-
-      public bool IsValid()
-      {
-         if (!Left.HasValue && !Right.HasValue)
-         {
-            return false;
-         }
-         if (IsLeftSideCurrent && (!Left.HasValue || Left.Value.FileName == null))
-         {
-            return false;
-         }
-         if (!IsLeftSideCurrent && (!Right.HasValue || Right.Value.FileName == null))
-         {
-            return false;
-         }
-         return true;
-      }
+      public bool IsLeftSide;
+      public string FileName;
+      public int LineNumber;
 
       new public string ToString()
       {
-         return String.Format("\nLeft: {0}\nRight: {1}\nIsLeftSideCurrent: {2}",
-            (Left?.ToString() ?? "null"), (Right?.ToString() ?? "null"), IsLeftSideCurrent);
+         return String.Format("\nFileName: {0}\nLineNumber: {1}\nIsLeftSide: {2}", FileName, LineNumber, IsLeftSide);
       }
-
-      public Side? Left;
-      public Side? Right;
-      public bool IsLeftSideCurrent;
    }
 }
 

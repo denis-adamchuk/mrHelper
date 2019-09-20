@@ -12,7 +12,7 @@ using mrHelper.Common.Interfaces;
 namespace mrHelper.Core.Matching
 {
    /// <summary>
-   /// Matches SHA of two commits to the line/side details obtained from diff tool.
+   /// Matches SHA of two commits to a line position in two files.
    /// See matching rules in comments for DiffPosition structure.
    /// Cost: one 'git diff -U20000' for each Match() call.
    /// </summary>
@@ -35,23 +35,23 @@ namespace mrHelper.Core.Matching
       /// Throws ArgumentException in case of bad arguments.
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public DiffPosition Match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      public DiffPosition Match(DiffRefs diffRefs, LineMatchInfo lineMatchInfo)
       {
-         if (!difftoolInfo.IsValid())
+         if (!lineMatchInfo.IsValid())
          {
             throw new ArgumentException(
-               String.Format("Bad diff tool info: {0}", difftoolInfo.ToString()));
+               String.Format("Bad line match info: {0}", lineMatchInfo.ToString()));
          }
 
-         MatchResult matchResult = match(diffRefs, difftoolInfo);
-         return createPosition(matchResult, diffRefs, difftoolInfo);
+         MatchResult matchResult = match(diffRefs, lineMatchInfo);
+         return createPosition(matchResult, diffRefs, lineMatchInfo);
       }
 
-      private DiffPosition createPosition(MatchResult matchResult, DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      private DiffPosition createPosition(MatchResult matchResult, DiffRefs diffRefs, LineMatchInfo lineMatchInfo)
       {
          string leftPath = String.Empty;
          string rightPath = String.Empty;
-         getPositionPaths(ref difftoolInfo, ref leftPath, ref rightPath);
+         getPositionPaths(ref lineMatchInfo, ref leftPath, ref rightPath);
 
          string leftLine = String.Empty;
          string rightLine = String.Empty;
@@ -68,25 +68,25 @@ namespace mrHelper.Core.Matching
          return position;
       }
 
-      private void getPositionPaths(ref DiffToolInfo difftoolInfo, ref string LeftPath, ref string RightPath)
+      private void getPositionPaths(ref LineMatchInfo lineMatchInfo, ref string LeftPath, ref string RightPath)
       {
-         if (difftoolInfo.Left.HasValue && !difftoolInfo.Right.HasValue)
+         if (lineMatchInfo.LeftFileName != String.Empty && lineMatchInfo.RightFileName == String.Empty)
          {
-            // When a file is removed, diff tool does not provide a right-side file name
-            LeftPath = difftoolInfo.Left.Value.FileName;
+            // When a file is removed, right-side file name is missing
+            LeftPath = lineMatchInfo.LeftFileName;
             RightPath = LeftPath;
          }
-         else if (!difftoolInfo.Left.HasValue && difftoolInfo.Right.HasValue)
+         else if (lineMatchInfo.LeftFileName == String.Empty && lineMatchInfo.RightFileName != String.Empty)
          {
-            // When a file is added, diff tool does not provide a left-side file name
-            LeftPath = difftoolInfo.Right.Value.FileName;
+            // When a file is added, left-side file name is missing
+            LeftPath = lineMatchInfo.RightFileName;
             RightPath = LeftPath;
          }
-         else if (difftoolInfo.Left.HasValue && difftoolInfo.Right.HasValue)
+         else if (lineMatchInfo.LeftFileName != String.Empty && lineMatchInfo.RightFileName != String.Empty)
          {
             // Filenames may be different and may be the same, it does not matter here
-            LeftPath = difftoolInfo.Left.Value.FileName;
-            RightPath = difftoolInfo.Right.Value.FileName;
+            LeftPath = lineMatchInfo.LeftFileName;
+            RightPath = lineMatchInfo.RightFileName;
          }
          else
          {
@@ -100,28 +100,27 @@ namespace mrHelper.Core.Matching
          rightLine = matchResult.RightLineNumber.HasValue ? matchResult.RightLineNumber.Value.ToString() : null;
       }
 
-      private MatchResult match(DiffRefs diffRefs, DiffToolInfo difftoolInfo)
+      private MatchResult match(DiffRefs diffRefs, LineMatchInfo lineMatchInfo)
       {
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
          FullContextDiff context =
             provider.GetFullContextDiff(diffRefs.LeftSHA, diffRefs.RightSHA,
-               difftoolInfo.Left?.FileName ?? null, difftoolInfo.Right?.FileName ?? null);
+               lineMatchInfo.LeftFileName, lineMatchInfo.RightFileName);
 
          Debug.Assert(context.Left.Count == context.Right.Count);
 
-         bool isCurrentSideLeft = difftoolInfo.IsLeftSideCurrent;
-         DiffToolInfo.Side currentSide = isCurrentSideLeft ? difftoolInfo.Left.Value : difftoolInfo.Right.Value;
+         bool isCurrentSideLeft = lineMatchInfo.IsLeftSideLineNumber;
 
          SparsedList<string> firstList = isCurrentSideLeft ? context.Left : context.Right;
          SparsedList<string> secondList = isCurrentSideLeft ? context.Right : context.Left;
 
-         SparsedListIterator<string> itFirst = SparsedListUtils.FindNth(firstList.Begin(), currentSide.LineNumber - 1);
+         SparsedListIterator<string> itFirst = SparsedListUtils.FindNth(firstList.Begin(), lineMatchInfo.LineNumber - 1);
          SparsedListIterator<string> itSecond = SparsedListUtils.Advance(secondList.Begin(), itFirst.Position);
 
          return new MatchResult
          {
-            LeftLineNumber = isCurrentSideLeft ? currentSide.LineNumber : itSecond.LineNumber + 1,
-            RightLineNumber = isCurrentSideLeft ? itSecond.LineNumber + 1 : currentSide.LineNumber
+            LeftLineNumber = isCurrentSideLeft ? lineMatchInfo.LineNumber : itSecond.LineNumber + 1,
+            RightLineNumber = isCurrentSideLeft ? itSecond.LineNumber + 1 : lineMatchInfo.LineNumber
          };
       }
 

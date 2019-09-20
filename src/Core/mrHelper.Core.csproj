@@ -71,6 +71,7 @@
     <Compile Include="src\Interprocess\ParentProcessUtilities.cs" />
     <Compile Include="src\Interprocess\Helpers.cs" />
     <Compile Include="src\Matching\RefToLineMatcher.cs" />
+    <Compile Include="src\Matching\LineMatchInfo.cs" />
     <Compile Include="src\Matching\Types.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

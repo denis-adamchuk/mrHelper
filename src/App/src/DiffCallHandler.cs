@@ -26,7 +26,7 @@ namespace mrHelper.App
    {
       internal DiffCallHandler(DiffToolInfo diffToolInfo)
       {
-         _originalDiffToolInfo = diffToolInfo;
+         _diffToolInfo = diffToolInfo;
       }
 
       public void Handle(Snapshot snapshot)
@@ -37,24 +37,25 @@ namespace mrHelper.App
 
             DiffToolInfoProcessor processor = new DiffToolInfoProcessor(gitRepository);
 
-            DiffToolInfo diffToolInfo;
-            if (!processor.Process(_originalDiffToolInfo, snapshot.Refs, out diffToolInfo))
+            LineMatchInfo lineMatchInfo;
+            if (!processor.Process(_diffToolInfo, snapshot.Refs, out lineMatchInfo))
             {
                return;
             }
 
             RefToLineMatcher matcher = new RefToLineMatcher(gitRepository);
-            DiffPosition position = matcher.Match(snapshot.Refs, diffToolInfo);
+            DiffPosition position = matcher.Match(snapshot.Refs, lineMatchInfo);
 
-            NewDiscussionForm form = new NewDiscussionForm(snapshot, diffToolInfo, position, gitRepository);
+            NewDiscussionForm form = new NewDiscussionForm(lineMatchInfo.LeftFileName, lineMatchInfo.RightFileName,
+               position, gitRepository);
             if (form.ShowDialog() == DialogResult.OK)
             {
-               submitDiscussion(snapshot, diffToolInfo, position, form.Body, form.IncludeContext);
+               submitDiscussion(snapshot, lineMatchInfo, position, form.Body, form.IncludeContext);
             }
          }
       }
 
-      private static void submitDiscussion(Snapshot snapshot, DiffToolInfo diffToolInfo, DiffPosition position,
+      private static void submitDiscussion(Snapshot snapshot, LineMatchInfo lineMatchInfo, DiffPosition position,
         string body, bool includeContext)
       {
          if (body.Length == 0)
@@ -92,12 +93,12 @@ namespace mrHelper.App
                   "Position: {0}\n" +
                   "Include context: {1}\n" +
                   "Snapshot refs: {2}\n" +
-                  "DiffToolInfo: {3}\n" +
+                  "LineMatchInfo: {3}\n" +
                   "Body:\n{4}",
                   position.ToString(),
                   includeContext.ToString(),
                   snapshot.Refs.ToString(),
-                  diffToolInfo.ToString(),
+                  lineMatchInfo.ToString(),
                   body);
 
             if (!ex.Handled)
@@ -121,7 +122,7 @@ namespace mrHelper.App
          };
       }
 
-      private readonly DiffToolInfo _originalDiffToolInfo;
+      private readonly DiffToolInfo _diffToolInfo;
    }
 }
 

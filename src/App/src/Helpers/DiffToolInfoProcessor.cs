@@ -2,10 +2,11 @@ using System;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using mrHelper.Core.Interprocess;
-using mrHelper.Core.Git;
-using System.Windows.Forms;
 using mrHelper.Common.Exceptions;
+using mrHelper.Core.Git;
+using mrHelper.Core.Matching;
+using mrHelper.Core.Interprocess;
+using System.Windows.Forms;
 
 namespace mrHelper.Forms.Helpers
 {
@@ -24,7 +25,7 @@ namespace mrHelper.Forms.Helpers
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public bool Process(DiffToolInfo source, Core.Matching.DiffRefs refs, out DiffToolInfo dest)
+      public bool Process(DiffToolInfo source, Core.Matching.DiffRefs refs, out LineMatchInfo dest)
       {
          string currentName;
          string anotherName;
@@ -39,14 +40,17 @@ namespace mrHelper.Forms.Helpers
             throw; // fatal error
          }
 
-         if (renamed)
+         dest = createLineMatchInfo(source, anotherName);
+         if (!renamed)
          {
-            Trace.TraceInformation("Detected file {0}. Git repository path: {1}. DiffRefs: {2}\nDiffToolInfo: {3}",
-               (moved ? "move" : "rename"), _gitRepository.Path, refs.ToString(), source.ToString());
+            return true;
          }
 
-         dest = source;
-         return !renamed || handleFileRename(source, currentName, anotherName, moved, out dest);
+         Trace.TraceInformation(String.Format(
+            "Detected file {0}. Git repository path: {1}. DiffRefs: {2}\nDiffToolInfo: {3}\nLineMatchInfo: {4}",
+                  (moved ? "move" : "rename"), _gitRepository.Path, refs.ToString(), source.ToString(), dest.ToString()));
+
+         return handleFileRename(source.IsLeftSide, currentName, anotherName, moved);
       }
 
       /// <summary>
@@ -56,57 +60,37 @@ namespace mrHelper.Forms.Helpers
          out string currentName, out string anotherName, out bool moved)
       {
          GitRenameDetector renameChecker = new GitRenameDetector(_gitRepository);
-         if (!diffToolInfo.Left.HasValue)
+         if (!diffToolInfo.IsLeftSide)
          {
-            Debug.Assert(diffToolInfo.Right.HasValue);
-            currentName = diffToolInfo.Right.Value.FileName;
+            currentName = diffToolInfo.FileName;
             anotherName = renameChecker.IsRenamed(
                refs.LeftSHA,
                refs.RightSHA,
-               diffToolInfo.Right.Value.FileName,
+               diffToolInfo.FileName,
                false, out moved);
-            if (anotherName == diffToolInfo.Right.Value.FileName)
-            {
-               // it is not a renamed but removed file
-               return false;
-            }
-         }
-         else if (!diffToolInfo.Right.HasValue)
-         {
-            Debug.Assert(diffToolInfo.Left.HasValue);
-            currentName = diffToolInfo.Left.Value.FileName;
-            anotherName = renameChecker.IsRenamed(
-               refs.LeftSHA,
-               refs.RightSHA,
-               diffToolInfo.Left.Value.FileName,
-               true, out moved);
-            if (anotherName == diffToolInfo.Left.Value.FileName)
-            {
-               // it is not a renamed but added file
-               return false;
-            }
          }
          else
          {
-            // If even two names are given, we need to check here because use might selected manually two
-            // versions of a moved file
-            bool isLeftSide = diffToolInfo.IsLeftSideCurrent;
-            currentName = isLeftSide ? diffToolInfo.Left.Value.FileName : diffToolInfo.Right.Value.FileName;
+            currentName = diffToolInfo.FileName;
             anotherName = renameChecker.IsRenamed(
                refs.LeftSHA,
                refs.RightSHA,
-               currentName,
-               isLeftSide, out moved);
-            return moved;
+               diffToolInfo.FileName,
+               true, out moved);
          }
-         return true;
+
+         if (moved || anotherName != currentName)
+         {
+            return true;
+         }
+
+         // it is not a renamed but a new/removed file
+         anotherName = String.Empty;
+         return false;
       }
 
-      private static bool handleFileRename(DiffToolInfo source,
-         string currentName, string anotherName, bool moved, out DiffToolInfo dest)
+      private static bool handleFileRename(bool isLeftSideCurrent, string currentName, string anotherName, bool moved)
       {
-         dest = source;
-
          if (moved)
          {
             MessageBox.Show(
@@ -122,8 +106,7 @@ namespace mrHelper.Forms.Helpers
             return false;
          }
 
-         bool isLeftSide = source.IsLeftSideCurrent;
-         string fileStatus = isLeftSide ? "new" : "deleted";
+         string fileStatus = isLeftSideCurrent ? "new" : "deleted";
 
          if (MessageBox.Show(
                "Merge Request Helper detected that current file is a renamed version of another file. "
@@ -140,27 +123,20 @@ namespace mrHelper.Forms.Helpers
             return false;
          }
 
-         dest = createDiffToolInfoCloneWithFakeSide(source, anotherName);
-         Trace.TraceInformation("Updated DiffToolInfo: {0}", dest.ToString());
          return true;
       }
 
-      private static DiffToolInfo createDiffToolInfoCloneWithFakeSide(DiffToolInfo source, string anotherName)
+      private static LineMatchInfo createLineMatchInfo(DiffToolInfo source, string anotherName)
       {
-         bool isLeftSide = source.IsLeftSideCurrent;
-         return new DiffToolInfo
+         Debug.Assert(source.LineNumber > 0);
+         Debug.Assert(anotherName != String.Empty);
+
+         return new LineMatchInfo
          {
-            IsLeftSideCurrent = isLeftSide,
-            Left = new DiffToolInfo.Side
-            {
-               FileName = isLeftSide ? source.Left.Value.FileName : anotherName,
-               LineNumber = isLeftSide ? source.Left.Value.LineNumber : DiffToolInfo.Side.UninitializedLineNumber
-            },
-            Right = new DiffToolInfo.Side
-            {
-               FileName = isLeftSide ? anotherName : source.Right.Value.FileName,
-               LineNumber = isLeftSide ? DiffToolInfo.Side.UninitializedLineNumber : source.Right.Value.LineNumber
-            },
+            IsLeftSideLineNumber = source.IsLeftSide,
+            LeftFileName = source.IsLeftSide ? source.FileName : anotherName,
+            RightFileName = source.IsLeftSide ? anotherName : source.FileName,
+            LineNumber = source.LineNumber
          };
       }
 
