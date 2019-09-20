@@ -19,9 +19,9 @@ namespace mrHelper.App
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(DiffToolInfo diffToolInfo)
+      internal DiffCallHandler(LineMatchInfo LineMatchInfo)
       {
-         _diffToolInfo = diffToolInfo;
+         _originalLineMatchInfo = LineMatchInfo;
       }
 
       async public Task HandleAsync(Snapshot snapshot)
@@ -29,13 +29,12 @@ namespace mrHelper.App
          using (GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null))
          {
             IGitRepository gitRepository = factory.GetClient(snapshot.Host, snapshot.Project);
-            DiffToolInfoProcessor processor = getDiffToolInfoProcessor(gitRepository);
+            LineMatchInfoCorrector corrector = getLineMatchInfoCorrector(gitRepository);
 
-            LineMatchInfo lineMatchInfo;
-            bool processed;
+            LineMatchInfo? lineMatchInfo;
             try
             {
-               processed = processor.Process(_diffToolInfo, snapshot.Refs, out lineMatchInfo);
+               lineMatchInfo = corrector.Correct(_originalLineMatchInfo, snapshot.Refs);
             }
             catch (GitOperationException ex)
             {
@@ -43,26 +42,26 @@ namespace mrHelper.App
                return;
             }
 
-            if (!processed)
+            if (!lineMatchInfo.HasValue)
             {
                return;
             }
 
             RefToLineMatcher matcher = new RefToLineMatcher(gitRepository);
-            DiffPosition position = matcher.Match(snapshot.Refs, lineMatchInfo);
+            DiffPosition position = matcher.Match(snapshot.Refs, lineMatchInfo.Value);
 
-            NewDiscussionForm form = new NewDiscussionForm(lineMatchInfo.LeftFileName, lineMatchInfo.RightFileName,
-               position, gitRepository);
+            NewDiscussionForm form = new NewDiscussionForm(
+               lineMatchInfo.Value.LeftFileName, lineMatchInfo.Value.RightFileName, position, gitRepository);
             if (form.ShowDialog() == DialogResult.OK)
             {
-               await submitDiscussionAsync(snapshot, lineMatchInfo, position, form.Body, form.IncludeContext);
+               await submitDiscussionAsync(snapshot, lineMatchInfo.Value, position, form.Body, form.IncludeContext);
             }
          }
       }
 
-      private DiffToolInfoProcessor getDiffToolInfoProcessor(IGitRepository repository)
+      private LineMatchInfoCorrector getLineMatchInfoCorrector(IGitRepository repository)
       {
-         return new DiffToolInfoProcessor(repository,
+         return new LineMatchInfoCorrector(repository,
             (currentName, anotherName) =>
          {
             MessageBox.Show(
@@ -74,14 +73,25 @@ namespace mrHelper.App
             + anotherName,
               "Cannot create a discussion",
               MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
          },
-            (currentName, anotherName, isNew) =>
+            (currentName, anotherName, status) =>
          {
-            string fileStatus = isNew ? "new" : "deleted";
+            string question = String.Empty;
+            if (status == "new" || status == "deleted")
+            {
+               question = "Do you really want to review this file as a " + status + " file? ";
+            }
+            else if (status == "modified")
+            {
+               question = "Do you really want to continue reviewing this file against the selected file? ";
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
             if (MessageBox.Show(
                      "Merge Request Helper detected that current file is a renamed version of another file. "
-                     + "Do you really want to review this file as a " + fileStatus + " file? "
+                     + question
                      + "It is recommended to press \"No\" and match files manually in the diff tool.\n"
                      + "Current file:\n"
                      + currentName + "\n\n"
@@ -91,10 +101,15 @@ namespace mrHelper.App
                      MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2)
                == DialogResult.No)
             {
-               Trace.TraceInformation("User decided to match files manually");
                return false;
             }
             return true;
+         },
+            () =>
+         {
+            MessageBox.Show("Merge Request Helper detected that selected files do not match to each other. "
+            + "GitLab does not allow to create discussions on such files.", "Cannot create a discussion",
+              MessageBoxButtons.OK, MessageBoxIcon.Warning);
          });
       }
 
@@ -166,7 +181,7 @@ namespace mrHelper.App
          };
       }
 
-      private readonly DiffToolInfo _diffToolInfo;
+      private readonly LineMatchInfo _originalLineMatchInfo;
    }
 }
 

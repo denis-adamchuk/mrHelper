@@ -2,11 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.Core.Interprocess
 {
    /// <summary>
-   /// Parses command-line arguments to DiffToolInfo structure
+   /// Parses command-line arguments to LineMatchInfo structure
    /// </summary>
    public class DiffArgumentParser
    {
@@ -20,7 +21,16 @@ namespace mrHelper.Core.Interprocess
       {
          Debug.Assert(arguments[1] == "diff");
 
-         if (arguments.Length == 4)
+         if (arguments.Length == 5)
+         {
+            // Expected arguments (when comparing two files):
+            // (0) Current-pane file name with path 
+            // (1) Current-pane line number 
+            // (2) Next-pane file name with path 
+            _arguments = new string[3];
+            Array.Copy(arguments, 2, _arguments, 0, 3);
+         }
+         else if (arguments.Length == 4)
          {
             // Expected arguments (when a single file is opened in a diff tool):
             // (0) Current-pane file name with path 
@@ -31,15 +41,15 @@ namespace mrHelper.Core.Interprocess
          else
          {
             throw new ArgumentException(
-               String.Format("Bad number of arguments ({0} were given, 4 expected)", arguments.Length));
+               String.Format("Bad number of arguments ({0} were given, 4 or 5 are expected)", arguments.Length));
          }
       }
 
       /// <summary>
-      /// Creates DiffToolInfo structure.
+      /// Creates LineMatchInfo structure.
       /// Throws ArgumentException.
       /// </summary>
-      public DiffToolInfo Parse()
+      public LineMatchInfo Parse()
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
 
@@ -50,10 +60,14 @@ namespace mrHelper.Core.Interprocess
          }
 
          GroupCollection groupCollection = parsePath(tempFolder, _arguments[0]);
-         return new DiffToolInfo
+         bool isLeftSide = groupCollection[1].Value == "left";
+         string currentFileName = groupCollection[2].Value;
+         string nextFileName = _arguments.Length > 2 ? parsePath(tempFolder, _arguments[2])[2].Value : String.Empty;
+         return new LineMatchInfo
          {
-            IsLeftSide = groupCollection[1].Value == "left",
-            FileName = groupCollection[2].Value,
+            IsLeftSideLineNumber = isLeftSide,
+            LeftFileName = isLeftSide ? currentFileName : nextFileName,
+            RightFileName = isLeftSide ? nextFileName : currentFileName,
             LineNumber = currentLineNumber
          };
       }
