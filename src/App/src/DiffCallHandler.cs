@@ -84,6 +84,7 @@ namespace mrHelper.App
 
          try
          {
+            // TODO Check this place and other similar places if exceptions are caught (they seem to be not)
             Task.Run(async () => await creator.CreateDiscussionAsync(parameters));
          }
          catch (DiscussionCreatorException ex)
