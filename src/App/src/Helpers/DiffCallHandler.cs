@@ -19,9 +19,9 @@ namespace mrHelper.App
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(LineMatchInfo LineMatchInfo)
+      internal DiffCallHandler(MatchInfo matchInfo)
       {
-         _originalLineMatchInfo = LineMatchInfo;
+         _matchInfo = matchInfo;
       }
 
       async public Task HandleAsync(Snapshot snapshot)
@@ -29,39 +29,45 @@ namespace mrHelper.App
          using (GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null))
          {
             IGitRepository gitRepository = factory.GetClient(snapshot.Host, snapshot.Project);
-            LineMatchInfoCorrector corrector = getLineMatchInfoCorrector(gitRepository);
 
-            LineMatchInfo? lineMatchInfo;
+            FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
+            LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
+
+            DiffPosition position = new DiffPosition
+            {
+               Refs = snapshot.Refs
+            };
+
+            bool matchSucceded = false;
             try
             {
-               lineMatchInfo = corrector.Correct(_originalLineMatchInfo, snapshot.Refs);
+               matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position) &&
+                               lineNumberMatcher.Match(_matchInfo, position, out position);
             }
-            catch (GitOperationException ex)
+            catch (Exception ex)
             {
-               ExceptionHandlers.Handle(ex, "Cannot create LineMatchInfo");
+               Debug.Assert((ex is ArgumentException) || (ex is GitOperationException));
+               ExceptionHandlers.Handle(ex, "Cannot create DiffPosition");
                return;
             }
 
-            if (!lineMatchInfo.HasValue)
+            if (!matchSucceded)
             {
                return;
             }
-
-            RefToLineMatcher matcher = new RefToLineMatcher(gitRepository);
-            DiffPosition position = matcher.Match(snapshot.Refs, lineMatchInfo.Value);
 
             NewDiscussionForm form = new NewDiscussionForm(
-               lineMatchInfo.Value.LeftFileName, lineMatchInfo.Value.RightFileName, position, gitRepository);
+               _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository);
             if (form.ShowDialog() == DialogResult.OK)
             {
-               await submitDiscussionAsync(snapshot, lineMatchInfo.Value, position, form.Body, form.IncludeContext);
+               await submitDiscussionAsync(snapshot, _matchInfo, position, form.Body, form.IncludeContext);
             }
          }
       }
 
-      private LineMatchInfoCorrector getLineMatchInfoCorrector(IGitRepository repository)
+      private FileNameMatcher getFileNameMatcher(IGitRepository repository)
       {
-         return new LineMatchInfoCorrector(repository,
+         return new FileNameMatcher(repository,
             (currentName, anotherName) =>
          {
             MessageBox.Show(
@@ -113,7 +119,7 @@ namespace mrHelper.App
          });
       }
 
-      async private static Task submitDiscussionAsync(Snapshot snapshot, LineMatchInfo lineMatchInfo, DiffPosition position,
+      async private static Task submitDiscussionAsync(Snapshot snapshot, MatchInfo matchInfo, DiffPosition position,
         string body, bool includeContext)
       {
          if (body.Length == 0)
@@ -142,7 +148,6 @@ namespace mrHelper.App
 
          try
          {
-            // TODO Check this place and other similar places if exceptions are caught (they seem to be not)
             await creator.CreateDiscussionAsync(parameters);
          }
          catch (DiscussionCreatorException ex)
@@ -152,12 +157,12 @@ namespace mrHelper.App
                   "Position: {0}\n" +
                   "Include context: {1}\n" +
                   "Snapshot refs: {2}\n" +
-                  "LineMatchInfo: {3}\n" +
+                  "MatchInfo: {3}\n" +
                   "Body:\n{4}",
                   position.ToString(),
                   includeContext.ToString(),
                   snapshot.Refs.ToString(),
-                  lineMatchInfo.ToString(),
+                  matchInfo.ToString(),
                   body);
 
             if (!ex.Handled)
@@ -181,7 +186,7 @@ namespace mrHelper.App
          };
       }
 
-      private readonly LineMatchInfo _originalLineMatchInfo;
+      private readonly MatchInfo _matchInfo;
    }
 }
 

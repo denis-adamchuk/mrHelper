@@ -7,7 +7,7 @@ namespace mrHelper.Core.Matching
    /// <summary>
    /// Describes position of a line to be matched between two files
    /// </summary>
-   public struct LineMatchInfo
+   public struct MatchInfo
    {
       public bool IsValid()
       {

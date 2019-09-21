@@ -49,7 +49,7 @@ namespace mrHelper.Core.Interprocess
       /// Creates LineMatchInfo structure.
       /// Throws ArgumentException.
       /// </summary>
-      public LineMatchInfo Parse()
+      public MatchInfo Parse()
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
 
@@ -63,7 +63,7 @@ namespace mrHelper.Core.Interprocess
          bool isLeftSide = groupCollection[1].Value == "left";
          string currentFileName = groupCollection[2].Value;
          string nextFileName = _arguments.Length > 2 ? parsePath(tempFolder, _arguments[2])[2].Value : String.Empty;
-         return new LineMatchInfo
+         return new MatchInfo
          {
             IsLeftSideLineNumber = isLeftSide,
             LeftFileName = isLeftSide ? currentFileName : nextFileName,
