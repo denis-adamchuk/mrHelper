@@ -12,6 +12,7 @@ using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Core.Interprocess;
 using mrHelper.Client.Discussions;
+using mrHelper.Client.Workflow;
 
 namespace mrHelper.App.Forms
 {
@@ -400,61 +401,101 @@ namespace mrHelper.App.Forms
          {
             string argumentsString = Win32Tools.HandleSentMessage(rMessage.LParam);
 
-            BeginInvoke(new Action<string>(
-               async (argString) =>
+            BeginInvoke(new Action(
+               async () =>
                {
-                  string[] argumentsEx = argString.Split('|');
-                  int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
-
-                  string[] arguments = new string[argumentsEx.Length - 1];
-                  Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
-
-                  DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
-                  DiffCallHandler handler;
-                  try
+                  string command = argumentsString.Split('|')[1];
+                  if (command == "diff")
                   {
-                     handler = new DiffCallHandler(diffArgumentParser.Parse());
+                     await onDiffCommand(argumentsString);
                   }
-                  catch (ArgumentException ex)
+                  else if (command == "open")
                   {
-                     ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
-                     MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                     return;
+                     await onOpenCommand(argumentsString);
                   }
-
-                  SnapshotSerializer serializer = new SnapshotSerializer();
-                  Snapshot snapshot;
-                  try
-                  {
-                     snapshot = serializer.DeserializeFromDisk(gitPID);
-                  }
-                  catch (System.IO.IOException ex)
-                  {
-                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-                     MessageBox.Show(
-                        "Make sure that diff tool was launched from Merge Request Helper which is still running",
-                        "Cannot create a discussion",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                     return;
-                  }
-
-                  try
-                  {
-                     await handler.HandleAsync(snapshot);
-                  }
-                  catch (DiscussionCreatorException ex)
-                  {
-                     ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
-                     MessageBox.Show(
-                        "Something went wrong at GitLab. See Merge Request Helper log files for details",
-                        "Cannot create a discussion",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  }
-               }), argumentsString);
+               }));
          }
 
          base.WndProc(ref rMessage);
+      }
+
+      async private static Task onDiffCommand(string argumentsString)
+      {
+         string[] argumentsEx = argumentsString.Split('|');
+         int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
+
+         string[] arguments = new string[argumentsEx.Length - 1];
+         Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
+
+         DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
+         DiffCallHandler handler;
+         try
+         {
+            handler = new DiffCallHandler(diffArgumentParser.Parse());
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+            MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
+         SnapshotSerializer serializer = new SnapshotSerializer();
+         Snapshot snapshot;
+         try
+         {
+            snapshot = serializer.DeserializeFromDisk(gitPID);
+         }
+         catch (System.IO.IOException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+            MessageBox.Show(
+               "Make sure that diff tool was launched from Merge Request Helper which is still running",
+               "Cannot create a discussion",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
+         try
+         {
+            await handler.HandleAsync(snapshot);
+         }
+         catch (DiscussionCreatorException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+            MessageBox.Show(
+               "Something went wrong at GitLab. See Merge Request Helper log files for details",
+               "Cannot create a discussion",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      async private Task onOpenCommand(string argumentsString)
+      {
+         string url = argumentsString.Split('|')[2];
+
+         GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl;
+         try
+         {
+            mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
+         }
+         catch (UriFormatException ex)
+         {
+            ExceptionHandlers.Handle(ex, String.Format("Bad URL {0}", url));
+            return;
+         }
+
+         try
+         {
+            await _workflow.SwitchHostAsync(mergeRequestUrl.Host);
+            await _workflow.SwitchProjectAsync(mergeRequestUrl.Project);
+            await _workflow.SwitchMergeRequestAsync(mergeRequestUrl.IId);
+         }
+         catch (WorkflowException ex)
+         {
+            ExceptionHandlers.Handle(ex, String.Format("Cannot switch to {0}", url));
+         }
       }
 
       private static string formatCommitComboboxItem(CommitComboBoxItem item)

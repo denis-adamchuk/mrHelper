@@ -14,8 +14,7 @@ namespace mrHelper.App
 {
    internal static class Program
    {
-      static readonly string mutex1_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
-      static readonly string mutex2_guid = "{08c448dc-8635-42d0-89bd-75c14837aaa1}";
+      static readonly string mutex_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
 
       private static void HandleUnhandledException(Exception ex)
       {
@@ -36,14 +35,14 @@ namespace mrHelper.App
          var arguments = Environment.GetCommandLineArgs();
          if (arguments.Length < 2)
          {
-            using (Mutex mutex = new Mutex(false, "Global\\" + mutex1_guid))
+            using (Mutex mutex = new Mutex(false, "Global\\" + mutex_guid))
             {
                if (!mutex.WaitOne(0, false))
                {
                   return;
                }
 
-               Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
+               Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
                setupTraceListener("mrHelper.main.log");
 
                try
@@ -58,22 +57,43 @@ namespace mrHelper.App
          }
          else if (arguments[1] == "diff")
          {
-            using (Mutex mutex = new Mutex(false, "Global\\" + mutex2_guid))
+            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+            setupTraceListener("mrHelper.diff.log");
+
+            int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
+            string[] argumentsEx = new string[arguments.Length + 1];
+            Array.Copy(arguments, 0, argumentsEx, 0, arguments.Length);
+            argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
+
+            int mainInstancePID = ParentProcessUtilities.GetParentProcess(gitPID).Id;
+            if (mainInstancePID == -1)
             {
-               if (!mutex.WaitOne(0, false))
-               {
-                  return;
-               }
+               Debug.Assert(false);
+               MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               return;
+            }
 
-               Application.ThreadException += (sender,e) => HandleUnhandledException(e.Exception);
-               setupTraceListener("mrHelper.diff.log");
+            string message = String.Join("|", argumentsEx);
+            Win32Tools.SendMessageToProcess(mainInstancePID, message);
+         }
+         else if (arguments[1] == "open")
+         {
+            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+            setupTraceListener("mrHelper.open.log");
 
-               int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
-               string[] argumentsEx = new string[arguments.Length + 1];
-               Array.Copy(arguments, 0, argumentsEx, 0, arguments.Length);
-               argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
+            Process currentProcess = Process.GetCurrentProcess();
+            Process[] processes = Process.GetProcessesByName(currentProcess.ProcessName);
+            if (processes.Length == 1)
+            {
+               // Main instance not started yet
+               throw new NotImplementedException("TODO Launch main instance");
+            }
+            else
+            {
+               Debug.Assert(processes.Length == 2);
 
-               int mainInstancePID = ParentProcessUtilities.GetParentProcess(gitPID).Id;
+               int mainInstancePID = processes[0].Id == currentProcess.Id ? processes[1].Id : processes[0].Id;
                if (mainInstancePID == -1)
                {
                   Debug.Assert(false);
@@ -82,7 +102,7 @@ namespace mrHelper.App
                   return;
                }
 
-               string message = String.Join("|", argumentsEx);
+               string message = String.Join("|", arguments);
                Win32Tools.SendMessageToProcess(mainInstancePID, message);
             }
          }
