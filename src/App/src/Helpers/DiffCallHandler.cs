@@ -71,14 +71,14 @@ namespace mrHelper.App
             (currentName, anotherName) =>
          {
             MessageBox.Show(
-              "Merge Request Helper detected that current file is a moved version of another file. "
-            + "GitLab does not allow to create discussions on moved files.\n\n"
-            + "Current file:\n"
-            + currentName + "\n\n"
-            + "Another file:\n"
-            + anotherName,
-              "Cannot create a discussion",
-              MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               "Merge Request Helper detected that current file is a moved version of another file. "
+               + "GitLab does not allow to create discussions on moved files.\n\n"
+               + "Current file:\n"
+               + currentName + "\n\n"
+               + "Another file:\n"
+               + anotherName,
+               "Cannot create a discussion",
+               MessageBoxButtons.OK, MessageBoxIcon.Warning);
          },
             (currentName, anotherName, status) =>
          {
@@ -95,27 +95,26 @@ namespace mrHelper.App
             {
                Debug.Assert(false);
             }
-            if (MessageBox.Show(
-                     "Merge Request Helper detected that current file is a renamed version of another file. "
-                     + question
-                     + "It is recommended to press \"No\" and match files manually in the diff tool.\n"
-                     + "Current file:\n"
-                     + currentName + "\n\n"
-                     + "Another file:\n"
-                     + anotherName,
-                     "Cannot create a discussion",
-                     MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2)
-               == DialogResult.No)
-            {
-               return false;
-            }
-            return true;
+            return MessageBox.Show(
+                  "Merge Request Helper detected that current file is a renamed version of another file. "
+                  + question
+                  + "It is recommended to press \"No\" and match files manually in the diff tool.\n"
+                  + "Current file:\n"
+                  + currentName + "\n\n"
+                  + "Another file:\n"
+                  + anotherName,
+                  "Rename detected",
+                  MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2)
+               == DialogResult.Yes;
          },
             () =>
          {
-            MessageBox.Show("Merge Request Helper detected that selected files do not match to each other. "
-            + "GitLab does not allow to create discussions on such files.", "Cannot create a discussion",
-              MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            string question = "Do you really want to continue reviewing this file against the selected file? ";
+            return MessageBox.Show(
+                  "Merge Request Helper detected that selected files do not match to each other. "
+                  + question, "Files do not match",
+                  MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
+               == DialogResult.Yes;
          });
       }
 

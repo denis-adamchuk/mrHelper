@@ -11,7 +11,7 @@ namespace mrHelper.Core.Matching
    public class FileNameMatcher
    {
       public FileNameMatcher(IGitRepository gitRepository,
-         Action<string, string> onFileMove, Func<string, string, string, bool> onFileRename, Action onWrongMatch)
+         Action<string, string> onFileMove, Func<string, string, string, bool> onFileRename, Func<bool> onWrongMatch)
       {
          _gitRepository = gitRepository;
          _onFileMove = onFileMove;
@@ -37,14 +37,9 @@ namespace mrHelper.Core.Matching
          oppositeName = getOppositeName(refs, isLeftSide, currentName, oppositeName);
 
          outDiffPosition = inDiffPosition;
-         if (oppositeName == null)
-         {
-            return false;
-         }
-
          outDiffPosition.LeftPath = isLeftSide ? currentName : oppositeName;
          outDiffPosition.RightPath = isLeftSide ? oppositeName : currentName;
-         return true;
+         return oppositeName != null;
       }
 
       private string getOppositeName(DiffRefs refs, bool isLeftSide, string sourceCurrentName, string sourceOppositeName)
@@ -57,7 +52,7 @@ namespace mrHelper.Core.Matching
          if (moved)
          {
             _onFileMove(sourceCurrentName, anotherName);
-            trace("move", refs, sourceCurrentName, sourceOppositeName, String.Empty);
+            trace("move", isLeftSide, refs, sourceCurrentName, sourceOppositeName, String.Empty);
             return null;
          }
 
@@ -71,18 +66,19 @@ namespace mrHelper.Core.Matching
                if (_onFileRename(sourceCurrentName, anotherName, isLeftSide ? "deleted" : "new"))
                {
                   // discard rename. fix up the opposite name to deceive GitLab.
-                  trace("rename (discard)", refs, sourceCurrentName, sourceOppositeName, anotherName);
+                  trace("rename (continue)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, anotherName);
                   return anotherName;
                }
                else
                {
                   // user will re-match
-                  trace("rename (re-match)", refs, sourceCurrentName, sourceOppositeName, String.Empty);
+                  trace("rename (cancel)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, String.Empty);
                   return null;
                }
             }
             else
             {
+               // no rename detected
                // GitLab expects a non-empty name in this case
                return sourceCurrentName;
             }
@@ -104,39 +100,51 @@ namespace mrHelper.Core.Matching
                   if (_onFileRename(sourceCurrentName, anotherName, "modified"))
                   {
                      // discard rename. fix up the opposite name to deceive GitLab.
-                     trace("rename (discard)", refs, sourceCurrentName, sourceOppositeName, anotherName);
+                     trace("rename (continue)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, anotherName);
                      return anotherName;
                   }
                   else
                   {
                      // user will re-match
-                     trace("rename (re-match)", refs, sourceCurrentName, sourceOppositeName, String.Empty);
+                     trace("rename (cancel)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, String.Empty);
                      return null;
                   }
                }
             }
             else
             {
+               // no rename detected
                if (sourceCurrentName != sourceOppositeName)
                {
-                  _onWrongMatch();
-                  trace("wrong match", refs, sourceCurrentName, sourceOppositeName, String.Empty);
-                  return null;
+                  // wrong match, propose to re-match
+                  if (_onWrongMatch())
+                  {
+                     trace("wrong match (continue)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, sourceCurrentName);
+                     return sourceCurrentName;
+                  }
+                  else
+                  {
+                     trace("wrong match (cancel)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, String.Empty);
+                     return null;
+                  }
                }
-
-               // it is not a rename but really modified file detected
-               return sourceOppositeName;
+               else
+               {
+                  // it is not a rename but really modified file detected
+                  return sourceOppositeName;
+               }
             }
          }
       }
 
-      private void trace(string action, DiffRefs refs, string sourceCurrentName, string sourceOppositeName,
-         string fixedOppositeName)
+      private void trace(string action, bool isLeftSide, DiffRefs refs,
+         string sourceCurrentName, string sourceOppositeName, string fixedOppositeName)
       {
          Trace.TraceInformation(String.Format(
-            "[MatchInfoCorrector] {0}. Git repository path: {1}. DiffRefs: {2}\n"
-          + "sourceCurrentName: {3}\nsourceOppositeName: {4}\nfixedOppositeName: {5}",
-               action, _gitRepository.Path, refs.ToString(), sourceCurrentName, sourceOppositeName, fixedOppositeName));
+            "[FileNameMatcher] {0}. Git repository path: {1}. DiffRefs: {2}\n"
+          + "sourceCurrentName: {3}\nsourceOppositeName: {4}\nfixedOppositeName: {5}\nIsLeftSide: {6}",
+               action, _gitRepository.Path, refs.ToString(),
+               sourceCurrentName, sourceOppositeName, fixedOppositeName, isLeftSide));
       }
 
       private readonly IGitRepository _gitRepository;
@@ -144,7 +152,7 @@ namespace mrHelper.Core.Matching
       /// <summary>
       /// Notify user about impossible match
       /// </summary>
-      private readonly Action _onWrongMatch;
+      private readonly Func<bool> _onWrongMatch;
 
       /// <summary>
       /// Notify user about file move

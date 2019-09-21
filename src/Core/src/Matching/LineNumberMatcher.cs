@@ -37,33 +37,36 @@ namespace mrHelper.Core.Matching
          }
 
          DiffRefs refs = inDiffPosition.Refs;
-         int oppositeLine = getOppositeLine(refs, matchInfo);
-
          int currentLine = matchInfo.LineNumber;
          bool isLeftSide = matchInfo.IsLeftSideLineNumber;
+         int? oppositeLine = getOppositeLine(refs, isLeftSide, inDiffPosition.LeftPath, inDiffPosition.RightPath,
+            currentLine);
+
+         string currentLineAsString = currentLine.ToString();
+         string oppositeLineAsString = oppositeLine == null ? null : oppositeLine.ToString();
 
          outDiffPosition = inDiffPosition;
-         outDiffPosition.LeftLine = (isLeftSide ? currentLine : oppositeLine).ToString();
-         outDiffPosition.RightLine = (isLeftSide ? oppositeLine : currentLine).ToString();
+         outDiffPosition.LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString;
+         outDiffPosition.RightLine = isLeftSide ? oppositeLineAsString : currentLineAsString;
          return true;
       }
 
-      private int getOppositeLine(DiffRefs refs, MatchInfo matchInfo)
+      private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,
+         int lineNumber)
       {
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
          FullContextDiff context = provider.GetFullContextDiff(
-            refs.LeftSHA, refs.RightSHA, matchInfo.LeftFileName, matchInfo.RightFileName);
+            refs.LeftSHA, refs.RightSHA, leftFileName, rightFileName);
 
          Debug.Assert(context.Left.Count == context.Right.Count);
 
-         SparsedList<string> currentList = matchInfo.IsLeftSideLineNumber ? context.Left : context.Right;
-         SparsedList<string> oppositeList = matchInfo.IsLeftSideLineNumber ? context.Right : context.Left;
+         SparsedList<string> currentList = isLeftSide ? context.Left : context.Right;
+         SparsedList<string> oppositeList = isLeftSide ? context.Right : context.Left;
 
-         SparsedListIterator<string> itCurrentList = SparsedListUtils.FindNth(currentList.Begin(), matchInfo.LineNumber - 1);
+         SparsedListIterator<string> itCurrentList = SparsedListUtils.FindNth(currentList.Begin(), lineNumber - 1);
          SparsedListIterator<string> itOppositeList = SparsedListUtils.Advance(oppositeList.Begin(), itCurrentList.Position);
 
-         // TODO How it worked before w/o Value?
-         return itOppositeList.LineNumber.Value + 1;
+         return itOppositeList.LineNumber == null ? new Nullable<int>() : itOppositeList.LineNumber.Value + 1;
       }
 
       private readonly IGitRepository _gitRepository;
