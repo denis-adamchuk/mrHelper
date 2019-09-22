@@ -409,7 +409,7 @@ namespace mrHelper.App.Forms
                   {
                      await onDiffCommand(argumentsString);
                   }
-                  else if (command == "open")
+                  else
                   {
                      await onOpenCommand(argumentsString);
                   }
@@ -473,9 +473,8 @@ namespace mrHelper.App.Forms
 
       async private Task onOpenCommand(string argumentsString)
       {
-         string url = argumentsString.Split('|')[2];
-         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
-         url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
+         string[] arguments = argumentsString.Split('|');
+         string url = arguments[1];
 
          try
          {
@@ -492,6 +491,9 @@ namespace mrHelper.App.Forms
 
       async private Task connectToUrl(string url)
       {
+         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
+         url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
+
          GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl;
          try
          {
@@ -505,9 +507,9 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchHostAsync(mergeRequestUrl.Host);
-            await _workflow.SwitchProjectAsync(mergeRequestUrl.Project);
-            await _workflow.SwitchMergeRequestAsync(mergeRequestUrl.IId);
+            await _workflow.SwitchHostAsync(mergeRequestUrl.Host, false);
+            await _workflow.SwitchProjectAsync(mergeRequestUrl.Project, false);
+            await _workflow.SwitchMergeRequestAsync(mergeRequestUrl.IId, true);
          }
          catch (WorkflowException ex)
          {

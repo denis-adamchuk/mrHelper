@@ -33,7 +33,7 @@ namespace mrHelper.Client.Workflow
                // emulate host change to reload project list
                try
                {
-                  await switchHostAsync(State.HostName);
+                  await switchHostAsync(State.HostName, true);
                }
                catch (WorkflowException)
                {
@@ -45,7 +45,7 @@ namespace mrHelper.Client.Workflow
                // emulate project change to reload merge request list
                try
                {
-                  await switchProjectAsync(State.Project.Path_With_Namespace);
+                  await switchProjectAsync(State.Project.Path_With_Namespace, true);
                }
                catch (WorkflowException)
                {
@@ -60,27 +60,15 @@ namespace mrHelper.Client.Workflow
 
       async public Task InitializeAsync(string hostname)
       {
-         await switchHostAsync(hostname);
+         await switchHostAsync(hostname, true);
       }
 
-      async public Task SwitchHostAsync(string hostName)
+      async public Task SwitchHostAsync(string hostName, bool recursive)
       {
-         await switchHostAsync(hostName);
+         await switchHostAsync(hostName, recursive);
       }
 
-      async public Task SwitchProjectAsync(string projectName)
-      {
-         if (State == null)
-         {
-            // not initialized
-            Debug.Assert(false);
-            return;
-         }
-
-         await switchProjectAsync(projectName);
-      }
-
-      async public Task SwitchMergeRequestAsync(int mergeRequestIId)
+      async public Task SwitchProjectAsync(string projectName, bool recursive)
       {
          if (State == null)
          {
@@ -89,7 +77,19 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         await switchMergeRequestAsync(mergeRequestIId);
+         await switchProjectAsync(projectName, recursive);
+      }
+
+      async public Task SwitchMergeRequestAsync(int mergeRequestIId, bool recursive)
+      {
+         if (State == null)
+         {
+            // not initialized
+            Debug.Assert(false);
+            return;
+         }
+
+         await switchMergeRequestAsync(mergeRequestIId, recursive);
       }
 
       async public Task CancelAsync()
@@ -152,7 +152,7 @@ namespace mrHelper.Client.Workflow
 
       public WorkflowState State { get; private set; }
 
-      async private Task switchHostAsync(string hostName)
+      async private Task switchHostAsync(string hostName, bool recursive)
       {
          PreSwitchHost?.Invoke(hostName);
 
@@ -197,14 +197,17 @@ namespace mrHelper.Client.Workflow
 
          PostSwitchHost?.Invoke(State, projects);
 
-         string projectName = selectProjectFromList(projects);
-         if (projectName != String.Empty)
+         if (recursive)
          {
-            await switchProjectAsync(projectName);
+            string projectName = selectProjectFromList(projects);
+            if (projectName != String.Empty)
+            {
+               await switchProjectAsync(projectName, true);
+            }
          }
       }
 
-      async private Task switchProjectAsync(string projectName)
+      async private Task switchProjectAsync(string projectName, bool recursive)
       {
          PreSwitchProject?.Invoke(projectName);
 
@@ -238,14 +241,17 @@ namespace mrHelper.Client.Workflow
 
          PostSwitchProject?.Invoke(State, mergeRequests);
 
-         int? iid = selectMergeRequestFromList(mergeRequests);
-         if (iid.HasValue)
+         if (recursive)
          {
-            await switchMergeRequestAsync(iid.Value);
+            int? iid = selectMergeRequestFromList(mergeRequests);
+            if (iid.HasValue)
+            {
+               await switchMergeRequestAsync(iid.Value, recursive);
+            }
          }
       }
 
-      async private Task switchMergeRequestAsync(int mergeRequestIId)
+      async private Task switchMergeRequestAsync(int mergeRequestIId, bool recursive)
       {
          PreSwitchMergeRequest?.Invoke(mergeRequestIId);
 
@@ -274,11 +280,14 @@ namespace mrHelper.Client.Workflow
 
          PostSwitchMergeRequest?.Invoke(State);
 
-         if (!await loadCommitsAsync() || !await loadSystemNotesAsync())
+         if (recursive)
          {
-            return;
+            if (!await loadCommitsAsync() || !await loadSystemNotesAsync())
+            {
+               return;
+            }
+            await loadLatestVersionAsync();
          }
-         await loadLatestVersionAsync();
       }
 
       async private Task<bool> loadCommitsAsync()

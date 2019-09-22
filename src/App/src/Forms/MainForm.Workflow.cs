@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchHostAsync(hostName);
+            await _workflow.SwitchHostAsync(hostName, true);
          }
          catch (WorkflowException ex)
          {
@@ -160,7 +160,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchProjectAsync(projectName);
+            await _workflow.SwitchProjectAsync(projectName, true);
          }
          catch (WorkflowException ex)
          {
@@ -247,7 +247,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchMergeRequestAsync(mergeRequestIId);
+            await _workflow.SwitchMergeRequestAsync(mergeRequestIId, true);
          }
          catch (WorkflowException ex)
          {
