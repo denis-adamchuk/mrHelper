@@ -8,6 +8,6 @@ namespace mrHelper.Common.Constants
 {
    public static class Constants
    {
-      public static string CustomProtocolName = "mrHelper";
+      public static string CustomProtocolName = "mrhelper";
    }
 }

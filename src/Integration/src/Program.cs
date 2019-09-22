@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using mrHelper.Common.Tools;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.IO;
+using System.Threading;
 
 namespace mrHelper.Integration
 {
@@ -17,7 +19,15 @@ namespace mrHelper.Integration
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.integration.log"));
 
-         RegisterCustomProtocol();
+         if (args.Length < 1)
+         {
+            Console.WriteLine("Usage: mrHelper.Integration InstallationDir");
+            return;
+         }
+
+         char[] charsToTrim = { '"' };
+         string path = args[0].Trim(charsToTrim);
+         RegisterCustomProtocol(path);
       }
 
       private static void HandleUnhandledException(Exception ex)
@@ -28,10 +38,10 @@ namespace mrHelper.Integration
          Application.Exit();
       }
 
-      static private void RegisterCustomProtocol()
+      static private void RegisterCustomProtocol(string directory)
       {
          string binaryFileName = "mrHelper.exe";
-         string binaryFilePath = System.IO.Path.Combine(Environment.CurrentDirectory, binaryFileName);
+         string binaryFilePath = System.IO.Path.Combine(directory, binaryFileName);
          string defaultIconString = String.Format("\"{0}\", 0", binaryFilePath);
          string commandString = String.Format("\"{0}\" open \"%1\"", binaryFilePath);
 
