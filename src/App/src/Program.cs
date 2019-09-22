@@ -10,13 +10,12 @@ using mrHelper.Client.Git;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
+using System.Text.RegularExpressions;
 
 namespace mrHelper.App
 {
    internal static class Program
    {
-      static readonly string mutex_guid = "{5e9e9467-835f-497d-83de-77bdf4cfc2f1}";
-
       private static void HandleUnhandledException(Exception ex)
       {
          MessageBox.Show("Fatal error occurred, see details in logs",
@@ -25,88 +24,146 @@ namespace mrHelper.App
          Application.Exit();
       }
 
+      private static readonly Regex url_re = new Regex( String.Format(
+         @"{0}:\/\/^(http[s]?:\/\/[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
+            mrHelper.Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+      private struct LaunchContext
+      {
+         public Process CurrentProcess;
+         public Process MainInstance;
+         public string[] Arguments;
+      };
+
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
       [STAThread]
       private static void Main()
       {
-         Application.EnableVisualStyles();
-         Application.SetCompatibleTextRenderingDefault(false);
-         var arguments = Environment.GetCommandLineArgs();
-         if (arguments.Length < 2)
+         LaunchContext context = initializeLaunchContext();
+
+         if (context.Arguments.Length > 2)
          {
-            using (Mutex mutex = new Mutex(false, "Global\\" + mutex_guid))
-            {
-               if (!mutex.WaitOne(0, false))
-               {
-                  return;
-               }
-
-               Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-               Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.main.log"));
-
-               try
-               {
-                  Application.Run(new MainForm());
-               }
-               catch (Exception ex) // whatever unhandled exception
-               {
-                  HandleUnhandledException(ex);
-               }
-            }
+            MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-         else if (arguments[1] == "diff")
+         else if (context.Arguments.Length == 2 && context.Arguments[1] == "diff")
          {
-            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-            Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.diff.log"));
-
-            int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
-            string[] argumentsEx = new string[arguments.Length + 1];
-            Array.Copy(arguments, 0, argumentsEx, 0, arguments.Length);
-            argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
-
-            int mainInstancePID = ParentProcessUtilities.GetParentProcess(gitPID).Id;
-            if (mainInstancePID == -1)
+            if (context.MainInstance == context.CurrentProcess)
             {
                Debug.Assert(false);
                MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-               return;
-            }
-
-            string message = String.Join("|", argumentsEx);
-            Win32Tools.SendMessageToProcess(mainInstancePID, message);
-         }
-         else if (arguments[1] == "open")
-         {
-            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-            Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.open.log"));
-
-            Process currentProcess = Process.GetCurrentProcess();
-            Process[] processes = Process.GetProcessesByName(currentProcess.ProcessName);
-            if (processes.Length == 1)
-            {
-               // Main instance not started yet
-               throw new NotImplementedException("TODO Launch main instance");
             }
             else
             {
-               Debug.Assert(processes.Length == 2);
-
-               int mainInstancePID = processes[0].Id == currentProcess.Id ? processes[1].Id : processes[0].Id;
-               if (mainInstancePID == -1)
-               {
-                  Debug.Assert(false);
-                  MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return;
-               }
-
-               string message = String.Join("|", arguments);
-               Win32Tools.SendMessageToProcess(mainInstancePID, message);
+               onLaunchFromDiffTool(context);
             }
          }
+         else
+         {
+            if (context.Arguments.Length == 2)
+            {
+               Match m = url_re.Match(context.Arguments[1]);
+               if (!m.Success)
+               {
+                  MessageBox.Show("Invalid URL argument", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return;
+               }
+            }
+
+            if (context.MainInstance == context.CurrentProcess)
+            {
+               // currently running instance is the only one, need to convert it into a main instance
+               onLaunchMainInstace();
+            }
+            else
+            {
+               // currently running instance is concurrent to the main instance, need to signal the main one
+               onLaunchAnotherInstance(context);
+            }
+         }
+      }
+
+      private static LaunchContext initializeLaunchContext()
+      {
+         LaunchContext context = new LaunchContext
+         {
+            CurrentProcess = Process.GetCurrentProcess(),
+            Arguments = Environment.GetCommandLineArgs()
+         };
+
+         Process[] processes = Process.GetProcessesByName(context.CurrentProcess.ProcessName);
+         if (processes.Length == 1)
+         {
+            context.MainInstance = context.CurrentProcess;
+         }
+         else if (processes.Length == 2)
+         {
+            context.MainInstance = processes[0].Id == context.CurrentProcess.Id ? processes[1] : processes[0];
+         }
+         else
+         {
+            Debug.Assert(false);
+         }
+
+         return context;
+      }
+
+      private static void onLaunchMainInstace()
+      {
+         Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.main.log"));
+
+         Application.EnableVisualStyles();
+         Application.SetCompatibleTextRenderingDefault(false);
+
+         try
+         {
+            Application.Run(new MainForm());
+         }
+         catch (Exception ex) // whatever unhandled exception
+         {
+            HandleUnhandledException(ex);
+         }
+      }
+
+      private static void onLaunchAnotherInstance(LaunchContext context)
+      {
+         Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.another.log"));
+
+         if (context.Arguments.Length > 1)
+         {
+            string message = String.Join("|", context.Arguments);
+            Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
+         }
+
+         NativeMethods.SetForegroundWindow(context.MainInstance.MainWindowHandle);
+      }
+
+      private static void onLaunchFromDiffTool(LaunchContext context)
+      {
+         Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.diff.log"));
+
+         Debug.Assert(context.CurrentProcess != context.MainInstance);
+         int gitPID = Common.Tools.Helpers.GetGitParentProcessId(context.CurrentProcess, context.MainInstance);
+         if (gitPID == -1)
+         {
+            MessageBox.Show("Cannot find parent git process", "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return;
+         }
+
+         string[] argumentsEx = new string[context.Arguments.Length + 1];
+         Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
+         argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
+
+         string message = String.Join("|", argumentsEx);
+         Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
+
+         NativeMethods.SetForegroundWindow(context.MainInstance.MainWindowHandle);
       }
    }
 }

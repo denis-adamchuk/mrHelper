@@ -43,7 +43,7 @@ namespace mrHelper.Integration
          string binaryFileName = "mrHelper.exe";
          string binaryFilePath = System.IO.Path.Combine(directory, binaryFileName);
          string defaultIconString = String.Format("\"{0}\", 0", binaryFilePath);
-         string commandString = String.Format("\"{0}\" open \"%1\"", binaryFilePath);
+         string commandString = String.Format("\"{0}\" \"%1\"", binaryFilePath);
 
          CustomProtocol protocol = new CustomProtocol(mrHelper.Common.Constants.Constants.CustomProtocolName,
             "Merge Request Helper for GitLab link protocol",

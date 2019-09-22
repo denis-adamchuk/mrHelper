@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace mrHelper.Core.Interprocess
+namespace mrHelper.Common.Tools
 {
     public static class NativeMethods
     {
@@ -21,6 +21,9 @@ namespace mrHelper.Core.Interprocess
         /// that has the specified class name and window name.</returns>
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         /// <summary>
         /// Handle used to send the message to all windows

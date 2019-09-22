@@ -1,9 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using mrHelper.Core.Interprocess;
 
-namespace mrHelper.Core.Interprocess
+namespace mrHelper.Common.Tools
 {
    public static class Win32Tools
    {

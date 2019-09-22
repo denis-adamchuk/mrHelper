@@ -23,7 +23,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       async private void MrHelperForm_Load(object sender, EventArgs e)
       {
-         Win32Tools.EnableCopyDataMessageHandling(this.Handle);
+         Common.Tools.Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
          loadSettings();
          addCustomActions();
@@ -397,9 +397,9 @@ namespace mrHelper.App.Forms
 
       protected override void WndProc(ref Message rMessage)
       {
-         if (rMessage.Msg == NativeMethods.WM_COPYDATA)
+         if (rMessage.Msg == Common.Tools.NativeMethods.WM_COPYDATA)
          {
-            string argumentsString = Win32Tools.HandleSentMessage(rMessage.LParam);
+            string argumentsString = Common.Tools.Win32Tools.HandleSentMessage(rMessage.LParam);
 
             BeginInvoke(new Action(
                async () =>
@@ -477,6 +477,21 @@ namespace mrHelper.App.Forms
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
+         try
+         {
+            await connectToUrl(url);
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert((ex is UriFormatException) || (ex is WorkflowException));
+            MessageBox.Show(String.Format("Cannot process request to open \"{0}\"", url), "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+      }
+
+      async private Task connectToUrl(string url)
+      {
          GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl;
          try
          {
@@ -485,7 +500,7 @@ namespace mrHelper.App.Forms
          catch (UriFormatException ex)
          {
             ExceptionHandlers.Handle(ex, String.Format("Bad URL {0}", url));
-            return;
+            throw;
          }
 
          try
@@ -497,6 +512,7 @@ namespace mrHelper.App.Forms
          catch (WorkflowException ex)
          {
             ExceptionHandlers.Handle(ex, String.Format("Cannot switch to {0}", url));
+            throw;
          }
       }
 

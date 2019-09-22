@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace mrHelper.Core.Interprocess
+namespace mrHelper.Common.Tools
 {
 
 /// <summary>
@@ -15,34 +15,27 @@ namespace mrHelper.Core.Interprocess
 public struct ParentProcessUtilities
 {
    // These members must match PROCESS_BASIC_INFORMATION
-   internal IntPtr Reserved1;
-   internal IntPtr PebBaseAddress;
-   internal IntPtr Reserved2_0;
-   internal IntPtr Reserved2_1;
-   internal IntPtr UniqueProcessId;
-   internal IntPtr InheritedFromUniqueProcessId;
+   private struct PROCESS_BASIC_INFORMATION
+   {
+      public IntPtr Reserved1;
+      public IntPtr PebBaseAddress;
+      public IntPtr Reserved2_0;
+      public IntPtr Reserved2_1;
+      public IntPtr UniqueProcessId;
+      public IntPtr InheritedFromUniqueProcessId;
+   }
 
    [DllImport("ntdll.dll")]
    private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass,
-      ref ParentProcessUtilities processInformation, int processInformationLength, out int returnLength);
-
-   /// <summary>
-   /// Gets the parent process of the current process.
-   /// </summary>
-   /// <returns>An instance of the Process class.</returns>
-   public static Process GetParentProcess()
-   {
-      return GetParentProcess(Process.GetCurrentProcess().Handle);
-   }
+      ref PROCESS_BASIC_INFORMATION processInformation, int processInformationLength, out int returnLength);
 
    /// <summary>
    /// Gets the parent process of specified process.
    /// </summary>
-   /// <param name="id">The process id.</param>
+   /// <param name="process">The process object.</param>
    /// <returns>An instance of the Process class.</returns>
-   public static Process GetParentProcess(int id)
+   public static Process GetParentProcess(Process process)
    {
-      Process process = Process.GetProcessById(id);
       return GetParentProcess(process.Handle);
    }
 
@@ -51,13 +44,14 @@ public struct ParentProcessUtilities
    /// </summary>
    /// <param name="handle">The process handle.</param>
    /// <returns>An instance of the Process class.</returns>
-   public static Process GetParentProcess(IntPtr handle)
+   private static Process GetParentProcess(IntPtr handle)
    {
-      ParentProcessUtilities pbi = new ParentProcessUtilities();
-      int returnLength;
-      int status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out returnLength);
+      PROCESS_BASIC_INFORMATION pbi = new PROCESS_BASIC_INFORMATION();
+      int status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out int returnLength);
       if (status != 0)
+      {
          throw new Win32Exception(status);
+      }
 
       try
       {

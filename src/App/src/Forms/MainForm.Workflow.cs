@@ -53,6 +53,22 @@ namespace mrHelper.App.Forms
 
       async private Task initializeWorkflow()
       {
+         string[] arguments = Environment.GetCommandLineArgs();
+         if (arguments.Length > 1)
+         {
+            string url = arguments[1];
+            try
+            {
+               await connectToUrl(url);
+               return;
+            }
+            catch (UriFormatException)
+            {
+               MessageBox.Show(String.Format("Cannot open \"{0}\"", url), "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+         }
+
          string hostname = getInitialHostName();
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
 

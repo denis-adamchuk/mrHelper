@@ -1,19 +1,19 @@
 using System;
 using System.Diagnostics;
 
-namespace mrHelper.Core.Interprocess
+namespace mrHelper.Common.Tools
 {
    public static class Helpers
    {
-      public static int GetGitParentProcessId(int mrHelperProcessId)
+      public static int GetGitParentProcessId(Process currentProcess, Process mainInstance)
       {
          Process previousParent = null;
-         Process parent = ParentProcessUtilities.GetParentProcess(mrHelperProcessId);
+         Process parent = ParentProcessUtilities.GetParentProcess(currentProcess);
 
-         while (parent != null && parent.ProcessName != "mrHelper")
+         while (parent != null && parent != mainInstance)
          {
             previousParent = parent;
-            parent = ParentProcessUtilities.GetParentProcess(parent.Id);
+            parent = ParentProcessUtilities.GetParentProcess(parent);
          }
 
          if (previousParent == null || previousParent.ProcessName != "git")

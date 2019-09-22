@@ -57,8 +57,6 @@
     <Compile Include="src\Context\EnhancedContextMaker.cs" />
     <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="src\Context\DiffContextFormatter.cs" />
-    <Compile Include="src\Interprocess\NativeMethods.cs" />
-    <Compile Include="src\Interprocess\Win32Tools.cs" />
     <Compile Include="src\Tools\SparsedList.cs" />
     <Compile Include="src\Tools\SparsedListIterator.cs" />
     <Compile Include="src\Tools\SparsedListUtils.cs" />
@@ -67,8 +65,6 @@
     <Compile Include="src\Interprocess\Snapshot.cs" />
     <Compile Include="src\Interprocess\SnapshotSerializer.cs" />
     <Compile Include="src\Interprocess\DiffArgumentParser.cs" />
-    <Compile Include="src\Interprocess\ParentProcessUtilities.cs" />
-    <Compile Include="src\Interprocess\Helpers.cs" />
     <Compile Include="src\Matching\FileNameMatcher.cs" />
     <Compile Include="src\Matching\MatchInfo.cs" />
     <Compile Include="src\Matching\LineNumberMatcher.cs" />
