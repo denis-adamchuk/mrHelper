@@ -474,7 +474,7 @@ namespace mrHelper.App.Forms
       async private Task onOpenCommand(string argumentsString)
       {
          string url = argumentsString.Split('|')[2];
-         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName;
+         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
          GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl;
