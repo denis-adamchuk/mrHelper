@@ -35,7 +35,8 @@ namespace mrHelper.Integration
          string defaultIconString = String.Format("\"{0}\", 0", binaryFilePath);
          string commandString = String.Format("\"{0}\" open \"%1\"", binaryFilePath);
 
-         CustomProtocol protocol = new CustomProtocol("mrHelper", "Merge Request Helper for GitLab link protocol",
+         CustomProtocol protocol = new CustomProtocol(mrHelper.Common.Constants.Constants.CustomProtocolName,
+            "Merge Request Helper for GitLab link protocol",
             new Dictionary<string, string>{ { "open", commandString } }, defaultIconString);
          protocol.RegisterInRegistry();
       }

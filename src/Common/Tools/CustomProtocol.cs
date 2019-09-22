@@ -27,7 +27,7 @@ namespace mrHelper.Integration
       {
          RegistryKey hcr = Registry.ClassesRoot;
          RegistryKey appSubKey = hcr.CreateSubKey(ProtocolName);
-         appSubKey.SetValue(String.Empty /* Default */, ProtocolDescription);
+         appSubKey.SetValue(String.Empty /* Default */, String.Format("URL: {0}", ProtocolDescription));
          appSubKey.SetValue("URL Protocol", String.Empty);
 
          RegistryKey defaultIconSubKey = hcr.CreateSubKey(
