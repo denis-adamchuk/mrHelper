@@ -7,6 +7,7 @@ using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
 
@@ -43,7 +44,7 @@ namespace mrHelper.App
                }
 
                Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-               setupTraceListener("mrHelper.main.log");
+               Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.main.log"));
 
                try
                {
@@ -58,7 +59,7 @@ namespace mrHelper.App
          else if (arguments[1] == "diff")
          {
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-            setupTraceListener("mrHelper.diff.log");
+            Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.diff.log"));
 
             int gitPID = mrHelper.Core.Interprocess.Helpers.GetGitParentProcessId(Process.GetCurrentProcess().Id);
             string[] argumentsEx = new string[arguments.Length + 1];
@@ -80,7 +81,7 @@ namespace mrHelper.App
          else if (arguments[1] == "open")
          {
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-            setupTraceListener("mrHelper.open.log");
+            Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.open.log"));
 
             Process currentProcess = Process.GetCurrentProcess();
             Process[] processes = Process.GetProcessesByName(currentProcess.ProcessName);
@@ -106,14 +107,6 @@ namespace mrHelper.App
                Win32Tools.SendMessageToProcess(mainInstancePID, message);
             }
          }
-      }
-
-      private static void setupTraceListener(string logfilename)
-      {
-         string logFilePath = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mrHelper", logfilename);
-         Trace.Listeners.Add(new CustomTraceListener(logFilePath));
-         Trace.AutoFlush = true;
       }
    }
 }

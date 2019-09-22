@@ -139,7 +139,6 @@
     <Compile Include="src\Helpers\DiscussionFilter.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
-    <Compile Include="src\Helpers\CustomTraceListener.cs" />
     <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
       <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>

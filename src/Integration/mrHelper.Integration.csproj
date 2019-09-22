@@ -4,16 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>mrHelper.Common</RootNamespace>
-    <AssemblyName>mrHelper.Common</AssemblyName>
+    <ProjectGuid>{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>mrHelper.Integration</RootNamespace>
+    <AssemblyName>mrHelper.Integration</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,6 +25,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\Release\</OutputPath>
@@ -34,25 +36,30 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Exceptions\CustomCommandLoaderException.cs" />
-    <Compile Include="Exceptions\DiffToolIntegrationException.cs" />
-    <Compile Include="Exceptions\GitExceptions.cs" />
-    <Compile Include="Interfaces\CommandCallbackItf.cs" />
-    <Compile Include="Interfaces\CommandItf.cs" />
-    <Compile Include="Interfaces\GitRepositoryItf.cs" />
-    <Compile Include="Interfaces\GlobalGitConfigurationItf.cs" />
-    <Compile Include="Interfaces\IntegratedDiffToolItf.cs" />
-    <Compile Include="Types\ProjectKey.cs" />
-    <Compile Include="Tools\CustomProtocol.cs" />
-    <Compile Include="Tools\CustomTraceListener.cs" />
+    <Compile Include="src\Program.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
+      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mrHelper.Integration.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
