@@ -11,6 +11,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace mrHelper.App
 {
@@ -42,7 +43,6 @@ namespace mrHelper.App
             {
                if (context.IsRunningMainInstance())
                {
-                  Debug.Assert(false);
                   MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
                      MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                }
@@ -71,6 +71,7 @@ namespace mrHelper.App
             if (context.IsRunningMainInstance())
             {
                // currently running instance is the only one, need to convert it into a main instance
+               Directory.SetCurrentDirectory(Path.GetDirectoryName(context.MainInstance.MainModule.FileName));
                onLaunchMainInstace();
             }
             else
