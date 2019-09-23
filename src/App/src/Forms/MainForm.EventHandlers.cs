@@ -399,7 +399,7 @@ namespace mrHelper.App.Forms
       {
          if (rMessage.Msg == Common.Tools.NativeMethods.WM_COPYDATA)
          {
-            string argumentsString = Common.Tools.Win32Tools.HandleSentMessage(rMessage.LParam);
+            string argumentsString = Common.Tools.Win32Tools.ConvertMessageToText(rMessage.LParam);
 
             BeginInvoke(new Action(
                async () =>

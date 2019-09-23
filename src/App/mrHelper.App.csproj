@@ -137,6 +137,7 @@
     </Compile>
     <Compile Include="src\Helpers\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\DiscussionFilter.cs" />
+    <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />

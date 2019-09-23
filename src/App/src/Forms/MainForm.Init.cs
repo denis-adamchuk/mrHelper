@@ -161,7 +161,7 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
          labelGitStatus.Text = String.Empty;
-         this.Text += " (" + Application.ProductVersion + ")";
+         Text = Common.Constants.Constants.MainWindowCaption + " (" + Application.ProductVersion + ")";
 
          bool configured = listViewKnownHosts.Items.Count > 0
                         && textBoxLocalGitFolder.Text.Length > 0;

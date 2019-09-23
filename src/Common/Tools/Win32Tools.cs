@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -50,10 +51,25 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public static void SendMessageToProcess(int pid, string message)
+      public static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId)
       {
-         Process process = Process.GetProcessById(pid);
+         List<IntPtr> handles = new List<IntPtr>();
 
+         foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+         {
+            NativeMethods.EnumThreadWindows(thread.Id,
+               (hWnd, lParam) =>
+            {
+               handles.Add(hWnd);
+               return true;
+            }, IntPtr.Zero);
+         }
+
+         return handles;
+      }
+
+      public static void SendMessageToWindow(IntPtr window, string message)
+      {
          IntPtr ptrCopyData = IntPtr.Zero;
          try
          {
@@ -65,7 +81,7 @@ namespace mrHelper.Common.Tools
             ptrCopyData = Marshal.AllocCoTaskMem(Marshal.SizeOf(copyData));
             Marshal.StructureToPtr(copyData, ptrCopyData, false);
 
-            NativeMethods.SendMessage(process.MainWindowHandle, NativeMethods.WM_COPYDATA, IntPtr.Zero, ptrCopyData);
+            NativeMethods.SendMessage(window, NativeMethods.WM_COPYDATA, IntPtr.Zero, ptrCopyData);
          }
          finally
          {
@@ -76,11 +92,10 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public static string HandleSentMessage(IntPtr message)
+      public static string ConvertMessageToText(IntPtr message)
       {
          NativeMethods.COPYDATASTRUCT copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(
             message, typeof(NativeMethods.COPYDATASTRUCT));
-         int dataType = (int)copyData.dwData;
          return Marshal.PtrToStringAnsi(copyData.lpData);
       }
    }

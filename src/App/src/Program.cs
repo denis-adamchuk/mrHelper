@@ -28,26 +28,19 @@ namespace mrHelper.App
          @"^({0}:\/\/)?(http[s]?:\/\/[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
             mrHelper.Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-      private struct LaunchContext
-      {
-         public Process CurrentProcess;
-         public Process MainInstance;
-         public string[] Arguments;
-      };
-
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
       [STAThread]
       private static void Main()
       {
-         LaunchContext context = initializeLaunchContext();
+         LaunchContext context = new LaunchContext();
 
          if (context.Arguments.Length > 2)
          {
             if (context.Arguments[1] == "diff")
             {
-               if (context.MainInstance == context.CurrentProcess)
+               if (context.IsRunningMainInstance())
                {
                   Debug.Assert(false);
                   MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
@@ -75,7 +68,7 @@ namespace mrHelper.App
                }
             }
 
-            if (context.MainInstance == context.CurrentProcess)
+            if (context.IsRunningMainInstance())
             {
                // currently running instance is the only one, need to convert it into a main instance
                onLaunchMainInstace();
@@ -86,31 +79,6 @@ namespace mrHelper.App
                onLaunchAnotherInstance(context);
             }
          }
-      }
-
-      private static LaunchContext initializeLaunchContext()
-      {
-         LaunchContext context = new LaunchContext
-         {
-            CurrentProcess = Process.GetCurrentProcess(),
-            Arguments = Environment.GetCommandLineArgs()
-         };
-
-         Process[] processes = Process.GetProcessesByName(context.CurrentProcess.ProcessName);
-         if (processes.Length == 1)
-         {
-            context.MainInstance = context.CurrentProcess;
-         }
-         else if (processes.Length == 2)
-         {
-            context.MainInstance = processes[0].Id == context.CurrentProcess.Id ? processes[1] : processes[0];
-         }
-         else
-         {
-            Debug.Assert(false);
-         }
-
-         return context;
       }
 
       private static void onLaunchMainInstace()
@@ -138,13 +106,18 @@ namespace mrHelper.App
 
          try
          {
+            Debug.Assert(!context.IsRunningMainInstance());
+
             if (context.Arguments.Length > 1)
             {
                string message = String.Join("|", context.Arguments);
-               Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
+               IntPtr mainWindow = context.GetMainWindowOfMainInstance();
+               if (mainWindow != IntPtr.Zero)
+               {
+                  Win32Tools.SendMessageToWindow(mainWindow, message);
+                  NativeMethods.SetForegroundWindow(mainWindow);
+               }
             }
-
-            NativeMethods.SetForegroundWindow(context.MainInstance.MainWindowHandle);
          }
          catch (Exception ex) // whatever unhandled exception
          {
@@ -159,7 +132,7 @@ namespace mrHelper.App
 
          try
          {
-            Debug.Assert(context.CurrentProcess != context.MainInstance);
+            Debug.Assert(!context.IsRunningMainInstance());
             int gitPID = -1;
             try
             {
@@ -182,7 +155,11 @@ namespace mrHelper.App
             argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
 
             string message = String.Join("|", argumentsEx);
-            Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
+            IntPtr mainWindow = context.GetMainWindowOfMainInstance();
+            if (mainWindow != IntPtr.Zero)
+            {
+               Win32Tools.SendMessageToWindow(mainWindow, message);
+            }
          }
          catch (Exception ex) // whatever unhandled exception
          {

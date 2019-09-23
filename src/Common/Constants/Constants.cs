@@ -9,5 +9,6 @@ namespace mrHelper.Common.Constants
    public static class Constants
    {
       public static string CustomProtocolName = "mrhelper";
+      public static string MainWindowCaption  = "Merge Request Helper";
    }
 }
