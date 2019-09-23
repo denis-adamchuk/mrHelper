@@ -10,7 +10,7 @@ namespace mrHelper.Common.Tools
          Process previousParent = null;
          Process parent = ParentProcessUtilities.GetParentProcess(currentProcess);
 
-         while (parent != null && parent != mainInstance)
+         while (parent != null && parent.Id != mainInstance.Id)
          {
             previousParent = parent;
             parent = ParentProcessUtilities.GetParentProcess(parent);

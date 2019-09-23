@@ -45,19 +45,22 @@ namespace mrHelper.App
 
          if (context.Arguments.Length > 2)
          {
-            MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         else if (context.Arguments.Length == 2 && context.Arguments[1] == "diff")
-         {
-            if (context.MainInstance == context.CurrentProcess)
+            if (context.Arguments[1] == "diff")
             {
-               Debug.Assert(false);
-               MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               if (context.MainInstance == context.CurrentProcess)
+               {
+                  Debug.Assert(false);
+                  MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               }
+               else
+               {
+                  onLaunchFromDiffTool(context);
+               }
             }
             else
             {
-               onLaunchFromDiffTool(context);
+               MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
          }
          else
@@ -133,13 +136,20 @@ namespace mrHelper.App
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.another.log"));
 
-         if (context.Arguments.Length > 1)
+         try
          {
-            string message = String.Join("|", context.Arguments);
-            Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
-         }
+            if (context.Arguments.Length > 1)
+            {
+               string message = String.Join("|", context.Arguments);
+               Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
+            }
 
-         NativeMethods.SetForegroundWindow(context.MainInstance.MainWindowHandle);
+            NativeMethods.SetForegroundWindow(context.MainInstance.MainWindowHandle);
+         }
+         catch (Exception ex) // whatever unhandled exception
+         {
+            HandleUnhandledException(ex);
+         }
       }
 
       private static void onLaunchFromDiffTool(LaunchContext context)
@@ -147,23 +157,37 @@ namespace mrHelper.App
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.diff.log"));
 
-         Debug.Assert(context.CurrentProcess != context.MainInstance);
-         int gitPID = Common.Tools.Helpers.GetGitParentProcessId(context.CurrentProcess, context.MainInstance);
-         if (gitPID == -1)
+         try
          {
-            MessageBox.Show("Cannot find parent git process", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            return;
+            Debug.Assert(context.CurrentProcess != context.MainInstance);
+            int gitPID = -1;
+            try
+            {
+               gitPID = Common.Tools.Helpers.GetGitParentProcessId(context.CurrentProcess, context.MainInstance);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot find parent git process");
+            }
+
+            if (gitPID == -1)
+            {
+               MessageBox.Show("Cannot find parent git process", "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               return;
+            }
+
+            string[] argumentsEx = new string[context.Arguments.Length + 1];
+            Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
+            argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
+
+            string message = String.Join("|", argumentsEx);
+            Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
          }
-
-         string[] argumentsEx = new string[context.Arguments.Length + 1];
-         Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
-         argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
-
-         string message = String.Join("|", argumentsEx);
-         Win32Tools.SendMessageToProcess(context.MainInstance.Id, message);
-
-         NativeMethods.SetForegroundWindow(context.MainInstance.MainWindowHandle);
+         catch (Exception ex) // whatever unhandled exception
+         {
+            HandleUnhandledException(ex);
+         }
       }
    }
 }
