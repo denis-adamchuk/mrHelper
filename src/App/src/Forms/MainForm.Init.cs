@@ -268,7 +268,7 @@ namespace mrHelper.App.Forms
 
                try
                {
-                  await _workflow.SwitchProjectAsync(_workflow.State.Project.Path_With_Namespace, true);
+                  await _workflow.SwitchProjectAsync(_workflow.State.Project.Path_With_Namespace);
                }
                catch (WorkflowException ex)
                {

@@ -476,46 +476,53 @@ namespace mrHelper.App.Forms
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
-         try
-         {
-            await connectToUrl(url);
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert((ex is UriFormatException) || (ex is WorkflowException));
-            MessageBox.Show(String.Format("Cannot process request to open \"{0}\"", url), "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-         }
+         await connectToUrlAsync(url);
       }
 
-      async private Task connectToUrl(string url)
+      async private Task<bool> connectToUrlAsync(string url)
       {
+         Trace.TraceInformation(String.Format("[MainForm] Connecting to URL ", url));
+
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
-         GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl;
-         try
-         {
-            mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
-         }
-         catch (UriFormatException ex)
-         {
-            ExceptionHandlers.Handle(ex, String.Format("Bad URL {0}", url));
-            throw;
-         }
+         Action<string, Exception> ReportError =
+            (msg, ex) =>
+          {
+             MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex.Message),
+                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+             ExceptionHandlers.Handle(ex, String.Format("Cannot open URL", url));
+          };
 
          try
          {
-            await _workflow.SwitchHostAsync(mergeRequestUrl.Host, false);
-            await _workflow.SwitchProjectAsync(mergeRequestUrl.Project, false);
-            await _workflow.SwitchMergeRequestAsync(mergeRequestUrl.IId, true);
+            GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
+            await _workflow.InitializeAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
          }
-         catch (WorkflowException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, String.Format("Cannot switch to {0}", url));
-            throw;
+            if (ex is NotEnabledProjectException)
+            {
+               ReportError(String.Format("Current version supports connection to URL for projects listed in {0} only. ",
+                  Tools.ProjectListFileName), ex);
+            }
+            else if (ex is NotAvailableMergeRequest)
+            {
+               ReportError(String.Format("Current version supports connection to URL for Open WIP merge requests only. "),
+                  ex);
+            }
+            else if (ex is UriFormatException || ex is WorkflowException)
+            {
+               ReportError(String.Empty, ex);
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
+            return false;
          }
+
+         return true;
       }
 
       private static string formatCommitComboboxItem(CommitComboBoxItem item)

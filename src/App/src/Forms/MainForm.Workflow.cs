@@ -54,19 +54,9 @@ namespace mrHelper.App.Forms
       async private Task initializeWorkflow()
       {
          string[] arguments = Environment.GetCommandLineArgs();
-         if (arguments.Length > 1)
+         if (arguments.Length > 1 && await connectToUrlAsync(arguments[1]))
          {
-            string url = arguments[1];
-            try
-            {
-               await connectToUrl(url);
-               return;
-            }
-            catch (UriFormatException)
-            {
-               MessageBox.Show(String.Format("Cannot open \"{0}\"", url), "Error",
-                  MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            return;
          }
 
          string hostname = getInitialHostName();
@@ -82,7 +72,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchHostAsync(hostName, true);
+            await _workflow.SwitchHostAsync(hostName);
          }
          catch (WorkflowException ex)
          {
@@ -160,7 +150,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchProjectAsync(projectName, true);
+            await _workflow.SwitchProjectAsync(projectName);
          }
          catch (WorkflowException ex)
          {
@@ -247,7 +237,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchMergeRequestAsync(mergeRequestIId, true);
+            await _workflow.SwitchMergeRequestAsync(mergeRequestIId);
          }
          catch (WorkflowException ex)
          {
