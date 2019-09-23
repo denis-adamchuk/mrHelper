@@ -40,6 +40,12 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void NewDiscussionForm_Shown(object sender, EventArgs e)
+      {
+         BringToFront();  // bring to the foreground
+         TopMost = false; // disable TopMost property which is initially true
+      }
+
       /// <summary>
       /// Throws ArgumentException.
       /// Throws GitOperationException and GitObjectException in case of problems with git.

@@ -135,6 +135,8 @@
          this.MinimizeBox = false;
          this.Name = "NewDiscussionForm";
          this.Text = "New Discussion";
+         this.TopMost = true;
+         this.Shown += new System.EventHandler(this.NewDiscussionForm_Shown);
          this.ResumeLayout(false);
          this.PerformLayout();
 
