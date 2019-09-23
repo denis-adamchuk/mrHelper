@@ -19,49 +19,45 @@ namespace mrHelper.App
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo)
+      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot)
       {
          _matchInfo = matchInfo;
+         _snapshot = snapshot;
       }
 
-      async public Task HandleAsync(Snapshot snapshot)
+      async public Task HandleAsync(IGitRepository gitRepository)
       {
-         using (GitClientFactory factory = new GitClientFactory(snapshot.TempFolder, null))
+         FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
+         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
+
+         DiffPosition position = new DiffPosition
          {
-            IGitRepository gitRepository = factory.GetClient(snapshot.Host, snapshot.Project);
+            Refs = _snapshot.Refs
+         };
 
-            FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
-            LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
+         bool matchSucceded = false;
+         try
+         {
+            matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position) &&
+                            lineNumberMatcher.Match(_matchInfo, position, out position);
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert((ex is ArgumentException) || (ex is GitOperationException));
+            ExceptionHandlers.Handle(ex, "Cannot create DiffPosition");
+            return;
+         }
 
-            DiffPosition position = new DiffPosition
-            {
-               Refs = snapshot.Refs
-            };
+         if (!matchSucceded)
+         {
+            return;
+         }
 
-            bool matchSucceded = false;
-            try
-            {
-               matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position) &&
-                               lineNumberMatcher.Match(_matchInfo, position, out position);
-            }
-            catch (Exception ex)
-            {
-               Debug.Assert((ex is ArgumentException) || (ex is GitOperationException));
-               ExceptionHandlers.Handle(ex, "Cannot create DiffPosition");
-               return;
-            }
-
-            if (!matchSucceded)
-            {
-               return;
-            }
-
-            NewDiscussionForm form = new NewDiscussionForm(
-               _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository);
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-               await submitDiscussionAsync(snapshot, _matchInfo, position, form.Body, form.IncludeContext);
-            }
+         NewDiscussionForm form = new NewDiscussionForm(
+            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository);
+         if (form.ShowDialog() == DialogResult.OK)
+         {
+            await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
          }
       }
 
@@ -186,6 +182,7 @@ namespace mrHelper.App
       }
 
       private readonly MatchInfo _matchInfo;
+      private readonly Snapshot _snapshot;
    }
 }
 

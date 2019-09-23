@@ -13,6 +13,7 @@ using mrHelper.Client.TimeTracking;
 using mrHelper.Core.Interprocess;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -419,27 +420,13 @@ namespace mrHelper.App.Forms
          base.WndProc(ref rMessage);
       }
 
-      async private static Task onDiffCommand(string argumentsString)
+      async private Task onDiffCommand(string argumentsString)
       {
          string[] argumentsEx = argumentsString.Split('|');
          int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
 
          string[] arguments = new string[argumentsEx.Length - 1];
          Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
-
-         DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
-         DiffCallHandler handler;
-         try
-         {
-            handler = new DiffCallHandler(diffArgumentParser.Parse());
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
-            MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-         }
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          Snapshot snapshot;
@@ -457,9 +444,30 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
+         DiffCallHandler handler;
          try
          {
-            await handler.HandleAsync(snapshot);
+            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+            MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
+         Common.Interfaces.IGitRepository gitRepository = null;
+         if (_gitClientFactory.ParentFolder == snapshot.TempFolder)
+         {
+            GitClient client = getGitClient(snapshot.Host, snapshot.Project);
+            gitRepository = client.DoesRequireClone() ? null : client;
+         }
+
+         try
+         {
+            await handler.HandleAsync(gitRepository);
          }
          catch (DiscussionCreatorException ex)
          {
