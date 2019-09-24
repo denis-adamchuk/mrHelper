@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Accessors;
@@ -26,6 +23,26 @@ namespace mrHelper.App
       }
 
       async public Task HandleAsync(IGitRepository gitRepository)
+      {
+         if (gitRepository != null)
+         {
+            await doHandleAsync(gitRepository);
+            return;
+         }
+
+         Trace.TraceWarning(String.Format(
+            "[DiffCallHandler] Creating temporary GitClient for TempFolder \"{0}\", Host {1}, Project {2}",
+            _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
+
+         using (GitClientFactory factory = new GitClientFactory(_snapshot.TempFolder, null))
+         {
+            GitClient tempRepository = factory.GetClient(_snapshot.Host, _snapshot.Project);
+            Debug.Assert(!tempRepository.DoesRequireClone());
+            await doHandleAsync(tempRepository);
+         }
+      }
+
+      async public Task doHandleAsync(IGitRepository gitRepository)
       {
          FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
          LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
@@ -74,7 +91,8 @@ namespace mrHelper.App
                + "Another file:\n"
                + anotherName,
                "Cannot create a discussion",
-               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               MessageBoxButtons.OK, MessageBoxIcon.Warning,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
          },
             (currentName, anotherName, status) =>
          {
@@ -100,7 +118,8 @@ namespace mrHelper.App
                   + "Another file:\n"
                   + anotherName,
                   "Rename detected",
-                  MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2)
+                  MessageBoxButtons.YesNo, MessageBoxIcon.Information,
+                  MessageBoxDefaultButton.Button2, MessageBoxOptions.ServiceNotification)
                == DialogResult.Yes;
          },
             () =>
@@ -109,7 +128,8 @@ namespace mrHelper.App
             return MessageBox.Show(
                   "Merge Request Helper detected that selected files do not match to each other. "
                   + question, "Files do not match",
-                  MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
+                  MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+                  MessageBoxDefaultButton.Button2, MessageBoxOptions.ServiceNotification)
                == DialogResult.Yes;
          });
       }
@@ -120,7 +140,8 @@ namespace mrHelper.App
          if (body.Length == 0)
          {
             MessageBox.Show("Discussion text cannot be empty", "Warning",
-               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
             return;
          }
 

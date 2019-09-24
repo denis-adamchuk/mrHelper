@@ -55,7 +55,7 @@ namespace mrHelper.App.Forms
          DiffPosition position, IGitRepository gitRepository)
       {
          ContextDepth depth = new ContextDepth(0, 3);
-         IContextMaker textContextMaker = new EnhancedContextMaker(gitRepository);
+         IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
          DiffContext context = textContextMaker.GetContext(position, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
