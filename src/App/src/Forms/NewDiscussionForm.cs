@@ -43,9 +43,8 @@ namespace mrHelper.App.Forms
 
       private void NewDiscussionForm_Shown(object sender, EventArgs e)
       {
-         BringToFront();  // bring to the foreground
          TopMost = false; // disable TopMost property which is initially true
-         Focus();
+         Activate(); // steal Focus
       }
 
       /// <summary>
