@@ -95,10 +95,11 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            form = new DiscussionsForm(_workflow.State.MergeRequestDescriptor, _workflow.State.MergeRequest.Title,
-               _workflow.State.MergeRequest.Author, client, int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               discussions, _discussionManager, _workflow.State.CurrentUser,
-               async (mrd) =>
+            DiscussionsForm discussionsForm = new DiscussionsForm(_workflow.State.MergeRequestDescriptor,
+               _workflow.State.MergeRequest.Title, _workflow.State.MergeRequest.Author, client,
+               int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager,
+               _workflow.State.CurrentUser,
+                  async (mrd) =>
                {
                   try
                   {
@@ -115,6 +116,7 @@ namespace mrHelper.App.Forms
                      ExceptionHandlers.Handle(ex, "Cannot update git repository on refreshing discussions");
                   }
                });
+            form = discussionsForm;
          }
          catch (NoDiscussionsToShow)
          {

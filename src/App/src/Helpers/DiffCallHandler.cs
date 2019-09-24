@@ -52,7 +52,7 @@ namespace mrHelper.App
             Refs = _snapshot.Refs
          };
 
-         bool matchSucceded = false;
+         bool matchSucceded;
          try
          {
             matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position) &&
@@ -70,11 +70,13 @@ namespace mrHelper.App
             return;
          }
 
-         NewDiscussionForm form = new NewDiscussionForm(
-            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository);
-         if (form.ShowDialog() == DialogResult.OK)
+         using (NewDiscussionForm form = new NewDiscussionForm(
+            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository))
          {
-            await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
+            }
          }
       }
 

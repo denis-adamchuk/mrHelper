@@ -44,7 +44,7 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<Project>> GetProjectsAsync(string hostName, bool publicOnly)
+      async internal Task<List<Project>> GetProjectsAsync(bool publicOnly)
       {
          try
          {

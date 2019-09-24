@@ -6,8 +6,6 @@ namespace mrHelper.Common.Types
    {
       public string HostName;
       public int ProjectId;
-
-      public string Host { get; set; }
    }
 }
 

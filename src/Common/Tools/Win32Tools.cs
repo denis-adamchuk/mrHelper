@@ -73,10 +73,12 @@ namespace mrHelper.Common.Tools
          IntPtr ptrCopyData = IntPtr.Zero;
          try
          {
-            NativeMethods.COPYDATASTRUCT copyData = new NativeMethods.COPYDATASTRUCT();
-            copyData.dwData = new IntPtr(0);
-            copyData.cbData = message.Length + 1;
-            copyData.lpData = Marshal.StringToHGlobalAnsi(message);
+            NativeMethods.COPYDATASTRUCT copyData = new NativeMethods.COPYDATASTRUCT
+            {
+               dwData = new IntPtr(0),
+               cbData = message.Length + 1,
+               lpData = Marshal.StringToHGlobalAnsi(message)
+            };
 
             ptrCopyData = Marshal.AllocCoTaskMem(Marshal.SizeOf(copyData));
             Marshal.StructureToPtr(copyData, ptrCopyData, false);

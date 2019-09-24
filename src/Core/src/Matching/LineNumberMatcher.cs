@@ -43,7 +43,7 @@ namespace mrHelper.Core.Matching
             currentLine);
 
          string currentLineAsString = currentLine.ToString();
-         string oppositeLineAsString = oppositeLine == null ? null : oppositeLine.ToString();
+         string oppositeLineAsString = oppositeLine?.ToString();
 
          outDiffPosition = inDiffPosition;
          outDiffPosition.LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString;

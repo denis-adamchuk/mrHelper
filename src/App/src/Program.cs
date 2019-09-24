@@ -96,15 +96,13 @@ namespace mrHelper.App
                return;
             }
 
-            string message = String.Join("|", context.Arguments);
-            Trace.TraceInformation(String.Format("Launched secondary instance. Arguments: {0}", message));
-
             IntPtr mainWindow = context.GetWindowByCaption(
                mrHelper.Common.Constants.Constants.MainWindowCaption, true);
             if (mainWindow != IntPtr.Zero)
             {
                if (context.Arguments.Length > 1)
                {
+                  string message = String.Join("|", context.Arguments);
                   Win32Tools.SendMessageToWindow(mainWindow, message);
                }
                NativeMethods.SetForegroundWindow(mainWindow);

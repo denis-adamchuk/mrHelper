@@ -256,7 +256,7 @@ namespace mrHelper.Client.Workflow
          {
             currentUser = await Operator.GetCurrentUserAsync();
             projects = hasEnabledProjects ?
-               enabledProjects : await Operator.GetProjectsAsync(hostName, Settings.ShowPublicOnly);
+               enabledProjects : await Operator.GetProjectsAsync(Settings.ShowPublicOnly);
          }
          catch (OperatorException ex)
          {

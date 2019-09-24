@@ -84,7 +84,7 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> connectToUrlAsync(string url)
       {
-         Trace.TraceInformation(String.Format("[MainForm] Connecting to URL ", url));
+         Trace.TraceInformation(String.Format("[MainForm] Connecting to URL {0}", url));
 
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;

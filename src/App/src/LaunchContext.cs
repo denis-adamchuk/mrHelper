@@ -23,7 +23,7 @@ namespace mrHelper.App
       public Process CurrentProcess;
       public bool IsRunningSingleInstance;
       public string[] Arguments;
-      private Process[] AllProcesses;
+      private readonly Process[] AllProcesses;
 
       public IntPtr GetWindowByCaption(string caption, bool startsWith)
       {
