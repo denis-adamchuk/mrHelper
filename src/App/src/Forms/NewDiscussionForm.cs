@@ -23,6 +23,7 @@ namespace mrHelper.App.Forms
          htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
 
+         this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
       }
@@ -44,6 +45,7 @@ namespace mrHelper.App.Forms
       {
          BringToFront();  // bring to the foreground
          TopMost = false; // disable TopMost property which is initially true
+         Focus();
       }
 
       /// <summary>

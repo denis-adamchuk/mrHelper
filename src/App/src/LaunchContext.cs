@@ -12,49 +12,36 @@ namespace mrHelper.App
    {
       public LaunchContext()
       {
-         CurrentProcess = Process.GetCurrentProcess();
          Arguments = Environment.GetCommandLineArgs();
-         MainInstance = getMainInstance();
-      }
 
-      public bool IsRunningMainInstance()
-      {
-         return CurrentProcess.Id == MainInstance.Id;
+         CurrentProcess = Process.GetCurrentProcess();
+         AllProcesses = Process.GetProcessesByName(CurrentProcess.ProcessName);
+
+         IsRunningSingleInstance = AllProcesses.Length == 1;
       }
 
       public Process CurrentProcess;
-      public Process MainInstance;
+      public bool IsRunningSingleInstance;
       public string[] Arguments;
+      private Process[] AllProcesses;
 
-      public IntPtr GetMainWindowOfMainInstance()
+      public IntPtr GetWindowByCaption(string caption, bool startsWith)
       {
-         StringBuilder strbTitle = new StringBuilder(255);
-         foreach (IntPtr window in Win32Tools.EnumerateProcessWindowHandles(MainInstance.Id))
+         foreach (Process process in AllProcesses)
          {
-            int nLength = NativeMethods.GetWindowText(window, strbTitle, strbTitle.Capacity + 1);
-            string strTitle = strbTitle.ToString();
-            if (strTitle.StartsWith(Common.Constants.Constants.MainWindowCaption))
+            StringBuilder strbTitle = new StringBuilder(255);
+            foreach (IntPtr window in Win32Tools.EnumerateProcessWindowHandles(process.Id))
             {
-               return window;
+               int nLength = NativeMethods.GetWindowText(window, strbTitle, strbTitle.Capacity + 1);
+               string strTitle = strbTitle.ToString();
+               if ((startsWith && strTitle.StartsWith(caption)) || (!startsWith && strTitle == caption))
+               {
+                  return window;
+               }
             }
          }
+
          return IntPtr.Zero;
-      }
-
-      private Process getMainInstance()
-      {
-         Process[] processes = Process.GetProcessesByName(CurrentProcess.ProcessName);
-         if (processes.Length == 1)
-         {
-            return CurrentProcess;
-         }
-         else if (processes.Length == 2)
-         {
-            return processes[0].Id == CurrentProcess.Id ? processes[1] : processes[0];
-         }
-
-         Debug.Assert(false);
-         return null;
       }
    };
 }

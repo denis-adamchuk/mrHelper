@@ -494,11 +494,12 @@ namespace mrHelper.App.Forms
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
-         Action<string, Exception> ReportError =
-            (msg, ex) =>
+         Action<string, Exception, bool> ReportError =
+            (msg, ex, error) =>
           {
              MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex.Message),
-                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                error ? "Error" : "Warning", MessageBoxButtons.OK,
+                error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation);
              ExceptionHandlers.Handle(ex, String.Format("Cannot open URL", url));
           };
 
@@ -512,16 +513,16 @@ namespace mrHelper.App.Forms
             if (ex is NotEnabledProjectException)
             {
                ReportError(String.Format("Current version supports connection to URL for projects listed in {0} only. ",
-                  Tools.ProjectListFileName), ex);
+                  Tools.ProjectListFileName), ex, false);
             }
             else if (ex is NotAvailableMergeRequest)
             {
                ReportError(String.Format("Current version supports connection to URL for Open WIP merge requests only. "),
-                  ex);
+                  ex, false);
             }
             else if (ex is UriFormatException || ex is WorkflowException)
             {
-               ReportError(String.Empty, ex);
+               ReportError(String.Empty, ex, true);
             }
             else
             {

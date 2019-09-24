@@ -37,52 +37,17 @@ namespace mrHelper.App
       {
          LaunchContext context = new LaunchContext();
 
-         if (context.Arguments.Length > 2)
+         if (context.IsRunningSingleInstance)
          {
-            if (context.Arguments[1] == "diff")
-            {
-               if (context.IsRunningMainInstance())
-               {
-                  MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-               }
-               else
-               {
-                  onLaunchFromDiffTool(context);
-               }
-            }
-            else
-            {
-               MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            onLaunchMainInstace(context);
          }
          else
          {
-            if (context.Arguments.Length == 2)
-            {
-               Match m = url_re.Match(context.Arguments[1]);
-               if (!m.Success)
-               {
-                  MessageBox.Show("Invalid URL argument", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return;
-               }
-            }
-
-            if (context.IsRunningMainInstance())
-            {
-               // currently running instance is the only one, need to convert it into a main instance
-               Directory.SetCurrentDirectory(Path.GetDirectoryName(context.MainInstance.MainModule.FileName));
-               onLaunchMainInstace();
-            }
-            else
-            {
-               // currently running instance is concurrent to the main instance, need to signal the main one
-               onLaunchAnotherInstance(context);
-            }
+            onLaunchAnotherInstance(context);
          }
       }
 
-      private static void onLaunchMainInstace()
+      private static void onLaunchMainInstace(LaunchContext context)
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.main.log"));
@@ -92,6 +57,18 @@ namespace mrHelper.App
 
          try
          {
+            if (!checkArguments(context))
+            {
+               return;
+            }
+
+            if (context.Arguments.Length > 2 && context.Arguments[1] == "diff")
+            {
+               onLaunchFromDiffTool(context);
+               return;
+            }
+
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
             Application.Run(new MainForm());
          }
          catch (Exception ex) // whatever unhandled exception
@@ -103,20 +80,50 @@ namespace mrHelper.App
       private static void onLaunchAnotherInstance(LaunchContext context)
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.another.log"));
+         string filename = String.Format("mrHelper.secondary.{0}.log", context.CurrentProcess.Id);
+         Trace.Listeners.Add(new CustomTraceListener("mrHelper", filename));
 
          try
          {
-            Debug.Assert(!context.IsRunningMainInstance());
-
-            if (context.Arguments.Length > 1)
+            if (!checkArguments(context))
             {
-               string message = String.Join("|", context.Arguments);
-               IntPtr mainWindow = context.GetMainWindowOfMainInstance();
-               if (mainWindow != IntPtr.Zero)
+               return;
+            }
+
+            if (context.Arguments.Length > 2 && context.Arguments[1] == "diff")
+            {
+               onLaunchFromDiffTool(context);
+               return;
+            }
+
+            string message = String.Join("|", context.Arguments);
+            Trace.TraceInformation(String.Format("Launched secondary instance. Arguments: {0}", message));
+
+            IntPtr mainWindow = context.GetWindowByCaption(
+               mrHelper.Common.Constants.Constants.MainWindowCaption, true);
+            if (mainWindow != IntPtr.Zero)
+            {
+               if (context.Arguments.Length > 1)
                {
                   Win32Tools.SendMessageToWindow(mainWindow, message);
-                  NativeMethods.SetForegroundWindow(mainWindow);
+               }
+               NativeMethods.SetForegroundWindow(mainWindow);
+            }
+            else
+            {
+               Debug.Assert(false);
+
+               Trace.TraceInformation(String.Format("Cannot find Main Window"));
+
+               // bring to front any window
+               IntPtr window = context.GetWindowByCaption(String.Empty, true);
+               if (window != IntPtr.Zero)
+               {
+                  NativeMethods.SetForegroundWindow(window);
+               }
+               else
+               {
+                  Trace.TraceInformation(String.Format("Cannot find application windows"));
                }
             }
          }
@@ -128,44 +135,87 @@ namespace mrHelper.App
 
       private static void onLaunchFromDiffTool(LaunchContext context)
       {
-         Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.diff.log"));
+         if (context.IsRunningSingleInstance)
+         {
+            Trace.TraceWarning("Merge Request Helper is not running");
+            MessageBox.Show("Merge Request Helper is not running. Discussion cannot be created", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return;
+         }
 
+         IntPtr concurrentDiscussionWindow = context.GetWindowByCaption(
+            mrHelper.Common.Constants.Constants.NewDiscussionCaption, false);
+         if (concurrentDiscussionWindow != IntPtr.Zero)
+         {
+            Trace.TraceWarning("Found a concurrent Create New Discussion window");
+            NativeMethods.SetForegroundWindow(concurrentDiscussionWindow);
+            return;
+         }
+
+         int gitPID = -1;
          try
          {
-            Debug.Assert(!context.IsRunningMainInstance());
-            int gitPID = -1;
-            try
-            {
-               gitPID = Common.Tools.Helpers.GetGitParentProcessId(context.CurrentProcess, context.MainInstance);
-            }
-            catch (Exception ex)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot find parent git process");
-            }
-
-            if (gitPID == -1)
-            {
-               MessageBox.Show("Cannot find parent git process", "Error",
-                  MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-               return;
-            }
-
-            string[] argumentsEx = new string[context.Arguments.Length + 1];
-            Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
-            argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
-
-            string message = String.Join("|", argumentsEx);
-            IntPtr mainWindow = context.GetMainWindowOfMainInstance();
-            if (mainWindow != IntPtr.Zero)
-            {
-               Win32Tools.SendMessageToWindow(mainWindow, message);
-            }
+            gitPID = Common.Tools.Helpers.GetGitParentProcessId(context.CurrentProcess);
          }
-         catch (Exception ex) // whatever unhandled exception
+         catch (Exception ex)
          {
-            HandleUnhandledException(ex);
+            ExceptionHandlers.Handle(ex, "Cannot find parent git process");
          }
+
+         if (gitPID == -1)
+         {
+            Trace.TraceError("Cannot find parent git process");
+            MessageBox.Show(
+               "Cannot find parent git process. Discussion cannot be created. Is Merge Request Helper running?",
+               "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return;
+         }
+
+         string[] argumentsEx = new string[context.Arguments.Length + 1];
+         Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
+         argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
+
+         string message = String.Join("|", argumentsEx);
+         IntPtr mainWindow = context.GetWindowByCaption(
+            mrHelper.Common.Constants.Constants.MainWindowCaption, true);
+         if (mainWindow == IntPtr.Zero)
+         {
+            Debug.Assert(false);
+
+            Trace.TraceWarning("Cannot find Main Window");
+            return;
+         }
+
+         Win32Tools.SendMessageToWindow(mainWindow, message);
+      }
+
+      private static bool checkArguments(LaunchContext context)
+      {
+         if (context.Arguments.Length > 2)
+         {
+            if (context.Arguments[1] == "diff")
+            {
+               return true;
+            }
+            else
+            {
+               string arguments = String.Join(" ", context.Arguments);
+               Trace.TraceError(String.Format("Invalid arguments {0}", arguments));
+               MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return false;
+            }
+         }
+         else if (context.Arguments.Length == 2)
+         {
+            Match m = url_re.Match(context.Arguments[1]);
+            if (!m.Success)
+            {
+               Trace.TraceError(String.Format("Invalid URL {0}", context.Arguments[1]));
+               MessageBox.Show("Invalid URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return false;
+            }
+         }
+         return true;
       }
    }
 }

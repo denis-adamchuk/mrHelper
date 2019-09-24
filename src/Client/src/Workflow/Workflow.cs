@@ -98,6 +98,11 @@ namespace mrHelper.Client.Workflow
          }
 
          List<Project> projects = await loadHostAsync(hostname, token);
+         if (projects == null)
+         {
+            return; // cancelled
+         }
+
          projects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
          enabledProjects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
          Debug.Assert(projects.Count == enabledProjects.Count);
@@ -107,7 +112,10 @@ namespace mrHelper.Client.Workflow
          }
 
          List<MergeRequest> mergeRequests = await loadProjectAsync(projectname);
-         Debug.Assert(mergeRequests != null);
+         if (mergeRequests == null)
+         {
+            return; // cancelled
+         }
 
          if (!mergeRequests.Cast<MergeRequest>().Any((x) => x.IId == mergeRequestIId))
          {
