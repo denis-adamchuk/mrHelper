@@ -3,20 +3,17 @@ using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using mrHelper.App.Helpers;
-using mrHelper.CustomActions;
-using mrHelper.Common.Interfaces;
-using mrHelper.Core;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Core.Interprocess;
+using mrHelper.Client.Discussions;
+using mrHelper.Client.Workflow;
+using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -27,6 +24,8 @@ namespace mrHelper.App.Forms
       /// </summary>
       async private void MrHelperForm_Load(object sender, EventArgs e)
       {
+         CommonTools.Win32Tools.EnableCopyDataMessageHandling(this.Handle);
+
          loadSettings();
          addCustomActions();
          integrateInTools();
@@ -100,6 +99,9 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
+         // Store data before opening a modal dialog
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+
          TimeSpan oldSpan = TimeSpan.Parse(labelTimeTrackingTrackedTime.Text);
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
@@ -110,11 +112,9 @@ namespace mrHelper.App.Forms
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
                if (diff != TimeSpan.Zero)
                {
-                  MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
-
                   await _timeTrackingManager.AddSpanAsync(add, diff, mrd);
 
-                  updateTotalTime(_workflow.State.MergeRequestDescriptor);
+                  updateTotalTime(mrd);
                   labelWorkflowStatus.Text = "Total spent time updated";
 
                   Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
@@ -395,6 +395,37 @@ namespace mrHelper.App.Forms
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
+      }
+
+      protected override void WndProc(ref Message rMessage)
+      {
+         if (rMessage.Msg == CommonTools.NativeMethods.WM_COPYDATA)
+         {
+            string argumentString = CommonTools.Win32Tools.ConvertMessageToText(rMessage.LParam);
+
+            BeginInvoke(new Action(
+               async () =>
+               {
+                  string[] arguments = argumentString.Split('|');
+                  if (arguments.Length < 2)
+                  {
+                     Debug.Assert(false);
+                     Trace.TraceError(String.Format("Invalid WM_COPYDATA message content: {0}", argumentString));
+                     return;
+                  }
+
+                  if (arguments[1] == "diff")
+                  {
+                     await onDiffCommand(argumentString);
+                  }
+                  else
+                  {
+                     await onOpenCommand(argumentString);
+                  }
+               }));
+         }
+
+         base.WndProc(ref rMessage);
       }
 
       private static string formatCommitComboboxItem(CommitComboBoxItem item)

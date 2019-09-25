@@ -51,8 +51,6 @@
     <Compile Include="src\Discussions\DiscussionOperator.cs" />
     <Compile Include="src\Git\GitClient.cs" />
     <Compile Include="src\Git\GitClientFactory.cs" />
-    <Compile Include="src\Git\GitUtils.cs" />
-    <Compile Include="src\Git\GlobalGitConfiguration.cs" />
     <Compile Include="src\TimeTracking\TimeTracker.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingManager.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingOperator.cs" />
@@ -78,9 +76,6 @@
     <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
     <Compile Include="src\Workflow\WorkflowFactory.cs" />
     <Compile Include="src\Workflow\WorkflowState.cs" />
-    <Compile Include="src\Persistence\PersistentStorage.cs" />
-    <Compile Include="src\Persistence\PersistentState.cs" />
-    <Compile Include="src\Persistence\PersistentStateItf.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -6,6 +6,7 @@ using mrHelper.Client.Git;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Common.Exceptions;
+using mrHelper.Core.Git;
 
 namespace mrHelper.App.Helpers
 {

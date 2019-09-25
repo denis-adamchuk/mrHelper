@@ -25,19 +25,19 @@ namespace mrHelper.Client.Updates
       /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      public DateTime GetLatestChangeTimestamp()
+      async public Task<DateTime> GetLatestChangeTimestampAsync()
       {
+         DateTime dateTime = DateTime.MinValue;
          try
          {
-            Task<Version> task = Task.Run<Version>(
-               async () => await Operator.GetLatestVersionAsync(MergeRequestDescriptor));
-            return task.Result.Created_At;
+            Version version = await Operator.GetLatestVersionAsync(MergeRequestDescriptor);
+            dateTime = version.Created_At;
          }
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot check for commits");
          }
-         return DateTime.MinValue;
+         return dateTime;
       }
 
       public override string ToString()

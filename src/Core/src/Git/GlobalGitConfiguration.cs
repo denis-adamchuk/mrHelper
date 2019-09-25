@@ -1,7 +1,7 @@
 using System;
 using mrHelper.Common.Interfaces;
 
-namespace mrHelper.Client.Git
+namespace mrHelper.Core.Git
 {
    public class GlobalGitConfiguration : IGlobalGitConfiguration
    {

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.Common.Interfaces;
@@ -13,22 +14,18 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      internal NewDiscussionForm(Snapshot snapshot, DiffToolInfo difftoolInfo, DiffPosition position,
-         IGitRepository gitRepository)
+      internal NewDiscussionForm(string leftSideFileName, string rightSideFileName,
+         DiffPosition position, IGitRepository gitRepository)
       {
-         _interprocessSnapshot = snapshot;
-         _difftoolInfo = difftoolInfo;
-         _position = position;
-         _gitRepository = gitRepository;
-
          InitializeComponent();
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
          htmlPanel.Location = new Point(12, 73);
          htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
 
+         this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;
          this.ActiveControl = textBoxDiscussionBody;
-         showDiscussionContext(htmlPanel, textBoxFileName);
+         showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
       }
 
       public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }
@@ -44,27 +41,29 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void NewDiscussionForm_Shown(object sender, EventArgs e)
+      {
+         TopMost = false; // disable TopMost property which is initially true
+         Activate(); // steal Focus
+      }
+
       /// <summary>
       /// Throws ArgumentException.
       /// Throws GitOperationException and GitObjectException in case of problems with git.
       /// </summary>
-      private void showDiscussionContext(HtmlPanel htmlPanel, TextBox tbFileName)
+      private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
+         DiffPosition position, IGitRepository gitRepository)
       {
          ContextDepth depth = new ContextDepth(0, 3);
-         IContextMaker textContextMaker = new EnhancedContextMaker(_gitRepository);
-         DiffContext context = textContextMaker.GetContext(_position, depth);
+         IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
+         DiffContext context = textContextMaker.GetContext(position, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
          htmlPanel.Text = formatter.FormatAsHTML(context);
 
-         tbFileName.Text = "Left: " + (_difftoolInfo.Left?.FileName ?? "N/A")
-                      + "  Right: " + (_difftoolInfo.Right?.FileName ?? "N/A");
+         textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
+                           + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
-
-      private readonly Snapshot _interprocessSnapshot;
-      private readonly DiffToolInfo _difftoolInfo;
-      private readonly DiffPosition _position;
-      private readonly IGitRepository _gitRepository;
    }
 }
 

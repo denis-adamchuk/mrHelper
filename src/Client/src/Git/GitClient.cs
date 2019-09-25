@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Updates;
+using mrHelper.Core.Git;
 
 namespace mrHelper.Client.Git
 {
@@ -124,7 +125,6 @@ namespace mrHelper.Client.Git
          p.Dispose();
       }
 
-      // 'null' filename strings will be replaced with empty strings
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
          DiffCacheKey key = new DiffCacheKey
@@ -145,7 +145,7 @@ namespace mrHelper.Client.Git
          {
             string arguments =
                "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
-               + " -- " + (filename1 ?? "") + " " + (filename2 ?? "");
+               + " -- " + filename1 + " " + filename2;
             return GitUtils.git(arguments).Output;
          }, Path);
 

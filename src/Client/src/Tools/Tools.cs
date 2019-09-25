@@ -15,7 +15,7 @@ namespace mrHelper.Client.Tools
 {
    public static class Tools
    {
-      private const string ProjectListFileName = "projects.json";
+      public const string ProjectListFileName = "projects.json";
       private const string CustomActionsFileName = "CustomActions.xml";
 
       public static List<ICommand> LoadCustomActions(ICommandCallback callback)
@@ -51,6 +51,8 @@ namespace mrHelper.Client.Tools
          return null;
       }
 
+      public static string UnknownHostToken = String.Empty;
+
       public static string GetAccessToken(string hostname, UserDefinedSettings settings)
       {
          for (int iKnownHost = 0; iKnownHost < settings.KnownHosts.Count; ++iKnownHost)
@@ -60,7 +62,7 @@ namespace mrHelper.Client.Tools
                return settings.KnownAccessTokens[iKnownHost];
             }
          }
-         return String.Empty;
+         return UnknownHostToken;
       }
 
       public static List<MergeRequest> FilterMergeRequests(List<MergeRequest> mergeRequests,

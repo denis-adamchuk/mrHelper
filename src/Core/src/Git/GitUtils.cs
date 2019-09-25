@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using mrHelper.Common.Exceptions;
 
-namespace mrHelper.Client.Git
+namespace mrHelper.Core.Git
 {
    public static class GitUtils
    {
@@ -50,12 +50,12 @@ namespace mrHelper.Client.Git
       /// Launch 'git' with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static internal GitOutput git(string arguments, bool wait = true)
+      static public GitOutput git(string arguments, bool wait = true)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
 
-         var process = new Process
+         using (Process process = new Process
          {
             StartInfo = new ProcessStartInfo
             {
@@ -67,53 +67,54 @@ namespace mrHelper.Client.Git
                RedirectStandardError = true,
                CreateNoWindow = true
             }
-         };
-
-         process.OutputDataReceived += (sender, args) => { if (args.Data != null) output.Add(args.Data); };
-         process.ErrorDataReceived += (sender, args) => { if (args.Data != null) errors.Add(args.Data); };
-
-         process.Start();
-
-         process.BeginOutputReadLine();
-         process.BeginErrorReadLine();
-
-         int exitcode = 0;
-         if (wait)
+         })
          {
-            process.WaitForExit();
-         }
-         else
-         {
-            System.Threading.Thread.Sleep(500); // ms
-            if (process.HasExited)
+            process.OutputDataReceived += (sender, args) => { if (args.Data != null) output.Add(args.Data); };
+            process.ErrorDataReceived += (sender, args) => { if (args.Data != null) errors.Add(args.Data); };
+
+            process.Start();
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            int exitcode = 0;
+            if (wait)
             {
-               exitcode = process.ExitCode;
+               process.WaitForExit();
             }
-         }
-
-         if (exitcode != 0)
-         {
-            throw new GitOperationException(arguments, exitcode, errors);
-         }
-         else if (errors.Count > 0)
-         {
-            Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
-               arguments, String.Join("\n", errors)));
-
-            if (errors[0].StartsWith("fatal:"))
+            else
             {
-               string reasons = "Possible reasons:\n-Git repository is not up-to-date\n-Given commit is no longer in the repository (force push?)";
-               string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
-               throw new GitObjectException(message);
+               System.Threading.Thread.Sleep(500); // ms
+               if (process.HasExited)
+               {
+                  exitcode = process.ExitCode;
+               }
             }
+
+            if (exitcode != 0)
+            {
+               throw new GitOperationException(arguments, exitcode, errors);
+            }
+            else if (errors.Count > 0)
+            {
+               Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
+                  arguments, String.Join("\n", errors)));
+
+               if (errors[0].StartsWith("fatal:"))
+               {
+                  string reasons = "Possible reasons:\n-Git repository is not up-to-date\n-Given commit is no longer in the repository (force push?)";
+                  string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
+                  throw new GitObjectException(message);
+               }
+            }
+            return new GitOutput { Output = output, Errors = errors, PID = process.HasExited ? -1 : process.Id };
          }
-         return new GitOutput { Output = output, Errors = errors, PID = process.HasExited ? -1 : process.Id };
       }
 
       /// <summary>
       /// Create a task to 'git' with arguments passed asynchronously
       /// </summary>
-      static internal GitAsyncTaskDescriptor gitAsync(string arguments, IProgress<string> progress)
+      static public GitAsyncTaskDescriptor gitAsync(string arguments, IProgress<string> progress)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();

@@ -53,6 +53,12 @@ namespace mrHelper.App.Forms
 
       async private Task initializeWorkflow()
       {
+         string[] arguments = Environment.GetCommandLineArgs();
+         if (arguments.Length > 1 && await connectToUrlAsync(arguments[1]))
+         {
+            return;
+         }
+
          string hostname = getInitialHostName();
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
 

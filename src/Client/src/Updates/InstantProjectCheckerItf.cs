@@ -11,7 +11,7 @@ namespace mrHelper.Client.Updates
 {
    public interface IInstantProjectChecker
    {
-      DateTime GetLatestChangeTimestamp();
+      Task<DateTime> GetLatestChangeTimestampAsync();
    }
 }
 
