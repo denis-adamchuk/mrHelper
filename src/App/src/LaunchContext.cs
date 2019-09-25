@@ -29,8 +29,24 @@ namespace mrHelper.App
       {
          foreach (Process process in AllProcesses)
          {
+            IEnumerable<IntPtr> handles;
+            try
+            {
+               handles = Win32Tools.EnumerateProcessWindowHandles(process.Id);
+            }
+            catch (Exception ex)
+            {
+               // Check if we could not obtain windows from a process
+               if (!(ex is ArgumentException) || (ex is InvalidOperationException))
+               {
+                  throw;
+               }
+
+               continue;
+            }
+
             StringBuilder strbTitle = new StringBuilder(255);
-            foreach (IntPtr window in Win32Tools.EnumerateProcessWindowHandles(process.Id))
+            foreach (IntPtr window in handles)
             {
                int nLength = NativeMethods.GetWindowText(window, strbTitle, strbTitle.Capacity + 1);
                string strTitle = strbTitle.ToString();

@@ -19,6 +19,7 @@ namespace mrHelper.App
    {
       private static void HandleUnhandledException(Exception ex)
       {
+         Debug.Assert(false);
          MessageBox.Show("Fatal error occurred, see details in logs",
             "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          Trace.TraceError("Unhandled exception: {0}\nCallstack:\n{1}", ex.Message, ex.StackTrace);
