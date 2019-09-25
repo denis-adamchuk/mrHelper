@@ -7,11 +7,11 @@ using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
 using System.Text.RegularExpressions;
 using System.IO;
+using mrHelper.CommonTools;
 
 namespace mrHelper.App
 {
@@ -153,7 +153,7 @@ namespace mrHelper.App
          int gitPID = -1;
          try
          {
-            gitPID = Common.Tools.Helpers.GetGitParentProcessId(context.CurrentProcess);
+            gitPID = getGitParentProcessId(context.CurrentProcess);
          }
          catch (Exception ex)
          {
@@ -214,6 +214,29 @@ namespace mrHelper.App
             }
          }
          return true;
+      }
+
+      /// <summary>
+      /// Traverse process tree up to a process with the same name as the current process.
+      /// Return process id of `git` process that is a child of a found process and parent of the current one.
+      /// </summary>
+      private static int getGitParentProcessId(Process currentProcess)
+      {
+         Process previousParent = null;
+         Process parent = ParentProcessUtilities.GetParentProcess(currentProcess);
+
+         while (parent != null && parent.ProcessName != currentProcess.ProcessName)
+         {
+            previousParent = parent;
+            parent = ParentProcessUtilities.GetParentProcess(parent);
+         }
+
+         if (previousParent == null || previousParent.ProcessName != "git")
+         {
+            return -1;
+         }
+
+         return previousParent.Id;
       }
    }
 }

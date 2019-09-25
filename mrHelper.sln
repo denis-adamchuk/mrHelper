@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.DiffTool", "src\Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Common", "src\Common\mrHelper.Common.csproj", "{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CommonTools", "src\CommonTools\mrHelper.CommonTools.csproj", "{3170D188-51AB-4634-975C-9DAA826570C9}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitLabSharp", "submodules\GitLabSharp\GitLabSharp.csproj", "{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "mrHelper.Install", "submodules\mrHelper.Install\mrHelper.Install.vdproj", "{1AE3FE90-8FE6-4F29-9E73-D2F0ECCA213A}"
@@ -64,6 +66,12 @@ Global
 		{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}.Install|Any CPU.Build.0 = Release|Any CPU
 		{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3170D188-51AB-4634-975C-9DAA826570C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3170D188-51AB-4634-975C-9DAA826570C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3170D188-51AB-4634-975C-9DAA826570C9}.Install|Any CPU.ActiveCfg = Release|Any CPU
+		{3170D188-51AB-4634-975C-9DAA826570C9}.Install|Any CPU.Build.0 = Release|Any CPU
+		{3170D188-51AB-4634-975C-9DAA826570C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3170D188-51AB-4634-975C-9DAA826570C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}.Install|Any CPU.ActiveCfg = Release|Any CPU

@@ -57,6 +57,11 @@
     <Compile Include="src\Context\EnhancedContextMaker.cs" />
     <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="src\Context\DiffContextFormatter.cs" />
+    <Compile Include="src\Git\GitUtils.cs" />
+    <Compile Include="src\Git\GlobalGitConfiguration.cs" />
+    <Compile Include="src\Persistence\PersistentState.cs" />
+    <Compile Include="src\Persistence\PersistentStateItf.cs" />
+    <Compile Include="src\Persistence\PersistentStorage.cs" />
     <Compile Include="src\Tools\SparsedList.cs" />
     <Compile Include="src\Tools\SparsedListIterator.cs" />
     <Compile Include="src\Tools\SparsedListUtils.cs" />

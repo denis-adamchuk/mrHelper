@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mrHelper.Integration
+namespace mrHelper.CommonTools
 {
    public class CustomProtocol
    {

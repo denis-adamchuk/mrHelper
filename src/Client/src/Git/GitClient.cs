@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Updates;
+using mrHelper.Core.Git;
 
 namespace mrHelper.Client.Git
 {

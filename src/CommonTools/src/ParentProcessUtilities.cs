@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace mrHelper.Common.Tools
+namespace mrHelper.CommonTools
 {
 
 /// <summary>

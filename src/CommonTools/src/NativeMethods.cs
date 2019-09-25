@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace mrHelper.Common.Tools
+namespace mrHelper.CommonTools
 {
     public static class NativeMethods
     {

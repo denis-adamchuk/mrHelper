@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       async private void MrHelperForm_Load(object sender, EventArgs e)
       {
-         Common.Tools.Win32Tools.EnableCopyDataMessageHandling(this.Handle);
+         CommonTools.Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
          loadSettings();
          addCustomActions();
@@ -99,6 +99,9 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
+         // Store data before opening a modal dialog
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+
          TimeSpan oldSpan = TimeSpan.Parse(labelTimeTrackingTrackedTime.Text);
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
@@ -109,11 +112,9 @@ namespace mrHelper.App.Forms
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
                if (diff != TimeSpan.Zero)
                {
-                  MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
-
                   await _timeTrackingManager.AddSpanAsync(add, diff, mrd);
 
-                  updateTotalTime(_workflow.State.MergeRequestDescriptor);
+                  updateTotalTime(mrd);
                   labelWorkflowStatus.Text = "Total spent time updated";
 
                   Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
@@ -398,9 +399,9 @@ namespace mrHelper.App.Forms
 
       protected override void WndProc(ref Message rMessage)
       {
-         if (rMessage.Msg == Common.Tools.NativeMethods.WM_COPYDATA)
+         if (rMessage.Msg == CommonTools.NativeMethods.WM_COPYDATA)
          {
-            string argumentString = Common.Tools.Win32Tools.ConvertMessageToText(rMessage.LParam);
+            string argumentString = CommonTools.Win32Tools.ConvertMessageToText(rMessage.LParam);
 
             BeginInvoke(new Action(
                async () =>

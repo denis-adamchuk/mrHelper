@@ -21,6 +21,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.Persistence;
+using mrHelper.Core.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -238,11 +239,13 @@ namespace mrHelper.App.Forms
       private void subscribeToUpdates()
       {
          _updateManager = new UpdateManager(_workflow, this, _settings);
-         _updateManager.OnUpdate += async (updates) =>
+         _updateManager.OnUpdate +=
+            async (updates) =>
          {
             notifyOnMergeRequestUpdates(updates);
 
-            if (_workflow.State.Project.Id == default(Project).Id)
+            Project currentProject = _workflow.State.Project;
+            if (currentProject.Id == default(Project).Id)
             {
                // state changed 
                return;
@@ -268,7 +271,7 @@ namespace mrHelper.App.Forms
 
                try
                {
-                  await _workflow.SwitchProjectAsync(_workflow.State.Project.Path_With_Namespace);
+                  await _workflow.SwitchProjectAsync(currentProject.Path_With_Namespace);
                }
                catch (WorkflowException ex)
                {

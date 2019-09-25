@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using mrHelper.Common.Exceptions;
 
-namespace mrHelper.Client.Git
+namespace mrHelper.Core.Git
 {
    public static class GitUtils
    {
@@ -50,7 +50,7 @@ namespace mrHelper.Client.Git
       /// Launch 'git' with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static internal GitOutput git(string arguments, bool wait = true)
+      static public GitOutput git(string arguments, bool wait = true)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
@@ -114,7 +114,7 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Create a task to 'git' with arguments passed asynchronously
       /// </summary>
-      static internal GitAsyncTaskDescriptor gitAsync(string arguments, IProgress<string> progress)
+      static public GitAsyncTaskDescriptor gitAsync(string arguments, IProgress<string> progress)
       {
          List<string> output = new List<string>();
          List<string> errors = new List<string>();
