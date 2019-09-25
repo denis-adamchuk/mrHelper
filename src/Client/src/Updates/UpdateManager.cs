@@ -33,6 +33,13 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
+         Workflow.PostSwitchHost += async (state, projects) =>
+         {
+            Trace.TraceInformation("[UpdateManager] Processing host switch");
+
+            await initializeAsync(state.HostName);
+         };
+
          Workflow.PostSwitchProject += (state, mergeRequests) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing project switch");
@@ -52,11 +59,10 @@ namespace mrHelper.Client.Updates
          };
       }
 
-      async public Task InitializeAsync()
+      async private Task initializeAsync(string hostname)
       {
          Trace.TraceInformation("[UpdateManager] Initializing");
 
-         string hostname = Workflow.State.HostName;
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
          await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
 
@@ -147,11 +153,11 @@ namespace mrHelper.Client.Updates
          {
             return await Operator.GetMergeRequestsAsync(hostname, projectname);
          }
-         catch (OperatorException ex)
+         catch (OperatorException)
          {
             string message = String.Format(
                "[UpdateManager] Cannot load merge requests. HostName={0}, ProjectName={1}", hostname, projectname);
-            ExceptionHandlers.Handle(ex, message);
+            Trace.TraceError(message);
          }
          return null;
       }
@@ -162,12 +168,12 @@ namespace mrHelper.Client.Updates
          {
             return await Operator.GetLatestVersionAsync(mrd);
          }
-         catch (OperatorException ex)
+         catch (OperatorException)
          {
             string message = String.Format(
                "[UpdateManager] Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
                mrd.HostName, mrd.ProjectName, mrd.IId);
-            ExceptionHandlers.Handle(ex, message);
+            Trace.TraceError(message);
          }
          return null;
       }

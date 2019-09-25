@@ -91,9 +91,9 @@ namespace mrHelper.Client.Discussions
          {
             await DiscussionOperator.CreateDiscussionAsync(MergeRequestDescriptor, parameters);
          }
-         catch (OperatorException ex)
+         catch (OperatorException)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a discussion (again)");
+            Trace.TraceError("Cannot create a discussion (again)");
             return false;
          }
          return true;

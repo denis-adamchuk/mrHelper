@@ -260,14 +260,10 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[Workflow] Cancelled switch host to {0}", hostName));
-               return null; // silent return
-            }
-            FailedSwitchHost?.Invoke();
-            throw new WorkflowException(String.Format("Cannot load projects from host {0}", hostName));
+            string cancelMessage = String.Format("Cancelled switch host to {0}", hostName);
+            string errorMessage = String.Format("Cannot load projects from host {0}", hostName);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchHost);
+            return null;
          }
 
          State.CurrentUser = currentUser;
@@ -289,14 +285,10 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[Workflow] Cancelled switch project to {0}", projectName));
-               return null; // silent return
-            }
-            FailedSwitchProject?.Invoke();
-            throw new WorkflowException(String.Format("Cannot load project {0}", projectName));
+            string cancelMessage = String.Format("Cancelled switch project to {0}", projectName);
+            string errorMessage = String.Format("Cannot load project {0}", projectName);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchProject);
+            return null;
          }
 
          State.Project = project;
@@ -318,15 +310,10 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[Workflow] Cancelled switch MR IID to {0}",
-                  mergeRequestIId.ToString()));
-               return; // silent return
-            }
-            FailedSwitchMergeRequest?.Invoke();
-            throw new WorkflowException(String.Format("Cannot load merge request with IId {0}", mergeRequestIId));
+            string cancelMessage = String.Format("Cancelled switch MR to MR with IId {0}", mergeRequestIId);
+            string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchMergeRequest);
+            return;
          }
 
          State.MergeRequest = mergeRequest;
@@ -353,15 +340,12 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading commits"));
-               return false; // silent return
-            }
-            FailedLoadCommits?.Invoke();
-            throw new WorkflowException(String.Format(
-               "Cannot load commits for merge request with IId {0}", State.MergeRequest.IId));
+            string cancelMessage = String.Format("Cancelled loading commits for merge request with IId {0}",
+               State.MergeRequest.IId);
+            string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
+               State.MergeRequest.IId);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCommits);
+            return false;
          }
          PostLoadCommits?.Invoke(State, commits);
          return true;
@@ -377,15 +361,12 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading system notes"));
-               return false; // silent return
-            }
-            FailedLoadSystemNotes?.Invoke();
-            throw new WorkflowException(String.Format(
-               "Cannot load system notes for merge request with IId {0}", State.MergeRequest.IId));
+            string cancelMessage = String.Format("Cancelled loading system notes for merge request with IId {0}",
+               State.MergeRequest.IId);
+            string errorMessage = String.Format("Cannot load system notes for merge request with IId {0}",
+               State.MergeRequest.IId);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSystemNotes);
+            return false;
          }
          PostLoadSystemNotes?.Invoke(State, notes);
          return true;
@@ -402,18 +383,38 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            bool cancelled = ex.InternalException is GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[Workflow] Cancelled loading latest version"));
-               return false; // silent return
-            }
-            FailedLoadLatestVersion?.Invoke();
-            throw new WorkflowException(String.Format(
-               "Cannot load latest version for merge request with IId {0}", State.MergeRequest.IId));
+            string cancelMessage = String.Format("Cancelled loading latest version for merge request with IId {0}",
+               State.MergeRequest.IId);
+            string errorMessage = String.Format("Cannot load latest version for merge request with IId {0}",
+               State.MergeRequest.IId);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadLatestVersion);
+            return false;
          }
          PostLoadLatestVersion?.Invoke(State, latestVersion);
          return true;
+      }
+
+      private void handleOperatorException(OperatorException ex, string cancelMessage, string errorMessage,
+         Action failureCallback)
+      {
+         bool cancelled = ex.InternalException is GitLabClientCancelled;
+         if (cancelled)
+         {
+            Trace.TraceInformation(String.Format("[Workflow] {0}", cancelMessage));
+            return;
+         }
+
+         failureCallback?.Invoke();
+
+         string details = String.Empty;
+         if (ex.InternalException is GitLabSharp.Accessors.GitLabRequestException internalEx)
+         {
+            details = internalEx.WebException.Message;
+         }
+
+         string message = String.Format("{0}. {1}", errorMessage, details);
+         Trace.TraceError(String.Format("[Workflow] {0}", message));
+         throw new WorkflowException(message);
       }
 
       private string selectProjectFromList(List<Project> projects)

@@ -10,16 +10,16 @@ namespace mrHelper.Client.Tools
    {
       static public void Handle(Exception exception, string meaning)
       {
-         if (exception is OperatorException ex0)
+         if (exception is OperatorException)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nNested Exception:",
-                  ex0.GetType().ToString(), meaning, ex0.Message);
-            Handle(ex0.InternalException, meaning);
+            Debug.Assert(false);
+            Trace.TraceError(meaning);
          }
          else if (exception is GitLabSharpException ex00)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nNested Exception: {3}",
-                  ex00.GetType().ToString(), meaning, ex00.Message, ex00.InternalException?.Message ?? "null");
+            Trace.TraceError("[{0}] {1}", ex00.GetType().ToString(), meaning);
+            Trace.TraceError("{0}", ex00.Message);
+            Trace.TraceError("Nested Exception: {0}", ex00.InternalException?.Message ?? "null");
          }
          else if (exception is GitLabClientCancelled)
          {
@@ -27,20 +27,21 @@ namespace mrHelper.Client.Tools
          }
          else if (exception is GitLabRequestException ex1)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nNested WebException: {3}",
-                  ex1.GetType().ToString(), meaning, ex1.Message, ex1.WebException.Message);
+            Trace.TraceError("[{0}] {1}", ex1.GetType().ToString(), meaning);
+            Trace.TraceError("{0}", ex1.Message);
+            Trace.TraceError("Nested Exception: {0}", ex1.WebException?.Message ?? "null");
          }
          else if (exception is DiffToolIntegrationException ex2)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nNested Exception: {3}",
-                  ex2.GetType().ToString(), meaning, ex2.Message,
-                  (ex2.NestedException != null ? ex2.NestedException.Message : "N/A"));
+            Trace.TraceError("[{0}] {1}", ex2.GetType().ToString(), meaning);
+            Trace.TraceError("{0}", ex2.Message);
+            Trace.TraceError("Nested Exception: {0}", (ex2.NestedException != null ? ex2.NestedException.Message : "N/A"));
          }
          else if (exception is CustomCommandLoaderException ex3)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nNested Exception: {3}",
-                  ex3.GetType().ToString(), meaning, ex3.Message,
-                  (ex3.NestedException != null ? ex3.NestedException.Message : "N/A"));
+            Trace.TraceError("[{0}] {1}", ex3.GetType().ToString(), meaning);
+            Trace.TraceError("{0}", ex3.Message);
+            Trace.TraceError("Nested Exception: {0}", (ex3.NestedException != null ? ex3.NestedException.Message : "N/A"));
          }
          else if (exception is GitOperationException ex4)
          {

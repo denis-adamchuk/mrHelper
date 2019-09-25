@@ -226,14 +226,10 @@ namespace mrHelper.App.Forms
             // Connect
             await initializeWorkflow();
          }
-         catch (WorkflowException)
+         catch (WorkflowException ex)
          {
-            MessageBox.Show("Cannot initialize the workflow. Application cannot start. See logs for details",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Close();
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-
-         await _updateManager.InitializeAsync();
       }
 
       private void subscribeToUpdates()
