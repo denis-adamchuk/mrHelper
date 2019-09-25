@@ -308,6 +308,7 @@ namespace mrHelper.App.Forms
          linkLabelConnectedTo.Visible = enabled;
          buttonDiscussions.Enabled = enabled;
          buttonAddComment.Enabled = enabled;
+         buttonNewDiscussion.Enabled = enabled;
       }
 
       private void enableCommitActions(bool enabled)

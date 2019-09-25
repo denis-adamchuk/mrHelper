@@ -91,6 +91,7 @@ namespace mrHelper.App.Forms
          this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
+         this.buttonNewDiscussion = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -283,7 +284,7 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(107, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(137, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(83, 27);
          this.buttonDiscussions.TabIndex = 12;
@@ -312,14 +313,14 @@ namespace mrHelper.App.Forms
          // buttonAddComment
          // 
          this.buttonAddComment.Enabled = false;
-         this.buttonAddComment.Location = new System.Drawing.Point(16, 19);
+         this.buttonAddComment.Location = new System.Drawing.Point(9, 19);
          this.buttonAddComment.Name = "buttonAddComment";
-         this.buttonAddComment.Size = new System.Drawing.Size(83, 27);
+         this.buttonAddComment.Size = new System.Drawing.Size(103, 27);
          this.buttonAddComment.TabIndex = 13;
-         this.buttonAddComment.Text = "Add Comment";
-         this.toolTip.SetToolTip(this.buttonAddComment, "Press Alt-K to create a new discussion");
+         this.buttonAddComment.Text = "New Discussion";
+         this.toolTip.SetToolTip(this.buttonAddComment, "Create a new resolvable discussion");
          this.buttonAddComment.UseVisualStyleBackColor = true;
-         this.buttonAddComment.Click += new System.EventHandler(this.ButtonAddComment_Click);
+         this.buttonAddComment.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
          // 
          // contextMenuStrip
          // 
@@ -536,18 +537,19 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxActions.Location = new System.Drawing.Point(4, 410);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(301, 55);
+         this.groupBoxActions.Size = new System.Drawing.Size(274, 55);
          this.groupBoxActions.TabIndex = 22;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
          // 
          // groupBoxReview
          // 
+         this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
          this.groupBoxReview.Controls.Add(this.buttonAddComment);
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
-         this.groupBoxReview.Location = new System.Drawing.Point(313, 410);
+         this.groupBoxReview.Location = new System.Drawing.Point(284, 410);
          this.groupBoxReview.Name = "groupBoxReview";
-         this.groupBoxReview.Size = new System.Drawing.Size(207, 55);
+         this.groupBoxReview.Size = new System.Drawing.Size(349, 55);
          this.groupBoxReview.TabIndex = 11;
          this.groupBoxReview.TabStop = false;
          this.groupBoxReview.Text = "Review";
@@ -703,6 +705,18 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += ComboBoxCommits_DrawItem;
          // 
+         // button1
+         // 
+         this.buttonNewDiscussion.Enabled = false;
+         this.buttonNewDiscussion.Location = new System.Drawing.Point(238, 19);
+         this.buttonNewDiscussion.Name = "button1";
+         this.buttonNewDiscussion.Size = new System.Drawing.Size(103, 27);
+         this.buttonNewDiscussion.TabIndex = 14;
+         this.buttonNewDiscussion.Text = "Add comment";
+         this.toolTip.SetToolTip(this.buttonNewDiscussion, "Leave a comment (cannot be resolved and replied)");
+         this.buttonNewDiscussion.UseVisualStyleBackColor = true;
+         this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonAddComment_Click);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -797,6 +811,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
       private System.Windows.Forms.Button buttonEditTime;
       private System.Windows.Forms.Button buttonAddComment;
+      private System.Windows.Forms.Button buttonNewDiscussion;
    }
 }
 

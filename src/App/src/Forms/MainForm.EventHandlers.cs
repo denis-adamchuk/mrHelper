@@ -79,6 +79,11 @@ namespace mrHelper.App.Forms
          await onAddCommentAsync();
       }
 
+      async private void ButtonNewDiscussion_Click(object sender, EventArgs e)
+      {
+         await onNewDiscussionAsync();
+      }
+
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
          if (isTrackingTime())

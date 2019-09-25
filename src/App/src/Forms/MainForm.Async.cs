@@ -265,6 +265,33 @@ namespace mrHelper.App.Forms
          }
       }
 
+      async private Task onNewDiscussionAsync()
+      {
+         // Store data before opening a modal dialog
+         string title = _workflow.State.MergeRequest.Title;
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+
+         string caption = String.Format("Create a new discussion in merge request \"{0}\"", title);
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
+         {
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Discussion body cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
+
+               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrd);
+
+               labelWorkflowStatus.Text = "Creating a discussion...";
+               await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body });
+               labelWorkflowStatus.Text = "Discussion created";
+            }
+         }
+      }
+
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA)
       {
          Snapshot snapshot;
