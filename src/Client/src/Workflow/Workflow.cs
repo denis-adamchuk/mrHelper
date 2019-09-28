@@ -44,33 +44,6 @@ namespace mrHelper.Client.Workflow
       internal Workflow(UserDefinedSettings settings, PersistentStorage persistentStorage)
       {
          Settings = settings;
-         Settings.PropertyChanged += async (sender, property) =>
-         {
-            if (property.PropertyName == "ShowPublicOnly")
-            {
-               // emulate host change to reload project list
-               try
-               {
-                  await SwitchHostAsync(State.HostName);
-               }
-               catch (WorkflowException)
-               {
-                  // just do nothing
-               }
-            }
-            else if (property.PropertyName == "LastUsedLabels")
-            {
-               // emulate project change to reload merge request list
-               try
-               {
-                  await SwitchProjectAsync(State.Project.Path_With_Namespace);
-               }
-               catch (WorkflowException)
-               {
-                  // just do nothing
-               }
-            }
-         };
 
          persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);

@@ -237,7 +237,7 @@ namespace mrHelper.App.Forms
          comboBoxHost.Enabled = enabled;
          comboBoxProjects.Enabled = enabled;
          comboBoxFilteredMergeRequests.Enabled = enabled;
-         buttonApplyLabels.Enabled = enabled;
+         enableMergeRequestFilterControls(enabled);
          tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
 
          if (enabled)
@@ -248,7 +248,6 @@ namespace mrHelper.App.Forms
 
       private void enableMergeRequestFilterControls(bool enabled)
       {
-         buttonApplyLabels.Enabled = enabled;
          checkBoxLabels.Enabled = enabled;
          textBoxLabels.Enabled = enabled;
       }

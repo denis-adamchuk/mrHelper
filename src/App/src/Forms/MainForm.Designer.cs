@@ -42,7 +42,6 @@ namespace mrHelper.App.Forms
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
-         this.buttonApplyLabels = new System.Windows.Forms.Button();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
@@ -168,7 +167,6 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSelectMergeRequest
          // 
-         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonApplyLabels);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxLabels);
          this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxLabels);
          this.groupBoxSelectMergeRequest.Controls.Add(this.linkLabelConnectedTo);
@@ -180,24 +178,16 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
-         // buttonApplyLabels
-         // 
-         this.buttonApplyLabels.Location = new System.Drawing.Point(307, 14);
-         this.buttonApplyLabels.Name = "buttonApplyLabels";
-         this.buttonApplyLabels.Size = new System.Drawing.Size(83, 27);
-         this.buttonApplyLabels.TabIndex = 5;
-         this.buttonApplyLabels.Text = "Apply";
-         this.toolTip.SetToolTip(this.buttonApplyLabels, "Press Alt-K to create a new discussion");
-         this.buttonApplyLabels.UseVisualStyleBackColor = true;
-         this.buttonApplyLabels.Click += new System.EventHandler(this.ButtonApplyLabels_Click);
-         // 
          // textBoxLabels
          // 
          this.textBoxLabels.Location = new System.Drawing.Point(69, 18);
          this.textBoxLabels.Name = "textBoxLabels";
-         this.textBoxLabels.Size = new System.Drawing.Size(232, 20);
+         this.textBoxLabels.Size = new System.Drawing.Size(321, 20);
          this.textBoxLabels.TabIndex = 4;
-         this.toolTip.SetToolTip(this.textBoxLabels, "Return merge requests that contain any of these labels");
+         this.toolTip.SetToolTip(this.textBoxLabels,
+               "Return merge requests that contain any of these labels (comma-separated list is expected)");
+         this.textBoxLabels.LostFocus += new System.EventHandler(TextBoxLabels_LostFocus);
+         this.textBoxLabels.KeyDown += TextBoxLabels_KeyDown;
          // 
          // checkBoxLabels
          // 
@@ -794,7 +784,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ListView listViewKnownHosts;
       private System.Windows.Forms.ColumnHeader columnHeaderHost;
       private System.Windows.Forms.ColumnHeader columnHeaderAccessToken;
-      private System.Windows.Forms.Button buttonApplyLabels;
       private System.Windows.Forms.GroupBox groupBoxSelectProject;
       private SelectionPreservingComboBox comboBoxProjects;
       private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;

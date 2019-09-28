@@ -297,11 +297,6 @@ namespace mrHelper.App.Forms
          e.DrawFocusRectangle();
       }
 
-      private void ButtonApplyLabels_Click(object sender, EventArgs e)
-      {
-         _settings.LastUsedLabels = textBoxLabels.Text;
-      }
-
       private void ComboBoxLeftCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
          checkComboboxCommitsOrder(true /* I'm left one */);
@@ -372,9 +367,15 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
+      async private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
       {
          _settings.ShowPublicOnly = (sender as CheckBox).Checked;
+
+         if (_workflow != null)
+         {
+            // emulate host change to reload project list
+            await changeHostAsync(_workflow.State.HostName);
+         }
       }
 
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
@@ -382,9 +383,39 @@ namespace mrHelper.App.Forms
          _settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
-      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      async private void TextBoxLabels_KeyDown(object sender, KeyEventArgs e)
+      {
+         if (e.KeyData == Keys.Enter)
+         {
+            await onTextBoxLabelsUpdate();
+         }
+      }
+
+      async private void TextBoxLabels_LostFocus(object sender, EventArgs e)
+      {
+         await onTextBoxLabelsUpdate();
+      }
+
+      async private Task onTextBoxLabelsUpdate()
+      {
+         _settings.LastUsedLabels = textBoxLabels.Text;
+
+         if (_workflow != null && _settings.CheckedLabelsFilter)
+         {
+            // emulate project change to reload merge request list
+            await changeProjectAsync(_workflow.State.Project.Path_With_Namespace);
+         }
+      }
+
+      async private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
          _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+
+         if (_workflow != null)
+         {
+            // emulate project change to reload merge request list
+            await changeProjectAsync(_workflow.State.Project.Path_With_Namespace);
+         }
       }
 
       private void comboBoxDCDepth_SelectedIndexChanged(object sender, EventArgs e)
