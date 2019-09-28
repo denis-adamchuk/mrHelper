@@ -340,8 +340,48 @@ namespace mrHelper.App.Forms
          baseCommitItem.IsBase = true;
          comboBoxRightCommit.Items.Add(baseCommitItem);
 
-         comboBoxLeftCommit.SelectedIndex = 0;
-         comboBoxRightCommit.SelectedIndex = 0;
+         selectNotReviewedCommits(out int leftSelectedIndex, out int rightSelectedIndex);
+         comboBoxLeftCommit.SelectedIndex = leftSelectedIndex;
+         comboBoxRightCommit.SelectedIndex = rightSelectedIndex;
+      }
+
+      private void selectNotReviewedCommits(out int left, out int right)
+      {
+         Debug.Assert(comboBoxLeftCommit.Items.Count == comboBoxRightCommit.Items.Count);
+
+         left = 0;
+         right = 0;
+
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         if (!_reviewedCommits.ContainsKey(mrd))
+         {
+            left = 0;
+            right = comboBoxRightCommit.Items.Count - 1;
+            return;
+         }
+
+         int? iNewestOfReviewedCommits = new Nullable<int>();
+         HashSet<string> reviewedCommits = _reviewedCommits[mrd];
+         for (int iItem = 0; iItem < comboBoxLeftCommit.Items.Count; ++iItem)
+         {
+            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[iItem])).SHA;
+            if (reviewedCommits.Contains(sha))
+            {
+               iNewestOfReviewedCommits = iItem;
+               break;
+            }
+         }
+
+         if (!iNewestOfReviewedCommits.HasValue)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         left = Math.Max(0, iNewestOfReviewedCommits.Value - 1);
+
+         // note that it should not be left + 1 because Left CB is shifted comparing to Right CB
+         right = Math.Min(left, comboBoxRightCommit.Items.Count - 1);
       }
 
       private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)
