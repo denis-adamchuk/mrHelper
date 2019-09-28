@@ -109,6 +109,14 @@ namespace mrHelper.Client.Updates
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated {1}, Closed {2}",
                updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
 
+         if (updates.UpdatedMergeRequests.Count > 0)
+         {
+            Trace.TraceInformation(
+               String.Format("[UpdateManager] Updated commits: {0}. Updated labels: {1}",
+                  updates.UpdatedMergeRequests.Count((x) => x.UpdateKind.HasFlag(UpdateKind.CommitsUpdated)),
+                  updates.UpdatedMergeRequests.Count((x) => x.UpdateKind.HasFlag(UpdateKind.LabelsUpdated))));
+         }
+
          OnUpdate?.Invoke(updates);
       }
 

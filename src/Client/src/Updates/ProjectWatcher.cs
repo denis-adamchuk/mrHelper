@@ -35,19 +35,28 @@ namespace mrHelper.Client.Updates
          }
       }
 
+      private static int GetId(MergeRequest x) => x.Id;
+      private static int GetId(UpdatedMergeRequest x) => GetId(x.MergeRequest);
+
+      private static int GetProjectId(MergeRequest x) => x.Project_Id;
+      private static int GetProjectId(UpdatedMergeRequest x) => GetProjectId(x.MergeRequest);
+
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates(List<MergeRequest> mergeRequests, string hostname,
+      private List<ProjectUpdate> getProjectUpdates<T>(List<T> mergeRequests, string hostname,
          IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
          // Check all the updated merge request to figure out the latest change among them
          DateTime updateTimestamp = DateTime.MinValue;
-         foreach (MergeRequest mergeRequest in mergeRequests)
+         foreach (T mergeRequest in mergeRequests)
          {
-            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = mergeRequest.Project_Id };
+            int mergeRequestId = GetId((dynamic)mergeRequest);
+            int projectId = GetProjectId((dynamic)mergeRequest);
+
+            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = projectId };
             string projectName = details.GetProjectName(key);
 
             // Excluding duplicates
@@ -59,8 +68,8 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            updateTimestamp = details.GetLatestChangeTimestamp(mergeRequest.Id) > updateTimestamp ?
-               details.GetLatestChangeTimestamp(mergeRequest.Id) : updateTimestamp;
+            updateTimestamp = details.GetLatestChangeTimestamp(mergeRequestId) > updateTimestamp ?
+               details.GetLatestChangeTimestamp(mergeRequestId) : updateTimestamp;
 
             projectUpdates.Add(
                new ProjectUpdate

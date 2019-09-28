@@ -394,10 +394,14 @@ namespace mrHelper.App.Forms
             notifyOnMergeRequestEvent(mergeRequest, "New merge request");
          }
 
-         List<MergeRequest> updatedMergeRequests = Tools.FilterMergeRequests(updates.UpdatedMergeRequests, _settings);
-         foreach (MergeRequest mergeRequest in updatedMergeRequests)
+         List<UpdatedMergeRequest> updatedMergeRequests =
+            Tools.FilterMergeRequests(updates.UpdatedMergeRequests, _settings);
+         foreach (UpdatedMergeRequest mergeRequest in updatedMergeRequests)
          {
-            notifyOnMergeRequestEvent(mergeRequest, "New commit in merge request");
+            if (mergeRequest.UpdateKind.HasFlag(UpdateKind.CommitsUpdated))
+            {
+               notifyOnMergeRequestEvent(mergeRequest.MergeRequest, "New commit in merge request");
+            }
          }
       }
 

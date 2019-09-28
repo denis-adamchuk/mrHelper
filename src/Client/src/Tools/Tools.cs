@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Web.Script.Serialization;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.CustomActions;
@@ -65,31 +66,33 @@ namespace mrHelper.Client.Tools
          return UnknownHostToken;
       }
 
-      public static List<MergeRequest> FilterMergeRequests(List<MergeRequest> mergeRequests,
-         UserDefinedSettings settings)
+      private static List<string> GetLabels(MergeRequest x) => x.Labels;
+      private static List<string> GetLabels(UpdatedMergeRequest x) => x.MergeRequest.Labels;
+
+      public static List<T> FilterMergeRequests<T>(List<T> mergeRequests, UserDefinedSettings settings)
       {
-         Func<MergeRequest, bool> DoesMatchLabels =
+         if (!settings.CheckedLabelsFilter)
+         {
+            return mergeRequests;
+         }
+
+         List<string> SplitLabels(string labels)
+         {
+            List<string> result = new List<string>();
+            foreach (var item in labels.Split(','))
+            {
+               result.Add(item.Trim(' '));
+            }
+            return result;
+         }
+
+         List<string> splittedLabels = SplitLabels(settings.LastUsedLabels);
+         return mergeRequests.Where(
             (x) =>
          {
-            Func<string, List<string>> SplitLabels =
-               (labels) =>
-            {
-               List<string> result = new List<string>();
-               foreach (var item in labels.Split(','))
-               {
-                  result.Add(item.Trim(' '));
-               }
-               return result;
-            };
-
-            if (!settings.CheckedLabelsFilter)
-            {
-               return true;
-            }
-            return SplitLabels(settings.LastUsedLabels).Intersect(x.Labels).Count() != 0;
-         };
-
-         return mergeRequests.Where((x) => DoesMatchLabels(x)).ToList();
+            List<string> mrLabels = GetLabels((dynamic)x);
+            return splittedLabels.Intersect(mrLabels).Count() != 0;
+         }).ToList();
       }
 
       private class HostInProjectsFile
