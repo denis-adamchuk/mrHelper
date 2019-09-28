@@ -128,6 +128,7 @@ namespace mrHelper.App.Forms
          this.buttonRemoveKnownHost.Text = "Remove";
          this.buttonRemoveKnownHost.UseVisualStyleBackColor = true;
          this.buttonRemoveKnownHost.Click += new System.EventHandler(this.ButtonRemoveKnownHost_Click);
+         this.toolTip.SetToolTip(this.buttonRemoveKnownHost, "Remove a selected host from the list of known hosts");
          // 
          // buttonAddKnownHost
          // 
@@ -138,6 +139,7 @@ namespace mrHelper.App.Forms
          this.buttonAddKnownHost.Text = "Add...";
          this.buttonAddKnownHost.UseVisualStyleBackColor = true;
          this.buttonAddKnownHost.Click += new System.EventHandler(this.ButtonAddKnownHost_Click);
+         this.toolTip.SetToolTip(this.buttonAddKnownHost, "Add a host with Access Token to the list of known hosts");
          // 
          // listViewKnownHosts
          // 
@@ -185,7 +187,7 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Size = new System.Drawing.Size(321, 20);
          this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels,
-               "Return merge requests that contain any of these labels (comma-separated list is expected)");
+               "Show merge requests that contain any of these labels (comma-separated list is expected)");
          this.textBoxLabels.LostFocus += new System.EventHandler(TextBoxLabels_LostFocus);
          this.textBoxLabels.KeyDown += TextBoxLabels_KeyDown;
          // 
@@ -234,6 +236,7 @@ namespace mrHelper.App.Forms
          this.buttonBrowseLocalGitFolder.Text = "Browse...";
          this.buttonBrowseLocalGitFolder.UseVisualStyleBackColor = true;
          this.buttonBrowseLocalGitFolder.Click += new System.EventHandler(this.ButtonBrowseLocalGitFolder_Click);
+         this.toolTip.SetToolTip(this.buttonBrowseLocalGitFolder, "Select a folder where repositories will be stored");
          // 
          // textBoxLocalGitFolder
          // 
@@ -243,6 +246,7 @@ namespace mrHelper.App.Forms
          this.textBoxLocalGitFolder.Size = new System.Drawing.Size(375, 20);
          this.textBoxLocalGitFolder.TabIndex = 1;
          this.textBoxLocalGitFolder.TabStop = false;
+         this.toolTip.SetToolTip(this.textBoxLocalGitFolder, "A folder where repositories are stored");
          // 
          // labelLocalGitFolder
          // 
@@ -267,7 +271,7 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool.Size = new System.Drawing.Size(83, 27);
          this.buttonDiffTool.TabIndex = 11;
          this.buttonDiffTool.Text = "Diff Tool";
-         this.toolTip.SetToolTip(this.buttonDiffTool, "Press Alt-K to create a new discussion");
+         this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
          this.buttonDiffTool.UseVisualStyleBackColor = true;
          this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
          // 
@@ -279,7 +283,7 @@ namespace mrHelper.App.Forms
          this.buttonDiscussions.Size = new System.Drawing.Size(83, 27);
          this.buttonDiscussions.TabIndex = 12;
          this.buttonDiscussions.Text = "Discussions";
-         this.toolTip.SetToolTip(this.buttonDiscussions, "List of all discussions");
+         this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of Discussions");
          this.buttonDiscussions.UseVisualStyleBackColor = true;
          this.buttonDiscussions.Click += new System.EventHandler(this.ButtonDiscussions_Click);
          // 
@@ -300,17 +304,17 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
-         // buttonAddComment
+         // buttonNewDiscussion
          // 
-         this.buttonAddComment.Enabled = false;
-         this.buttonAddComment.Location = new System.Drawing.Point(9, 19);
-         this.buttonAddComment.Name = "buttonAddComment";
-         this.buttonAddComment.Size = new System.Drawing.Size(103, 27);
-         this.buttonAddComment.TabIndex = 13;
-         this.buttonAddComment.Text = "New Discussion";
-         this.toolTip.SetToolTip(this.buttonAddComment, "Create a new resolvable discussion");
-         this.buttonAddComment.UseVisualStyleBackColor = true;
-         this.buttonAddComment.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
+         this.buttonNewDiscussion.Enabled = false;
+         this.buttonNewDiscussion.Location = new System.Drawing.Point(9, 19);
+         this.buttonNewDiscussion.Name = "buttonNewDiscussion";
+         this.buttonNewDiscussion.Size = new System.Drawing.Size(103, 27);
+         this.buttonNewDiscussion.TabIndex = 13;
+         this.buttonNewDiscussion.Text = "New Discussion";
+         this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable discussion");
+         this.buttonNewDiscussion.UseVisualStyleBackColor = true;
+         this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
          // 
          // contextMenuStrip
          // 
@@ -569,6 +573,7 @@ namespace mrHelper.App.Forms
          this.buttonEditTime.Text = "Edit";
          this.buttonEditTime.UseVisualStyleBackColor = true;
          this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
+         this.toolTip.SetToolTip(this.buttonEditTime, "Edit total time tracked on this merge request");
          // 
          // labelTimeTrackingMergeRequestName
          // 
@@ -695,17 +700,17 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += ComboBoxCommits_DrawItem;
          // 
-         // button1
+         // buttonAddComment
          // 
-         this.buttonNewDiscussion.Enabled = false;
-         this.buttonNewDiscussion.Location = new System.Drawing.Point(238, 19);
-         this.buttonNewDiscussion.Name = "button1";
-         this.buttonNewDiscussion.Size = new System.Drawing.Size(103, 27);
-         this.buttonNewDiscussion.TabIndex = 14;
-         this.buttonNewDiscussion.Text = "Add comment";
-         this.toolTip.SetToolTip(this.buttonNewDiscussion, "Leave a comment (cannot be resolved and replied)");
-         this.buttonNewDiscussion.UseVisualStyleBackColor = true;
-         this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonAddComment_Click);
+         this.buttonAddComment.Enabled = false;
+         this.buttonAddComment.Location = new System.Drawing.Point(238, 19);
+         this.buttonAddComment.Name = "button1";
+         this.buttonAddComment.Size = new System.Drawing.Size(103, 27);
+         this.buttonAddComment.TabIndex = 14;
+         this.buttonAddComment.Text = "Add comment";
+         this.toolTip.SetToolTip(this.buttonAddComment, "Leave a comment (cannot be resolved and replied)");
+         this.buttonAddComment.UseVisualStyleBackColor = true;
+         this.buttonAddComment.Click += new System.EventHandler(this.ButtonAddComment_Click);
          // 
          // MainForm
          // 
