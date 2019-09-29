@@ -236,43 +236,47 @@ namespace mrHelper.App.Forms
       {
          _updateManager = new UpdateManager(_workflow, this, _settings);
          _updateManager.OnUpdate +=
-            async (updates) =>
+            (updates) =>
          {
-            if (_workflow.State.HostName != updates.HostName)
-            {
-               return;
-            }
-
-            notifyOnMergeRequestUpdates(updates);
-
-            Project currentProject = _workflow.State.Project;
-            if (currentProject.Id == default(Project).Id)
-            {
-               // state changed 
-               Debug.Assert(false); // when possible?
-               return;
-            }
-
-            // check if currently selected project is affected by update
-
-            if (updates.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-             || updates.UpdatedMergeRequests.Any(x => x.MergeRequest.Project_Id == _workflow.State.Project.Id)
-             || updates.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
-            {
-               // emulate project change to reload merge request list
-               // This will automatically update commit list (if there are new ones).
-               // This will also remove closed merge requests from the list.
-               Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
-
-               try
+            BeginInvoke(new Action<MergeRequestUpdates>(
+               async (updatesInternal) =>
                {
-                  await _workflow.SwitchProjectAsync(currentProject.Path_With_Namespace);
-               }
-               catch (WorkflowException ex)
-               {
-                  ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
-               }
-            }
+                  if (_workflow.State.HostName != updatesInternal.HostName)
+                  {
+                     return;
+                  }
+
+                  notifyOnMergeRequestUpdates(updatesInternal);
+
+                  Project currentProject = _workflow.State.Project;
+                  if (currentProject.Id == default(Project).Id)
+                  {
+                     // state changed 
+                     Debug.Assert(false); // when possible?
+                     return;
+                  }
+
+                  // check if currently selected project is affected by update
+
+                  if (updatesInternal.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
+                   || updatesInternal.UpdatedMergeRequests.Any(x => x.MergeRequest.Project_Id == _workflow.State.Project.Id)
+                   || updatesInternal.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
+                  {
+                     // emulate project change to reload merge request list
+                     // This will automatically update commit list (if there are new ones).
+                     // This will also remove closed merge requests from the list.
+                     Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
+
+                     try
+                     {
+                        await _workflow.SwitchProjectAsync(currentProject.Path_With_Namespace);
+                     }
+                     catch (WorkflowException ex)
+                     {
+                        ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
+                     }
+                  }
+               }), updates);
          };
       }
 

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using mrHelper.Client.Git;
 using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.Git
@@ -19,7 +19,7 @@ namespace mrHelper.Client.Git
       /// Create a factory
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
-      public GitClientFactory(string parentFolder, IProjectWatcher projectWatcher)
+      public GitClientFactory(string parentFolder, IProjectWatcher projectWatcher, ISynchronizeInvoke synchronizeInvoke)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -28,6 +28,7 @@ namespace mrHelper.Client.Git
 
          ParentFolder = parentFolder;
          ProjectWatcher = projectWatcher;
+         SynchronizeInvoke = synchronizeInvoke;
 
          Trace.TraceInformation(String.Format("[GitClientFactory] Created GitClientFactory for parentFolder {0}",
             parentFolder));
@@ -47,7 +48,7 @@ namespace mrHelper.Client.Git
             return Clients[key];
          }
 
-         GitClient client = new GitClient(hostName, projectName, path, ProjectWatcher);
+         GitClient client = new GitClient(hostName, projectName, path, ProjectWatcher, SynchronizeInvoke);
          Clients[key] = client;
          return client;
       }
@@ -76,6 +77,7 @@ namespace mrHelper.Client.Git
       private Dictionary<Key, GitClient> Clients { get; set; } = new Dictionary<Key, GitClient>();
 
       private IProjectWatcher ProjectWatcher { get; }
+      private ISynchronizeInvoke SynchronizeInvoke { get; }
    }
 }
 

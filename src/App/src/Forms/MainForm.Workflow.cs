@@ -16,7 +16,9 @@ using mrHelper.Client;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
+using mrHelper.Common.Exceptions;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -358,7 +360,36 @@ namespace mrHelper.App.Forms
             Debug.Assert(comboBoxRightCommit.Enabled);
             enableCommitActions(true);
          }
+
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
+
+         // Making it asynchronous here guarantees that UpdateManager updates the cache before we access it
+         BeginInvoke(new Action<string, string, int>(
+            async (hostname, projectname, id) =>
+            {
+               GitClient client = getGitClient(hostname, projectname);
+               if (client == null || client.DoesRequireClone())
+               {
+                  Trace.TraceInformation(String.Format("[MainForm.Workflow] Cannot update git repository silently: {0}",
+                     (client == null ? "client is null" : "must be cloned first")));
+                  return;
+               }
+
+               Trace.TraceInformation("[MainForm.Workflow] Going to update git repository silently");
+
+               IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker(id);
+               try
+               {
+                  await client.Updater.ManualUpdateAsync(instantChecker, null);
+               }
+               catch (GitOperationException)
+               {
+                  Trace.TraceInformation("[MainForm.Workflow] Silent update cancelled");
+                  return;
+               }
+
+               Trace.TraceInformation("[MainForm.Workflow] Silent update finished");
+            }), _workflow.State.HostName, _workflow.State.Project.Path_With_Namespace, _workflow.State.MergeRequest.Id);
       }
 
       private void onLoadTotalTime()

@@ -296,11 +296,11 @@ namespace mrHelper.Client.Workflow
 
          PostSwitchMergeRequest?.Invoke(State);
 
-         if (!await loadCommitsAsync() || !await loadSystemNotesAsync())
+         if (!await loadLatestVersionAsync() || !await loadSystemNotesAsync())
          {
             return;
          }
-         await loadLatestVersionAsync();
+         await loadCommitsAsync();
       }
 
       async private Task<bool> loadCommitsAsync()

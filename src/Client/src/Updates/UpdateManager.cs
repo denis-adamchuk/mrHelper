@@ -33,11 +33,15 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
-         Workflow.PostSwitchHost += async (state, projects) =>
+         Workflow.PostSwitchHost += (state, projects) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing host switch");
+            synchronizeInvoke.BeginInvoke(new Action<string>(
+               async (hostname) =>
+               {
+                  Trace.TraceInformation("[UpdateManager] Processing host switch");
 
-            await initializeAsync(state.HostName);
+                  await initializeAsync(hostname);
+               }), new object[] { state.HostName });
          };
 
          Workflow.PostSwitchProject += (state, mergeRequests) =>

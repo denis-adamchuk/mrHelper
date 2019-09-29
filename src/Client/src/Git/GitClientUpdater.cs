@@ -2,8 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using GitLabSharp.Entities;
+using System.ComponentModel;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Common.Exceptions;
@@ -19,11 +18,12 @@ namespace mrHelper.Client.Git
       /// Bind to the specific GitClient object
       /// </summary>
       internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, Task> onUpdate,
-         Func<string, string, bool> isMyProject)
+         Func<string, string, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
       {
          _onUpdate = onUpdate;
          _isMyProject = isMyProject;
          _projectWatcher = projectWatcher;
+         _synchronizeInvoke = synchronizeInvoke;
       }
 
       public void Dispose()
@@ -72,7 +72,19 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private void onProjectWatcherUpdate(List<ProjectUpdate> updates)
+      private void onProjectWatcherUpdate(List<ProjectUpdate> updates)
+      {
+         if (_synchronizeInvoke == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         _synchronizeInvoke.BeginInvoke(new Action<List<ProjectUpdate>>(
+            async (updatesInternal) => await onProjectWatcherUpdateAsync(updatesInternal) ), new object[] { updates });
+      }
+
+      async private Task onProjectWatcherUpdateAsync(List<ProjectUpdate> updates)
       {
          Debug.Assert(_subscribed);
 
@@ -153,9 +165,11 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private Func<Action<string>, Task> _onUpdate { get; }
-      private Func<string, string, bool> _isMyProject { get; }
-      private IProjectWatcher _projectWatcher { get; }
+      private Func<Action<string>, Task> _onUpdate;
+      private Func<string, string, bool> _isMyProject;
+      private IProjectWatcher _projectWatcher;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
+
       private DateTime _latestChange { get; set; } = DateTime.MinValue;
 
       private bool _updating = false;

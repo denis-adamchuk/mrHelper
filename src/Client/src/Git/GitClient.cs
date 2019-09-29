@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
@@ -27,7 +28,8 @@ namespace mrHelper.Client.Git
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal GitClient(string hostname, string projectname, string path, IProjectWatcher projectWatcher)
+      internal GitClient(string hostname, string projectname, string path, IProjectWatcher projectWatcher,
+         ISynchronizeInvoke synchronizeInvoke)
       {
          if (!canClone(path) && !isValidRepository(path))
          {
@@ -66,7 +68,7 @@ namespace mrHelper.Client.Git
             (hostNameToCheck, projectNameToCheck) =>
          {
             return _hostName == hostNameToCheck && _projectName == projectNameToCheck;
-         });
+         }, synchronizeInvoke);
 
          Trace.TraceInformation(String.Format("[GitClient] Created GitClient at path {0} for host {1} and project {2}",
             path, hostname, projectname));

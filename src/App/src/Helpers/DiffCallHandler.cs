@@ -34,7 +34,7 @@ namespace mrHelper.App
             "[DiffCallHandler] Creating temporary GitClient for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
-         using (GitClientFactory factory = new GitClientFactory(_snapshot.TempFolder, null))
+         using (GitClientFactory factory = new GitClientFactory(_snapshot.TempFolder, null, null))
          {
             GitClient tempRepository = factory.GetClient(_snapshot.Host, _snapshot.Project);
             Debug.Assert(!tempRepository.DoesRequireClone());

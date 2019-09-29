@@ -452,7 +452,7 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new GitClientFactory(localFolder, _updateManager.GetProjectWatcher());
+               _gitClientFactory = new GitClientFactory(localFolder, _updateManager.GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {
