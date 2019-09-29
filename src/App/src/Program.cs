@@ -111,7 +111,7 @@ namespace mrHelper.App
             }
             else
             {
-               Debug.Assert(false);
+               // This may happen if a custom protocol link is quickly clicked more than once in a row
 
                Trace.TraceInformation(String.Format("Cannot find Main Window"));
 
