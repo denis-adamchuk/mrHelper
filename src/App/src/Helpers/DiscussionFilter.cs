@@ -57,7 +57,7 @@ namespace mrHelper.App.Helpers
          {
             return false;
          }
-         
+
          if (Filter.ByCurrentUserOnly && discussion.Notes[0].Author.Id != CurrentUser.Id)
          {
             return false;

@@ -28,8 +28,10 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.buttonDiscussionsRefresh = new System.Windows.Forms.Button();
+         this.toolTipActionsPanel = new System.Windows.Forms.ToolTip(this.components);
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -50,6 +52,7 @@
          this.buttonDiscussionsRefresh.Size = new System.Drawing.Size(75, 23);
          this.buttonDiscussionsRefresh.TabIndex = 0;
          this.buttonDiscussionsRefresh.Text = "Refresh";
+         this.toolTipActionsPanel.SetToolTip(this.buttonDiscussionsRefresh, "Reload discussions from Server");
          this.buttonDiscussionsRefresh.UseVisualStyleBackColor = true;
          this.buttonDiscussionsRefresh.Click += new System.EventHandler(this.ButtonDiscussionsRefresh_Click);
          // 
@@ -59,7 +62,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionActionsPanel";
-         this.Size = new System.Drawing.Size(104, 66);
+         this.Size = new System.Drawing.Size(98, 66);
          this.groupBox1.ResumeLayout(false);
          this.ResumeLayout(false);
 
@@ -69,5 +72,6 @@
 
       private System.Windows.Forms.GroupBox groupBox1;
       private System.Windows.Forms.Button buttonDiscussionsRefresh;
+      private System.Windows.Forms.ToolTip toolTipActionsPanel;
    }
 }

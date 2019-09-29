@@ -66,10 +66,31 @@ namespace mrHelper.App.Forms
                DisplayFilter.Filter = FilterPanel.Filter;
                updateLayout(null);
             });
-         ActionsPanel = new DiscussionActionsPanel(async () => await onRefresh());
+         ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
+         SearchPanel = new DiscussionSearchPanel(
+            (text, forward) =>
+            {
+               unhighlightSearchResult();
+               if (text != _searchText)
+               {
+                  _searchText = text;
+                  _searchResults = TextSearch.Search(text, forward, TextSearch.GetSearchableControls(this));
+               }
+               else
+               {
+                  _searchResults.MoveNext(forward);
+               }
+               highlightSearchResult();
+               return _searchResults.Count;
+            },
+            () =>
+            {
+               resetSearch();
+            });
 
          Controls.Add(FilterPanel);
          Controls.Add(ActionsPanel);
+         Controls.Add(SearchPanel);
 
          if (!renderDiscussions(discussions))
          {
@@ -82,6 +103,16 @@ namespace mrHelper.App.Forms
          if (e.KeyCode == Keys.F5)
          {
             await onRefresh();
+         }
+         else if (e.KeyCode == Keys.F3)
+         {
+            unhighlightSearchResult();
+            _searchResults.MoveNext(!e.Modifiers.HasFlag(Keys.Shift));
+            highlightSearchResult();
+         }
+         else if (e.KeyCode == Keys.Escape)
+         {
+            resetSearch();
          }
          else if (e.KeyCode == Keys.Home)
          {
@@ -179,6 +210,8 @@ namespace mrHelper.App.Forms
 
       private void updateLayout(List<Discussion> discussions)
       {
+         resetSearch();
+
          this.Text = DefaultCaption + "   (Rendering)";
 
          SuspendLayout();
@@ -221,6 +254,42 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void highlightSearchResult()
+      {
+         if (_searchResults.Current.Control is TextBox textbox)
+         {
+            textbox.Select(_searchResults.Current.InsideControlPosition, _searchText.Length);
+            textbox.Focus();
+
+            Point controlLocationAtScreen = textbox.PointToScreen(new Point(0, -5));
+            Point controlLocationAtForm = this.PointToClient(controlLocationAtScreen);
+
+            if (!ClientRectangle.Contains(controlLocationAtForm))
+            {
+               Point newPosition = new Point(AutoScrollPosition.X, VerticalScroll.Value + controlLocationAtForm.Y);
+               AutoScrollPosition = newPosition;
+               PerformLayout();
+            }
+
+         }
+      }
+
+      private void unhighlightSearchResult()
+      {
+         if (_searchResults.Current.Control is TextBox textbox)
+         {
+            textbox.SelectionLength = 0;
+         }
+      }
+
+      private void resetSearch()
+      {
+         unhighlightSearchResult();
+         _searchResults = default(SearchResults<TextSearchResult>);
+         _searchText = String.Empty;
+         SearchPanel.Reset();
+      }
+
       private void createDiscussionBoxes(List<Discussion> discussions)
       {
          foreach (var discussion in discussions)
@@ -239,7 +308,6 @@ namespace mrHelper.App.Forms
                   sender.Visible = false; // to avoid flickering on repositioning
                }, (sender) => updateLayout(null))
             {
-
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
             };
@@ -258,15 +326,20 @@ namespace mrHelper.App.Forms
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          actionsPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
+         searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
+                                    actionsPanelLocation.Y + ActionsPanel.Size.Height);
 
          // Stack panels horizontally
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
          ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
+         SearchPanel.Location = searchPanelLocation + (Size)AutoScrollPosition;
 
          // Prepare to stack boxes vertically
          int topOffset = Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,
-                                  actionsPanelLocation.Y + ActionsPanel.Size.Height);
+                         Math.Max(actionsPanelLocation.Y + ActionsPanel.Size.Height,
+                                  searchPanelLocation.Y + SearchPanel.Size.Height));
          Size previousBoxSize = new Size();
          Point previousBoxLocation = new Point();
          previousBoxLocation.Offset(0, topOffset);
@@ -324,6 +397,10 @@ namespace mrHelper.App.Forms
       private readonly DiscussionFilter SystemFilter; // filters out discussions with System notes
 
       private readonly DiscussionActionsPanel ActionsPanel;
+
+      private readonly DiscussionSearchPanel SearchPanel;
+      private SearchResults<TextSearchResult> _searchResults;
+      private string _searchText;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 
