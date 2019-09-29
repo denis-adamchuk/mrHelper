@@ -327,13 +327,13 @@ namespace mrHelper.App.Forms
       {
          if (commits.Count > 0)
          {
-            enableCommitActions(true);
+            enableComboBox(comboBoxLeftCommit);
+            enableComboBox(comboBoxRightCommit);
 
             addCommitsToComboBoxes(commits,
                state.MergeRequest.Diff_Refs.Base_SHA, state.MergeRequest.Target_Branch);
 
-            enableComboBox(comboBoxLeftCommit);
-            enableComboBox(comboBoxRightCommit);
+            enableCommitActions(true);
          }
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
@@ -343,7 +343,6 @@ namespace mrHelper.App.Forms
 
       private void onLoadLatestVersion()
       {
-         enableCommitActions(false);
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading latest version"));
       }
 
@@ -355,12 +354,6 @@ namespace mrHelper.App.Forms
 
       private void onLatestVersionLoaded()
       {
-         if (comboBoxLeftCommit.Enabled)
-         {
-            Debug.Assert(comboBoxRightCommit.Enabled);
-            enableCommitActions(true);
-         }
-
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
 
          // Making it asynchronous here guarantees that UpdateManager updates the cache before we access it

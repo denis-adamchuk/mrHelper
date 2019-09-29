@@ -305,13 +305,13 @@ namespace mrHelper.App.Forms
       private void enableMergeRequestActions(bool enabled)
       {
          linkLabelConnectedTo.Visible = enabled;
-         buttonDiscussions.Enabled = enabled;
          buttonAddComment.Enabled = enabled;
          buttonNewDiscussion.Enabled = enabled;
       }
 
       private void enableCommitActions(bool enabled)
       {
+         buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
          buttonDiffTool.Enabled = enabled;
          groupBoxActions.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
       }
