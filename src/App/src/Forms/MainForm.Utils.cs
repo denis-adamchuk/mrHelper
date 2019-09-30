@@ -373,7 +373,6 @@ namespace mrHelper.App.Forms
 
          if (!iNewestOfReviewedCommits.HasValue)
          {
-            Debug.Assert(false);
             return;
          }
 

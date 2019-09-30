@@ -70,6 +70,12 @@
     <Compile Include="src\Controls\DiscussionFilterPanel.Designer.cs">
       <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\DiscussionSearchPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DiscussionSearchPanel.Designer.cs">
+      <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\SelectionPreservingComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -141,6 +147,8 @@
     </Compile>
     <Compile Include="src\Helpers\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\DiscussionFilter.cs" />
+    <Compile Include="src\Helpers\Search\SearchResults.cs" />
+    <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
@@ -150,6 +158,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionFilterPanel.resx">
       <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\DiscussionSearchPanel.resx">
+      <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
