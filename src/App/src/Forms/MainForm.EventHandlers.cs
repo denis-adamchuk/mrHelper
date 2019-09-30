@@ -581,10 +581,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         // Reset member right now to not send tracked time again on re-entrance
+         TimeTracker timeTracker = _timeTracker;
+         _timeTracker = null;
+
          // Stop stopwatch and send tracked time
          if (send)
          {
-            TimeSpan span = _timeTracker.Elapsed;
+            TimeSpan span = timeTracker.Elapsed;
             if (span.TotalSeconds > 1)
             {
                labelWorkflowStatus.Text = "Sending tracked time...";
@@ -592,7 +596,7 @@ namespace mrHelper.App.Forms
                string status = String.Format("Tracked time {0} sent successfully", duration);
                try
                {
-                  await _timeTracker.StopAsync();
+                  await timeTracker.StopAsync();
                }
                catch (TimeTrackerException)
                {
@@ -608,10 +612,9 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            _timeTracker.Cancel();
+            timeTracker.Cancel();
             labelWorkflowStatus.Text = "Time tracking cancelled";
          }
-         _timeTracker = null;
 
          // Stop timer
          _timeTrackingTimer.Stop();
