@@ -18,7 +18,6 @@ namespace mrHelper.App.Controls
       public void Reset()
       {
          labelFoundCount.Visible = false;
-         textBoxSearch.Text = String.Empty;
          enableButtons();
       }
 

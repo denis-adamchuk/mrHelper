@@ -67,6 +67,12 @@ namespace mrHelper.App.Forms
                updateLayout(null);
             });
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
+         TextSearch = new TextSearch(this,
+            (control) =>
+            {
+               return control is TextBox &&
+                  (control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion));
+            });
          SearchPanel = new DiscussionSearchPanel(
             (text, forward) =>
             {
@@ -74,7 +80,7 @@ namespace mrHelper.App.Forms
                if (text != _searchText)
                {
                   _searchText = text;
-                  _searchResults = TextSearch.Search(text, forward, TextSearch.GetSearchableControls(this));
+                  _searchResults = TextSearch.Search(text, forward);
                }
                else
                {
@@ -116,7 +122,7 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.Home)
          {
-            if (!(ActiveControl is TextBox))
+            if (!(ActiveControl is TextBox) && !(ActiveControl is DiscussionSearchPanel))
             {
                AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Minimum);
                PerformLayout();
@@ -125,7 +131,7 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.End)
          {
-            if (!(ActiveControl is TextBox))
+            if (!(ActiveControl is TextBox) && !(ActiveControl is DiscussionSearchPanel))
             {
                AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Maximum);
                PerformLayout();
@@ -399,6 +405,7 @@ namespace mrHelper.App.Forms
       private readonly DiscussionActionsPanel ActionsPanel;
 
       private readonly DiscussionSearchPanel SearchPanel;
+      private readonly TextSearch TextSearch;
       private SearchResults<TextSearchResult> _searchResults;
       private string _searchText;
    }

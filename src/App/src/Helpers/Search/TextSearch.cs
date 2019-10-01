@@ -14,15 +14,21 @@ namespace mrHelper.App.Helpers
       public int InsideControlPosition;
    }
 
-   internal static class TextSearch
+   internal class TextSearch
    {
-      internal static List<Control> GetSearchableControls(Control container)
+      internal TextSearch(Control container, Func<Control, bool> isSearchableControl)
+      {
+         _container = container;
+         _isSearchableControl = isSearchableControl;
+      }
+
+      private List<Control> getSearchableControls(Control container)
       {
          List<Control> controlList = new List<Control>();
          foreach (Control control in container.Controls)
          {
-            controlList.AddRange(GetSearchableControls(control));
-            if (isSearchableControl(control))
+            controlList.AddRange(getSearchableControls(control));
+            if (_isSearchableControl(control))
             {
                controlList.Add(control);
             }
@@ -30,8 +36,9 @@ namespace mrHelper.App.Helpers
          return controlList;
       }
 
-      internal static SearchResults<TextSearchResult> Search(string text, bool forward, IEnumerable<Control> controls)
+      internal SearchResults<TextSearchResult> Search(string text, bool forward)
       {
+         IEnumerable<Control> controls = getSearchableControls(_container);
          List<TextSearchResult> searchResults = new List<TextSearchResult>();
 
          foreach (Control control in controls)
@@ -51,15 +58,9 @@ namespace mrHelper.App.Helpers
          return new SearchResults<TextSearchResult>(searchResults.ToArray(), forward);
       }
 
-      private static bool doesMatchText(Control control, string text,
-         int startPosition, out int insideControlPosition)
+      private bool doesMatchText(Control control, string text, int startPosition, out int insideControlPosition)
       {
          insideControlPosition = -1;
-
-         if (!isSearchableControl(control))
-         {
-            return false;
-         }
 
          int position = control.Text.IndexOf(text, startPosition);
          if (position != -1)
@@ -71,10 +72,13 @@ namespace mrHelper.App.Helpers
          return false;
       }
 
-      private static bool isSearchableControl(Control control)
+      private bool isSearchableControl(Control control)
       {
          return control is TextBox && control.Parent is DiscussionBox;
       }
+
+      Control _container;
+      Func<Control, bool> _isSearchableControl;
    }
 }
 
