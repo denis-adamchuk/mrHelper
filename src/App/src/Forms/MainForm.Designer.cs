@@ -524,7 +524,7 @@ namespace mrHelper.App.Forms
          this.comboBoxProjects.Size = new System.Drawing.Size(278, 21);
          this.comboBoxProjects.Sorted = true;
          this.comboBoxProjects.TabIndex = 2;
-         this.comboBoxProjects.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxProjects_SelectionChangeCommited);
+         //this.comboBoxProjects.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxProjects_SelectionChangeCommited);
          this.comboBoxProjects.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProjects_Format);
          // 
          // groupBoxActions

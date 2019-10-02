@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
 using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Updates
@@ -38,6 +39,9 @@ namespace mrHelper.Client.Updates
       private static int GetId(MergeRequest x) => x.Id;
       private static int GetId(UpdatedMergeRequest x) => GetId(x.MergeRequest);
 
+      private static int GetIId(MergeRequest x) => x.IId;
+      private static int GetIId(UpdatedMergeRequest x) => GetIId(x.MergeRequest);
+
       private static int GetProjectId(MergeRequest x) => x.Project_Id;
       private static int GetProjectId(UpdatedMergeRequest x) => GetProjectId(x.MergeRequest);
 
@@ -54,6 +58,7 @@ namespace mrHelper.Client.Updates
          foreach (T mergeRequest in mergeRequests)
          {
             int mergeRequestId = GetId((dynamic)mergeRequest);
+            int mergeRequestIId = GetIId((dynamic)mergeRequest);
             int projectId = GetProjectId((dynamic)mergeRequest);
 
             ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = projectId };
@@ -68,8 +73,10 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            updateTimestamp = details.GetLatestChangeTimestamp(mergeRequestId) > updateTimestamp ?
-               details.GetLatestChangeTimestamp(mergeRequestId) : updateTimestamp;
+            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = key, IId = mergeRequestIId };
+
+            updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
+               details.GetLatestChangeTimestamp(mrk) : updateTimestamp;
 
             projectUpdates.Add(
                new ProjectUpdate

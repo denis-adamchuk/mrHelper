@@ -27,11 +27,11 @@ namespace mrHelper.App.Forms
       async private Task showDiscussionsFormAsync()
       {
          // Store data before async/await
-         string hostname = _workflow.State.HostName;
-         string projectname = _workflow.State.Project.Path_With_Namespace;
          User currentUser = _workflow.State.CurrentUser;
-         MergeRequest mergeRequest = _workflow.State.MergeRequest;
          MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         MergeRequest mergeRequest = _workflow.State.MergeRequest;
+         string hostname = mrd.HostName;
+         string projectname = mrd.ProjectName;
 
          GitClient client = getGitClient(hostname, projectname);
          if (client != null)
@@ -157,10 +157,11 @@ namespace mrHelper.App.Forms
          // Keep data before async/await
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
-         string hostname = _workflow.State.HostName;
-         string projectname = _workflow.State.Project.Path_With_Namespace;
-         int mergeRequestId = _workflow.State.MergeRequest.Id;
+
          MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         string hostname = mrd.HostName;
+         string projectname = mrd.ProjectName;
 
          GitClient client = getGitClient(hostname, projectname);
          if (client != null)
@@ -172,7 +173,7 @@ namespace mrHelper.App.Forms
                // user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetLocalProjectChecker(mergeRequestId), updateGitStatusText);
+                  _updateManager.GetLocalProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {

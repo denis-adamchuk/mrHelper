@@ -178,6 +178,13 @@ namespace mrHelper.App.Forms
 
       async private Task onApplicationStarted()
       {
+         if (!System.IO.File.Exists(Tools.ProjectListFileName))
+         {
+            MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
+               Tools.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
          _persistentStorage = new PersistentStorage();
@@ -248,33 +255,18 @@ namespace mrHelper.App.Forms
 
                   notifyOnMergeRequestUpdates(updatesInternal);
 
-                  Project currentProject = _workflow.State.Project;
-                  if (currentProject.Id == default(Project).Id)
+                  // emulate host change to reload merge request list
+                  // This will automatically update commit list (if there are new ones).
+                  // This will also remove closed merge requests from the list.
+                  Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
+
+                  try
                   {
-                     // state changed 
-                     Debug.Assert(false); // when possible?
-                     return;
+                     await _workflow.SwitchHostAsync(updatesInternal.HostName);
                   }
-
-                  // check if currently selected project is affected by update
-
-                  if (updatesInternal.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-                   || updatesInternal.UpdatedMergeRequests.Any(x => x.MergeRequest.Project_Id == _workflow.State.Project.Id)
-                   || updatesInternal.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
+                  catch (WorkflowException ex)
                   {
-                     // emulate project change to reload merge request list
-                     // This will automatically update commit list (if there are new ones).
-                     // This will also remove closed merge requests from the list.
-                     Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
-
-                     try
-                     {
-                        await _workflow.SwitchProjectAsync(currentProject.Path_With_Namespace);
-                     }
-                     catch (WorkflowException ex)
-                     {
-                        ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
-                     }
+                     ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
                   }
                }), updates);
          };

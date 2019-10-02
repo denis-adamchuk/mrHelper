@@ -55,12 +55,12 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentProjectName()
       {
-         return _workflow.State.Project.Path_With_Namespace;
+         return _workflow.State.MergeRequestDescriptor.ProjectName;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return _workflow.State.MergeRequest.IId;
+         return _workflow.State.MergeRequestDescriptor.IId;
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer

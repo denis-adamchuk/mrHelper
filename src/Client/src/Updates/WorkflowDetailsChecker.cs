@@ -138,6 +138,7 @@ namespace mrHelper.Client.Updates
          foreach (Tuple<MergeRequest, MergeRequest> mrPair in diff.Common)
          {
             Debug.Assert(mrPair.Item1.Id == mrPair.Item2.Id);
+            MergeRequest mergeRequest = mrPair.Item1;
 
             UpdateKind? kind = new Nullable<UpdateKind>();
             if (!Enumerable.SequenceEqual(mrPair.Item1.Labels, mrPair.Item2.Labels))
@@ -145,8 +146,14 @@ namespace mrHelper.Client.Updates
                kind = updateFlag(kind, UpdateKind.LabelsUpdated);
             }
 
-            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestChangeTimestamp(mrPair.Item1.Id);
-            DateTime newCachedChangeTimestamp = newDetails.GetLatestChangeTimestamp(mrPair.Item2.Id);
+            MergeRequestKey mergeRequestKey = new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = hostname, ProjectId = mergeRequest.Project_Id },
+               IId = mergeRequest.IId
+            };
+
+            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestChangeTimestamp(mergeRequestKey);
+            DateTime newCachedChangeTimestamp = newDetails.GetLatestChangeTimestamp(mergeRequestKey);
 
             if (newCachedChangeTimestamp > previouslyCachedChangeTimestamp)
             {
@@ -158,7 +165,7 @@ namespace mrHelper.Client.Updates
                updates.UpdatedMergeRequests.Add(new UpdatedMergeRequest
                {
                   UpdateKind = kind.Value,
-                  MergeRequest = mrPair.Item1
+                  MergeRequest = mergeRequest
                });
             }
          }

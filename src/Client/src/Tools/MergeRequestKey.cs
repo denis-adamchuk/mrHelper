@@ -3,10 +3,9 @@ using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Tools
 {
-   public struct MergeRequestDescriptor
+   public struct MergeRequestKey
    {
-      public string HostName;
-      public string ProjectName;
+      public ProjectKey ProjectKey;
       public int IId;
    }
 }

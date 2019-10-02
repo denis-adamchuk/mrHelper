@@ -33,7 +33,7 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
-         Workflow.PostSwitchHost += (state, projects) =>
+         Workflow.PostSwitchHost += (_, projects) =>
          {
             synchronizeInvoke.BeginInvoke(new Action<string>(
                async (hostname) =>
@@ -41,25 +41,23 @@ namespace mrHelper.Client.Updates
                   Trace.TraceInformation("[UpdateManager] Processing host switch");
 
                   await initializeAsync(hostname);
-               }), new object[] { state.HostName });
+               }), new object[] { Workflow.State.HostName });
          };
 
-         Workflow.PostSwitchProject += (state, mergeRequests) =>
+         Workflow.PostLoadProject += (project, mergeRequests) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing project switch");
 
-            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.Project.Id));
+            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == project.Id));
 
-            Cache.UpdateMergeRequests(state.HostName, state.Project, mergeRequests);
+            Cache.UpdateMergeRequests(Workflow.State.HostName, project, mergeRequests);
          };
 
-         Workflow.PostLoadLatestVersion += (state, version) =>
+         Workflow.PostLoadLatestVersion += (version) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing latest version load");
 
-            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.MergeRequest.Project_Id));
-
-            Cache.UpdateLatestVersion(state.MergeRequest.Id, version);
+            Cache.UpdateLatestVersion(Workflow.State.MergeRequestKey, version);
          };
       }
 
@@ -81,9 +79,9 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Checks local cache to detect if there are project changes caused by new versions of a merge request
       /// </summary>
-      public IInstantProjectChecker GetLocalProjectChecker(int mergeRequestId)
+      public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
-         return new LocalProjectChecker(mergeRequestId, Cache.Details.Clone());
+         return new LocalProjectChecker(mrk, Cache.Details.Clone());
       }
 
       /// <summary>
@@ -134,7 +132,7 @@ namespace mrHelper.Client.Updates
                continue;
             }
 
-            Dictionary<int, Version> latestVersions = new Dictionary<int, Version>();
+            Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
                MergeRequestDescriptor mrd = new MergeRequestDescriptor
@@ -147,12 +145,17 @@ namespace mrHelper.Client.Updates
                Version? latestVersion = await loadLatestVersionAsync(mrd);
                if (latestVersion != null)
                {
-                  latestVersions[mergeRequest.Id] = latestVersion.Value;
+                  MergeRequestKey mrk = new MergeRequestKey
+                  {
+                     ProjectKey = new mrHelper.Common.Types.ProjectKey { HostName = hostname, ProjectId = project.Id },
+                     IId = mergeRequest.IId
+                  };
+                  latestVersions[mrk] = latestVersion.Value;
                }
             }
 
             Cache.UpdateMergeRequests(hostname, project, mergeRequests);
-            foreach (KeyValuePair<int, Version> latestVersion in latestVersions)
+            foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
             {
                Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
             }

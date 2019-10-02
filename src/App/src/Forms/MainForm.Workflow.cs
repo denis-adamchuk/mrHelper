@@ -28,28 +28,28 @@ namespace mrHelper.App.Forms
       {
          _workflow = _workflowFactory.CreateWorkflow();
          _workflow.PreSwitchHost += (hostname) => onChangeHost(hostname);
-         _workflow.PostSwitchHost += (state, projects) => onHostChanged(state, projects);
+         _workflow.PostSwitchHost += (user, projects) => onHostChanged(user, projects);
          _workflow.FailedSwitchHost += () => onFailedChangeHost();
 
-         _workflow.PreSwitchProject += (projectname) => onChangeProject(projectname);
-         _workflow.PostSwitchProject +=
-            (state, mergeRequests) =>
+         _workflow.PreLoadProject += (projectname) => onChangeProject(projectname);
+         _workflow.PostLoadProject +=
+            (project, mergeRequests) =>
          {
-            onProjectChanged(state, mergeRequests);
-            cleanupReviewedCommits(state.HostName, state.Project.Path_With_Namespace, mergeRequests);
+            onProjectChanged(project, mergeRequests);
+            cleanupReviewedCommits(_workflow.State.HostName, project.Path_With_Namespace, mergeRequests);
          };
-         _workflow.FailedSwitchProject += () => onFailedChangeProject();
+         _workflow.FailedLoadProject += () => onFailedChangeProject();
 
-         _workflow.PreSwitchMergeRequest += (iid) => onChangeMergeRequest(iid);
-         _workflow.PostSwitchMergeRequest += (state) => onMergeRequestChanged(state);
+         _workflow.PreSwitchMergeRequest += (id) => onChangeMergeRequest(id);
+         _workflow.PostSwitchMergeRequest += () => onMergeRequestChanged();
          _workflow.FailedSwitchMergeRequest += () => onFailedChangeMergeRequest();
 
          _workflow.PreLoadCommits += () => onLoadCommits();
-         _workflow.PostLoadCommits += (state, commits) => onCommitsLoaded(state, commits);
+         _workflow.PostLoadCommits += (commits) => onCommitsLoaded(commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
 
          _workflow.PreLoadLatestVersion += () => onLoadLatestVersion();
-         _workflow.PostLoadLatestVersion += (state, version) => onLatestVersionLoaded();
+         _workflow.PostLoadLatestVersion += (version) => onLatestVersionLoaded();
          _workflow.FailedLoadLatestVersion += () => onFailedLoadLatestVersion();
       }
 
@@ -123,7 +123,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change host"));
       }
 
-      private void onHostChanged(WorkflowState state, List<Project> projects)
+      private void onHostChanged(User currentUser, List<Project> projects)
       {
          Debug.Assert(comboBoxProjects.Items.Count == 0);
          foreach (var project in projects)
@@ -142,7 +142,7 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Host changed. Loaded {0} projects", projects.Count));
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Current user details: Id: {0}, Name: {1}, Username: {2}",
-            state.CurrentUser.Id.ToString(), state.CurrentUser.Name, state.CurrentUser.Username));
+            currentUser.Id.ToString(), currentUser.Name, currentUser.Username));
       }
 
       async private Task changeProjectAsync(string projectName)
@@ -152,7 +152,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.SwitchProjectAsync(projectName);
+            await _workflow.LoadProjectAsync(projectName);
          }
          catch (WorkflowException ex)
          {
@@ -202,7 +202,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change project"));
       }
 
-      private void onProjectChanged(WorkflowState state, List<MergeRequest> mergeRequests)
+      private void onProjectChanged(Project project, List<MergeRequest> mergeRequests)
       {
          mergeRequests = Tools.FilterMergeRequests(mergeRequests, _settings);
 
@@ -226,20 +226,20 @@ namespace mrHelper.App.Forms
             disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
          }
 
-         labelWorkflowStatus.Text = String.Format("Project {0} selected", state.Project.Path_With_Namespace);
+         labelWorkflowStatus.Text = String.Format("Project {0} selected", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Project changed. Loaded {0} merge requests", mergeRequests.Count));
       }
 
-      async private Task changeMergeRequestAsync(int mergeRequestIId)
+      async private Task changeMergeRequestAsync(int mergeRequestId)
       {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
-            mergeRequestIId.ToString()));
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to Id {0}",
+            mergeRequestId.ToString()));
 
          try
          {
-            await _workflow.SwitchMergeRequestAsync(mergeRequestIId);
+            await _workflow.SwitchMergeRequestAsync(mergeRequestId);
          }
          catch (WorkflowException ex)
          {
@@ -248,11 +248,11 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onChangeMergeRequest(int mergeRequestIId)
+      private void onChangeMergeRequest(int mergeRequestId)
       {
          foreach (MergeRequest mergeRequest in comboBoxFilteredMergeRequests.Items.Cast<MergeRequest>())
          {
-            if (mergeRequest.IId == mergeRequestIId)
+            if (mergeRequest.Id == mergeRequestId)
             {
                comboBoxFilteredMergeRequests.SelectedItem = mergeRequest;
             }
@@ -261,7 +261,7 @@ namespace mrHelper.App.Forms
          if (comboBoxFilteredMergeRequests.SelectedItem != null)
          {
             richTextBoxMergeRequestDescription.Text = "Loading...";
-            labelWorkflowStatus.Text = String.Format("Loading merge request with IId {0}...", mergeRequestIId);
+            labelWorkflowStatus.Text = String.Format("Loading merge request with Id {0}...", mergeRequestId);
          }
 
          enableMergeRequestActions(false);
@@ -272,8 +272,8 @@ namespace mrHelper.App.Forms
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Changing merge request to IId {0}",
-            mergeRequestIId.ToString()));
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Changing merge request to Id {0}",
+            mergeRequestId.ToString()));
       }
 
       private void onFailedChangeMergeRequest()
@@ -284,15 +284,16 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change merge request"));
       }
 
-      private void onMergeRequestChanged(WorkflowState state)
+      private void onMergeRequestChanged()
       {
-         Debug.Assert(state.MergeRequest.IId != default(MergeRequest).IId);
+         MergeRequest mergeRequest = _workflow.State.MergeRequest;
+         Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
 
          enableMergeRequestActions(true);
-         updateMergeRequestDetails(state.MergeRequest);
-         updateTimeTrackingMergeRequestDetails(state.MergeRequest);
+         updateMergeRequestDetails(mergeRequest);
+         updateTimeTrackingMergeRequestDetails(mergeRequest);
 
-         labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", state.MergeRequest.IId);
+         labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Merge request changed"));
       }
@@ -323,15 +324,15 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load commits"));
       }
 
-      private void onCommitsLoaded(WorkflowState state, List<Commit> commits)
+      private void onCommitsLoaded(List<Commit> commits)
       {
          if (commits.Count > 0)
          {
             enableComboBox(comboBoxLeftCommit);
             enableComboBox(comboBoxRightCommit);
 
-            addCommitsToComboBoxes(commits,
-               state.MergeRequest.Diff_Refs.Base_SHA, state.MergeRequest.Target_Branch);
+            MergeRequest mergeRequest = _workflow.State.MergeRequest;
+            addCommitsToComboBoxes(commits, mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
 
             enableCommitActions(true);
          }
@@ -356,9 +357,12 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
 
+         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+
          // Making it asynchronous here guarantees that UpdateManager updates the cache before we access it
-         BeginInvoke(new Action<string, string, int>(
-            async (hostname, projectname, id) =>
+         BeginInvoke(new Action<string, string, MergeRequestKey>(
+            async (hostname, projectname, key) =>
             {
                GitClient client = getGitClient(hostname, projectname);
                if (client == null || client.DoesRequireClone())
@@ -370,7 +374,7 @@ namespace mrHelper.App.Forms
 
                Trace.TraceInformation("[MainForm.Workflow] Going to update git repository silently");
 
-               IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker(id);
+               IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker(key);
                try
                {
                   await client.Updater.ManualUpdateAsync(instantChecker, null);
@@ -382,7 +386,7 @@ namespace mrHelper.App.Forms
                }
 
                Trace.TraceInformation("[MainForm.Workflow] Silent update finished");
-            }), _workflow.State.HostName, _workflow.State.Project.Path_With_Namespace, _workflow.State.MergeRequest.Id);
+            }), mrd.HostName, mrd.ProjectName, mrk);
       }
 
       private void onLoadTotalTime()

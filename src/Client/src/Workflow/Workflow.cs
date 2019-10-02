@@ -70,7 +70,7 @@ namespace mrHelper.Client.Workflow
             throw new NotEnabledProjectException(projectname);
          }
 
-         List<Project> projects = await loadHostAsync(hostname, token);
+         List<Project> projects = await switchHostAsync(hostname, token);
          if (projects == null)
          {
             return; // cancelled
@@ -84,17 +84,16 @@ namespace mrHelper.Client.Workflow
             Debug.Assert(projects[iProject].Id == enabledProjects[iProject].Id);
          }
 
-         List<MergeRequest> mergeRequests = await loadProjectAsync(projectname);
-         if (mergeRequests == null)
+         foreach (Project project in projects)
          {
-            return; // cancelled
+            List<MergeRequest> mergeRequests = await loadProjectAsync(project.Path_With_Namespace);
+            if (mergeRequests == null)
+            {
+               return; // cancelled
+            }
          }
 
-         if (!mergeRequests.Cast<MergeRequest>().Any((x) => x.IId == mergeRequestIId))
-         {
-            throw new NotAvailableMergeRequest(mergeRequestIId);
-         }
-         await loadMergeRequestAsync(mergeRequestIId);
+         await switchMergeRequestAsync(mergeRequestIId);
       }
 
       async public Task SwitchHostAsync(string hostName)
@@ -105,47 +104,48 @@ namespace mrHelper.Client.Workflow
             throw new UnknownHostException(hostName);
          }
 
-         List<Project> projects = await loadHostAsync(hostName, token);
+         List<Project> projects = await switchHostAsync(hostName, token);
          if (projects != null)
          {
-            string projectName = selectProjectFromList(projects);
-            if (projectName != String.Empty)
+            foreach (Project singleProject in projects)
             {
-               await SwitchProjectAsync(projectName);
+               await loadProjectAsync(singleProject.Path_With_Namespace);
+            }
+
+            Project project = selectProjectFromList(projects);
+            if (_state.MergeRequests.ContainsKey(project))
+            {
+               int? id = selectMergeRequestFromList(_state.MergeRequests[project]);
+               if (id.HasValue)
+               {
+                  await switchMergeRequestAsync(id.Value);
+               }
             }
          }
       }
 
-      async public Task SwitchProjectAsync(string projectName)
+      async public Task LoadProjectAsync(string projectName)
       {
-         if (State == null)
+         if (_state == null)
          {
             // not initialized
             Debug.Assert(false);
             return;
          }
 
-         List<MergeRequest> mergeRequests = await loadProjectAsync(projectName);
-         if (mergeRequests != null)
-         {
-            int? iid = selectMergeRequestFromList(mergeRequests);
-            if (iid.HasValue)
-            {
-               await loadMergeRequestAsync(iid.Value);
-            }
-         }
+         await loadProjectAsync(projectName);
       }
-
-      async public Task SwitchMergeRequestAsync(int mergeRequestIId)
+	  
+      async public Task SwitchMergeRequestAsync(int mergeRequestId)
       {
-         if (State == null)
+         if (_state == null)
          {
             // not initialized
             Debug.Assert(false);
             return;
          }
 
-         await loadMergeRequestAsync(mergeRequestIId);
+         await switchMergeRequestAsync(mergeRequestId);
       }
 
       async public Task CancelAsync()
@@ -166,53 +166,53 @@ namespace mrHelper.Client.Workflow
       /// </summary>
       public List<Project> GetProjectsToUpdate()
       {
-         if (State == null)
+         if (_state == null)
          {
             // not initialized
             Debug.Assert(false);
             return null;
          }
 
-         List<Project> enabledProjects = getEnabledProjects(State.HostName);
+         List<Project> enabledProjects = getEnabledProjects(_state.HostName);
          if ((enabledProjects?.Count ?? 0) != 0)
          {
             return enabledProjects;
          }
 
-         return State.Project.Id != default(Project).Id ? new List<Project>{ State.Project } : new List<Project>();
+         return new List<Project>();
       }
 
       public event Action<string> PreSwitchHost;
-      public event Action<WorkflowState, List<Project>> PostSwitchHost;
+      public event Action<User, List<Project>> PostSwitchHost;
       public event Action FailedSwitchHost;
 
-      public event Action<string> PreSwitchProject;
-      public event Action<WorkflowState, List<MergeRequest>> PostSwitchProject;
-      public event Action FailedSwitchProject;
+      public event Action<string> PreLoadProject;
+      public event Action<Project, List<MergeRequest>> PostLoadProject;
+      public event Action FailedLoadProject;
 
       public event Action<int> PreSwitchMergeRequest;
-      public event Action<WorkflowState> PostSwitchMergeRequest;
+      public event Action PostSwitchMergeRequest;
       public event Action FailedSwitchMergeRequest;
 
       public event Action PreLoadCommits;
-      public event Action<WorkflowState, List<Commit>> PostLoadCommits;
+      public event Action<List<Commit>> PostLoadCommits;
       public event Action FailedLoadCommits;
 
       public event Action PreLoadSystemNotes;
-      public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
+      public event Action<List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
 
       public event Action PreLoadLatestVersion;
-      public event Action<WorkflowState, Version> PostLoadLatestVersion;
+      public event Action<Version> PostLoadLatestVersion;
       public event Action FailedLoadLatestVersion;
 
-      public WorkflowState State { get; private set; }
+      public IWorkflowState State { get { return _state; } }
 
-      async private Task<List<Project>> loadHostAsync(string hostName, string token)
+      async private Task<List<Project>> switchHostAsync(string hostName, string token)
       {
          PreSwitchHost?.Invoke(hostName);
 
-         State = new WorkflowState
+         _state = new WorkflowState
          {
             HostName = hostName
          };
@@ -239,15 +239,15 @@ namespace mrHelper.Client.Workflow
             return null;
          }
 
-         State.CurrentUser = currentUser;
+         _state.CurrentUser = currentUser;
 
-         PostSwitchHost?.Invoke(State, projects);
+         PostSwitchHost?.Invoke(currentUser, projects);
          return projects;
       }
 
       async private Task<List<MergeRequest>> loadProjectAsync(string projectName)
       {
-         PreSwitchProject?.Invoke(projectName);
+         PreLoadProject?.Invoke(projectName);
 
          Project project = new Project();
          List<MergeRequest> mergeRequests;
@@ -260,26 +260,26 @@ namespace mrHelper.Client.Workflow
          {
             string cancelMessage = String.Format("Cancelled switch project to {0}", projectName);
             string errorMessage = String.Format("Cannot load project {0}", projectName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchProject);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProject);
             return null;
          }
 
-         State.Project = project;
+         _state.MergeRequests[project] = mergeRequests;
 
-         _lastProjectsByHosts[State.HostName] = State.Project.Path_With_Namespace;
-
-         PostSwitchProject?.Invoke(State, mergeRequests);
+         PostLoadProject?.Invoke(project, mergeRequests);
          return mergeRequests;
       }
 
-      async private Task loadMergeRequestAsync(int mergeRequestIId)
+      async private Task switchMergeRequestAsync(int mergeRequestId)
       {
-         PreSwitchMergeRequest?.Invoke(mergeRequestIId);
+         PreSwitchMergeRequest?.Invoke(mergeRequestId);
+
+         findMergeRequest(mergeRequestId, out Project project, out int mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
          try
          {
-            mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
+            mergeRequest = await Operator.GetMergeRequestAsync(project.Path_With_Namespace, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
@@ -289,12 +289,13 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         State.MergeRequest = mergeRequest;
+         _state.MergeRequest = mergeRequest;
+         _lastProjectsByHosts[_state.HostName] = project.Path_With_Namespace;
 
-         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
+         ProjectKey key = new ProjectKey { HostName = _state.HostName, ProjectId = project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;
 
-         PostSwitchMergeRequest?.Invoke(State);
+         PostSwitchMergeRequest?.Invoke();
 
          if (!await loadLatestVersionAsync() || !await loadSystemNotesAsync())
          {
@@ -303,24 +304,45 @@ namespace mrHelper.Client.Workflow
          await loadCommitsAsync();
       }
 
+      private void findMergeRequest(int mergeRequestId, out Project project, out int mergeRequestIId)
+      {
+         project = new Project();
+         mergeRequestIId = 0;
+         foreach (KeyValuePair<Project, List<MergeRequest>> mergeRequests in _state.MergeRequests)
+         {
+            int idx = mergeRequests.Value.FindIndex((x) => x.Id == mergeRequestId);
+            if (idx != -1)
+            {
+               project = mergeRequests.Key;
+               mergeRequestIId = mergeRequests.Value[idx].IId;
+               break;
+            }
+         }
+
+         if (mergeRequestIId == 0)
+         {
+            throw new NotAvailableMergeRequest(mergeRequestIId);
+         }
+      }
+
       async private Task<bool> loadCommitsAsync()
       {
          PreLoadCommits?.Invoke();
          List<Commit> commits;
          try
          {
-            commits = await Operator.GetCommitsAsync(State.Project.Path_With_Namespace, State.MergeRequest.IId);
+            commits = await Operator.GetCommitsAsync(_state.Project.Path_With_Namespace, _state.MergeRequest.IId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading commits for merge request with IId {0}",
-               State.MergeRequest.IId);
+               _state.MergeRequest.IId);
             string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
-               State.MergeRequest.IId);
+               _state.MergeRequest.IId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCommits);
             return false;
          }
-         PostLoadCommits?.Invoke(State, commits);
+         PostLoadCommits?.Invoke(commits);
          return true;
       }
 
@@ -330,18 +352,18 @@ namespace mrHelper.Client.Workflow
          List<Note> notes;
          try
          {
-            notes = await Operator.GetSystemNotesAsync(State.Project.Path_With_Namespace, State.MergeRequest.IId);
+            notes = await Operator.GetSystemNotesAsync(_state.Project.Path_With_Namespace, _state.MergeRequest.IId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading system notes for merge request with IId {0}",
-               State.MergeRequest.IId);
+               _state.MergeRequest.IId);
             string errorMessage = String.Format("Cannot load system notes for merge request with IId {0}",
-               State.MergeRequest.IId);
+               _state.MergeRequest.IId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSystemNotes);
             return false;
          }
-         PostLoadSystemNotes?.Invoke(State, notes);
+         PostLoadSystemNotes?.Invoke(notes);
          return true;
       }
 
@@ -352,18 +374,18 @@ namespace mrHelper.Client.Workflow
          try
          {
             latestVersion = await Operator.GetLatestVersionAsync(
-               State.Project.Path_With_Namespace, State.MergeRequest.IId);
+               _state.Project.Path_With_Namespace, _state.MergeRequest.IId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading latest version for merge request with IId {0}",
-               State.MergeRequest.IId);
+               _state.MergeRequest.IId);
             string errorMessage = String.Format("Cannot load latest version for merge request with IId {0}",
-               State.MergeRequest.IId);
+               _state.MergeRequest.IId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadLatestVersion);
             return false;
          }
-         PostLoadLatestVersion?.Invoke(State, latestVersion);
+         PostLoadLatestVersion?.Invoke(latestVersion);
          return true;
       }
 
@@ -390,25 +412,31 @@ namespace mrHelper.Client.Workflow
          throw new WorkflowException(message);
       }
 
-      private string selectProjectFromList(List<Project> projects)
+      private Project selectProjectFromList(List<Project> projects)
       {
-         string key = State.HostName;
+         string key = _state.HostName;
          // if we remember a project selected for the given host before...
          if (_lastProjectsByHosts.ContainsKey(key)
             // ... and if such project still exists in a list of Projects
             && projects.Any((x) => x.Path_With_Namespace == _lastProjectsByHosts[key]))
          {
-            return _lastProjectsByHosts[key];
+            foreach (KeyValuePair<Project, List<MergeRequest>> mergeRequests in _state.MergeRequests)
+            {
+               if (mergeRequests.Key.Path_With_Namespace == _lastProjectsByHosts[key])
+               {
+                  return mergeRequests.Key;
+               }
+            }
          }
 
-         return projects.Count > 0 ? projects[0].Path_With_Namespace : String.Empty;
+         return projects.Count > 0 ? projects[0] : default(Project);
       }
 
       private int? selectMergeRequestFromList(List<MergeRequest> mergeRequests)
       {
          mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
 
-         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
+         ProjectKey key = new ProjectKey { HostName = _state.HostName, ProjectId = _state.Project.Id };
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
             // ... and if such MR still exists in a list of MRs
@@ -417,7 +445,7 @@ namespace mrHelper.Client.Workflow
             return _lastMergeRequestsByProjects[key];
          }
 
-         return mergeRequests.Count > 0 ? mergeRequests[0].IId : new Nullable<int>();
+         return mergeRequests.Count > 0 ? mergeRequests[0].Id : new Nullable<int>();
       }
 
       private List<Project> getEnabledProjects(string hostname)
@@ -467,6 +495,7 @@ namespace mrHelper.Client.Workflow
 
       private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
       private Dictionary<ProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<ProjectKey, int>();
+      private WorkflowState _state = new WorkflowState();
    }
 }
 

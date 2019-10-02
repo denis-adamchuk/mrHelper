@@ -275,7 +275,7 @@ namespace mrHelper.App.Forms
          if (mergeRequest.HasValue)
          {
             labelTimeTrackingMergeRequestName.Text =
-               mergeRequest.Value.Title + "   " + "[" + _workflow.State.Project.Path_With_Namespace + "]";
+               mergeRequest.Value.Title + "   " + "[" + _workflow.State.MergeRequestDescriptor.ProjectName + "]";
          }
       }
 

@@ -18,14 +18,14 @@ namespace mrHelper.Client.Updates
       {
          ProjectNames = new Dictionary<ProjectKey, string>();
          MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
-         Changes = new Dictionary<int, DateTime>();
+         Changes = new Dictionary<MergeRequestKey, DateTime>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
       {
          ProjectNames = new Dictionary<ProjectKey, string>(details.ProjectNames);
          MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details.MergeRequests);
-         Changes = new Dictionary<int, DateTime>(details.Changes);
+         Changes = new Dictionary<MergeRequestKey, DateTime>(details.Changes);
       }
 
       /// <summary>
@@ -72,40 +72,25 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request
       /// </summary>
-      public DateTime GetLatestChangeTimestamp(int mergeRequestId)
+      public DateTime GetLatestChangeTimestamp(MergeRequestKey mrk)
       {
-         return Changes.ContainsKey(mergeRequestId) ? Changes[mergeRequestId] : DateTime.MinValue;
+         return Changes.ContainsKey(mrk) ? Changes[mrk] : DateTime.MinValue;
       }
 
       /// <summary>
       /// Update a timestamp of the most recent version of a specified merge request
       /// </summary>
-      internal void SetLatestChangeTimestamp(int mergeRequestId, DateTime timestamp)
+      internal void SetLatestChangeTimestamp(MergeRequestKey mrk, DateTime timestamp)
       {
-         Changes[mergeRequestId] = timestamp;
+         Changes[mrk] = timestamp;
       }
 
       /// <summary>
       /// Remove records from Changes collection
       /// </summary>
-      internal void CleanupTimestamps(int mergeRequestId)
+      internal void CleanupTimestamps(MergeRequestKey mrk)
       {
-         Changes.Remove(mergeRequestId);
-      }
-
-      /// <summary>
-      /// Return project Id by merge request Id
-      /// </summary>
-      public ProjectKey GetProjectKey(int mergeRequestId)
-      {
-         foreach (KeyValuePair<ProjectKey, List<MergeRequest>> mergeRequests in MergeRequests)
-         {
-            if (mergeRequests.Value.Any((x) => x.Id == mergeRequestId))
-            {
-               return mergeRequests.Key;
-            }
-         }
-         return new ProjectKey { HostName = String.Empty, ProjectId = 0 };
+         Changes.Remove(mrk);
       }
 
       // maps unique project id to project's Path with Namespace property
@@ -114,8 +99,8 @@ namespace mrHelper.Client.Updates
       // maps unique project id to list of merge requests
       private Dictionary<ProjectKey, List<MergeRequest>> MergeRequests;
 
-      // maps unique Merge Request Id (not IId) to a timestamp of its latest version
-      private Dictionary<int, DateTime> Changes;
+      // maps Merge Request to a timestamp of its latest version
+      private Dictionary<MergeRequestKey, DateTime> Changes;
    }
 }
 

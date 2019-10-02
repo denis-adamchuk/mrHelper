@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Workflow
 {
-   public class WorkflowState
+   public class WorkflowState : IWorkflowState
    {
       public string HostName
       {
          get { return _hostName; }
-         set
+         internal set
          {
             _hostName = value;
             _currentUser = default(User);
@@ -20,17 +21,7 @@ namespace mrHelper.Client.Workflow
       public User CurrentUser
       {
          get { return _currentUser; }
-         set { _currentUser = value; }
-      }
-
-      public Project Project
-      {
-         get { return _project; }
-         set
-         {
-            _project = value;
-            _mergeRequest = default(MergeRequest);
-         }
+         internal set { _currentUser = value; }
       }
 
       public MergeRequest MergeRequest
@@ -55,9 +46,39 @@ namespace mrHelper.Client.Workflow
          }
       }
 
+      public MergeRequestKey MergeRequestKey
+      {
+         get
+         {
+            return new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = HostName, ProjectId = Project.Id },
+               IId = MergeRequest.IId
+            };
+         }
+      }
+
+      internal Project Project
+      {
+         get
+         {
+            foreach (Project project in MergeRequests.Keys)
+            {
+               if (project.Id == MergeRequest.Project_Id)
+               {
+                  return project;
+               }
+            }
+
+            return default(Project);
+         }
+      }
+
+      internal Dictionary<Project, List<MergeRequest>> MergeRequests =
+         new Dictionary<Project, List<MergeRequest>>();
+
       private string _hostName = String.Empty;
       private User _currentUser = new User();
-      private Project _project = new Project();
       private MergeRequest _mergeRequest = new MergeRequest();
    }
 }

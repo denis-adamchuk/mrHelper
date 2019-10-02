@@ -21,7 +21,7 @@ namespace mrHelper.Client.TimeTracking
          workflow.PreLoadSystemNotes += () => PreLoadTotalTime?.Invoke();
          workflow.FailedLoadSystemNotes += () => FailedLoadTotalTime?.Invoke();
          workflow.PostLoadSystemNotes +=
-            (state, notes) => processSystemNotes(state.MergeRequestDescriptor, state.CurrentUser, notes);
+            (notes) => processSystemNotes(workflow.State.MergeRequestDescriptor, workflow.State.CurrentUser, notes);
       }
 
       public event Action PreLoadTotalTime;

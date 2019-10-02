@@ -168,18 +168,18 @@ namespace mrHelper.App.Forms
          await changeHostAsync(hostname);
       }
 
-      async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
-      {
-         string projectname = (sender as ComboBox).Text;
-         await changeProjectAsync(projectname);
-      }
+      //async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
+      //{
+      //   string projectname = (sender as ComboBox).Text;
+      //   await changeProjectAsync(projectname);
+      //}
 
       async private void ComboBoxFilteredMergeRequests_SelectionChangeCommited(object sender, EventArgs e)
       {
          ComboBox comboBox = (sender as ComboBox);
          MergeRequest mergeRequest = (MergeRequest)comboBox.SelectedItem;
 
-         await changeMergeRequestAsync(mergeRequest.IId);
+         await changeMergeRequestAsync(mergeRequest.Id);
       }
 
       private void ComboBoxFilteredMergeRequests_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
@@ -402,8 +402,8 @@ namespace mrHelper.App.Forms
 
          if (_workflow != null && _settings.CheckedLabelsFilter)
          {
-            // emulate project change to reload merge request list
-            await changeProjectAsync(_workflow.State.Project.Path_With_Namespace);
+            // emulate host change to reload merge request list
+            await changeProjectAsync(_workflow.State.HostName);
          }
       }
 
@@ -413,8 +413,8 @@ namespace mrHelper.App.Forms
 
          if (_workflow != null)
          {
-            // emulate project change to reload merge request list
-            await changeProjectAsync(_workflow.State.Project.Path_With_Namespace);
+            // emulate host change to reload merge request list
+            await changeProjectAsync(_workflow.State.HostName);
          }
       }
 
