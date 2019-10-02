@@ -174,7 +174,7 @@ namespace mrHelper.App.Forms
       //   await changeProjectAsync(projectname);
       //}
 
-      async private void ComboBoxFilteredMergeRequests_SelectionChangeCommited(object sender, EventArgs e)
+      async private void ListBoxFilteredMergeRequests_SelectedIndexChanged(object sender, EventArgs e)
       {
          ComboBox comboBox = (sender as ComboBox);
          MergeRequest mergeRequest = (MergeRequest)comboBox.SelectedItem;
@@ -182,7 +182,7 @@ namespace mrHelper.App.Forms
          await changeMergeRequestAsync(mergeRequest.Id);
       }
 
-      private void ComboBoxFilteredMergeRequests_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
+      private void ListBoxFilteredMergeRequests_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
       {
          if (e.Index < 0)
          {
@@ -223,7 +223,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ComboBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+      private void ListBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
       {
          if (e.Index < 0)
          {

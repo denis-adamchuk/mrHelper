@@ -212,6 +212,20 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void disableListBox(ListBox listBox, string text)
+      {
+         listBox.SelectedIndex = -1;
+         listBox.Items.Clear();
+         listBox.Enabled = false;
+
+         listBox.Text = text;
+      }
+
+      private void enableListBox(ListBox listBox)
+      {
+         listBox.Enabled = false;
+      }
+
       private void disableComboBox(SelectionPreservingComboBox comboBox, string text)
       {
          comboBox.DroppedDown = false;
@@ -235,8 +249,7 @@ namespace mrHelper.App.Forms
          buttonDiffTool.Enabled = enabled;
          buttonDiscussions.Enabled = enabled;
          comboBoxHost.Enabled = enabled;
-         comboBoxProjects.Enabled = enabled;
-         comboBoxFilteredMergeRequests.Enabled = enabled;
+         listBoxFilteredMergeRequests.Enabled = enabled;
          enableMergeRequestFilterControls(enabled);
          tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
 
@@ -254,7 +267,7 @@ namespace mrHelper.App.Forms
 
       private void updateMergeRequestDetails(MergeRequest? mergeRequest)
       {
-         toolTip.SetToolTip(comboBoxFilteredMergeRequests,
+         toolTip.SetToolTip(listBoxFilteredMergeRequests,
             mergeRequest.HasValue ? formatMergeRequestForDropdown(mergeRequest.Value) : String.Empty);
          richTextBoxMergeRequestDescription.Text =
             mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
@@ -407,14 +420,15 @@ namespace mrHelper.App.Forms
       private void notifyOnMergeRequestEvent(MergeRequest mergeRequest, string title)
       {
          string projectName = String.Empty;
-         foreach (var item in comboBoxProjects.Items)
-         {
-            Project project = (Project)(item);
-            if (project.Id == mergeRequest.Project_Id)
-            {
-               projectName = project.Path_With_Namespace;
-            }
-         }
+         // TODO
+         //foreach (var item in comboBoxProjects.Items)
+         //{
+         //   Project project = (Project)(item);
+         //   if (project.Id == mergeRequest.Project_Id)
+         //   {
+         //      projectName = project.Path_With_Namespace;
+         //   }
+         //}
 
          showTooltipBalloon(title, "\""
             + mergeRequest.Title

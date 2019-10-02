@@ -93,12 +93,12 @@ namespace mrHelper.App.Forms
                AccessToken = Tools.GetAccessToken(hostname, _settings)
             };
 
-            disableComboBox(comboBoxProjects, "Loading...");
+            //disableComboBox(comboBoxProjects, "Loading...");
             labelWorkflowStatus.Text = "Loading projects...";
          }
          else
          {
-            disableComboBox(comboBoxProjects, String.Empty);
+            //disableComboBox(comboBoxProjects, String.Empty);
          }
 
          enableMergeRequestFilterControls(false);
@@ -107,7 +107,7 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(null);
          updateTotalTime(null);
-         disableComboBox(comboBoxFilteredMergeRequests, String.Empty);
+         disableListBox(listBoxFilteredMergeRequests, String.Empty);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
 
@@ -117,7 +117,7 @@ namespace mrHelper.App.Forms
 
       private void onFailedChangeHost()
       {
-         disableComboBox(comboBoxProjects, String.Empty);
+         //disableComboBox(comboBoxProjects, String.Empty);
          labelWorkflowStatus.Text = "Failed to load projects";
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to change host"));
@@ -125,16 +125,16 @@ namespace mrHelper.App.Forms
 
       private void onHostChanged(User currentUser, List<Project> projects)
       {
-         Debug.Assert(comboBoxProjects.Items.Count == 0);
-         foreach (var project in projects)
-         {
-            comboBoxProjects.Items.Add(project);
-         }
+         //Debug.Assert(comboBoxProjects.Items.Count == 0);
+         //foreach (var project in projects)
+         //{
+         //   comboBoxProjects.Items.Add(project);
+         //}
 
-         if (comboBoxProjects.Items.Count > 0)
-         {
-            enableComboBox(comboBoxProjects);
-         }
+         //if (comboBoxProjects.Items.Count > 0)
+         //{
+         //   enableComboBox(comboBoxProjects);
+         //}
 
          labelWorkflowStatus.Text = "Projects loaded";
 
@@ -173,7 +173,7 @@ namespace mrHelper.App.Forms
 
          if (comboBoxProjects.SelectedItem != null)
          {
-            disableComboBox(comboBoxFilteredMergeRequests, "Loading...");
+            disableListBox(listBoxFilteredMergeRequests, "Loading...");
             labelWorkflowStatus.Text = "Loading merge requests...";
          }
          else
