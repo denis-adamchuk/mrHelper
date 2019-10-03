@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
-using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Updates
 {
@@ -61,7 +60,7 @@ namespace mrHelper.Client.Updates
             int mergeRequestIId = GetIId((dynamic)mergeRequest);
             int projectId = GetProjectId((dynamic)mergeRequest);
 
-            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = projectId };
+            OldProjectKey key = new OldProjectKey{ HostName = hostname, ProjectId = projectId };
             string projectName = details.GetProjectName(key);
 
             // Excluding duplicates
@@ -73,7 +72,8 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = key, IId = mergeRequestIId };
+            ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = projectName };
+            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequestIId };
 
             updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
                details.GetLatestChangeTimestamp(mrk) : updateTimestamp;

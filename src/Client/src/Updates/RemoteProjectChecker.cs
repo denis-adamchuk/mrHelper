@@ -15,9 +15,9 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class RemoteProjectChecker : IInstantProjectChecker
    {
-      internal RemoteProjectChecker(MergeRequestDescriptor mrd, UpdateOperator updateOperator)
+      internal RemoteProjectChecker(MergeRequestKey mrk, UpdateOperator updateOperator)
       {
-         MergeRequestDescriptor = mrd;
+         MergeRequestKey = mrk;
          Operator = updateOperator;
       }
 
@@ -30,7 +30,7 @@ namespace mrHelper.Client.Updates
          DateTime dateTime = DateTime.MinValue;
          try
          {
-            Version version = await Operator.GetLatestVersionAsync(MergeRequestDescriptor);
+            Version version = await Operator.GetLatestVersionAsync(MergeRequestKey);
             dateTime = version.Created_At;
          }
          catch (OperatorException ex)
@@ -42,11 +42,11 @@ namespace mrHelper.Client.Updates
 
       public override string ToString()
       {
-         return String.Format("RemoteProjectChecker. MRD: HostName={0}, ProjectName={1}, IId={2}",
-            MergeRequestDescriptor.HostName, MergeRequestDescriptor.ProjectName, MergeRequestDescriptor.IId);
+         return String.Format("RemoteProjectChecker. MRK: HostName={0}, ProjectName={1}, IId={2}",
+            MergeRequestKey.ProjectKey.HostName, MergeRequestKey.ProjectKey.ProjectName, MergeRequestKey.IId);
       }
 
-      private MergeRequestDescriptor MergeRequestDescriptor { get; }
+      private MergeRequestKey MergeRequestKey { get; }
       private UpdateOperator Operator { get; }
    }
 }

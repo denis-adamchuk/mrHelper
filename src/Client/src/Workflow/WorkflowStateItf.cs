@@ -13,7 +13,6 @@ namespace mrHelper.Client.Workflow
       string HostName { get; }
       User CurrentUser { get; }
       MergeRequest MergeRequest { get; }
-      MergeRequestDescriptor MergeRequestDescriptor { get; }
       MergeRequestKey MergeRequestKey { get; }
    }
 }

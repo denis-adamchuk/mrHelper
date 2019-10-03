@@ -18,13 +18,14 @@ namespace mrHelper.Client.TimeTracking
          Settings = settings;
       }
 
-      async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestDescriptor mrd)
+      async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrd.HostName, Tools.Tools.GetAccessToken(mrd.HostName, Settings));
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
+            Tools.Tools.GetAccessToken(mrk.ProjectKey.HostName, Settings));
          try
          {
             await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrd.ProjectName).MergeRequests.Get(mrd.IId).AddSpentTimeAsync(
+               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).AddSpentTimeAsync(
                   new AddSpentTimeParameters
                   {
                      Add = add,

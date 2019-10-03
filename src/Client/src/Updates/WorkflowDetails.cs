@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
@@ -16,14 +15,14 @@ namespace mrHelper.Client.Updates
    {
       internal WorkflowDetails()
       {
-         ProjectNames = new Dictionary<ProjectKey, string>();
+         ProjectNames = new Dictionary<OldProjectKey, string>();
          MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
          Changes = new Dictionary<MergeRequestKey, DateTime>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
       {
-         ProjectNames = new Dictionary<ProjectKey, string>(details.ProjectNames);
+         ProjectNames = new Dictionary<OldProjectKey, string>(details.ProjectNames);
          MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details.MergeRequests);
          Changes = new Dictionary<MergeRequestKey, DateTime>(details.Changes);
       }
@@ -37,9 +36,9 @@ namespace mrHelper.Client.Updates
       }
 
       /// <summary>
-      /// Return project name (Path_With_Namespace) by unique project Id
+      /// Return project name (Path_With_Namespace) by hostname and unique project Id
       /// </summary>
-      public string GetProjectName(ProjectKey key)
+      public string GetProjectName(OldProjectKey key)
       {
          Debug.Assert(ProjectNames.ContainsKey(key));
          return ProjectNames.ContainsKey(key) ? ProjectNames[key] : String.Empty;
@@ -48,7 +47,7 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Add a project name/id pair to the cache
       /// </summary>
-      internal void SetProjectName(ProjectKey key, string name)
+      internal void SetProjectName(OldProjectKey key, string name)
       {
          ProjectNames[key] = name;
       }
@@ -93,14 +92,14 @@ namespace mrHelper.Client.Updates
          Changes.Remove(mrk);
       }
 
-      // maps unique project id to project's Path with Namespace property
-      private Dictionary<ProjectKey, string> ProjectNames;
+      // maps hostname and unique project id to project's Path with Namespace property
+      private readonly Dictionary<OldProjectKey, string> ProjectNames;
 
       // maps unique project id to list of merge requests
       private Dictionary<ProjectKey, List<MergeRequest>> MergeRequests;
 
       // maps Merge Request to a timestamp of its latest version
-      private Dictionary<MergeRequestKey, DateTime> Changes;
+      private readonly Dictionary<MergeRequestKey, DateTime> Changes;
    }
 }
 

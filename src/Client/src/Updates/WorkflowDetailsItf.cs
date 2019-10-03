@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
-using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Updates
 {
@@ -14,9 +13,9 @@ namespace mrHelper.Client.Updates
       IWorkflowDetails Clone();
 
       /// <summary>
-      /// Return project name (Path_With_Namespace) by unique project Id
+      /// Return project name (Path_With_Namespace) by hostname and unique project Id
       /// </summary>
-      string GetProjectName(ProjectKey key);
+      string GetProjectName(OldProjectKey key);
 
       /// <summary>
       /// Return a list of merge requests by unique project id

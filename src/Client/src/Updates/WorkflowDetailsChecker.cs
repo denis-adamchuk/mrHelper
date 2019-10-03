@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
@@ -70,7 +69,7 @@ namespace mrHelper.Client.Updates
 
          foreach (var project in enabledProjects)
          {
-            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = project.Id };
+            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace };
             List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(key);
             List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(key);
 
@@ -146,9 +145,12 @@ namespace mrHelper.Client.Updates
                kind = updateFlag(kind, UpdateKind.LabelsUpdated);
             }
 
+            OldProjectKey oldProjectKey = new OldProjectKey { HostName = hostname, ProjectId = mergeRequest.Project_Id };
+            string projectName = oldDetails.GetProjectName(oldProjectKey);
+
             MergeRequestKey mergeRequestKey = new MergeRequestKey
             {
-               ProjectKey = new ProjectKey { HostName = hostname, ProjectId = mergeRequest.Project_Id },
+               ProjectKey = new ProjectKey{ HostName = hostname, ProjectName = projectName },
                IId = mergeRequest.IId
             };
 

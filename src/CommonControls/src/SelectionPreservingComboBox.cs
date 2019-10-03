@@ -5,18 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper.App.Controls
+namespace mrHelper.CommonControls
 {
    /// <summary>
    /// Unlike its parent class, SelectionPreservingComboBox preserves state of SelectedIndex, SelectedItem,
    /// SelectedText and Text properties until SelectedIndexChanged event is invoked, including cases
    /// when dropdown is expanded and user hovers but does not click on items
    /// </summary>
-   internal class SelectionPreservingComboBox : ComboBox
+   public partial class SelectionPreservingComboBox : ComboBox
    {
-      new internal event EventHandler SelectedIndexChanged;
+      new public event EventHandler SelectedIndexChanged;
 
-      internal SelectionPreservingComboBox()
+      public SelectionPreservingComboBox()
       {
          base.SelectionChangeCommitted +=
             (sender, args) =>
@@ -31,7 +31,7 @@ namespace mrHelper.App.Controls
          };
       }
 
-      new internal int SelectedIndex
+      new public int SelectedIndex
       {
          get
          {
@@ -52,7 +52,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new internal object SelectedItem
+      new public object SelectedItem
       {
          get
          {
@@ -64,7 +64,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new internal string SelectedText
+      new public string SelectedText
       {
          get
          {
@@ -72,7 +72,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new internal string Text
+      new public string Text
       {
          get
          {
@@ -89,7 +89,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      new internal ComboBoxStyle DropDownStyle
+      new public ComboBoxStyle DropDownStyle
       {
          get
          {

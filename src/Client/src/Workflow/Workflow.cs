@@ -6,10 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
-using mrHelper.Client.Tools;
 using mrHelper.Client.Persistence;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Workflow
 {
@@ -292,7 +291,7 @@ namespace mrHelper.Client.Workflow
          _state.MergeRequest = mergeRequest;
          _lastProjectsByHosts[_state.HostName] = project.Path_With_Namespace;
 
-         ProjectKey key = new ProjectKey { HostName = _state.HostName, ProjectId = project.Id };
+         OldProjectKey key = new OldProjectKey { HostName = _state.HostName, ProjectId = project.Id };
          _lastMergeRequestsByProjects[key] = mergeRequestIId;
 
          PostSwitchMergeRequest?.Invoke();
@@ -436,7 +435,8 @@ namespace mrHelper.Client.Workflow
       {
          mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
 
-         ProjectKey key = new ProjectKey { HostName = _state.HostName, ProjectId = _state.Project.Id };
+         OldProjectKey key = new OldProjectKey { HostName = _state.HostName, ProjectId = _state.Project.Id };
+
          // if we remember MR selected for the given host/project before...
          if (_lastMergeRequestsByProjects.ContainsKey(key)
             // ... and if such MR still exists in a list of MRs
@@ -484,7 +484,7 @@ namespace mrHelper.Client.Workflow
 
                   string host = splitted[0];
                   string projectId = splitted[1];
-                  return new ProjectKey { HostName = host, ProjectId = int.Parse(projectId) };
+                  return new OldProjectKey { HostName = host, ProjectId = int.Parse(projectId) };
                },
                item => (int)item.Value);
          }
@@ -494,7 +494,7 @@ namespace mrHelper.Client.Workflow
       private WorkflowDataOperator Operator { get; set; }
 
       private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
-      private Dictionary<ProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<ProjectKey, int>();
+      private Dictionary<OldProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<OldProjectKey, int>();
       private WorkflowState _state = new WorkflowState();
    }
 }

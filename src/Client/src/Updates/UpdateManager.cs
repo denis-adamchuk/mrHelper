@@ -87,9 +87,9 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Makes a request to GitLab to detect if there are project changes caused by new versions of a merge request
       /// </summary>
-      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestDescriptor mrd)
+      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
       {
-         return new RemoteProjectChecker(mrd, Operator);
+         return new RemoteProjectChecker(mrk, Operator);
       }
 
       /// <summary>
@@ -132,24 +132,20 @@ namespace mrHelper.Client.Updates
                continue;
             }
 
+            ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+
             Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               MergeRequestDescriptor mrd = new MergeRequestDescriptor
+               MergeRequestKey mrk = new MergeRequestKey
                {
-                  HostName = hostname,
-                  ProjectName = project.Path_With_Namespace,
+                  ProjectKey = projectKey,
                   IId = mergeRequest.IId
                };
 
-               Version? latestVersion = await loadLatestVersionAsync(mrd);
+               Version? latestVersion = await loadLatestVersionAsync(mrk);
                if (latestVersion != null)
                {
-                  MergeRequestKey mrk = new MergeRequestKey
-                  {
-                     ProjectKey = new mrHelper.Common.Types.ProjectKey { HostName = hostname, ProjectId = project.Id },
-                     IId = mergeRequest.IId
-                  };
                   latestVersions[mrk] = latestVersion.Value;
                }
             }
@@ -177,17 +173,17 @@ namespace mrHelper.Client.Updates
          return null;
       }
 
-      async private Task<Version?> loadLatestVersionAsync(MergeRequestDescriptor mrd)
+      async private Task<Version?> loadLatestVersionAsync(MergeRequestKey mrk)
       {
          try
          {
-            return await Operator.GetLatestVersionAsync(mrd);
+            return await Operator.GetLatestVersionAsync(mrk);
          }
          catch (OperatorException)
          {
             string message = String.Format(
                "[UpdateManager] Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
-               mrd.HostName, mrd.ProjectName, mrd.IId);
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
             Trace.TraceError(message);
          }
          return null;

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.757
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29324.140
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.App", "src\App\mrHelper.App.csproj", "{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "mrHelper.Install", "submodules\mrHelper.Install\mrHelper.Install.vdproj", "{1AE3FE90-8FE6-4F29-9E73-D2F0ECCA213A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Integration", "src\Integration\mrHelper.Integration.csproj", "{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CommonControls", "src\CommonControls\mrHelper.CommonControls.csproj", "{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +90,12 @@ Global
 		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|Any CPU.Build.0 = Release|Any CPU
 		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Install|Any CPU.ActiveCfg = Release|Any CPU
+		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Install|Any CPU.Build.0 = Release|Any CPU
+		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

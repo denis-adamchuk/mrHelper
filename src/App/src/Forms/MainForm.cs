@@ -18,6 +18,8 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
+using mrHelper.App.Controls;
+using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -38,9 +40,18 @@ namespace mrHelper.App.Forms
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
+      private void SetHeight(ListView listView, int height)
+      {
+         ImageList imgList = new ImageList();
+         imgList.ImageSize = new Size(1, height);
+         listView.SmallImageList = imgList;
+      }
+
       internal MainForm()
       {
          InitializeComponent();
+
+         SetHeight(listViewMergeRequests, listViewMergeRequests.Font.Height * 2 + 2);
       }
 
       public string GetCurrentHostName()
@@ -55,12 +66,12 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentProjectName()
       {
-         return _workflow.State.MergeRequestDescriptor.ProjectName;
+         return _workflow.State.MergeRequestKey.ProjectKey.ProjectName;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return _workflow.State.MergeRequestDescriptor.IId;
+         return _workflow.State.MergeRequestKey.IId;
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
@@ -81,8 +92,8 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
 
       private string _initialHostName = String.Empty;
-      private Dictionary<MergeRequestDescriptor, HashSet<string>> _reviewedCommits =
-         new Dictionary<MergeRequestDescriptor, HashSet<string>>();
+      private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
+         new Dictionary<MergeRequestKey, HashSet<string>>();
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
@@ -120,6 +131,92 @@ namespace mrHelper.App.Forms
          internal CommitComboBoxItem(Commit commit)
             : this(commit.Id, commit.Title, commit.Created_At)
          {
+         }
+      }
+
+      private void fillRectangle2(DrawListViewSubItemEventArgs e, Color backColor, bool isSelected)
+      {
+         if (isSelected)
+         {
+            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+         }
+         else
+         {
+            using (Brush brush = new SolidBrush(backColor))
+            {
+               e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+         }
+      }
+
+      private void listViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+      {
+         Tuple<string, MergeRequest> projectAndMergeRequest = (Tuple<string, MergeRequest>)(e.Item.Tag);
+         string projectname = projectAndMergeRequest.Item1;
+         MergeRequest mergeRequest = projectAndMergeRequest.Item2;
+
+         e.DrawBackground();
+
+         bool isSelected = e.Item.Selected;
+         fillRectangle2(e, getMergeRequestColor(mergeRequest), isSelected);
+
+         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+
+         switch (e.ColumnIndex)
+         {
+            case 0:
+               e.Graphics.DrawString(mergeRequest.IId.ToString(), e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+               break;
+            case 1:
+               e.Graphics.DrawString(mergeRequest.Author.Name, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+               break;
+            case 2:
+               e.Graphics.DrawString(projectname, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+               break;
+            case 3:
+               {
+                  string labels = String.Join(", ", mergeRequest.Labels.ToArray());
+
+                  // first row
+                  e.Graphics.DrawString(mergeRequest.Title, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+
+                  // second row
+                  e.Graphics.DrawString(" [" + labels + "]", e.Item.ListView.Font, textBrush,
+                     new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / (float)2));
+               }
+               break;
+         }
+
+
+         e.DrawFocusRectangle(e.Bounds);
+      }
+
+      private void listViewMergeRequests_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+      {
+         e.DrawDefault = true;
+      }
+
+      private void listViewMergeRequests_DrawItem(object sender, DrawListViewItemEventArgs e)
+      {
+         //e.DrawDefault = true;
+      }
+
+      private void listViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+      {
+         e.ToString();
+      }
+
+      async private void listViewMergeRequests_MouseClick(object sender, MouseEventArgs e)
+      {
+         ListView listView = (sender as ListView);
+
+         if (listView.SelectedItems.Count > 0)
+         {
+            Tuple<string, MergeRequest> projectAndMergeRequest =
+               (Tuple<string, MergeRequest>)(listView.SelectedItems[0].Tag);
+            await changeMergeRequestAsync(projectAndMergeRequest.Item2.Id);
          }
       }
    }

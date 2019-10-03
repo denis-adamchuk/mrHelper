@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
-using mrHelper.Common.Types;
 
 namespace mrHelper.Client.Workflow
 {
@@ -33,26 +32,13 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      public MergeRequestDescriptor MergeRequestDescriptor
-      {
-         get
-         {
-            return new MergeRequestDescriptor
-            {
-               HostName = HostName,
-               ProjectName = Project.Path_With_Namespace,
-               IId = MergeRequest.IId
-            };
-         }
-      }
-
       public MergeRequestKey MergeRequestKey
       {
          get
          {
             return new MergeRequestKey
             {
-               ProjectKey = new ProjectKey { HostName = HostName, ProjectId = Project.Id },
+               ProjectKey = new ProjectKey { HostName = HostName, ProjectName = Project.Path_With_Namespace },
                IId = MergeRequest.IId
             };
          }

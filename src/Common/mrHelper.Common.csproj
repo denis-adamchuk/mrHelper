@@ -50,7 +50,6 @@
     <Compile Include="Interfaces\GitRepositoryItf.cs" />
     <Compile Include="Interfaces\GlobalGitConfigurationItf.cs" />
     <Compile Include="Interfaces\IntegratedDiffToolItf.cs" />
-    <Compile Include="Types\ProjectKey.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

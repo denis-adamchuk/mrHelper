@@ -24,17 +24,17 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionCreator
    {
-      internal DiscussionCreator(MergeRequestDescriptor mrd, DiscussionOperator discussionOperator)
+      internal DiscussionCreator(MergeRequestKey mrk, DiscussionOperator discussionOperator)
       {
          DiscussionOperator = discussionOperator;
-         MergeRequestDescriptor = mrd;
+         MergeRequestKey = mrk;
       }
 
       async public Task CreateNoteAsync(CreateNewNoteParameters parameters)
       {
          try
          {
-            await DiscussionOperator.CreateNoteAsync(MergeRequestDescriptor, parameters);
+            await DiscussionOperator.CreateNoteAsync(MergeRequestKey, parameters);
          }
          catch (OperatorException)
          {
@@ -46,7 +46,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.CreateDiscussionAsync(MergeRequestDescriptor, parameters);
+            await DiscussionOperator.CreateDiscussionAsync(MergeRequestKey, parameters);
          }
          catch (OperatorException ex)
          {
@@ -89,7 +89,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await DiscussionOperator.CreateDiscussionAsync(MergeRequestDescriptor, parameters);
+            await DiscussionOperator.CreateDiscussionAsync(MergeRequestKey, parameters);
          }
          catch (OperatorException)
          {
@@ -117,7 +117,7 @@ namespace mrHelper.Client.Discussions
 
          int deletedCount = 0;
 
-         List<Discussion> discussions = await DiscussionOperator.GetDiscussionsAsync(MergeRequestDescriptor);
+         List<Discussion> discussions = await DiscussionOperator.GetDiscussionsAsync(MergeRequestKey);
          if (discussions == null)
          {
             Trace.TraceWarning(String.Format("No discussions found"));
@@ -135,7 +135,7 @@ namespace mrHelper.Client.Discussions
                      " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
-                  await DiscussionOperator.DeleteNoteAsync(MergeRequestDescriptor, note.Id);
+                  await DiscussionOperator.DeleteNoteAsync(MergeRequestKey, note.Id);
                   ++deletedCount;
                }
             }
@@ -161,7 +161,7 @@ namespace mrHelper.Client.Discussions
       }
 
       private DiscussionOperator DiscussionOperator { get; }
-      private MergeRequestDescriptor MergeRequestDescriptor { get; }
+      private MergeRequestKey MergeRequestKey { get; }
    }
 }
 

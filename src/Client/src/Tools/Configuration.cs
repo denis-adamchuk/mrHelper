@@ -45,8 +45,10 @@ namespace mrHelper.Client.Tools
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                "mrHelper", "mrHelper.exe.config");
 
-         ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap();
-         configFileMap.ExeConfigFilename = configFilePath;
+         ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap
+         {
+            ExeConfigFilename = configFilePath
+         };
 
          _config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
 

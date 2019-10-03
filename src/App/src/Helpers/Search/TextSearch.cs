@@ -72,11 +72,6 @@ namespace mrHelper.App.Helpers
          return false;
       }
 
-      private bool isSearchableControl(Control control)
-      {
-         return control is TextBox && control.Parent is DiscussionBox;
-      }
-
       Control _container;
       Func<Control, bool> _isSearchableControl;
    }

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
@@ -21,9 +20,10 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void UpdateMergeRequests(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
-         ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = project.Id };
-         InternalDetails.SetProjectName(key, project.Path_With_Namespace);
+         OldProjectKey oldProjectKey = new OldProjectKey { HostName = hostname, ProjectId = project.Id };
+         InternalDetails.SetProjectName(oldProjectKey, project.Path_With_Namespace);
 
+         ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace };
          List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
          InternalDetails.SetMergeRequests(key, mergeRequests);
 

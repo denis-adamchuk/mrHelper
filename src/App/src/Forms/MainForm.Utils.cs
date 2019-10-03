@@ -18,6 +18,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
 using System.Drawing;
 using mrHelper.App.Helpers;
+using mrHelper.CommonControls;
 
 namespace mrHelper.App.Forms
 {
@@ -212,35 +213,42 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void disableListBox(ListBox listBox, string text)
+      private void disableListView(ListView listView, bool clear)
       {
-         listBox.SelectedIndex = -1;
-         listBox.Items.Clear();
-         listBox.Enabled = false;
+         listView.Enabled = false;
+         foreach (ListViewItem item in listView.Items)
+         {
+            item.Selected = false;
+         }
 
-         listBox.Text = text;
+         if (clear)
+         {
+            listView.Items.Clear();
+         }
       }
 
-      private void enableListBox(ListBox listBox)
+      private void enableListView(ListView listView)
       {
-         listBox.Enabled = false;
+         listView.Enabled = true;
       }
 
-      private void disableComboBox(SelectionPreservingComboBox comboBox, string text)
+      private void disableComboBox(ComboBox comboBox, string text)
       {
-         comboBox.DroppedDown = false;
-         comboBox.SelectedIndex = -1;
-         comboBox.Items.Clear();
-         comboBox.Enabled = false;
+         SelectionPreservingComboBox spComboBox = (SelectionPreservingComboBox)comboBox;
+         spComboBox.DroppedDown = false;
+         spComboBox.SelectedIndex = -1;
+         spComboBox.Items.Clear();
+         spComboBox.Enabled = false;
 
-         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
-         comboBox.Text = text;
+         spComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+         spComboBox.Text = text;
       }
 
-      private void enableComboBox(SelectionPreservingComboBox comboBox)
+      private void enableComboBox(ComboBox comboBox)
       {
-         comboBox.Enabled = true;
-         comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+         SelectionPreservingComboBox spComboBox = (SelectionPreservingComboBox)comboBox;
+         spComboBox.Enabled = true;
+         spComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
       private void enableControlsOnGitAsyncOperation(bool enabled)
@@ -249,7 +257,7 @@ namespace mrHelper.App.Forms
          buttonDiffTool.Enabled = enabled;
          buttonDiscussions.Enabled = enabled;
          comboBoxHost.Enabled = enabled;
-         listBoxFilteredMergeRequests.Enabled = enabled;
+         listViewMergeRequests.Enabled = enabled;
          enableMergeRequestFilterControls(enabled);
          tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
 
@@ -267,8 +275,6 @@ namespace mrHelper.App.Forms
 
       private void updateMergeRequestDetails(MergeRequest? mergeRequest)
       {
-         toolTip.SetToolTip(listBoxFilteredMergeRequests,
-            mergeRequest.HasValue ? formatMergeRequestForDropdown(mergeRequest.Value) : String.Empty);
          richTextBoxMergeRequestDescription.Text =
             mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
          richTextBoxMergeRequestDescription.Update();
@@ -288,11 +294,11 @@ namespace mrHelper.App.Forms
          if (mergeRequest.HasValue)
          {
             labelTimeTrackingMergeRequestName.Text =
-               mergeRequest.Value.Title + "   " + "[" + _workflow.State.MergeRequestDescriptor.ProjectName + "]";
+               mergeRequest.Value.Title + "   " + "[" + _workflow.State.MergeRequestKey.ProjectKey.ProjectName + "]";
          }
       }
 
-      private void updateTotalTime(MergeRequestDescriptor? mrd)
+      private void updateTotalTime(MergeRequestKey? mrk)
       {
          if (isTrackingTime())
          {
@@ -301,7 +307,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!mrd.HasValue)
+         if (!mrk.HasValue)
          {
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             labelTimeTrackingTrackedTime.Text = String.Empty;
@@ -310,7 +316,7 @@ namespace mrHelper.App.Forms
          else
          {
             labelTimeTrackingTrackedLabel.Text = "Total Time:";
-            labelTimeTrackingTrackedTime.Text = _timeTrackingManager.GetTotalTime(mrd.Value).ToString(@"hh\:mm\:ss");
+            labelTimeTrackingTrackedTime.Text = _timeTrackingManager.GetTotalTime(mrk.Value).ToString(@"hh\:mm\:ss");
             buttonEditTime.Enabled = true;
          }
       }
@@ -348,8 +354,10 @@ namespace mrHelper.App.Forms
          }
 
          // Add target branch to the right combo-box
-         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch + " [Base]", null);
-         baseCommitItem.IsBase = true;
+         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch + " [Base]", null)
+         {
+            IsBase = true
+         };
          comboBoxRightCommit.Items.Add(baseCommitItem);
 
          selectNotReviewedCommits(out int leftSelectedIndex, out int rightSelectedIndex);
@@ -364,8 +372,8 @@ namespace mrHelper.App.Forms
          left = 0;
          right = 0;
 
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
-         if (!_reviewedCommits.ContainsKey(mrd))
+         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         if (!_reviewedCommits.ContainsKey(mrk))
          {
             left = 0;
             right = comboBoxRightCommit.Items.Count - 1;
@@ -373,7 +381,7 @@ namespace mrHelper.App.Forms
          }
 
          int? iNewestOfReviewedCommits = new Nullable<int>();
-         HashSet<string> reviewedCommits = _reviewedCommits[mrd];
+         HashSet<string> reviewedCommits = _reviewedCommits[mrk];
          for (int iItem = 0; iItem < comboBoxLeftCommit.Items.Count; ++iItem)
          {
             string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[iItem])).SHA;
@@ -491,7 +499,7 @@ namespace mrHelper.App.Forms
       /// Make some checks and create a Client
       /// </summary>
       /// <returns>null if could not create a GitClient</returns>
-      private GitClient getGitClient(string hostname, string projectname)
+      private GitClient getGitClient(ProjectKey key)
       {
          GitClientFactory factory = getGitClientFactory(_settings.LocalGitFolder);
          if (factory == null)
@@ -502,7 +510,7 @@ namespace mrHelper.App.Forms
          GitClient client;
          try
          {
-            client = factory.GetClient(hostname, projectname);
+            client = factory.GetClient(key.HostName, key.ProjectName);
          }
          catch (ArgumentException ex)
          {
@@ -562,8 +570,8 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
-         bool wasReviewed = _reviewedCommits.ContainsKey(mrd) && _reviewedCommits[mrd].Contains(item.SHA);
+         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
          return wasReviewed || item.IsBase ? SystemColors.Window :
             _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);
       }
@@ -573,9 +581,11 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void cleanupReviewedCommits(string hostname, string projectname, List<MergeRequest> mergeRequests)
       {
-         MergeRequestDescriptor[] toRemove = _reviewedCommits.Keys.Where(
-            (x) => x.HostName == hostname && x.ProjectName == projectname && !mergeRequests.Any((y) => x.IId == y.IId)).ToArray();
-         foreach (MergeRequestDescriptor key in toRemove)
+         MergeRequestKey[] toRemove = _reviewedCommits.Keys.Where(
+            (x) => x.ProjectKey.HostName == hostname
+                && x.ProjectKey.ProjectName == projectname
+                && !mergeRequests.Any((y) => x.IId == y.IId)).ToArray();
+         foreach (MergeRequestKey key in toRemove)
          {
             _reviewedCommits.Remove(key);
          }

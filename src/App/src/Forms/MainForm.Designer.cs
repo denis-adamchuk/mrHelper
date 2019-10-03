@@ -1,4 +1,4 @@
-﻿using mrHelper.App.Controls;
+﻿using mrHelper.CommonControls;
 
 namespace mrHelper.App.Forms
 {
@@ -42,19 +42,24 @@ namespace mrHelper.App.Forms
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
+         this.listViewMergeRequests = new System.Windows.Forms.ListView();
+         this.columnHeaderId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderProject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
-         this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
          this.buttonBrowseLocalGitFolder = new System.Windows.Forms.Button();
          this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.buttonDiffTool = new System.Windows.Forms.Button();
-         this.buttonDiscussions = new System.Windows.Forms.Button();
          this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
+         this.buttonDiffTool = new System.Windows.Forms.Button();
          this.buttonNewDiscussion = new System.Windows.Forms.Button();
-         this.buttonEditTime = new System.Windows.Forms.Button();
          this.buttonAddComment = new System.Windows.Forms.Button();
+         this.buttonDiscussions = new System.Windows.Forms.Button();
+         this.buttonEditTime = new System.Windows.Forms.Button();
+         this.comboBoxHost = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -69,27 +74,28 @@ namespace mrHelper.App.Forms
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.checkBoxShowPublicOnly = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
+         this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
+         this.panel1 = new System.Windows.Forms.Panel();
+         this.panel3 = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.labelGitStatus = new System.Windows.Forms.Label();
-         this.groupBoxActions = new System.Windows.Forms.GroupBox();
-         this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
          this.buttonTimeTrackingCancel = new System.Windows.Forms.Button();
          this.labelTimeTrackingTrackedTime = new System.Windows.Forms.Label();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
+         this.panel2 = new System.Windows.Forms.Panel();
+         this.groupBoxReview = new System.Windows.Forms.GroupBox();
+         this.groupBoxActions = new System.Windows.Forms.GroupBox();
+         this.groupBoxDiff = new System.Windows.Forms.GroupBox();
+         this.comboBoxRightCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
+         this.comboBoxLeftCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
-         this.groupBoxDiff = new System.Windows.Forms.GroupBox();
-         this.comboBoxHost = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxRightCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.comboBoxLeftCommit = new mrHelper.App.Controls.SelectionPreservingComboBox();
-         this.buttonNewDiscussion = new System.Windows.Forms.Button();
-         this.groupBoxHost = new System.Windows.Forms.GroupBox();
-         this.listBoxFilteredMergeRequests = new System.Windows.Forms.ListBox();
+         this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
@@ -97,11 +103,15 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.SuspendLayout();
          this.groupBoxOther.SuspendLayout();
          this.groupBoxGit.SuspendLayout();
+         this.groupBoxHost.SuspendLayout();
          this.tabPageMR.SuspendLayout();
-         this.groupBoxReview.SuspendLayout();
+         this.panel1.SuspendLayout();
+         this.panel3.SuspendLayout();
          this.groupBoxTimeTracking.SuspendLayout();
-         this.groupBoxDescription.SuspendLayout();
+         this.panel2.SuspendLayout();
+         this.groupBoxReview.SuspendLayout();
          this.groupBoxDiff.SuspendLayout();
+         this.groupBoxDescription.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxKnownHosts
@@ -166,21 +176,72 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSelectMergeRequest
          // 
-         this.groupBoxSelectMergeRequest.Controls.Add(this.listBoxFilteredMergeRequests);
+         this.groupBoxSelectMergeRequest.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBoxSelectMergeRequest.Controls.Add(this.listViewMergeRequests);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxLabels);
          this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxLabels);
-         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(6, 6);
+         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
-         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(643, 527);
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(567, 572);
          this.groupBoxSelectMergeRequest.TabIndex = 3;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
+         // 
+         // listViewMergeRequests
+         // 
+         this.listViewMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.listViewMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderId,
+            this.columnHeaderAuthor,
+            this.columnHeaderProject,
+            this.columnHeaderTitle});
+         this.listViewMergeRequests.FullRowSelect = true;
+         this.listViewMergeRequests.GridLines = true;
+         this.listViewMergeRequests.HideSelection = false;
+         this.listViewMergeRequests.Location = new System.Drawing.Point(0, 44);
+         this.listViewMergeRequests.MultiSelect = false;
+         this.listViewMergeRequests.Name = "listViewMergeRequests";
+         this.listViewMergeRequests.OwnerDraw = true;
+         this.listViewMergeRequests.Size = new System.Drawing.Size(561, 522);
+         this.listViewMergeRequests.TabIndex = 5;
+         this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
+         this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
+         this.listViewMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.listViewMergeRequests_DrawColumnHeader);
+         this.listViewMergeRequests.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.listViewMergeRequests_DrawItem);
+         this.listViewMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listViewMergeRequests_DrawSubItem);
+         this.listViewMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewMergeRequests_ItemSelectionChanged);
+         this.listViewMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ListViewMergeRequests_SelectedIndexChanged);
+         this.listViewMergeRequests.MouseClick += new System.Windows.Forms.MouseEventHandler(this.listViewMergeRequests_MouseClick);
+         // 
+         // columnHeaderId
+         // 
+         this.columnHeaderId.Text = "Id";
+         this.columnHeaderId.Width = 34;
+         // 
+         // columnHeaderAuthor
+         // 
+         this.columnHeaderAuthor.Text = "Author";
+         this.columnHeaderAuthor.Width = 106;
+         // 
+         // columnHeaderProject
+         // 
+         this.columnHeaderProject.Text = "Project";
+         this.columnHeaderProject.Width = 80;
+         // 
+         // columnHeaderTitle
+         // 
+         this.columnHeaderTitle.Text = "TItle";
+         this.columnHeaderTitle.Width = 400;
          // 
          // textBoxLabels
          // 
          this.textBoxLabels.Location = new System.Drawing.Point(69, 18);
          this.textBoxLabels.Name = "textBoxLabels";
-         this.textBoxLabels.Size = new System.Drawing.Size(321, 20);
+         this.textBoxLabels.Size = new System.Drawing.Size(568, 20);
          this.textBoxLabels.TabIndex = 4;
          this.toolTip.SetToolTip(this.textBoxLabels, "Show merge requests that contain any of these labels (comma-separated list is exp" +
         "ected)");
@@ -196,18 +257,6 @@ namespace mrHelper.App.Forms
          this.checkBoxLabels.Text = "Labels";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
          this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.CheckBoxLabels_CheckedChanged);
-         // 
-         // linkLabelConnectedTo
-         // 
-         this.linkLabelConnectedTo.AutoSize = true;
-         this.linkLabelConnectedTo.Location = new System.Drawing.Point(6, 152);
-         this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
-         this.linkLabelConnectedTo.Size = new System.Drawing.Size(54, 13);
-         this.linkLabelConnectedTo.TabIndex = 7;
-         this.linkLabelConnectedTo.TabStop = true;
-         this.linkLabelConnectedTo.Text = "<url-here>";
-         this.linkLabelConnectedTo.Visible = false;
-         this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
          // 
          // buttonBrowseLocalGitFolder
          // 
@@ -245,30 +294,6 @@ namespace mrHelper.App.Forms
          this.toolTip.InitialDelay = 500;
          this.toolTip.ReshowDelay = 100;
          // 
-         // buttonDiffTool
-         // 
-         this.buttonDiffTool.Enabled = false;
-         this.buttonDiffTool.Location = new System.Drawing.Point(536, 15);
-         this.buttonDiffTool.Name = "buttonDiffTool";
-         this.buttonDiffTool.Size = new System.Drawing.Size(83, 27);
-         this.buttonDiffTool.TabIndex = 11;
-         this.buttonDiffTool.Text = "Diff Tool";
-         this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
-         this.buttonDiffTool.UseVisualStyleBackColor = true;
-         this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
-         // 
-         // buttonDiscussions
-         // 
-         this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(137, 19);
-         this.buttonDiscussions.Name = "buttonDiscussions";
-         this.buttonDiscussions.Size = new System.Drawing.Size(83, 27);
-         this.buttonDiscussions.TabIndex = 12;
-         this.buttonDiscussions.Text = "Discussions";
-         this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of Discussions");
-         this.buttonDiscussions.UseVisualStyleBackColor = true;
-         this.buttonDiscussions.Click += new System.EventHandler(this.ButtonDiscussions_Click);
-         // 
          // comboBoxDCDepth
          // 
          this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -286,6 +311,17 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
+         // buttonDiffTool
+         // 
+         this.buttonDiffTool.Location = new System.Drawing.Point(565, 17);
+         this.buttonDiffTool.Name = "buttonDiffTool";
+         this.buttonDiffTool.Size = new System.Drawing.Size(75, 23);
+         this.buttonDiffTool.TabIndex = 2;
+         this.buttonDiffTool.Text = "Diff Tool";
+         this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
+         this.buttonDiffTool.UseVisualStyleBackColor = true;
+         this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
+         // 
          // buttonNewDiscussion
          // 
          this.buttonNewDiscussion.Enabled = false;
@@ -296,19 +332,6 @@ namespace mrHelper.App.Forms
          this.buttonNewDiscussion.Text = "New Discussion";
          this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable discussion");
          this.buttonNewDiscussion.UseVisualStyleBackColor = true;
-         this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
-         // 
-         // buttonEditTime
-         // 
-         this.buttonEditTime.Enabled = false;
-         this.buttonEditTime.Location = new System.Drawing.Point(538, 19);
-         this.buttonEditTime.Name = "buttonEditTime";
-         this.buttonEditTime.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditTime.TabIndex = 28;
-         this.buttonEditTime.Text = "Edit";
-         this.toolTip.SetToolTip(this.buttonEditTime, "Edit total time tracked on this merge request");
-         this.buttonEditTime.UseVisualStyleBackColor = true;
-         this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
          // 
          // buttonAddComment
          // 
@@ -320,7 +343,40 @@ namespace mrHelper.App.Forms
          this.buttonAddComment.Text = "Add comment";
          this.toolTip.SetToolTip(this.buttonAddComment, "Leave a comment (cannot be resolved and replied)");
          this.buttonAddComment.UseVisualStyleBackColor = true;
-         this.buttonAddComment.Click += new System.EventHandler(this.ButtonAddComment_Click);
+         // 
+         // buttonDiscussions
+         // 
+         this.buttonDiscussions.Enabled = false;
+         this.buttonDiscussions.Location = new System.Drawing.Point(137, 19);
+         this.buttonDiscussions.Name = "buttonDiscussions";
+         this.buttonDiscussions.Size = new System.Drawing.Size(83, 27);
+         this.buttonDiscussions.TabIndex = 12;
+         this.buttonDiscussions.Text = "Discussions";
+         this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of Discussions");
+         this.buttonDiscussions.UseVisualStyleBackColor = true;
+         // 
+         // buttonEditTime
+         // 
+         this.buttonEditTime.Enabled = false;
+         this.buttonEditTime.Location = new System.Drawing.Point(538, 19);
+         this.buttonEditTime.Name = "buttonEditTime";
+         this.buttonEditTime.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditTime.TabIndex = 28;
+         this.buttonEditTime.Text = "Edit";
+         this.toolTip.SetToolTip(this.buttonEditTime, "Edit total time tracked on this merge request");
+         this.buttonEditTime.UseVisualStyleBackColor = true;
+         // 
+         // comboBoxHost
+         // 
+         this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxHost.FormattingEnabled = true;
+         this.comboBoxHost.Location = new System.Drawing.Point(6, 31);
+         this.comboBoxHost.Name = "comboBoxHost";
+         this.comboBoxHost.Size = new System.Drawing.Size(250, 21);
+         this.comboBoxHost.TabIndex = 0;
+         this.toolTip.SetToolTip(this.comboBoxHost, "Select a host from a list of known hosts");
+         this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
+         this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
          // contextMenuStrip
          // 
@@ -362,10 +418,11 @@ namespace mrHelper.App.Forms
          // 
          this.tabControl.Controls.Add(this.tabPageSettings);
          this.tabControl.Controls.Add(this.tabPageMR);
-         this.tabControl.Location = new System.Drawing.Point(9, 12);
+         this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.tabControl.Location = new System.Drawing.Point(0, 0);
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
-         this.tabControl.Size = new System.Drawing.Size(1300, 569);
+         this.tabControl.Size = new System.Drawing.Size(1310, 604);
          this.tabControl.TabIndex = 0;
          // 
          // tabPageSettings
@@ -377,7 +434,7 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
          this.tabPageSettings.Name = "tabPageSettings";
          this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSettings.Size = new System.Drawing.Size(1292, 590);
+         this.tabPageSettings.Size = new System.Drawing.Size(1302, 578);
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
@@ -459,78 +516,82 @@ namespace mrHelper.App.Forms
          this.groupBoxGit.TabStop = false;
          this.groupBoxGit.Text = "git";
          // 
+         // groupBoxHost
+         // 
+         this.groupBoxHost.Controls.Add(this.comboBoxHost);
+         this.groupBoxHost.Location = new System.Drawing.Point(525, 147);
+         this.groupBoxHost.Name = "groupBoxHost";
+         this.groupBoxHost.Size = new System.Drawing.Size(265, 69);
+         this.groupBoxHost.TabIndex = 3;
+         this.groupBoxHost.TabStop = false;
+         this.groupBoxHost.Text = "Select Host";
+         // 
          // tabPageMR
          // 
-         this.tabPageMR.Controls.Add(this.linkLabelAbortGit);
-         this.tabPageMR.Controls.Add(this.labelWorkflowStatus);
-         this.tabPageMR.Controls.Add(this.labelGitStatus);
-         this.tabPageMR.Controls.Add(this.groupBoxActions);
-         this.tabPageMR.Controls.Add(this.groupBoxReview);
-         this.tabPageMR.Controls.Add(this.groupBoxTimeTracking);
-         this.tabPageMR.Controls.Add(this.groupBoxDescription);
          this.tabPageMR.Controls.Add(this.groupBoxSelectMergeRequest);
-         this.tabPageMR.Controls.Add(this.groupBoxDiff);
+         this.tabPageMR.Controls.Add(this.panel1);
          this.tabPageMR.Location = new System.Drawing.Point(4, 22);
          this.tabPageMR.Name = "tabPageMR";
          this.tabPageMR.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageMR.Size = new System.Drawing.Size(1292, 543);
+         this.tabPageMR.Size = new System.Drawing.Size(1302, 578);
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
          // 
+         // panel1
+         // 
+         this.panel1.Controls.Add(this.panel3);
+         this.panel1.Controls.Add(this.groupBoxTimeTracking);
+         this.panel1.Controls.Add(this.panel2);
+         this.panel1.Controls.Add(this.groupBoxDiff);
+         this.panel1.Controls.Add(this.groupBoxDescription);
+         this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
+         this.panel1.Location = new System.Drawing.Point(649, 3);
+         this.panel1.Name = "panel1";
+         this.panel1.Size = new System.Drawing.Size(650, 572);
+         this.panel1.TabIndex = 26;
+         // 
+         // panel3
+         // 
+         this.panel3.Controls.Add(this.linkLabelAbortGit);
+         this.panel3.Controls.Add(this.labelWorkflowStatus);
+         this.panel3.Controls.Add(this.labelGitStatus);
+         this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
+         this.panel3.Location = new System.Drawing.Point(0, 478);
+         this.panel3.Name = "panel3";
+         this.panel3.Size = new System.Drawing.Size(650, 71);
+         this.panel3.TabIndex = 37;
+         // 
          // linkLabelAbortGit
          // 
          this.linkLabelAbortGit.AutoSize = true;
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(1245, 510);
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(601, 41);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
          this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
-         this.linkLabelAbortGit.TabIndex = 25;
+         this.linkLabelAbortGit.TabIndex = 36;
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
          this.linkLabelAbortGit.Visible = false;
-         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
          // 
          // labelWorkflowStatus
          // 
          this.labelWorkflowStatus.AutoEllipsis = true;
-         this.labelWorkflowStatus.Location = new System.Drawing.Point(655, 485);
+         this.labelWorkflowStatus.Location = new System.Drawing.Point(11, 16);
          this.labelWorkflowStatus.Name = "labelWorkflowStatus";
          this.labelWorkflowStatus.Size = new System.Drawing.Size(622, 13);
-         this.labelWorkflowStatus.TabIndex = 24;
+         this.labelWorkflowStatus.TabIndex = 35;
          this.labelWorkflowStatus.Text = "<Workflow Status Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
     "eiusmod tempor incididunt sed do eiusmod sdae>";
          // 
          // labelGitStatus
          // 
          this.labelGitStatus.AutoEllipsis = true;
-         this.labelGitStatus.Location = new System.Drawing.Point(655, 510);
+         this.labelGitStatus.Location = new System.Drawing.Point(11, 41);
          this.labelGitStatus.Name = "labelGitStatus";
          this.labelGitStatus.Size = new System.Drawing.Size(569, 13);
-         this.labelGitStatus.TabIndex = 23;
+         this.labelGitStatus.TabIndex = 34;
          this.labelGitStatus.Text = "<Git Status Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusm" +
     "od tempor incididunt incididu sde abnt>";
-         // 
-         //this.comboBoxProjects.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxProjects_SelectionChangeCommited);
-         // groupBoxActions
-         // 
-         this.groupBoxActions.Location = new System.Drawing.Point(656, 338);
-         this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(274, 55);
-         this.groupBoxActions.TabIndex = 22;
-         this.groupBoxActions.TabStop = false;
-         this.groupBoxActions.Text = "Actions";
-         // 
-         // groupBoxReview
-         // 
-         this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
-         this.groupBoxReview.Controls.Add(this.buttonAddComment);
-         this.groupBoxReview.Controls.Add(this.buttonDiscussions);
-         this.groupBoxReview.Location = new System.Drawing.Point(936, 338);
-         this.groupBoxReview.Name = "groupBoxReview";
-         this.groupBoxReview.Size = new System.Drawing.Size(349, 55);
-         this.groupBoxReview.TabIndex = 11;
-         this.groupBoxReview.TabStop = false;
-         this.groupBoxReview.Text = "Review";
          // 
          // groupBoxTimeTracking
          // 
@@ -540,10 +601,11 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingTrackedTime);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingStart);
          this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingTrackedLabel);
-         this.groupBoxTimeTracking.Location = new System.Drawing.Point(656, 399);
+         this.groupBoxTimeTracking.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 406);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
-         this.groupBoxTimeTracking.Size = new System.Drawing.Size(629, 72);
-         this.groupBoxTimeTracking.TabIndex = 10;
+         this.groupBoxTimeTracking.Size = new System.Drawing.Size(650, 72);
+         this.groupBoxTimeTracking.TabIndex = 36;
          this.groupBoxTimeTracking.TabStop = false;
          this.groupBoxTimeTracking.Text = "Time Tracking";
          // 
@@ -566,7 +628,6 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingCancel.TabIndex = 25;
          this.buttonTimeTrackingCancel.Text = "Cancel";
          this.buttonTimeTrackingCancel.UseVisualStyleBackColor = true;
-         this.buttonTimeTrackingCancel.Click += new System.EventHandler(this.ButtonTimeTrackingCancel_Click);
          // 
          // labelTimeTrackingTrackedTime
          // 
@@ -586,7 +647,6 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingStart.TabIndex = 10;
          this.buttonTimeTrackingStart.Text = "Start";
          this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
-         this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
          // 
          // labelTimeTrackingTrackedLabel
          // 
@@ -597,101 +657,114 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedLabel.TabIndex = 19;
          this.labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
          // 
-         // groupBoxDescription
+         // panel2
          // 
-         this.groupBoxDescription.Controls.Add(this.richTextBoxMergeRequestDescription);
-         this.groupBoxDescription.Controls.Add(this.linkLabelConnectedTo);
-         this.groupBoxDescription.Location = new System.Drawing.Point(658, 57);
-         this.groupBoxDescription.Name = "groupBoxDescription";
-         this.groupBoxDescription.Size = new System.Drawing.Size(627, 176);
-         this.groupBoxDescription.TabIndex = 15;
-         this.groupBoxDescription.TabStop = false;
-         this.groupBoxDescription.Text = "Merge Request";
+         this.panel2.Controls.Add(this.groupBoxReview);
+         this.panel2.Controls.Add(this.groupBoxActions);
+         this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+         this.panel2.Location = new System.Drawing.Point(0, 329);
+         this.panel2.Name = "panel2";
+         this.panel2.Size = new System.Drawing.Size(650, 77);
+         this.panel2.TabIndex = 35;
          // 
-         // richTextBoxMergeRequestDescription
+         // groupBoxReview
          // 
-         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(6, 19);
-         this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
-         this.richTextBoxMergeRequestDescription.ReadOnly = true;
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(615, 130);
-         this.richTextBoxMergeRequestDescription.TabIndex = 1;
-         this.richTextBoxMergeRequestDescription.TabStop = false;
-         this.richTextBoxMergeRequestDescription.Text = "";
+         this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
+         this.groupBoxReview.Controls.Add(this.buttonAddComment);
+         this.groupBoxReview.Controls.Add(this.buttonDiscussions);
+         this.groupBoxReview.Location = new System.Drawing.Point(290, 3);
+         this.groupBoxReview.Name = "groupBoxReview";
+         this.groupBoxReview.Size = new System.Drawing.Size(349, 55);
+         this.groupBoxReview.TabIndex = 29;
+         this.groupBoxReview.TabStop = false;
+         this.groupBoxReview.Text = "Review";
          // 
+         // groupBoxActions
          // 
-         // comboBoxHost
-         // 
-         this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxHost.FormattingEnabled = true;
-         this.comboBoxHost.Location = new System.Drawing.Point(9, 15);
-         this.comboBoxHost.Name = "comboBoxHost";
-         this.comboBoxHost.Size = new System.Drawing.Size(205, 21);
-         this.comboBoxHost.TabIndex = 1;
-         this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
-         this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
+         this.groupBoxActions.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxActions.Name = "groupBoxActions";
+         this.groupBoxActions.Size = new System.Drawing.Size(274, 55);
+         this.groupBoxActions.TabIndex = 31;
+         this.groupBoxActions.TabStop = false;
+         this.groupBoxActions.Text = "Actions";
          // 
          // groupBoxDiff
          // 
+         this.groupBoxDiff.Controls.Add(this.buttonDiffTool);
          this.groupBoxDiff.Controls.Add(this.comboBoxRightCommit);
          this.groupBoxDiff.Controls.Add(this.comboBoxLeftCommit);
-         this.groupBoxDiff.Controls.Add(this.buttonDiffTool);
-         this.groupBoxDiff.Location = new System.Drawing.Point(658, 254);
+         this.groupBoxDiff.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxDiff.Location = new System.Drawing.Point(0, 242);
          this.groupBoxDiff.Name = "groupBoxDiff";
-         this.groupBoxDiff.Size = new System.Drawing.Size(627, 78);
-         this.groupBoxDiff.TabIndex = 8;
+         this.groupBoxDiff.Size = new System.Drawing.Size(650, 87);
+         this.groupBoxDiff.TabIndex = 34;
          this.groupBoxDiff.TabStop = false;
-         this.groupBoxDiff.Text = "Compare commits";
+         this.groupBoxDiff.Text = "Select commits";
          // 
          // comboBoxRightCommit
          // 
          this.comboBoxRightCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxRightCommit.Location = new System.Drawing.Point(4, 46);
+         this.comboBoxRightCommit.FormattingEnabled = true;
+         this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 46);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(526, 21);
-         this.comboBoxRightCommit.TabIndex = 9;
+         this.comboBoxRightCommit.Size = new System.Drawing.Size(553, 21);
+         this.comboBoxRightCommit.TabIndex = 1;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
+         this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          // 
          // comboBoxLeftCommit
          // 
          this.comboBoxLeftCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLeftCommit.Location = new System.Drawing.Point(4, 19);
+         this.comboBoxLeftCommit.FormattingEnabled = true;
+         this.comboBoxLeftCommit.Location = new System.Drawing.Point(6, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(526, 21);
-         this.comboBoxLeftCommit.TabIndex = 8;
+         this.comboBoxLeftCommit.Size = new System.Drawing.Size(553, 21);
+         this.comboBoxLeftCommit.TabIndex = 0;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
+         this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          // 
-         // groupBoxHost
+         // groupBoxDescription
          // 
-         this.groupBoxHost.Location = new System.Drawing.Point(525, 147);
-         this.groupBoxHost.Name = "groupBoxHost";
-         this.groupBoxHost.Size = new System.Drawing.Size(220, 45);
-         this.groupBoxHost.TabIndex = 3;
-         this.groupBoxHost.TabStop = false;
-         this.groupBoxHost.Text = "Select Host";
+         this.groupBoxDescription.Controls.Add(this.richTextBoxMergeRequestDescription);
+         this.groupBoxDescription.Controls.Add(this.linkLabelConnectedTo);
+         this.groupBoxDescription.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxDescription.Location = new System.Drawing.Point(0, 0);
+         this.groupBoxDescription.Name = "groupBoxDescription";
+         this.groupBoxDescription.Size = new System.Drawing.Size(650, 242);
+         this.groupBoxDescription.TabIndex = 29;
+         this.groupBoxDescription.TabStop = false;
+         this.groupBoxDescription.Text = "Merge Request";
          // 
-         // listBoxFilteredMergeRequests
+         // richTextBoxMergeRequestDescription
          // 
-         this.listBoxFilteredMergeRequests.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-         this.listBoxFilteredMergeRequests.FormattingEnabled = true;
-         this.listBoxFilteredMergeRequests.Location = new System.Drawing.Point(6, 51);
-         this.listBoxFilteredMergeRequests.Name = "listBoxFilteredMergeRequests";
-         this.listBoxFilteredMergeRequests.Size = new System.Drawing.Size(631, 459);
-         this.listBoxFilteredMergeRequests.TabIndex = 5;
-         this.listBoxFilteredMergeRequests.DrawItem += this.ListBoxFilteredMergeRequests_DrawItem;
-         this.listBoxFilteredMergeRequests.MeasureItem += this.ListBoxFilteredMergeRequests_MeasureItem;
-         this.listBoxFilteredMergeRequests.SelectedIndexChanged += new System.EventHandler(this.ListBoxFilteredMergeRequests_SelectedIndexChanged);
+         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
+         this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
+         this.richTextBoxMergeRequestDescription.ReadOnly = true;
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(644, 193);
+         this.richTextBoxMergeRequestDescription.TabIndex = 1;
+         this.richTextBoxMergeRequestDescription.TabStop = false;
+         this.richTextBoxMergeRequestDescription.Text = "";
+         // 
+         // linkLabelConnectedTo
+         // 
+         this.linkLabelConnectedTo.AutoSize = true;
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 212);
+         this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
+         this.linkLabelConnectedTo.Size = new System.Drawing.Size(54, 13);
+         this.linkLabelConnectedTo.TabIndex = 7;
+         this.linkLabelConnectedTo.TabStop = true;
+         this.linkLabelConnectedTo.Text = "<url-here>";
+         this.linkLabelConnectedTo.Visible = false;
          // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(1310, 589);
+         this.ClientSize = new System.Drawing.Size(1310, 604);
          this.Controls.Add(this.tabControl);
-         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-         this.MaximizeBox = false;
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);
@@ -706,14 +779,18 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.PerformLayout();
          this.groupBoxGit.ResumeLayout(false);
          this.groupBoxGit.PerformLayout();
+         this.groupBoxHost.ResumeLayout(false);
          this.tabPageMR.ResumeLayout(false);
-         this.tabPageMR.PerformLayout();
-         this.groupBoxReview.ResumeLayout(false);
+         this.panel1.ResumeLayout(false);
+         this.panel3.ResumeLayout(false);
+         this.panel3.PerformLayout();
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxTimeTracking.PerformLayout();
+         this.panel2.ResumeLayout(false);
+         this.groupBoxReview.ResumeLayout(false);
+         this.groupBoxDiff.ResumeLayout(false);
          this.groupBoxDescription.ResumeLayout(false);
          this.groupBoxDescription.PerformLayout();
-         this.groupBoxDiff.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -735,22 +812,11 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.TabPage tabPageSettings;
       private System.Windows.Forms.GroupBox groupBoxGit;
       private System.Windows.Forms.TabPage tabPageMR;
-      private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
-      private System.Windows.Forms.GroupBox groupBoxDiff;
-      private System.Windows.Forms.GroupBox groupBoxDescription;
-      private System.Windows.Forms.RichTextBox richTextBoxMergeRequestDescription;
       private System.Windows.Forms.CheckBox checkBoxLabels;
       private System.Windows.Forms.TextBox textBoxLabels;
-      private System.Windows.Forms.Label labelTimeTrackingTrackedTime;
-      private System.Windows.Forms.Label labelTimeTrackingTrackedLabel;
-      private System.Windows.Forms.Button buttonTimeTrackingStart;
+      private SelectionPreservingComboBox comboBoxHost;
       private SelectionPreservingComboBox comboBoxLeftCommit;
       private SelectionPreservingComboBox comboBoxRightCommit;
-      private System.Windows.Forms.Button buttonDiffTool;
-      private SelectionPreservingComboBox comboBoxHost;
-      private System.Windows.Forms.GroupBox groupBoxReview;
-      private System.Windows.Forms.GroupBox groupBoxTimeTracking;
-      private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBoxOther;
       private System.Windows.Forms.Button buttonRemoveKnownHost;
       private System.Windows.Forms.Button buttonAddKnownHost;
@@ -758,22 +824,40 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ColumnHeader columnHeaderHost;
       private System.Windows.Forms.ColumnHeader columnHeaderAccessToken;
       private System.Windows.Forms.CheckBox checkBoxShowPublicOnly;
-      private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Label labelDepth;
       private System.Windows.Forms.ComboBox comboBoxDCDepth;
       private System.Windows.Forms.CheckBox checkBoxMinimizeOnClose;
       private System.Windows.Forms.ComboBox comboBoxColorSchemes;
       private System.Windows.Forms.Label labelColorScheme;
-      private System.Windows.Forms.Label labelGitStatus;
-      private System.Windows.Forms.Label labelWorkflowStatus;
-      private System.Windows.Forms.LinkLabel linkLabelAbortGit;
-      private System.Windows.Forms.Button buttonTimeTrackingCancel;
-      private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
-      private System.Windows.Forms.Button buttonEditTime;
-      private System.Windows.Forms.Button buttonAddComment;
-      private System.Windows.Forms.Button buttonNewDiscussion;
-      private System.Windows.Forms.ListBox listBoxFilteredMergeRequests;
       private System.Windows.Forms.GroupBox groupBoxHost;
+      private System.Windows.Forms.Panel panel1;
+      private System.Windows.Forms.GroupBox groupBoxDescription;
+      private System.Windows.Forms.RichTextBox richTextBoxMergeRequestDescription;
+      private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
+      private System.Windows.Forms.GroupBox groupBoxDiff;
+      private System.Windows.Forms.Button buttonDiffTool;
+      private System.Windows.Forms.Panel panel3;
+      private System.Windows.Forms.LinkLabel linkLabelAbortGit;
+      private System.Windows.Forms.Label labelWorkflowStatus;
+      private System.Windows.Forms.Label labelGitStatus;
+      private System.Windows.Forms.GroupBox groupBoxTimeTracking;
+      private System.Windows.Forms.Button buttonEditTime;
+      private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
+      private System.Windows.Forms.Button buttonTimeTrackingCancel;
+      private System.Windows.Forms.Label labelTimeTrackingTrackedTime;
+      private System.Windows.Forms.Button buttonTimeTrackingStart;
+      private System.Windows.Forms.Label labelTimeTrackingTrackedLabel;
+      private System.Windows.Forms.Panel panel2;
+      private System.Windows.Forms.GroupBox groupBoxReview;
+      private System.Windows.Forms.Button buttonNewDiscussion;
+      private System.Windows.Forms.Button buttonAddComment;
+      private System.Windows.Forms.Button buttonDiscussions;
+      private System.Windows.Forms.GroupBox groupBoxActions;
+      private System.Windows.Forms.ListView listViewMergeRequests;
+      private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
+      private System.Windows.Forms.ColumnHeader columnHeaderProject;
+      private System.Windows.Forms.ColumnHeader columnHeaderTitle;
+      private System.Windows.Forms.ColumnHeader columnHeaderId;
    }
 }
 

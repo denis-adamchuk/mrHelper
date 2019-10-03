@@ -13,10 +13,10 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionEditor
    {
-      internal DiscussionEditor(MergeRequestDescriptor mrd, string discussionId, DiscussionOperator discussionOperator)
+      internal DiscussionEditor(MergeRequestKey mrk, string discussionId, DiscussionOperator discussionOperator)
       {
          DiscussionOperator = discussionOperator;
-         MergeRequestDescriptor = mrd;
+         MergeRequestKey = mrk;
          DiscussionId = discussionId;
       }
 
@@ -24,7 +24,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            return await DiscussionOperator.GetDiscussionAsync(MergeRequestDescriptor, DiscussionId);
+            return await DiscussionOperator.GetDiscussionAsync(MergeRequestKey, DiscussionId);
          }
          catch (OperatorException)
          {
@@ -36,7 +36,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.ReplyAsync(MergeRequestDescriptor, DiscussionId, body);
+            await DiscussionOperator.ReplyAsync(MergeRequestKey, DiscussionId, body);
          }
          catch (OperatorException)
          {
@@ -48,7 +48,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.ModifyNoteBodyAsync(MergeRequestDescriptor, DiscussionId, noteId, body);
+            await DiscussionOperator.ModifyNoteBodyAsync(MergeRequestKey, DiscussionId, noteId, body);
          }
          catch (OperatorException)
          {
@@ -60,7 +60,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.DeleteNoteAsync(MergeRequestDescriptor, noteId);
+            await DiscussionOperator.DeleteNoteAsync(MergeRequestKey, noteId);
          }
          catch (OperatorException)
          {
@@ -72,7 +72,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.ResolveNoteAsync(MergeRequestDescriptor, DiscussionId, noteId, resolved);
+            await DiscussionOperator.ResolveNoteAsync(MergeRequestKey, DiscussionId, noteId, resolved);
          }
          catch (OperatorException)
          {
@@ -84,7 +84,7 @@ namespace mrHelper.Client.Discussions
       {
          try
          {
-            await DiscussionOperator.ResolveDiscussionAsync(MergeRequestDescriptor, DiscussionId, resolved);
+            await DiscussionOperator.ResolveDiscussionAsync(MergeRequestKey, DiscussionId, resolved);
          }
          catch (OperatorException)
          {
@@ -93,7 +93,7 @@ namespace mrHelper.Client.Discussions
       }
 
       private DiscussionOperator DiscussionOperator { get; }
-      private MergeRequestDescriptor MergeRequestDescriptor { get; }
+      private MergeRequestKey MergeRequestKey { get; }
       private string DiscussionId { get; }
    }
 }
