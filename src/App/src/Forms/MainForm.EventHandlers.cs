@@ -523,7 +523,10 @@ namespace mrHelper.App.Forms
 
       private void onTimer(object sender, EventArgs e)
       {
-         labelTimeTrackingTrackedTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
+         if (_timeTracker != null)
+         {
+            labelTimeTrackingTrackedTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
+         }
       }
 
       private bool onAddKnownHost(string host, string accessToken)
@@ -581,6 +584,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         // Stop timer
+         _timeTrackingTimer.Stop();
+
          // Reset member right now to not send tracked time again on re-entrance
          TimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
@@ -615,9 +621,6 @@ namespace mrHelper.App.Forms
             timeTracker.Cancel();
             labelWorkflowStatus.Text = "Time tracking cancelled";
          }
-
-         // Stop timer
-         _timeTrackingTimer.Stop();
 
          // Update button text and enabled state
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
