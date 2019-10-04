@@ -56,22 +56,22 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentHostName()
       {
-         return _workflow.State.HostName;
+         return getHostName();
       }
 
       public string GetCurrentAccessToken()
       {
-         return Tools.GetAccessToken(_workflow.State.HostName, _settings);
+         return Tools.GetAccessToken(getHostName(), _settings);
       }
 
       public string GetCurrentProjectName()
       {
-         return _workflow.State.MergeRequestKey.ProjectKey.ProjectName;
+         return getMergeRequestKey().Value.ProjectKey.ProjectName;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return _workflow.State.MergeRequestKey.IId;
+         return getMergeRequestKey().Value.IId;
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
@@ -134,91 +134,21 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void fillRectangle2(DrawListViewSubItemEventArgs e, Color backColor, bool isSelected)
+      private struct FullMergeRequestKey
       {
-         if (isSelected)
+         public string HostName;
+         public Project Project;
+         public MergeRequest MergeRequest;
+
+         public FullMergeRequestKey(string hostname, Project project, MergeRequest mergeRequest)
          {
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-         }
-         else
-         {
-            using (Brush brush = new SolidBrush(backColor))
-            {
-               e.Graphics.FillRectangle(brush, e.Bounds);
-            }
-         }
-      }
-
-      private void listViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
-      {
-         Tuple<string, MergeRequest> projectAndMergeRequest = (Tuple<string, MergeRequest>)(e.Item.Tag);
-         string projectname = projectAndMergeRequest.Item1;
-         MergeRequest mergeRequest = projectAndMergeRequest.Item2;
-
-         e.DrawBackground();
-
-         bool isSelected = e.Item.Selected;
-         fillRectangle2(e, getMergeRequestColor(mergeRequest), isSelected);
-
-         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-
-         switch (e.ColumnIndex)
-         {
-            case 0:
-               e.Graphics.DrawString(mergeRequest.IId.ToString(), e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
-            case 1:
-               e.Graphics.DrawString(mergeRequest.Author.Name, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
-            case 2:
-               e.Graphics.DrawString(projectname, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
-            case 3:
-               {
-                  string labels = String.Join(", ", mergeRequest.Labels.ToArray());
-
-                  // first row
-                  e.Graphics.DrawString(mergeRequest.Title, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-
-                  // second row
-                  e.Graphics.DrawString(" [" + labels + "]", e.Item.ListView.Font, textBrush,
-                     new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / (float)2));
-               }
-               break;
-         }
-
-
-         e.DrawFocusRectangle(e.Bounds);
-      }
-
-      private void listViewMergeRequests_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
-      {
-         e.DrawDefault = true;
-      }
-
-      private void listViewMergeRequests_DrawItem(object sender, DrawListViewItemEventArgs e)
-      {
-         //e.DrawDefault = true;
-      }
-
-      private void listViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-      {
-         e.ToString();
-      }
-
-      async private void listViewMergeRequests_MouseClick(object sender, MouseEventArgs e)
-      {
-         ListView listView = (sender as ListView);
-
-         if (listView.SelectedItems.Count > 0)
-         {
-            Tuple<string, MergeRequest> projectAndMergeRequest =
-               (Tuple<string, MergeRequest>)(listView.SelectedItems[0].Tag);
-            await changeMergeRequestAsync(projectAndMergeRequest.Item2.Id);
+            HostName = hostname;
+            Project = project;
+            MergeRequest = mergeRequest;
          }
       }
+
+      private User? _currentUser;
    }
 }
 

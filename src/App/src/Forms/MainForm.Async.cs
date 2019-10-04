@@ -27,9 +27,9 @@ namespace mrHelper.App.Forms
       async private Task showDiscussionsFormAsync()
       {
          // Store data before async/await
-         User currentUser = _workflow.State.CurrentUser;
-         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
-         MergeRequest mergeRequest = _workflow.State.MergeRequest;
+         User currentUser = _currentUser.Value;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
+         MergeRequest mergeRequest = getMergeRequest().Value;
 
          GitClient client = getGitClient(mrk.ProjectKey);
          if (client != null)
@@ -156,7 +156,7 @@ namespace mrHelper.App.Forms
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
-         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          GitClient client = getGitClient(mrk.ProjectKey);
          if (client != null)
@@ -237,8 +237,8 @@ namespace mrHelper.App.Forms
       async private Task onAddCommentAsync()
       {
          // Store data before opening a modal dialog
-         string title = _workflow.State.MergeRequest.Title;
-         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         string title = getMergeRequest().Value.Title;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
@@ -264,8 +264,8 @@ namespace mrHelper.App.Forms
       async private Task onNewDiscussionAsync()
       {
          // Store data before opening a modal dialog
-         string title = _workflow.State.MergeRequest.Title;
-         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         string title = getMergeRequest().Value.Title;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          string caption = String.Format("Create a new discussion in merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))

@@ -102,7 +102,7 @@ namespace mrHelper.App.Forms
          try
          {
             GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
-            await _workflow.InitializeAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+            await _workflow.StartAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
          }
          catch (Exception ex)
          {

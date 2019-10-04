@@ -76,8 +76,6 @@
     <Compile Include="src\Workflow\Workflow.cs" />
     <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
     <Compile Include="src\Workflow\WorkflowFactory.cs" />
-    <Compile Include="src\Workflow\WorkflowState.cs" />
-    <Compile Include="src\Workflow\WorkflowStateItf.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

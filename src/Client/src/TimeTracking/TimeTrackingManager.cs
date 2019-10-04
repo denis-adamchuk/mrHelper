@@ -18,10 +18,20 @@ namespace mrHelper.Client.TimeTracking
       {
          Settings = settings;
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
+         workflow.PostSwitchHost += (user) => _currentUser = user;
          workflow.PreLoadSystemNotes += () => PreLoadTotalTime?.Invoke();
          workflow.FailedLoadSystemNotes += () => FailedLoadTotalTime?.Invoke();
-         workflow.PostLoadSystemNotes +=
-            (notes) => processSystemNotes(workflow.State.MergeRequestKey, workflow.State.CurrentUser, notes);
+         workflow.PostLoadSystemNotes += (hostname, project, mergeRequest, notes)
+            => processSystemNotes(
+               new MergeRequestKey
+               {
+                  ProjectKey = new ProjectKey
+                  {
+                     HostName = hostname,
+                     ProjectName = project.Path_With_Namespace
+                  },
+                  IId = mergeRequest.IId
+               }, notes);
       }
 
       public event Action PreLoadTotalTime;
@@ -56,12 +66,12 @@ namespace mrHelper.Client.TimeTracking
             @"^(?'operation'added|subtracted)\s(?>(?'hours'\d*)h\s)?(?>(?'minutes'\d*)m\s)?(?>(?'seconds'\d*)s\s)?of time spent.*",
                RegexOptions.Compiled);
 
-      private void processSystemNotes(MergeRequestKey mrk, User currentUser, List<Note> notes)
+      private void processSystemNotes(MergeRequestKey mrk, List<Note> notes)
       {
          TimeSpan span = TimeSpan.Zero;
          foreach (Note note in notes)
          {
-            if (note.Author.Id == currentUser.Id)
+            if (note.Author.Id == _currentUser.Id)
             {
                Match m = spentTimeRe.Match(note.Body);
                if (!m.Success)
@@ -92,6 +102,7 @@ namespace mrHelper.Client.TimeTracking
       private TimeTrackingOperator TimeTrackingOperator { get; }
       private Dictionary<MergeRequestKey, TimeSpan> MergeRequestTimes { get; } =
          new Dictionary<MergeRequestKey, TimeSpan>();
+      private User _currentUser;
    }
 }
 

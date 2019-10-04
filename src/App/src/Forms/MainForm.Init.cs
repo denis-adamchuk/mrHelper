@@ -113,7 +113,6 @@ namespace mrHelper.App.Forms
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
-         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
          checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
 
          if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
@@ -248,7 +247,7 @@ namespace mrHelper.App.Forms
             BeginInvoke(new Action<MergeRequestUpdates>(
                async (updatesInternal) =>
                {
-                  if (_workflow.State.HostName != updatesInternal.HostName)
+                  if (getHostName() != updatesInternal.HostName)
                   {
                      return;
                   }
@@ -262,7 +261,7 @@ namespace mrHelper.App.Forms
 
                   try
                   {
-                     await _workflow.SwitchHostAsync(updatesInternal.HostName);
+                     await _workflow.StartAsync(updatesInternal.HostName);
                   }
                   catch (WorkflowException ex)
                   {

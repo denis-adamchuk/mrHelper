@@ -33,31 +33,39 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
-         Workflow.PostSwitchHost += (_, projects) =>
+         Workflow.PostLoadHostProjects += (hostname, projects) =>
          {
-            synchronizeInvoke.BeginInvoke(new Action<string>(
-               async (hostname) =>
+            synchronizeInvoke.BeginInvoke(new Action(
+               async () =>
                {
                   Trace.TraceInformation("[UpdateManager] Processing host switch");
 
                   await initializeAsync(hostname);
-               }), new object[] { Workflow.State.HostName });
+               }), null);
          };
 
-         Workflow.PostLoadProject += (project, mergeRequests) =>
+         Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing project switch");
 
-            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == project.Id));
+            Debug.Assert(Workflow.GetProjectsToUpdate(hostname).Any((x) => x.Id == project.Id));
 
-            Cache.UpdateMergeRequests(Workflow.State.HostName, project, mergeRequests);
+            Cache.UpdateMergeRequests(hostname, project, mergeRequests);
          };
 
-         Workflow.PostLoadLatestVersion += (version) =>
+         Workflow.PostLoadLatestVersion += (hostname, project, mergeRequest, version) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing latest version load");
 
-            Cache.UpdateLatestVersion(Workflow.State.MergeRequestKey, version);
+            Debug.Assert(Workflow.GetProjectsToUpdate(hostname).Any((x) => x.Id == project.Id));
+
+            // TODO Looks ineffecient to convert to/from MRK, see callers
+            MergeRequestKey mrk = new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+               IId = mergeRequest.IId
+            };
+            Cache.UpdateLatestVersion(mrk, version);
          };
       }
 
@@ -65,7 +73,8 @@ namespace mrHelper.Client.Updates
       {
          Trace.TraceInformation("[UpdateManager] Initializing");
 
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
+         _hostname = hostname;
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate(hostname);
          await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
 
          Trace.TraceInformation("[UpdateManager] Initialized");
@@ -99,13 +108,12 @@ namespace mrHelper.Client.Updates
       {
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
-         string hostname = Workflow.State.HostName;
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
+         List<Project> enabledProjects = Workflow.GetProjectsToUpdate(_hostname);
+         await loadDataAndUpdateCacheAsync(_hostname, enabledProjects);
 
-         MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(hostname,
+         MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(_hostname,
             enabledProjects, oldDetails, Cache.Details);
-         ProjectWatcher.ProcessUpdates(updates, hostname, Cache.Details);
+         ProjectWatcher.ProcessUpdates(updates, _hostname, Cache.Details);
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated {1}, Closed {2}",
@@ -200,6 +208,7 @@ namespace mrHelper.Client.Updates
       private ProjectWatcher ProjectWatcher { get; }
       private UserDefinedSettings Settings { get; }
       private UpdateOperator Operator { get; }
+      private string _hostname;
    }
 }
 

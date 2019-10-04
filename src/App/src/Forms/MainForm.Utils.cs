@@ -24,6 +24,44 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
+      User? getCurrentUser()
+      {
+         Debug.Assert(_currentUser != null);
+         return _currentUser.Value;
+      }
+
+      string getHostName()
+      {
+         return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
+      }
+
+      MergeRequest? getMergeRequest()
+      {
+         if (listViewMergeRequests.SelectedItems.Count > 0)
+         {
+            return (MergeRequest)listViewMergeRequests.SelectedItems[0].Tag;
+         }
+         Debug.Assert(false);
+         return null;
+      }
+
+      MergeRequestKey? getMergeRequestKey()
+      {
+         if (listViewMergeRequests.SelectedItems.Count > 0)
+         {
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
+
+            MergeRequestKey mrk = new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = fmk.HostName, ProjectName = fmk.Project.Path_With_Namespace },
+               IId = fmk.MergeRequest.IId
+            };
+            return mrk;
+         }
+         Debug.Assert(false);
+         return null;
+      }
+
       /// <summary>
       /// Populates host list with list of known hosts from Settings
       /// </summary>
@@ -294,7 +332,7 @@ namespace mrHelper.App.Forms
          if (mergeRequest.HasValue)
          {
             labelTimeTrackingMergeRequestName.Text =
-               mergeRequest.Value.Title + "   " + "[" + _workflow.State.MergeRequestKey.ProjectKey.ProjectName + "]";
+               mergeRequest.Value.Title + "   " + "[" + getMergeRequestKey()?.ProjectKey.ProjectName + "]";
          }
       }
 
@@ -372,7 +410,7 @@ namespace mrHelper.App.Forms
          left = 0;
          right = 0;
 
-         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
          if (!_reviewedCommits.ContainsKey(mrk))
          {
             left = 0;
@@ -570,7 +608,7 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
-         MergeRequestKey mrk = _workflow.State.MergeRequestKey;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
          bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
          return wasReviewed || item.IsBase ? SystemColors.Window :
             _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);

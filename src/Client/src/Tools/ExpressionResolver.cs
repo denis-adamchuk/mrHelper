@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GitLabSharp.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,15 +11,15 @@ namespace mrHelper.Client.Tools
    {
       public ExpressionResolver(Workflow.Workflow workflow)
       {
-         Workflow = workflow;
+         workflow.PostSwitchHost += (user) => _currentUser = user;
       }
 
       public string Resolve(string expression)
       {
-         return expression.Replace("%CurrentUsername%", Workflow.State.CurrentUser.Username);
+         return expression.Replace("%CurrentUsername%", _currentUser.Username);
       }
 
-      private Workflow.Workflow Workflow { get; }
+      private User _currentUser;
    }
 }
 
