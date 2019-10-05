@@ -8,10 +8,5 @@ namespace mrHelper.Client.Tools
       public string ProjectName;
    }
 
-   public struct OldProjectKey
-   {
-      public string HostName;
-      public int ProjectId;
-   }
 }
 

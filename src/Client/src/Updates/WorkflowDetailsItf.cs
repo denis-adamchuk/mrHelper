@@ -13,11 +13,6 @@ namespace mrHelper.Client.Updates
       IWorkflowDetails Clone();
 
       /// <summary>
-      /// Return project name (Path_With_Namespace) by hostname and unique project Id
-      /// </summary>
-      string GetProjectName(OldProjectKey key);
-
-      /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
       List<MergeRequest> GetMergeRequests(ProjectKey key);

@@ -35,14 +35,14 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      private static int GetId(MergeRequest x) => x.Id;
-      private static int GetId(UpdatedMergeRequest x) => GetId(x.MergeRequest);
+      private static int GetId(NewOrClosedMergeRequest x) => x.MergeRequest.Id;
+      private static int GetId(UpdatedMergeRequest x) => x.MergeRequest.Id;
 
-      private static int GetIId(MergeRequest x) => x.IId;
-      private static int GetIId(UpdatedMergeRequest x) => GetIId(x.MergeRequest);
+      private static int GetIId(NewOrClosedMergeRequest x) => x.MergeRequest.IId;
+      private static int GetIId(UpdatedMergeRequest x) => x.MergeRequest.IId;
 
-      private static int GetProjectId(MergeRequest x) => x.Project_Id;
-      private static int GetProjectId(UpdatedMergeRequest x) => GetProjectId(x.MergeRequest);
+      private static Project GetProject(NewOrClosedMergeRequest x) => x.Project;
+      private static Project GetProject(UpdatedMergeRequest x) => x.Project;
 
       /// <summary>
       /// Convert a list of Project Id to list of Project names
@@ -58,22 +58,18 @@ namespace mrHelper.Client.Updates
          {
             int mergeRequestId = GetId((dynamic)mergeRequest);
             int mergeRequestIId = GetIId((dynamic)mergeRequest);
-            int projectId = GetProjectId((dynamic)mergeRequest);
-
-            OldProjectKey key = new OldProjectKey{ HostName = hostname, ProjectId = projectId };
-            string projectName = details.GetProjectName(key);
+            Project project = GetProject((dynamic)mergeRequest);
 
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectName == projectName)
+               if (projectUpdates[iUpdate].ProjectName == project.Path_With_Namespace)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }
             }
 
-            ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = projectName };
-            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequestIId };
+            MergeRequestKey mrk = new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequestIId);
 
             updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
                details.GetLatestChangeTimestamp(mrk) : updateTimestamp;
@@ -82,7 +78,7 @@ namespace mrHelper.Client.Updates
                new ProjectUpdate
                {
                   HostName = hostname,
-                  ProjectName = projectName,
+                  ProjectName = project.Path_With_Namespace,
                   Timestamp = updateTimestamp
                });
          }

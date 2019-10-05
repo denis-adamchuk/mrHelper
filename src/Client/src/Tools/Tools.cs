@@ -66,7 +66,7 @@ namespace mrHelper.Client.Tools
          return UnknownHostToken;
       }
 
-      private static List<string> GetLabels(MergeRequest x) => x.Labels;
+      private static List<string> GetLabels(NewOrClosedMergeRequest x) => x.MergeRequest.Labels;
       private static List<string> GetLabels(UpdatedMergeRequest x) => x.MergeRequest.Labels;
 
       public static List<T> FilterMergeRequests<T>(List<T> mergeRequests, UserDefinedSettings settings)

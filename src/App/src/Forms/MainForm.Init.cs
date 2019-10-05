@@ -190,7 +190,7 @@ namespace mrHelper.App.Forms
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _workflowFactory = new WorkflowFactory(_settings, _persistentStorage);
+         _workflowFactory = new WorkflowFactory(_settings);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -247,25 +247,62 @@ namespace mrHelper.App.Forms
             BeginInvoke(new Action<MergeRequestUpdates>(
                async (updatesInternal) =>
                {
-                  if (getHostName() != updatesInternal.HostName)
-                  {
-                     return;
-                  }
-
                   notifyOnMergeRequestUpdates(updatesInternal);
 
-                  // emulate host change to reload merge request list
-                  // This will automatically update commit list (if there are new ones).
-                  // This will also remove closed merge requests from the list.
-                  Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
-
-                  try
+                  foreach (NewOrClosedMergeRequest mergeRequest in updatesInternal.NewMergeRequests)
                   {
-                     await _workflow.StartAsync(updatesInternal.HostName);
+                     addListViewMergeRequestItem(mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
                   }
-                  catch (WorkflowException ex)
+
+                  for (int idx = listViewMergeRequests.Items.Count - 1; idx >= 0; --idx)
                   {
-                     ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
+                     var item = listViewMergeRequests.Items[idx];
+                     FullMergeRequestKey key = (FullMergeRequestKey)item.Tag;
+
+                     foreach (NewOrClosedMergeRequest mergeRequest in updatesInternal.ClosedMergeRequests)
+                     {
+                        if (key.HostName == mergeRequest.HostName
+                         && key.Project.Id == mergeRequest.Project.Id
+                         && key.MergeRequest.Id == mergeRequest.MergeRequest.Id)
+                        {
+                           listViewMergeRequests.Items.RemoveAt(idx);
+                           break; // cannot have the same MR twice in updates
+                        }
+                     }
+                  }
+
+                  bool reloadCurrent = false;
+                  for (int idx = listViewMergeRequests.Items.Count - 1; idx >= 0; --idx)
+                  {
+                     var item = listViewMergeRequests.Items[idx];
+                     FullMergeRequestKey key = (FullMergeRequestKey)item.Tag;
+
+                     foreach (UpdatedMergeRequest mergeRequest in updatesInternal.UpdatedMergeRequests)
+                     {
+                        if (key.HostName == mergeRequest.HostName
+                         && key.Project.Id == mergeRequest.Project.Id
+                         && key.MergeRequest.Id == mergeRequest.MergeRequest.Id)
+                        {
+                           if (mergeRequest.UpdateKind.HasFlag(UpdateKind.CommitsUpdated) && item.Selected)
+                           {
+                              reloadCurrent = true;
+                           }
+                           else if (mergeRequest.UpdateKind.HasFlag(UpdateKind.LabelsUpdated))
+                           {
+                              item.Tag = new FullMergeRequestKey(mergeRequest.HostName,
+                                 mergeRequest.Project, mergeRequest.MergeRequest);
+                           }
+                           break; // cannot have the same MR twice in updates
+                        }
+                     }
+                  }
+
+                  if (reloadCurrent)
+                  {
+                     Trace.TraceInformation("[MainForm] Reloading current Merge Request");
+
+                     FullMergeRequestKey key = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+                     await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId);
                   }
                }), updates);
          };

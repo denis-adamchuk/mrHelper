@@ -50,13 +50,7 @@ namespace mrHelper.App.Forms
          if (listViewMergeRequests.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
-
-            MergeRequestKey mrk = new MergeRequestKey
-            {
-               ProjectKey = new ProjectKey { HostName = fmk.HostName, ProjectName = fmk.Project.Path_With_Namespace },
-               IId = fmk.MergeRequest.IId
-            };
-            return mrk;
+            return new MergeRequestKey(fmk.HostName, fmk.Project.Path_With_Namespace, fmk.MergeRequest.IId);
          }
          Debug.Assert(false);
          return null;
@@ -331,6 +325,8 @@ namespace mrHelper.App.Forms
 
          if (mergeRequest.HasValue)
          {
+            Debug.Assert(getMergeRequestKey().HasValue);
+
             labelTimeTrackingMergeRequestName.Text =
                mergeRequest.Value.Title + "   " + "[" + getMergeRequestKey()?.ProjectKey.ProjectName + "]";
          }
@@ -410,6 +406,7 @@ namespace mrHelper.App.Forms
          left = 0;
          right = 0;
 
+         Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
          if (!_reviewedCommits.ContainsKey(mrk))
          {
@@ -463,19 +460,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void notifyOnMergeRequestEvent(MergeRequest mergeRequest, string title)
+      private void notifyOnMergeRequestEvent(string projectName, MergeRequest mergeRequest, string title)
       {
-         string projectName = String.Empty;
-         // TODO
-         //foreach (var item in comboBoxProjects.Items)
-         //{
-         //   Project project = (Project)(item);
-         //   if (project.Id == mergeRequest.Project_Id)
-         //   {
-         //      projectName = project.Path_With_Namespace;
-         //   }
-         //}
-
          showTooltipBalloon(title, "\""
             + mergeRequest.Title
             + "\" from "
@@ -486,10 +472,10 @@ namespace mrHelper.App.Forms
 
       private void notifyOnMergeRequestUpdates(MergeRequestUpdates updates)
       {
-         List<MergeRequest> newMergeRequests = Tools.FilterMergeRequests(updates.NewMergeRequests, _settings);
-         foreach (MergeRequest mergeRequest in newMergeRequests)
+         List<NewOrClosedMergeRequest> newMergeRequests = Tools.FilterMergeRequests(updates.NewMergeRequests, _settings);
+         foreach (NewOrClosedMergeRequest mergeRequest in newMergeRequests)
          {
-            notifyOnMergeRequestEvent(mergeRequest, "New merge request");
+            notifyOnMergeRequestEvent(mergeRequest.Project.Path_With_Namespace, mergeRequest.MergeRequest, "New merge request");
          }
 
          List<UpdatedMergeRequest> updatedMergeRequests =
@@ -498,7 +484,8 @@ namespace mrHelper.App.Forms
          {
             if (mergeRequest.UpdateKind.HasFlag(UpdateKind.CommitsUpdated))
             {
-               notifyOnMergeRequestEvent(mergeRequest.MergeRequest, "New commit in merge request");
+               notifyOnMergeRequestEvent(mergeRequest.Project.Path_With_Namespace, mergeRequest.MergeRequest,
+                  "New commit in merge request");
             }
          }
       }
@@ -608,6 +595,7 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
          bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
          return wasReviewed || item.IsBase ? SystemColors.Window :
@@ -627,6 +615,18 @@ namespace mrHelper.App.Forms
          {
             _reviewedCommits.Remove(key);
          }
+      }
+
+      private void addListViewMergeRequestItem(string hostname, Project project, MergeRequest mergeRequest)
+      {
+         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
+                  {
+                     mergeRequest.Id.ToString(), // Column IId
+                     String.Empty,               // Column Author (stub)
+                     String.Empty,               // Column Title (stub)
+                     String.Empty,               // Column Labels (stub)
+                  }, listViewMergeRequests.Groups[project.Path_With_Namespace]));
+         item.Tag = new FullMergeRequestKey(hostname, project, mergeRequest);
       }
    }
 }

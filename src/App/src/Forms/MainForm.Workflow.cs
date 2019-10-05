@@ -36,6 +36,8 @@ namespace mrHelper.App.Forms
          _workflow.PostLoadHostProjects += (hostname, projects) => onHostProjectsLoaded(projects);
          _workflow.FailedLoadHostProjects += () => onFailedLoadHostProjects();
 
+         _workflow.PreLoadAllMergeRequests += () => onLoadAllMergeRequests();
+
          _workflow.PreLoadProjectMergeRequests += (project) => onLoadProjectMergeRequests(project);
          _workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
@@ -44,6 +46,8 @@ namespace mrHelper.App.Forms
             cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
          };
          _workflow.FailedLoadProjectMergeRequests += () => onFailedLoadProjectMergeRequests();
+
+         _workflow.PostLoadAllMergeRequests += () => onAllMergeRequestsLoaded();
 
          _workflow.PrelLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
          _workflow.PostLoadSingleMergeRequest += (project, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
@@ -70,7 +74,7 @@ namespace mrHelper.App.Forms
          string hostname = getInitialHostName();
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
 
-         await _workflow.StartAsync(hostname);
+         await startWorkflowAsync(hostname);
       }
 
       async private Task switchHostByUserAsync(string hostName)
@@ -80,7 +84,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await _workflow.StartAsync(hostName);
+            await startWorkflowAsync(hostName);
          }
          catch (WorkflowException ex)
          {
@@ -89,7 +93,16 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task switchMergeRequestByUserAsync(string hostname, Project project, int mergeRequestIId)
+      async private Task startWorkflowAsync(string hostname)
+      {
+         bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
+         string projectname =
+            shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
+         int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
+         await _workflow.StartAsync(hostname, projectname, iid);
+      }
+
+      async private Task<bool> switchMergeRequestByUserAsync(string hostname, Project project, int mergeRequestIId)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             mergeRequestIId.ToString()));
@@ -102,7 +115,10 @@ namespace mrHelper.App.Forms
          {
             ExceptionHandlers.Handle(ex, "Cannot switch merge request");
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
          }
+
+         return true;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,24 +191,31 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Projects loaded";
 
+         if (listViewMergeRequests.Groups.Count > 0)
+         {
+            enableListView(listViewMergeRequests);
+         }
+
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count));
       }
 
-      private void onLoadProjectMergeRequests(Project project)
+      private void onLoadAllMergeRequests()
       {
-         disableListView(listViewMergeRequests, false);
-
-         labelWorkflowStatus.Text = String.Format("Loading merge requests of project {0}...",
-            project.Path_With_Namespace);
-
          enableMergeRequestFilterControls(false);
          enableMergeRequestActions(false);
          enableCommitActions(false);
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(null);
          updateTotalTime(null);
+         disableListView(listViewMergeRequests, false);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
+      }
+
+      private void onLoadProjectMergeRequests(Project project)
+      {
+         labelWorkflowStatus.Text = String.Format("Loading merge requests of project {0}...",
+            project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading project {0}", project.Path_With_Namespace));
       }
@@ -210,34 +233,26 @@ namespace mrHelper.App.Forms
 
          foreach (var mergeRequest in mergeRequests)
          {
-            ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
-               {
-                  mergeRequest.Id.ToString(), // Column IId
-                  String.Empty,               // Column Author (stub)
-                  String.Empty,               // Column Title (stub)
-                  String.Empty,               // Column Labels (stub)
-               }, listViewMergeRequests.Groups[project.Path_With_Namespace]));
-            item.Tag = new FullMergeRequestKey(hostname, project, mergeRequest);
-         }
-
-         if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
-         {
-            enableMergeRequestFilterControls(true);
-         }
-
-         if (listViewMergeRequests.Items.Count > 0)
-         {
-            enableListView(listViewMergeRequests);
-         }
-         else
-         {
-            disableListView(listViewMergeRequests, true);
+            addListViewMergeRequestItem(hostname, project, mergeRequest);
          }
 
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Project loaded. Loaded {0} merge requests", mergeRequests.Count));
+      }
+
+      private void onAllMergeRequestsLoaded()
+      {
+         if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
+         {
+            enableMergeRequestFilterControls(true);
+         }
+
+         if (listViewMergeRequests.Groups.Count > 0)
+         {
+            enableListView(listViewMergeRequests);
+         }
       }
 
       private void onLoadSingleMergeRequest(int mergeRequestId)
@@ -375,13 +390,7 @@ namespace mrHelper.App.Forms
                }
 
                Trace.TraceInformation("[MainForm.Workflow] Silent update finished");
-            }), new MergeRequestKey
-            {
-               ProjectKey = new ProjectKey
-               {
-                  HostName = hostname, ProjectName = project.Path_With_Namespace
-               }, IId = mergeRequest.IId
-            });
+            }), new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId));
       }
 
       private void onLoadTotalTime()

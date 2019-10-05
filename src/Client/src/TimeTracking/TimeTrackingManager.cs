@@ -22,16 +22,7 @@ namespace mrHelper.Client.TimeTracking
          workflow.PreLoadSystemNotes += () => PreLoadTotalTime?.Invoke();
          workflow.FailedLoadSystemNotes += () => FailedLoadTotalTime?.Invoke();
          workflow.PostLoadSystemNotes += (hostname, project, mergeRequest, notes)
-            => processSystemNotes(
-               new MergeRequestKey
-               {
-                  ProjectKey = new ProjectKey
-                  {
-                     HostName = hostname,
-                     ProjectName = project.Path_With_Namespace
-                  },
-                  IId = mergeRequest.IId
-               }, notes);
+            => processSystemNotes(new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId), notes);
       }
 
       public event Action PreLoadTotalTime;

@@ -66,12 +66,12 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentProjectName()
       {
-         return getMergeRequestKey().Value.ProjectKey.ProjectName;
+         return getMergeRequestKey()?.ProjectKey.ProjectName ?? String.Empty;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return getMergeRequestKey().Value.IId;
+         return getMergeRequestKey()?.IId ?? 0;
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
@@ -94,6 +94,8 @@ namespace mrHelper.App.Forms
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
          new Dictionary<MergeRequestKey, HashSet<string>>();
+      private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
+         new Dictionary<string, MergeRequestKey>();
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;

@@ -15,14 +15,12 @@ namespace mrHelper.Client.Updates
    {
       internal WorkflowDetails()
       {
-         ProjectNames = new Dictionary<OldProjectKey, string>();
          MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
          Changes = new Dictionary<MergeRequestKey, DateTime>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
       {
-         ProjectNames = new Dictionary<OldProjectKey, string>(details.ProjectNames);
          MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details.MergeRequests);
          Changes = new Dictionary<MergeRequestKey, DateTime>(details.Changes);
       }
@@ -33,23 +31,6 @@ namespace mrHelper.Client.Updates
       public IWorkflowDetails Clone()
       {
          return new WorkflowDetails(this);
-      }
-
-      /// <summary>
-      /// Return project name (Path_With_Namespace) by hostname and unique project Id
-      /// </summary>
-      public string GetProjectName(OldProjectKey key)
-      {
-         Debug.Assert(ProjectNames.ContainsKey(key));
-         return ProjectNames.ContainsKey(key) ? ProjectNames[key] : String.Empty;
-      }
-
-      /// <summary>
-      /// Add a project name/id pair to the cache
-      /// </summary>
-      internal void SetProjectName(OldProjectKey key, string name)
-      {
-         ProjectNames[key] = name;
       }
 
       /// <summary>
@@ -91,9 +72,6 @@ namespace mrHelper.Client.Updates
       {
          Changes.Remove(mrk);
       }
-
-      // maps hostname and unique project id to project's Path with Namespace property
-      private readonly Dictionary<OldProjectKey, string> ProjectNames;
 
       // maps unique project id to list of merge requests
       private Dictionary<ProjectKey, List<MergeRequest>> MergeRequests;

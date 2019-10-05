@@ -26,6 +26,8 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before async/await
          User currentUser = _currentUser.Value;
          MergeRequestKey mrk = getMergeRequestKey().Value;
@@ -156,6 +158,7 @@ namespace mrHelper.App.Forms
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
+         Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
 
          GitClient client = getGitClient(mrk.ProjectKey);
@@ -236,6 +239,8 @@ namespace mrHelper.App.Forms
 
       async private Task onAddCommentAsync()
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before opening a modal dialog
          string title = getMergeRequest().Value.Title;
          MergeRequestKey mrk = getMergeRequestKey().Value;
@@ -263,6 +268,8 @@ namespace mrHelper.App.Forms
 
       async private Task onNewDiscussionAsync()
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before opening a modal dialog
          string title = getMergeRequest().Value.Title;
          MergeRequestKey mrk = getMergeRequestKey().Value;

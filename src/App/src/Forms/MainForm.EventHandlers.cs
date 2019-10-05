@@ -104,6 +104,8 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before opening a modal dialog
          MergeRequestKey mrk = getMergeRequestKey().Value;
 
@@ -218,7 +220,6 @@ namespace mrHelper.App.Forms
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
          Tuple<string, MergeRequest> projectAndMergeRequest = (Tuple<string, MergeRequest>)(e.Item.Tag);
-         string projectname = projectAndMergeRequest.Item1;
          MergeRequest mergeRequest = projectAndMergeRequest.Item2;
 
          e.DrawBackground();
@@ -262,7 +263,11 @@ namespace mrHelper.App.Forms
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-            await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId);
+            if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
+            {
+               Debug.Assert(getMergeRequestKey().HasValue);
+               _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
+            }
          }
       }
 
@@ -412,6 +417,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
          getGitClient(getMergeRequestKey().Value.ProjectKey)?.CancelAsyncOperation();
       }
 
@@ -547,7 +553,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Start();
 
          // Reset and start stopwatch
-         Debug.Assert(getMergeRequestKey().Value.IId != default(MergeRequest).IId);
+         Debug.Assert(getMergeRequestKey().HasValue);
          _timeTracker = _timeTrackingManager.GetTracker(getMergeRequestKey().Value);
          _timeTracker.Start();
 
@@ -613,7 +619,7 @@ namespace mrHelper.App.Forms
             isMergeRequestSelected ? getMergeRequest().Value : new Nullable<MergeRequest>());
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(isMergeRequestSelected ?  getMergeRequestKey().Value : new Nullable<MergeRequestKey>());
+         updateTotalTime(isMergeRequestSelected ? getMergeRequestKey().Value : new Nullable<MergeRequestKey>());
       }
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)
@@ -626,6 +632,11 @@ namespace mrHelper.App.Forms
                + "|" + item.Key.IId.ToString(),
                item => item.Value);
          writer.Set("ReviewedCommits", reviewedCommits);
+
+         Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
+               item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
+               item => item.Value.IId.ToString());
+         writer.Set("MergeRequestsByHosts", mergeRequestsByHosts);
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
@@ -649,11 +660,7 @@ namespace mrHelper.App.Forms
                   string host = splitted[0];
                   string projectName = splitted[1];
                   int iid = int.Parse(splitted[2]);
-                  return new MergeRequestKey
-                  {
-                     ProjectKey = new ProjectKey { HostName = host, ProjectName = projectName },
-                     IId = iid
-                  };
+                  return new MergeRequestKey(host, projectName, iid);
                },
                item =>
                {
@@ -663,6 +670,29 @@ namespace mrHelper.App.Forms
                      commits.Add(commit);
                   }
                   return commits;
+               });
+         }
+
+         Dictionary<string, object> lastMergeRequestsByHosts =
+            (Dictionary<string, object>)reader.Get("MergeRequestsByHosts");
+         if (lastMergeRequestsByHosts != null)
+         {
+            _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+                  Debug.Assert(splitted.Length == 2);
+                  return splitted[0];
+               },
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+                  Debug.Assert(splitted.Length == 2);
+
+                  string hostname2 = splitted[0];
+                  string projectname = splitted[1];
+                  int iid = int.Parse((string)item.Value);
+                  return new MergeRequestKey(hostname2, projectname, iid);
                });
          }
       }

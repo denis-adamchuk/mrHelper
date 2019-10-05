@@ -20,9 +20,6 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void UpdateMergeRequests(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
-         OldProjectKey oldProjectKey = new OldProjectKey { HostName = hostname, ProjectId = project.Id };
-         InternalDetails.SetProjectName(oldProjectKey, project.Path_With_Namespace);
-
          ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace };
          List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
          InternalDetails.SetMergeRequests(key, mergeRequests);
@@ -31,7 +28,8 @@ namespace mrHelper.Client.Updates
             "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                project.Path_With_Namespace, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
 
-         cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
+         cleanupOldRecords(new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+            previouslyCachedMergeRequests, mergeRequests);
       }
 
       /// <summary>
@@ -63,12 +61,7 @@ namespace mrHelper.Client.Updates
          {
             if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
             {
-               InternalDetails.CleanupTimestamps(
-                  new MergeRequestKey
-                  {
-                     ProjectKey = key,
-                     IId = mergeRequest.IId
-                  });
+               InternalDetails.CleanupTimestamps(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
             }
          }
       }

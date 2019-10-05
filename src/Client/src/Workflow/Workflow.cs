@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
-using mrHelper.Client.Persistence;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Tools;
 
@@ -40,12 +39,9 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      internal Workflow(UserDefinedSettings settings, PersistentStorage persistentStorage)
+      internal Workflow(UserDefinedSettings settings)
       {
          Settings = settings;
-
-         persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
-         persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
       }
 
       async public Task StartAsync(string hostname, string projectname, int mergeRequestIId)
@@ -58,6 +54,8 @@ namespace mrHelper.Client.Workflow
 
          List<Project> enabledProjects = getEnabledProjects(hostname);
          bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         string defaultProject = hasEnabledProjects ? enabledProjects[0].Path_With_Namespace : String.Empty;
+         projectname = projectname == String.Empty ? defaultProject : projectname;
 
          if (!hasEnabledProjects || !enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname)))
          {
@@ -83,6 +81,8 @@ namespace mrHelper.Client.Workflow
             Debug.Assert(projects[iProject].Id == enabledProjects[iProject].Id);
          }
 
+         PreLoadAllMergeRequests?.Invoke();
+
          foreach (Project project in projects)
          {
             List<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
@@ -90,45 +90,15 @@ namespace mrHelper.Client.Workflow
             {
                return; // cancelled
             }
+
+            mergeRequestIId = mergeRequestIId == 0 ? mergeRequests[0].IId : mergeRequestIId;
          }
+
+         PostLoadAllMergeRequests?.Invoke();
 
          await loadMergeRequestAsync(hostname, projects.Find((x) => x.Path_With_Namespace == projectname), mergeRequestIId);
       }
 
-      async public Task StartAsync(string hostName)
-      {
-         string token = Tools.Tools.GetAccessToken(hostName, Settings);
-         if (token == Tools.Tools.UnknownHostToken)
-         {
-            throw new UnknownHostException(hostName);
-         }
-
-         if (!await switchHostAsync(hostName, token))
-         {
-            return; // cancelled
-         }
-
-         List<Project> projects = await loadHostProjectsAsync(hostName);
-         if (projects != null)
-         {
-            Dictionary<Project, List<MergeRequest>> projectMergeRequests = new Dictionary<Project, List<MergeRequest>>();
-            foreach (Project singleProject in projects)
-            {
-               projectMergeRequests[singleProject] = await loadProjectMergeRequestsAsync(hostName, singleProject);
-            }
-
-            Project project = selectProjectFromList(hostName, projects, projectMergeRequests);
-            if (projectMergeRequests.ContainsKey(project))
-            {
-               int? iid = selectMergeRequestFromList(hostName, project, projectMergeRequests[project]);
-               if (iid.HasValue)
-               {
-                  await loadMergeRequestAsync(hostName, project, iid.Value);
-               }
-            }
-         }
-      }
-	  
       async public Task LoadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
       {
          await loadMergeRequestAsync(hostname, project, mergeRequestIId);
@@ -169,9 +139,13 @@ namespace mrHelper.Client.Workflow
       public event Action<string, List<Project>> PostLoadHostProjects;
       public event Action FailedLoadHostProjects;
 
+      public event Action PreLoadAllMergeRequests;
+
       public event Action<Project> PreLoadProjectMergeRequests;
       public event Action<string, Project, List<MergeRequest>> PostLoadProjectMergeRequests;
       public event Action FailedLoadProjectMergeRequests;
+
+      public event Action PostLoadAllMergeRequests;
 
       public event Action<int> PrelLoadSingleMergeRequest;
       public event Action<Project, MergeRequest> PostLoadSingleMergeRequest;
@@ -279,11 +253,6 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         _lastProjectsByHosts[hostname] = projectName;
-
-         OldProjectKey key = new OldProjectKey { HostName = hostname, ProjectId = project.Id };
-         _lastMergeRequestsByProjects[key] = mergeRequestIId;
-
          PostLoadSingleMergeRequest?.Invoke(project, mergeRequest);
 
          if (!await loadLatestVersionAsync(hostname, project, mergeRequest)
@@ -380,91 +349,13 @@ namespace mrHelper.Client.Workflow
          throw new WorkflowException(message);
       }
 
-      private Project selectProjectFromList(string hostname, List<Project> projects,
-         Dictionary<Project, List<MergeRequest>> projectMergeRequests)
-      {
-         string key = hostname;
-         // if we remember a project selected for the given host before...
-         if (_lastProjectsByHosts.ContainsKey(key)
-            // ... and if such project still exists in a list of Projects
-            && projects.Any((x) => x.Path_With_Namespace == _lastProjectsByHosts[key]))
-         {
-            foreach (KeyValuePair<Project, List<MergeRequest>> mergeRequests in projectMergeRequests)
-            {
-               if (mergeRequests.Key.Path_With_Namespace == _lastProjectsByHosts[key])
-               {
-                  return mergeRequests.Key;
-               }
-            }
-         }
-
-         return projects.Count > 0 ? projects[0] : default(Project);
-      }
-
-      private int? selectMergeRequestFromList(string hostname, Project project, List<MergeRequest> mergeRequests)
-      {
-         mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
-
-         OldProjectKey key = new OldProjectKey { HostName = hostname, ProjectId = project.Id };
-
-         // if we remember MR selected for the given host/project before...
-         if (_lastMergeRequestsByProjects.ContainsKey(key)
-            // ... and if such MR still exists in a list of MRs
-            && mergeRequests.Any((x) => x.IId == _lastMergeRequestsByProjects[key]))
-         {
-            return _lastMergeRequestsByProjects[key];
-         }
-
-         return mergeRequests.Count > 0 ? mergeRequests[0].Id : new Nullable<int>();
-      }
-
       private List<Project> getEnabledProjects(string hostname)
       {
          return Tools.Tools.LoadProjectsFromFile(hostname);
       }
 
-      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
-      {
-         writer.Set("ProjectsByHosts", _lastProjectsByHosts);
-
-         Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.ToDictionary(
-               item => item.Key.HostName + "|" + item.Key.ProjectId.ToString(),
-               item => item.Value);
-         writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
-      }
-
-      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
-      {
-         Dictionary<string, object> projectsByHosts = (Dictionary<string, object>)reader.Get("ProjectsByHosts");
-         if (projectsByHosts != null)
-         {
-            _lastProjectsByHosts = projectsByHosts.ToDictionary(item => item.Key, item => item.Value.ToString());
-         }
-
-         Dictionary<string, object> mergeRequestsByProjects =
-            (Dictionary<string, object>)reader.Get("MergeRequestsByProjects");
-         if (mergeRequestsByProjects != null)
-         {
-            _lastMergeRequestsByProjects = mergeRequestsByProjects.ToDictionary(
-               item =>
-               {
-                  string[] splitted = item.Key.Split('|');
-
-                  Debug.Assert(splitted.Length == 2);
-
-                  string host = splitted[0];
-                  string projectId = splitted[1];
-                  return new OldProjectKey { HostName = host, ProjectId = int.Parse(projectId) };
-               },
-               item => (int)item.Value);
-         }
-      }
-
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
-
-      private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
-      private Dictionary<OldProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<OldProjectKey, int>();
    }
 }
 

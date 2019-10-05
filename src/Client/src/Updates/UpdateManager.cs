@@ -59,12 +59,7 @@ namespace mrHelper.Client.Updates
 
             Debug.Assert(Workflow.GetProjectsToUpdate(hostname).Any((x) => x.Id == project.Id));
 
-            // TODO Looks ineffecient to convert to/from MRK, see callers
-            MergeRequestKey mrk = new MergeRequestKey
-            {
-               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-               IId = mergeRequest.IId
-            };
+            MergeRequestKey mrk = new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId);
             Cache.UpdateLatestVersion(mrk, version);
          };
       }
@@ -140,16 +135,10 @@ namespace mrHelper.Client.Updates
                continue;
             }
 
-            ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-
             Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               MergeRequestKey mrk = new MergeRequestKey
-               {
-                  ProjectKey = projectKey,
-                  IId = mergeRequest.IId
-               };
+               MergeRequestKey mrk = new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId);
 
                Version? latestVersion = await loadLatestVersionAsync(mrk);
                if (latestVersion != null)
