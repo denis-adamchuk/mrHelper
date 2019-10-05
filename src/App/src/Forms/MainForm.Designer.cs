@@ -70,6 +70,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.panel2 = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
@@ -443,7 +444,8 @@ namespace mrHelper.App.Forms
             this.columnHeaderIId,
             this.columnHeaderAuthor,
             this.columnHeaderTitle,
-            this.columnHeaderLabels});
+            this.columnHeaderLabels,
+            this.columnHeaderJira});
          this.listViewMergeRequests.FullRowSelect = true;
          this.listViewMergeRequests.GridLines = true;
          this.listViewMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -480,6 +482,11 @@ namespace mrHelper.App.Forms
          // 
          this.columnHeaderLabels.Text = "Labels";
          this.columnHeaderLabels.Width = 200;
+         // 
+         // columnHeaderJira
+         // 
+         this.columnHeaderJira.Text = "Jira";
+         this.columnHeaderJira.Width = 80;
          // 
          // checkBoxLabels
          // 
@@ -836,6 +843,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderTitle;
       private System.Windows.Forms.ColumnHeader columnHeaderLabels;
+      private System.Windows.Forms.ColumnHeader columnHeaderJira;
       private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.CheckBox checkBoxLabels;
       private System.Windows.Forms.Panel panel1;

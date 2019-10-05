@@ -20,6 +20,7 @@ using System.Drawing;
 using mrHelper.App.Helpers;
 using mrHelper.CommonControls;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace mrHelper.App.Forms
 {
@@ -616,10 +617,11 @@ namespace mrHelper.App.Forms
       {
          ListViewItem item = listView.Items.Add(new ListViewItem(new string[]
                   {
-                     mergeRequest.Id.ToString(), // Column IId
-                     String.Empty,               // Column Author (stub)
-                     String.Empty,               // Column Title (stub)
-                     String.Empty,               // Column Labels (stub)
+                     String.Empty, // Column IId (stub)
+                     String.Empty, // Column Author (stub)
+                     String.Empty, // Column Title (stub)
+                     String.Empty, // Column Labels (stub)
+                     String.Empty, // Column Jira (stub)
                   }, listView.Groups[project.Path_With_Namespace]));
          setListViewItemTag(item, hostname, project, mergeRequest);
       }
@@ -656,6 +658,13 @@ namespace mrHelper.App.Forms
          }
 
          return stringBuilder.ToString();
+      }
+
+      private static readonly Regex jira_re = new Regex(@"(?'name'(?!([A-Z0-9a-z]{1,10})-?$)[A-Z]{1}[A-Z0-9]+-\d+)");
+      private static string getJiraTask(MergeRequest mergeRequest)
+      {
+         Match m = jira_re.Match(mergeRequest.Title);
+         return !m.Success || m.Groups.Count < 1 || m.Groups["name"].Success ? String.Empty : m.Groups["name"].Value;
       }
 
       private static void setListViewRowHeight(ListView listView, int height)

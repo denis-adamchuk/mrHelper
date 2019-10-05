@@ -219,17 +219,19 @@ namespace mrHelper.App.Forms
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
          string text;
+         bool isClickable;
          switch (e.ColumnIndex)
          {
-            case 0:  text = mergeRequest.IId.ToString(); break;
-            case 1:  text = mergeRequest.Author.Name;    break;
-            case 2:  text = mergeRequest.Title;          break;
-            case 3:  text = formatLabels(mergeRequest);  break;
-            default: text = String.Empty;                break;
+            case 0: text = mergeRequest.IId.ToString(); isClickable = true;  break;
+            case 1: text = mergeRequest.Author.Name;    isClickable = false; break;
+            case 2: text = mergeRequest.Title;          isClickable = false; break;
+            case 3: text = formatLabels(mergeRequest);  isClickable = false; break;
+            case 4: text = getJiraTask(mergeRequest);   isClickable = true;  break;
+            default: text = String.Empty;               isClickable = false; break;
          }
 
          Font font = e.Item.ListView.Font;
-         if (e.ColumnIndex == 0)
+         if (isClickable)
          {
             using (font = new Font(e.Item.ListView.Font, FontStyle.Underline))
             {
