@@ -228,7 +228,19 @@ namespace mrHelper.App.Forms
             default: text = String.Empty;                break;
          }
 
-         e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+         Font font = e.Item.ListView.Font;
+         if (e.ColumnIndex == 0)
+         {
+            using (font = new Font(e.Item.ListView.Font, FontStyle.Underline))
+            {
+               Brush brush = Brushes.Blue;
+               e.Graphics.DrawString(text, font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
+            }
+         }
+         else
+         {
+            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+         }
 
          e.DrawFocusRectangle(e.Bounds);
       }
@@ -238,9 +250,27 @@ namespace mrHelper.App.Forms
          e.DrawDefault = true;
       }
 
+      private void ListViewMergeRequests_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         ListView listView = (sender as ListView);
+
+         ListViewHitTestInfo hit = listView.HitTest(e.Location);
+         bool mouseOverFirstColumn = hit.SubItem != null && hit.SubItem == hit.Item.SubItems[0];
+         listView.Cursor = mouseOverFirstColumn ? Cursors.Hand : Cursors.Default;
+      }
+
       async private void ListViewMergeRequests_MouseClick(object sender, MouseEventArgs e)
       {
          ListView listView = (sender as ListView);
+         
+         ListViewHitTestInfo hit = listView.HitTest(e.Location);
+         bool mouseOverFirstColumn = hit.SubItem != null && hit.SubItem == hit.Item.SubItems[0];
+         if (mouseOverFirstColumn)
+         {
+            FullMergeRequestKey fmk = (FullMergeRequestKey)hit.Item.Tag;
+            openBrowser(fmk.MergeRequest.Web_Url);
+            return;
+         }
 
          if (listView.SelectedItems.Count > 0)
          {
@@ -301,16 +331,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         try
-         {
-            // this should open a browser
-            Process.Start(linkLabelConnectedTo.Text);
-         }
-         catch (Exception ex) // see Process.Start exception list
-         {
-            ExceptionHandlers.Handle(ex, "Cannot open URL");
-            MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         openBrowser(linkLabelConnectedTo.Text);
       }
 
       async private void ButtonAddKnownHost_Click(object sender, EventArgs e)

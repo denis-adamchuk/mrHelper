@@ -664,6 +664,19 @@ namespace mrHelper.App.Forms
          imgList.ImageSize = new Size(1, height);
          listView.SmallImageList = imgList;
       }
+
+      private void openBrowser(string text)
+      {
+         try
+         {
+            Process.Start(text);
+         }
+         catch (Exception ex) // see Process.Start exception list
+         {
+            ExceptionHandlers.Handle(ex, "Cannot open URL");
+            MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
    }
 }
 

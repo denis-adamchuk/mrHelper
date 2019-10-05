@@ -459,6 +459,7 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
          this.listViewMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
          this.listViewMergeRequests.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseClick);
+         this.listViewMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(ListViewMergeRequests_MouseMove);
          // 
          // columnHeaderIId
          // 
