@@ -170,17 +170,6 @@ namespace mrHelper.App.Forms
          await switchHostByUserAsync(hostname);
       }
 
-      private void ListBoxFilteredMergeRequests_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
-      {
-         if (e.Index < 0)
-         {
-            return;
-         }
-
-         ListBox listBox = sender as ListBox;
-         e.ItemHeight = listBox.Font.Height * 2 + 2;
-      }
-
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
       {
          if (backColor == SystemColors.Window)
@@ -227,26 +216,19 @@ namespace mrHelper.App.Forms
          bool isSelected = e.Item.Selected;
          fillRectangle(e, getMergeRequestColor(mergeRequest), isSelected);
 
-         //e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
+         string text;
          switch (e.ColumnIndex)
          {
-            case 0:
-               e.Graphics.DrawString(mergeRequest.IId.ToString(), e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
-            case 1:
-               e.Graphics.DrawString(mergeRequest.Author.Name, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
-            case 2:
-               e.Graphics.DrawString(mergeRequest.Title, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
-            case 3:
-               string labels = String.Join(", ", mergeRequest.Labels.ToArray());
-               e.Graphics.DrawString(labels, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
-               break;
+            case 0:  text = mergeRequest.IId.ToString(); break;
+            case 1:  text = mergeRequest.Author.Name;    break;
+            case 2:  text = mergeRequest.Title;          break;
+            case 3:  text = formatLabels(mergeRequest);  break;
+            default: text = String.Empty;                break;
          }
+
+         e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
 
          e.DrawFocusRectangle(e.Bounds);
       }

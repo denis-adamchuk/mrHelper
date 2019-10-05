@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -18,8 +19,6 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
-using mrHelper.App.Controls;
-using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -40,18 +39,9 @@ namespace mrHelper.App.Forms
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
-      private void SetHeight(ListView listView, int height)
-      {
-         ImageList imgList = new ImageList();
-         imgList.ImageSize = new Size(1, height);
-         listView.SmallImageList = imgList;
-      }
-
       internal MainForm()
       {
          InitializeComponent();
-
-         SetHeight(listViewMergeRequests, listViewMergeRequests.Font.Height * 2 + 2);
       }
 
       public string GetCurrentHostName()

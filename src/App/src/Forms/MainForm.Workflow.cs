@@ -233,8 +233,9 @@ namespace mrHelper.App.Forms
 
          foreach (var mergeRequest in mergeRequests)
          {
-            addListViewMergeRequestItem(hostname, project, mergeRequest);
+            addListViewMergeRequestItem(listViewMergeRequests, hostname, project, mergeRequest);
          }
+         recalcRowHeightForMergeRequestListView(listViewMergeRequests);
 
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 

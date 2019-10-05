@@ -273,7 +273,7 @@ namespace mrHelper.App.Forms
                      switch (mergeRequest.UpdateKind)
                      {
                         case UpdateKind.New:
-                           addListViewMergeRequestItem(
+                           addListViewMergeRequestItem(listViewMergeRequests,
                               mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
                            break;
 
@@ -289,11 +289,13 @@ namespace mrHelper.App.Forms
 
                         case UpdateKind.LabelsUpdated:
                            processUpdatedMergeRequest(mergeRequest,
-                              (item, index) => item.Tag = new FullMergeRequestKey(
+                              (item, index) => setListViewItemTag(item,
                                  mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest));
                            break;
                      }
                   }
+
+                  recalcRowHeightForMergeRequestListView(listViewMergeRequests);
 
                   if (reloadCurrent)
                   {

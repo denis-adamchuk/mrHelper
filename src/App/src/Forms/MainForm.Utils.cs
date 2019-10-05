@@ -19,6 +19,7 @@ using mrHelper.Client.Git;
 using System.Drawing;
 using mrHelper.App.Helpers;
 using mrHelper.CommonControls;
+using System.Text;
 
 namespace mrHelper.App.Forms
 {
@@ -610,16 +611,58 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addListViewMergeRequestItem(string hostname, Project project, MergeRequest mergeRequest)
+      private void addListViewMergeRequestItem(ListView listView,
+         string hostname, Project project, MergeRequest mergeRequest)
       {
-         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
+         ListViewItem item = listView.Items.Add(new ListViewItem(new string[]
                   {
                      mergeRequest.Id.ToString(), // Column IId
                      String.Empty,               // Column Author (stub)
                      String.Empty,               // Column Title (stub)
                      String.Empty,               // Column Labels (stub)
-                  }, listViewMergeRequests.Groups[project.Path_With_Namespace]));
+                  }, listView.Groups[project.Path_With_Namespace]));
+         setListViewItemTag(item, hostname, project, mergeRequest);
+      }
+
+      private static void setListViewItemTag(ListViewItem item,
+         string hostname, Project project, MergeRequest mergeRequest)
+      {
          item.Tag = new FullMergeRequestKey(hostname, project, mergeRequest);
+      }
+
+      private void recalcRowHeightForMergeRequestListView(ListView listView)
+      {
+         int maxLineCount = listView.Items.Cast<FullMergeRequestKey>().
+            Select((x) => formatLabels(x.MergeRequest).Count((y) => y == '\n')).Max();
+         setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
+         listView.Refresh();
+      }
+
+      private static string formatLabels(MergeRequest mergeRequest)
+      {
+         var query = mergeRequest.Labels.GroupBy(
+            (label) => label.StartsWith("@") && label.IndexOf('-') != -1 ? label.Substring(0, label.IndexOf('-')) : label,
+            (label) => label,
+            (baseLabel, labels) => new
+            {
+               Labels = labels
+            });
+
+         StringBuilder stringBuilder = new StringBuilder();
+         foreach (var group in query)
+         {
+            stringBuilder.Append(String.Join(",", group.Labels));
+            stringBuilder.Append("\n");
+         }
+
+         return stringBuilder.ToString();
+      }
+
+      private static void setListViewRowHeight(ListView listView, int height)
+      {
+         ImageList imgList = new ImageList();
+         imgList.ImageSize = new Size(1, height);
+         listView.SmallImageList = imgList;
       }
    }
 }
