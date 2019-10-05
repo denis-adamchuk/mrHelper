@@ -244,56 +244,54 @@ namespace mrHelper.App.Forms
          _updateManager.OnUpdate +=
             (updates) =>
          {
-            BeginInvoke(new Action<MergeRequestUpdates>(
+            BeginInvoke(new Action<List<UpdatedMergeRequest>>(
                async (updatesInternal) =>
                {
                   notifyOnMergeRequestUpdates(updatesInternal);
 
-                  foreach (NewOrClosedMergeRequest mergeRequest in updatesInternal.NewMergeRequests)
+                  Action<UpdatedMergeRequest, Action<ListViewItem, int>> processUpdatedMergeRequest =
+                     (mergeRequest, act) =>
                   {
-                     addListViewMergeRequestItem(mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
-                  }
-
-                  for (int idx = listViewMergeRequests.Items.Count - 1; idx >= 0; --idx)
-                  {
-                     var item = listViewMergeRequests.Items[idx];
-                     FullMergeRequestKey key = (FullMergeRequestKey)item.Tag;
-
-                     foreach (NewOrClosedMergeRequest mergeRequest in updatesInternal.ClosedMergeRequests)
+                     for (int idx = listViewMergeRequests.Items.Count - 1; idx >= 0; --idx)
                      {
+                        var item = listViewMergeRequests.Items[idx];
+                        FullMergeRequestKey key = (FullMergeRequestKey)item.Tag;
+
                         if (key.HostName == mergeRequest.HostName
                          && key.Project.Id == mergeRequest.Project.Id
                          && key.MergeRequest.Id == mergeRequest.MergeRequest.Id)
                         {
-                           listViewMergeRequests.Items.RemoveAt(idx);
-                           break; // cannot have the same MR twice in updates
+                           act(item, idx);
+                           break; // cannot have the same MR twice in the list
                         }
                      }
-                  }
+                  };
 
                   bool reloadCurrent = false;
-                  for (int idx = listViewMergeRequests.Items.Count - 1; idx >= 0; --idx)
+                  foreach (UpdatedMergeRequest mergeRequest in updatesInternal)
                   {
-                     var item = listViewMergeRequests.Items[idx];
-                     FullMergeRequestKey key = (FullMergeRequestKey)item.Tag;
-
-                     foreach (UpdatedMergeRequest mergeRequest in updatesInternal.UpdatedMergeRequests)
+                     switch (mergeRequest.UpdateKind)
                      {
-                        if (key.HostName == mergeRequest.HostName
-                         && key.Project.Id == mergeRequest.Project.Id
-                         && key.MergeRequest.Id == mergeRequest.MergeRequest.Id)
-                        {
-                           if (mergeRequest.UpdateKind.HasFlag(UpdateKind.CommitsUpdated) && item.Selected)
-                           {
-                              reloadCurrent = true;
-                           }
-                           else if (mergeRequest.UpdateKind.HasFlag(UpdateKind.LabelsUpdated))
-                           {
-                              item.Tag = new FullMergeRequestKey(mergeRequest.HostName,
-                                 mergeRequest.Project, mergeRequest.MergeRequest);
-                           }
-                           break; // cannot have the same MR twice in updates
-                        }
+                        case UpdateKind.New:
+                           addListViewMergeRequestItem(
+                              mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
+                           break;
+
+                        case UpdateKind.Closed:
+                           processUpdatedMergeRequest(mergeRequest,
+                              (item, index) => listViewMergeRequests.Items.RemoveAt(index));
+                           break;
+
+                        case UpdateKind.CommitsUpdated:
+                           processUpdatedMergeRequest(mergeRequest,
+                              (item, index) => reloadCurrent |= item.Selected);
+                           break;
+
+                        case UpdateKind.LabelsUpdated:
+                           processUpdatedMergeRequest(mergeRequest,
+                              (item, index) => item.Tag = new FullMergeRequestKey(
+                                 mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest));
+                           break;
                      }
                   }
 

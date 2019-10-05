@@ -470,24 +470,17 @@ namespace mrHelper.App.Forms
             + (projectName == String.Empty ? "N/A" : projectName));
       }
 
-      private void notifyOnMergeRequestUpdates(MergeRequestUpdates updates)
+      private void notifyOnMergeRequestUpdates(List<UpdatedMergeRequest> updates)
       {
-         List<NewOrClosedMergeRequest> newMergeRequests = Tools.FilterMergeRequests(updates.NewMergeRequests, _settings);
-         foreach (NewOrClosedMergeRequest mergeRequest in newMergeRequests)
-         {
-            notifyOnMergeRequestEvent(mergeRequest.Project.Path_With_Namespace, mergeRequest.MergeRequest, "New merge request");
-         }
+         List<UpdatedMergeRequest> filtered = Tools.FilterMergeRequests(updates, _settings);
 
-         List<UpdatedMergeRequest> updatedMergeRequests =
-            Tools.FilterMergeRequests(updates.UpdatedMergeRequests, _settings);
-         foreach (UpdatedMergeRequest mergeRequest in updatedMergeRequests)
-         {
-            if (mergeRequest.UpdateKind.HasFlag(UpdateKind.CommitsUpdated))
-            {
-               notifyOnMergeRequestEvent(mergeRequest.Project.Path_With_Namespace, mergeRequest.MergeRequest,
-                  "New commit in merge request");
-            }
-         }
+         filtered.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
+            notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
+               "New merge request"));
+
+         filtered.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated).ToList().ForEach((x) =>
+            notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
+               "New commits in merge request"));
       }
 
       private GitClientFactory getGitClientFactory(string localFolder)

@@ -17,7 +17,7 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class UpdateManager
    {
-      public event Action<MergeRequestUpdates> OnUpdate;
+      public event Action<List<UpdatedMergeRequest>> OnUpdate;
 
       public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings)
@@ -106,21 +106,16 @@ namespace mrHelper.Client.Updates
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate(_hostname);
          await loadDataAndUpdateCacheAsync(_hostname, enabledProjects);
 
-         MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(_hostname,
+         List<UpdatedMergeRequest> updates = WorkflowDetailsChecker.CheckForUpdates(_hostname,
             enabledProjects, oldDetails, Cache.Details);
          ProjectWatcher.ProcessUpdates(updates, _hostname, Cache.Details);
 
          Trace.TraceInformation(
-            String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated {1}, Closed {2}",
-               updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
-
-         if (updates.UpdatedMergeRequests.Count > 0)
-         {
-            Trace.TraceInformation(
-               String.Format("[UpdateManager] Updated commits: {0}. Updated labels: {1}",
-                  updates.UpdatedMergeRequests.Count((x) => x.UpdateKind.HasFlag(UpdateKind.CommitsUpdated)),
-                  updates.UpdatedMergeRequests.Count((x) => x.UpdateKind.HasFlag(UpdateKind.LabelsUpdated))));
-         }
+            String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
+               updates.Count((x) => x.UpdateKind == UpdateKind.New),
+               updates.Count((x) => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
+               updates.Count((x) => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated)),
+               updates.Count((x) => x.UpdateKind == UpdateKind.Closed));
 
          OnUpdate?.Invoke(updates);
       }

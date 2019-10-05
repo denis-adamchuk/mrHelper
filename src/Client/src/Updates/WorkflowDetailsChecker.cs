@@ -11,11 +11,13 @@ using System.Diagnostics;
 
 namespace mrHelper.Client.Updates
 {
-   [Flags]
    public enum UpdateKind
    {
-      CommitsUpdated = 1,
-      LabelsUpdated  = 2
+      New,
+      Closed,
+      CommitsUpdated,
+      LabelsUpdated,
+      CommitsAndLabelsUpdated
    }
 
    public struct UpdatedMergeRequest
@@ -24,21 +26,14 @@ namespace mrHelper.Client.Updates
       public MergeRequest MergeRequest;
       public string HostName;
       public Project Project;
-   }
 
-   public struct NewOrClosedMergeRequest
-   {
-      public MergeRequest MergeRequest;
-      public string HostName;
-      public Project Project;
-   }
-
-   public struct MergeRequestUpdates
-   {
-      public string HostName;
-      public List<NewOrClosedMergeRequest> NewMergeRequests;
-      public List<UpdatedMergeRequest> UpdatedMergeRequests;
-      public List<NewOrClosedMergeRequest> ClosedMergeRequests;
+      public UpdatedMergeRequest(UpdateKind kind, MergeRequest mergeRequest, string hostname, Project project)
+      {
+         UpdateKind = kind;
+         MergeRequest = mergeRequest;
+         HostName = hostname;
+         Project = project;
+      }
    }
 
    /// <summary>
@@ -68,10 +63,11 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Process a timer event
       /// </summary>
-      internal MergeRequestUpdates CheckForUpdates(string hostname, List<Project> enabledProjects,
+      internal List<UpdatedMergeRequest> CheckForUpdates(string hostname, List<Project> enabledProjects,
          IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
-         TwoListDifference<MergeRequestWithProject> diff = getMergeRequestDiff(hostname, enabledProjects, oldDetails, newDetails);
+         TwoListDifference<MergeRequestWithProject> diff = getMergeRequestDiff(
+            hostname, enabledProjects, oldDetails, newDetails);
          return getMergeRequestUpdates(hostname, diff, oldDetails, newDetails);
       }
 
@@ -139,66 +135,43 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
-      private MergeRequestUpdates getMergeRequestUpdates(string hostname,
+      private List<UpdatedMergeRequest> getMergeRequestUpdates(string hostname,
          TwoListDifference<MergeRequestWithProject> diff, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
-         MergeRequestUpdates updates = new MergeRequestUpdates
-         {
-            HostName = hostname,
-            NewMergeRequests = new List<NewOrClosedMergeRequest>(),
-            UpdatedMergeRequests = new List<UpdatedMergeRequest>(),
-            ClosedMergeRequests = new List<NewOrClosedMergeRequest>()
-         };
+         List<UpdatedMergeRequest> updates = new List<UpdatedMergeRequest>();
 
          foreach (MergeRequestWithProject mergeRequest in diff.SecondOnly)
          {
-            updates.NewMergeRequests.Add(new NewOrClosedMergeRequest
-               { MergeRequest = mergeRequest.MergeRequest, HostName = hostname, Project = mergeRequest.Project });
+            updates.Add(new UpdatedMergeRequest(
+               UpdateKind.New, mergeRequest.MergeRequest, hostname, mergeRequest.Project));
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
          {
-            updates.ClosedMergeRequests.Add(new NewOrClosedMergeRequest
-               { MergeRequest = mergeRequest.MergeRequest, HostName = hostname, Project = mergeRequest.Project });
+            updates.Add(new UpdatedMergeRequest(
+               UpdateKind.Closed, mergeRequest.MergeRequest, hostname, mergeRequest.Project));
          }
-
-         Func<UpdateKind?, UpdateKind, UpdateKind> updateFlag =
-            (old, flag) =>
-         {
-            return old != null ? (UpdateKind)(old | flag) : flag;
-         };
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
          {
             Debug.Assert(mrPair.Item1.MergeRequest.Id == mrPair.Item2.MergeRequest.Id);
             MergeRequest mergeRequest = mrPair.Item1.MergeRequest;
-            string projectName = mrPair.Item1.Project.Path_With_Namespace;
+            Project project = mrPair.Item1.Project;
 
-            UpdateKind? kind = new Nullable<UpdateKind>();
-            if (!Enumerable.SequenceEqual(mrPair.Item1.MergeRequest.Labels, mrPair.Item2.MergeRequest.Labels))
-            {
-               kind = updateFlag(kind, UpdateKind.LabelsUpdated);
-            }
-
-            MergeRequestKey mergeRequestKey = new MergeRequestKey(hostname, projectName, mergeRequest.IId);
-
+            MergeRequestKey mergeRequestKey = new MergeRequestKey(
+               hostname, project.Path_With_Namespace, mergeRequest.IId);
             DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestChangeTimestamp(mergeRequestKey);
             DateTime newCachedChangeTimestamp = newDetails.GetLatestChangeTimestamp(mergeRequestKey);
 
-            if (newCachedChangeTimestamp > previouslyCachedChangeTimestamp)
-            {
-               kind = updateFlag(kind, UpdateKind.CommitsUpdated);
-            }
+            bool labelsUpdated = !Enumerable.SequenceEqual(mrPair.Item1.MergeRequest.Labels,
+                                                           mrPair.Item2.MergeRequest.Labels);
+            bool commitsUpdated = newCachedChangeTimestamp > previouslyCachedChangeTimestamp;
 
-            if (kind.HasValue)
+            if (labelsUpdated || commitsUpdated)
             {
-               updates.UpdatedMergeRequests.Add(new UpdatedMergeRequest
-               {
-                  UpdateKind = kind.Value,
-                  MergeRequest = mergeRequest,
-                  HostName = hostname,
-                  Project = mrPair.Item1.Project
-               });
+               UpdateKind kind = (labelsUpdated && commitsUpdated ? UpdateKind.CommitsAndLabelsUpdated :
+                                 (labelsUpdated ? UpdateKind.LabelsUpdated : UpdateKind.CommitsUpdated));
+               updates.Add(new UpdatedMergeRequest(kind, mergeRequest, hostname, project));
             }
          }
 
