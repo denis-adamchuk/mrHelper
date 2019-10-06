@@ -14,6 +14,7 @@ using mrHelper.Core.Interprocess;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Git;
+using mrHelper.CommonControls;
 
 namespace mrHelper.App.Forms
 {
@@ -29,6 +30,9 @@ namespace mrHelper.App.Forms
          loadSettings();
          addCustomActions();
          integrateInTools();
+
+         this.WindowState = FormWindowState.Maximized;
+         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
          await onApplicationStarted();
       }
 
@@ -166,6 +170,7 @@ namespace mrHelper.App.Forms
 
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
+         tabControl.SelectedTab = tabPageMR;
          string hostname = (sender as ComboBox).Text;
          await switchHostByUserAsync(hostname);
       }
@@ -234,7 +239,7 @@ namespace mrHelper.App.Forms
             e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
          }
 
-         e.DrawFocusRectangle(e.Bounds);
+         //e.DrawFocusRectangle(e.Bounds);
       }
 
       private void ListViewMergeRequests_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
@@ -251,7 +256,7 @@ namespace mrHelper.App.Forms
          listView.Cursor = clickable ? Cursors.Hand : Cursors.Default;
       }
 
-      async private void ListViewMergeRequests_MouseClick(object sender, MouseEventArgs e)
+      private void ListViewMergeRequests_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
       {
          ListView listView = (sender as ListView);
 
@@ -260,18 +265,41 @@ namespace mrHelper.App.Forms
          if (clickable)
          {
             openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
+            _cancelSelection = true;
+         }
+      }
+
+      private void ListViewMergeRequests_ItemSelectionChanging(object sender, ItemSelectionChangingEventArgs e)
+      {
+         if (_cancelSelection)
+         {
+            e.Cancel = true;
+            return;
+         }
+      }
+
+      async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+      {
+         ListView listView = (sender as ListView);
+
+         if (listView.SelectedItems.Count < 1)
+         {
+            // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
+            await switchMergeRequestByUserAsync(String.Empty, default(Project), 0);
             return;
          }
 
-         if (listView.SelectedItems.Count > 0)
+         FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
+         if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
          {
-            FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-            if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
-            {
-               Debug.Assert(getMergeRequestKey().HasValue);
-               _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
-            }
+            Debug.Assert(getMergeRequestKey().HasValue);
+            _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
          }
+      }
+
+      private void ListViewMergeRequests_MouseUp(object sender, MouseEventArgs e)
+      {
+         _cancelSelection = false;
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)

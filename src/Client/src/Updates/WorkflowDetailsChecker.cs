@@ -155,8 +155,8 @@ namespace mrHelper.Client.Updates
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
          {
             Debug.Assert(mrPair.Item1.MergeRequest.Id == mrPair.Item2.MergeRequest.Id);
-            MergeRequest mergeRequest = mrPair.Item1.MergeRequest;
-            Project project = mrPair.Item1.Project;
+            MergeRequest mergeRequest = mrPair.Item2.MergeRequest;
+            Project project = mrPair.Item2.Project;
 
             MergeRequestKey mergeRequestKey = new MergeRequestKey(
                hostname, project.Path_With_Namespace, mergeRequest.IId);

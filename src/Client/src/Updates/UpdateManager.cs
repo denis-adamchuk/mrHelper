@@ -112,10 +112,10 @@ namespace mrHelper.Client.Updates
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
-               updates.Count((x) => x.UpdateKind == UpdateKind.New),
-               updates.Count((x) => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
-               updates.Count((x) => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated)),
-               updates.Count((x) => x.UpdateKind == UpdateKind.Closed));
+               updates.Count(x => x.UpdateKind == UpdateKind.New),
+               updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
+               updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
+               updates.Count(x => x.UpdateKind == UpdateKind.Closed)));
 
          OnUpdate?.Invoke(updates);
       }
@@ -183,7 +183,7 @@ namespace mrHelper.Client.Updates
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {
-            Interval = 5 * 60000 // five minutes in ms
+            Interval = 0.5 * 60000 // five minutes in ms
          };
 
       private Workflow.Workflow Workflow { get; }

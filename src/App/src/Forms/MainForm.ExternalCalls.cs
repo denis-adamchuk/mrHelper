@@ -106,7 +106,17 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            if (ex is NotEnabledProjectException)
+            if (ex is NoProjectsException)
+            {
+               ReportError(String.Format("Check {0} file. ",
+                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
+            }
+            else if (ex is BadProjectName)
+            {
+               ReportError(String.Format("Check {0} file. ",
+                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
+            }
+            else if (ex is NotEnabledProjectException)
             {
                ReportError(String.Format("Current version supports connection to URL for projects listed in {0} only. ",
                   mrHelper.Common.Constants.Constants.ProjectListFileName), ex, false);

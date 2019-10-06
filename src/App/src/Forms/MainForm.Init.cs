@@ -204,7 +204,11 @@ namespace mrHelper.App.Forms
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _workflowFactory = new WorkflowFactory(_settings);
+         // set instance non-public property with name "DoubleBuffered" to true
+         typeof(Control).InvokeMember("DoubleBuffered",
+             System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+             null,listViewMergeRequests, new object[] { true });
+
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -282,6 +286,8 @@ namespace mrHelper.App.Forms
                   };
 
                   bool reloadCurrent = false;
+                  bool mightChangeRowHeight = false;
+                  bool invalidate = false;
                   foreach (UpdatedMergeRequest mergeRequest in updatesInternal)
                   {
                      switch (mergeRequest.UpdateKind)
@@ -289,11 +295,14 @@ namespace mrHelper.App.Forms
                         case UpdateKind.New:
                            addListViewMergeRequestItem(listViewMergeRequests,
                               mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
+                           mightChangeRowHeight = true;
+                           invalidate = true;
                            break;
 
                         case UpdateKind.Closed:
                            processUpdatedMergeRequest(mergeRequest,
                               (item, index) => listViewMergeRequests.Items.RemoveAt(index));
+                           invalidate = true;
                            break;
 
                         case UpdateKind.CommitsUpdated:
@@ -305,11 +314,21 @@ namespace mrHelper.App.Forms
                            processUpdatedMergeRequest(mergeRequest,
                               (item, index) => setListViewItemTag(item,
                                  mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest));
+                           mightChangeRowHeight = true;
+                           invalidate = true;
                            break;
                      }
                   }
 
-                  recalcRowHeightForMergeRequestListView(listViewMergeRequests);
+                  if (mightChangeRowHeight)
+                  {
+                     recalcRowHeightForMergeRequestListView(listViewMergeRequests);
+                  }
+
+                  if (invalidate)
+                  {
+                     listViewMergeRequests.Invalidate();
+                  }
 
                   if (reloadCurrent)
                   {

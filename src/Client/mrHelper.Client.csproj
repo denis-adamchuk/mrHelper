@@ -76,7 +76,6 @@
     <Compile Include="src\Updates\RemoteProjectChecker.cs" />
     <Compile Include="src\Workflow\Workflow.cs" />
     <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
-    <Compile Include="src\Workflow\WorkflowFactory.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

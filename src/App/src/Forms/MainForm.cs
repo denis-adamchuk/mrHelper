@@ -74,7 +74,6 @@ namespace mrHelper.App.Forms
       private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
 
-      private WorkflowFactory _workflowFactory;
       private UpdateManager _updateManager;
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
@@ -157,6 +156,11 @@ namespace mrHelper.App.Forms
          private Func<string> _getText;
          private Func<string> _getUrl;
       }
+
+      /// <summary>
+      /// Protection from changing selection when clicked on a clickable sub-item of ListViewEx
+      /// </summary>
+      private bool _cancelSelection = false;
 
       private User? _currentUser;
    }

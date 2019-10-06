@@ -28,16 +28,25 @@ namespace mrHelper.Client.Services
 
       public string GetJiraServiceUrl()
       {
-         return _services?.Single((x) => x.Name == "Jira")?.Properties["Url"]?.ToString() ?? String.Empty;
+         int index = _services?.FindIndex((x) => x.Name == "Jira") ?? -1;
+         if (index == -1)
+         {
+            return String.Empty;
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         return properties != null && properties.ContainsKey("url") ? properties["url"].ToString() : String.Empty;
       }
 
-      private class Service
+#pragma warning disable 0649
+      private struct Service
       {
-         public string Name = null;
-         public Dictionary<string, object> Properties = null;
+         public string Name;
+         public Dictionary<string, object> Properties;
       }
+#pragma warning restore 0649
 
-      private List<Service> _services;
+      private List<Service> _services = new List<Service>();
 
       private const string ServiceListFileName = "services.json";
    }

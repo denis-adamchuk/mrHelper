@@ -65,7 +65,7 @@ namespace mrHelper.App.Forms
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
-         this.listViewMergeRequests = new System.Windows.Forms.ListView();
+         this.listViewMergeRequests = new ListViewEx();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -407,7 +407,7 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Panel2.Controls.Add(this.panel1);
          this.splitContainer1.Panel2.Controls.Add(this.groupBox3);
          this.splitContainer1.Panel2.Controls.Add(this.groupBox2);
-         this.splitContainer1.Panel2MinSize = 550;
+         this.splitContainer1.Panel2MinSize = 580;
          this.splitContainer1.Size = new System.Drawing.Size(1422, 512);
          this.splitContainer1.SplitterDistance = 802;
          this.splitContainer1.SplitterWidth = 8;
@@ -428,6 +428,7 @@ namespace mrHelper.App.Forms
          // 
          // textBoxLabels
          // 
+         this.textBoxLabels.Enabled = false;
          this.textBoxLabels.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxLabels.Location = new System.Drawing.Point(69, 17);
          this.textBoxLabels.Name = "textBoxLabels";
@@ -460,8 +461,11 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
          this.listViewMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
          this.listViewMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
-         this.listViewMergeRequests.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseClick);
+         this.listViewMergeRequests.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseUp);
          this.listViewMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(ListViewMergeRequests_MouseMove);
+         this.listViewMergeRequests.ItemSelectionChanging += ListViewMergeRequests_ItemSelectionChanging;
+         this.listViewMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(ListViewMergeRequests_ItemSelectionChanged);
+         this.listViewMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(ListViewMergeRequests_MouseDown);
          // 
          // columnHeaderIId
          // 
@@ -490,6 +494,7 @@ namespace mrHelper.App.Forms
          // 
          // checkBoxLabels
          // 
+         this.checkBoxLabels.Enabled = false;
          this.checkBoxLabels.AutoSize = true;
          this.checkBoxLabels.Location = new System.Drawing.Point(6, 19);
          this.checkBoxLabels.Name = "checkBoxLabels";
@@ -561,6 +566,7 @@ namespace mrHelper.App.Forms
          // 
          // labelTimeTrackingMergeRequestName
          // 
+         this.labelTimeTrackingMergeRequestName.Visible = false;
          this.labelTimeTrackingMergeRequestName.AutoSize = true;
          this.labelTimeTrackingMergeRequestName.Location = new System.Drawing.Point(6, 54);
          this.labelTimeTrackingMergeRequestName.Name = "labelTimeTrackingMergeRequestName";
@@ -570,6 +576,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonEditTime
          // 
+         this.buttonEditTime.Enabled = false;
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonEditTime.Location = new System.Drawing.Point(509, 19);
          this.buttonEditTime.Name = "buttonEditTime";
@@ -612,6 +619,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonTimeTrackingStart
          // 
+         this.buttonTimeTrackingStart.Enabled = false;
          this.buttonTimeTrackingStart.Location = new System.Drawing.Point(6, 19);
          this.buttonTimeTrackingStart.Name = "buttonTimeTrackingStart";
          this.buttonTimeTrackingStart.Size = new System.Drawing.Size(96, 32);
@@ -645,6 +653,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonAddComment
          // 
+         this.buttonAddComment.Enabled = false;
          this.buttonAddComment.Location = new System.Drawing.Point(256, 19);
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
@@ -655,6 +664,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonDiscussions
          // 
+         this.buttonDiscussions.Enabled = false;
          this.buttonDiscussions.Location = new System.Drawing.Point(139, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
@@ -665,6 +675,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonNewDiscussion
          // 
+         this.buttonNewDiscussion.Enabled = false;
          this.buttonNewDiscussion.Location = new System.Drawing.Point(16, 19);
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
@@ -677,7 +688,7 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxActions.Location = new System.Drawing.Point(3, 6);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(246, 63);
+         this.groupBoxActions.Size = new System.Drawing.Size(196, 63);
          this.groupBoxActions.TabIndex = 0;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
@@ -697,6 +708,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonDiffTool
          // 
+         this.buttonDiffTool.Enabled = false;
          this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiffTool.Location = new System.Drawing.Point(513, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
@@ -761,6 +773,7 @@ namespace mrHelper.App.Forms
          // 
          // richTextBoxMergeRequestDescription
          // 
+         this.richTextBoxMergeRequestDescription.ReadOnly = true;
          this.richTextBoxMergeRequestDescription.Dock = System.Windows.Forms.DockStyle.Top;
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
@@ -838,7 +851,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxHost;
       private System.Windows.Forms.SplitContainer splitContainer1;
       private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
-      private System.Windows.Forms.ListView listViewMergeRequests;
+      private ListViewEx listViewMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderTitle;

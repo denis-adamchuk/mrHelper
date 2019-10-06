@@ -23,6 +23,18 @@ namespace mrHelper.Client.Workflow
          String.Format("Cannot find access token for host {0}", hostname)) {}
    }
 
+   public class BadProjectName : WorkflowException
+   {
+      internal BadProjectName(string projectname): base(
+         String.Format("Bad project name {0}", projectname)) {}
+   }
+
+   public class NoProjectsException : WorkflowException
+   {
+      internal NoProjectsException(): base(
+         String.Format("Project list is empty")) {}
+   }
+
    public class NotEnabledProjectException : WorkflowException
    {
       internal NotEnabledProjectException(string projectname): base(
@@ -40,12 +52,13 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      internal Workflow(UserDefinedSettings settings)
+      public Workflow(UserDefinedSettings settings, Func<MergeRequest, bool> needLoadMergeRequest)
       {
          Settings = settings;
+         _needLoadMergeRequest = needLoadMergeRequest;
       }
 
-      async public Task StartAsync(string hostname, string projectname, int mergeRequestIId)
+      async public Task StartAsync(string hostname, string projectname, int mergeRequestIId = 0)
       {
          string token = Settings.GetAccessToken(hostname);
          if (token == String.Empty)
@@ -55,8 +68,17 @@ namespace mrHelper.Client.Workflow
 
          List<Project> enabledProjects = getEnabledProjects(hostname);
          bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
-         string defaultProject = hasEnabledProjects ? enabledProjects[0].Path_With_Namespace : String.Empty;
+         if (!hasEnabledProjects)
+         {
+            throw new NoProjectsException();
+         }
+
+         string defaultProject = enabledProjects[0].Path_With_Namespace;
          projectname = projectname == String.Empty ? defaultProject : projectname;
+         if (projectname.Count((x) => x == '/') != 1)
+         {
+            throw new BadProjectName(projectname);
+         }
 
          if (!hasEnabledProjects || !enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname)))
          {
@@ -91,18 +113,20 @@ namespace mrHelper.Client.Workflow
             {
                return; // cancelled
             }
-
-            mergeRequestIId = mergeRequestIId == 0 ? mergeRequests[0].IId : mergeRequestIId;
          }
 
          PostLoadAllMergeRequests?.Invoke();
 
-         await loadMergeRequestAsync(hostname, projects.Find((x) => x.Path_With_Namespace == projectname), mergeRequestIId);
+         if (mergeRequestIId != 0)
+         {
+            await loadMergeRequestAsync(hostname, projects.Find((x) => x.Path_With_Namespace == projectname),
+               mergeRequestIId);
+         }
       }
 
-      async public Task LoadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
+      async public Task<bool> LoadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
       {
-         await loadMergeRequestAsync(hostname, project, mergeRequestIId);
+         return await loadMergeRequestAsync(hostname, project, mergeRequestIId);
       }
 
       async public Task CancelAsync()
@@ -235,23 +259,28 @@ namespace mrHelper.Client.Workflow
          return mergeRequests;
       }
 
-      async private Task loadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
+      async private Task<bool> loadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
       {
          PrelLoadSingleMergeRequest?.Invoke(mergeRequestIId);
+         if (mergeRequestIId == 0)
+         {
+            Operator?.CancelAsync();
+            return false;
+         }
 
          string projectName = project.Path_With_Namespace;
 
          MergeRequest mergeRequest = new MergeRequest();
          try
          {
-            mergeRequest = await Operator.GetMergeRequestAsync(projectName, mergeRequest.IId);
+            mergeRequest = await Operator.GetMergeRequestAsync(projectName, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled switch MR to MR with IId {0}", mergeRequestIId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);
-            return;
+            return false;
          }
 
          PostLoadSingleMergeRequest?.Invoke(project, mergeRequest);
@@ -259,9 +288,9 @@ namespace mrHelper.Client.Workflow
          if (!await loadLatestVersionAsync(hostname, project, mergeRequest)
           || !await loadSystemNotesAsync(hostname, project, mergeRequest))
          {
-            return;
+            return false;
          }
-         await loadCommitsAsync(projectName, mergeRequest);
+         return await loadCommitsAsync(projectName, mergeRequest);
       }
 
       async private Task<bool> loadCommitsAsync(string projectName, MergeRequest mergeRequest)
@@ -373,11 +402,15 @@ namespace mrHelper.Client.Workflow
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
 
-      private class HostInProjectsFile
+#pragma warning disable 0649
+      private struct HostInProjectsFile
       {
-         public string Name = null;
-         public List<Project> Projects = null;
+         public string Name;
+         public List<Project> Projects;
       }
+#pragma warning restore 0649
+
+      private Func<MergeRequest, bool> _needLoadMergeRequest;
    }
 }
 

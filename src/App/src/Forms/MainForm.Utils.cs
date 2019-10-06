@@ -488,21 +488,21 @@ namespace mrHelper.App.Forms
       private static List<string> GetLabels(MergeRequest x) => x.Labels;
       private static List<string> GetLabels(UpdatedMergeRequest x) => GetLabels(x.MergeRequest);
 
+      private static List<string> SplitLabels(string labels)
+      {
+         List<string> result = new List<string>();
+         foreach (var item in labels.Split(','))
+         {
+            result.Add(item.Trim(' '));
+         }
+         return result;
+      }
+
       private static List<T> FilterMergeRequests<T>(List<T> mergeRequests, UserDefinedSettings settings)
       {
          if (!settings.CheckedLabelsFilter)
          {
             return mergeRequests;
-         }
-
-         List<string> SplitLabels(string labels)
-         {
-            List<string> result = new List<string>();
-            foreach (var item in labels.Split(','))
-            {
-               result.Add(item.Trim(' '));
-            }
-            return result;
          }
 
          List<string> splittedLabels = SplitLabels(settings.LastUsedLabels);
@@ -512,6 +512,17 @@ namespace mrHelper.App.Forms
             List<string> mrLabels = GetLabels((dynamic)x);
             return splittedLabels.Intersect(mrLabels).Count() != 0;
          }).ToList();
+      }
+
+      private static bool IsFilteredMergeRequest(MergeRequest mergeRequest, UserDefinedSettings settings)
+      {
+         if (!settings.CheckedLabelsFilter)
+         {
+            return false;
+         }
+
+         List<string> splittedLabels = SplitLabels(settings.LastUsedLabels);
+         return splittedLabels.Intersect(mergeRequest.Labels).Count() == 0;
       }
 
       private GitClientFactory getGitClientFactory(string localFolder)
@@ -653,33 +664,40 @@ namespace mrHelper.App.Forms
                      String.Empty, // Column Jira (stub)
                   }, listView.Groups[project.Path_With_Namespace]));
          setListViewItemTag(item, hostname, project, mergeRequest);
-
-         string jiraServiceUrl = _serviceManager.GetJiraServiceUrl();
-         string jiraTaskUrl = jiraServiceUrl != String.Empty ?
-            jiraServiceUrl + "/browse/" + getJiraTask(mergeRequest) : String.Empty;
-
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mergeRequest.IId.ToString(), () => mergeRequest.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => mergeRequest.Author.Name,    () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mergeRequest.Title,          () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mergeRequest),  () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => getJiraTask(mergeRequest),   () => jiraTaskUrl);
       }
 
       private void setListViewItemTag(ListViewItem item, string hostname, Project project, MergeRequest mergeRequest)
       {
          item.Tag = new FullMergeRequestKey(hostname, project, mergeRequest);
+
+         string jiraServiceUrl = _serviceManager.GetJiraServiceUrl();
+         string jiraTask = getJiraTask(mergeRequest);
+         string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
+            jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
+
+         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mergeRequest.IId.ToString(), () => mergeRequest.Web_Url);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => mergeRequest.Author.Name,    () => String.Empty);
+         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mergeRequest.Title,          () => String.Empty);
+         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mergeRequest),  () => String.Empty);
+         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                    () => jiraTaskUrl);
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
       {
-         int maxLineCount = listView.Items.Cast<FullMergeRequestKey>().
-            Select((x) => formatLabels(x.MergeRequest).Count((y) => y == '\n')).Max();
+         if (listView.Items.Count == 0)
+         {
+            return;
+         }
+         
+         int maxLineCount = listView.Items.Cast<ListViewItem>().
+            Select((x) => formatLabels(((FullMergeRequestKey)(x.Tag)).MergeRequest).Count((y) => y == '\n')).Max();
          setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
-         listView.Refresh();
       }
 
       private static string formatLabels(MergeRequest mergeRequest)
       {
+         mergeRequest.Labels.Sort();
+
          var query = mergeRequest.Labels.GroupBy(
             (label) => label.StartsWith("@") && label.IndexOf('-') != -1 ? label.Substring(0, label.IndexOf('-')) : label,
             (label) => label,
@@ -702,7 +720,7 @@ namespace mrHelper.App.Forms
       private static string getJiraTask(MergeRequest mergeRequest)
       {
          Match m = jira_re.Match(mergeRequest.Title);
-         return !m.Success || m.Groups.Count < 1 || m.Groups["name"].Success ? String.Empty : m.Groups["name"].Value;
+         return !m.Success || m.Groups.Count < 1 || !m.Groups["name"].Success ? String.Empty : m.Groups["name"].Value;
       }
 
       private static void setListViewRowHeight(ListView listView, int height)
