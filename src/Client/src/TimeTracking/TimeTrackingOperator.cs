@@ -21,7 +21,7 @@ namespace mrHelper.Client.TimeTracking
       async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            Tools.Tools.GetAccessToken(mrk.ProjectKey.HostName, Settings));
+            Settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>

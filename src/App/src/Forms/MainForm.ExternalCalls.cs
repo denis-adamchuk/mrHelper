@@ -109,7 +109,7 @@ namespace mrHelper.App.Forms
             if (ex is NotEnabledProjectException)
             {
                ReportError(String.Format("Current version supports connection to URL for projects listed in {0} only. ",
-                  Tools.ProjectListFileName), ex, false);
+                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, false);
             }
             else if (ex is NotAvailableMergeRequest)
             {

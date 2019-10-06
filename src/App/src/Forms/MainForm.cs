@@ -19,6 +19,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Client.Services;
 
 namespace mrHelper.App.Forms
 {
@@ -51,7 +52,7 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentAccessToken()
       {
-         return Tools.GetAccessToken(getHostName(), _settings);
+         return _settings.GetAccessToken(getHostName());
       }
 
       public string GetCurrentProjectName()
@@ -80,6 +81,7 @@ namespace mrHelper.App.Forms
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
       private PersistentStorage _persistentStorage;
+      private ServiceManager _serviceManager;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
@@ -138,6 +140,22 @@ namespace mrHelper.App.Forms
             Project = project;
             MergeRequest = mergeRequest;
          }
+      }
+
+      private struct ListViewSubItemInfo
+      {
+         public ListViewSubItemInfo(Func<string> getText, Func<string> getUrl)
+         {
+            _getText = getText;
+            _getUrl = getUrl;
+         }
+
+         public bool Clickable => _getUrl() != String.Empty;
+         public string Text => _getText();
+         public string Url => _getUrl();
+
+         private Func<string> _getText;
+         private Func<string> _getUrl;
       }
 
       private User? _currentUser;

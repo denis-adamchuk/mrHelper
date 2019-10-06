@@ -8,6 +8,7 @@ using GitLabSharp;
 using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Tools;
+using mrHelper.Common;
 
 namespace mrHelper.Client.Workflow
 {
@@ -46,8 +47,8 @@ namespace mrHelper.Client.Workflow
 
       async public Task StartAsync(string hostname, string projectname, int mergeRequestIId)
       {
-         string token = Tools.Tools.GetAccessToken(hostname, Settings);
-         if (token == Tools.Tools.UnknownHostToken)
+         string token = Settings.GetAccessToken(hostname);
+         if (token == String.Empty)
          {
             throw new UnknownHostException(hostname);
          }
@@ -351,11 +352,32 @@ namespace mrHelper.Client.Workflow
 
       private List<Project> getEnabledProjects(string hostname)
       {
-         return Tools.Tools.LoadProjectsFromFile(hostname);
+         // Check if file exists. If it does not, it is not an error.
+         if (System.IO.File.Exists(mrHelper.Common.Constants.Constants.ProjectListFileName))
+         {
+            try
+            {
+               List<HostInProjectsFile> hosts =
+                  Tools.Tools.LoadListFromFile<HostInProjectsFile>(mrHelper.Common.Constants.Constants.ProjectListFileName);
+               return hosts.FirstOrDefault((x) => x.Name == hostname).Projects;
+            }
+            catch (Exception ex) // whatever de-serialization exception
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load projects from file");
+            }
+         }
+
+         return null;
       }
 
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
+
+      private class HostInProjectsFile
+      {
+         public string Name = null;
+         public List<Project> Projects = null;
+      }
    }
 }
 

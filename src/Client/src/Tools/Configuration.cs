@@ -121,6 +121,18 @@ namespace mrHelper.Client.Tools
          set { setValue(ColorSchemeFileNameKeyName, value); }
       }
 
+      public string GetAccessToken(string hostname)
+      {
+         for (int iKnownHost = 0; iKnownHost < KnownHosts.Count; ++iKnownHost)
+         {
+            if (hostname == KnownHosts[iKnownHost])
+            {
+               return KnownAccessTokens[iKnownHost];
+            }
+         }
+         return String.Empty;
+      }
+
       private string getValue(string key, string defaultValue)
       {
          if (_config.AppSettings.Settings[key] != null)

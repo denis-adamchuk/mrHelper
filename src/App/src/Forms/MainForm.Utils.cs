@@ -474,7 +474,7 @@ namespace mrHelper.App.Forms
 
       private void notifyOnMergeRequestUpdates(List<UpdatedMergeRequest> updates)
       {
-         List<UpdatedMergeRequest> filtered = Tools.FilterMergeRequests(updates, _settings);
+         List<UpdatedMergeRequest> filtered = FilterMergeRequests(updates, _settings);
 
          filtered.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
@@ -483,6 +483,35 @@ namespace mrHelper.App.Forms
          filtered.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated).ToList().ForEach((x) =>
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
                "New commits in merge request"));
+      }
+
+      private static List<string> GetLabels(MergeRequest x) => x.Labels;
+      private static List<string> GetLabels(UpdatedMergeRequest x) => GetLabels(x.MergeRequest);
+
+      private static List<T> FilterMergeRequests<T>(List<T> mergeRequests, UserDefinedSettings settings)
+      {
+         if (!settings.CheckedLabelsFilter)
+         {
+            return mergeRequests;
+         }
+
+         List<string> SplitLabels(string labels)
+         {
+            List<string> result = new List<string>();
+            foreach (var item in labels.Split(','))
+            {
+               result.Add(item.Trim(' '));
+            }
+            return result;
+         }
+
+         List<string> splittedLabels = SplitLabels(settings.LastUsedLabels);
+         return mergeRequests.Where(
+            (x) =>
+         {
+            List<string> mrLabels = GetLabels((dynamic)x);
+            return splittedLabels.Intersect(mrLabels).Count() != 0;
+         }).ToList();
       }
 
       private GitClientFactory getGitClientFactory(string localFolder)
@@ -624,10 +653,19 @@ namespace mrHelper.App.Forms
                      String.Empty, // Column Jira (stub)
                   }, listView.Groups[project.Path_With_Namespace]));
          setListViewItemTag(item, hostname, project, mergeRequest);
+
+         string jiraServiceUrl = _serviceManager.GetJiraServiceUrl();
+         string jiraTaskUrl = jiraServiceUrl != String.Empty ?
+            jiraServiceUrl + "/browse/" + getJiraTask(mergeRequest) : String.Empty;
+
+         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mergeRequest.IId.ToString(), () => mergeRequest.Web_Url);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => mergeRequest.Author.Name,    () => String.Empty);
+         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mergeRequest.Title,          () => String.Empty);
+         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mergeRequest),  () => String.Empty);
+         item.SubItems[4].Tag = new ListViewSubItemInfo(() => getJiraTask(mergeRequest),   () => jiraTaskUrl);
       }
 
-      private static void setListViewItemTag(ListViewItem item,
-         string hostname, Project project, MergeRequest mergeRequest)
+      private void setListViewItemTag(ListViewItem item, string hostname, Project project, MergeRequest mergeRequest)
       {
          item.Tag = new FullMergeRequestKey(hostname, project, mergeRequest);
       }

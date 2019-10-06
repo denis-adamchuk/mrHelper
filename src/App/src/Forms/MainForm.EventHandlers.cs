@@ -208,27 +208,17 @@ namespace mrHelper.App.Forms
 
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
-         Tuple<string, MergeRequest> projectAndMergeRequest = (Tuple<string, MergeRequest>)(e.Item.Tag);
-         MergeRequest mergeRequest = projectAndMergeRequest.Item2;
+         FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
 
          e.DrawBackground();
 
          bool isSelected = e.Item.Selected;
-         fillRectangle(e, getMergeRequestColor(mergeRequest), isSelected);
+         fillRectangle(e, getMergeRequestColor(fmk.MergeRequest), isSelected);
 
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
-         string text;
-         bool isClickable;
-         switch (e.ColumnIndex)
-         {
-            case 0: text = mergeRequest.IId.ToString(); isClickable = true;  break;
-            case 1: text = mergeRequest.Author.Name;    isClickable = false; break;
-            case 2: text = mergeRequest.Title;          isClickable = false; break;
-            case 3: text = formatLabels(mergeRequest);  isClickable = false; break;
-            case 4: text = getJiraTask(mergeRequest);   isClickable = true;  break;
-            default: text = String.Empty;               isClickable = false; break;
-         }
+         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
+         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
 
          Font font = e.Item.ListView.Font;
          if (isClickable)
@@ -257,20 +247,19 @@ namespace mrHelper.App.Forms
          ListView listView = (sender as ListView);
 
          ListViewHitTestInfo hit = listView.HitTest(e.Location);
-         bool mouseOverFirstColumn = hit.SubItem != null && hit.SubItem == hit.Item.SubItems[0];
-         listView.Cursor = mouseOverFirstColumn ? Cursors.Hand : Cursors.Default;
+         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
+         listView.Cursor = clickable ? Cursors.Hand : Cursors.Default;
       }
 
       async private void ListViewMergeRequests_MouseClick(object sender, MouseEventArgs e)
       {
          ListView listView = (sender as ListView);
-         
+
          ListViewHitTestInfo hit = listView.HitTest(e.Location);
-         bool mouseOverFirstColumn = hit.SubItem != null && hit.SubItem == hit.Item.SubItems[0];
-         if (mouseOverFirstColumn)
+         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
+         if (clickable)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)hit.Item.Tag;
-            openBrowser(fmk.MergeRequest.Web_Url);
+            openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
             return;
          }
 

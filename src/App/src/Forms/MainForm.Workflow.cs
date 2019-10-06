@@ -95,6 +95,7 @@ namespace mrHelper.App.Forms
 
       async private Task startWorkflowAsync(string hostname)
       {
+         // TODO - Test a case when a selected MR is hidden by filters
          bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
          string projectname =
             shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
@@ -130,7 +131,7 @@ namespace mrHelper.App.Forms
             comboBoxHost.SelectedItem = new HostComboBoxItem
             {
                Host = hostname,
-               AccessToken = Tools.GetAccessToken(hostname, _settings)
+               AccessToken = _settings.GetAccessToken(hostname)
             };
 
             labelWorkflowStatus.Text = String.Format("Loading projects from host {0}...", hostname);
@@ -229,7 +230,7 @@ namespace mrHelper.App.Forms
 
       private void onProjectMergeRequestsLoaded(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
-         mergeRequests = Tools.FilterMergeRequests(mergeRequests, _settings);
+         mergeRequests = FilterMergeRequests(mergeRequests, _settings);
 
          foreach (var mergeRequest in mergeRequests)
          {

@@ -29,7 +29,20 @@ namespace mrHelper.App.Forms
    {
       private void addCustomActions()
       {
-         List<ICommand> commands = Tools.LoadCustomActions(this);
+         CustomCommandLoader loader = new CustomCommandLoader(this);
+         List<ICommand> commands = null;
+         try
+         {
+            string CustomActionsFileName = "CustomActions.xml";
+            commands = loader.LoadCommands(CustomActionsFileName);
+         }
+         catch (CustomCommandLoaderException ex)
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
+            // Do not try to load custom actions if they don't exist.
+            ExceptionHandlers.Handle(ex, "Cannot load custom actions");
+         }
+
          if (commands == null)
          {
             return;
@@ -177,15 +190,16 @@ namespace mrHelper.App.Forms
 
       async private Task onApplicationStarted()
       {
-         if (!System.IO.File.Exists(Tools.ProjectListFileName))
+         if (!System.IO.File.Exists(Common.Constants.Constants.ProjectListFileName))
          {
             MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
-               Tools.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               Common.Constants.Constants.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
+         _serviceManager = new Client.Services.ServiceManager();
          _persistentStorage = new PersistentStorage();
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
