@@ -153,8 +153,8 @@ namespace mrHelper.App.Forms
          public string Text => _getText();
          public string Url => _getUrl();
 
-         private Func<string> _getText;
-         private Func<string> _getUrl;
+         private readonly Func<string> _getText;
+         private readonly Func<string> _getUrl;
       }
 
       /// <summary>

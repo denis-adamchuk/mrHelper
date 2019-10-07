@@ -16,7 +16,7 @@ namespace mrHelper.Client.Persistence
 
    public class PersistentStorage
    {
-      private string storageFileName = "mrhelper.state.json";
+      private readonly string storageFileName = "mrhelper.state.json";
 
       public event Action<IPersistentStateSetter> OnSerialize;
       public event Action<IPersistentStateGetter> OnDeserialize;

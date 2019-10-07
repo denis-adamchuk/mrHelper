@@ -11,7 +11,7 @@ namespace mrHelper.Client.Tools
    {
       public ExpressionResolver(Workflow.Workflow workflow)
       {
-         workflow.PostSwitchHost += (user) => _currentUser = user;
+         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
       }
 
       public string Resolve(string expression)

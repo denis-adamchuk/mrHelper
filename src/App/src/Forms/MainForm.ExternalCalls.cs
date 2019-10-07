@@ -102,16 +102,13 @@ namespace mrHelper.App.Forms
          try
          {
             GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
-            await _workflow.StartAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+            await _workflow.LoadCurrentUserAsync(mergeRequestUrl.Host);
+            await _workflow.LoadAllMergeRequestsAsync(mergeRequestUrl.Host);
+            await _workflow.LoadMergeRequestAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
          }
          catch (Exception ex)
          {
             if (ex is NoProjectsException)
-            {
-               ReportError(String.Format("Check {0} file. ",
-                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
-            }
-            else if (ex is BadProjectName)
             {
                ReportError(String.Format("Check {0} file. ",
                   mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);

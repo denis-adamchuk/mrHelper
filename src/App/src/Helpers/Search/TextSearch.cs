@@ -72,8 +72,8 @@ namespace mrHelper.App.Helpers
          return false;
       }
 
-      Control _container;
-      Func<Control, bool> _isSearchableControl;
+      readonly Control _container;
+      readonly Func<Control, bool> _isSearchableControl;
    }
 }
 

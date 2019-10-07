@@ -23,12 +23,6 @@ namespace mrHelper.Client.Workflow
          String.Format("Cannot find access token for host {0}", hostname)) {}
    }
 
-   public class BadProjectName : WorkflowException
-   {
-      internal BadProjectName(string projectname): base(
-         String.Format("Bad project name {0}", projectname)) {}
-   }
-
    public class NoProjectsException : WorkflowException
    {
       internal NoProjectsException(): base(
@@ -58,37 +52,18 @@ namespace mrHelper.Client.Workflow
          _needLoadMergeRequest = needLoadMergeRequest;
       }
 
-      async public Task StartAsync(string hostname, string projectname, int mergeRequestIId = 0)
+      async public Task LoadCurrentUserAsync(string hostname)
       {
-         string token = Settings.GetAccessToken(hostname);
-         if (token == String.Empty)
-         {
-            throw new UnknownHostException(hostname);
-         }
+         checkParameters(hostname);
 
-         List<Project> enabledProjects = getEnabledProjects(hostname);
-         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
-         if (!hasEnabledProjects)
-         {
-            throw new NoProjectsException();
-         }
+         await loadCurrentUserAsync(hostname);
+      }
 
-         string defaultProject = enabledProjects[0].Path_With_Namespace;
-         projectname = projectname == String.Empty ? defaultProject : projectname;
-         if (projectname.Count((x) => x == '/') != 1)
-         {
-            throw new BadProjectName(projectname);
-         }
+      async public Task LoadAllMergeRequestsAsync(string hostname)
+      {
+         checkParameters(hostname);
 
-         if (!hasEnabledProjects || !enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname)))
-         {
-            throw new NotEnabledProjectException(projectname);
-         }
-
-         if (!await switchHostAsync(hostname, token))
-         {
-            return; // cancelled
-         }
+         PreLoadAllMergeRequests?.Invoke();
 
          List<Project> projects = await loadHostProjectsAsync(hostname);
          if (projects == null)
@@ -96,6 +71,8 @@ namespace mrHelper.Client.Workflow
             return; // cancelled
          }
 
+#if DEBUG
+         List<Project> enabledProjects = getEnabledProjects(hostname);
          projects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
          enabledProjects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
          Debug.Assert(projects.Count == enabledProjects.Count);
@@ -103,8 +80,7 @@ namespace mrHelper.Client.Workflow
          {
             Debug.Assert(projects[iProject].Id == enabledProjects[iProject].Id);
          }
-
-         PreLoadAllMergeRequests?.Invoke();
+#endif
 
          foreach (Project project in projects)
          {
@@ -116,17 +92,13 @@ namespace mrHelper.Client.Workflow
          }
 
          PostLoadAllMergeRequests?.Invoke();
-
-         if (mergeRequestIId != 0)
-         {
-            await loadMergeRequestAsync(hostname, projects.Find((x) => x.Path_With_Namespace == projectname),
-               mergeRequestIId);
-         }
       }
 
-      async public Task<bool> LoadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
+      async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
       {
-         return await loadMergeRequestAsync(hostname, project, mergeRequestIId);
+         checkParameters(hostname, projectname);
+
+         return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
       }
 
       async public Task CancelAsync()
@@ -156,9 +128,9 @@ namespace mrHelper.Client.Workflow
          return new List<Project>();
       }
 
-      public event Action<string> PreSwitchHost;
-      public event Action<User> PostSwitchHost;
-      public event Action FailedSwitchHost;
+      public event Action<string> PreLoadCurrentUser;
+      public event Action<User> PostLoadCurrentUser;
+      public event Action FailedLoadCurrentUser;
 
       public event Action<string> PreLoadHostProjects;
       public event Action<string, List<Project>> PostLoadHostProjects;
@@ -173,7 +145,7 @@ namespace mrHelper.Client.Workflow
       public event Action PostLoadAllMergeRequests;
 
       public event Action<int> PrelLoadSingleMergeRequest;
-      public event Action<Project, MergeRequest> PostLoadSingleMergeRequest;
+      public event Action<string, MergeRequest> PostLoadSingleMergeRequest;
       public event Action FailedLoadSingleMergeRequest;
 
       public event Action PreLoadCommits;
@@ -181,19 +153,41 @@ namespace mrHelper.Client.Workflow
       public event Action FailedLoadCommits;
 
       public event Action PreLoadSystemNotes;
-      public event Action<string, Project, MergeRequest, List<Note>> PostLoadSystemNotes;
+      public event Action<string, string, MergeRequest, List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
 
       public event Action PreLoadLatestVersion;
-      public event Action<string, Project, MergeRequest, Version> PostLoadLatestVersion;
+      public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
       public event Action FailedLoadLatestVersion;
 
-      async private Task<bool> switchHostAsync(string hostName, string token)
+      private void checkParameters(string hostname, string projectname = "")
       {
-         PreSwitchHost?.Invoke(hostName);
+         string token = Settings.GetAccessToken(hostname);
+         if (token == String.Empty)
+         {
+            throw new UnknownHostException(hostname);
+         }
 
          Operator?.CancelAsync();
-         Operator = new WorkflowDataOperator(hostName, token);
+         Operator = new WorkflowDataOperator(hostname, token);
+
+         List<Project> enabledProjects = getEnabledProjects(hostname);
+         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         if (!hasEnabledProjects)
+         {
+            throw new NoProjectsException();
+         }
+
+         if (projectname != String.Empty &&
+            (!hasEnabledProjects || !enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
+         {
+            throw new NotEnabledProjectException(projectname);
+         }
+      }
+
+      async private Task<bool> loadCurrentUserAsync(string hostName)
+      {
+         PreLoadCurrentUser?.Invoke(hostName);
 
          User currentUser;
          try
@@ -202,13 +196,13 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled switch host to {0}", hostName);
+            string cancelMessage = String.Format("Cancelled loading current user from host {0}", hostName);
             string errorMessage = String.Format("Cannot load user from host {0}", hostName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchHost);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCurrentUser);
             return false;
          }
 
-         PostSwitchHost?.Invoke(currentUser);
+         PostLoadCurrentUser?.Invoke(currentUser);
          return true;
       }
 
@@ -249,7 +243,7 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled switch project to {0}", projectName);
+            string cancelMessage = String.Format("Cancelled loading project merge requests from {0}", projectName);
             string errorMessage = String.Format("Cannot load project {0}", projectName);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
             return null;
@@ -259,7 +253,7 @@ namespace mrHelper.Client.Workflow
          return mergeRequests;
       }
 
-      async private Task<bool> loadMergeRequestAsync(string hostname, Project project, int mergeRequestIId)
+      async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)
       {
          PrelLoadSingleMergeRequest?.Invoke(mergeRequestIId);
          if (mergeRequestIId == 0)
@@ -268,8 +262,6 @@ namespace mrHelper.Client.Workflow
             return false;
          }
 
-         string projectName = project.Path_With_Namespace;
-
          MergeRequest mergeRequest = new MergeRequest();
          try
          {
@@ -277,16 +269,16 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled switch MR to MR with IId {0}", mergeRequestIId);
+            string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mergeRequestIId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);
             return false;
          }
 
-         PostLoadSingleMergeRequest?.Invoke(project, mergeRequest);
+         PostLoadSingleMergeRequest?.Invoke(projectName, mergeRequest);
 
-         if (!await loadLatestVersionAsync(hostname, project, mergeRequest)
-          || !await loadSystemNotesAsync(hostname, project, mergeRequest))
+         if (!await loadLatestVersionAsync(hostname, projectName, mergeRequest)
+          || !await loadSystemNotesAsync(hostname, projectName, mergeRequest))
          {
             return false;
          }
@@ -314,13 +306,13 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      async private Task<bool> loadSystemNotesAsync(string hostname, Project project, MergeRequest mergeRequest)
+      async private Task<bool> loadSystemNotesAsync(string hostname, string projectname, MergeRequest mergeRequest)
       {
          PreLoadSystemNotes?.Invoke();
          List<Note> notes;
          try
          {
-            notes = await Operator.GetSystemNotesAsync(project.Path_With_Namespace, mergeRequest.IId);
+            notes = await Operator.GetSystemNotesAsync(projectname, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
@@ -331,17 +323,17 @@ namespace mrHelper.Client.Workflow
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSystemNotes);
             return false;
          }
-         PostLoadSystemNotes?.Invoke(hostname, project, mergeRequest, notes);
+         PostLoadSystemNotes?.Invoke(hostname, projectname, mergeRequest, notes);
          return true;
       }
 
-      async private Task<bool> loadLatestVersionAsync(string hostname, Project project, MergeRequest mergeRequest)
+      async private Task<bool> loadLatestVersionAsync(string hostname, string projectname, MergeRequest mergeRequest)
       {
          PreLoadLatestVersion?.Invoke();
          Version latestVersion;
          try
          {
-            latestVersion = await Operator.GetLatestVersionAsync(project.Path_With_Namespace, mergeRequest.IId);
+            latestVersion = await Operator.GetLatestVersionAsync(projectname, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
@@ -352,7 +344,7 @@ namespace mrHelper.Client.Workflow
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadLatestVersion);
             return false;
          }
-         PostLoadLatestVersion?.Invoke(hostname, project, mergeRequest, latestVersion);
+         PostLoadLatestVersion?.Invoke(hostname, projectname, mergeRequest, latestVersion);
          return true;
       }
 
@@ -410,7 +402,7 @@ namespace mrHelper.Client.Workflow
       }
 #pragma warning restore 0649
 
-      private Func<MergeRequest, bool> _needLoadMergeRequest;
+      private readonly Func<MergeRequest, bool> _needLoadMergeRequest;
    }
 }
 

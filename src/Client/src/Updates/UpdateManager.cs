@@ -48,19 +48,14 @@ namespace mrHelper.Client.Updates
          {
             Trace.TraceInformation("[UpdateManager] Processing project switch");
 
-            Debug.Assert(Workflow.GetProjectsToUpdate(hostname).Any((x) => x.Id == project.Id));
-
-            Cache.UpdateMergeRequests(hostname, project, mergeRequests);
+            Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
          };
 
-         Workflow.PostLoadLatestVersion += (hostname, project, mergeRequest, version) =>
+         Workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing latest version load");
 
-            Debug.Assert(Workflow.GetProjectsToUpdate(hostname).Any((x) => x.Id == project.Id));
-
-            MergeRequestKey mrk = new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId);
-            Cache.UpdateLatestVersion(mrk, version);
+            Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
          };
       }
 
@@ -142,7 +137,7 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            Cache.UpdateMergeRequests(hostname, project, mergeRequests);
+            Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
             foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
             {
                Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);

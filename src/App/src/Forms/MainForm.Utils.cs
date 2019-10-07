@@ -725,8 +725,10 @@ namespace mrHelper.App.Forms
 
       private static void setListViewRowHeight(ListView listView, int height)
       {
-         ImageList imgList = new ImageList();
-         imgList.ImageSize = new Size(1, height);
+         ImageList imgList = new ImageList
+         {
+            ImageSize = new Size(1, height)
+         };
          listView.SmallImageList = imgList;
       }
 

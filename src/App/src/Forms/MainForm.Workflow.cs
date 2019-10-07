@@ -28,9 +28,9 @@ namespace mrHelper.App.Forms
       {
          _workflow = new Workflow(_settings, (mergeRequest) => !IsFilteredMergeRequest(mergeRequest, _settings) );
 
-         _workflow.PreSwitchHost += (hostname) => onSwitchHost(hostname);
-         _workflow.PostSwitchHost += (user) => onHostSwitched(user);
-         _workflow.FailedSwitchHost += () => onFailedSwitchHost();
+         _workflow.PreLoadCurrentUser += (hostname) => onLoadCurrentUser(hostname);
+         _workflow.PostLoadCurrentUser += (user) => onCurrentUserLoaded(user);
+         _workflow.FailedLoadCurrentUser += () => onFailedLoadCurrentUser();
 
          _workflow.PreLoadHostProjects += (hostname) => onLoadHostProjects(hostname);
          _workflow.PostLoadHostProjects += (hostname, projects) => onHostProjectsLoaded(projects);
@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
          _workflow.PostLoadAllMergeRequests += () => onAllMergeRequestsLoaded();
 
          _workflow.PrelLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
-         _workflow.PostLoadSingleMergeRequest += (project, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
+         _workflow.PostLoadSingleMergeRequest += (_, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
          _workflow.FailedLoadSingleMergeRequest += () => onFailedLoadSingleMergeRequest();
 
          _workflow.PreLoadCommits += () => onLoadCommits();
@@ -93,21 +93,42 @@ namespace mrHelper.App.Forms
          }
       }
 
+      async private Task<bool> switchMergeRequestByUserAsync(string hostname, Project project, int mergeRequestIId)
+      {
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
+            mergeRequestIId.ToString()));
+
+         try
+         {
+            return await _workflow.LoadMergeRequestAsync(hostname, project.Path_With_Namespace, mergeRequestIId);
+         }
+         catch (WorkflowException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot switch merge request");
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
+      }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
       async private Task startWorkflowAsync(string hostname)
       {
          labelWorkflowStatus.Text = String.Empty;
 
          // TODO - Test a case when a selected MR is hidden by filters
-         bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
-         string projectname = shouldUseLastSelection ?
-            _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
-         await _workflow.StartAsync(hostname, projectname);
+         await _workflow.LoadCurrentUserAsync(hostname);
+         await _workflow.LoadAllMergeRequestsAsync(hostname);
          if (listViewMergeRequests.Items.Count == 0)
          {
             return;
          }
 
+         bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
+         string projectname = shouldUseLastSelection ?
+            _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
          int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
+
          foreach (ListViewItem item in listViewMergeRequests.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
@@ -143,59 +164,21 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<bool> switchMergeRequestByUserAsync(string hostname, Project project, int mergeRequestIId)
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
-            mergeRequestIId.ToString()));
-
-         try
-         {
-            return await _workflow.LoadMergeRequestAsync(hostname, project, mergeRequestIId);
-         }
-         catch (WorkflowException ex)
-         {
-            ExceptionHandlers.Handle(ex, "Cannot switch merge request");
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
-         }
-      }
-
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onSwitchHost(string hostname)
+      private void onLoadCurrentUser(string hostname)
       {
-         if (hostname != String.Empty)
-         {
-            comboBoxHost.SelectedItem = new HostComboBoxItem
-            {
-               Host = hostname,
-               AccessToken = _settings.GetAccessToken(hostname)
-            };
-
-            labelWorkflowStatus.Text = String.Format("Connecting to host {0}...", hostname);
-         }
-
-         enableMergeRequestFilterControls(false);
-         enableMergeRequestActions(false);
-         enableCommitActions(false);
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(null);
-         updateTotalTime(null);
-         disableListView(listViewMergeRequests, true);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Switching host to {0}", hostname));
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Connecting host to {0}", hostname));
       }
 
-      private void onFailedSwitchHost()
+      private void onFailedLoadCurrentUser()
       {
          labelWorkflowStatus.Text = "Failed to connect";
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to switch host"));
       }
 
-      private void onHostSwitched(User currentUser)
+      private void onCurrentUserLoaded(User currentUser)
       {
          _currentUser = currentUser;
 
@@ -208,6 +191,17 @@ namespace mrHelper.App.Forms
 
       private void onLoadHostProjects(string hostname)
       {
+         if (hostname != String.Empty)
+         {
+            comboBoxHost.SelectedItem = new HostComboBoxItem
+            {
+               Host = hostname,
+               AccessToken = _settings.GetAccessToken(hostname)
+            };
+
+            labelWorkflowStatus.Text = String.Format("Connecting to host {0}...", hostname);
+         }
+
          enableMergeRequestFilterControls(false);
          enableMergeRequestActions(false);
          enableCommitActions(false);
@@ -406,7 +400,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load latest version"));
       }
 
-      private void onLatestVersionLoaded(string hostname, Project project, MergeRequest mergeRequest)
+      private void onLatestVersionLoaded(string hostname, string projectname, MergeRequest mergeRequest)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
 
@@ -436,7 +430,7 @@ namespace mrHelper.App.Forms
                }
 
                Trace.TraceInformation("[MainForm.Workflow] Silent update finished");
-            }), new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId));
+            }), new MergeRequestKey(hostname, projectname, mergeRequest.IId));
       }
 
       private void onLoadTotalTime()

@@ -18,11 +18,11 @@ namespace mrHelper.Client.TimeTracking
       {
          Settings = settings;
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
-         workflow.PostSwitchHost += (user) => _currentUser = user;
+         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          workflow.PreLoadSystemNotes += () => PreLoadTotalTime?.Invoke();
          workflow.FailedLoadSystemNotes += () => FailedLoadTotalTime?.Invoke();
-         workflow.PostLoadSystemNotes += (hostname, project, mergeRequest, notes)
-            => processSystemNotes(new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId), notes);
+         workflow.PostLoadSystemNotes += (hostname, projectname, mergeRequest, notes)
+            => processSystemNotes(new MergeRequestKey(hostname, projectname, mergeRequest.IId), notes);
       }
 
       public event Action PreLoadTotalTime;

@@ -18,18 +18,17 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Cache passed merge requests
       /// </summary>
-      internal void UpdateMergeRequests(string hostname, Project project, List<MergeRequest> mergeRequests)
+      internal void UpdateMergeRequests(string hostname, string projectname, List<MergeRequest> mergeRequests)
       {
-         ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace };
+         ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = projectname };
          List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
          InternalDetails.SetMergeRequests(key, mergeRequests);
 
          Trace.TraceInformation(String.Format(
             "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
-               project.Path_With_Namespace, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
+               projectname, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
 
-         cleanupOldRecords(new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-            previouslyCachedMergeRequests, mergeRequests);
+         cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
       }
 
       /// <summary>
