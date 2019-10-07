@@ -32,6 +32,11 @@ namespace mrHelper.CommonControls
 
    public class ListViewEx : ListView
    {
+      public ListViewEx()
+      {
+         DoubleBuffered = true;
+      }
+
       private static readonly Object ItemSelectionChangingEvent = new Object();
       public event EventHandler<ItemSelectionChangingEventArgs> ItemSelectionChanging
       {

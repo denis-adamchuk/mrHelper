@@ -96,6 +96,13 @@ namespace mrHelper.Client.Workflow
 
       async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
       {
+         if (mergeRequestIId == 0)
+         {
+            PrelLoadSingleMergeRequest?.Invoke(0);
+            Operator?.CancelAsync();
+            return false;
+         }
+
          checkParameters(hostname, projectname);
 
          return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
@@ -256,11 +263,6 @@ namespace mrHelper.Client.Workflow
       async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)
       {
          PrelLoadSingleMergeRequest?.Invoke(mergeRequestIId);
-         if (mergeRequestIId == 0)
-         {
-            Operator?.CancelAsync();
-            return false;
-         }
 
          MergeRequest mergeRequest = new MergeRequest();
          try

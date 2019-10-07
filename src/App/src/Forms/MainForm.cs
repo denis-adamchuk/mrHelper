@@ -160,7 +160,8 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Protection from changing selection when clicked on a clickable sub-item of ListViewEx
       /// </summary>
-      private bool _cancelSelection = false;
+      //private bool _discardMergeRequestChangeOnSelectionChange = false;
+      //private ListViewItem _itemToBeSelectedAfterMouseUp = null;
 
       private User? _currentUser;
    }

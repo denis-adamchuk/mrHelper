@@ -204,11 +204,6 @@ namespace mrHelper.App.Forms
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         // set instance non-public property with name "DoubleBuffered" to true
-         typeof(Control).InvokeMember("DoubleBuffered",
-             System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-             null,listViewMergeRequests, new object[] { true });
-
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=

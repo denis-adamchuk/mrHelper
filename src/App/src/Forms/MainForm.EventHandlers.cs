@@ -256,6 +256,7 @@ namespace mrHelper.App.Forms
          listView.Cursor = clickable ? Cursors.Hand : Cursors.Default;
       }
 
+
       private void ListViewMergeRequests_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
       {
          ListView listView = (sender as ListView);
@@ -264,23 +265,41 @@ namespace mrHelper.App.Forms
          bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
          if (clickable)
          {
+            //_discardMergeRequestChangeOnSelectionChange = true;
+            //_itemToBeSelectedAfterMouseUp = listView.SelectedItems.Count > 0 ? listView.SelectedItems[0] : null;
             openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
-            _cancelSelection = true;
-         }
-      }
-
-      private void ListViewMergeRequests_ItemSelectionChanging(object sender, ItemSelectionChangingEventArgs e)
-      {
-         if (_cancelSelection)
-         {
-            e.Cancel = true;
-            return;
          }
       }
 
       async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
+
+         //if (_discardMergeRequestChangeOnSelectionChange)
+         //{
+         //   if (listView.SelectedItems.Count == 0)
+         //   {
+         //      return;
+         //   }
+         //   else
+         //   {
+         //      if (_itemToBeSelectedAfterMouseUp != null)
+         //      {
+         //         _discardMergeRequestChangeOnSelectionChange = false;
+         //         _itemToBeSelectedAfterMouseUp.Selected = true;
+         //      }
+         //   }
+         //   return;
+         //}
+
+         //if (_itemToBeSelectedAfterMouseUp != null)
+         //{
+         //   if (listView.SelectedItems.Count == 1)
+         //   {
+         //      _itemToBeSelectedAfterMouseUp = null;
+         //   }
+         //   return;
+         //}
 
          if (listView.SelectedItems.Count < 1)
          {
@@ -297,9 +316,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ListViewMergeRequests_MouseUp(object sender, MouseEventArgs e)
+      private void ListViewMergeRequests_Leave(object sender, System.EventArgs e)
       {
-         _cancelSelection = false;
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
