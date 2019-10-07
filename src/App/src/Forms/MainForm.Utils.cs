@@ -41,7 +41,8 @@ namespace mrHelper.App.Forms
       {
          if (listViewMergeRequests.SelectedItems.Count > 0)
          {
-            return (MergeRequest)listViewMergeRequests.SelectedItems[0].Tag;
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
+            return fmk.MergeRequest;
          }
          Debug.Assert(false);
          return null;

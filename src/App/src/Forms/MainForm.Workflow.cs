@@ -26,7 +26,8 @@ namespace mrHelper.App.Forms
    {
       private void createWorkflow()
       {
-         _workflow = new Workflow(_settings, (mergeRequest) => !IsFilteredMergeRequest(mergeRequest, _settings) );
+         _workflow = new Workflow(_settings,
+            (message) => MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information));
 
          _workflow.PreLoadCurrentUser += (hostname) => onLoadCurrentUser(hostname);
          _workflow.PostLoadCurrentUser += (user) => onCurrentUserLoaded(user);
@@ -74,7 +75,7 @@ namespace mrHelper.App.Forms
          string hostname = getInitialHostName();
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
 
-         await startWorkflowAsync(hostname);
+         await switchHostByUserAsync(hostname);
       }
 
       async private Task switchHostByUserAsync(string hostName)
@@ -82,9 +83,14 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}",
             hostName));
 
+         bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
+         string projectname = shouldUseLastSelection ?
+            _lastMergeRequestsByHosts[hostName].ProjectKey.ProjectName : String.Empty;
+         int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
+
          try
          {
-            await startWorkflowAsync(hostName);
+            await startWorkflowAsync(hostName, projectname, iid, true);
          }
          catch (WorkflowException ex)
          {
@@ -106,42 +112,39 @@ namespace mrHelper.App.Forms
          {
             ExceptionHandlers.Handle(ex, "Cannot switch merge request");
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
          }
+
+         return false;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      async private Task startWorkflowAsync(string hostname)
+      async private Task startWorkflowAsync(string hostname, string projectname, int iid, bool reloadAll)
       {
          labelWorkflowStatus.Text = String.Empty;
 
          // TODO - Test a case when a selected MR is hidden by filters
-         await _workflow.LoadCurrentUserAsync(hostname);
-         await _workflow.LoadAllMergeRequestsAsync(hostname);
+         if (reloadAll)
+         {
+            await _workflow.LoadCurrentUserAsync(hostname);
+            await _workflow.LoadAllMergeRequestsAsync(hostname);
+         }
+
          if (listViewMergeRequests.Items.Count == 0)
          {
             return;
          }
 
-         bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
-         string projectname = shouldUseLastSelection ?
-            _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
-         int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
-
          foreach (ListViewItem item in listViewMergeRequests.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
-            if (!shouldUseLastSelection ||
+            if (projectname == String.Empty ||
                 (iid == key.MergeRequest.IId && projectname == key.Project.Path_With_Namespace))
             {
                item.Selected = true;
                return;
             }
          }
-
-         // if what is expected to be selected is no longer in the list (or filtered out)
-         Debug.Assert(shouldUseLastSelection);
 
          // selected an item from the proper group
          foreach (ListViewGroup group in listViewMergeRequests.Groups)

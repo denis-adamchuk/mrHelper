@@ -99,12 +99,16 @@ namespace mrHelper.App.Forms
              ExceptionHandlers.Handle(ex, String.Format("Cannot open URL", url));
           };
 
+         // TODO Need to reset FILTERS
+
          try
          {
             GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
-            await _workflow.LoadCurrentUserAsync(mergeRequestUrl.Host);
-            await _workflow.LoadAllMergeRequestsAsync(mergeRequestUrl.Host);
-            await _workflow.LoadMergeRequestAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+
+            bool relodAll = listViewMergeRequests.Items.Count == 0
+               || ((FullMergeRequestKey)(listViewMergeRequests.Items[0].Tag)).HostName != mergeRequestUrl.Host;
+
+            await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId, relodAll);
          }
          catch (Exception ex)
          {

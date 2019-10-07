@@ -157,12 +157,6 @@ namespace mrHelper.App.Forms
          private readonly Func<string> _getUrl;
       }
 
-      /// <summary>
-      /// Protection from changing selection when clicked on a clickable sub-item of ListViewEx
-      /// </summary>
-      //private bool _discardMergeRequestChangeOnSelectionChange = false;
-      //private ListViewItem _itemToBeSelectedAfterMouseUp = null;
-
       private User? _currentUser;
    }
 }

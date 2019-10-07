@@ -265,8 +265,6 @@ namespace mrHelper.App.Forms
          bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
          if (clickable)
          {
-            //_discardMergeRequestChangeOnSelectionChange = true;
-            //_itemToBeSelectedAfterMouseUp = listView.SelectedItems.Count > 0 ? listView.SelectedItems[0] : null;
             openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
          }
       }
@@ -274,32 +272,6 @@ namespace mrHelper.App.Forms
       async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
-
-         //if (_discardMergeRequestChangeOnSelectionChange)
-         //{
-         //   if (listView.SelectedItems.Count == 0)
-         //   {
-         //      return;
-         //   }
-         //   else
-         //   {
-         //      if (_itemToBeSelectedAfterMouseUp != null)
-         //      {
-         //         _discardMergeRequestChangeOnSelectionChange = false;
-         //         _itemToBeSelectedAfterMouseUp.Selected = true;
-         //      }
-         //   }
-         //   return;
-         //}
-
-         //if (_itemToBeSelectedAfterMouseUp != null)
-         //{
-         //   if (listView.SelectedItems.Count == 1)
-         //   {
-         //      _itemToBeSelectedAfterMouseUp = null;
-         //   }
-         //   return;
-         //}
 
          if (listView.SelectedItems.Count < 1)
          {

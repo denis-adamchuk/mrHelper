@@ -46,10 +46,10 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      public Workflow(UserDefinedSettings settings, Func<MergeRequest, bool> needLoadMergeRequest)
+      public Workflow(UserDefinedSettings settings, Action<string> onNonFatalError)
       {
          Settings = settings;
-         _needLoadMergeRequest = needLoadMergeRequest;
+         _onNonFatalError = onNonFatalError;
       }
 
       async public Task LoadCurrentUserAsync(string hostname)
@@ -84,10 +84,17 @@ namespace mrHelper.Client.Workflow
 
          foreach (Project project in projects)
          {
-            List<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
-            if (mergeRequests == null)
+            try
             {
-               return; // cancelled
+               List<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
+               if (mergeRequests == null)
+               {
+                  return; // cancelled
+               }
+            }
+            catch (WorkflowException ex)
+            {
+               _onNonFatalError?.Invoke(ex.Message);
             }
          }
 
@@ -404,7 +411,7 @@ namespace mrHelper.Client.Workflow
       }
 #pragma warning restore 0649
 
-      private readonly Func<MergeRequest, bool> _needLoadMergeRequest;
+      private Action<string> _onNonFatalError;
    }
 }
 

@@ -65,7 +65,7 @@ namespace mrHelper.App.Forms
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
-         this.listViewMergeRequests = new System.Windows.Forms.ListView();
+         this.listViewMergeRequests = new mrHelper.CommonControls.ListViewEx();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -464,7 +464,6 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(ListViewMergeRequests_MouseMove);
          this.listViewMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(ListViewMergeRequests_ItemSelectionChanged);
          this.listViewMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(ListViewMergeRequests_MouseDown);
-         this.listViewMergeRequests.Leave += ListViewMergeRequests_Leave;
          // 
          // columnHeaderIId
          // 
@@ -850,7 +849,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxHost;
       private System.Windows.Forms.SplitContainer splitContainer1;
       private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
-      private System.Windows.Forms.ListView listViewMergeRequests;
+      private mrHelper.CommonControls.ListViewEx listViewMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderTitle;
