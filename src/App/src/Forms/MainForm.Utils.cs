@@ -691,7 +691,7 @@ namespace mrHelper.App.Forms
          }
          
          int maxLineCount = listView.Items.Cast<ListViewItem>().
-            Select((x) => formatLabels(((FullMergeRequestKey)(x.Tag)).MergeRequest).Count((y) => y == '\n')).Max();
+            Select((x) => formatLabels(((FullMergeRequestKey)(x.Tag)).MergeRequest).Count((y) => y == '\n')).Max() + 1;
          setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
       }
 
@@ -714,7 +714,7 @@ namespace mrHelper.App.Forms
             stringBuilder.Append("\n");
          }
 
-         return stringBuilder.ToString();
+         return stringBuilder.ToString().TrimEnd('\n');
       }
 
       private static readonly Regex jira_re = new Regex(@"(?'name'(?!([A-Z0-9a-z]{1,10})-?$)[A-Z]{1}[A-Z0-9]+-\d+)");
