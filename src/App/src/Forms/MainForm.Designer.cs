@@ -157,7 +157,6 @@ namespace mrHelper.App.Forms
             this.columnHeaderHost,
             this.columnHeaderAccessToken});
          this.listViewKnownHosts.FullRowSelect = true;
-         this.listViewKnownHosts.GridLines = true;
          this.listViewKnownHosts.HideSelection = false;
          this.listViewKnownHosts.Location = new System.Drawing.Point(9, 19);
          this.listViewKnownHosts.MultiSelect = false;

@@ -238,8 +238,6 @@ namespace mrHelper.App.Forms
          {
             e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
          }
-
-         //e.DrawFocusRectangle(e.Bounds);
       }
 
       private void ListViewMergeRequests_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
