@@ -178,7 +178,7 @@ namespace mrHelper.Client.Updates
 
       private System.Timers.Timer Timer { get; } = new System.Timers.Timer
          {
-            Interval = 0.5 * 60000 // five minutes in ms
+            Interval = 5 * 60000 // five minutes in ms
          };
 
       private Workflow.Workflow Workflow { get; }
