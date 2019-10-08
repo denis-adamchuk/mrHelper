@@ -239,11 +239,6 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Projects loaded";
 
-         //if (listViewMergeRequests.Groups.Count > 0)
-         //{
-         //   enableListView(listViewMergeRequests);
-         //}
-
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count));
       }
 

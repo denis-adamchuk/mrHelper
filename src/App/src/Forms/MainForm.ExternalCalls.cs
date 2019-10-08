@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -82,6 +83,40 @@ namespace mrHelper.App.Forms
          await connectToUrlAsync(url);
       }
 
+      private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
+      {
+         MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex.Message),
+            error ? "Error" : "Warning", MessageBoxButtons.OK,
+            error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
+            MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+         ExceptionHandlers.Handle(ex, String.Format("Cannot open URL {0}", url));
+      }
+
+      async private Task<bool> startWorkflowAsync(GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl, bool reloadAll)
+      {
+         return await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId,
+            reloadAll, true);
+      }
+
+      async private void unhideFilteredMergeRequestAsync(GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      {
+         if (MessageBox.Show("Merge Request is hidden by filters, do you want to reset them?", "Warning",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+         {
+            return;
+         }
+
+         _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
+            new MergeRequestKey(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+
+         checkBoxLabels.Checked = false;
+
+         if (!await startWorkflowAsync(mergeRequestUrl, false))
+         {
+            Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+         }
+      }
+
       async private Task<bool> connectToUrlAsync(string url)
       {
          Trace.TraceInformation(String.Format("[MainForm] Connecting to URL {0}", url));
@@ -89,21 +124,10 @@ namespace mrHelper.App.Forms
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
-         Action<string, Exception, bool> ReportError =
-            (msg, ex, error) =>
-          {
-             MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex.Message),
-                error ? "Error" : "Warning", MessageBoxButtons.OK,
-                error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
-                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-             ExceptionHandlers.Handle(ex, String.Format("Cannot open URL", url));
-          };
-
-         // just a shorthand
-         Func<GitLabSharp.ParsedMergeRequestUrl, bool, Task<bool>> startWorkflow =
-            async (mergeRequestUrl, reloadAll) =>
-               await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId,
-                  reloadAll, true);
+         Func<GitLabSharp.ParsedMergeRequestUrl, FullMergeRequestKey, bool> equal = (mergeRequestUrl, key) =>
+            key.HostName == mergeRequestUrl.Host
+         && key.MergeRequest.IId == mergeRequestUrl.IId
+         && key.Project.Path_With_Namespace == mergeRequestUrl.Project;
 
          try
          {
@@ -112,16 +136,18 @@ namespace mrHelper.App.Forms
             bool reloadAll = listViewMergeRequests.Items.Count == 0
                || ((FullMergeRequestKey)(listViewMergeRequests.Items[0].Tag)).HostName != mergeRequestUrl.Host;
 
-            bool ok = (!reloadAll && await startWorkflow(mergeRequestUrl, false))
-                                  || await startWorkflow(mergeRequestUrl, true);
+            bool ok = (!reloadAll && await startWorkflowAsync(mergeRequestUrl, false))
+                                  || await startWorkflowAsync(mergeRequestUrl, true);
             if (!ok)
             {
-               if (MessageBox.Show("Merge Request is hidden by filters, do you want to reset them?", "Warning",
-                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+               if (_allMergeRequests.Any(x => equal(mergeRequestUrl, x)))
                {
-                  _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
-                     new MergeRequestKey(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
-                  checkBoxLabels.Checked = false;
+                  unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
+               }
+               else
+               {
+                  reportErrorOnConnect(url, String.Format(
+                     "Current version supports connection to URL for Open WIP merge requests only. "), null, false);
                }
             }
          }
@@ -129,22 +155,18 @@ namespace mrHelper.App.Forms
          {
             if (ex is NoProjectsException)
             {
-               ReportError(String.Format("Check {0} file. ",
+               reportErrorOnConnect(url, String.Format("Check {0} file. ",
                   mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
             }
             else if (ex is NotEnabledProjectException)
             {
-               ReportError(String.Format("Current version supports connection to URL for projects listed in {0} only. ",
+               reportErrorOnConnect(url, String.Format(
+                  "Current version supports connection to URL for projects listed in {0} only. ",
                   mrHelper.Common.Constants.Constants.ProjectListFileName), ex, false);
-            }
-            else if (ex is NotAvailableMergeRequest)
-            {
-               ReportError(String.Format("Current version supports connection to URL for Open WIP merge requests only. "),
-                  ex, false);
             }
             else if (ex is UriFormatException || ex is WorkflowException)
             {
-               ReportError(String.Empty, ex, true);
+               reportErrorOnConnect(url, String.Empty, ex, true);
             }
             else
             {
@@ -157,5 +179,4 @@ namespace mrHelper.App.Forms
       }
    }
 }
-
 

@@ -657,17 +657,9 @@ namespace mrHelper.App.Forms
       {
          if (clear)
          {
-            foreach (ListViewGroup group in listViewMergeRequests.Groups)
-            {
-               group.Items.Clear();
-            }
+            listViewMergeRequests.Groups.Cast<ListViewGroup>().ToList().ForEach(group => group.Items.Clear());
          }
 
-         addListViewMergeRequestItems(keys);
-      }
-
-      private void addListViewMergeRequestItems(List<FullMergeRequestKey> keys)
-      {
          keys.ForEach(key => addListViewMergeRequestItem(key));
          recalcRowHeightForMergeRequestListView(listViewMergeRequests);
       }

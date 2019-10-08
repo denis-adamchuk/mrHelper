@@ -35,12 +35,6 @@ namespace mrHelper.Client.Workflow
          String.Format("Project {0} is not in the list of enabled projects", projectname)) {}
    }
 
-   public class NotAvailableMergeRequest : WorkflowException
-   {
-      internal NotAvailableMergeRequest(int iid): base(
-         String.Format("Merge Request with IId {0} is not available", iid)) {}
-   }
-
    /// <summary>
    /// Client workflow related to Hosts/Projects/Merge Requests
    /// </summary>
@@ -278,16 +272,6 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            if (ex.InternalException is GitLabSharp.Accessors.GitLabRequestException rex)
-            {
-               var webException = rex.WebException;
-               var response = ((System.Net.HttpWebResponse)webException.Response);
-
-               if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-               {
-                  throw new NotAvailableMergeRequest(mergeRequestIId);
-               }
-            }
             string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mergeRequestIId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);

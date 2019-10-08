@@ -214,10 +214,6 @@ namespace mrHelper.App.Forms
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
-         if (IsFilteredMergeRequest(fmk.MergeRequest, _settings))
-         {
-            return;
-         }
 
          e.DrawBackground();
 
