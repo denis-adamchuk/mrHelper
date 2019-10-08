@@ -285,7 +285,7 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
          this.tabPageSettings.Name = "tabPageSettings";
          this.tabPageSettings.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSettings.Size = new System.Drawing.Size(1428, 518);
+         this.tabPageSettings.Size = new System.Drawing.Size(1696, 864);
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
@@ -427,11 +427,13 @@ namespace mrHelper.App.Forms
          // 
          // textBoxLabels
          // 
-         this.textBoxLabels.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxLabels.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxLabels.Enabled = false;
-         this.textBoxLabels.Location = new System.Drawing.Point(220, 17);
+         this.textBoxLabels.Location = new System.Drawing.Point(82, 17);
          this.textBoxLabels.Name = "textBoxLabels";
-         this.textBoxLabels.Size = new System.Drawing.Size(727, 20);
+         this.textBoxLabels.Size = new System.Drawing.Size(865, 20);
          this.textBoxLabels.TabIndex = 1;
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
          // 

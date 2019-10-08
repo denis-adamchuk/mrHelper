@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await startWorkflowAsync(hostName, projectname, iid, true);
+            await startWorkflowAsync(hostName, projectname, iid, true, false);
          }
          catch (WorkflowException ex)
          {
@@ -119,20 +119,15 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      async private Task startWorkflowAsync(string hostname, string projectname, int iid, bool reloadAll)
+      async private Task<bool> startWorkflowAsync(string hostname, string projectname, int iid,
+         bool reloadAll, bool exact)
       {
          labelWorkflowStatus.Text = String.Empty;
 
-         // TODO - Test a case when a selected MR is hidden by filters
          if (reloadAll)
          {
             await _workflow.LoadCurrentUserAsync(hostname);
             await _workflow.LoadAllMergeRequestsAsync(hostname);
-         }
-
-         if (listViewMergeRequests.Items.Count == 0)
-         {
-            return;
          }
 
          foreach (ListViewItem item in listViewMergeRequests.Items)
@@ -142,8 +137,13 @@ namespace mrHelper.App.Forms
                 (iid == key.MergeRequest.IId && projectname == key.Project.Path_With_Namespace))
             {
                item.Selected = true;
-               return;
+               return true;
             }
+         }
+
+         if (exact)
+         {
+            return false;
          }
 
          // selected an item from the proper group
@@ -152,7 +152,7 @@ namespace mrHelper.App.Forms
             if (projectname == group.Name && group.Items.Count > 0)
             {
                group.Items[0].Selected = true;
-               return;
+               return true;
             }
          }
 
@@ -162,9 +162,11 @@ namespace mrHelper.App.Forms
             if (group.Items.Count > 0)
             {
                group.Items[0].Selected = true;
-               return;
+               return true;
             }
          }
+
+         return false;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,19 +230,19 @@ namespace mrHelper.App.Forms
 
       private void onHostProjectsLoaded(List<Project> projects)
       {
-         listViewMergeRequests.Items.Clear();
-         listViewMergeRequests.Groups.Clear();
-         foreach (Project project in projects)
-         {
-            listViewMergeRequests.Groups.Add(project.Path_With_Namespace, project.Path_With_Namespace);
-         }
+         //listViewMergeRequests.Items.Clear();
+         //listViewMergeRequests.Groups.Clear();
+         //foreach (Project project in projects)
+         //{
+         //   listViewMergeRequests.Groups.Add(project.Path_With_Namespace, project.Path_With_Namespace);
+         //}
 
          labelWorkflowStatus.Text = "Projects loaded";
 
-         if (listViewMergeRequests.Groups.Count > 0)
-         {
-            enableListView(listViewMergeRequests);
-         }
+         //if (listViewMergeRequests.Groups.Count > 0)
+         //{
+         //   enableListView(listViewMergeRequests);
+         //}
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count));
       }
@@ -275,8 +277,6 @@ namespace mrHelper.App.Forms
 
       private void onProjectMergeRequestsLoaded(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
-         mergeRequests = FilterMergeRequests(mergeRequests, _settings);
-
          foreach (var mergeRequest in mergeRequests)
          {
             addListViewMergeRequestItem(listViewMergeRequests, hostname, project, mergeRequest);

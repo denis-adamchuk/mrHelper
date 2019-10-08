@@ -214,6 +214,10 @@ namespace mrHelper.App.Forms
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
+         if (IsFilteredMergeRequest(fmk.MergeRequest, _settings))
+         {
+            return;
+         }
 
          e.DrawBackground();
 
@@ -283,6 +287,12 @@ namespace mrHelper.App.Forms
          {
             Debug.Assert(getMergeRequestKey().HasValue);
             _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
+            return;
+         }
+
+         if (listView.SelectedItems.Count > 0)
+         {
+            listView.SelectedItems[0].Selected = false;
          }
       }
 
@@ -380,38 +390,36 @@ namespace mrHelper.App.Forms
          _settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
-      async private void TextBoxLabels_KeyDown(object sender, KeyEventArgs e)
+      private void TextBoxLabels_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyData == Keys.Enter)
          {
-            await onTextBoxLabelsUpdate();
+            onTextBoxLabelsUpdate();
          }
       }
 
-      async private void TextBoxLabels_LostFocus(object sender, EventArgs e)
+      private void TextBoxLabels_LostFocus(object sender, EventArgs e)
       {
-         await onTextBoxLabelsUpdate();
+         onTextBoxLabelsUpdate();
       }
 
-      async private Task onTextBoxLabelsUpdate()
+      private void onTextBoxLabelsUpdate()
       {
          _settings.LastUsedLabels = textBoxLabels.Text;
 
-         if (_workflow != null && _settings.CheckedLabelsFilter)
+         if (_settings.CheckedLabelsFilter)
          {
-            // emulate host change to reload merge request list
-            await switchHostByUserAsync(getHostName());
+            listViewMergeRequests.Invalidate();
          }
       }
 
-      async private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
          _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
 
          if (_workflow != null)
          {
-            // emulate host change to reload merge request list
-            await switchHostByUserAsync(getHostName());
+            listViewMergeRequests.Invalidate();
          }
       }
 

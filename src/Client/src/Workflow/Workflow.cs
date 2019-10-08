@@ -278,6 +278,16 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
+            if (ex.InternalException is GitLabSharp.Accessors.GitLabRequestException rex)
+            {
+               var webException = rex.WebException;
+               var response = ((System.Net.HttpWebResponse)webException.Response);
+
+               if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+               {
+                  throw new NotAvailableMergeRequest(mergeRequestIId);
+               }
+            }
             string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mergeRequestIId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);

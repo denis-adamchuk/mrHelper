@@ -99,16 +99,31 @@ namespace mrHelper.App.Forms
              ExceptionHandlers.Handle(ex, String.Format("Cannot open URL", url));
           };
 
-         // TODO Need to reset FILTERS
+         // just a shorthand
+         Func<GitLabSharp.ParsedMergeRequestUrl, bool, Task<bool>> startWorkflow =
+            async (mergeRequestUrl, reloadAll) =>
+               await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId,
+                  reloadAll, true);
 
          try
          {
             GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
 
-            bool relodAll = listViewMergeRequests.Items.Count == 0
+            bool reloadAll = listViewMergeRequests.Items.Count == 0
                || ((FullMergeRequestKey)(listViewMergeRequests.Items[0].Tag)).HostName != mergeRequestUrl.Host;
 
-            await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId, relodAll);
+            bool ok = (!reloadAll && await startWorkflow(mergeRequestUrl, false))
+                                  || await startWorkflow(mergeRequestUrl, true);
+            if (!ok)
+            {
+               if (MessageBox.Show("Merge Request is hidden by filters, do you want to reset them?", "Warning",
+                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+               {
+                  _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
+                     new MergeRequestKey(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+                  checkBoxLabels.Checked = false;
+               }
+            }
          }
          catch (Exception ex)
          {

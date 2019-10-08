@@ -653,10 +653,30 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addListViewMergeRequestItem(ListView listView,
+      private void invalidateShownListViewItems(ListView listView, ListViewItem[] fullCollection)
+      {
+         listView.Clear();
+
+         foreach (ListViewItem item in fullCollection)
+         {
+            FullMergeRequestKey fmk = (FullMergeRequestKey)item.Tag;
+            //string projectname = fmk.Project.Path_With_Namespace;
+            //if (!listView.Groups.Cast<ListViewGroup>().Any(x => x.Name == projectname))
+            //{
+            //   listView.Groups.Add(projectname, projectname);
+            //}
+
+            if (!IsFilteredMergeRequest(fmk.MergeRequest, _settings))
+            {
+               listView.Items.Add(item);
+            }
+         }
+      }
+
+      private void addListViewMergeRequestItem(List<ListViewItem> fullCollection,
          string hostname, Project project, MergeRequest mergeRequest)
       {
-         ListViewItem item = listView.Items.Add(new ListViewItem(new string[]
+         fullCollection.Add(new ListViewItem(new string[]
                   {
                      String.Empty, // Column IId (stub)
                      String.Empty, // Column Author (stub)
