@@ -409,7 +409,7 @@ namespace mrHelper.App.Forms
 
          if (_settings.CheckedLabelsFilter)
          {
-            listViewMergeRequests.Invalidate();
+            fillListViewMergeRequests(_allMergeRequests, true);
          }
       }
 
@@ -419,7 +419,7 @@ namespace mrHelper.App.Forms
 
          if (_workflow != null)
          {
-            listViewMergeRequests.Invalidate();
+            fillListViewMergeRequests(_allMergeRequests, true);
          }
       }
 

@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace mrHelper.CommonControls
 {
-   public class ListViewEx : ListView
+   public partial class ListViewEx : ListView
    {
       public ListViewEx()
       {

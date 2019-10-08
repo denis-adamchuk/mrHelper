@@ -653,38 +653,41 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void invalidateShownListViewItems(ListView listView, ListViewItem[] fullCollection)
+      private void fillListViewMergeRequests(List<FullMergeRequestKey> keys, bool clear)
       {
-         listView.Clear();
-
-         foreach (ListViewItem item in fullCollection)
+         if (clear)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)item.Tag;
-            //string projectname = fmk.Project.Path_With_Namespace;
-            //if (!listView.Groups.Cast<ListViewGroup>().Any(x => x.Name == projectname))
-            //{
-            //   listView.Groups.Add(projectname, projectname);
-            //}
-
-            if (!IsFilteredMergeRequest(fmk.MergeRequest, _settings))
+            foreach (ListViewGroup group in listViewMergeRequests.Groups)
             {
-               listView.Items.Add(item);
+               group.Items.Clear();
             }
          }
+
+         addListViewMergeRequestItems(keys);
       }
 
-      private void addListViewMergeRequestItem(List<ListViewItem> fullCollection,
-         string hostname, Project project, MergeRequest mergeRequest)
+      private void addListViewMergeRequestItems(List<FullMergeRequestKey> keys)
       {
-         fullCollection.Add(new ListViewItem(new string[]
-                  {
-                     String.Empty, // Column IId (stub)
-                     String.Empty, // Column Author (stub)
-                     String.Empty, // Column Title (stub)
-                     String.Empty, // Column Labels (stub)
-                     String.Empty, // Column Jira (stub)
-                  }, listView.Groups[project.Path_With_Namespace]));
-         setListViewItemTag(item, hostname, project, mergeRequest);
+         keys.ForEach(key => addListViewMergeRequestItem(key));
+         recalcRowHeightForMergeRequestListView(listViewMergeRequests);
+      }
+
+      private void addListViewMergeRequestItem(FullMergeRequestKey fmk)
+      {
+         if (IsFilteredMergeRequest(fmk.MergeRequest, _settings))
+         {
+            return;
+         }
+
+         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
+            {
+               String.Empty, // Column IId (stub)
+               String.Empty, // Column Author (stub)
+               String.Empty, // Column Title (stub)
+               String.Empty, // Column Labels (stub)
+               String.Empty, // Column Jira (stub)
+            }, listViewMergeRequests.Groups[fmk.Project.Path_With_Namespace]));
+         setListViewItemTag(item, fmk.HostName, fmk.Project, fmk.MergeRequest);
       }
 
       private void setListViewItemTag(ListViewItem item, string hostname, Project project, MergeRequest mergeRequest)

@@ -141,6 +141,8 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();
+
       private struct ListViewSubItemInfo
       {
          public ListViewSubItemInfo(Func<string> getText, Func<string> getUrl)

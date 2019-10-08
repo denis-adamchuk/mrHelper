@@ -230,12 +230,12 @@ namespace mrHelper.App.Forms
 
       private void onHostProjectsLoaded(List<Project> projects)
       {
-         //listViewMergeRequests.Items.Clear();
-         //listViewMergeRequests.Groups.Clear();
-         //foreach (Project project in projects)
-         //{
-         //   listViewMergeRequests.Groups.Add(project.Path_With_Namespace, project.Path_With_Namespace);
-         //}
+         listViewMergeRequests.Items.Clear();
+         listViewMergeRequests.Groups.Clear();
+         foreach (Project project in projects)
+         {
+            listViewMergeRequests.Groups.Add(project.Path_With_Namespace, project.Path_With_Namespace);
+         }
 
          labelWorkflowStatus.Text = "Projects loaded";
 
@@ -258,6 +258,8 @@ namespace mrHelper.App.Forms
          disableListView(listViewMergeRequests, false);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
+
+         _allMergeRequests.Clear();
       }
 
       private void onLoadProjectMergeRequests(Project project)
@@ -277,11 +279,14 @@ namespace mrHelper.App.Forms
 
       private void onProjectMergeRequestsLoaded(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
+         List<FullMergeRequestKey> keys = new List<FullMergeRequestKey>();
          foreach (var mergeRequest in mergeRequests)
          {
-            addListViewMergeRequestItem(listViewMergeRequests, hostname, project, mergeRequest);
+            keys.Add(new FullMergeRequestKey(hostname, project, mergeRequest));
          }
-         recalcRowHeightForMergeRequestListView(listViewMergeRequests);
+         _allMergeRequests.AddRange(keys);
+
+         fillListViewMergeRequests(keys, false);
 
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 

@@ -288,13 +288,20 @@ namespace mrHelper.App.Forms
                      switch (mergeRequest.UpdateKind)
                      {
                         case UpdateKind.New:
-                           addListViewMergeRequestItem(listViewMergeRequests,
+                           FullMergeRequestKey fmk = new FullMergeRequestKey(
                               mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
+                           _allMergeRequests.Add(fmk);
+                           addListViewMergeRequestItem(fmk);
                            mightChangeRowHeight = true;
                            invalidate = true;
                            break;
 
                         case UpdateKind.Closed:
+                           _allMergeRequests = _allMergeRequests.Where(
+                              x =>
+                                 x.HostName != mergeRequest.HostName
+                              || x.MergeRequest.IId != mergeRequest.MergeRequest.IId
+                              || x.Project.Path_With_Namespace != mergeRequest.Project.Path_With_Namespace).ToList();
                            processUpdatedMergeRequest(mergeRequest,
                               (item, index) => listViewMergeRequests.Items.RemoveAt(index));
                            invalidate = true;

@@ -1,4 +1,4 @@
-﻿namespace mrHelper.CommonControls.src
+﻿namespace mrHelper.CommonControls
 {
    partial class ListViewEx
    {
