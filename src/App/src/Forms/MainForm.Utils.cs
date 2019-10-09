@@ -164,11 +164,19 @@ namespace mrHelper.App.Forms
 
       private string getHostWithPrefix(string host)
       {
-         if (!host.StartsWith("http://") && !host.StartsWith("https://"))
+         string supportedProtocolPrefix = "https://";
+         string unsupportedProtocolPrefix = "https://";
+
+         if (host.StartsWith(supportedProtocolPrefix))
          {
-            return "https://" + host;
+            return host;
          }
-         return host;
+         else if (host.StartsWith(unsupportedProtocolPrefix))
+         {
+            host.Replace(unsupportedProtocolPrefix, supportedProtocolPrefix);
+         }
+
+         return supportedProtocolPrefix + host;
       }
 
       private string getDefaultColorSchemeFileName()
