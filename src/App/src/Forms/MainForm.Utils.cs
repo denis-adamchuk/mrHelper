@@ -173,7 +173,7 @@ namespace mrHelper.App.Forms
          }
          else if (host.StartsWith(unsupportedProtocolPrefix))
          {
-            host.Replace(unsupportedProtocolPrefix, supportedProtocolPrefix);
+           return host.Replace(unsupportedProtocolPrefix, supportedProtocolPrefix);
          }
 
          return supportedProtocolPrefix + host;

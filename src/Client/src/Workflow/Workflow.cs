@@ -186,7 +186,7 @@ namespace mrHelper.Client.Workflow
          }
 
          if (projectname != String.Empty &&
-            (!hasEnabledProjects || !enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
+            (!enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
          {
             throw new NotEnabledProjectException(projectname);
          }

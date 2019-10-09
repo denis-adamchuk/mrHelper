@@ -320,6 +320,18 @@ namespace mrHelper.App.Forms
                            mightChangeRowHeight = true;
                            invalidate = true;
                            break;
+
+                        case UpdateKind.CommitsAndLabelsUpdated:
+                           processUpdatedMergeRequest(mergeRequest,
+                              (item, index) =>
+                           {
+                              reloadCurrent |= item.Selected;
+                              setListViewItemTag(item, mergeRequest.HostName, mergeRequest.Project,
+                                 mergeRequest.MergeRequest);
+                           });
+                           mightChangeRowHeight = true;
+                           invalidate = true;
+                           break;
                      }
                   }
 
