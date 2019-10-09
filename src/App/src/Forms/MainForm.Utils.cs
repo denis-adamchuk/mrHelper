@@ -715,7 +715,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         
+
          int maxLineCount = listView.Items.Cast<ListViewItem>().
             Select((x) => formatLabels(((FullMergeRequestKey)(x.Tag)).MergeRequest).Count((y) => y == '\n')).Max() + 1;
          setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
@@ -761,6 +761,8 @@ namespace mrHelper.App.Forms
 
       private void openBrowser(string text)
       {
+         Trace.TraceInformation(String.Format("[Mainform] Opening browser with URL {0}", text));
+
          try
          {
             Process.Start(text);

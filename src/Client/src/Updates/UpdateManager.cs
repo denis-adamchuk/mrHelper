@@ -33,29 +33,18 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
-         Workflow.PostLoadHostProjects += (hostname, projects) =>
-         {
-            synchronizeInvoke.BeginInvoke(new Action(
-               async () =>
-               {
-                  Trace.TraceInformation("[UpdateManager] Processing loaded host projects");
-
-                  _hostname = hostname;
-                  await loadDataAndUpdateCacheAsync(hostname, projects);
-               }), null);
-         };
-
          Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing loaded project merge requests");
+            Trace.TraceInformation(String.Format("[UpdateManager] Set hostname for updates to {0}", hostname));
+            _hostname = hostname;
 
+            Trace.TraceInformation("[UpdateManager] Processing loaded project merge requests");
             Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
          };
 
          Workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
          {
             Trace.TraceInformation("[UpdateManager] Processing loaded latest version");
-
             Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
          };
       }
@@ -86,6 +75,12 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+         if (_hostname == String.Empty)
+         {
+            Trace.TraceWarning("[UpdateManager] Auto-update is cancelled because host name is empty");
+            return;
+         }
+
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
          List<Project> enabledProjects = Workflow.GetProjectsToUpdate(_hostname);
