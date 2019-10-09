@@ -702,7 +702,7 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxActions.Location = new System.Drawing.Point(3, 6);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(196, 63);
+         this.groupBoxActions.Size = new System.Drawing.Size(222, 63);
          this.groupBoxActions.TabIndex = 0;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
