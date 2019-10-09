@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -19,8 +21,6 @@ using mrHelper.Client.Git;
 using System.Drawing;
 using mrHelper.App.Helpers;
 using mrHelper.CommonControls;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace mrHelper.App.Forms
 {

@@ -285,11 +285,6 @@ namespace mrHelper.App.Forms
             _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
             return;
          }
-
-         //if (listView.SelectedItems.Count < 0)
-         //{
-         //   listView.SelectedItems[0].Selected = false;
-         //}
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)

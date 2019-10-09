@@ -81,5 +81,3 @@ namespace mrHelper.Client.Updates
    }
 }
 
-
-

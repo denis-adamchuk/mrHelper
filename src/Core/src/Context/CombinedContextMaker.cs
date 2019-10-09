@@ -95,10 +95,10 @@ namespace mrHelper.Core.Context
          int iContextLine = 0;
          while (true)
          {
-            int? leftLineNumber = itLeft.LineNumber != null ? itLeft.LineNumber + 1 : null;
-            int? rightLineNumber = itRight.LineNumber != null ? itRight.LineNumber + 1 : null;
+            int? leftLineNumber = itLeft.GetLineNumber() != null ? itLeft.GetLineNumber() + 1 : null;
+            int? rightLineNumber = itRight.GetLineNumber() != null ? itRight.GetLineNumber() + 1 : null;
 
-            DiffContext.Line line = getLineContext(leftLineNumber, rightLineNumber, itLeft.Current, itRight.Current);
+            DiffContext.Line line = getLineContext(leftLineNumber, rightLineNumber, itLeft.GetCurrent(), itRight.GetCurrent());
             diffContext.Lines.Add(line);
 
             if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber == linenumber)

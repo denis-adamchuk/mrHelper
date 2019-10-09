@@ -48,33 +48,27 @@ namespace mrHelper.Core.Tools
       /// <summary>
       /// Return content of the current line (if it is a non-null line)
       /// </summary>
-      public T Current
+      public T GetCurrent()
       {
-         get
+         if (_lineNumber >= _list.Count)
          {
-            if (_lineNumber >= _list.Count)
-            {
-               throw new BadPosition();
-            }
-
-            return _list[_lineNumber] != null ? _list[_lineNumber] : null;
+            throw new BadPosition();
          }
+
+         return _list[_lineNumber] ?? null;
       }
 
       /// <summary>
       /// Return number of the current line excluding null lines (if it is a non-null line)
       /// </summary>
-      public int? LineNumber
+      public int? GetLineNumber()
       {
-         get
+         if (_lineNumber >= _list.Count)
          {
-            if (_lineNumber >= _list.Count)
-            {
-               throw new BadPosition();
-            }
-
-            return _list[_lineNumber] != null ? _lineNumber - _nullCount : new Nullable<int>();
+            throw new BadPosition();
          }
+
+         return _list[_lineNumber] != null ? _lineNumber - _nullCount : new Nullable<int>();
       }
 
       /// <summary>
@@ -103,7 +97,7 @@ namespace mrHelper.Core.Tools
       }
 
       // container
-      private List<T> _list;
+      private readonly List<T> _list;
 
       // zero-based line number
       private int _lineNumber;

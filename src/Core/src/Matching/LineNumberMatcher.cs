@@ -66,7 +66,7 @@ namespace mrHelper.Core.Matching
          SparsedListIterator<string> itCurrentList = SparsedListUtils.FindNth(currentList.Begin(), lineNumber - 1);
          SparsedListIterator<string> itOppositeList = SparsedListUtils.Advance(oppositeList.Begin(), itCurrentList.Position);
 
-         return itOppositeList.LineNumber == null ? new Nullable<int>() : itOppositeList.LineNumber.Value + 1;
+         return itOppositeList.GetLineNumber() == null ? new Nullable<int>() : itOppositeList.GetLineNumber().Value + 1;
       }
 
       private readonly IGitRepository _gitRepository;

@@ -16,7 +16,7 @@ namespace mrHelper.Core.Tools
          int skipped = 0;
          while (true)
          {
-            if (iterator.LineNumber.HasValue)
+            if (iterator.GetLineNumber().HasValue)
             {
                if (skipped == index)
                {
