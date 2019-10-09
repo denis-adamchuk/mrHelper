@@ -130,6 +130,11 @@ namespace mrHelper.App.Forms
             await _workflow.LoadAllMergeRequestsAsync(hostname, onNonFatalError);
          }
 
+         if (listViewMergeRequests.Items.Count == 0)
+         {
+            return true;
+         }
+
          foreach (ListViewItem item in listViewMergeRequests.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);

@@ -37,7 +37,7 @@ namespace mrHelper.App
             catch (Exception ex)
             {
                // Check if we could not obtain windows from a process
-               if (!(ex is ArgumentException) || (ex is InvalidOperationException))
+               if (!((ex is ArgumentException) || (ex is InvalidOperationException)))
                {
                   throw;
                }
