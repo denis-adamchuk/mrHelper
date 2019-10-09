@@ -286,14 +286,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (listView.SelectedItems.Count > 0)
-         {
-            listView.SelectedItems[0].Selected = false;
-         }
-      }
-
-      private void ListViewMergeRequests_Leave(object sender, System.EventArgs e)
-      {
+         //if (listView.SelectedItems.Count < 0)
+         //{
+         //   listView.SelectedItems[0].Selected = false;
+         //}
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
@@ -394,6 +390,14 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void TextBoxLabels_KeyPress(object sender, KeyPressEventArgs e)
+      {
+         if (e.KeyChar == ',')
+         {
+            onTextBoxLabelsUpdate();
+         }
+      }
+
       private void TextBoxLabels_LostFocus(object sender, EventArgs e)
       {
          onTextBoxLabelsUpdate();
@@ -416,6 +420,14 @@ namespace mrHelper.App.Forms
          if (_workflow != null)
          {
             fillListViewMergeRequests(_allMergeRequests, true);
+         }
+      }
+
+      async private void ButtonUpdateList_Click(object sender, EventArgs e)
+      {
+         if (comboBoxHost.SelectedItem != null)
+         {
+            await switchHostByUserAsync(((HostComboBoxItem)comboBoxHost.SelectedItem).Host);
          }
       }
 

@@ -657,11 +657,13 @@ namespace mrHelper.App.Forms
       {
          if (clear)
          {
-            listViewMergeRequests.Groups.Cast<ListViewGroup>().ToList().ForEach(group => group.Items.Clear());
+            listViewMergeRequests.SelectedItems.Clear();
+            listViewMergeRequests.Items.Clear();
          }
 
          keys.ForEach(key => addListViewMergeRequestItem(key));
          recalcRowHeightForMergeRequestListView(listViewMergeRequests);
+         listViewMergeRequests.Invalidate();
       }
 
       private void addListViewMergeRequestItem(FullMergeRequestKey fmk)
@@ -671,6 +673,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         ListViewGroup group = listViewMergeRequests.Groups[fmk.Project.Path_With_Namespace];
          ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
             {
                String.Empty, // Column IId (stub)
@@ -678,7 +681,7 @@ namespace mrHelper.App.Forms
                String.Empty, // Column Title (stub)
                String.Empty, // Column Labels (stub)
                String.Empty, // Column Jira (stub)
-            }, listViewMergeRequests.Groups[fmk.Project.Path_With_Namespace]));
+            }, group));
          setListViewItemTag(item, fmk.HostName, fmk.Project, fmk.MergeRequest);
       }
 

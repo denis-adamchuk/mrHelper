@@ -64,6 +64,7 @@ namespace mrHelper.App.Forms
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
+         this.buttonUpdateList = new System.Windows.Forms.Button();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.listViewMergeRequests = new mrHelper.CommonControls.ListViewEx();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -414,6 +415,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSelectMergeRequest
          // 
+         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonUpdateList);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxLabels);
          this.groupBoxSelectMergeRequest.Controls.Add(this.listViewMergeRequests);
          this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxLabels);
@@ -425,6 +427,17 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
+         // buttonUpdateList
+         // 
+         this.buttonUpdateList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonUpdateList.Location = new System.Drawing.Point(851, 9);
+         this.buttonUpdateList.Name = "buttonUpdateList";
+         this.buttonUpdateList.Size = new System.Drawing.Size(96, 32);
+         this.buttonUpdateList.TabIndex = 3;
+         this.buttonUpdateList.Text = "Update List";
+         this.buttonUpdateList.UseVisualStyleBackColor = true;
+         this.buttonUpdateList.Click += new System.EventHandler(this.ButtonUpdateList_Click);
+         // 
          // textBoxLabels
          // 
          this.textBoxLabels.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -433,8 +446,10 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Enabled = false;
          this.textBoxLabels.Location = new System.Drawing.Point(82, 17);
          this.textBoxLabels.Name = "textBoxLabels";
-         this.textBoxLabels.Size = new System.Drawing.Size(865, 20);
+         this.textBoxLabels.Size = new System.Drawing.Size(709, 20);
          this.textBoxLabels.TabIndex = 1;
+         this.textBoxLabels.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxLabels_KeyDown);
+         this.textBoxLabels.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxLabels_KeyPress);
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
          // 
          // listViewMergeRequests
@@ -883,6 +898,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
       private System.Windows.Forms.RichTextBox richTextBoxMergeRequestDescription;
       private SelectionPreservingComboBox comboBoxHost;
+      private System.Windows.Forms.Button buttonUpdateList;
    }
 }
 

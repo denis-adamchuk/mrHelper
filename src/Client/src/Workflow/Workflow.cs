@@ -40,10 +40,9 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      public Workflow(UserDefinedSettings settings, Action<string> onNonFatalError)
+      public Workflow(UserDefinedSettings settings)
       {
          Settings = settings;
-         _onNonFatalError = onNonFatalError;
       }
 
       async public Task LoadCurrentUserAsync(string hostname)
@@ -53,7 +52,7 @@ namespace mrHelper.Client.Workflow
          await loadCurrentUserAsync(hostname);
       }
 
-      async public Task LoadAllMergeRequestsAsync(string hostname)
+      async public Task LoadAllMergeRequestsAsync(string hostname, Action<string> onNonFatalError)
       {
          checkParameters(hostname);
 
@@ -88,7 +87,7 @@ namespace mrHelper.Client.Workflow
             }
             catch (WorkflowException ex)
             {
-               _onNonFatalError?.Invoke(ex.Message);
+               onNonFatalError?.Invoke(ex.Message);
             }
          }
 
@@ -404,8 +403,6 @@ namespace mrHelper.Client.Workflow
          public List<Project> Projects;
       }
 #pragma warning restore 0649
-
-      private Action<string> _onNonFatalError;
    }
 }
 

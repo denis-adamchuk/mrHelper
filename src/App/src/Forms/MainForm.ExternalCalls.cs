@@ -85,7 +85,7 @@ namespace mrHelper.App.Forms
 
       private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
       {
-         MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex.Message),
+         MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex?.Message ?? "N/A"),
             error ? "Error" : "Warning", MessageBoxButtons.OK,
             error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
             MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
@@ -95,7 +95,7 @@ namespace mrHelper.App.Forms
       async private Task<bool> startWorkflowAsync(GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl, bool reloadAll)
       {
          return await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId,
-            reloadAll, true);
+            reloadAll, true, null);
       }
 
       async private void unhideFilteredMergeRequestAsync(GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl, string url)
@@ -136,9 +136,7 @@ namespace mrHelper.App.Forms
             bool reloadAll = listViewMergeRequests.Items.Count == 0
                || ((FullMergeRequestKey)(listViewMergeRequests.Items[0].Tag)).HostName != mergeRequestUrl.Host;
 
-            bool ok = (!reloadAll && await startWorkflowAsync(mergeRequestUrl, false))
-                                  || await startWorkflowAsync(mergeRequestUrl, true);
-            if (!ok)
+            if (!await startWorkflowAsync(mergeRequestUrl, reloadAll))
             {
                if (_allMergeRequests.Any(x => equal(mergeRequestUrl, x)))
                {

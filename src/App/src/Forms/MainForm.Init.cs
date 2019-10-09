@@ -54,7 +54,7 @@ namespace mrHelper.App.Forms
             X = 10,
             Y = 17
          };
-         System.Drawing.Size typicalSize = new System.Drawing.Size(83, 27);
+         System.Drawing.Size typicalSize = new System.Drawing.Size(96, 32);
          foreach (var command in commands)
          {
             string name = command.GetName();

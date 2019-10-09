@@ -26,8 +26,7 @@ namespace mrHelper.App.Forms
    {
       private void createWorkflow()
       {
-         _workflow = new Workflow(_settings,
-            (message) => MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information));
+         _workflow = new Workflow(_settings);
 
          _workflow.PreLoadCurrentUser += (hostname) => onLoadCurrentUser(hostname);
          _workflow.PostLoadCurrentUser += (user) => onCurrentUserLoaded(user);
@@ -90,7 +89,8 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await startWorkflowAsync(hostName, projectname, iid, true, false);
+            await startWorkflowAsync(hostName, projectname, iid, true, false,
+               (message) => MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information));
          }
          catch (WorkflowException ex)
          {
@@ -120,14 +120,14 @@ namespace mrHelper.App.Forms
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       async private Task<bool> startWorkflowAsync(string hostname, string projectname, int iid,
-         bool reloadAll, bool exact)
+         bool reloadAll, bool exact, Action<string> onNonFatalError)
       {
          labelWorkflowStatus.Text = String.Empty;
 
          if (reloadAll)
          {
             await _workflow.LoadCurrentUserAsync(hostname);
-            await _workflow.LoadAllMergeRequestsAsync(hostname);
+            await _workflow.LoadAllMergeRequestsAsync(hostname, onNonFatalError);
          }
 
          foreach (ListViewItem item in listViewMergeRequests.Items)
@@ -296,7 +296,7 @@ namespace mrHelper.App.Forms
             enableMergeRequestFilterControls(true);
          }
 
-         if (listViewMergeRequests.Groups.Count > 0)
+         if (listViewMergeRequests.Items.Count > 0)
          {
             enableListView(listViewMergeRequests);
          }
