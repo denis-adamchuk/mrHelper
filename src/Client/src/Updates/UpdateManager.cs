@@ -38,36 +38,26 @@ namespace mrHelper.Client.Updates
             synchronizeInvoke.BeginInvoke(new Action(
                async () =>
                {
-                  Trace.TraceInformation("[UpdateManager] Processing host switch");
+                  Trace.TraceInformation("[UpdateManager] Processing loaded host projects");
 
-                  await initializeAsync(hostname);
+                  _hostname = hostname;
+                  await loadDataAndUpdateCacheAsync(hostname, projects);
                }), null);
          };
 
          Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing project switch");
+            Trace.TraceInformation("[UpdateManager] Processing loaded project merge requests");
 
             Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
          };
 
          Workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing latest version load");
+            Trace.TraceInformation("[UpdateManager] Processing loaded latest version");
 
             Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
          };
-      }
-
-      async private Task initializeAsync(string hostname)
-      {
-         Trace.TraceInformation("[UpdateManager] Initializing");
-
-         _hostname = hostname;
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate(hostname);
-         await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
-
-         Trace.TraceInformation("[UpdateManager] Initialized");
       }
 
       public IProjectWatcher GetProjectWatcher()

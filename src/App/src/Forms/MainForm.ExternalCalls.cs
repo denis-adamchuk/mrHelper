@@ -3,6 +3,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp;
 using mrHelper.Core.Interprocess;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
@@ -80,6 +81,7 @@ namespace mrHelper.App.Forms
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
+         Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
          await connectToUrlAsync(url);
       }
 
@@ -92,17 +94,20 @@ namespace mrHelper.App.Forms
          ExceptionHandlers.Handle(ex, String.Format("Cannot open URL {0}", url));
       }
 
-      async private Task<bool> startWorkflowAsync(GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl, bool reloadAll)
+      async private Task<bool> startWorkflowAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, bool reloadAll)
       {
          return await startWorkflowAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId,
             reloadAll, true, null);
       }
 
-      async private void unhideFilteredMergeRequestAsync(GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      async private void unhideFilteredMergeRequestAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
       {
+         Trace.TraceInformation("[Mainform] Notify user that MR is hidden");
+
          if (MessageBox.Show("Merge Request is hidden by filters, do you want to reset them?", "Warning",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
          {
+            Trace.TraceInformation("[Mainform] User decided to not reset filters");
             return;
          }
 
@@ -117,37 +122,30 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<bool> connectToUrlAsync(string url)
+      async private Task connectToUrlAsync(string url)
       {
-         Trace.TraceInformation(String.Format("[MainForm] Connecting to URL {0}", url));
-
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
-         Func<GitLabSharp.ParsedMergeRequestUrl, FullMergeRequestKey, bool> equal = (mergeRequestUrl, key) =>
-            key.HostName == mergeRequestUrl.Host
-         && key.MergeRequest.IId == mergeRequestUrl.IId
-         && key.Project.Path_With_Namespace == mergeRequestUrl.Project;
-
+         UrlParser.ParsedMergeRequestUrl mergeRequestUrl;
          try
          {
-            GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
+            mergeRequestUrl = UrlParser.ParseMergeRequestUrl(url);
+            mergeRequestUrl.Host = getHostWithPrefix(mergeRequestUrl.Host);
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(ex is UriFormatException);
+            reportErrorOnConnect(url, String.Empty, ex, true);
+            return;
+         }
 
+         bool result = false;
+         try
+         {
             bool reloadAll = listViewMergeRequests.Items.Count == 0
                || ((FullMergeRequestKey)(listViewMergeRequests.Items[0].Tag)).HostName != mergeRequestUrl.Host;
-
-            if (!await startWorkflowAsync(mergeRequestUrl, reloadAll))
-            {
-               if (_allMergeRequests.Any(x => equal(mergeRequestUrl, x)))
-               {
-                  unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
-               }
-               else
-               {
-                  reportErrorOnConnect(url, String.Format(
-                     "Current version supports connection to URL for Open WIP merge requests only. "), null, false);
-               }
-            }
+            result = await startWorkflowAsync(mergeRequestUrl, reloadAll);
          }
          catch (Exception ex)
          {
@@ -162,7 +160,7 @@ namespace mrHelper.App.Forms
                   "Current version supports connection to URL for projects listed in {0} only. ",
                   mrHelper.Common.Constants.Constants.ProjectListFileName), ex, false);
             }
-            else if (ex is UriFormatException || ex is WorkflowException)
+            else if (ex is WorkflowException)
             {
                reportErrorOnConnect(url, String.Empty, ex, true);
             }
@@ -170,10 +168,23 @@ namespace mrHelper.App.Forms
             {
                Debug.Assert(false);
             }
-            return false;
          }
 
-         return true;
+         if (!result)
+         {
+            if (_allMergeRequests.Any(x =>
+                     x.HostName == mergeRequestUrl.Host
+                  && x.MergeRequest.IId == mergeRequestUrl.IId
+                  && x.Project.Path_With_Namespace == mergeRequestUrl.Project))
+            {
+               unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
+            }
+            else
+            {
+               reportErrorOnConnect(url, String.Format(
+                  "Current version supports connection to URL for Open WIP merge requests only. "), null, false);
+            }
+         }
       }
    }
 }

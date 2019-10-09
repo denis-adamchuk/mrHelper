@@ -242,8 +242,9 @@ namespace mrHelper.App.Forms
 
          try
          {
-            // Connect
-            await initializeWorkflow();
+            string[] arguments = Environment.GetCommandLineArgs();
+            string url = arguments.Length > 1 ? arguments[1] : String.Empty;
+            await initializeWorkflow(url);
          }
          catch (WorkflowException ex)
          {
