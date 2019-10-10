@@ -45,14 +45,14 @@ namespace mrHelper.Client.Workflow
          Settings = settings;
       }
 
-      async public Task LoadCurrentUserAsync(string hostname)
+      async public Task<bool> LoadCurrentUserAsync(string hostname)
       {
          checkParameters(hostname);
 
-         await loadCurrentUserAsync(hostname);
+         return await loadCurrentUserAsync(hostname);
       }
 
-      async public Task LoadAllMergeRequestsAsync(string hostname, Action<string> onNonFatalError)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Action<string> onNonFatalError)
       {
          checkParameters(hostname);
 
@@ -61,7 +61,7 @@ namespace mrHelper.Client.Workflow
          List<Project> projects = await loadHostProjectsAsync(hostname);
          if (projects == null)
          {
-            return; // cancelled
+            return false; // cancelled
          }
 
 #if DEBUG
@@ -82,14 +82,14 @@ namespace mrHelper.Client.Workflow
                List<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
                if (mergeRequests == null)
                {
-                  return; // cancelled
+                  return false; // cancelled
                }
 
                foreach (MergeRequest mergeRequest in mergeRequests)
                {
                   if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
                   {
-                     return; // cancelled
+                     return false; // cancelled
                   }
                }
             }
@@ -100,6 +100,7 @@ namespace mrHelper.Client.Workflow
          }
 
          PostLoadAllMergeRequests?.Invoke(hostname, projects);
+         return true;
       }
 
       async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)

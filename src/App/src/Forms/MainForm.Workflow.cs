@@ -87,8 +87,11 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await startWorkflowAsync(hostName, projectname, iid, true, false,
-               (message) => MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information));
+            if (await startWorkflowAsync(hostName, (message) =>
+               MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information)))
+            {
+               selectMergeRequest(projectname, iid, false);
+            }
          }
          catch (WorkflowException ex)
          {
@@ -117,23 +120,16 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      async private Task<bool> startWorkflowAsync(string hostname, string projectname, int iid,
-         bool reloadAll, bool exact, Action<string> onNonFatalError)
+      async private Task<bool> startWorkflowAsync(string hostname, Action<string> onNonFatalError)
       {
          labelWorkflowStatus.Text = String.Empty;
 
-         if (reloadAll)
-         {
-            await _workflow.LoadCurrentUserAsync(hostname);
-            await _workflow.LoadAllMergeRequestsAsync(hostname, onNonFatalError);
-         }
+         return await _workflow.LoadCurrentUserAsync(hostname)
+             && await _workflow.LoadAllMergeRequestsAsync(hostname, onNonFatalError);
+      }
 
-         if (listViewMergeRequests.Items.Count == 0)
-         {
-            Trace.TraceInformation("[MainForm.Workflow] Cannot select a merge request because the list is empty");
-            return true;
-         }
-
+      private bool selectMergeRequest(string projectname, int iid, bool exact)
+      {
          foreach (ListViewItem item in listViewMergeRequests.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
