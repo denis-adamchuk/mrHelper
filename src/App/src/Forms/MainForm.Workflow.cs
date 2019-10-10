@@ -312,9 +312,8 @@ namespace mrHelper.App.Forms
 
       private void onLoadSingleMergeRequest(int mergeRequestIId)
       {
-         if (listViewMergeRequests.SelectedItems.Count != 0)
+         if (mergeRequestIId != 0)
          {
-            richTextBoxMergeRequestDescription.Text = "Loading...";
             labelWorkflowStatus.Text = String.Format("Loading merge request with IId {0}...", mergeRequestIId);
          }
          else
@@ -329,6 +328,11 @@ namespace mrHelper.App.Forms
          updateTotalTime(null);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
+
+         if (mergeRequestIId != 0)
+         {
+            richTextBoxMergeRequestDescription.Text = "Loading...";
+         }
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading merge request with IId {0}",
             mergeRequestIId.ToString()));

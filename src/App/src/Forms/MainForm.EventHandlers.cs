@@ -270,6 +270,7 @@ namespace mrHelper.App.Forms
       async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
+         listView.Refresh();
 
          if (listView.SelectedItems.Count < 1)
          {
