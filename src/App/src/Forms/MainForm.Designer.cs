@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
-         this.buttonUpdateList = new System.Windows.Forms.Button();
+         this.buttonReloadList = new System.Windows.Forms.Button();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.listViewMergeRequests = new mrHelper.CommonControls.ListViewEx();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -415,7 +415,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSelectMergeRequest
          // 
-         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonUpdateList);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonReloadList);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxLabels);
          this.groupBoxSelectMergeRequest.Controls.Add(this.listViewMergeRequests);
          this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxLabels);
@@ -429,15 +429,15 @@ namespace mrHelper.App.Forms
          // 
          // buttonUpdateList
          // 
-         this.buttonUpdateList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonUpdateList.Enabled = false;
-         this.buttonUpdateList.Location = new System.Drawing.Point(851, 9);
-         this.buttonUpdateList.Name = "buttonUpdateList";
-         this.buttonUpdateList.Size = new System.Drawing.Size(96, 32);
-         this.buttonUpdateList.TabIndex = 3;
-         this.buttonUpdateList.Text = "Update List";
-         this.buttonUpdateList.UseVisualStyleBackColor = true;
-         this.buttonUpdateList.Click += new System.EventHandler(this.ButtonUpdateList_Click);
+         this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonReloadList.Enabled = false;
+         this.buttonReloadList.Location = new System.Drawing.Point(851, 9);
+         this.buttonReloadList.Name = "buttonUpdateList";
+         this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
+         this.buttonReloadList.TabIndex = 3;
+         this.buttonReloadList.Text = "Reload List";
+         this.buttonReloadList.UseVisualStyleBackColor = true;
+         this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
          // 
          // textBoxLabels
          // 
@@ -449,6 +449,8 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(709, 20);
          this.textBoxLabels.TabIndex = 1;
+         this.toolTip.SetToolTip(this.textBoxLabels, "Show merge requests that contain any of these labels (comma-separated list is exp" +
+        "ected)");
          this.textBoxLabels.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxLabels_KeyDown);
          this.textBoxLabels.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxLabels_KeyPress);
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
@@ -600,6 +602,7 @@ namespace mrHelper.App.Forms
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
          this.buttonEditTime.TabIndex = 4;
          this.buttonEditTime.Text = "Edit";
+         this.toolTip.SetToolTip(this.buttonEditTime, "Edit total time tracked on this merge request");
          this.buttonEditTime.UseVisualStyleBackColor = true;
          this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
          // 
@@ -676,6 +679,7 @@ namespace mrHelper.App.Forms
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
          this.buttonAddComment.TabIndex = 2;
          this.buttonAddComment.Text = "Add comment";
+         this.toolTip.SetToolTip(this.buttonAddComment, "Leave a comment (cannot be resolved and replied)");
          this.buttonAddComment.UseVisualStyleBackColor = true;
          this.buttonAddComment.Click += new System.EventHandler(this.ButtonAddComment_Click);
          // 
@@ -687,6 +691,7 @@ namespace mrHelper.App.Forms
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 1;
          this.buttonDiscussions.Text = "Discussions";
+         this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of Discussions");
          this.buttonDiscussions.UseVisualStyleBackColor = true;
          this.buttonDiscussions.Click += new System.EventHandler(this.ButtonDiscussions_Click);
          // 
@@ -698,6 +703,7 @@ namespace mrHelper.App.Forms
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
          this.buttonNewDiscussion.TabIndex = 0;
          this.buttonNewDiscussion.Text = "New discussion";
+         this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable discussion");
          this.buttonNewDiscussion.UseVisualStyleBackColor = true;
          this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
          // 
@@ -732,6 +738,7 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool.Size = new System.Drawing.Size(92, 48);
          this.buttonDiffTool.TabIndex = 2;
          this.buttonDiffTool.Text = "Diff tool";
+         this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
          this.buttonDiffTool.UseVisualStyleBackColor = true;
          this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
          // 
@@ -902,7 +909,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
       private System.Windows.Forms.RichTextBox richTextBoxMergeRequestDescription;
       private SelectionPreservingComboBox comboBoxHost;
-      private System.Windows.Forms.Button buttonUpdateList;
+      private System.Windows.Forms.Button buttonReloadList;
    }
 }
 

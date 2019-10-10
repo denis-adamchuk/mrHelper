@@ -194,6 +194,7 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
                Common.Constants.Constants.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
             return;
          }
 

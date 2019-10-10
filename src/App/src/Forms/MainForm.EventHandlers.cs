@@ -420,7 +420,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void ButtonUpdateList_Click(object sender, EventArgs e)
+      async private void ButtonReloadList_Click(object sender, EventArgs e)
       {
          if (comboBoxHost.SelectedItem != null)
          {

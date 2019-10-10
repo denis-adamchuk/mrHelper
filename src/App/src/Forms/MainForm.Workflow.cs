@@ -217,7 +217,7 @@ namespace mrHelper.App.Forms
 
       private void onHostProjectsLoaded(List<Project> projects)
       {
-         buttonUpdateList.Enabled = true;
+         buttonReloadList.Enabled = true;
 
          listViewMergeRequests.Items.Clear();
          listViewMergeRequests.Groups.Clear();
@@ -273,7 +273,7 @@ namespace mrHelper.App.Forms
 
       private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)
       {
-         buttonUpdateList.Enabled = true;
+         buttonReloadList.Enabled = true;
 
          if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
          {
@@ -419,7 +419,7 @@ namespace mrHelper.App.Forms
 
       private void disableAllUIControls(bool clearListView)
       {
-         buttonUpdateList.Enabled = false;
+         buttonReloadList.Enabled = false;
          enableMergeRequestFilterControls(false);
          enableMergeRequestActions(false);
          enableCommitActions(false);
