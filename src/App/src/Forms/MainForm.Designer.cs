@@ -429,8 +429,8 @@ namespace mrHelper.App.Forms
          // 
          // buttonUpdateList
          // 
-         this.buttonUpdateList.Enabled = false;
          this.buttonUpdateList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonUpdateList.Enabled = false;
          this.buttonUpdateList.Location = new System.Drawing.Point(851, 9);
          this.buttonUpdateList.Name = "buttonUpdateList";
          this.buttonUpdateList.Size = new System.Drawing.Size(96, 32);
@@ -534,8 +534,9 @@ namespace mrHelper.App.Forms
          // 
          // linkLabelAbortGit
          // 
+         this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.linkLabelAbortGit.AutoSize = true;
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(544, 32);
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(678, 32);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
          this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
          this.linkLabelAbortGit.TabIndex = 2;
