@@ -489,7 +489,8 @@ namespace mrHelper.App.Forms
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
                "New merge request"));
 
-         filtered.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated).ToList().ForEach((x) =>
+         filtered.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated
+                            || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated).ToList().ForEach((x) =>
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
                "New commits in merge request"));
       }

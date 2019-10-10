@@ -520,6 +520,8 @@ namespace mrHelper.App.Forms
          // 
          // panel2
          // 
+         this.panel2.BackColor = System.Drawing.Color.WhiteSmoke;
+         this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
          this.panel2.Controls.Add(this.linkLabelAbortGit);
          this.panel2.Controls.Add(this.labelGitStatus);
          this.panel2.Controls.Add(this.labelWorkflowStatus);

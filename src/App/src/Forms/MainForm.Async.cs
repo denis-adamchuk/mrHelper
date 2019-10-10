@@ -19,6 +19,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Git;
 using GitLabSharp.Accessors;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.App.Forms
 {
@@ -328,6 +329,65 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Discussions loaded";
          return discussions;
       }
+
+      ProjectKey GetProjectKey(ProjectKey pk) => pk;
+      ProjectKey GetProjectKey(MergeRequestKey mrk) => mrk.ProjectKey;
+
+      ProjectKey GetKeyForUpdate(ProjectKey pk) => pk;
+      MergeRequestKey GetKeyForUpdate(MergeRequestKey mrk) => mrk;
+
+      async private Task performSilentUpdate<T>(T key)
+      {
+         ProjectKey pk = GetProjectKey((dynamic)key);
+
+         if (_silentUpdateInProgress.Contains(pk))
+         {
+            Trace.TraceInformation(String.Format(
+               "[MainForm] Silent update for {0} is cancelled due to a concurrent silent update", pk.ProjectName));
+            return;
+         }
+
+         _silentUpdateInProgress.Add(pk);
+
+         GitClient client = getGitClient(pk);
+         if (client == null || client.DoesRequireClone())
+         {
+            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository silently: {0}",
+               (client == null ? "client is null" : "must be cloned first")));
+            _silentUpdateInProgress.Remove(pk);
+            return;
+         }
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
+
+         IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker((dynamic)key);
+         try
+         {
+            await client.Updater.ManualUpdateAsync(instantChecker, null);
+         }
+         catch (GitOperationException)
+         {
+            Trace.TraceInformation("[MainForm] Silent update cancelled");
+            _silentUpdateInProgress.Remove(pk);
+            return;
+         }
+
+         Trace.TraceInformation("[MainForm] Silent update finished");
+         _silentUpdateInProgress.Remove(pk);
+      }
+
+      private void scheduleSilentUpdate(ProjectKey pk)
+      {
+         BeginInvoke(new Action(async () => await performSilentUpdate(pk)));
+      }
+
+      private void scheduleSilentUpdate(MergeRequestKey mrk)
+      {
+         BeginInvoke(new Action(async () => await performSilentUpdate(mrk)));
+      }
+
+      private HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
    }
 }
 

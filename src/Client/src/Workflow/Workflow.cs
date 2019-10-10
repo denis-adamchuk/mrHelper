@@ -84,6 +84,14 @@ namespace mrHelper.Client.Workflow
                {
                   return; // cancelled
                }
+
+               foreach (MergeRequest mergeRequest in mergeRequests)
+               {
+                  if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
+                  {
+                     return; // cancelled
+                  }
+               }
             }
             catch (WorkflowException ex)
             {
@@ -91,7 +99,7 @@ namespace mrHelper.Client.Workflow
             }
          }
 
-         PostLoadAllMergeRequests?.Invoke();
+         PostLoadAllMergeRequests?.Invoke(hostname, projects);
       }
 
       async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
@@ -135,14 +143,14 @@ namespace mrHelper.Client.Workflow
       public event Action<string, Project, List<MergeRequest>> PostLoadProjectMergeRequests;
       public event Action FailedLoadProjectMergeRequests;
 
-      public event Action PostLoadAllMergeRequests;
+      public event Action<string, List<Project>> PostLoadAllMergeRequests;
 
       public event Action<int> PrelLoadSingleMergeRequest;
       public event Action<string, MergeRequest> PostLoadSingleMergeRequest;
       public event Action FailedLoadSingleMergeRequest;
 
       public event Action PreLoadCommits;
-      public event Action<MergeRequest, List<Commit>> PostLoadCommits;
+      public event Action<string, string, MergeRequest, List<Commit>> PostLoadCommits;
       public event Action FailedLoadCommits;
 
       public event Action PreLoadSystemNotes;
@@ -270,10 +278,10 @@ namespace mrHelper.Client.Workflow
          {
             return false;
          }
-         return await loadCommitsAsync(projectName, mergeRequest);
+         return await loadCommitsAsync(hostname, projectName, mergeRequest);
       }
 
-      async private Task<bool> loadCommitsAsync(string projectName, MergeRequest mergeRequest)
+      async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
       {
          PreLoadCommits?.Invoke();
          List<Commit> commits;
@@ -290,7 +298,7 @@ namespace mrHelper.Client.Workflow
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCommits);
             return false;
          }
-         PostLoadCommits?.Invoke(mergeRequest, commits);
+         PostLoadCommits?.Invoke(hostname, projectName, mergeRequest, commits);
          return true;
       }
 

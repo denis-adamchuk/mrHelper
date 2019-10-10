@@ -47,20 +47,16 @@ namespace mrHelper.App.Forms
          };
          _workflow.FailedLoadProjectMergeRequests += () => onFailedLoadProjectMergeRequests();
 
-         _workflow.PostLoadAllMergeRequests += () => onAllMergeRequestsLoaded();
+         _workflow.PostLoadAllMergeRequests += (hostname, projects) => onAllMergeRequestsLoaded(hostname, projects);
 
          _workflow.PrelLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
          _workflow.PostLoadSingleMergeRequest += (_, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
          _workflow.FailedLoadSingleMergeRequest += () => onFailedLoadSingleMergeRequest();
 
          _workflow.PreLoadCommits += () => onLoadCommits();
-         _workflow.PostLoadCommits += (mergeRequest, commits) => onCommitsLoaded(mergeRequest, commits);
+         _workflow.PostLoadCommits += (hostname, projectname, mergeRequest, commits) =>
+            onCommitsLoaded(hostname, projectname, mergeRequest, commits);
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
-
-         _workflow.PreLoadLatestVersion += () => onLoadLatestVersion();
-         _workflow.PostLoadLatestVersion +=
-            (hostname, project, mergeRequest, _) => onLatestVersionLoaded(hostname, project, mergeRequest);
-         _workflow.FailedLoadLatestVersion += () => onFailedLoadLatestVersion();
       }
 
       async private Task initializeWorkflow(string url)
@@ -298,7 +294,7 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Project loaded. Loaded {0} merge requests", mergeRequests.Count));
       }
 
-      private void onAllMergeRequestsLoaded()
+      private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)
       {
          if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
          {
@@ -308,6 +304,11 @@ namespace mrHelper.App.Forms
          if (listViewMergeRequests.Items.Count > 0)
          {
             enableListView(listViewMergeRequests);
+         }
+
+         foreach (Project project in projects)
+         {
+            scheduleSilentUpdate(new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace });
          }
       }
 
@@ -384,7 +385,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load commits"));
       }
 
-      private void onCommitsLoaded(MergeRequest mergeRequest, List<Commit> commits)
+      private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest, List<Commit> commits)
       {
          if (commits.Count > 0)
          {
@@ -399,50 +400,8 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count));
-      }
 
-      private void onLoadLatestVersion()
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading latest version"));
-      }
-
-      private void onFailedLoadLatestVersion()
-      {
-         labelWorkflowStatus.Text = "Failed to load latest version";
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load latest version"));
-      }
-
-      private void onLatestVersionLoaded(string hostname, string projectname, MergeRequest mergeRequest)
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Latest version loaded"));
-
-         // Making it asynchronous here guarantees that UpdateManager updates the cache before we access it
-         BeginInvoke(new Action<MergeRequestKey>(
-            async (mrk) =>
-            {
-               GitClient client = getGitClient(mrk.ProjectKey);
-               if (client == null || client.DoesRequireClone())
-               {
-                  Trace.TraceInformation(String.Format("[MainForm.Workflow] Cannot update git repository silently: {0}",
-                     (client == null ? "client is null" : "must be cloned first")));
-                  return;
-               }
-
-               Trace.TraceInformation("[MainForm.Workflow] Going to update git repository silently");
-
-               IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker(mrk);
-               try
-               {
-                  await client.Updater.ManualUpdateAsync(instantChecker, null);
-               }
-               catch (GitOperationException)
-               {
-                  Trace.TraceInformation("[MainForm.Workflow] Silent update cancelled");
-                  return;
-               }
-
-               Trace.TraceInformation("[MainForm.Workflow] Silent update finished");
-            }), new MergeRequestKey(hostname, projectname, mergeRequest.IId));
+         scheduleSilentUpdate(new MergeRequestKey(hostname, projectname, mergeRequest.IId));
       }
 
       private void onLoadTotalTime()

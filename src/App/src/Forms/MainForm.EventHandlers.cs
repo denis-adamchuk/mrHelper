@@ -638,7 +638,7 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
          // Show actual merge request details
-         bool isMergeRequestSelected = getMergeRequest().Value.IId != default(MergeRequest).IId;
+         bool isMergeRequestSelected = listViewMergeRequests.SelectedItems.Count > 0;
          updateTimeTrackingMergeRequestDetails(
             isMergeRequestSelected ? getMergeRequest().Value : new Nullable<MergeRequest>());
 

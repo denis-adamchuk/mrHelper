@@ -68,6 +68,22 @@ namespace mrHelper.Client.Updates
       }
 
       /// <summary>
+      /// Checks local cache to detect if there are project changes caused by new versions of any merge request
+      /// </summary>
+      public IInstantProjectChecker GetLocalProjectChecker(ProjectKey pk)
+      {
+         if (Cache.Details.GetMergeRequests(pk).Count == 0)
+         {
+            return GetLocalProjectChecker(default(MergeRequestKey));
+         }
+
+         MergeRequestKey mrk = Cache.Details.GetMergeRequests(pk).
+            Select(x => new MergeRequestKey(pk.HostName, pk.ProjectName, x.IId)).
+            OrderByDescending(x => Cache.Details.GetLatestChangeTimestamp(x)).First();
+         return GetLocalProjectChecker(mrk);
+      }
+
+      /// <summary>
       /// Makes a request to GitLab to detect if there are project changes caused by new versions of a merge request
       /// </summary>
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
