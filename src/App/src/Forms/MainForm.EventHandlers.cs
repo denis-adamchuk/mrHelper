@@ -170,9 +170,11 @@ namespace mrHelper.App.Forms
 
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
-         tabControl.SelectedTab = tabPageMR;
          string hostname = (sender as ComboBox).Text;
-         await switchHostByUserAsync(hostname);
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
+
+         await switchHostAsync(hostname);
       }
 
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
@@ -225,10 +227,9 @@ namespace mrHelper.App.Forms
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
 
-         Font font = e.Item.ListView.Font;
          if (isClickable)
          {
-            using (font = new Font(e.Item.ListView.Font, FontStyle.Underline))
+            using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
             {
                Brush brush = Brushes.Blue;
                e.Graphics.DrawString(text, font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
@@ -356,7 +357,7 @@ namespace mrHelper.App.Forms
                _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
                   .Select(i => i.SubItems[1].Text).ToList();
 
-               await switchHostByUserAsync(getInitialHostName());
+               await switchHostAsync(getInitialHostName());
             }
          }
       }
@@ -369,7 +370,7 @@ namespace mrHelper.App.Forms
             _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
                .Select(i => i.SubItems[1].Text).ToList();
 
-            await switchHostByUserAsync(getInitialHostName());
+            await switchHostAsync(getInitialHostName());
          }
       }
 
@@ -423,7 +424,7 @@ namespace mrHelper.App.Forms
       {
          if (comboBoxHost.SelectedItem != null)
          {
-            await switchHostByUserAsync(((HostComboBoxItem)comboBoxHost.SelectedItem).Host);
+            await switchHostAsync(((HostComboBoxItem)comboBoxHost.SelectedItem).Host);
          }
       }
 

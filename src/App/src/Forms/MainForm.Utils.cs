@@ -165,7 +165,7 @@ namespace mrHelper.App.Forms
       private string getHostWithPrefix(string host)
       {
          string supportedProtocolPrefix = "https://";
-         string unsupportedProtocolPrefix = "https://";
+         string unsupportedProtocolPrefix = "http://";
 
          if (host.StartsWith(supportedProtocolPrefix))
          {
@@ -467,6 +467,7 @@ namespace mrHelper.App.Forms
          }
          else
          {
+            labelGitStatus.Visible = true;
             labelGitStatus.Text = text;
          }
       }

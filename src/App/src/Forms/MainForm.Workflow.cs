@@ -59,30 +59,24 @@ namespace mrHelper.App.Forms
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
       }
 
-      async private Task initializeWorkflow(string url)
+      async private Task switchHostAsync(string hostName)
       {
-         if (url != String.Empty)
+         if (hostName != String.Empty)
          {
-            Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", url));
-            await connectToUrlAsync(url);
-            return;
+            tabControl.SelectedTab = tabPageMR;
+         }
+         else
+         {
+            disableAllUIControls(true);
          }
 
-         string hostname = getInitialHostName();
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing workflow for host {0}", hostname));
-
-         await switchHostByUserAsync(hostname);
-      }
-
-      async private Task switchHostByUserAsync(string hostName)
-      {
          bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
          string projectname = shouldUseLastSelection ?
             _lastMergeRequestsByHosts[hostName].ProjectKey.ProjectName : String.Empty;
          int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
 
          Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] User requested to change host to {0}. Last selected project: {1}, IId: {2}",
+            "[MainForm.Workflow] Changing host to {0}. Last selected project: {1}, IId: {2}",
             hostName, projectname != String.Empty ? projectname : "N/A", iid != 0 ? iid.ToString() : "N/A"));
 
          try
@@ -173,6 +167,8 @@ namespace mrHelper.App.Forms
 
       private void onLoadCurrentUser(string hostname)
       {
+         disableAllUIControls(true);
+
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading user from host {0}", hostname));
       }
 
@@ -207,18 +203,9 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = String.Format("Connecting to host {0}...", hostname);
          }
 
-         enableMergeRequestFilterControls(false);
-         enableMergeRequestActions(false);
-         enableCommitActions(false);
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(null);
-         updateTotalTime(null);
-         disableListView(listViewMergeRequests, true);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableAllUIControls(true);
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading projects from {0}",
-            hostname));
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading projects from {0}", hostname));
       }
 
       private void onFailedLoadHostProjects()
@@ -230,6 +217,8 @@ namespace mrHelper.App.Forms
 
       private void onHostProjectsLoaded(List<Project> projects)
       {
+         buttonUpdateList.Enabled = true;
+
          listViewMergeRequests.Items.Clear();
          listViewMergeRequests.Groups.Clear();
          foreach (Project project in projects)
@@ -244,15 +233,7 @@ namespace mrHelper.App.Forms
 
       private void onLoadAllMergeRequests()
       {
-         enableMergeRequestFilterControls(false);
-         enableMergeRequestActions(false);
-         enableCommitActions(false);
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(null);
-         updateTotalTime(null);
-         disableListView(listViewMergeRequests, false);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableAllUIControls(false);
 
          _allMergeRequests.Clear();
       }
@@ -292,6 +273,8 @@ namespace mrHelper.App.Forms
 
       private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)
       {
+         buttonUpdateList.Enabled = true;
+
          if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
          {
             enableMergeRequestFilterControls(true);
@@ -433,6 +416,21 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Total spent time loaded"));
       }
+
+      private void disableAllUIControls(bool clearListView)
+      {
+         buttonUpdateList.Enabled = false;
+         enableMergeRequestFilterControls(false);
+         enableMergeRequestActions(false);
+         enableCommitActions(false);
+         updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(null);
+         updateTotalTime(null);
+         disableListView(listViewMergeRequests, clearListView);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
+      }
+
    }
 }
 

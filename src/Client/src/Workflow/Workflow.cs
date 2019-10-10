@@ -47,14 +47,15 @@ namespace mrHelper.Client.Workflow
 
       async public Task<bool> LoadCurrentUserAsync(string hostname)
       {
-         checkParameters(hostname);
-
-         return await loadCurrentUserAsync(hostname);
+         return checkParameters(hostname) && await loadCurrentUserAsync(hostname);
       }
 
       async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Action<string> onNonFatalError)
       {
-         checkParameters(hostname);
+         if (!checkParameters(hostname))
+         {
+            return false;
+         }
 
          PreLoadAllMergeRequests?.Invoke();
 
@@ -112,9 +113,8 @@ namespace mrHelper.Client.Workflow
             return false;
          }
 
-         checkParameters(hostname, projectname);
-
-         return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
+         return checkParameters(hostname, projectname)
+             && await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
       }
 
       async public Task CancelAsync()
@@ -162,15 +162,21 @@ namespace mrHelper.Client.Workflow
       public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
       public event Action FailedLoadLatestVersion;
 
-      private void checkParameters(string hostname, string projectname = "")
+      private bool checkParameters(string hostname, string projectname = "")
       {
+         Operator?.CancelAsync();
+
+         if (hostname == String.Empty)
+         {
+            return false;
+         }
+
          string token = Settings.GetAccessToken(hostname);
          if (token == String.Empty)
          {
             throw new UnknownHostException(hostname);
          }
 
-         Operator?.CancelAsync();
          Operator = new WorkflowDataOperator(hostname, token);
 
          List<Project> enabledProjects = getEnabledProjects(hostname);
@@ -185,6 +191,8 @@ namespace mrHelper.Client.Workflow
          {
             throw new NotEnabledProjectException(projectname);
          }
+
+         return true;
       }
 
       async private Task<bool> loadCurrentUserAsync(string hostName)

@@ -149,6 +149,13 @@ namespace mrHelper.App.Forms
 
       async private Task connectToUrlAsync(string url)
       {
+         if (url == String.Empty)
+         {
+            return;
+         }
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", url));
+
          string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 

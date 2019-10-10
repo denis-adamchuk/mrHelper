@@ -387,7 +387,7 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () => await performSilentUpdate(mrk)));
       }
 
-      private HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
+      private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
    }
 }
 

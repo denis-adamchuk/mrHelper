@@ -429,6 +429,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonUpdateList
          // 
+         this.buttonUpdateList.Enabled = false;
          this.buttonUpdateList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonUpdateList.Location = new System.Drawing.Point(851, 9);
          this.buttonUpdateList.Name = "buttonUpdateList";
@@ -541,6 +542,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
          this.linkLabelAbortGit.Visible = false;
+         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
          // 
          // labelGitStatus
          // 
