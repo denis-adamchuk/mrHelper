@@ -121,20 +121,6 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      /// <summary>
-      /// Return projects at the current Host that are allowed to be checked for updates
-      /// </summary>
-      public List<Project> GetProjectsToUpdate(string hostname)
-      {
-         List<Project> enabledProjects = getEnabledProjects(hostname);
-         if ((enabledProjects?.Count ?? 0) != 0)
-         {
-            return enabledProjects;
-         }
-
-         return new List<Project>();
-      }
-
       public event Action<string> PreLoadCurrentUser;
       public event Action<User> PostLoadCurrentUser;
       public event Action FailedLoadCurrentUser;

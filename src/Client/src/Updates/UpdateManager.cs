@@ -33,11 +33,16 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
+         Workflow.PostLoadHostProjects += (hostname, projects) =>
+         {
+            Trace.TraceInformation(String.Format(
+               "[UpdateManager] Set hostname for updates to {0}, will update {1} projects", hostname, projects.Count));
+            _hostname = hostname;
+            _projects = projects;
+         };
+
          Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
          {
-            Trace.TraceInformation(String.Format("[UpdateManager] Set hostname for updates to {0}", hostname));
-            _hostname = hostname;
-
             Trace.TraceInformation("[UpdateManager] Processing loaded project merge requests");
             Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
          };
@@ -83,11 +88,10 @@ namespace mrHelper.Client.Updates
 
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate(_hostname);
-         await loadDataAndUpdateCacheAsync(_hostname, enabledProjects);
+         await loadDataAndUpdateCacheAsync(_hostname, _projects);
 
-         List<UpdatedMergeRequest> updates = WorkflowDetailsChecker.CheckForUpdates(_hostname,
-            enabledProjects, oldDetails, Cache.Details);
+         List<UpdatedMergeRequest> updates = WorkflowDetailsChecker.CheckForUpdates(_hostname, _projects,
+            oldDetails, Cache.Details);
          ProjectWatcher.ProcessUpdates(updates, _hostname, Cache.Details);
 
          Trace.TraceInformation(
@@ -172,7 +176,9 @@ namespace mrHelper.Client.Updates
       private ProjectWatcher ProjectWatcher { get; }
       private UserDefinedSettings Settings { get; }
       private UpdateOperator Operator { get; }
+
       private string _hostname;
+      private List<Project> _projects;
    }
 }
 
