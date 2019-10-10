@@ -534,7 +534,7 @@ namespace mrHelper.App.Forms
          // linkLabelAbortGit
          // 
          this.linkLabelAbortGit.AutoSize = true;
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(573, 32);
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(544, 32);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
          this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
          this.linkLabelAbortGit.TabIndex = 2;
@@ -544,7 +544,6 @@ namespace mrHelper.App.Forms
          // 
          // labelGitStatus
          // 
-         this.labelGitStatus.AutoSize = true;
          this.labelGitStatus.Location = new System.Drawing.Point(6, 32);
          this.labelGitStatus.Name = "labelGitStatus";
          this.labelGitStatus.Size = new System.Drawing.Size(510, 13);
@@ -556,10 +555,9 @@ namespace mrHelper.App.Forms
          // labelWorkflowStatus
          // 
          this.labelWorkflowStatus.AutoEllipsis = true;
-         this.labelWorkflowStatus.AutoSize = true;
          this.labelWorkflowStatus.Location = new System.Drawing.Point(6, 9);
          this.labelWorkflowStatus.Name = "labelWorkflowStatus";
-         this.labelWorkflowStatus.Size = new System.Drawing.Size(576, 13);
+         this.labelWorkflowStatus.Size = new System.Drawing.Size(570, 13);
          this.labelWorkflowStatus.TabIndex = 0;
          this.labelWorkflowStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore magna aliqua";
