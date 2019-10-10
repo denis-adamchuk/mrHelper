@@ -787,6 +787,7 @@ namespace mrHelper.App.Forms
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
          this.linkLabelConnectedTo.Visible = false;
+         this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
          // 
          // richTextBoxMergeRequestDescription
          // 
