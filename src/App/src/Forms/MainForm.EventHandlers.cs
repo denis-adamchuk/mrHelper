@@ -346,7 +346,8 @@ namespace mrHelper.App.Forms
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
-               if (!onAddKnownHost(form.Host, form.AccessToken))
+               string hostname = getHostWithPrefix(form.Host);
+               if (!onAddKnownHost(hostname, form.AccessToken))
                {
                   MessageBox.Show("Such host is already in the list", "Host will not be added",
                      MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -357,7 +358,7 @@ namespace mrHelper.App.Forms
                _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
                   .Select(i => i.SubItems[1].Text).ToList();
 
-               await switchHostAsync(getInitialHostName());
+               await switchHostAsync(hostname);
             }
          }
       }

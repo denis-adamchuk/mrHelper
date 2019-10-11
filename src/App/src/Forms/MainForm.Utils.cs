@@ -156,7 +156,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         var item = new ListViewItem(getHostWithPrefix(host));
+         var item = new ListViewItem(host);
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
          return true;
