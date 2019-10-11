@@ -174,7 +174,7 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
 
-         await switchHostAsync(hostname);
+         await switchHostToSelected();
       }
 
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
@@ -283,6 +283,10 @@ namespace mrHelper.App.Forms
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
          if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
          {
+            selectNotReviewedCommits(out int left, out int right);
+            comboBoxLeftCommit.SelectedIndex = left;
+            comboBoxRightCommit.SelectedIndex = right;
+
             Debug.Assert(getMergeRequestKey().HasValue);
             _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
             return;
@@ -344,34 +348,50 @@ namespace mrHelper.App.Forms
       {
          using (AddKnownHostForm form = new AddKnownHostForm())
          {
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog() != DialogResult.OK)
             {
-               string hostname = getHostWithPrefix(form.Host);
-               if (!onAddKnownHost(hostname, form.AccessToken))
-               {
-                  MessageBox.Show("Such host is already in the list", "Host will not be added",
-                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                  return;
-               }
-
-               _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-               _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-                  .Select(i => i.SubItems[1].Text).ToList();
-
-               await switchHostAsync(hostname);
+               return;
             }
+
+            string hostname = getHostWithPrefix(form.Host);
+            if (!addKnownHost(hostname, form.AccessToken))
+            {
+               MessageBox.Show("Such host is already in the list", "Host will not be added",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               return;
+            }
+
+            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+               .Select(i => i.SubItems[1].Text).ToList();
+
+            updateHostsDropdownList();
+            selectHost(PreferredSelection.Latest);
+            await switchHostToSelected();
          }
       }
 
       async private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
       {
-         if (onRemoveKnownHost())
-         {
-            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-               .Select(i => i.SubItems[1].Text).ToList();
+         bool removeCurrent =
+               listViewKnownHosts.SelectedItems.Count > 0
+            && comboBoxHost.SelectedItem != null
+            && ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host == listViewKnownHosts.SelectedItems[0].Text;
 
-            await switchHostAsync(getInitialHostName());
+         if (!removeKnownHost())
+         {
+            return;
+         }
+
+         _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+         _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+            .Select(i => i.SubItems[1].Text).ToList();
+
+         updateHostsDropdownList();
+         if (removeCurrent)
+         {
+            selectHost(PreferredSelection.Latest);
+            await switchHostToSelected();
          }
       }
 
@@ -539,31 +559,6 @@ namespace mrHelper.App.Forms
          {
             labelTimeTrackingTrackedTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
          }
-      }
-
-      private bool onAddKnownHost(string host, string accessToken)
-      {
-         if (!addKnownHost(host, accessToken))
-         {
-            return false;
-         }
-
-         updateHostsDropdownList();
-         return true;
-      }
-
-      private bool onRemoveKnownHost()
-      {
-         if (listViewKnownHosts.SelectedItems.Count > 0)
-         {
-            Trace.TraceInformation(String.Format("[MainForm] Removing host name {0}",
-               listViewKnownHosts.SelectedItems[0].ToString()));
-
-            listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
-            updateHostsDropdownList();
-            return true;
-         }
-         return false;
       }
 
       private void onStartTimer()

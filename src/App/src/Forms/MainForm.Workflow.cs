@@ -59,6 +59,13 @@ namespace mrHelper.App.Forms
          _workflow.FailedLoadCommits += () => onFailedLoadCommits();
       }
 
+      async private Task switchHostToSelected()
+      {
+         string hostname =
+            comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
+         await switchHostAsync(hostname);
+      }
+
       async private Task switchHostAsync(string hostName)
       {
          if (hostName != String.Empty)
@@ -122,47 +129,6 @@ namespace mrHelper.App.Forms
              && await _workflow.LoadAllMergeRequestsAsync(hostname, onNonFatalError);
       }
 
-      private bool selectMergeRequest(string projectname, int iid, bool exact)
-      {
-         foreach (ListViewItem item in listViewMergeRequests.Items)
-         {
-            FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
-            if (projectname == String.Empty ||
-                (iid == key.MergeRequest.IId && projectname == key.Project.Path_With_Namespace))
-            {
-               item.Selected = true;
-               return true;
-            }
-         }
-
-         if (exact)
-         {
-            return false;
-         }
-
-         // selected an item from the proper group
-         foreach (ListViewGroup group in listViewMergeRequests.Groups)
-         {
-            if (projectname == group.Name && group.Items.Count > 0)
-            {
-               group.Items[0].Selected = true;
-               return true;
-            }
-         }
-
-         // select whatever
-         foreach (ListViewGroup group in listViewMergeRequests.Groups)
-         {
-            if (group.Items.Count > 0)
-            {
-               group.Items[0].Selected = true;
-               return true;
-            }
-         }
-
-         return false;
-      }
-
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       private void onLoadCurrentUser(string hostname)
@@ -194,12 +160,6 @@ namespace mrHelper.App.Forms
       {
          if (hostname != String.Empty)
          {
-            comboBoxHost.SelectedItem = new HostComboBoxItem
-            {
-               Host = hostname,
-               AccessToken = _settings.GetAccessToken(hostname)
-            };
-
             labelWorkflowStatus.Text = String.Format("Connecting to host {0}...", hostname);
          }
 

@@ -69,20 +69,147 @@ namespace mrHelper.App.Forms
             disableComboBox(comboBoxHost, String.Empty);
             return;
          }
+
          enableComboBox(comboBoxHost);
 
-         comboBoxHost.SelectedIndex = -1;
-         comboBoxHost.Items.Clear();
+         for (int idx = comboBoxHost.Items.Count - 1; idx >= 0; --idx)
+         {
+            HostComboBoxItem item = (HostComboBoxItem)comboBoxHost.Items[idx];
+            if (!listViewKnownHosts.Items.Cast<ListViewItem>().Any(x => x.Text == item.Host))
+            {
+               comboBoxHost.Items.RemoveAt(idx);
+            }
+         }
 
          foreach (ListViewItem item in listViewKnownHosts.Items)
          {
-            HostComboBoxItem hostItem = new HostComboBoxItem
+            if (!comboBoxHost.Items.Cast<HostComboBoxItem>().Any(x => x.Host == item.Text))
             {
-               Host = item.Text,
-               AccessToken = item.SubItems[1].Text
-            };
-            comboBoxHost.Items.Add(hostItem);
+               HostComboBoxItem hostItem = new HostComboBoxItem
+               {
+                  Host = item.Text,
+                  AccessToken = item.SubItems[1].Text
+               };
+               comboBoxHost.Items.Add(hostItem);
+            }
          }
+      }
+
+      private enum PreferredSelection
+      {
+         Initial,
+         Latest
+      }
+
+      private void selectHost(PreferredSelection preferred)
+      {
+         if (comboBoxHost.Items.Count == 0)
+         {
+            return;
+         }
+
+         comboBoxHost.SelectedIndex = -1;
+
+         HostComboBoxItem initialSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
+            x => x.Host == getInitialHostName());
+         HostComboBoxItem defaultSelectedItem = (HostComboBoxItem)comboBoxHost.Items[comboBoxHost.Items.Count - 1];
+         switch (preferred)
+         {
+            case PreferredSelection.Initial:
+               if (!String.IsNullOrEmpty(initialSelectedItem.Host))
+               {
+                  comboBoxHost.SelectedItem = initialSelectedItem;
+               }
+               else
+               {
+                  comboBoxHost.SelectedItem = defaultSelectedItem;
+               }
+               break;
+
+            case PreferredSelection.Latest:
+               comboBoxHost.SelectedItem = defaultSelectedItem;
+               break;
+         }
+      }
+
+      private bool selectMergeRequest(string projectname, int iid, bool exact)
+      {
+         foreach (ListViewItem item in listViewMergeRequests.Items)
+         {
+            FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
+            if (projectname == String.Empty ||
+                (iid == key.MergeRequest.IId && projectname == key.Project.Path_With_Namespace))
+            {
+               item.Selected = true;
+               return true;
+            }
+         }
+
+         if (exact)
+         {
+            return false;
+         }
+
+         // selected an item from the proper group
+         foreach (ListViewGroup group in listViewMergeRequests.Groups)
+         {
+            if (projectname == group.Name && group.Items.Count > 0)
+            {
+               group.Items[0].Selected = true;
+               return true;
+            }
+         }
+
+         // select whatever
+         foreach (ListViewGroup group in listViewMergeRequests.Groups)
+         {
+            if (group.Items.Count > 0)
+            {
+               group.Items[0].Selected = true;
+               return true;
+            }
+         }
+
+         return false;
+      }
+
+      private void selectNotReviewedCommits(out int left, out int right)
+      {
+         Debug.Assert(comboBoxLeftCommit.Items.Count == comboBoxRightCommit.Items.Count);
+
+         left = 0;
+         right = 0;
+
+         Debug.Assert(getMergeRequestKey().HasValue);
+         MergeRequestKey mrk = getMergeRequestKey().Value;
+         if (!_reviewedCommits.ContainsKey(mrk))
+         {
+            left = 0;
+            right = comboBoxRightCommit.Items.Count - 1;
+            return;
+         }
+
+         int? iNewestOfReviewedCommits = new Nullable<int>();
+         HashSet<string> reviewedCommits = _reviewedCommits[mrk];
+         for (int iItem = 0; iItem < comboBoxLeftCommit.Items.Count; ++iItem)
+         {
+            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[iItem])).SHA;
+            if (reviewedCommits.Contains(sha))
+            {
+               iNewestOfReviewedCommits = iItem;
+               break;
+            }
+         }
+
+         if (!iNewestOfReviewedCommits.HasValue)
+         {
+            return;
+         }
+
+         left = Math.Max(0, iNewestOfReviewedCommits.Value - 1);
+
+         // note that it should not be left + 1 because Left CB is shifted comparing to Right CB
+         right = Math.Min(left, comboBoxRightCommit.Items.Count - 1);
       }
 
       private void checkComboboxCommitsOrder(bool shouldReorderRightCombobox)
@@ -160,6 +287,19 @@ namespace mrHelper.App.Forms
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
          return true;
+      }
+
+      private bool removeKnownHost()
+      {
+         if (listViewKnownHosts.SelectedItems.Count > 0)
+         {
+            Trace.TraceInformation(String.Format("[MainForm] Removing host name {0}",
+               listViewKnownHosts.SelectedItems[0].ToString()));
+
+            listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
+            return true;
+         }
+         return false;
       }
 
       private string getHostWithPrefix(string host)
@@ -404,49 +544,6 @@ namespace mrHelper.App.Forms
             IsBase = true
          };
          comboBoxRightCommit.Items.Add(baseCommitItem);
-
-         selectNotReviewedCommits(out int leftSelectedIndex, out int rightSelectedIndex);
-         comboBoxLeftCommit.SelectedIndex = leftSelectedIndex;
-         comboBoxRightCommit.SelectedIndex = rightSelectedIndex;
-      }
-
-      private void selectNotReviewedCommits(out int left, out int right)
-      {
-         Debug.Assert(comboBoxLeftCommit.Items.Count == comboBoxRightCommit.Items.Count);
-
-         left = 0;
-         right = 0;
-
-         Debug.Assert(getMergeRequestKey().HasValue);
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-         if (!_reviewedCommits.ContainsKey(mrk))
-         {
-            left = 0;
-            right = comboBoxRightCommit.Items.Count - 1;
-            return;
-         }
-
-         int? iNewestOfReviewedCommits = new Nullable<int>();
-         HashSet<string> reviewedCommits = _reviewedCommits[mrk];
-         for (int iItem = 0; iItem < comboBoxLeftCommit.Items.Count; ++iItem)
-         {
-            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[iItem])).SHA;
-            if (reviewedCommits.Contains(sha))
-            {
-               iNewestOfReviewedCommits = iItem;
-               break;
-            }
-         }
-
-         if (!iNewestOfReviewedCommits.HasValue)
-         {
-            return;
-         }
-
-         left = Math.Max(0, iNewestOfReviewedCommits.Value - 1);
-
-         // note that it should not be left + 1 because Left CB is shifted comparing to Right CB
-         right = Math.Min(left, comboBoxRightCommit.Items.Count - 1);
       }
 
       private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)

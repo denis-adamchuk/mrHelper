@@ -25,8 +25,8 @@ namespace mrHelper.Client.Workflow
 
    public class NoProjectsException : WorkflowException
    {
-      internal NoProjectsException(): base(
-         String.Format("Project list is empty")) {}
+      internal NoProjectsException(string hostname): base(
+         String.Format("Project list for hostname {0} is empty", hostname)) {}
    }
 
    public class NotEnabledProjectException : WorkflowException
@@ -183,7 +183,7 @@ namespace mrHelper.Client.Workflow
          bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
          if (!hasEnabledProjects)
          {
-            throw new NoProjectsException();
+            throw new NoProjectsException(hostname);
          }
 
          if (projectname != String.Empty &&

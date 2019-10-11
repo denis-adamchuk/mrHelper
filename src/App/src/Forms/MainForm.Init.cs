@@ -214,8 +214,6 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Update();
          };
 
-         updateHostsDropdownList();
-
          createWorkflow();
 
          // Expression resolver requires Workflow 
@@ -231,7 +229,6 @@ namespace mrHelper.App.Forms
          // Time Tracking Manager requires Workflow
          createTimeTrackingManager();
 
-         // Now we can de-serialize the persistence state, Workflow subscribed to Storage callbacks
          try
          {
             _persistentStorage.Deserialize();
@@ -240,6 +237,8 @@ namespace mrHelper.App.Forms
          {
             ExceptionHandlers.Handle(ex, "Cannot deserialize the state");
          }
+
+         updateHostsDropdownList();
 
          try
          {
@@ -252,7 +251,8 @@ namespace mrHelper.App.Forms
             }
             else
             {
-               await switchHostAsync(getInitialHostName());
+               selectHost(PreferredSelection.Initial);
+               await switchHostToSelected();
             }
          }
          catch (WorkflowException ex)

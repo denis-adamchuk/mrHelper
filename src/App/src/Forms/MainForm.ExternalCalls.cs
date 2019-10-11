@@ -96,6 +96,9 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> restartWorkflowByUrl(string url, string hostname)
       {
+         _initialHostName = hostname;
+         selectHost(PreferredSelection.Initial);
+
          try
          {
             return await startWorkflowAsync(hostname, null);
@@ -106,12 +109,6 @@ namespace mrHelper.App.Forms
             {
                reportErrorOnConnect(url, String.Format("Check {0} file. ",
                   mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
-            }
-            else if (ex is NotEnabledProjectException)
-            {
-               reportErrorOnConnect(url, String.Format(
-                  "Current version supports connection to URL for projects listed in {0} only. ",
-                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, false);
             }
             else if (ex is WorkflowException)
             {
@@ -172,8 +169,17 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         bool restartWorkflow = listViewMergeRequests.Items.Count == 0
-            || ((FullMergeRequestKey)(listViewMergeRequests.Items[0].Tag)).HostName != mergeRequestUrl.Host;
+         HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
+            x => x.Host == mergeRequestUrl.Host);
+         if (proposedSelectedItem.Host == String.Empty)
+         {
+            reportErrorOnConnect(url, String.Format(
+               "Cannot connect to host {0} because it is not in the list of known hosts", mergeRequestUrl.Host),
+               null, true);
+            return;
+         }
+
+         bool restartWorkflow = comboBoxHost.SelectedText != mergeRequestUrl.Host;
          if (restartWorkflow && !await restartWorkflowByUrl(url, mergeRequestUrl.Host))
          {
             return;
@@ -194,7 +200,8 @@ namespace mrHelper.App.Forms
          else
          {
             reportErrorOnConnect(url, String.Format(
-               "Current version supports connection to URL for Open WIP merge requests only. "), null, false);
+               "Current version supports connection to URL for Open WIP merge requests of projects listed in {0} only. ",
+               mrHelper.Common.Constants.Constants.ProjectListFileName), null, false);
          }
       }
    }
