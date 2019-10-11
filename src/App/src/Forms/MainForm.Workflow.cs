@@ -278,10 +278,6 @@ namespace mrHelper.App.Forms
          if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
          {
             enableMergeRequestFilterControls(true);
-         }
-
-         if (listViewMergeRequests.Items.Count > 0)
-         {
             enableListView(listViewMergeRequests);
          }
 
