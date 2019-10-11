@@ -55,8 +55,8 @@ namespace mrHelper.App
          bool matchSucceded;
          try
          {
-            matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position) &&
-                            lineNumberMatcher.Match(_matchInfo, position, out position);
+            matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position);
+            lineNumberMatcher.Match(_matchInfo, position, out position);
          }
          catch (Exception ex)
          {

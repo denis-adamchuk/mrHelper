@@ -11,7 +11,8 @@ namespace mrHelper.Client.Discussions
 {
    public class DiscussionCreatorException : Exception
    {
-      public DiscussionCreatorException(bool handled)
+      public DiscussionCreatorException(bool handled, Exception ex)
+         : base("Discussion creation failed", ex)
       {
          Handled = handled;
       }
@@ -36,9 +37,9 @@ namespace mrHelper.Client.Discussions
          {
             await DiscussionOperator.CreateNoteAsync(MergeRequestKey, parameters);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionCreatorException(false);
+            throw new DiscussionCreatorException(false, ex);
          }
       }
 
@@ -51,7 +52,7 @@ namespace mrHelper.Client.Discussions
          catch (OperatorException ex)
          {
             bool handled = await handleGitlabError(parameters, ex);
-            throw new DiscussionCreatorException(handled);
+            throw new DiscussionCreatorException(handled, ex);
          }
       }
 

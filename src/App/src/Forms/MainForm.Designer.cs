@@ -19,6 +19,7 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+         _updateManager.Dispose();
          _gitClientFactory?.Dispose();
          _timeTrackingTimer?.Dispose();
          _workflow?.Dispose();

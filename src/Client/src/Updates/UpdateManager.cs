@@ -15,7 +15,7 @@ namespace mrHelper.Client.Updates
    /// <summary>
    /// Manages updates
    /// </summary>
-   public class UpdateManager
+   public class UpdateManager : IDisposable
    {
       public event Action<List<UpdatedMergeRequest>> OnUpdate;
 
@@ -52,6 +52,11 @@ namespace mrHelper.Client.Updates
             Trace.TraceInformation("[UpdateManager] Processing loaded latest version");
             Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
          };
+      }
+
+      public void Dispose()
+      {
+         Timer.Dispose();
       }
 
       public IProjectWatcher GetProjectWatcher()

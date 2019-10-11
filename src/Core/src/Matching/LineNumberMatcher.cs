@@ -28,7 +28,7 @@ namespace mrHelper.Core.Matching
       /// Throws ArgumentException in case of bad arguments.
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public bool Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
+      public void Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
       {
          if (!matchInfo.IsValid())
          {
@@ -48,7 +48,6 @@ namespace mrHelper.Core.Matching
          outDiffPosition = inDiffPosition;
          outDiffPosition.LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString;
          outDiffPosition.RightLine = isLeftSide ? oppositeLineAsString : currentLineAsString;
-         return true;
       }
 
       private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,

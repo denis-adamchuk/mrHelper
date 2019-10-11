@@ -37,15 +37,16 @@ namespace mrHelper.App
       [STAThread]
       private static void Main()
       {
-         LaunchContext context = new LaunchContext();
-
-         if (context.IsRunningSingleInstance)
+         using (LaunchContext context = new LaunchContext())
          {
-            onLaunchMainInstace(context);
-         }
-         else
-         {
-            onLaunchAnotherInstance(context);
+            if (context.IsRunningSingleInstance)
+            {
+               onLaunchMainInstace(context);
+            }
+            else
+            {
+               onLaunchAnotherInstance(context);
+            }
          }
       }
 

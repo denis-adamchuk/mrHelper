@@ -67,7 +67,7 @@ namespace mrHelper.App.Forms
          }
          catch (DiscussionCreatorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+            ExceptionHandlers.Handle(ex, "Cannot create a discussion from diff tool");
             MessageBox.Show(
                "Something went wrong at GitLab. See Merge Request Helper log files for details",
                "Cannot create a discussion",
