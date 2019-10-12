@@ -760,26 +760,38 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void fillListViewMergeRequests(List<FullMergeRequestKey> keys, bool clear)
+      private void updateVisibleMergeRequests()
       {
-         if (clear)
+         foreach (FullMergeRequestKey fmk in _allMergeRequests)
          {
-            listViewMergeRequests.SelectedItems.Clear();
-            listViewMergeRequests.Items.Clear();
+            int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
+               x => FullMergeRequestKey.SameMergeRequest((FullMergeRequestKey)x.Tag, fmk));
+            if (index == -1)
+            {
+               addListViewMergeRequestItem(fmk);
+            }
+            else
+            {
+               setListViewItemTag(listViewMergeRequests.Items[index], fmk);
+            }
          }
 
-         keys.ForEach(key => addListViewMergeRequestItem(key));
+         for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
+         {
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
+            if (!_allMergeRequests.Any(x => FullMergeRequestKey.SameMergeRequest(x, fmk))
+               || IsFilteredMergeRequest(fmk.MergeRequest, _settings))
+            {
+               listViewMergeRequests.Items.RemoveAt(index);
+            }
+         }
+
          recalcRowHeightForMergeRequestListView(listViewMergeRequests);
          listViewMergeRequests.Invalidate();
       }
 
       private void addListViewMergeRequestItem(FullMergeRequestKey fmk)
       {
-         if (IsFilteredMergeRequest(fmk.MergeRequest, _settings))
-         {
-            return;
-         }
-
          ListViewGroup group = listViewMergeRequests.Groups[fmk.Project.Path_With_Namespace];
          ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
             {
@@ -789,23 +801,23 @@ namespace mrHelper.App.Forms
                String.Empty, // Column Labels (stub)
                String.Empty, // Column Jira (stub)
             }, group));
-         setListViewItemTag(item, fmk.HostName, fmk.Project, fmk.MergeRequest);
+         setListViewItemTag(item, fmk);
       }
 
-      private void setListViewItemTag(ListViewItem item, string hostname, Project project, MergeRequest mergeRequest)
+      private void setListViewItemTag(ListViewItem item, FullMergeRequestKey fmk)
       {
-         item.Tag = new FullMergeRequestKey(hostname, project, mergeRequest);
+         item.Tag = fmk;
 
          string jiraServiceUrl = _serviceManager.GetJiraServiceUrl();
-         string jiraTask = getJiraTask(mergeRequest);
+         string jiraTask = getJiraTask(fmk.MergeRequest);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mergeRequest.IId.ToString(), () => mergeRequest.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => mergeRequest.Author.Name,    () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mergeRequest.Title,          () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mergeRequest),  () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                    () => jiraTaskUrl);
+         item.SubItems[0].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.IId.ToString(), () => fmk.MergeRequest.Web_Url);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.Author.Name,    () => String.Empty);
+         item.SubItems[2].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.Title,          () => String.Empty);
+         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(fmk.MergeRequest),  () => String.Empty);
+         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                        () => jiraTaskUrl);
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -870,6 +882,115 @@ namespace mrHelper.App.Forms
          {
             ExceptionHandlers.Handle(ex, "Cannot open URL");
             MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private int GetIndex<T>(ListView.ListViewItemCollection collection, Func<T, bool> match)
+      {
+         for (int index = collection.Count - 1; index >= 0; --index)
+         {
+            if (match((dynamic)(collection[index].Tag)))
+            {
+               return index;
+            }
+         }
+         return -1;
+      }
+
+      private int GetIndex<T>(List<FullMergeRequestKey> collection, Func<T, bool> match)
+      {
+         return collection.FindIndex(x => match((dynamic)x));
+      }
+
+      private void findAndProcess<T, U>(T collection, Func<U, bool> match, Action<int> action)
+      {
+         int index = GetIndex((dynamic)collection, match);
+         if (index != -1)
+         {
+            action(index);
+         }
+      }
+
+      private struct UpdateHint
+      {
+         public bool UpdateAllVisibleRows;
+         public bool ReloadCurrent;
+
+         public static UpdateHint operator + (UpdateHint a, UpdateHint b)
+         {
+            return new UpdateHint
+            {
+               UpdateAllVisibleRows = a.UpdateAllVisibleRows || b.UpdateAllVisibleRows,
+               ReloadCurrent = a.ReloadCurrent || b.ReloadCurrent,
+            };
+         }
+      }
+
+      private void processUpdatesAsync(List<UpdatedMergeRequest> updates)
+      {
+         notifyOnMergeRequestUpdates(updates);
+
+         Func<FullMergeRequestKey, UpdateHint> processNew = (fmk) =>
+         {
+            _allMergeRequests.Add(fmk);
+            return new UpdateHint { UpdateAllVisibleRows = true };
+         };
+
+         Func<FullMergeRequestKey, UpdateHint> processClosed = (fmk) =>
+         {
+            findAndProcess<List<FullMergeRequestKey>, FullMergeRequestKey>(
+               _allMergeRequests, x => FullMergeRequestKey.SameMergeRequest(x, fmk),
+               (index) => _allMergeRequests.RemoveAt(index));
+            return new UpdateHint { UpdateAllVisibleRows = true };
+         };
+
+         Func<FullMergeRequestKey, UpdateHint> processLabelsUpdated = (fmk) =>
+         {
+            findAndProcess<List<FullMergeRequestKey>, FullMergeRequestKey>(
+               _allMergeRequests, x => FullMergeRequestKey.SameMergeRequest(x, fmk),
+               (index) => _allMergeRequests[index] = fmk);
+            return new UpdateHint { UpdateAllVisibleRows = true };
+         };
+
+         Func<FullMergeRequestKey, UpdateHint> processCommitsUpdated = (fmk) =>
+         {
+            bool reloadCurrent = false;
+            findAndProcess<ListView.ListViewItemCollection, FullMergeRequestKey>(
+               listViewMergeRequests.Items, x => FullMergeRequestKey.SameMergeRequest(x, fmk),
+               (index) => reloadCurrent = reloadCurrent || listViewMergeRequests.Items[index].Selected);
+            return new UpdateHint { ReloadCurrent = reloadCurrent };
+         };
+
+         UpdateHint updateHint = new UpdateHint();
+         foreach (UpdatedMergeRequest mergeRequest in updates)
+         {
+            FullMergeRequestKey fmk = new FullMergeRequestKey(
+               mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
+
+            switch (mergeRequest.UpdateKind)
+            {
+               case UpdateKind.New:                      updateHint += processNew(fmk);            break;
+               case UpdateKind.Closed:                   updateHint += processClosed(fmk);         break;
+               case UpdateKind.CommitsUpdated:           updateHint += processCommitsUpdated(fmk); break;
+               case UpdateKind.LabelsUpdated:            updateHint += processLabelsUpdated(fmk);  break;
+               case UpdateKind.CommitsAndLabelsUpdated:  updateHint += processCommitsUpdated(fmk)
+                                                                     + processLabelsUpdated(fmk);  break;
+            }
+         }
+
+         if (updateHint.UpdateAllVisibleRows)
+         {
+            updateVisibleMergeRequests();
+         }
+
+         if (updateHint.ReloadCurrent)
+         {
+            Trace.TraceInformation("[MainForm] Reloading current Merge Request");
+
+            Debug.Assert(listViewMergeRequests.SelectedItems.Count > 0);
+            ListViewItem selected = listViewMergeRequests.SelectedItems[0];
+            selected.Selected = false;
+            selected.Selected = true;
          }
       }
    }

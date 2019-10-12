@@ -223,7 +223,7 @@ namespace mrHelper.App.Forms
          }
          _allMergeRequests.AddRange(keys);
 
-         fillListViewMergeRequests(keys, false);
+         updateVisibleMergeRequests();
 
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 

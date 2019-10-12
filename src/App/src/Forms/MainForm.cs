@@ -139,6 +139,13 @@ namespace mrHelper.App.Forms
             Project = project;
             MergeRequest = mergeRequest;
          }
+
+         public static bool SameMergeRequest(FullMergeRequestKey fmk1, FullMergeRequestKey fmk2)
+         {
+            return fmk1.HostName == fmk2.HostName
+                && fmk1.Project.Path_With_Namespace == fmk2.Project.Path_With_Namespace
+                && fmk1.MergeRequest.IId == fmk2.MergeRequest.IId;
+         }
       }
 
       private List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();

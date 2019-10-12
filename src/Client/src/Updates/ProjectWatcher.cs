@@ -46,7 +46,8 @@ namespace mrHelper.Client.Updates
          foreach (UpdatedMergeRequest mergeRequest in mergeRequests)
          {
             bool mayCauseProjectChange = mergeRequest.UpdateKind == UpdateKind.New
-                                      || mergeRequest.UpdateKind == UpdateKind.CommitsUpdated;
+                                      || mergeRequest.UpdateKind == UpdateKind.CommitsUpdated
+                                      || mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated;
             if (!mayCauseProjectChange)
             {
                continue;

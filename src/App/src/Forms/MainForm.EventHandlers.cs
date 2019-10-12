@@ -215,6 +215,11 @@ namespace mrHelper.App.Forms
 
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
+         if (e.Item.ListView == null)
+         {
+            return; // is being removed
+         }
+
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
 
          e.DrawBackground();
@@ -427,7 +432,7 @@ namespace mrHelper.App.Forms
 
          if (_settings.CheckedLabelsFilter)
          {
-            fillListViewMergeRequests(_allMergeRequests, true);
+            updateVisibleMergeRequests();
          }
       }
 
@@ -437,7 +442,7 @@ namespace mrHelper.App.Forms
 
          if (_workflow != null)
          {
-            fillListViewMergeRequests(_allMergeRequests, true);
+            updateVisibleMergeRequests();
          }
       }
 
@@ -445,6 +450,7 @@ namespace mrHelper.App.Forms
       {
          if (comboBoxHost.SelectedItem != null)
          {
+            Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
             await switchHostAsync(((HostComboBoxItem)comboBoxHost.SelectedItem).Host);
          }
       }
