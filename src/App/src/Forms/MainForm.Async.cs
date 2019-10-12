@@ -343,7 +343,7 @@ namespace mrHelper.App.Forms
          if (_silentUpdateInProgress.Contains(pk))
          {
             Trace.TraceInformation(String.Format(
-               "[MainForm] Silent update for {0} is cancelled due to a concurrent silent update", pk.ProjectName));
+               "[MainForm] Silent update for {0} is skipped due to a concurrent silent update", pk.ProjectName));
             return;
          }
 
