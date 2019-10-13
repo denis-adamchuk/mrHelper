@@ -159,6 +159,17 @@ namespace mrHelper.App.Forms
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
 
+         List<string> includedSHA = new List<string>();
+         for (int index = comboBoxLeftCommit.SelectedIndex; index < comboBoxLeftCommit.Items.Count; ++index)
+         {
+            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[index])).SHA;
+            includedSHA.Add(sha);
+            if (sha == leftSHA)
+            {
+               break;
+            }
+         }
+
          Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
 
@@ -230,9 +241,7 @@ namespace mrHelper.App.Forms
          {
             _reviewedCommits[mrk] = new HashSet<string>();
          }
-
-         _reviewedCommits[mrk].Add(leftSHA);
-         _reviewedCommits[mrk].Add(rightSHA);
+         includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
 
          comboBoxLeftCommit.Refresh();
          comboBoxRightCommit.Refresh();
