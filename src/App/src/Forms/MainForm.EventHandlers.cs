@@ -288,10 +288,6 @@ namespace mrHelper.App.Forms
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
          if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
          {
-            selectNotReviewedCommits(out int left, out int right);
-            comboBoxLeftCommit.SelectedIndex = left;
-            comboBoxRightCommit.SelectedIndex = right;
-
             Debug.Assert(getMergeRequestKey().HasValue);
             _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
             return;
@@ -379,9 +375,8 @@ namespace mrHelper.App.Forms
       async private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
       {
          bool removeCurrent =
-               listViewKnownHosts.SelectedItems.Count > 0
-            && comboBoxHost.SelectedItem != null
-            && ((HostComboBoxItem)(comboBoxHost.SelectedItem)).Host == listViewKnownHosts.SelectedItems[0].Text;
+               listViewKnownHosts.SelectedItems.Count > 0 && getHostName() != String.Empty
+            && getHostName() == listViewKnownHosts.SelectedItems[0].Text;
 
          if (!removeKnownHost())
          {
@@ -448,10 +443,10 @@ namespace mrHelper.App.Forms
 
       async private void ButtonReloadList_Click(object sender, EventArgs e)
       {
-         if (comboBoxHost.SelectedItem != null)
+         if (getHostName() != String.Empty)
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
-            await switchHostAsync(((HostComboBoxItem)comboBoxHost.SelectedItem).Host);
+            await switchHostAsync(getHostName());
          }
       }
 
@@ -468,7 +463,7 @@ namespace mrHelper.App.Forms
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          Debug.Assert(getMergeRequestKey().HasValue);
-         getGitClient(getMergeRequestKey().Value.ProjectKey)?.CancelAsyncOperation();
+         getGitClient(getMergeRequestKey().Value.ProjectKey, false)?.CancelAsyncOperation();
       }
 
       protected override void WndProc(ref Message rMessage)

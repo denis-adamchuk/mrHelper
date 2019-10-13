@@ -34,7 +34,7 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = getMergeRequestKey().Value;
          MergeRequest mergeRequest = getMergeRequest().Value;
 
-         GitClient client = getGitClient(mrk.ProjectKey);
+         GitClient client = getGitClient(mrk.ProjectKey, true);
          if (client != null)
          {
             enableControlsOnGitAsyncOperation(false);
@@ -109,7 +109,7 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     GitClient gitClient = getGitClient(key.ProjectKey);
+                     GitClient gitClient = getGitClient(key.ProjectKey, true);
                      if (!gitClient.DoesRequireClone())
                      {
                         // Using remote checker because there are might be discussions reported
@@ -162,7 +162,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
 
-         GitClient client = getGitClient(mrk.ProjectKey);
+         GitClient client = getGitClient(mrk.ProjectKey, true);
          if (client != null)
          {
             enableControlsOnGitAsyncOperation(false);
@@ -349,7 +349,7 @@ namespace mrHelper.App.Forms
 
          _silentUpdateInProgress.Add(pk);
 
-         GitClient client = getGitClient(pk);
+         GitClient client = getGitClient(pk, false);
          if (client == null || client.DoesRequireClone())
          {
             Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository silently: {0}",

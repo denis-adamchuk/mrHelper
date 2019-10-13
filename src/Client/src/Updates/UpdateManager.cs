@@ -101,9 +101,9 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         if (_hostname == String.Empty)
+         if (String.IsNullOrEmpty(_hostname) || _projects == null)
          {
-            Trace.TraceWarning("[UpdateManager] Auto-update is cancelled because host name is empty");
+            Trace.TraceWarning("[UpdateManager] Auto-update is cancelled");
             return;
          }
 

@@ -179,8 +179,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         bool restartWorkflow = comboBoxHost.SelectedText != mergeRequestUrl.Host;
-         if (restartWorkflow && !await restartWorkflowByUrl(url, mergeRequestUrl.Host))
+         // We need to restart the workflow here because we possible have an outdated list of merge requests in the cache
+         if (!await restartWorkflowByUrl(url, mergeRequestUrl.Host))
          {
             return;
          }

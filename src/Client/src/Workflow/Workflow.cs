@@ -283,11 +283,11 @@ namespace mrHelper.Client.Workflow
          PostLoadSingleMergeRequest?.Invoke(projectName, mergeRequest);
 
          if (!await loadLatestVersionAsync(hostname, projectName, mergeRequest)
-          || !await loadSystemNotesAsync(hostname, projectName, mergeRequest))
+          || !await loadCommitsAsync(hostname, projectName, mergeRequest))
          {
             return false;
          }
-         return await loadCommitsAsync(hostname, projectName, mergeRequest);
+         return await loadSystemNotesAsync(hostname, projectName, mergeRequest);
       }
 
       async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)

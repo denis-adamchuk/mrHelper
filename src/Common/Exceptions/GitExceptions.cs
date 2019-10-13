@@ -5,6 +5,14 @@ namespace mrHelper.Common.Exceptions
 {
    public class GitOperationException : Exception
    {
+      public GitOperationException(string message, int exitcode)
+         : base(message)
+      {
+         Details = message;
+         ExitCode = exitcode;
+         Cancelled = false;
+      }
+
       public GitOperationException(string command, int exitcode, List<string> errorOutput)
          : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
       {
@@ -17,9 +25,9 @@ namespace mrHelper.Common.Exceptions
       public bool Cancelled { get; set; } = false;
    }
 
-   public class GitObjectException : Exception
+   public class GitObjectException : GitOperationException
    {
-      public GitObjectException(string message) : base(message) { }
+      public GitObjectException(string message, int exitcode) : base(message, exitcode) { }
    }
 }
 

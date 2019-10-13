@@ -667,7 +667,7 @@ namespace mrHelper.App.Forms
       /// Make some checks and create a Client
       /// </summary>
       /// <returns>null if could not create a GitClient</returns>
-      private GitClient getGitClient(ProjectKey key)
+      private GitClient getGitClient(ProjectKey key, bool showMessageBoxOnError)
       {
          GitClientFactory factory = getGitClientFactory(_settings.LocalGitFolder);
          if (factory == null)
@@ -683,7 +683,10 @@ namespace mrHelper.App.Forms
          catch (ArgumentException ex)
          {
             ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClient"));
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (showMessageBoxOnError)
+            {
+               MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             return null;
          }
 

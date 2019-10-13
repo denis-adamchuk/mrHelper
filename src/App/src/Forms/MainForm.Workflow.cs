@@ -61,9 +61,7 @@ namespace mrHelper.App.Forms
 
       async private Task switchHostToSelected()
       {
-         string hostname =
-            comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
-         await switchHostAsync(hostname);
+         await switchHostAsync(getHostName());
       }
 
       async private Task switchHostAsync(string hostName)
@@ -332,6 +330,9 @@ namespace mrHelper.App.Forms
             enableComboBox(comboBoxRightCommit);
 
             addCommitsToComboBoxes(commits, mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
+            selectNotReviewedCommits(out int left, out int right);
+            comboBoxLeftCommit.SelectedIndex = left;
+            comboBoxRightCommit.SelectedIndex = right;
 
             enableCommitActions(true);
          }
