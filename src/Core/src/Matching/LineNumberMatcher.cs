@@ -28,7 +28,7 @@ namespace mrHelper.Core.Matching
       /// Throws ArgumentException in case of bad arguments.
       /// Throws GitOperationException in case of problems with git.
       /// </summary>
-      public bool Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
+      public void Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
       {
          if (!matchInfo.IsValid())
          {
@@ -48,7 +48,6 @@ namespace mrHelper.Core.Matching
          outDiffPosition = inDiffPosition;
          outDiffPosition.LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString;
          outDiffPosition.RightLine = isLeftSide ? oppositeLineAsString : currentLineAsString;
-         return true;
       }
 
       private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,
@@ -66,7 +65,7 @@ namespace mrHelper.Core.Matching
          SparsedListIterator<string> itCurrentList = SparsedListUtils.FindNth(currentList.Begin(), lineNumber - 1);
          SparsedListIterator<string> itOppositeList = SparsedListUtils.Advance(oppositeList.Begin(), itCurrentList.Position);
 
-         return itOppositeList.LineNumber == null ? new Nullable<int>() : itOppositeList.LineNumber.Value + 1;
+         return itOppositeList.GetLineNumber() == null ? new Nullable<int>() : itOppositeList.GetLineNumber().Value + 1;
       }
 
       private readonly IGitRepository _gitRepository;

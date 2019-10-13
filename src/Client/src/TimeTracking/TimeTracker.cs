@@ -8,16 +8,16 @@ namespace mrHelper.Client.TimeTracking
 {
    public class TimeTrackerException : Exception {}
 
-   internal delegate Task OnTrackerStoppedAsync(TimeSpan timeSpan, MergeRequestDescriptor mrd);
+   internal delegate Task OnTrackerStoppedAsync(TimeSpan timeSpan, MergeRequestKey mrk);
 
    /// <summary>
    /// Implements a merge request time tracker with simple interface
    /// </summary>
    public class TimeTracker
    {
-      internal TimeTracker(MergeRequestDescriptor mrd, OnTrackerStoppedAsync onTrackerStopped)
+      internal TimeTracker(MergeRequestKey mrk, OnTrackerStoppedAsync onTrackerStopped)
       {
-         MergeRequestDescriptor = mrd;
+         MergeRequestKey = mrk;
          OnStopped = onTrackerStopped;
          Stopwatch = new Stopwatch();
       }
@@ -29,7 +29,7 @@ namespace mrHelper.Client.TimeTracking
 
          Trace.TraceInformation(String.Format(
             "[TimeTracker] Starting time tracking for MR IId {0} (project {1}",
-            MergeRequestDescriptor.IId, MergeRequestDescriptor.ProjectName));
+            MergeRequestKey.IId, MergeRequestKey.ProjectKey.ProjectName));
       }
 
       async public Task StopAsync()
@@ -41,9 +41,9 @@ namespace mrHelper.Client.TimeTracking
 
             Trace.TraceInformation(String.Format(
                "[TimeTracker] Time tracking stopped. Sending {0} for MR IId {1} (project {2})",
-               span.ToString(), MergeRequestDescriptor.IId, MergeRequestDescriptor.ProjectName));
+               span.ToString(), MergeRequestKey.IId, MergeRequestKey.ProjectKey.ProjectName));
 
-            await OnStopped(span, MergeRequestDescriptor);
+            await OnStopped(span, MergeRequestKey);
          }
          catch (OperatorException)
          {
@@ -55,14 +55,14 @@ namespace mrHelper.Client.TimeTracking
       {
          Trace.TraceInformation(String.Format(
             "[TimeTracker] Time tracking for MR IId {0} (project {1}) cancelled",
-            MergeRequestDescriptor.IId, MergeRequestDescriptor.ProjectName));
+            MergeRequestKey.IId, MergeRequestKey.ProjectKey.ProjectName));
 
          Stopwatch.Stop();
       }
 
       public TimeSpan Elapsed { get { return Stopwatch.Elapsed; } }
 
-      private MergeRequestDescriptor MergeRequestDescriptor { get; }
+      private MergeRequestKey MergeRequestKey { get; }
       private Stopwatch Stopwatch { get; }
       private OnTrackerStoppedAsync OnStopped { get; }
    }

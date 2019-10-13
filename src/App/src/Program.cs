@@ -28,7 +28,7 @@ namespace mrHelper.App
       }
 
       private static readonly Regex url_re = new Regex( String.Format(
-         @"^({0}:\/\/)?(http[s]?:\/\/[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
+         @"^({0}:\/\/)?((http[s]?:\/\/)?[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
             mrHelper.Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       /// <summary>
@@ -37,15 +37,16 @@ namespace mrHelper.App
       [STAThread]
       private static void Main()
       {
-         LaunchContext context = new LaunchContext();
-
-         if (context.IsRunningSingleInstance)
+         using (LaunchContext context = new LaunchContext())
          {
-            onLaunchMainInstace(context);
-         }
-         else
-         {
-            onLaunchAnotherInstance(context);
+            if (context.IsRunningSingleInstance)
+            {
+               onLaunchMainInstace(context);
+            }
+            else
+            {
+               onLaunchAnotherInstance(context);
+            }
          }
       }
 

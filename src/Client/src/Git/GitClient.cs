@@ -44,25 +44,21 @@ namespace mrHelper.Client.Git
          {
             if (_descriptor != null)
             {
-               CancelAsyncOperation();
-
-               while (_descriptor != null)
-               {
-                  await Task.Delay(50);
-               }
+               await pickupGitCommandAsync(reportProgress);
+               return;
             }
 
             if (canClone(Path))
             {
                string arguments = "clone --progress " + _hostName + "/" + _projectName + " " + Path;
-               await run_async(arguments, reportProgress);
+               await executeGitCommandAsync(arguments, reportProgress);
                return;
             }
 
-            await (Task)run_in_path(() =>
+            await (Task)changeCurrentDirectoryAndRun(() =>
             {
                string arguments = "fetch --progress";
-               return run_async(arguments, reportProgress);
+               return executeGitCommandAsync(arguments, reportProgress);
             }, Path);
          },
             (hostNameToCheck, projectNameToCheck) =>
@@ -95,7 +91,7 @@ namespace mrHelper.Client.Git
       /// </summary>
       public int DiffTool(string name, string leftCommit, string rightCommit)
       {
-         return (int)run_in_path(() =>
+         return (int)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
             return GitUtils.git(arguments, false).PID;
@@ -143,7 +139,7 @@ namespace mrHelper.Client.Git
             return _cachedDiffs[key];
          }
 
-         List<string> result = (List<string>)run_in_path(() =>
+         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string arguments =
                "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
@@ -157,7 +153,7 @@ namespace mrHelper.Client.Git
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)run_in_path(() =>
+         return (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
             return GitUtils.git(arguments).Output;
@@ -177,7 +173,7 @@ namespace mrHelper.Client.Git
             return _cachedRevisions[key];
          }
 
-         List<string> result = (List<string>)run_in_path(() =>
+         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "show " + sha + ":" + filename;
             return GitUtils.git(arguments).Output;
@@ -202,7 +198,7 @@ namespace mrHelper.Client.Git
             return false;
          }
 
-         return (bool)run_in_path(() =>
+         return (bool)changeCurrentDirectoryAndRun(() =>
          {
             try
             {
@@ -217,7 +213,7 @@ namespace mrHelper.Client.Git
          }, path);
       }
 
-      static private object run_in_path(Func<object> cmd, string path)
+      static private object changeCurrentDirectoryAndRun(Func<object> cmd, string path)
       {
          var cwd = Directory.GetCurrentDirectory();
          try
@@ -234,16 +230,15 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task run_async(string arguments, Action<string> onProgressChange)
+      async private Task executeGitCommandAsync(string arguments, Action<string> onProgressChange)
       {
-         Progress<string> progress = onProgressChange != null ? new Progress<string>() : null;
-         if (onProgressChange != null)
+         _onProgressChange = onProgressChange;
+
+         Progress<string> progress = new Progress<string>();
+         progress.ProgressChanged += (sender, status) =>
          {
-            progress.ProgressChanged += (sender, status) =>
-            {
-               onProgressChange(status);
-            };
-         }
+            _onProgressChange?.Invoke(status);
+         };
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             _projectName, arguments));
@@ -269,6 +264,20 @@ namespace mrHelper.Client.Git
          }
       }
 
+      async private Task pickupGitCommandAsync(Action<string> onProgressChange)
+      {
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}", _projectName));
+
+         _onProgressChange = onProgressChange;
+
+         while (_descriptor != null)
+         {
+            await Task.Delay(50);
+         }
+
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}", _projectName));
+      }
+
       private struct DiffCacheKey
       {
          public string sha1;
@@ -290,10 +299,12 @@ namespace mrHelper.Client.Git
       private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
          new Dictionary<RevisionCacheKey, List<string>>();
 
-      private GitUtils.GitAsyncTaskDescriptor _descriptor = null;
+      private GitUtils.GitAsyncTaskDescriptor _descriptor;
 
       private string _hostName { get; }
       private string _projectName { get; }
+
+      private Action<string> _onProgressChange;
    }
 }
 

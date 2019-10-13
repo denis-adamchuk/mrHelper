@@ -1,8 +1,8 @@
 using System.Windows.Forms;
 
-namespace mrHelper.App.Controls
+namespace mrHelper.CommonControls
 {
-   internal class TextBoxNoWheel : TextBox
+   public class TextBoxNoWheel : TextBox
    {
       protected override void WndProc(ref Message m)
       {

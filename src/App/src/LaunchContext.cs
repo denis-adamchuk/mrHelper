@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace mrHelper.App
 {
-   public class LaunchContext
+   public class LaunchContext : IDisposable
    {
       public LaunchContext()
       {
@@ -20,10 +20,15 @@ namespace mrHelper.App
          IsRunningSingleInstance = AllProcesses.Length == 1;
       }
 
-      public Process CurrentProcess;
-      public bool IsRunningSingleInstance;
-      public string[] Arguments;
+      public Process CurrentProcess { get; private set; }
+      public bool IsRunningSingleInstance { get; private set; }
+      public string[] Arguments { get; private set; }
       private readonly Process[] AllProcesses;
+
+      public void Dispose()
+      {
+         CurrentProcess.Dispose();
+      }
 
       public IntPtr GetWindowByCaption(string caption, bool startsWith)
       {
@@ -37,7 +42,7 @@ namespace mrHelper.App
             catch (Exception ex)
             {
                // Check if we could not obtain windows from a process
-               if (!(ex is ArgumentException) || (ex is InvalidOperationException))
+               if (!((ex is ArgumentException) || (ex is InvalidOperationException)))
                {
                   throw;
                }

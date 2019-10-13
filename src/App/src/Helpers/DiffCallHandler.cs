@@ -55,8 +55,8 @@ namespace mrHelper.App
          bool matchSucceded;
          try
          {
-            matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position) &&
-                            lineNumberMatcher.Match(_matchInfo, position, out position);
+            matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position);
+            lineNumberMatcher.Match(_matchInfo, position, out position);
          }
          catch (Exception ex)
          {
@@ -153,16 +153,13 @@ namespace mrHelper.App
             Position = includeContext ? createPositionParameters(position) : new Nullable<PositionParameters>()
          };
 
-         MergeRequestDescriptor mergeRequestDescriptor = new MergeRequestDescriptor
-         {
-            HostName = snapshot.Host,
-            ProjectName = snapshot.Project,
-            IId = snapshot.MergeRequestIId
-         };
 
          UserDefinedSettings settings = new UserDefinedSettings(false);
          DiscussionManager manager = new DiscussionManager(settings);
-         DiscussionCreator creator = manager.GetDiscussionCreator(mergeRequestDescriptor);
+
+         MergeRequestKey mergeRequestKey = new MergeRequestKey(
+               snapshot.Host, snapshot.Project, snapshot.MergeRequestIId);
+         DiscussionCreator creator = manager.GetDiscussionCreator(mergeRequestKey);
 
          try
          {

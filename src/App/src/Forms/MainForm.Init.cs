@@ -29,7 +29,20 @@ namespace mrHelper.App.Forms
    {
       private void addCustomActions()
       {
-         List<ICommand> commands = Tools.LoadCustomActions(this);
+         CustomCommandLoader loader = new CustomCommandLoader(this);
+         List<ICommand> commands = null;
+         try
+         {
+            string CustomActionsFileName = "CustomActions.xml";
+            commands = loader.LoadCommands(CustomActionsFileName);
+         }
+         catch (CustomCommandLoaderException ex)
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
+            // Do not try to load custom actions if they don't exist.
+            ExceptionHandlers.Handle(ex, "Cannot load custom actions");
+         }
+
          if (commands == null)
          {
             return;
@@ -41,7 +54,7 @@ namespace mrHelper.App.Forms
             X = 10,
             Y = 17
          };
-         System.Drawing.Size typicalSize = new System.Drawing.Size(83, 27);
+         System.Drawing.Size typicalSize = new System.Drawing.Size(96, 32);
          foreach (var command in commands)
          {
             string name = command.GetName();
@@ -113,7 +126,6 @@ namespace mrHelper.App.Forms
          textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
          checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
          textBoxLabels.Text = _settings.LastUsedLabels;
-         checkBoxShowPublicOnly.Checked = _settings.ShowPublicOnly;
          checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
 
          if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
@@ -178,13 +190,21 @@ namespace mrHelper.App.Forms
 
       async private Task onApplicationStarted()
       {
+         if (!System.IO.File.Exists(Common.Constants.Constants.ProjectListFileName))
+         {
+            MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
+               Common.Constants.Constants.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+            return;
+         }
+
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
+         _serviceManager = new Client.Services.ServiceManager();
          _persistentStorage = new PersistentStorage();
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _workflowFactory = new WorkflowFactory(_settings, _persistentStorage);
          _discussionManager = new DiscussionManager(_settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
@@ -193,8 +213,6 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = status;
             labelWorkflowStatus.Update();
          };
-
-         updateHostsDropdownList();
 
          createWorkflow();
 
@@ -211,7 +229,6 @@ namespace mrHelper.App.Forms
          // Time Tracking Manager requires Workflow
          createTimeTrackingManager();
 
-         // Now we can de-serialize the persistence state, Workflow subscribed to Storage callbacks
          try
          {
             _persistentStorage.Deserialize();
@@ -221,10 +238,22 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle(ex, "Cannot deserialize the state");
          }
 
+         updateHostsDropdownList();
+
          try
          {
-            // Connect
-            await initializeWorkflow();
+            string[] arguments = Environment.GetCommandLineArgs();
+            string url = arguments.Length > 1 ? arguments[1] : String.Empty;
+
+            if (url != String.Empty)
+            {
+               await connectToUrlAsync(url);
+            }
+            else
+            {
+               selectHost(PreferredSelection.Initial);
+               await switchHostToSelected();
+            }
          }
          catch (WorkflowException ex)
          {
@@ -235,49 +264,7 @@ namespace mrHelper.App.Forms
       private void subscribeToUpdates()
       {
          _updateManager = new UpdateManager(_workflow, this, _settings);
-         _updateManager.OnUpdate +=
-            (updates) =>
-         {
-            BeginInvoke(new Action<MergeRequestUpdates>(
-               async (updatesInternal) =>
-               {
-                  if (_workflow.State.HostName != updatesInternal.HostName)
-                  {
-                     return;
-                  }
-
-                  notifyOnMergeRequestUpdates(updatesInternal);
-
-                  Project currentProject = _workflow.State.Project;
-                  if (currentProject.Id == default(Project).Id)
-                  {
-                     // state changed 
-                     Debug.Assert(false); // when possible?
-                     return;
-                  }
-
-                  // check if currently selected project is affected by update
-
-                  if (updatesInternal.NewMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id)
-                   || updatesInternal.UpdatedMergeRequests.Any(x => x.MergeRequest.Project_Id == _workflow.State.Project.Id)
-                   || updatesInternal.ClosedMergeRequests.Any(x => x.Project_Id == _workflow.State.Project.Id))
-                  {
-                     // emulate project change to reload merge request list
-                     // This will automatically update commit list (if there are new ones).
-                     // This will also remove closed merge requests from the list.
-                     Trace.TraceInformation("[MainForm] Emulating project change to reload merge request list");
-
-                     try
-                     {
-                        await _workflow.SwitchProjectAsync(currentProject.Path_With_Namespace);
-                     }
-                     catch (WorkflowException ex)
-                     {
-                        ExceptionHandlers.Handle(ex, "Workflow error occurred during auto-update");
-                     }
-                  }
-               }), updates);
-         };
+         _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
       }
 
       private void createTimeTrackingManager()

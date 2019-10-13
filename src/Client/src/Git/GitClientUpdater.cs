@@ -165,9 +165,9 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private Func<Action<string>, Task> _onUpdate;
-      private Func<string, string, bool> _isMyProject;
-      private IProjectWatcher _projectWatcher;
+      private readonly Func<Action<string>, Task> _onUpdate;
+      private readonly Func<string, string, bool> _isMyProject;
+      private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
       private DateTime _latestChange { get; set; } = DateTime.MinValue;

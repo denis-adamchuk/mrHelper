@@ -14,9 +14,9 @@ namespace mrHelper.Client.Updates
    /// </summary>
    public class LocalProjectChecker : IInstantProjectChecker
    {
-      internal LocalProjectChecker(int mergeRequestId, IWorkflowDetails details)
+      internal LocalProjectChecker(MergeRequestKey mrk, IWorkflowDetails details)
       {
-         MergeRequestId = mergeRequestId;
+         MergeRequestKey = mrk;
          Details = details;
       }
 
@@ -26,7 +26,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async public Task<DateTime> GetLatestChangeTimestampAsync()
       {
-         return await Task.FromResult(Details.GetLatestChangeTimestamp(MergeRequestId));
+         return await Task.FromResult(Details.GetLatestChangeTimestamp(MergeRequestKey));
 
          /*
             Commented out: advanced algorithm of detecting the most latest timestamp
@@ -51,10 +51,10 @@ namespace mrHelper.Client.Updates
 
       public override string ToString()
       {
-         return String.Format("LocalProjectChecker. MergeRequest Id: {0}", MergeRequestId);
+         return String.Format("LocalProjectChecker. MergeRequest IId: {0}", MergeRequestKey.IId);
       }
 
-      private int MergeRequestId { get; }
+      private MergeRequestKey MergeRequestKey { get; }
       private IWorkflowDetails Details { get; }
    }
 }

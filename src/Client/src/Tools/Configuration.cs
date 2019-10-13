@@ -45,8 +45,10 @@ namespace mrHelper.Client.Tools
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                "mrHelper", "mrHelper.exe.config");
 
-         ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap();
-         configFileMap.ExeConfigFilename = configFilePath;
+         ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap
+         {
+            ExeConfigFilename = configFilePath
+         };
 
          _config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
 
@@ -117,6 +119,18 @@ namespace mrHelper.Client.Tools
       {
          get { return getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue); }
          set { setValue(ColorSchemeFileNameKeyName, value); }
+      }
+
+      public string GetAccessToken(string hostname)
+      {
+         for (int iKnownHost = 0; iKnownHost < KnownHosts.Count; ++iKnownHost)
+         {
+            if (hostname == KnownHosts[iKnownHost])
+            {
+               return KnownAccessTokens[iKnownHost];
+            }
+         }
+         return String.Empty;
       }
 
       private string getValue(string key, string defaultValue)

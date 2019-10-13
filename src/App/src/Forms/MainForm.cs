@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -18,6 +19,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
+using mrHelper.Client.Services;
 
 namespace mrHelper.App.Forms
 {
@@ -45,22 +47,22 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentHostName()
       {
-         return _workflow.State.HostName;
+         return getHostName();
       }
 
       public string GetCurrentAccessToken()
       {
-         return Tools.GetAccessToken(_workflow.State.HostName, _settings);
+         return _settings.GetAccessToken(getHostName());
       }
 
       public string GetCurrentProjectName()
       {
-         return _workflow.State.Project.Path_With_Namespace;
+         return getMergeRequestKey()?.ProjectKey.ProjectName ?? String.Empty;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return _workflow.State.MergeRequest.IId;
+         return getMergeRequestKey()?.IId ?? 0;
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
@@ -72,17 +74,19 @@ namespace mrHelper.App.Forms
       private bool _requireShowingTooltipOnHideToTray = true;
       private UserDefinedSettings _settings;
 
-      private WorkflowFactory _workflowFactory;
       private UpdateManager _updateManager;
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
       private PersistentStorage _persistentStorage;
+      private ServiceManager _serviceManager;
 
       private string _initialHostName = String.Empty;
-      private Dictionary<MergeRequestDescriptor, HashSet<string>> _reviewedCommits =
-         new Dictionary<MergeRequestDescriptor, HashSet<string>>();
+      private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
+         new Dictionary<MergeRequestKey, HashSet<string>>();
+      private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
+         new Dictionary<string, MergeRequestKey>();
       private Workflow _workflow;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
@@ -122,6 +126,47 @@ namespace mrHelper.App.Forms
          {
          }
       }
+
+      private struct FullMergeRequestKey
+      {
+         public string HostName;
+         public Project Project;
+         public MergeRequest MergeRequest;
+
+         public FullMergeRequestKey(string hostname, Project project, MergeRequest mergeRequest)
+         {
+            HostName = hostname;
+            Project = project;
+            MergeRequest = mergeRequest;
+         }
+
+         public static bool SameMergeRequest(FullMergeRequestKey fmk1, FullMergeRequestKey fmk2)
+         {
+            return fmk1.HostName == fmk2.HostName
+                && fmk1.Project.Path_With_Namespace == fmk2.Project.Path_With_Namespace
+                && fmk1.MergeRequest.IId == fmk2.MergeRequest.IId;
+         }
+      }
+
+      private List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();
+
+      private struct ListViewSubItemInfo
+      {
+         public ListViewSubItemInfo(Func<string> getText, Func<string> getUrl)
+         {
+            _getText = getText;
+            _getUrl = getUrl;
+         }
+
+         public bool Clickable => _getUrl() != String.Empty;
+         public string Text => _getText();
+         public string Url => _getUrl();
+
+         private readonly Func<string> _getText;
+         private readonly Func<string> _getUrl;
+      }
+
+      private User? _currentUser;
    }
 }
 

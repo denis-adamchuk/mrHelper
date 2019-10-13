@@ -20,11 +20,11 @@ namespace mrHelper.Client.Discussions
          DiscussionOperator = new DiscussionOperator(settings);
       }
 
-      async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestDescriptor mrd)
+      async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
          try
          {
-            return await DiscussionOperator.GetDiscussionsAsync(mrd);
+            return await DiscussionOperator.GetDiscussionsAsync(mrk);
          }
          catch (OperatorException)
          {
@@ -32,14 +32,14 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      public DiscussionCreator GetDiscussionCreator(MergeRequestDescriptor mrd)
+      public DiscussionCreator GetDiscussionCreator(MergeRequestKey mrk)
       {
-         return new DiscussionCreator(mrd, DiscussionOperator);
+         return new DiscussionCreator(mrk, DiscussionOperator);
       }
 
-      public DiscussionEditor GetDiscussionEditor(MergeRequestDescriptor mrd, string discussionId)
+      public DiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
       {
-         return new DiscussionEditor(mrd, discussionId, DiscussionOperator);
+         return new DiscussionEditor(mrk, discussionId, DiscussionOperator);
       }
 
       private DiscussionOperator DiscussionOperator { get; }

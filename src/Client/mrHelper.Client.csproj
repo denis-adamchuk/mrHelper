@@ -51,13 +51,15 @@
     <Compile Include="src\Discussions\DiscussionOperator.cs" />
     <Compile Include="src\Git\GitClient.cs" />
     <Compile Include="src\Git\GitClientFactory.cs" />
+    <Compile Include="src\Services\ServiceManager.cs" />
     <Compile Include="src\TimeTracking\TimeTracker.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingManager.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingOperator.cs" />
     <Compile Include="src\Tools\Configuration.cs" />
     <Compile Include="src\Tools\ExceptionHandlers.cs" />
-    <Compile Include="src\Tools\MergeRequestDescriptor.cs" />
+    <Compile Include="src\Tools\MergeRequestKey.cs" />
     <Compile Include="src\Tools\OperatorException.cs" />
+    <Compile Include="src\Tools\ProjectKey.cs" />
     <Compile Include="src\Tools\Tools.cs" />
     <Compile Include="src\Git\GitClientUpdater.cs" />
     <Compile Include="src\Tools\ExpressionResolver.cs" />
@@ -74,8 +76,6 @@
     <Compile Include="src\Updates\RemoteProjectChecker.cs" />
     <Compile Include="src\Workflow\Workflow.cs" />
     <Compile Include="src\Workflow\WorkflowDataOperator.cs" />
-    <Compile Include="src\Workflow\WorkflowFactory.cs" />
-    <Compile Include="src\Workflow\WorkflowState.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -85,7 +85,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
-      <Name>Common</Name>
+      <Name>mrHelper.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\CustomActions\mrHelper.CustomActions.csproj">
       <Project>{cb91ad53-06a4-45c2-b568-215bd24033bc}</Project>
@@ -93,7 +93,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Core\mrHelper.Core.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
-      <Name>Core</Name>
+      <Name>mrHelper.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

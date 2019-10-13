@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp;
 using mrHelper.Core.Interprocess;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
@@ -65,7 +67,7 @@ namespace mrHelper.App.Forms
          }
          catch (DiscussionCreatorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+            ExceptionHandlers.Handle(ex, "Cannot create a discussion from diff tool");
             MessageBox.Show(
                "Something went wrong at GitLab. See Merge Request Helper log files for details",
                "Cannot create a discussion",
@@ -79,57 +81,129 @@ namespace mrHelper.App.Forms
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
+         Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
          await connectToUrlAsync(url);
       }
 
-      async private Task<bool> connectToUrlAsync(string url)
+      private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
       {
-         Trace.TraceInformation(String.Format("[MainForm] Connecting to URL {0}", url));
+         MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex?.Message ?? "N/A"),
+            error ? "Error" : "Warning", MessageBoxButtons.OK,
+            error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
+            MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+         ExceptionHandlers.Handle(ex, String.Format("Cannot open URL {0}", url));
+      }
 
-         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
-         url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
-
-         Action<string, Exception, bool> ReportError =
-            (msg, ex, error) =>
-          {
-             MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex.Message),
-                error ? "Error" : "Warning", MessageBoxButtons.OK,
-                error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
-                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-             ExceptionHandlers.Handle(ex, String.Format("Cannot open URL", url));
-          };
+      async private Task<bool> restartWorkflowByUrl(string url, string hostname)
+      {
+         _initialHostName = hostname;
+         selectHost(PreferredSelection.Initial);
 
          try
          {
-            GitLabSharp.ParsedMergeRequestUrl mergeRequestUrl = new GitLabSharp.ParsedMergeRequestUrl(url);
-            await _workflow.InitializeAsync(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+            return await startWorkflowAsync(hostname, null);
          }
          catch (Exception ex)
          {
-            if (ex is NotEnabledProjectException)
+            if (ex is NoProjectsException)
             {
-               ReportError(String.Format("Current version supports connection to URL for projects listed in {0} only. ",
-                  Tools.ProjectListFileName), ex, false);
+               reportErrorOnConnect(url, String.Format("Check {0} file. ",
+                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
             }
-            else if (ex is NotAvailableMergeRequest)
+            else if (ex is WorkflowException)
             {
-               ReportError(String.Format("Current version supports connection to URL for Open WIP merge requests only. "),
-                  ex, false);
-            }
-            else if (ex is UriFormatException || ex is WorkflowException)
-            {
-               ReportError(String.Empty, ex, true);
+               reportErrorOnConnect(url, String.Empty, ex, true);
             }
             else
             {
                Debug.Assert(false);
             }
-            return false;
+         }
+         return false;
+      }
+
+      private void unhideFilteredMergeRequestAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      {
+         Trace.TraceInformation("[MainForm] Notify user that MR is hidden");
+
+         if (MessageBox.Show("Merge Request is hidden by filters, do you want to reset them?", "Warning",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+         {
+            Trace.TraceInformation("[MainForm] User decided to not reset filters");
+            return;
          }
 
-         return true;
+         _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
+            new MergeRequestKey(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+
+         checkBoxLabels.Checked = false;
+
+         if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+         {
+            Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+         }
+      }
+
+      async private Task connectToUrlAsync(string url)
+      {
+         if (url == String.Empty)
+         {
+            return;
+         }
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", url));
+
+         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
+         url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
+
+         UrlParser.ParsedMergeRequestUrl mergeRequestUrl;
+         try
+         {
+            mergeRequestUrl = UrlParser.ParseMergeRequestUrl(url);
+            mergeRequestUrl.Host = getHostWithPrefix(mergeRequestUrl.Host);
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(ex is UriFormatException);
+            reportErrorOnConnect(url, String.Empty, ex, true);
+            return;
+         }
+
+         HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
+            x => x.Host == mergeRequestUrl.Host);
+         if (proposedSelectedItem.Host == String.Empty)
+         {
+            reportErrorOnConnect(url, String.Format(
+               "Cannot connect to host {0} because it is not in the list of known hosts", mergeRequestUrl.Host),
+               null, true);
+            return;
+         }
+
+         // We need to restart the workflow here because we possible have an outdated list of merge requests in the cache
+         if (!await restartWorkflowByUrl(url, mergeRequestUrl.Host))
+         {
+            return;
+         }
+
+         if (selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+         {
+            return;
+         }
+
+         if (_allMergeRequests.Any(x =>
+                  x.HostName == mergeRequestUrl.Host
+               && x.MergeRequest.IId == mergeRequestUrl.IId
+               && x.Project.Path_With_Namespace == mergeRequestUrl.Project))
+         {
+            unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
+         }
+         else
+         {
+            reportErrorOnConnect(url, String.Format(
+               "Current version supports connection to URL for Open WIP merge requests of projects listed in {0} only. ",
+               mrHelper.Common.Constants.Constants.ProjectListFileName), null, false);
+         }
       }
    }
 }
-
 

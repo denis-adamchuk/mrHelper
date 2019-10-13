@@ -10,7 +10,7 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
-using mrHelper.App.Controls;
+using mrHelper.CommonControls;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Tools;

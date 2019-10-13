@@ -26,11 +26,11 @@ namespace mrHelper.App.Forms
       /// Throws:
       /// ArgumentException
       /// </summary>
-      internal DiscussionsForm(MergeRequestDescriptor mrd, string mrTitle, User mergeRequestAuthor,
+      internal DiscussionsForm(MergeRequestKey mrk, string mrTitle, User mergeRequestAuthor,
          IGitRepository gitRepository, int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions,
-         DiscussionManager manager, User currentUser, Func<MergeRequestDescriptor, Task> updateGitRepository)
+         DiscussionManager manager, User currentUser, Func<MergeRequestKey, Task> updateGitRepository)
       {
-         _mergeRequestDescriptor = mrd;
+         _mergeRequestKey = mrk;
          _mergeRequestTitle = mrTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
@@ -183,17 +183,17 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation(String.Format(
             "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
-               _mergeRequestDescriptor.HostName, _mergeRequestDescriptor.ProjectName, _mergeRequestDescriptor.IId));
+               _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
          this.Text = DefaultCaption + "   (Checking for new commits)";
-         await _updateGitRepository(_mergeRequestDescriptor);
+         await _updateGitRepository(_mergeRequestKey);
 
          this.Text = DefaultCaption + "   (Loading discussions)";
 
          List<Discussion> discussions = null;
          try
          {
-            discussions = await _manager.GetDiscussionsAsync(_mergeRequestDescriptor);
+            discussions = await _manager.GetDiscussionsAsync(_mergeRequestKey);
          }
          catch (DiscussionManagerException)
          {
@@ -305,7 +305,7 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestDescriptor, discussion.Id);
+            DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
                _diffContextDepth, _gitRepository, _colorScheme,
                (sender) =>
@@ -387,7 +387,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private readonly MergeRequestDescriptor _mergeRequestDescriptor;
+      private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
       private readonly IGitRepository _gitRepository;
@@ -396,7 +396,7 @@ namespace mrHelper.App.Forms
 
       private User _currentUser;
       private readonly DiscussionManager _manager;
-      private readonly Func<MergeRequestDescriptor, Task> _updateGitRepository;
+      private readonly Func<MergeRequestKey, Task> _updateGitRepository;
 
       private readonly DiscussionFilterPanel FilterPanel;
       private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences

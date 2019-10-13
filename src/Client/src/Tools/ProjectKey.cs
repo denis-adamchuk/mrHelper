@@ -1,11 +1,12 @@
 using System;
 
-namespace mrHelper.Common.Types
+namespace mrHelper.Client.Tools
 {
    public struct ProjectKey
    {
       public string HostName;
-      public int ProjectId;
+      public string ProjectName;
    }
+
 }
 

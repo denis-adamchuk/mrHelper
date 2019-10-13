@@ -16,6 +16,8 @@ namespace mrHelper.Client.Persistence
 
    public class PersistentStorage
    {
+      private readonly string storageFileName = "mrhelper.state.json";
+
       public event Action<IPersistentStateSetter> OnSerialize;
       public event Action<IPersistentStateGetter> OnDeserialize;
 
@@ -71,9 +73,8 @@ namespace mrHelper.Client.Persistence
 
       private string getFilePath()
       {
-         string filename = "mrHelper.state.json";
          return System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mrHelper", filename);
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mrHelper", storageFileName);
       }
    }
 }

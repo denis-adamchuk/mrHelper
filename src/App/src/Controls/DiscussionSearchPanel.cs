@@ -66,8 +66,8 @@ namespace mrHelper.App.Controls
          }
       }
 
-      Func<string, bool, int> _onFind;
-      Action _onCancel;
+      readonly Func<string, bool, int> _onFind;
+      readonly Action _onCancel;
    }
 }
 

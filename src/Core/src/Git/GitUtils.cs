@@ -104,7 +104,7 @@ namespace mrHelper.Core.Git
                {
                   string reasons = "Possible reasons:\n-Git repository is not up-to-date\n-Given commit is no longer in the repository (force push?)";
                   string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
-                  throw new GitObjectException(message);
+                  throw new GitObjectException(message, exitcode);
                }
             }
             return new GitOutput { Output = output, Errors = errors, PID = process.HasExited ? -1 : process.Id };

@@ -76,12 +76,6 @@
     <Compile Include="src\Controls\DiscussionSearchPanel.Designer.cs">
       <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\SelectionPreservingComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="src\Controls\TextBoxNoWheel.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -209,13 +203,17 @@
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CommonControls\mrHelper.CommonControls.csproj">
+      <Project>{2c6bdbb7-c1e2-46b6-a850-47892837f0c3}</Project>
+      <Name>mrHelper.CommonControls</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CommonTools\mrHelper.CommonTools.csproj">
       <Project>{3170D188-51AB-4634-975C-9DAA826570C9}</Project>
       <Name>mrHelper.CommonTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
-      <Name>Common</Name>
+      <Name>mrHelper.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\Core\mrHelper.Core.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>

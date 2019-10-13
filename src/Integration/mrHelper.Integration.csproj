@@ -62,7 +62,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
-      <Name>Common</Name>
+      <Name>mrHelper.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

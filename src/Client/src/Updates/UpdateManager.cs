@@ -15,9 +15,9 @@ namespace mrHelper.Client.Updates
    /// <summary>
    /// Manages updates
    /// </summary>
-   public class UpdateManager
+   public class UpdateManager : IDisposable
    {
-      public event Action<MergeRequestUpdates> OnUpdate;
+      public event Action<List<UpdatedMergeRequest>> OnUpdate;
 
       public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings)
@@ -33,44 +33,30 @@ namespace mrHelper.Client.Updates
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
-         Workflow.PostSwitchHost += (state, projects) =>
+         Workflow.PostLoadHostProjects += (hostname, projects) =>
          {
-            synchronizeInvoke.BeginInvoke(new Action<string>(
-               async (hostname) =>
-               {
-                  Trace.TraceInformation("[UpdateManager] Processing host switch");
-
-                  await initializeAsync(hostname);
-               }), new object[] { state.HostName });
+            Trace.TraceInformation(String.Format(
+               "[UpdateManager] Set hostname for updates to {0}, will update {1} projects", hostname, projects.Count));
+            _hostname = hostname;
+            _projects = projects;
          };
 
-         Workflow.PostSwitchProject += (state, mergeRequests) =>
+         Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing project switch");
-
-            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.Project.Id));
-
-            Cache.UpdateMergeRequests(state.HostName, state.Project, mergeRequests);
+            Trace.TraceInformation("[UpdateManager] Processing loaded project merge requests");
+            Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
          };
 
-         Workflow.PostLoadLatestVersion += (state, version) =>
+         Workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
          {
-            Trace.TraceInformation("[UpdateManager] Processing latest version load");
-
-            Debug.Assert(Workflow.GetProjectsToUpdate().Any((x) => x.Id == state.MergeRequest.Project_Id));
-
-            Cache.UpdateLatestVersion(state.MergeRequest.Id, version);
+            Trace.TraceInformation("[UpdateManager] Processing loaded latest version");
+            Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
          };
       }
 
-      async private Task initializeAsync(string hostname)
+      public void Dispose()
       {
-         Trace.TraceInformation("[UpdateManager] Initializing");
-
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
-
-         Trace.TraceInformation("[UpdateManager] Initialized");
+         Timer.Dispose();
       }
 
       public IProjectWatcher GetProjectWatcher()
@@ -81,17 +67,33 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Checks local cache to detect if there are project changes caused by new versions of a merge request
       /// </summary>
-      public IInstantProjectChecker GetLocalProjectChecker(int mergeRequestId)
+      public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
-         return new LocalProjectChecker(mergeRequestId, Cache.Details.Clone());
+         return new LocalProjectChecker(mrk, Cache.Details.Clone());
+      }
+
+      /// <summary>
+      /// Checks local cache to detect if there are project changes caused by new versions of any merge request
+      /// </summary>
+      public IInstantProjectChecker GetLocalProjectChecker(ProjectKey pk)
+      {
+         if (Cache.Details.GetMergeRequests(pk).Count == 0)
+         {
+            return GetLocalProjectChecker(default(MergeRequestKey));
+         }
+
+         MergeRequestKey mrk = Cache.Details.GetMergeRequests(pk).
+            Select(x => new MergeRequestKey(pk.HostName, pk.ProjectName, x.IId)).
+            OrderByDescending(x => Cache.Details.GetLatestChangeTimestamp(x)).First();
+         return GetLocalProjectChecker(mrk);
       }
 
       /// <summary>
       /// Makes a request to GitLab to detect if there are project changes caused by new versions of a merge request
       /// </summary>
-      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestDescriptor mrd)
+      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
       {
-         return new RemoteProjectChecker(mrd, Operator);
+         return new RemoteProjectChecker(mrk, Operator);
       }
 
       /// <summary>
@@ -99,27 +101,26 @@ namespace mrHelper.Client.Updates
       /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+         if (String.IsNullOrEmpty(_hostname) || _projects == null)
+         {
+            Trace.TraceWarning("[UpdateManager] Auto-update is cancelled");
+            return;
+         }
+
          IWorkflowDetails oldDetails = Cache.Details.Clone();
 
-         string hostname = Workflow.State.HostName;
-         List<Project> enabledProjects = Workflow.GetProjectsToUpdate();
-         await loadDataAndUpdateCacheAsync(hostname, enabledProjects);
+         await loadDataAndUpdateCacheAsync(_hostname, _projects);
 
-         MergeRequestUpdates updates = WorkflowDetailsChecker.CheckForUpdates(hostname,
-            enabledProjects, oldDetails, Cache.Details);
-         ProjectWatcher.ProcessUpdates(updates, hostname, Cache.Details);
+         List<UpdatedMergeRequest> updates = WorkflowDetailsChecker.CheckForUpdates(_hostname, _projects,
+            oldDetails, Cache.Details);
+         ProjectWatcher.ProcessUpdates(updates, _hostname, Cache.Details);
 
          Trace.TraceInformation(
-            String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated {1}, Closed {2}",
-               updates.NewMergeRequests.Count, updates.UpdatedMergeRequests.Count, updates.ClosedMergeRequests.Count));
-
-         if (updates.UpdatedMergeRequests.Count > 0)
-         {
-            Trace.TraceInformation(
-               String.Format("[UpdateManager] Updated commits: {0}. Updated labels: {1}",
-                  updates.UpdatedMergeRequests.Count((x) => x.UpdateKind.HasFlag(UpdateKind.CommitsUpdated)),
-                  updates.UpdatedMergeRequests.Count((x) => x.UpdateKind.HasFlag(UpdateKind.LabelsUpdated))));
-         }
+            String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
+               updates.Count(x => x.UpdateKind == UpdateKind.New),
+               updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
+               updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
+               updates.Count(x => x.UpdateKind == UpdateKind.Closed)));
 
          OnUpdate?.Invoke(updates);
       }
@@ -134,25 +135,20 @@ namespace mrHelper.Client.Updates
                continue;
             }
 
-            Dictionary<int, Version> latestVersions = new Dictionary<int, Version>();
+            Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               MergeRequestDescriptor mrd = new MergeRequestDescriptor
-               {
-                  HostName = hostname,
-                  ProjectName = project.Path_With_Namespace,
-                  IId = mergeRequest.IId
-               };
+               MergeRequestKey mrk = new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId);
 
-               Version? latestVersion = await loadLatestVersionAsync(mrd);
+               Version? latestVersion = await loadLatestVersionAsync(mrk);
                if (latestVersion != null)
                {
-                  latestVersions[mergeRequest.Id] = latestVersion.Value;
+                  latestVersions[mrk] = latestVersion.Value;
                }
             }
 
-            Cache.UpdateMergeRequests(hostname, project, mergeRequests);
-            foreach (KeyValuePair<int, Version> latestVersion in latestVersions)
+            Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
+            foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
             {
                Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
             }
@@ -174,17 +170,17 @@ namespace mrHelper.Client.Updates
          return null;
       }
 
-      async private Task<Version?> loadLatestVersionAsync(MergeRequestDescriptor mrd)
+      async private Task<Version?> loadLatestVersionAsync(MergeRequestKey mrk)
       {
          try
          {
-            return await Operator.GetLatestVersionAsync(mrd);
+            return await Operator.GetLatestVersionAsync(mrk);
          }
          catch (OperatorException)
          {
             string message = String.Format(
                "[UpdateManager] Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
-               mrd.HostName, mrd.ProjectName, mrd.IId);
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
             Trace.TraceError(message);
          }
          return null;
@@ -201,6 +197,9 @@ namespace mrHelper.Client.Updates
       private ProjectWatcher ProjectWatcher { get; }
       private UserDefinedSettings Settings { get; }
       private UpdateOperator Operator { get; }
+
+      private string _hostname;
+      private List<Project> _projects;
    }
 }
 

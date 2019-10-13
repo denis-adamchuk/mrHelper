@@ -19,6 +19,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Git;
 using GitLabSharp.Accessors;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.App.Forms
 {
@@ -26,14 +27,14 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
-         // Store data before async/await
-         string hostname = _workflow.State.HostName;
-         string projectname = _workflow.State.Project.Path_With_Namespace;
-         User currentUser = _workflow.State.CurrentUser;
-         MergeRequest mergeRequest = _workflow.State.MergeRequest;
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         Debug.Assert(getMergeRequestKey().HasValue);
 
-         GitClient client = getGitClient(hostname, projectname);
+         // Store data before async/await
+         User currentUser = _currentUser.Value;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
+         MergeRequest mergeRequest = getMergeRequest().Value;
+
+         GitClient client = getGitClient(mrk.ProjectKey, true);
          if (client != null)
          {
             enableControlsOnGitAsyncOperation(false);
@@ -41,7 +42,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetRemoteProjectChecker(mrd), updateGitStatusText);
+                  _updateManager.GetRemoteProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -90,7 +91,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         List<Discussion> discussions = await loadDiscussionsAsync(mrd);
+         List<Discussion> discussions = await loadDiscussionsAsync(mrk);
          if (discussions == null)
          {
             return;
@@ -102,18 +103,18 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(mrd, mergeRequest.Title, mergeRequest.Author, client,
+            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, mergeRequest.Title, mergeRequest.Author, client,
                int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager, currentUser,
-                  async (desc) =>
+                  async (key) =>
                {
                   try
                   {
-                     GitClient gitClient = getGitClient(desc.HostName, desc.ProjectName);
+                     GitClient gitClient = getGitClient(key.ProjectKey, true);
                      if (!gitClient.DoesRequireClone())
                      {
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
-                        await gitClient.Updater.ManualUpdateAsync(_updateManager.GetRemoteProjectChecker(desc), null);
+                        await gitClient.Updater.ManualUpdateAsync(_updateManager.GetRemoteProjectChecker(key), null);
                      }
                   }
                   catch (GitOperationException ex)
@@ -141,7 +142,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Discussions opened";
 
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
-            mrd.IId, (client?.Path ?? "null")));
+            mrk.IId, (client?.Path ?? "null")));
 
          form.Show();
       }
@@ -157,12 +158,22 @@ namespace mrHelper.App.Forms
          // Keep data before async/await
          string leftSHA = getGitTag(true /* left */);
          string rightSHA = getGitTag(false /* right */);
-         string hostname = _workflow.State.HostName;
-         string projectname = _workflow.State.Project.Path_With_Namespace;
-         int mergeRequestId = _workflow.State.MergeRequest.Id;
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
 
-         GitClient client = getGitClient(hostname, projectname);
+         List<string> includedSHA = new List<string>();
+         for (int index = comboBoxLeftCommit.SelectedIndex; index < comboBoxLeftCommit.Items.Count; ++index)
+         {
+            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[index])).SHA;
+            includedSHA.Add(sha);
+            if (sha == leftSHA)
+            {
+               break;
+            }
+         }
+
+         Debug.Assert(getMergeRequestKey().HasValue);
+         MergeRequestKey mrk = getMergeRequestKey().Value;
+
+         GitClient client = getGitClient(mrk.ProjectKey, true);
          if (client != null)
          {
             enableControlsOnGitAsyncOperation(false);
@@ -172,7 +183,7 @@ namespace mrHelper.App.Forms
                // user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version
                await _gitClientUpdater.UpdateAsync(client,
-                  _updateManager.GetLocalProjectChecker(mergeRequestId), updateGitStatusText);
+                  _updateManager.GetLocalProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -226,13 +237,11 @@ namespace mrHelper.App.Forms
 
          saveInterprocessSnapshot(pid, leftSHA, rightSHA);
 
-         if (!_reviewedCommits.ContainsKey(mrd))
+         if (!_reviewedCommits.ContainsKey(mrk))
          {
-            _reviewedCommits[mrd] = new HashSet<string>();
+            _reviewedCommits[mrk] = new HashSet<string>();
          }
-
-         _reviewedCommits[mrd].Add(leftSHA);
-         _reviewedCommits[mrd].Add(rightSHA);
+         includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
 
          comboBoxLeftCommit.Refresh();
          comboBoxRightCommit.Refresh();
@@ -240,9 +249,11 @@ namespace mrHelper.App.Forms
 
       async private Task onAddCommentAsync()
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before opening a modal dialog
-         string title = _workflow.State.MergeRequest.Title;
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         string title = getMergeRequest().Value.Title;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
@@ -256,7 +267,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrd);
+               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Adding a comment...";
                await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
@@ -267,9 +278,11 @@ namespace mrHelper.App.Forms
 
       async private Task onNewDiscussionAsync()
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before opening a modal dialog
-         string title = _workflow.State.MergeRequest.Title;
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         string title = getMergeRequest().Value.Title;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          string caption = String.Format("Create a new discussion in merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
@@ -283,7 +296,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrd);
+               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Creating a discussion...";
                await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body });
@@ -307,13 +320,13 @@ namespace mrHelper.App.Forms
          serializer.SerializeToDisk(snapshot, pid);
       }
 
-      async private Task<List<Discussion>> loadDiscussionsAsync(MergeRequestDescriptor mrd)
+      async private Task<List<Discussion>> loadDiscussionsAsync(MergeRequestKey mrk)
       {
          labelWorkflowStatus.Text = "Loading discussions...";
          List<Discussion> discussions;
          try
          {
-            discussions = await _discussionManager.GetDiscussionsAsync(mrd);
+            discussions = await _discussionManager.GetDiscussionsAsync(mrk);
          }
          catch (DiscussionManagerException)
          {
@@ -325,6 +338,65 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Discussions loaded";
          return discussions;
       }
+
+      ProjectKey GetProjectKey(ProjectKey pk) => pk;
+      ProjectKey GetProjectKey(MergeRequestKey mrk) => mrk.ProjectKey;
+
+      ProjectKey GetKeyForUpdate(ProjectKey pk) => pk;
+      MergeRequestKey GetKeyForUpdate(MergeRequestKey mrk) => mrk;
+
+      async private Task performSilentUpdate<T>(T key)
+      {
+         ProjectKey pk = GetProjectKey((dynamic)key);
+
+         if (_silentUpdateInProgress.Contains(pk))
+         {
+            Trace.TraceInformation(String.Format(
+               "[MainForm] Silent update for {0} is skipped due to a concurrent silent update", pk.ProjectName));
+            return;
+         }
+
+         _silentUpdateInProgress.Add(pk);
+
+         GitClient client = getGitClient(pk, false);
+         if (client == null || client.DoesRequireClone())
+         {
+            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository silently: {0}",
+               (client == null ? "client is null" : "must be cloned first")));
+            _silentUpdateInProgress.Remove(pk);
+            return;
+         }
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
+
+         IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker((dynamic)key);
+         try
+         {
+            await client.Updater.ManualUpdateAsync(instantChecker, null);
+         }
+         catch (GitOperationException)
+         {
+            Trace.TraceInformation("[MainForm] Silent update cancelled");
+            _silentUpdateInProgress.Remove(pk);
+            return;
+         }
+
+         Trace.TraceInformation("[MainForm] Silent update finished");
+         _silentUpdateInProgress.Remove(pk);
+      }
+
+      private void scheduleSilentUpdate(ProjectKey pk)
+      {
+         BeginInvoke(new Action(async () => await performSilentUpdate(pk)));
+      }
+
+      private void scheduleSilentUpdate(MergeRequestKey mrk)
+      {
+         BeginInvoke(new Action(async () => await performSilentUpdate(mrk)));
+      }
+
+      private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
    }
 }
 

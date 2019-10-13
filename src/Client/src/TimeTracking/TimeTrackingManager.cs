@@ -18,37 +18,38 @@ namespace mrHelper.Client.TimeTracking
       {
          Settings = settings;
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
+         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          workflow.PreLoadSystemNotes += () => PreLoadTotalTime?.Invoke();
          workflow.FailedLoadSystemNotes += () => FailedLoadTotalTime?.Invoke();
-         workflow.PostLoadSystemNotes +=
-            (state, notes) => processSystemNotes(state.MergeRequestDescriptor, state.CurrentUser, notes);
+         workflow.PostLoadSystemNotes += (hostname, projectname, mergeRequest, notes)
+            => processSystemNotes(new MergeRequestKey(hostname, projectname, mergeRequest.IId), notes);
       }
 
       public event Action PreLoadTotalTime;
       public event Action FailedLoadTotalTime;
-      public event Action<MergeRequestDescriptor> PostLoadTotalTime;
+      public event Action<MergeRequestKey> PostLoadTotalTime;
 
-      public TimeSpan GetTotalTime(MergeRequestDescriptor mrd)
+      public TimeSpan GetTotalTime(MergeRequestKey mrk)
       {
-         return MergeRequestTimes.ContainsKey(mrd) ? MergeRequestTimes[mrd] : default(TimeSpan);
+         return MergeRequestTimes.ContainsKey(mrk) ? MergeRequestTimes[mrk] : default(TimeSpan);
       }
 
-      async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestDescriptor mrd)
+      async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         await TimeTrackingOperator.AddSpanAsync(add, span, mrd);
+         await TimeTrackingOperator.AddSpanAsync(add, span, mrk);
          if (add)
          {
-            MergeRequestTimes[mrd] += span;
+            MergeRequestTimes[mrk] += span;
          }
          else
          {
-            MergeRequestTimes[mrd] -= span;
+            MergeRequestTimes[mrk] -= span;
          }
       }
 
-      public TimeTracker GetTracker(MergeRequestDescriptor mrd)
+      public TimeTracker GetTracker(MergeRequestKey mrk)
       {
-         return new TimeTracker(mrd, async (span, descriptor) => { await AddSpanAsync(true, span, descriptor); });
+         return new TimeTracker(mrk, async (span, key) => { await AddSpanAsync(true, span, key); });
       }
 
       private static readonly Regex spentTimeRe =
@@ -56,12 +57,12 @@ namespace mrHelper.Client.TimeTracking
             @"^(?'operation'added|subtracted)\s(?>(?'hours'\d*)h\s)?(?>(?'minutes'\d*)m\s)?(?>(?'seconds'\d*)s\s)?of time spent.*",
                RegexOptions.Compiled);
 
-      private void processSystemNotes(MergeRequestDescriptor mrd, User currentUser, List<Note> notes)
+      private void processSystemNotes(MergeRequestKey mrk, List<Note> notes)
       {
          TimeSpan span = TimeSpan.Zero;
          foreach (Note note in notes)
          {
-            if (note.Author.Id == currentUser.Id)
+            if (note.Author.Id == _currentUser.Id)
             {
                Match m = spentTimeRe.Match(note.Body);
                if (!m.Success)
@@ -84,14 +85,15 @@ namespace mrHelper.Client.TimeTracking
             }
          }
 
-         MergeRequestTimes[mrd] = span;
-         PostLoadTotalTime?.Invoke(mrd);
+         MergeRequestTimes[mrk] = span;
+         PostLoadTotalTime?.Invoke(mrk);
       }
 
       private UserDefinedSettings Settings { get; }
       private TimeTrackingOperator TimeTrackingOperator { get; }
-      private Dictionary<MergeRequestDescriptor, TimeSpan> MergeRequestTimes { get; } =
-         new Dictionary<MergeRequestDescriptor, TimeSpan>();
+      private Dictionary<MergeRequestKey, TimeSpan> MergeRequestTimes { get; } =
+         new Dictionary<MergeRequestKey, TimeSpan>();
+      private User _currentUser;
    }
 }
 

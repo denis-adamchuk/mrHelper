@@ -14,6 +14,7 @@ using mrHelper.Core.Interprocess;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Git;
+using mrHelper.CommonControls;
 
 namespace mrHelper.App.Forms
 {
@@ -29,6 +30,9 @@ namespace mrHelper.App.Forms
          loadSettings();
          addCustomActions();
          integrateInTools();
+
+         this.WindowState = FormWindowState.Maximized;
+         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
          await onApplicationStarted();
       }
 
@@ -104,8 +108,10 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
+         Debug.Assert(getMergeRequestKey().HasValue);
+
          // Store data before opening a modal dialog
-         MergeRequestDescriptor mrd = _workflow.State.MergeRequestDescriptor;
+         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          TimeSpan oldSpan = TimeSpan.Parse(labelTimeTrackingTrackedTime.Text);
          using (EditTimeForm form = new EditTimeForm(oldSpan))
@@ -117,13 +123,13 @@ namespace mrHelper.App.Forms
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
                if (diff != TimeSpan.Zero)
                {
-                  await _timeTrackingManager.AddSpanAsync(add, diff, mrd);
+                  await _timeTrackingManager.AddSpanAsync(add, diff, mrk);
 
-                  updateTotalTime(mrd);
+                  updateTotalTime(mrk);
                   labelWorkflowStatus.Text = "Total spent time updated";
 
                   Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
-                     mrd.IId, mrd.ProjectName, diff.ToString()));
+                     mrk.IId, mrk.ProjectKey.ProjectName, diff.ToString()));
                }
             }
          }
@@ -165,32 +171,10 @@ namespace mrHelper.App.Forms
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
          string hostname = (sender as ComboBox).Text;
-         await changeHostAsync(hostname);
-      }
 
-      async private void ComboBoxProjects_SelectionChangeCommited(object sender, EventArgs e)
-      {
-         string projectname = (sender as ComboBox).Text;
-         await changeProjectAsync(projectname);
-      }
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
 
-      async private void ComboBoxFilteredMergeRequests_SelectionChangeCommited(object sender, EventArgs e)
-      {
-         ComboBox comboBox = (sender as ComboBox);
-         MergeRequest mergeRequest = (MergeRequest)comboBox.SelectedItem;
-
-         await changeMergeRequestAsync(mergeRequest.IId);
-      }
-
-      private void ComboBoxFilteredMergeRequests_MeasureItem(object sender, System.Windows.Forms.MeasureItemEventArgs e)
-      {
-         if (e.Index < 0)
-         {
-            return;
-         }
-
-         ComboBox comboBox = sender as ComboBox;
-         e.ItemHeight = comboBox.Font.Height * 2 + 2;
+         await switchHostToSelected();
       }
 
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
@@ -208,64 +192,106 @@ namespace mrHelper.App.Forms
          e.Graphics.DrawString(text, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
       }
 
-      private void fillComboboxItemRectangle(DrawItemEventArgs e, Color backColor, bool isSelected)
+      Graphics GetGraphics(DrawItemEventArgs e) => e.Graphics;
+      Graphics GetGraphics(DrawListViewSubItemEventArgs e) => e.Graphics;
+
+      Rectangle GetBounds(DrawItemEventArgs e) => e.Bounds;
+      Rectangle GetBounds(DrawListViewSubItemEventArgs e) => e.Bounds;
+
+      private void fillRectangle<T>(T e, Color backColor, bool isSelected)
       {
          if (isSelected)
          {
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+            GetGraphics((dynamic)e).FillRectangle(SystemBrushes.Highlight, GetBounds((dynamic)e));
          }
          else
          {
             using (Brush brush = new SolidBrush(backColor))
             {
-               e.Graphics.FillRectangle(brush, e.Bounds);
+               GetGraphics((dynamic)e).FillRectangle(brush, GetBounds((dynamic)e));
             }
          }
       }
 
-      private void ComboBoxFilteredMergeRequests_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+      private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
-         if (e.Index < 0)
+         if (e.Item.ListView == null)
          {
-            return;
+            return; // is being removed
          }
 
-         ComboBox comboBox = sender as ComboBox;
-         MergeRequest mergeRequest = (MergeRequest)(comboBox.Items[e.Index]);
+         FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
 
          e.DrawBackground();
 
-         if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
+         bool isSelected = e.Item.Selected;
+         fillRectangle(e, getMergeRequestColor(fmk.MergeRequest), isSelected);
+
+         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+
+         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
+         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
+
+         if (isClickable)
          {
-            drawComboBoxEdit(e, comboBox, getMergeRequestColor(mergeRequest), mergeRequest.Title);
+            using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
+            {
+               Brush brush = Brushes.Blue;
+               e.Graphics.DrawString(text, font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
+            }
          }
          else
          {
-            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            fillComboboxItemRectangle(e, getMergeRequestColor(mergeRequest), isSelected);
+            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+         }
+      }
 
-            string labels = String.Join(", ", mergeRequest.Labels.ToArray());
-            string authorText = "Author: " + mergeRequest.Author.Name;
-            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+      private void ListViewMergeRequests_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+      {
+         e.DrawDefault = true;
+      }
 
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using (Font boldFont = new Font(comboBox.Font, FontStyle.Bold))
-            {
-               // first row
-               e.Graphics.DrawString(mergeRequest.Title, boldFont, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+      private void ListViewMergeRequests_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         ListView listView = (sender as ListView);
 
-               // second row
-               SizeF authorTextSize = e.Graphics.MeasureString(authorText, comboBox.Font);
+         ListViewHitTestInfo hit = listView.HitTest(e.Location);
+         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
+         listView.Cursor = clickable ? Cursors.Hand : Cursors.Default;
+      }
 
-               e.Graphics.DrawString(authorText, comboBox.Font, textBrush,
-                  new PointF(e.Bounds.X, e.Bounds.Y + e.Bounds.Height / (float)2));
 
-               e.Graphics.DrawString(" [" + labels + "]", comboBox.Font, textBrush,
-                  new PointF(e.Bounds.X + authorTextSize.Width, e.Bounds.Y + e.Bounds.Height / (float)2));
-            }
+      private void ListViewMergeRequests_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         ListView listView = (sender as ListView);
+
+         ListViewHitTestInfo hit = listView.HitTest(e.Location);
+         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
+         if (clickable)
+         {
+            openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
+         }
+      }
+
+      async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+      {
+         ListView listView = (sender as ListView);
+         listView.Refresh();
+
+         if (listView.SelectedItems.Count < 1)
+         {
+            // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
+            await switchMergeRequestByUserAsync(String.Empty, default(Project), 0);
+            return;
          }
 
-         e.DrawFocusRectangle();
+         FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
+         if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
+         {
+            Debug.Assert(getMergeRequestKey().HasValue);
+            _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
+            return;
+         }
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
@@ -287,7 +313,7 @@ namespace mrHelper.App.Forms
          else
          {
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            fillComboboxItemRectangle(e, getCommitComboBoxItemColor(item), isSelected);
+            fillRectangle(e, getCommitComboBoxItemColor(item), isSelected);
 
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -314,67 +340,58 @@ namespace mrHelper.App.Forms
          formatHostListItem(e);
       }
 
-      private void ComboBoxProjects_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatProjectsListItem(e);
-      }
-
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         try
-         {
-            // this should open a browser
-            Process.Start(linkLabelConnectedTo.Text);
-         }
-         catch (Exception ex) // see Process.Start exception list
-         {
-            ExceptionHandlers.Handle(ex, "Cannot open URL");
-            MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         openBrowser(linkLabelConnectedTo.Text);
       }
 
       async private void ButtonAddKnownHost_Click(object sender, EventArgs e)
       {
          using (AddKnownHostForm form = new AddKnownHostForm())
          {
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog() != DialogResult.OK)
             {
-               if (!onAddKnownHost(form.Host, form.AccessToken))
-               {
-                  MessageBox.Show("Such host is already in the list", "Host will not be added",
-                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                  return;
-               }
-
-               _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-               _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-                  .Select(i => i.SubItems[1].Text).ToList();
-
-               await changeHostAsync(getInitialHostName());
+               return;
             }
+
+            string hostname = getHostWithPrefix(form.Host);
+            if (!addKnownHost(hostname, form.AccessToken))
+            {
+               MessageBox.Show("Such host is already in the list", "Host will not be added",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               return;
+            }
+
+            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+               .Select(i => i.SubItems[1].Text).ToList();
+
+            updateHostsDropdownList();
+            selectHost(PreferredSelection.Latest);
+            await switchHostToSelected();
          }
       }
 
       async private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
       {
-         if (onRemoveKnownHost())
-         {
-            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-               .Select(i => i.SubItems[1].Text).ToList();
+         bool removeCurrent =
+               listViewKnownHosts.SelectedItems.Count > 0 && getHostName() != String.Empty
+            && getHostName() == listViewKnownHosts.SelectedItems[0].Text;
 
-            await changeHostAsync(getInitialHostName());
+         if (!removeKnownHost())
+         {
+            return;
          }
-      }
 
-      async private void CheckBoxShowPublicOnly_CheckedChanged(object sender, EventArgs e)
-      {
-         _settings.ShowPublicOnly = (sender as CheckBox).Checked;
+         _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+         _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+            .Select(i => i.SubItems[1].Text).ToList();
 
-         if (_workflow != null)
+         updateHostsDropdownList();
+         if (removeCurrent)
          {
-            // emulate host change to reload project list
-            await changeHostAsync(_workflow.State.HostName);
+            selectHost(PreferredSelection.Latest);
+            await switchHostToSelected();
          }
       }
 
@@ -383,38 +400,53 @@ namespace mrHelper.App.Forms
          _settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
-      async private void TextBoxLabels_KeyDown(object sender, KeyEventArgs e)
+      private void TextBoxLabels_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyData == Keys.Enter)
          {
-            await onTextBoxLabelsUpdate();
+            onTextBoxLabelsUpdate();
          }
       }
 
-      async private void TextBoxLabels_LostFocus(object sender, EventArgs e)
+      private void TextBoxLabels_KeyPress(object sender, KeyPressEventArgs e)
       {
-         await onTextBoxLabelsUpdate();
+         if (e.KeyChar == ',')
+         {
+            onTextBoxLabelsUpdate();
+         }
       }
 
-      async private Task onTextBoxLabelsUpdate()
+      private void TextBoxLabels_LostFocus(object sender, EventArgs e)
+      {
+         onTextBoxLabelsUpdate();
+      }
+
+      private void onTextBoxLabelsUpdate()
       {
          _settings.LastUsedLabels = textBoxLabels.Text;
 
-         if (_workflow != null && _settings.CheckedLabelsFilter)
+         if (_settings.CheckedLabelsFilter)
          {
-            // emulate project change to reload merge request list
-            await changeProjectAsync(_workflow.State.Project.Path_With_Namespace);
+            updateVisibleMergeRequests();
          }
       }
 
-      async private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
          _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
 
          if (_workflow != null)
          {
-            // emulate project change to reload merge request list
-            await changeProjectAsync(_workflow.State.Project.Path_With_Namespace);
+            updateVisibleMergeRequests();
+         }
+      }
+
+      async private void ButtonReloadList_Click(object sender, EventArgs e)
+      {
+         if (getHostName() != String.Empty)
+         {
+            Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
+            await switchHostAsync(getHostName());
          }
       }
 
@@ -430,7 +462,8 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         getGitClient(GetCurrentHostName(), GetCurrentProjectName())?.CancelAsyncOperation();
+         Debug.Assert(getMergeRequestKey().HasValue);
+         getGitClient(getMergeRequestKey().Value.ProjectKey, false)?.CancelAsyncOperation();
       }
 
       protected override void WndProc(ref Message rMessage)
@@ -529,31 +562,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private bool onAddKnownHost(string host, string accessToken)
-      {
-         if (!addKnownHost(host, accessToken))
-         {
-            return false;
-         }
-
-         updateHostsDropdownList();
-         return true;
-      }
-
-      private bool onRemoveKnownHost()
-      {
-         if (listViewKnownHosts.SelectedItems.Count > 0)
-         {
-            Trace.TraceInformation(String.Format("[MainForm] Removing host name {0}",
-               listViewKnownHosts.SelectedItems[0].ToString()));
-
-            listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
-            updateHostsDropdownList();
-            return true;
-         }
-         return false;
-      }
-
       private void onStartTimer()
       {
          Debug.Assert(!isTrackingTime());
@@ -568,8 +576,8 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Start();
 
          // Reset and start stopwatch
-         Debug.Assert(_workflow.State.MergeRequestDescriptor.IId != default(MergeRequest).IId);
-         _timeTracker = _timeTrackingManager.GetTracker(_workflow.State.MergeRequestDescriptor);
+         Debug.Assert(getMergeRequestKey().HasValue);
+         _timeTracker = _timeTrackingManager.GetTracker(getMergeRequestKey().Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -629,23 +637,29 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
          // Show actual merge request details
-         bool isMergeRequestSelected = _workflow.State.MergeRequest.IId != default(MergeRequest).IId;
+         bool isMergeRequestSelected = listViewMergeRequests.SelectedItems.Count > 0;
          updateTimeTrackingMergeRequestDetails(
-            isMergeRequestSelected ? _workflow.State.MergeRequest : new Nullable<MergeRequest>());
+            isMergeRequestSelected ? getMergeRequest().Value : new Nullable<MergeRequest>());
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(isMergeRequestSelected ?
-            _workflow.State.MergeRequestDescriptor : new Nullable<MergeRequestDescriptor>());
+         updateTotalTime(isMergeRequestSelected ? getMergeRequestKey().Value : new Nullable<MergeRequestKey>());
       }
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)
       {
-         writer.Set("SelectedHost", _workflow.State.HostName);
+         writer.Set("SelectedHost", getHostName());
 
          Dictionary<string, HashSet<string>> reviewedCommits = _reviewedCommits.ToDictionary(
-               item => item.Key.HostName + "|" + item.Key.ProjectName + "|" + item.Key.IId.ToString(),
+               item => item.Key.ProjectKey.HostName
+               + "|" + item.Key.ProjectKey.ProjectName
+               + "|" + item.Key.IId.ToString(),
                item => item.Value);
          writer.Set("ReviewedCommits", reviewedCommits);
+
+         Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
+               item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
+               item => item.Value.IId.ToString());
+         writer.Set("MergeRequestsByHosts", mergeRequestsByHosts);
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
@@ -669,7 +683,7 @@ namespace mrHelper.App.Forms
                   string host = splitted[0];
                   string projectName = splitted[1];
                   int iid = int.Parse(splitted[2]);
-                  return new MergeRequestDescriptor{ HostName = host, ProjectName = projectName, IId = iid };
+                  return new MergeRequestKey(host, projectName, iid);
                },
                item =>
                {
@@ -679,6 +693,29 @@ namespace mrHelper.App.Forms
                      commits.Add(commit);
                   }
                   return commits;
+               });
+         }
+
+         Dictionary<string, object> lastMergeRequestsByHosts =
+            (Dictionary<string, object>)reader.Get("MergeRequestsByHosts");
+         if (lastMergeRequestsByHosts != null)
+         {
+            _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+                  Debug.Assert(splitted.Length == 2);
+                  return splitted[0];
+               },
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+                  Debug.Assert(splitted.Length == 2);
+
+                  string hostname2 = splitted[0];
+                  string projectname = splitted[1];
+                  int iid = int.Parse((string)item.Value);
+                  return new MergeRequestKey(hostname2, projectname, iid);
                });
          }
       }

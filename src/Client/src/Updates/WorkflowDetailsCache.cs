@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
@@ -19,30 +18,26 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Cache passed merge requests
       /// </summary>
-      internal void UpdateMergeRequests(string hostname, Project project, List<MergeRequest> mergeRequests)
+      internal void UpdateMergeRequests(string hostname, string projectname, List<MergeRequest> mergeRequests)
       {
-         ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = project.Id };
-         InternalDetails.SetProjectName(key, project.Path_With_Namespace);
-
+         ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = projectname };
          List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
          InternalDetails.SetMergeRequests(key, mergeRequests);
 
          Trace.TraceInformation(String.Format(
             "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
-               project.Path_With_Namespace, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
+               projectname, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
 
-         cleanupOldRecords(previouslyCachedMergeRequests, mergeRequests);
+         cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
       }
 
       /// <summary>
       /// Cache passed version
       /// </summary>
-      internal void UpdateLatestVersion(int mergeRequestId, Version latestVersion)
+      internal void UpdateLatestVersion(MergeRequestKey mrk, Version latestVersion)
       {
-         Debug.Assert(InternalDetails.GetProjectKey(mergeRequestId).ProjectId != 0);
-
-         DateTime previouslyCachedTimestamp = InternalDetails.GetLatestChangeTimestamp(mergeRequestId);
-         InternalDetails.SetLatestChangeTimestamp(mergeRequestId, latestVersion.Created_At);
+         DateTime previouslyCachedTimestamp = InternalDetails.GetLatestChangeTimestamp(mrk);
+         InternalDetails.SetLatestChangeTimestamp(mrk, latestVersion.Created_At);
 
          if (previouslyCachedTimestamp > latestVersion.Created_At)
          {
@@ -51,21 +46,21 @@ namespace mrHelper.Client.Updates
          }
 
          Trace.TraceInformation(String.Format(
-            "[WorkflowDetailsCache] Latest version of merge request with Id {0} has timestamp {1} (was {2} before update)",
-               mergeRequestId,
+            "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
+               mrk.IId,
                latestVersion.Created_At.ToLocalTime().ToString(),
                previouslyCachedTimestamp.ToLocalTime().ToString()));
       }
 
       internal IWorkflowDetails Details { get { return InternalDetails; } }
 
-      private void cleanupOldRecords(List<MergeRequest> oldRecords, List<MergeRequest> newRecords)
+      private void cleanupOldRecords(ProjectKey key, List<MergeRequest> oldRecords, List<MergeRequest> newRecords)
       {
          foreach (MergeRequest mergeRequest in oldRecords)
          {
             if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
             {
-               InternalDetails.CleanupTimestamps(mergeRequest.Id);
+               InternalDetails.CleanupTimestamps(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
             }
          }
       }

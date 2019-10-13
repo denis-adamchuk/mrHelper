@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
+using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Updates
 {
@@ -16,11 +16,9 @@ namespace mrHelper.Client.Updates
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(MergeRequestUpdates updates, string hostname, IWorkflowDetails details)
+      internal void ProcessUpdates(List<UpdatedMergeRequest> updates, string hostname, IWorkflowDetails details)
       {
-         List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
-         projectUpdates.AddRange(getProjectUpdates(updates.NewMergeRequests, hostname, details));
-         projectUpdates.AddRange(getProjectUpdates(updates.UpdatedMergeRequests, hostname, details));
+         List<ProjectUpdate> projectUpdates = getProjectUpdates(updates, hostname, details);
 
          if (projectUpdates.Count > 0)
          {
@@ -35,47 +33,46 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      private static int GetId(MergeRequest x) => x.Id;
-      private static int GetId(UpdatedMergeRequest x) => GetId(x.MergeRequest);
-
-      private static int GetProjectId(MergeRequest x) => x.Project_Id;
-      private static int GetProjectId(UpdatedMergeRequest x) => GetProjectId(x.MergeRequest);
-
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates<T>(List<T> mergeRequests, string hostname,
+      private List<ProjectUpdate> getProjectUpdates(List<UpdatedMergeRequest> mergeRequests, string hostname,
          IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
          // Check all the updated merge request to figure out the latest change among them
          DateTime updateTimestamp = DateTime.MinValue;
-         foreach (T mergeRequest in mergeRequests)
+         foreach (UpdatedMergeRequest mergeRequest in mergeRequests)
          {
-            int mergeRequestId = GetId((dynamic)mergeRequest);
-            int projectId = GetProjectId((dynamic)mergeRequest);
-
-            ProjectKey key = new ProjectKey{ HostName = hostname, ProjectId = projectId };
-            string projectName = details.GetProjectName(key);
+            bool mayCauseProjectChange = mergeRequest.UpdateKind == UpdateKind.New
+                                      || mergeRequest.UpdateKind == UpdateKind.CommitsUpdated
+                                      || mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated;
+            if (!mayCauseProjectChange)
+            {
+               continue;
+            }
 
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectName == projectName)
+               if (projectUpdates[iUpdate].ProjectName == mergeRequest.Project.Path_With_Namespace)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }
             }
 
-            updateTimestamp = details.GetLatestChangeTimestamp(mergeRequestId) > updateTimestamp ?
-               details.GetLatestChangeTimestamp(mergeRequestId) : updateTimestamp;
+            MergeRequestKey mrk = new MergeRequestKey(hostname,
+               mergeRequest.Project.Path_With_Namespace, mergeRequest.MergeRequest.IId);
+
+            updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
+               details.GetLatestChangeTimestamp(mrk) : updateTimestamp;
 
             projectUpdates.Add(
                new ProjectUpdate
                {
                   HostName = hostname,
-                  ProjectName = projectName,
+                  ProjectName = mergeRequest.Project.Path_With_Namespace,
                   Timestamp = updateTimestamp
                });
          }
@@ -84,6 +81,4 @@ namespace mrHelper.Client.Updates
       }
    }
 }
-
-
 

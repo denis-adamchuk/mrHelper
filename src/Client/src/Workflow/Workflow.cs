@@ -6,10 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
-using mrHelper.Common.Types;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Persistence;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Client.Tools;
+using mrHelper.Common;
 
 namespace mrHelper.Client.Workflow
 {
@@ -24,16 +23,16 @@ namespace mrHelper.Client.Workflow
          String.Format("Cannot find access token for host {0}", hostname)) {}
    }
 
+   public class NoProjectsException : WorkflowException
+   {
+      internal NoProjectsException(string hostname): base(
+         String.Format("Project list for hostname {0} is empty", hostname)) {}
+   }
+
    public class NotEnabledProjectException : WorkflowException
    {
       internal NotEnabledProjectException(string projectname): base(
          String.Format("Project {0} is not in the list of enabled projects", projectname)) {}
-   }
-
-   public class NotAvailableMergeRequest : WorkflowException
-   {
-      internal NotAvailableMergeRequest(int iid): base(
-         String.Format("Merge Request with IId {0} is not available", iid)) {}
    }
 
    /// <summary>
@@ -41,41 +40,33 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow : IDisposable
    {
-      internal Workflow(UserDefinedSettings settings, PersistentStorage persistentStorage)
+      public Workflow(UserDefinedSettings settings)
       {
          Settings = settings;
-
-         persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
-         persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
       }
 
-      async public Task InitializeAsync(string hostname)
+      async public Task<bool> LoadCurrentUserAsync(string hostname)
       {
-         await SwitchHostAsync(hostname);
+         return checkParameters(hostname) && await loadCurrentUserAsync(hostname);
       }
 
-      async public Task InitializeAsync(string hostname, string projectname, int mergeRequestIId)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Action<string> onNonFatalError)
       {
-         string token = Tools.Tools.GetAccessToken(hostname, Settings);
-         if (token == Tools.Tools.UnknownHostToken)
+         if (!checkParameters(hostname))
          {
-            throw new UnknownHostException(hostname);
+            return false;
          }
 
-         List<Project> enabledProjects = getEnabledProjects(hostname);
-         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         PreLoadAllMergeRequests?.Invoke();
 
-         if (!hasEnabledProjects || !enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname)))
-         {
-            throw new NotEnabledProjectException(projectname);
-         }
-
-         List<Project> projects = await loadHostAsync(hostname, token);
+         List<Project> projects = await loadHostProjectsAsync(hostname);
          if (projects == null)
          {
-            return; // cancelled
+            return false; // cancelled
          }
 
+#if DEBUG
+         List<Project> enabledProjects = getEnabledProjects(hostname);
          projects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
          enabledProjects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
          Debug.Assert(projects.Count == enabledProjects.Count);
@@ -83,69 +74,47 @@ namespace mrHelper.Client.Workflow
          {
             Debug.Assert(projects[iProject].Id == enabledProjects[iProject].Id);
          }
+#endif
 
-         List<MergeRequest> mergeRequests = await loadProjectAsync(projectname);
-         if (mergeRequests == null)
+         foreach (Project project in projects)
          {
-            return; // cancelled
-         }
-
-         if (!mergeRequests.Cast<MergeRequest>().Any((x) => x.IId == mergeRequestIId))
-         {
-            throw new NotAvailableMergeRequest(mergeRequestIId);
-         }
-         await loadMergeRequestAsync(mergeRequestIId);
-      }
-
-      async public Task SwitchHostAsync(string hostName)
-      {
-         string token = Tools.Tools.GetAccessToken(hostName, Settings);
-         if (token == Tools.Tools.UnknownHostToken)
-         {
-            throw new UnknownHostException(hostName);
-         }
-
-         List<Project> projects = await loadHostAsync(hostName, token);
-         if (projects != null)
-         {
-            string projectName = selectProjectFromList(projects);
-            if (projectName != String.Empty)
+            try
             {
-               await SwitchProjectAsync(projectName);
+               List<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
+               if (mergeRequests == null)
+               {
+                  return false; // cancelled
+               }
+
+               foreach (MergeRequest mergeRequest in mergeRequests)
+               {
+                  if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
+                  {
+                     return false; // cancelled
+                  }
+               }
+            }
+            catch (WorkflowException ex)
+            {
+               onNonFatalError?.Invoke(ex.Message);
             }
          }
+
+         PostLoadAllMergeRequests?.Invoke(hostname, projects);
+         return true;
       }
 
-      async public Task SwitchProjectAsync(string projectName)
+      async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
       {
-         if (State == null)
+         if (mergeRequestIId == 0)
          {
-            // not initialized
-            Debug.Assert(false);
-            return;
+            PrelLoadSingleMergeRequest?.Invoke(0);
+            Operator?.CancelAsync();
+            return false;
          }
 
-         List<MergeRequest> mergeRequests = await loadProjectAsync(projectName);
-         if (mergeRequests != null)
-         {
-            int? iid = selectMergeRequestFromList(mergeRequests);
-            if (iid.HasValue)
-            {
-               await loadMergeRequestAsync(iid.Value);
-            }
-         }
-      }
-
-      async public Task SwitchMergeRequestAsync(int mergeRequestIId)
-      {
-         if (State == null)
-         {
-            // not initialized
-            Debug.Assert(false);
-            return;
-         }
-
-         await loadMergeRequestAsync(mergeRequestIId);
+         return checkParameters(hostname, projectname)
+             && await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
       }
 
       async public Task CancelAsync()
@@ -161,209 +130,226 @@ namespace mrHelper.Client.Workflow
          Operator?.Dispose();
       }
 
-      /// <summary>
-      /// Return projects at the current Host that are allowed to be checked for updates
-      /// </summary>
-      public List<Project> GetProjectsToUpdate()
-      {
-         if (State == null)
-         {
-            // not initialized
-            Debug.Assert(false);
-            return null;
-         }
+      public event Action<string> PreLoadCurrentUser;
+      public event Action<User> PostLoadCurrentUser;
+      public event Action FailedLoadCurrentUser;
 
-         List<Project> enabledProjects = getEnabledProjects(State.HostName);
-         if ((enabledProjects?.Count ?? 0) != 0)
-         {
-            return enabledProjects;
-         }
+      public event Action<string> PreLoadHostProjects;
+      public event Action<string, List<Project>> PostLoadHostProjects;
+      public event Action FailedLoadHostProjects;
 
-         return State.Project.Id != default(Project).Id ? new List<Project>{ State.Project } : new List<Project>();
-      }
+      public event Action PreLoadAllMergeRequests;
 
-      public event Action<string> PreSwitchHost;
-      public event Action<WorkflowState, List<Project>> PostSwitchHost;
-      public event Action FailedSwitchHost;
+      public event Action<Project> PreLoadProjectMergeRequests;
+      public event Action<string, Project, List<MergeRequest>> PostLoadProjectMergeRequests;
+      public event Action FailedLoadProjectMergeRequests;
 
-      public event Action<string> PreSwitchProject;
-      public event Action<WorkflowState, List<MergeRequest>> PostSwitchProject;
-      public event Action FailedSwitchProject;
+      public event Action<string, List<Project>> PostLoadAllMergeRequests;
 
-      public event Action<int> PreSwitchMergeRequest;
-      public event Action<WorkflowState> PostSwitchMergeRequest;
-      public event Action FailedSwitchMergeRequest;
+      public event Action<int> PrelLoadSingleMergeRequest;
+      public event Action<string, MergeRequest> PostLoadSingleMergeRequest;
+      public event Action FailedLoadSingleMergeRequest;
 
       public event Action PreLoadCommits;
-      public event Action<WorkflowState, List<Commit>> PostLoadCommits;
+      public event Action<string, string, MergeRequest, List<Commit>> PostLoadCommits;
       public event Action FailedLoadCommits;
 
       public event Action PreLoadSystemNotes;
-      public event Action<WorkflowState, List<Note>> PostLoadSystemNotes;
+      public event Action<string, string, MergeRequest, List<Note>> PostLoadSystemNotes;
       public event Action FailedLoadSystemNotes;
 
       public event Action PreLoadLatestVersion;
-      public event Action<WorkflowState, Version> PostLoadLatestVersion;
+      public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
       public event Action FailedLoadLatestVersion;
 
-      public WorkflowState State { get; private set; }
-
-      async private Task<List<Project>> loadHostAsync(string hostName, string token)
+      private bool checkParameters(string hostname, string projectname = "")
       {
-         PreSwitchHost?.Invoke(hostName);
-
-         State = new WorkflowState
-         {
-            HostName = hostName
-         };
-
          Operator?.CancelAsync();
-         Operator = new WorkflowDataOperator(hostName, token);
+
+         if (hostname == String.Empty)
+         {
+            return false;
+         }
+
+         string token = Settings.GetAccessToken(hostname);
+         if (token == String.Empty)
+         {
+            throw new UnknownHostException(hostname);
+         }
+
+         Operator = new WorkflowDataOperator(hostname, token);
+
+         List<Project> enabledProjects = getEnabledProjects(hostname);
+         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         if (!hasEnabledProjects)
+         {
+            throw new NoProjectsException(hostname);
+         }
+
+         if (projectname != String.Empty &&
+            (!enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
+         {
+            throw new NotEnabledProjectException(projectname);
+         }
+
+         return true;
+      }
+
+      async private Task<bool> loadCurrentUserAsync(string hostName)
+      {
+         PreLoadCurrentUser?.Invoke(hostName);
+
+         User currentUser;
+         try
+         {
+            currentUser = await Operator.GetCurrentUserAsync();
+         }
+         catch (OperatorException ex)
+         {
+            string cancelMessage = String.Format("Cancelled loading current user from host {0}", hostName);
+            string errorMessage = String.Format("Cannot load user from host {0}", hostName);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCurrentUser);
+            return false;
+         }
+
+         PostLoadCurrentUser?.Invoke(currentUser);
+         return true;
+      }
+
+      async private Task<List<Project>> loadHostProjectsAsync(string hostName)
+      {
+         PreLoadHostProjects?.Invoke(hostName);
 
          List<Project> enabledProjects = getEnabledProjects(hostName);
          bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
 
-         User currentUser;
          List<Project> projects;
          try
          {
-            currentUser = await Operator.GetCurrentUserAsync();
-            projects = hasEnabledProjects ?
-               enabledProjects : await Operator.GetProjectsAsync(Settings.ShowPublicOnly);
+            projects = hasEnabledProjects ?  enabledProjects : await Operator.GetProjectsAsync(Settings.ShowPublicOnly);
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled switch host to {0}", hostName);
+            string cancelMessage = String.Format("Cancelled loading projects from host {0}", hostName);
             string errorMessage = String.Format("Cannot load projects from host {0}", hostName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchHost);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadHostProjects);
             return null;
          }
 
-         State.CurrentUser = currentUser;
-
-         PostSwitchHost?.Invoke(State, projects);
+         PostLoadHostProjects?.Invoke(hostName, projects);
          return projects;
       }
 
-      async private Task<List<MergeRequest>> loadProjectAsync(string projectName)
+      async private Task<List<MergeRequest>> loadProjectMergeRequestsAsync(string hostname, Project project)
       {
-         PreSwitchProject?.Invoke(projectName);
+         PreLoadProjectMergeRequests?.Invoke(project);
 
-         Project project = new Project();
+         string projectName = project.Path_With_Namespace;
+
          List<MergeRequest> mergeRequests;
          try
          {
-            project = await Operator.GetProjectAsync(projectName);
-            mergeRequests = await Operator.GetMergeRequestsAsync(project.Path_With_Namespace);
+            mergeRequests = await Operator.GetMergeRequestsAsync(projectName);
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled switch project to {0}", projectName);
+            string cancelMessage = String.Format("Cancelled loading project merge requests from {0}", projectName);
             string errorMessage = String.Format("Cannot load project {0}", projectName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchProject);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
             return null;
          }
 
-         State.Project = project;
-
-         _lastProjectsByHosts[State.HostName] = State.Project.Path_With_Namespace;
-
-         PostSwitchProject?.Invoke(State, mergeRequests);
+         PostLoadProjectMergeRequests?.Invoke(hostname, project, mergeRequests);
          return mergeRequests;
       }
 
-      async private Task loadMergeRequestAsync(int mergeRequestIId)
+      async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)
       {
-         PreSwitchMergeRequest?.Invoke(mergeRequestIId);
+         PrelLoadSingleMergeRequest?.Invoke(mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
          try
          {
-            mergeRequest = await Operator.GetMergeRequestAsync(State.Project.Path_With_Namespace, mergeRequestIId);
+            mergeRequest = await Operator.GetMergeRequestAsync(projectName, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled switch MR to MR with IId {0}", mergeRequestIId);
+            string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mergeRequestIId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedSwitchMergeRequest);
-            return;
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);
+            return false;
          }
 
-         State.MergeRequest = mergeRequest;
+         PostLoadSingleMergeRequest?.Invoke(projectName, mergeRequest);
 
-         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
-         _lastMergeRequestsByProjects[key] = mergeRequestIId;
-
-         PostSwitchMergeRequest?.Invoke(State);
-
-         if (!await loadLatestVersionAsync() || !await loadSystemNotesAsync())
+         if (!await loadLatestVersionAsync(hostname, projectName, mergeRequest)
+          || !await loadCommitsAsync(hostname, projectName, mergeRequest))
          {
-            return;
+            return false;
          }
-         await loadCommitsAsync();
+         return await loadSystemNotesAsync(hostname, projectName, mergeRequest);
       }
 
-      async private Task<bool> loadCommitsAsync()
+      async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
       {
          PreLoadCommits?.Invoke();
          List<Commit> commits;
          try
          {
-            commits = await Operator.GetCommitsAsync(State.Project.Path_With_Namespace, State.MergeRequest.IId);
+            commits = await Operator.GetCommitsAsync(projectName, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading commits for merge request with IId {0}",
-               State.MergeRequest.IId);
+               mergeRequest.IId);
             string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
-               State.MergeRequest.IId);
+               mergeRequest.IId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCommits);
             return false;
          }
-         PostLoadCommits?.Invoke(State, commits);
+         PostLoadCommits?.Invoke(hostname, projectName, mergeRequest, commits);
          return true;
       }
 
-      async private Task<bool> loadSystemNotesAsync()
+      async private Task<bool> loadSystemNotesAsync(string hostname, string projectname, MergeRequest mergeRequest)
       {
          PreLoadSystemNotes?.Invoke();
          List<Note> notes;
          try
          {
-            notes = await Operator.GetSystemNotesAsync(State.Project.Path_With_Namespace, State.MergeRequest.IId);
+            notes = await Operator.GetSystemNotesAsync(projectname, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading system notes for merge request with IId {0}",
-               State.MergeRequest.IId);
+               mergeRequest.IId);
             string errorMessage = String.Format("Cannot load system notes for merge request with IId {0}",
-               State.MergeRequest.IId);
+               mergeRequest.IId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSystemNotes);
             return false;
          }
-         PostLoadSystemNotes?.Invoke(State, notes);
+         PostLoadSystemNotes?.Invoke(hostname, projectname, mergeRequest, notes);
          return true;
       }
 
-      async private Task<bool> loadLatestVersionAsync()
+      async private Task<bool> loadLatestVersionAsync(string hostname, string projectname, MergeRequest mergeRequest)
       {
          PreLoadLatestVersion?.Invoke();
          Version latestVersion;
          try
          {
-            latestVersion = await Operator.GetLatestVersionAsync(
-               State.Project.Path_With_Namespace, State.MergeRequest.IId);
+            latestVersion = await Operator.GetLatestVersionAsync(projectname, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading latest version for merge request with IId {0}",
-               State.MergeRequest.IId);
+               mergeRequest.IId);
             string errorMessage = String.Format("Cannot load latest version for merge request with IId {0}",
-               State.MergeRequest.IId);
+               mergeRequest.IId);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadLatestVersion);
             return false;
          }
-         PostLoadLatestVersion?.Invoke(State, latestVersion);
+         PostLoadLatestVersion?.Invoke(hostname, projectname, mergeRequest, latestVersion);
          return true;
       }
 
@@ -390,83 +376,36 @@ namespace mrHelper.Client.Workflow
          throw new WorkflowException(message);
       }
 
-      private string selectProjectFromList(List<Project> projects)
-      {
-         string key = State.HostName;
-         // if we remember a project selected for the given host before...
-         if (_lastProjectsByHosts.ContainsKey(key)
-            // ... and if such project still exists in a list of Projects
-            && projects.Any((x) => x.Path_With_Namespace == _lastProjectsByHosts[key]))
-         {
-            return _lastProjectsByHosts[key];
-         }
-
-         return projects.Count > 0 ? projects[0].Path_With_Namespace : String.Empty;
-      }
-
-      private int? selectMergeRequestFromList(List<MergeRequest> mergeRequests)
-      {
-         mergeRequests = Tools.Tools.FilterMergeRequests(mergeRequests, Settings);
-
-         ProjectKey key = new ProjectKey { HostName = State.HostName, ProjectId = State.Project.Id };
-         // if we remember MR selected for the given host/project before...
-         if (_lastMergeRequestsByProjects.ContainsKey(key)
-            // ... and if such MR still exists in a list of MRs
-            && mergeRequests.Any((x) => x.IId == _lastMergeRequestsByProjects[key]))
-         {
-            return _lastMergeRequestsByProjects[key];
-         }
-
-         return mergeRequests.Count > 0 ? mergeRequests[0].IId : new Nullable<int>();
-      }
-
       private List<Project> getEnabledProjects(string hostname)
       {
-         return Tools.Tools.LoadProjectsFromFile(hostname);
-      }
-
-      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
-      {
-         writer.Set("ProjectsByHosts", _lastProjectsByHosts);
-
-         Dictionary<string, int> mergeRequestsByProjects = _lastMergeRequestsByProjects.ToDictionary(
-               item => item.Key.HostName + "|" + item.Key.ProjectId.ToString(),
-               item => item.Value);
-         writer.Set("MergeRequestsByProjects", mergeRequestsByProjects);
-      }
-
-      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
-      {
-         Dictionary<string, object> projectsByHosts = (Dictionary<string, object>)reader.Get("ProjectsByHosts");
-         if (projectsByHosts != null)
+         // Check if file exists. If it does not, it is not an error.
+         if (System.IO.File.Exists(mrHelper.Common.Constants.Constants.ProjectListFileName))
          {
-            _lastProjectsByHosts = projectsByHosts.ToDictionary(item => item.Key, item => item.Value.ToString());
+            try
+            {
+               List<HostInProjectsFile> hosts =
+                  Tools.Tools.LoadListFromFile<HostInProjectsFile>(mrHelper.Common.Constants.Constants.ProjectListFileName);
+               return hosts.FirstOrDefault((x) => x.Name == hostname).Projects;
+            }
+            catch (Exception ex) // whatever de-serialization exception
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load projects from file");
+            }
          }
 
-         Dictionary<string, object> mergeRequestsByProjects =
-            (Dictionary<string, object>)reader.Get("MergeRequestsByProjects");
-         if (mergeRequestsByProjects != null)
-         {
-            _lastMergeRequestsByProjects = mergeRequestsByProjects.ToDictionary(
-               item =>
-               {
-                  string[] splitted = item.Key.Split('|');
-
-                  Debug.Assert(splitted.Length == 2);
-
-                  string host = splitted[0];
-                  string projectId = splitted[1];
-                  return new ProjectKey { HostName = host, ProjectId = int.Parse(projectId) };
-               },
-               item => (int)item.Value);
-         }
+         return null;
       }
 
       private UserDefinedSettings Settings { get; }
       private WorkflowDataOperator Operator { get; set; }
 
-      private Dictionary<string, string> _lastProjectsByHosts = new Dictionary<string, string>();
-      private Dictionary<ProjectKey, int> _lastMergeRequestsByProjects = new Dictionary<ProjectKey, int>();
+#pragma warning disable 0649
+      private struct HostInProjectsFile
+      {
+         public string Name;
+         public List<Project> Projects;
+      }
+#pragma warning restore 0649
    }
 }
 
