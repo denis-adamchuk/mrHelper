@@ -91,6 +91,8 @@ namespace mrHelper.App.Forms
             };
             groupBoxActions.Controls.Add(button);
             offSetFromGroupBoxTopLeft.X += typicalSize.Width + 10;
+            groupBoxActions.Size =
+               new System.Drawing.Size((10 + typicalSize.Width) * (id + 1) + 10, groupBoxActions.Height);
             id++;
          }
       }
