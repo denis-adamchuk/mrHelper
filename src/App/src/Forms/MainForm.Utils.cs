@@ -517,7 +517,25 @@ namespace mrHelper.App.Forms
       {
          buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
          buttonDiffTool.Enabled = enabled;
-         groupBoxActions.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
+         enableCustomActions(enabled);
+      }
+
+      private void enableCustomActions(bool enabled)
+      {
+         if (!enabled || !getMergeRequest().HasValue)
+         {
+            groupBoxActions.Controls.Cast<Control>().ToList().ForEach(x => x.Enabled = false);
+            return;
+         }
+
+         MergeRequest mergeRequest = getMergeRequest().Value;
+         foreach (Control control in groupBoxActions.Controls)
+         {
+            string dependency = (string)control.Tag;
+            string resolved = String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
+            control.Enabled = resolved == String.Empty ||
+               mergeRequest.Labels.Any(x => String.Format("{{Label:{0}}}", x) == resolved);
+         }
       }
 
       private void addCommitsToComboBoxes(List<Commit> commits, string baseSha, string targetBranch)

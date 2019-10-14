@@ -78,7 +78,8 @@ namespace mrHelper.CustomActions
             if (obj.Name == "SendNote")
             {
                XmlNode body = obj.Attributes.GetNamedItem("Body");
-               results.Add(new SendNoteCommand(_callback, name.Value, body.Value));
+               XmlNode dependency = obj.Attributes.GetNamedItem("Dependency");
+               results.Add(new SendNoteCommand(_callback, name.Value, body.Value, dependency?.Value ?? String.Empty));
             }
             else
             {

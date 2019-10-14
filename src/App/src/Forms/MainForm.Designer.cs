@@ -408,7 +408,7 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Panel2.Controls.Add(this.panel1);
          this.splitContainer1.Panel2.Controls.Add(this.groupBox3);
          this.splitContainer1.Panel2.Controls.Add(this.groupBox2);
-         this.splitContainer1.Panel2MinSize = 580;
+         this.splitContainer1.Panel2MinSize = 710;
          this.splitContainer1.Size = new System.Drawing.Size(1690, 858);
          this.splitContainer1.SplitterDistance = 953;
          this.splitContainer1.SplitterWidth = 8;
@@ -503,7 +503,7 @@ namespace mrHelper.App.Forms
          // columnHeaderLabels
          // 
          this.columnHeaderLabels.Text = "Labels";
-         this.columnHeaderLabels.Width = 200;
+         this.columnHeaderLabels.Width = 265;
          // 
          // columnHeaderJira
          // 

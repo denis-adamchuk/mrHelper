@@ -55,7 +55,7 @@ namespace mrHelper.App.Forms
             Y = 17
          };
          System.Drawing.Size typicalSize = new System.Drawing.Size(96, 32);
-         foreach (var command in commands)
+         foreach (ICommand command in commands)
          {
             string name = command.GetName();
             var button = new System.Windows.Forms.Button
@@ -66,7 +66,8 @@ namespace mrHelper.App.Forms
                Text = name,
                UseVisualStyleBackColor = true,
                Enabled = false,
-               TabStop = false
+               TabStop = false,
+               Tag = command.GetDependency()
             };
             button.Click += async (x, y) =>
             {

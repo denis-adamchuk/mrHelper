@@ -6,6 +6,8 @@ namespace mrHelper.Common.Interfaces
    {
       string GetName();
 
+      string GetDependency();
+
       Task Run();
    }
 }
