@@ -62,7 +62,7 @@ namespace mrHelper.App.Helpers
       {
          insideControlPosition = -1;
 
-         int position = control.Text.IndexOf(text, startPosition);
+         int position = control.Text.IndexOf(text, startPosition, StringComparison.CurrentCultureIgnoreCase);
          if (position != -1)
          {
             insideControlPosition = position;
