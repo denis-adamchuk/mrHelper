@@ -33,7 +33,7 @@ class CommandLineArgs:
       msiHelp = 'Create MSI (if not specified, creates a zip)'
       parser.add_argument('-m', '--msi', action='store_true', help=msiHelp)
 
-      deployHelp = 'Deploy to a shared location'
+      deployHelp = 'Deploy MSI to a shared location (requires -m)'
       parser.add_argument('-d', '--deploy', action='store_true', help=deployHelp)
 
       self.args = parser.parse_known_args(argv)[0]
@@ -375,18 +375,39 @@ class DeployHelper:
       if not os.path.exists(deploy_path) or not os.path.isdir(deploy_path):
          raise self.Exception(f'Bad path for deployment "{deploy_path}"')
 
-   def deploy(self, filelist):
-      for source_filepath in filelist:
-         if not os.path.exists(source_filepath) or not os.path.isfile(source_filepath):
-            continue
+   def deploy(self, version, installer_filepath):
+      if not os.path.exists(installer_filepath) or not os.path.isfile(installer_filepath):
+         raise self.Exception(f'Installer cannot be found at "{installer_filepath}"')
 
-         splitted = os.path.split(os.path.abspath(source_filepath))
-         if len(splitted) != 2:
-            continue
-         filename = splitted[1]
+      splitted = os.path.split(os.path.abspath(installer_filepath))
+      if len(splitted) != 2:
+         raise self.Exception(f'Bad path "{installer_filepath}"')
 
-         dest_filepath = os.path.join(self.deploy_path, filename)
-         shutil.copyfile(source_filepath, dest_filepath)
+      installer_filename = splitted[1]
+
+      dest_installer_path = os.path.join(self.deploy_path, version)
+      if not os.path.exists(dest_installer_path):
+         os.mkdir(dest_installer_path)
+      elif os.path.isfile(dest_installer_path):
+         raise self.Exception(f'Cannot create a directory "{dest_installer_path}"')
+
+      dest_installer_filepath = os.path.join(dest_installer_path, installer_filename)
+      if os.path.exists(dest_installer_filepath):
+         if os.path.isfile(dest_installer_filepath):
+            os.remove(dest_installer_filepath)
+         else:
+            raise self.Exception(f'Cannot copy installer to "{dest_installer_filepath}" because a directory with the same name already exists')
+      shutil.copyfile(installer_filepath, dest_installer_filepath)
+
+      with open(config.latest_version_filename(), 'w') as latestVersion:
+         latestVersion.write(self._get_json(args.version(), dest_installer_filepath))
+      dest_latest_version_filename = os.path.join(self.deploy_path, config.latest_version_filename())
+      shutil.copyfile(config.latest_version_filename(), dest_latest_version_filename)
+      os.remove(config.latest_version_filename())
+
+   def _get_json(self, version, installer_filepath):
+      installer_path = installer_filepath.replace("\\", "/")
+      return f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{installer_path}" }}'
 
 
 def get_status_message(succeeded, step_name, version_incremented, build_created, pushed, deploy):
@@ -395,7 +416,7 @@ def get_status_message(succeeded, step_name, version_incremented, build_created,
    build = f'Build package created {"Yes" if build_created else "No"}.'
    push = f'Pushed to git: {"Yes" if pushed else "No"}.'
    deploy = f'Deployed: {"Yes" if deploy else "No"}.'
-   return f'{general}\n{version}\n{build}\n{push}\n{"" if succeeded else "Details:"}'
+   return f'{general}\n{version}\n{build}\n{push}\n{deploy}\n{"" if succeeded else "Details:"}'
 
 def handle_error(err_code, e, step_name, version_incremented, build_created, pushed, deployed):
    print(get_status_message(False, step_name, version_incremented, build_created, pushed, deployed))
@@ -415,10 +436,13 @@ try:
    builder = Builder(args.version(), config.version_file(), config.build_script())
    builder.build()
 
-   deploy_filelist = []
    if args.msi():
       postbuilder = PostBuilder(args.version(), config.bin(), config.msi_original_name(), config.msi_target_name_template())
-      deploy_filelist.append(postbuilder.postbuild())
+      installer_filename = postbuilder.postbuild()
+
+      if args.deploy():
+         deployer = DeployHelper(config.deploy_path())
+         deployer.deploy(args.version(), installer_filename)
 
    if not args.msi():
       maker = PackageMaker(args.version(), config.bin(), config.extras())
@@ -428,14 +452,6 @@ try:
       repository = RepositoryHelper(config.repository())
       repository.push(config.version_file())
       repository.add_tag(f"build-{args.version()}")
-
-   if args.deploy():
-      with open(config.latest_version_filename(), 'w') as latestVersion:
-         latestVersion.write(args.version())
-         deploy_filelist.append(config.latest_version_filename())
-      deployer = DeployHelper(config.deploy_path())
-      deployer.deploy(deploy_filelist)
-      os.remove(config.latest_version_filename())
 
 except ScriptConfigParser.Exception as e:
    handle_error(1, e, "validating config", False, False, False, False)

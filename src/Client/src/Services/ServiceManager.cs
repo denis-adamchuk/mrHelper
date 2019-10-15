@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
@@ -28,14 +30,60 @@ namespace mrHelper.Client.Services
 
       public string GetJiraServiceUrl()
       {
-         int index = _services?.FindIndex((x) => x.Name == "Jira") ?? -1;
+         int index = _services?.FindIndex(x => x.Name == "Jira") ?? -1;
          if (index == -1)
          {
+            Trace.TraceWarning(String.Format("[ServiceManager] Jira entry is missing"));
             return String.Empty;
          }
 
          Dictionary<string, object> properties = _services[index].Properties;
          return properties != null && properties.ContainsKey("url") ? properties["url"].ToString() : String.Empty;
+      }
+
+      public struct LatestVersionInformation
+      {
+         public string VersionNumber;
+         public string InstallerFilePath;
+      }
+
+      public LatestVersionInformation? GetLatestVersionInfo()
+      {
+         int index = _services?.FindIndex(x => x.Name == "CheckForUpdates") ?? -1;
+         if (index == -1)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] CheckForUpdates entry is missing"));
+            return null;
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         string path = properties != null && properties.ContainsKey("latest_version_info") ?
+            properties["latest_version_info"].ToString() : String.Empty;
+
+         if (path == String.Empty)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] latest_version_info field is empty"));
+            return null;
+         }
+
+         if (!System.IO.File.Exists(path))
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] Cannot find file \"{0}\"", path));
+            return null;
+         }
+
+         string json = System.IO.File.ReadAllText(path);
+         JavaScriptSerializer serializer = new JavaScriptSerializer();
+
+         try
+         {
+            return serializer.Deserialize<LatestVersionInformation>(json);
+         }
+         catch (Exception ex) // whatever de-serialization exception
+         {
+            ExceptionHandlers.Handle(ex, "Cannot deserialize JSON ");
+         }
+         return null;
       }
 
 #pragma warning disable 0649

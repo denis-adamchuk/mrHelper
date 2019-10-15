@@ -23,8 +23,6 @@ using mrHelper.Client.Services;
 
 namespace mrHelper.App.Forms
 {
-   delegate void UpdateTextCallback(string text);
-
    internal partial class MainForm : Form, ICommandCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
@@ -92,6 +90,7 @@ namespace mrHelper.App.Forms
       private TimeTracker _timeTracker;
 
       private ColorScheme _colorScheme;
+      private string _newVersionFilePath;
 
       private struct HostComboBoxItem
       {

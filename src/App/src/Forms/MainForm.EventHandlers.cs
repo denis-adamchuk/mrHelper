@@ -466,6 +466,34 @@ namespace mrHelper.App.Forms
          getGitClient(getMergeRequestKey().Value.ProjectKey, false)?.CancelAsyncOperation();
       }
 
+      private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         if (String.IsNullOrEmpty(_newVersionFilePath))
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         if (MessageBox.Show("Do you want to close the application and install a new version?", "Confirmation",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+         {
+            Trace.TraceInformation("[CheckForUpdates] User discarded to install a new version");
+            return;
+         }
+
+         try
+         {
+            Process.Start(_newVersionFilePath);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(ex, "[CheckForUpdates] Cannot launch installer");
+         }
+
+         _exiting = true;
+         Close();
+      }
+
       protected override void WndProc(ref Message rMessage)
       {
          if (rMessage.Msg == CommonTools.NativeMethods.WM_COPYDATA)

@@ -21,6 +21,7 @@ using mrHelper.Client.Git;
 using System.Drawing;
 using mrHelper.App.Helpers;
 using mrHelper.CommonControls;
+using static mrHelper.Client.Services.ServiceManager;
 
 namespace mrHelper.App.Forms
 {
@@ -577,8 +578,7 @@ namespace mrHelper.App.Forms
       {
          if (labelGitStatus.InvokeRequired)
          {
-            UpdateTextCallback fn = new UpdateTextCallback(updateGitStatusText);
-            Invoke(fn, new object [] { text });
+            Invoke(new Action<string>(updateGitStatusText), new object [] { text });
          }
          else
          {
@@ -1012,6 +1012,52 @@ namespace mrHelper.App.Forms
             ListViewItem selected = listViewMergeRequests.SelectedItems[0];
             selected.Selected = false;
             selected.Selected = true;
+         }
+      }
+
+      private void checkForApplicationUpdates()
+      {
+         LatestVersionInformation? info = _serviceManager.GetLatestVersionInfo();
+         if (!info.HasValue)
+         {
+            return;
+         }
+
+         if (info?.VersionNumber != String.Empty && info?.VersionNumber != Application.ProductVersion)
+         {
+            Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info?.VersionNumber));
+
+            if (String.IsNullOrEmpty(info?.InstallerFilePath) || !File.Exists(info?.InstallerFilePath))
+            {
+               Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
+                  info?.InstallerFilePath));
+               return;
+            }
+
+            Task.Run(
+               () =>
+            {
+               string filename = Path.GetFileName(info?.InstallerFilePath);
+               string tempFolder = Environment.GetEnvironmentVariable("TEMP");
+               string destFilePath = Path.Combine(tempFolder, filename);
+
+               try
+               {
+                  if (File.Exists(destFilePath))
+                  {
+                     File.Delete(destFilePath);
+                  }
+                  File.Copy(info?.InstallerFilePath, destFilePath);
+               }
+               catch (Exception ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Cannot download a new version");
+                  return;
+               }
+
+               _newVersionFilePath = destFilePath;
+               BeginInvoke(new Action(() => linkLabelNewVersion.Visible = true));
+            }); 
          }
       }
    }

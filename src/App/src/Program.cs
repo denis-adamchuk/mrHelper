@@ -54,6 +54,8 @@ namespace mrHelper.App
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.main.log"));
+         Trace.TraceInformation("----------------------------------------------------------------");
+         Trace.TraceInformation(String.Format("Merge Request Helper {0} started", Application.ProductVersion));
 
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);
@@ -85,6 +87,8 @@ namespace mrHelper.App
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          string filename = String.Format("mrHelper.secondary.{0}.log", context.CurrentProcess.Id);
          Trace.Listeners.Add(new CustomTraceListener("mrHelper", filename));
+         Trace.TraceInformation("----------------------------------------------------------------");
+         Trace.TraceInformation(String.Format("Merge Request Helper {0} started", Application.ProductVersion));
 
          try
          {
