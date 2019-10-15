@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import uuid
+import shutil
 import zipfile
 import argparse
 import traceback
@@ -32,6 +33,9 @@ class CommandLineArgs:
       msiHelp = 'Create MSI (if not specified, creates a zip)'
       parser.add_argument('-m', '--msi', action='store_true', help=msiHelp)
 
+      deployHelp = 'Deploy to a shared location'
+      parser.add_argument('-d', '--deploy', action='store_true', help=deployHelp)
+
       self.args = parser.parse_known_args(argv)[0]
 
       if not self.args.version:
@@ -57,6 +61,9 @@ class CommandLineArgs:
 
    def push(self):
       return self.args.push
+
+   def deploy(self):
+      return self.args.deploy
 
    def _validateVersion(self, version):
       version_rex = re.compile(r'^(?:[0-9]+\.){3}[0-9]+$')
@@ -100,6 +107,12 @@ class ScriptConfigParser:
    def msi_target_name_template(self):
       return self.config.get('Installer', 'msi_target_name_template')
 
+   def latest_version_filename(self):
+      return self.config.get('Deploy', 'latest_version_filename')
+
+   def deploy_path(self):
+      return self.config.get('Deploy', 'path')
+
    def _initialize(self, filename):
       self._addOption('Path', 'repository', '.')
       self._addOption('Path', 'Extras', 'extras')
@@ -109,6 +122,8 @@ class ScriptConfigParser:
       self._addOption('Installer', 'project', '')
       self._addOption('Installer', 'msi_original_name', '')
       self._addOption('Installer', 'msi_target_name_template', '')
+      self._addOption('Deploy', 'latest_version_filename', 'latest')
+      self._addOption('Deploy', 'path', '')
 
       with open(filename, 'w') as configFile:
          self.config.write(configFile)
@@ -126,6 +141,7 @@ class ScriptConfigParser:
       self._validateFileInConfig(self.config, 'Path', 'BuildScript')
       self._validateFileInConfig(self.config, 'Version', 'AssemblyInfo')
       self._validateFileInConfig(self.config, 'Installer', 'project')
+      self._validatePathInConfig(self.config, 'Deploy', 'path')
 
    def _validatePathInConfig(self, config, section, option):
       path = self.config.get(section, option)
@@ -198,13 +214,14 @@ class PostBuilder:
       self.msi_target_name_template = msi_target_name_template
 
    def postbuild(self):
-      self._rename_msi()
+      return self._rename_msi()
 
    def _rename_msi(self):
       msi_new_name = self.msi_target_name_template
       msi_new_name = msi_new_name.replace('{Version}', self.version)
       msi_new_path = os.path.join(self.bin_path, msi_new_name)
       os.rename(self.msi_path, msi_new_path)
+      return msi_new_path
 
 
 class Builder:
@@ -278,6 +295,7 @@ class PackageMaker:
             assert(False)
 
       self._pack(archive_name, [self.bin_path, self.extras_path])
+      return archive_name
 
    def _pack(self, archive_name, paths) :
       with zipfile.ZipFile(archive_name, 'a', zipfile.ZIP_DEFLATED) as zip:
@@ -344,15 +362,43 @@ class RepositoryHelper:
          raise self.Exception(f'Failed to push new tag to remote')
 
 
-def get_status_message(succeeded, step_name, version_incremented, build_created, pushed):
+class DeployHelper:
+   """ DeployHelper - deploys files to a location
+
+   """
+   class Exception(RuntimeError):
+      pass
+
+   def __init__(self, deploy_path):
+      self.deploy_path = deploy_path
+
+      if not os.path.exists(deploy_path) or not os.path.isdir(deploy_path):
+         raise self.Exception(f'Bad path for deployment "{deploy_path}"')
+
+   def deploy(self, filelist):
+      for source_filepath in filelist:
+         if not os.path.exists(source_filepath) or not os.path.isfile(source_filepath):
+            continue
+
+         splitted = os.path.split(os.path.abspath(source_filepath))
+         if len(splitted) != 2:
+            continue
+         filename = splitted[1]
+
+         dest_filepath = os.path.join(self.deploy_path, filename)
+         shutil.copyfile(source_filepath, dest_filepath)
+
+
+def get_status_message(succeeded, step_name, version_incremented, build_created, pushed, deploy):
    general = f'Succeeded' if succeeded else f'Fatal error at step "{step_name}".'
    version = f'Version number updated: {"Yes" if version_incremented else "No"}.'
    build = f'Build package created {"Yes" if build_created else "No"}.'
    push = f'Pushed to git: {"Yes" if pushed else "No"}.'
+   deploy = f'Deployed: {"Yes" if deploy else "No"}.'
    return f'{general}\n{version}\n{build}\n{push}\n{"" if succeeded else "Details:"}'
 
-def handle_error(err_code, e, step_name, version_incremented, build_created, pushed):
-   print(get_status_message(False, step_name, version_incremented, build_created, pushed))
+def handle_error(err_code, e, step_name, version_incremented, build_created, pushed, deployed):
+   print(get_status_message(False, step_name, version_incremented, build_created, pushed, deployed))
    print(e)
    sys.exit(err_code)
 
@@ -369,39 +415,50 @@ try:
    builder = Builder(args.version(), config.version_file(), config.build_script())
    builder.build()
 
+   deploy_filelist = []
    if args.msi():
       postbuilder = PostBuilder(args.version(), config.bin(), config.msi_original_name(), config.msi_target_name_template())
-      postbuilder.postbuild()
+      deploy_filelist.append(postbuilder.postbuild())
 
    if not args.msi():
       maker = PackageMaker(args.version(), config.bin(), config.extras())
-      maker.make_package()
+      deploy_filelist.append(maker.make_package())
 
    if args.push():
       repository = RepositoryHelper(config.repository())
       repository.push(config.version_file())
       repository.add_tag(f"build-{args.version()}")
 
+   if args.deploy():
+      with open(config.latest_version_filename(), 'w') as latestVersion:
+         latestVersion.write(args.version())
+         deploy_filelist.append(config.latest_version_filename())
+      deployer = DeployHelper(config.deploy_path())
+      deployer.deploy(deploy_filelist)
+      os.remove(config.latest_version_filename())
+
 except ScriptConfigParser.Exception as e:
-   handle_error(1, e, "validating config", False, False, False)
+   handle_error(1, e, "validating config", False, False, False, False)
 except CommandLineArgs.Exception as e:
-   handle_error(2, e, "parsing command-line", False, False, False)
+   handle_error(2, e, "parsing command-line", False, False, False, False)
 except PreBuilder.Exception as e:
-   handle_error(6, e, "pre-build step", False, False, False)
+   handle_error(6, e, "pre-build step", False, False, False, False)
 except PreBuilder.Exception as e:
-   handle_error(7, e, "post-build step", False, True, False)
+   handle_error(7, e, "post-build step", False, True, False, False)
 except Builder.Exception as e:
-   handle_error(3, e, "preparing to build", False, False, False)
+   handle_error(3, e, "preparing to build", False, False, False, False)
 except PackageMaker.Exception as e:
-   handle_error(4, e, "creating archive", True, False, False)
+   handle_error(4, e, "creating archive", True, False, False, False)
 except RepositoryHelper.Exception as e:
-   handle_error(5, e, "working with git", True, True, False)
+   handle_error(5, e, "working with git", True, True, False, False)
+except DeployHelper.Exception as e:
+   handle_error(8, e, "deployment", True, True, True, False)
 except Exception as e:
    print('Unknown error.\nDetails:')
    print(e)
    print(traceback.format_exc())
    sys.exit(6)
 else:
-   print(get_status_message(True, "", True, True, args.push()))
+   print(get_status_message(True, "", True, True, args.push(), args.deploy()))
    sys.exit(0)
 
