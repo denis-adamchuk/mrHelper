@@ -100,6 +100,21 @@ namespace mrHelper.CommonTools
             message, typeof(NativeMethods.COPYDATASTRUCT));
          return Marshal.PtrToStringAnsi(copyData.lpData);
       }
+
+      public static void ActivateWindow(IntPtr window)
+      {
+         int nCmdShow = CommonTools.NativeMethods.SW_SHOWNORMAL;
+         if (CommonTools.NativeMethods.IsIconic(window))
+         {
+            nCmdShow = CommonTools.NativeMethods.SW_RESTORE;
+         }
+         else if (CommonTools.NativeMethods.IsZoomed(window))
+         {
+            nCmdShow = CommonTools.NativeMethods.SW_SHOWMAXIMIZED;
+         }
+         CommonTools.NativeMethods.ShowWindowAsync(window, nCmdShow);
+         CommonTools.NativeMethods.SetForegroundWindow(window);
+      }
    }
 }
 

@@ -70,7 +70,7 @@ namespace mrHelper.App.Forms
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
       {
          ShowInTaskbar = true;
-         Show();
+         CommonTools.Win32Tools.ActivateWindow(this.Handle);
       }
 
       async private void ButtonDifftool_Click(object sender, EventArgs e)

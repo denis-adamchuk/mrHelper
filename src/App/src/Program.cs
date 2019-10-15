@@ -108,7 +108,7 @@ namespace mrHelper.App
                   string message = String.Join("|", context.Arguments);
                   Win32Tools.SendMessageToWindow(mainWindow, message);
                }
-               NativeMethods.SetForegroundWindow(mainWindow);
+               Win32Tools.ActivateWindow(mainWindow);
             }
             else
             {
@@ -120,7 +120,7 @@ namespace mrHelper.App
                IntPtr window = context.GetWindowByCaption(String.Empty, true);
                if (window != IntPtr.Zero)
                {
-                  NativeMethods.SetForegroundWindow(window);
+                  Win32Tools.ActivateWindow(window);
                }
                else
                {
@@ -149,7 +149,7 @@ namespace mrHelper.App
          if (concurrentDiscussionWindow != IntPtr.Zero)
          {
             Trace.TraceWarning("Found a concurrent Create New Discussion window");
-            NativeMethods.SetForegroundWindow(concurrentDiscussionWindow);
+            CommonTools.Win32Tools.ActivateWindow(concurrentDiscussionWindow);
             return;
          }
 
