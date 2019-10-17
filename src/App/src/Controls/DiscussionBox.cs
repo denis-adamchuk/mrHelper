@@ -254,8 +254,7 @@ namespace mrHelper.App.Controls
          HtmlPanel htmlPanel = new HtmlPanel
          {
             BorderStyle = BorderStyle.FixedSingle,
-            Height = panelHeight,
-            MinimumSize = new Size(600, 0),
+            MinimumSize = new Size(600, panelHeight),
             TabStop = false
          };
 
@@ -492,6 +491,7 @@ namespace mrHelper.App.Controls
          if (_panelContext != null)
          {
             _panelContext.Width = width * ContextWidth / 100;
+            _panelContext.Height = _panelContext.DisplayRectangle.Height + 2;
             _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
          _labelAuthor.Width = width * LabelAuthorWidth / 100;
