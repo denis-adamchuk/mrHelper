@@ -400,20 +400,9 @@ namespace mrHelper.App.Forms
          _settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
-      private void TextBoxLabels_KeyDown(object sender, KeyEventArgs e)
+      private void textBoxLabels_TextChanged(object sender, EventArgs e)
       {
-         if (e.KeyData == Keys.Enter)
-         {
-            onTextBoxLabelsUpdate();
-         }
-      }
-
-      private void TextBoxLabels_KeyPress(object sender, KeyPressEventArgs e)
-      {
-         if (e.KeyChar == ',')
-         {
-            onTextBoxLabelsUpdate();
-         }
+         onTextBoxLabelsUpdate();
       }
 
       private void TextBoxLabels_LostFocus(object sender, EventArgs e)

@@ -80,6 +80,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.panel2 = new System.Windows.Forms.Panel();
+         this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
@@ -98,7 +99,6 @@ namespace mrHelper.App.Forms
          this.groupBox2 = new System.Windows.Forms.GroupBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
-         this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -242,10 +242,9 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(709, 20);
          this.textBoxLabels.TabIndex = 1;
-         this.toolTip.SetToolTip(this.textBoxLabels, "Show merge requests that contain any of these labels (comma-separated list is exp" +
-        "ected)");
-         this.textBoxLabels.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxLabels_KeyDown);
-         this.textBoxLabels.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxLabels_KeyPress);
+         this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following: #{username} o" +
+        "r @{username} or {username}");
+         this.textBoxLabels.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
          // 
          // buttonEditTime
@@ -579,9 +578,9 @@ namespace mrHelper.App.Forms
          this.checkBoxLabels.Enabled = false;
          this.checkBoxLabels.Location = new System.Drawing.Point(6, 19);
          this.checkBoxLabels.Name = "checkBoxLabels";
-         this.checkBoxLabels.Size = new System.Drawing.Size(57, 17);
+         this.checkBoxLabels.Size = new System.Drawing.Size(48, 17);
          this.checkBoxLabels.TabIndex = 0;
-         this.checkBoxLabels.Text = "Labels";
+         this.checkBoxLabels.Text = "Filter";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
          this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.CheckBoxLabels_CheckedChanged);
          // 
@@ -598,6 +597,18 @@ namespace mrHelper.App.Forms
          this.panel2.Name = "panel2";
          this.panel2.Size = new System.Drawing.Size(729, 84);
          this.panel2.TabIndex = 4;
+         // 
+         // linkLabelNewVersion
+         // 
+         this.linkLabelNewVersion.AutoSize = true;
+         this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 54);
+         this.linkLabelNewVersion.Name = "linkLabelNewVersion";
+         this.linkLabelNewVersion.Size = new System.Drawing.Size(215, 13);
+         this.linkLabelNewVersion.TabIndex = 5;
+         this.linkLabelNewVersion.TabStop = true;
+         this.linkLabelNewVersion.Text = "New version is available! Click here to install";
+         this.linkLabelNewVersion.Visible = false;
+         this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
          // 
          // linkLabelAbortGit
          // 
@@ -808,18 +819,6 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(723, 118);
          this.richTextBoxMergeRequestDescription.TabIndex = 0;
          this.richTextBoxMergeRequestDescription.Text = "";
-         // 
-         // linkLabelNewVersion
-         // 
-         this.linkLabelNewVersion.AutoSize = true;
-         this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 54);
-         this.linkLabelNewVersion.Name = "linkLabelNewVersion";
-         this.linkLabelNewVersion.Size = new System.Drawing.Size(215, 13);
-         this.linkLabelNewVersion.TabIndex = 5;
-         this.linkLabelNewVersion.TabStop = true;
-         this.linkLabelNewVersion.Text = "New version is available! Click here to install";
-         this.linkLabelNewVersion.Visible = false;
-         this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
          // 
          // MainForm
          // 

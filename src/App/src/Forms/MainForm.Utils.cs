@@ -599,7 +599,7 @@ namespace mrHelper.App.Forms
 
       private void notifyOnMergeRequestUpdates(List<UpdatedMergeRequest> updates)
       {
-         List<UpdatedMergeRequest> filtered = FilterMergeRequests(updates, _settings);
+         List<UpdatedMergeRequest> filtered = filterMergeRequests(updates);
 
          filtered.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
@@ -611,44 +611,60 @@ namespace mrHelper.App.Forms
                "New commits in merge request"));
       }
 
-      private static List<string> GetLabels(MergeRequest x) => x.Labels;
-      private static List<string> GetLabels(UpdatedMergeRequest x) => GetLabels(x.MergeRequest);
-
-      private static List<string> SplitLabels(string labels)
+      private string[] getSelectedLabels()
       {
-         List<string> result = new List<string>();
-         foreach (var item in labels.Split(','))
+         if (!_settings.CheckedLabelsFilter)
          {
-            result.Add(item.Trim(' '));
-         }
-         return result;
-      }
-
-      private static List<T> FilterMergeRequests<T>(List<T> mergeRequests, UserDefinedSettings settings)
-      {
-         if (!settings.CheckedLabelsFilter)
-         {
-            return mergeRequests;
+            return null;
          }
 
-         List<string> splittedLabels = SplitLabels(settings.LastUsedLabels);
-         return mergeRequests.Where(
-            (x) =>
-         {
-            List<string> mrLabels = GetLabels((dynamic)x);
-            return splittedLabels.Intersect(mrLabels).Count() != 0;
-         }).ToList();
+         return _settings.LastUsedLabels.Split(',').Select(x => x.Trim(' ')).ToArray();
       }
 
-      private static bool IsFilteredMergeRequest(MergeRequest mergeRequest, UserDefinedSettings settings)
+      private List<T> filterMergeRequests<T>(List<T> mergeRequests)
       {
-         if (!settings.CheckedLabelsFilter)
+         string[] selected = getSelectedLabels();
+         return selected == null ? mergeRequests : mergeRequests.Where(x => isFilteredMergeRequest(x, selected)).ToList();
+      }
+
+      private static MergeRequest GetMergeRequest(MergeRequest x) => x;
+      private static MergeRequest GetMergeRequest(UpdatedMergeRequest x) => x.MergeRequest;
+
+      private bool isFilteredMergeRequest<T>(T mergeRequestT, string[] selected)
+      {
+         if (selected == null)
          {
             return false;
          }
 
-         List<string> splittedLabels = SplitLabels(settings.LastUsedLabels);
-         return splittedLabels.Intersect(mergeRequest.Labels).Count() == 0;
+         MergeRequest mergeRequest = GetMergeRequest((dynamic)mergeRequestT);
+         foreach (string item in selected)
+         {
+            if (item.StartsWith(authorLabelPrefix))
+            {
+               if (mergeRequest.Author.Username.StartsWith(item.Substring(1)))
+               {
+                  return false;
+               }
+            }
+            else if (item.StartsWith(gitlabLabelPrefix))
+            {
+               if (mergeRequest.Labels.Any(x => x.StartsWith(item)))
+               {
+                  return false;
+               }
+            }
+            else if (item.All(x => Char.IsLetter(x)))
+            {
+               if (mergeRequest.Author.Username.StartsWith(item)
+                  || mergeRequest.Labels.Any(x => x.StartsWith(gitlabLabelPrefix + item)))
+               {
+                  return false;
+               }
+            }
+         }
+
+         return true;
       }
 
       private GitClientFactory getGitClientFactory(string localFolder)
@@ -797,11 +813,12 @@ namespace mrHelper.App.Forms
             }
          }
 
+         string[] selected = getSelectedLabels();
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
             if (!_allMergeRequests.Any(x => FullMergeRequestKey.SameMergeRequest(x, fmk))
-               || IsFilteredMergeRequest(fmk.MergeRequest, _settings))
+               || isFilteredMergeRequest(fmk.MergeRequest, selected))
             {
                listViewMergeRequests.Items.RemoveAt(index);
             }
@@ -829,13 +846,16 @@ namespace mrHelper.App.Forms
       {
          item.Tag = fmk;
 
+         string author = String.Format("{0}\n({1}{2})",
+            fmk.MergeRequest.Author.Name, authorLabelPrefix, fmk.MergeRequest.Author.Username);
+
          string jiraServiceUrl = _serviceManager.GetJiraServiceUrl();
          string jiraTask = getJiraTask(fmk.MergeRequest);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
          item.SubItems[0].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.IId.ToString(), () => fmk.MergeRequest.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.Author.Name,    () => String.Empty);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                          () => String.Empty);
          item.SubItems[2].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.Title,          () => String.Empty);
          item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(fmk.MergeRequest),  () => String.Empty);
          item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                        () => jiraTaskUrl);
@@ -858,7 +878,8 @@ namespace mrHelper.App.Forms
          mergeRequest.Labels.Sort();
 
          var query = mergeRequest.Labels.GroupBy(
-            (label) => label.StartsWith("@") && label.IndexOf('-') != -1 ? label.Substring(0, label.IndexOf('-')) : label,
+            (label) => label.StartsWith(gitlabLabelPrefix) && label.IndexOf('-') != -1 ?
+               label.Substring(0, label.IndexOf('-')) : label,
             (label) => label,
             (baseLabel, labels) => new
             {
@@ -1060,6 +1081,9 @@ namespace mrHelper.App.Forms
             }); 
          }
       }
+
+      private static readonly string authorLabelPrefix = "#";
+      private static readonly string gitlabLabelPrefix = "@";
    }
 }
 
