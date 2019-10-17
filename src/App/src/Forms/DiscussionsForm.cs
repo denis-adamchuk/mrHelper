@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
             () =>
             {
                DisplayFilter.Filter = FilterPanel.Filter;
-               updateLayout(null);
+               updateLayout(null, true);
             });
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
          TextSearch = new TextSearch(this,
@@ -98,7 +98,7 @@ namespace mrHelper.App.Forms
          Controls.Add(ActionsPanel);
          Controls.Add(SearchPanel);
 
-         if (!renderDiscussions(discussions))
+         if (!renderDiscussions(discussions, false))
          {
             throw new NoDiscussionsToShow();
          }
@@ -158,7 +158,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[DiscussionsForm] Refreshing by user request");
 
-         if (!renderDiscussions(await loadDiscussionsAsync()))
+         if (!renderDiscussions(await loadDiscussionsAsync(), true))
          {
             MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -207,14 +207,14 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      private bool renderDiscussions(List<Discussion> discussions)
+      private bool renderDiscussions(List<Discussion> discussions, bool needReposition)
       {
-         updateLayout(discussions);
+         updateLayout(discussions, needReposition);
          Focus(); // Set focus to the Form
          return discussions != null && Controls.Cast<Control>().Any((x) => x is DiscussionBox);
       }
 
-      private void updateLayout(List<Discussion> discussions)
+      private void updateLayout(List<Discussion> discussions, bool needReposition)
       {
          resetSearch();
 
@@ -235,8 +235,11 @@ namespace mrHelper.App.Forms
             createDiscussionBoxes(discussions);
          }
 
-         // Reposition controls before updating their visibility to avoid flickering
-         repositionControls();
+         if (needReposition)
+         {
+            // Reposition controls before updating their visibility to avoid flickering
+            repositionControls();
+         }
 
          // Un-hide controls that should be visible now
          updateVisibilityOfBoxes();
@@ -312,7 +315,7 @@ namespace mrHelper.App.Forms
                {
                   SuspendLayout();
                   sender.Visible = false; // to avoid flickering on repositioning
-               }, (sender) => updateLayout(null))
+               }, (sender) => updateLayout(null, true))
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false

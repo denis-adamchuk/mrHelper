@@ -99,7 +99,7 @@ namespace mrHelper.App.Controls
 
       private void updateTextboxHeight(Control textBox)
       {
-         int newHeight = getTextBoxPreferredHeight(textBox);
+         int newHeight = getTextBoxPreferredHeight(textBox as TextBoxNoWheel);
          if (newHeight != textBox.Height)
          {
             textBox.Height = newHeight;
@@ -329,7 +329,6 @@ namespace mrHelper.App.Controls
             Multiline = true,
             MinimumSize = new Size(300, 0)
          };
-         labelFilename.Height = getTextBoxPreferredHeight(labelFilename);
          return labelFilename;
       }
 
@@ -376,7 +375,6 @@ namespace mrHelper.App.Controls
          textBox.ReadOnly = true;
          textBox.Text = note.Body.Replace("\n", "\r\n");
          textBox.Multiline = true;
-         textBox.Height = getTextBoxPreferredHeight(textBox);
          textBox.BackColor = getNoteColor(note);
          textBox.LostFocus += TextBox_LostFocus;
          textBox.KeyDown += TextBox_KeyDown;
@@ -441,10 +439,10 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-      private static int getTextBoxPreferredHeight(Control textBox)
+      private static int getTextBoxPreferredHeight(TextBoxNoWheel textBox)
       {
-         var numberOfLines = SendMessage(textBox.Handle.ToInt32(), EM_GETLINECOUNT, 0, 0);
-         return textBox.Font.Height * (numberOfLines + 1);
+         var numberOfLines = SendMessage(textBox.CachedHandle, EM_GETLINECOUNT, 0, 0);
+         return textBox.FontHeight * (numberOfLines + 1);
       }
 
       private string getNoteTooltipText(DiscussionNote note)
@@ -488,7 +486,7 @@ namespace mrHelper.App.Controls
          foreach (var textbox in _textboxesNotes)
          {
             textbox.Width = width * NotesWidth / 100;
-            textbox.Height = getTextBoxPreferredHeight(textbox);
+            textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
          }
 
          if (_panelContext != null)
@@ -500,7 +498,7 @@ namespace mrHelper.App.Controls
          if (_labelFileName != null)
          {
             _labelFileName.Width = width * LabelFilenameWidth / 100;
-            _labelFileName.Height = getTextBoxPreferredHeight(_labelFileName);
+            _labelFileName.Height = getTextBoxPreferredHeight(_labelFileName as TextBoxNoWheel);
          }
       }
 

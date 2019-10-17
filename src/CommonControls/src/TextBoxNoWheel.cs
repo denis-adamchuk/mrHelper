@@ -13,6 +13,33 @@ namespace mrHelper.CommonControls
          }
          base.WndProc(ref m);
       }
+
+      public int CachedHandle
+      {
+         get
+         {
+            if (_cachedHandle == 0)
+            {
+               _cachedHandle = Handle.ToInt32();
+            }
+            return _cachedHandle;
+         }
+      }
+
+      public new int FontHeight
+      {
+         get
+         {
+            if (_cachedFontHeight == 0)
+            {
+               _cachedFontHeight = Font.Height;
+            }
+            return _cachedFontHeight;
+         }
+      }
+
+      private int _cachedHandle;
+      private int _cachedFontHeight;
    }
 }
 
