@@ -223,12 +223,12 @@ namespace mrHelper.App.Controls
          var firstNote = Discussion.Notes[0];
 
          _labelAuthor = createLabelAuthor(firstNote);
-         _labelFileName = createLabelFilename(firstNote);
+         _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
          _textboxesNotes = createTextBoxes(Discussion.Notes);
 
          Controls.Add(_labelAuthor);
-         Controls.Add(_labelFileName);
+         Controls.Add(_textboxFilename);
          Controls.Add(_panelContext);
          foreach (var note in _textboxesNotes)
          {
@@ -293,8 +293,8 @@ namespace mrHelper.App.Controls
          }
       }
 
-      // Create a label that shows filename
-      private Control createLabelFilename(DiscussionNote firstNote)
+      // Create a textbox that shows filename
+      private Control createTextboxFilename(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
          {
@@ -322,14 +322,14 @@ namespace mrHelper.App.Controls
             result = newPath + "\r\n(was " + oldPath + ")";
          }
 
-         TextBox labelFilename = new TextBoxNoWheel
+         TextBox textboxFilename = new TextBoxNoWheel
          {
             ReadOnly = true,
             Text = result,
             Multiline = true,
             MinimumSize = new Size(300, 0)
          };
-         return labelFilename;
+         return textboxFilename;
       }
 
       // Create a label that shows discussion author
@@ -495,10 +495,10 @@ namespace mrHelper.App.Controls
             _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
          _labelAuthor.Width = width * LabelAuthorWidth / 100;
-         if (_labelFileName != null)
+         if (_textboxFilename != null)
          {
-            _labelFileName.Width = width * LabelFilenameWidth / 100;
-            _labelFileName.Height = getTextBoxPreferredHeight(_labelFileName as TextBoxNoWheel);
+            _textboxFilename.Width = width * LabelFilenameWidth / 100;
+            _textboxFilename.Height = getTextBoxPreferredHeight(_textboxFilename as TextBoxNoWheel);
          }
       }
 
@@ -524,10 +524,10 @@ namespace mrHelper.App.Controls
          Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
 
          // the LabelFilename is placed to the right of the Context and vertically aligned with Notes
-         if (_labelFileName != null)
+         if (_textboxFilename != null)
          {
-            _labelFileName.Location = nextNotePos;
-            nextNotePos.Offset(0, _labelFileName.Height + interControlVertMargin);
+            _textboxFilename.Location = nextNotePos;
+            nextNotePos.Offset(0, _textboxFilename.Height + interControlVertMargin);
          }
 
          // a list of Notes is to the right of the Context
@@ -538,7 +538,7 @@ namespace mrHelper.App.Controls
          }
 
          int lblAuthorHeight = _labelAuthor.Location.Y + _labelAuthor.PreferredSize.Height;
-         int lblFNameHeight = (_labelFileName == null ? 0 : _labelFileName.Location.Y + _labelFileName.Height);
+         int lblFNameHeight = (_textboxFilename == null ? 0 : _textboxFilename.Location.Y + _textboxFilename.Height);
          int ctxHeight = (_panelContext == null ? 0 : _panelContext.Location.Y + _panelContext.Height);
          int notesHeight = _textboxesNotes[_textboxesNotes.Count - 1].Location.Y
                          + _textboxesNotes[_textboxesNotes.Count - 1].Height;
@@ -758,7 +758,7 @@ namespace mrHelper.App.Controls
       private readonly int LabelFilenameWidth = 34;
 
       private Control _labelAuthor;
-      private Control _labelFileName;
+      private Control _textboxFilename;
       private Control _panelContext;
       private List<Control> _textboxesNotes;
 
