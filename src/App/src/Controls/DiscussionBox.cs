@@ -68,11 +68,12 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
-      private void TextBox_KeyDown(object sender, KeyEventArgs e)
+      async private void TextBox_KeyDown(object sender, KeyEventArgs e)
       {
          TextBox textBox = (TextBox)(sender);
 
-         if (textBox.ReadOnly && e.KeyData == Keys.F2)
+
+         if (e.KeyCode == Keys.F2 && textBox.ReadOnly)
          {
             DiscussionNote note = (DiscussionNote)(textBox.Tag);
             if (canBeModified(note))
@@ -80,7 +81,23 @@ namespace mrHelper.App.Controls
                onStartEditNote(textBox);
             }
          }
-         else if (!textBox.ReadOnly && e.KeyData == Keys.Escape)
+         else if (e.KeyCode == Keys.F4)
+         {
+            if (!textBox.ReadOnly)
+            {
+               onCancelEditNote(textBox);
+               updateTextboxHeight(textBox);
+            }
+            if (Control.ModifierKeys == Keys.Shift)
+            {
+               await onReplyToDiscussionAsync(textBox);
+            }
+            else
+            {
+               await onReplyAsync("Done");
+            }
+         }
+         else if (e.KeyCode == Keys.Escape && !textBox.ReadOnly)
          {
             onCancelEditNote(textBox);
             updateTextboxHeight(textBox);
@@ -118,10 +135,8 @@ namespace mrHelper.App.Controls
          await onSubmitNewBodyAsync(textBox);
       }
 
-      async private void MenuItemReply_Click(object sender, EventArgs e)
+      async private Task onReplyToDiscussionAsync(TextBox textBox)
       {
-         MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
          if (textBox?.Parent?.Parent == null)
          {
             return;
@@ -141,6 +156,13 @@ namespace mrHelper.App.Controls
                await onReplyAsync(form.Body);
             }
          }
+      }
+
+      async private void MenuItemReply_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         await onReplyToDiscussionAsync(textBox);
       }
 
       private void MenuItemEditNote_Click(object sender, EventArgs e)
@@ -430,7 +452,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply"
+            Text = "Reply (F4/Shift-F4)"
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
