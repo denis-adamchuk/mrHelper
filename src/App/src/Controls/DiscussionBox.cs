@@ -68,10 +68,26 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
-      async private void TextBox_KeyDown(object sender, KeyEventArgs e)
+      async private void FilenameTextBox_KeyDown(object sender, KeyEventArgs e)
       {
          TextBox textBox = (TextBox)(sender);
 
+         if (e.KeyCode == Keys.F4)
+         {
+            if (Control.ModifierKeys == Keys.Shift)
+            {
+               await onReplyAsyncDone();
+            }
+            else
+            {
+               await onReplyToDiscussionAsync(textBox);
+            }
+         }
+      }
+
+      async private void DiscussionNoteTextBox_KeyDown(object sender, KeyEventArgs e)
+      {
+         TextBox textBox = (TextBox)(sender);
 
          if (e.KeyCode == Keys.F2 && textBox.ReadOnly)
          {
@@ -90,11 +106,11 @@ namespace mrHelper.App.Controls
             }
             if (Control.ModifierKeys == Keys.Shift)
             {
-               await onReplyToDiscussionAsync(textBox);
+               await onReplyAsyncDone();
             }
             else
             {
-               await onReplyAsync("Done");
+               await onReplyToDiscussionAsync(textBox);
             }
          }
          else if (e.KeyCode == Keys.Escape && !textBox.ReadOnly)
@@ -104,7 +120,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void TextBox_KeyUp(object sender, KeyEventArgs e)
+      private void DiscussionNoteTextBox_KeyUp(object sender, KeyEventArgs e)
       {
          TextBox textBox = (TextBox)(sender);
 
@@ -163,6 +179,11 @@ namespace mrHelper.App.Controls
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
          await onReplyToDiscussionAsync(textBox);
+      }
+
+      async private void MenuItemReplyDone_Click(object sender, EventArgs e)
+      {
+         await onReplyAsyncDone();
       }
 
       private void MenuItemEditNote_Click(object sender, EventArgs e)
@@ -225,9 +246,6 @@ namespace mrHelper.App.Controls
 
          textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
 
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         Debug.Assert(note.Resolvable);
-
          await onToggleResolveDiscussionAsync();
       }
 
@@ -242,7 +260,7 @@ namespace mrHelper.App.Controls
       {
          Debug.Assert(Discussion.Notes.Count > 0);
 
-         var firstNote = Discussion.Notes[0];
+         DiscussionNote firstNote = Discussion.Notes[0];
 
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
@@ -343,14 +361,16 @@ namespace mrHelper.App.Controls
             result = newPath + "\r\n(was " + oldPath + ")";
          }
 
-         TextBox textboxFilename = new TextBoxNoWheel
+         TextBox textBox = new TextBoxNoWheel
          {
             ReadOnly = true,
             Text = result,
             Multiline = true,
-            MinimumSize = new Size(300, 0)
+            MinimumSize = new Size(300, 0),
          };
-         return textboxFilename;
+         textBox.KeyDown += FilenameTextBox_KeyDown;
+         textBox.ContextMenu = createContextMenuForFilename(firstNote, textBox);
+         return textBox;
       }
 
       // Create a label that shows discussion author
@@ -367,7 +387,7 @@ namespace mrHelper.App.Controls
 
       private List<Control> createTextBoxes(List<DiscussionNote> notes)
       {
-         var discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
+         bool discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
 
          List<Control> boxes = new List<Control>();
          foreach (var note in notes)
@@ -391,18 +411,20 @@ namespace mrHelper.App.Controls
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved)
       {
-         TextBox textBox = new TextBoxNoWheel();
-         _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
-         textBox.ReadOnly = true;
-         textBox.Text = note.Body.Replace("\n", "\r\n");
-         textBox.Multiline = true;
-         textBox.BackColor = getNoteColor(note);
+         TextBox textBox = new TextBoxNoWheel()
+         {
+            ReadOnly = true,
+            Text = note.Body.Replace("\n", "\r\n"),
+            Multiline = true,
+            BackColor = getNoteColor(note),
+            MinimumSize = new Size(300, 0),
+            Tag = note
+         };
          textBox.LostFocus += TextBox_LostFocus;
-         textBox.KeyDown += TextBox_KeyDown;
-         textBox.KeyUp += TextBox_KeyUp;
-         textBox.MinimumSize = new Size(300, 0);
-         textBox.Tag = note;
+         textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
+         textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
          textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
+         _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
 
          return textBox;
       }
@@ -452,13 +474,57 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply (F4/Shift-F4)"
+            Text = "Reply (F4)"
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
 
+         MenuItem menuItemReplyDone = new MenuItem
+         {
+            Tag = textBox,
+            Enabled = !Discussion.Individual_Note,
+            Text = "Reply \"Done\" (Shift-F4)"
+         };
+         menuItemReplyDone.Click += MenuItemReplyDone_Click;
+         contextMenu.MenuItems.Add(menuItemReplyDone);
+
          return contextMenu;
       }
+
+      private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
+      {
+         var contextMenu = new ContextMenu();
+
+         MenuItem menuItemToggleDiscussionResolve = new MenuItem
+         {
+            Tag = textBox,
+            Text = "Resolve/Unresolve Discussion",
+            Enabled = firstNote.Resolvable
+         };
+         menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
+         contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
+
+         MenuItem menuItemReply = new MenuItem
+         {
+            Tag = textBox,
+            Enabled = !Discussion.Individual_Note,
+            Text = "Reply (F4)"
+         };
+         menuItemReply.Click += MenuItemReply_Click;
+         contextMenu.MenuItems.Add(menuItemReply);
+
+         MenuItem menuItemReplyDone = new MenuItem
+         {
+            Tag = textBox,
+            Enabled = !Discussion.Individual_Note,
+            Text = "Reply \"Done\" (Shift-F4)"
+         };
+         menuItemReplyDone.Click += MenuItemReplyDone_Click;
+         contextMenu.MenuItems.Add(menuItemReplyDone);
+
+         return contextMenu;
+      }
+
 
       private static int getTextBoxPreferredHeight(TextBoxNoWheel textBox)
       {
@@ -568,6 +634,11 @@ namespace mrHelper.App.Controls
          int boxContentWidth = nextNoteX + _textboxesNotes[0].Width;
          int boxContentHeight = new[] { lblAuthorHeight, lblFNameHeight, ctxHeight, notesHeight }.Max();
          Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
+      }
+
+      async private Task onReplyAsyncDone()
+      {
+         await onReplyAsync("Done");
       }
 
       async private Task onReplyAsync(string body)
