@@ -599,13 +599,15 @@ namespace mrHelper.App.Forms
 
       private void notifyOnMergeRequestUpdates(List<UpdatedMergeRequest> updates)
       {
-         List<UpdatedMergeRequest> filtered = filterMergeRequests(updates);
+         string[] selected = getSelectedLabels();
+         List<UpdatedMergeRequest> interesting = selected == null ?
+            updates : updates.Where(x => !isFilteredMergeRequest(x, selected)).ToList();
 
-         filtered.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
+         interesting.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
                "New merge request"));
 
-         filtered.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated
+         interesting.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated
                             || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated).ToList().ForEach((x) =>
             notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
                "New commits in merge request"));
@@ -619,12 +621,6 @@ namespace mrHelper.App.Forms
          }
 
          return _settings.LastUsedLabels.Split(',').Select(x => x.Trim(' ')).ToArray();
-      }
-
-      private List<T> filterMergeRequests<T>(List<T> mergeRequests)
-      {
-         string[] selected = getSelectedLabels();
-         return selected == null ? mergeRequests : mergeRequests.Where(x => isFilteredMergeRequest(x, selected)).ToList();
       }
 
       private static MergeRequest GetMergeRequest(MergeRequest x) => x;
