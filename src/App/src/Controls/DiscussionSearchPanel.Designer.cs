@@ -30,26 +30,38 @@
       {
          this.components = new System.ComponentModel.Container();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
+         this.labelFoundCount = new System.Windows.Forms.Label();
          this.buttonFindPrev = new System.Windows.Forms.Button();
          this.buttonFindNext = new System.Windows.Forms.Button();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.toolTipSearchPanel = new System.Windows.Forms.ToolTip(this.components);
-         this.labelFoundCount = new System.Windows.Forms.Label();
+         this.checkBoxCaseSensitive = new System.Windows.Forms.CheckBox();
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBox1
          // 
+         this.groupBox1.Controls.Add(this.checkBoxCaseSensitive);
          this.groupBox1.Controls.Add(this.labelFoundCount);
          this.groupBox1.Controls.Add(this.buttonFindPrev);
          this.groupBox1.Controls.Add(this.buttonFindNext);
          this.groupBox1.Controls.Add(this.textBoxSearch);
          this.groupBox1.Location = new System.Drawing.Point(3, 3);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(416, 62);
+         this.groupBox1.Size = new System.Drawing.Size(416, 84);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Search";
+         // 
+         // labelFoundCount
+         // 
+         this.labelFoundCount.AutoSize = true;
+         this.labelFoundCount.Location = new System.Drawing.Point(3, 68);
+         this.labelFoundCount.Name = "labelFoundCount";
+         this.labelFoundCount.Size = new System.Drawing.Size(79, 13);
+         this.labelFoundCount.TabIndex = 3;
+         this.labelFoundCount.Text = "Found 0 results";
+         this.labelFoundCount.Visible = false;
          // 
          // buttonFindPrev
          // 
@@ -79,19 +91,19 @@
          this.textBoxSearch.Name = "textBoxSearch";
          this.textBoxSearch.Size = new System.Drawing.Size(242, 20);
          this.textBoxSearch.TabIndex = 0;
-         this.toolTipSearchPanel.SetToolTip(this.textBoxSearch, "Search text in discussions and comments. Search is case-sensitive.");
+         this.toolTipSearchPanel.SetToolTip(this.textBoxSearch, "Search text in discussions and comments.");
          this.textBoxSearch.TextChanged += new System.EventHandler(this.textBoxSearch_TextChanged);
          this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
          // 
-         // labelFoundCount
+         // checkBoxCaseSensitive
          // 
-         this.labelFoundCount.AutoSize = true;
-         this.labelFoundCount.Location = new System.Drawing.Point(6, 42);
-         this.labelFoundCount.Name = "labelFoundCount";
-         this.labelFoundCount.Size = new System.Drawing.Size(79, 13);
-         this.labelFoundCount.TabIndex = 3;
-         this.labelFoundCount.Text = "Found 0 results";
-         this.labelFoundCount.Visible = false;
+         this.checkBoxCaseSensitive.AutoSize = true;
+         this.checkBoxCaseSensitive.Location = new System.Drawing.Point(6, 45);
+         this.checkBoxCaseSensitive.Name = "checkBoxCaseSensitive";
+         this.checkBoxCaseSensitive.Size = new System.Drawing.Size(94, 17);
+         this.checkBoxCaseSensitive.TabIndex = 4;
+         this.checkBoxCaseSensitive.Text = "Case-sensitive";
+         this.checkBoxCaseSensitive.UseVisualStyleBackColor = true;
          // 
          // DiscussionSearchPanel
          // 
@@ -99,7 +111,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionSearchPanel";
-         this.Size = new System.Drawing.Size(422, 71);
+         this.Size = new System.Drawing.Size(422, 90);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          this.ResumeLayout(false);
@@ -114,5 +126,6 @@
       private System.Windows.Forms.Button buttonFindPrev;
       private System.Windows.Forms.ToolTip toolTipSearchPanel;
       private System.Windows.Forms.Label labelFoundCount;
+      private System.Windows.Forms.CheckBox checkBoxCaseSensitive;
    }
 }

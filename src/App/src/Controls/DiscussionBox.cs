@@ -465,7 +465,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = canBeModified(note),
-            Text = "Edit Note (F2)"
+            Text = "Edit Note\t(F2)"
          };
          menuItemEditNote.Click += MenuItemEditNote_Click;
          contextMenu.MenuItems.Add(menuItemEditNote);
@@ -474,7 +474,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply (F4)"
+            Text = "Reply\t(F4)"
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
@@ -483,7 +483,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply \"Done\" (Shift-F4)"
+            Text = "Reply \"Done\"\t(Shift-F4)"
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);
@@ -508,7 +508,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply (F4)"
+            Text = "Reply\t(F4)"
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
@@ -517,7 +517,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply \"Done\" (Shift-F4)"
+            Text = "Reply \"Done\"\t(Shift-F4)"
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);

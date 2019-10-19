@@ -1,11 +1,12 @@
-﻿using System;
+﻿using mrHelper.App.Helpers;
+using System;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
 {
    public partial class DiscussionSearchPanel : UserControl
    {
-      public DiscussionSearchPanel(Action<string, bool> onFind)
+      internal DiscussionSearchPanel(Action<SearchQuery, bool> onFind)
       {
          InitializeComponent();
 
@@ -31,12 +32,12 @@ namespace mrHelper.App.Controls
 
       private void ButtonFind_Click(object sender, EventArgs e)
       {
-         _onFind(textBoxSearch.Text, true);
+         _onFind(new SearchQuery { Text = textBoxSearch.Text, CaseSensitive = checkBoxCaseSensitive.Checked }, true);
       }
 
       private void buttonFindPrev_Click(object sender, EventArgs e)
       {
-         _onFind(textBoxSearch.Text, false);
+         _onFind(new SearchQuery { Text = textBoxSearch.Text, CaseSensitive = checkBoxCaseSensitive.Checked }, false);
       }
 
       private void textBoxSearch_TextChanged(object sender, EventArgs e)
@@ -52,7 +53,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      readonly Action<string, bool> _onFind;
+      readonly Action<SearchQuery, bool> _onFind;
    }
 }
 

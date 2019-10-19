@@ -74,15 +74,15 @@ namespace mrHelper.App.Forms
                   (control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion));
             });
          SearchPanel = new DiscussionSearchPanel(
-            (text, forward) =>
+            (query, forward) =>
             {
-               if (text == String.Empty)
+               if (query.Text == String.Empty)
                {
                   resetSearch();
                }
-               else if (text != _searchText)
+               else if (!query.Equals(_searchQuery))
                {
-                  startSearch(text, forward);
+                  startSearch(query, forward);
                }
                else
                {
@@ -264,7 +264,7 @@ namespace mrHelper.App.Forms
       {
          if (_searchIterator.Value.Control is TextBox textbox)
          {
-            textbox.Select(_searchIterator.Value.InsideControlPosition, _searchText.Length);
+            textbox.Select(_searchIterator.Value.InsideControlPosition, _searchQuery.Text.Length);
             textbox.Focus();
 
             Point controlLocationAtScreen = textbox.PointToScreen(new Point(0, -5));
@@ -377,12 +377,12 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void startSearch(string text, bool forward)
+      private void startSearch(SearchQuery query, bool forward)
       {
          unhighlightSearchResult();
 
-         _searchText = text;
-         _searchResults = TextSearch.Search(text);
+         _searchQuery = query;
+         _searchResults = TextSearch.Search(query);
          _searchIterator = forward ? _searchResults.First() : _searchResults.Last();
          SearchPanel.DisplayFoundCount(_searchResults.Count());
 
@@ -415,7 +415,7 @@ namespace mrHelper.App.Forms
          unhighlightSearchResult();
          _searchResults = new SearchResults<TextSearchResult>();
          _searchIterator = new SearchResultsCircularIterator<TextSearchResult>();
-         _searchText = String.Empty;
+         _searchQuery = new SearchQuery { Text = String.Empty, CaseSensitive = false };
          SearchPanel.DisplayFoundCount(null);
       }
 
@@ -428,7 +428,7 @@ namespace mrHelper.App.Forms
 
          unhighlightSearchResult();
 
-         SearchResults<TextSearchResult> newSearchResults = TextSearch.Search(_searchText);
+         SearchResults<TextSearchResult> newSearchResults = TextSearch.Search(_searchQuery);
          if (newSearchResults.Count() == 0)
          {
             resetSearch();
@@ -520,7 +520,7 @@ namespace mrHelper.App.Forms
       private readonly TextSearch TextSearch;
       private SearchResults<TextSearchResult> _searchResults;
       private SearchResultsCircularIterator<TextSearchResult> _searchIterator;
-      private string _searchText = String.Empty;
+      private SearchQuery _searchQuery;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

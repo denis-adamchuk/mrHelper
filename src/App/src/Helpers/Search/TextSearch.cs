@@ -15,6 +15,12 @@ namespace mrHelper.App.Helpers
       public int InsideControlPosition;
    }
 
+   internal struct SearchQuery
+   {
+      public string Text;
+      public bool CaseSensitive;
+   }
+
    internal class TextSearch
    {
       internal TextSearch(Control container, Func<Control, bool> isSearchableControl)
@@ -37,7 +43,7 @@ namespace mrHelper.App.Helpers
          return controlList;
       }
 
-      internal SearchResults<TextSearchResult> Search(string text)
+      internal SearchResults<TextSearchResult> Search(SearchQuery query)
       {
          IEnumerable<Control> controls = getSearchableControls(_container);
          List<TextSearchResult> searchResults = new List<TextSearchResult>();
@@ -46,7 +52,7 @@ namespace mrHelper.App.Helpers
          {
             int startPosition = 0;
             int insideControlIndex = 0;
-            while (doesMatchText(control, text, startPosition, out int insideControlPosition))
+            while (doesMatchText(control, query, startPosition, out int insideControlPosition))
             {
                searchResults.Add(new TextSearchResult
                   {
@@ -62,11 +68,13 @@ namespace mrHelper.App.Helpers
          return new SearchResults<TextSearchResult>(searchResults.ToArray());
       }
 
-      private bool doesMatchText(Control control, string text, int startPosition, out int insideControlPosition)
+      private bool doesMatchText(Control control, SearchQuery query, int startPosition, out int insideControlPosition)
       {
          insideControlPosition = -1;
 
-         int position = control.Text.IndexOf(text, startPosition, StringComparison.CurrentCultureIgnoreCase);
+         StringComparison stringComparison = query.CaseSensitive ?
+            StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+         int position = control.Text.IndexOf(query.Text, startPosition, stringComparison);
          if (position != -1)
          {
             insideControlPosition = position;
