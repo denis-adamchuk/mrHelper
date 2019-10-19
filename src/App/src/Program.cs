@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using mrHelper.Core.Interprocess;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
@@ -9,8 +12,6 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
-using System.Text.RegularExpressions;
-using System.IO;
 using mrHelper.CommonTools;
 
 namespace mrHelper.App
@@ -39,6 +40,10 @@ namespace mrHelper.App
       {
          using (LaunchContext context = new LaunchContext())
          {
+            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+            Trace.Listeners.Add(new CustomTraceListener(getLogFileName(context),
+               String.Format("Merge Request Helper {0} started", Application.ProductVersion)));
+
             if (context.IsRunningSingleInstance)
             {
                onLaunchMainInstace(context);
@@ -52,16 +57,24 @@ namespace mrHelper.App
 
       private static void onLaunchMainInstace(LaunchContext context)
       {
-         Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.main.log"));
-         Trace.TraceInformation("----------------------------------------------------------------");
-         Trace.TraceInformation(String.Format("Merge Request Helper {0} started", Application.ProductVersion));
-
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);
 
          try
          {
+            System.Threading.Tasks.Task.Run(
+               () =>
+            {
+               try
+               {
+                  cleanupLogFiles();
+               }
+               catch (Exception ex)
+               {
+                  ExceptionHandlers.Handle(ex, "Failed to clean-up log files");
+               }
+            });
+
             if (!checkArguments(context))
             {
                return;
@@ -84,12 +97,6 @@ namespace mrHelper.App
 
       private static void onLaunchAnotherInstance(LaunchContext context)
       {
-         Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         string filename = String.Format("mrHelper.secondary.{0}.log", context.CurrentProcess.Id);
-         Trace.Listeners.Add(new CustomTraceListener("mrHelper", filename));
-         Trace.TraceInformation("----------------------------------------------------------------");
-         Trace.TraceInformation(String.Format("Merge Request Helper {0} started", Application.ProductVersion));
-
          try
          {
             if (!checkArguments(context))
@@ -244,6 +251,48 @@ namespace mrHelper.App
          }
 
          return previousParent.Id;
+      }
+
+      private static string getFullLogPath()
+      {
+         string logFolderName = "mrHelper";
+         string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+         return System.IO.Path.Combine(appData, logFolderName);
+      }
+
+      private static string getLogFileName(LaunchContext context)
+      {
+         bool isMainInstance = context.IsRunningSingleInstance;
+
+         string format = "yyyy_MM_dd_HHmmss";
+
+         string filenamePrefix = isMainInstance ? "mrhelper.main" : "mrhelper.second.instance";
+         string filenameSuffix = isMainInstance ? String.Empty : ".id" + context.CurrentProcess.Id.ToString();
+         string filename = String.Format("{0}.{1}{2}.log", filenamePrefix, DateTime.Now.ToString(format), filenameSuffix);
+
+         return Path.Combine(getFullLogPath(), filename);
+      }
+
+      private static void cleanupLogFiles()
+      {
+         string path = getFullLogPath();
+
+         // erase old style log files
+         File.Delete(Path.Combine(path, "mrHelper.main.log"));
+         Directory.GetFiles(path, "mrHelper.secondary.*.log").ToList().ForEach(
+            x => File.Delete(Path.Combine(path, x)));
+
+         // erase all log files except N most recent ones
+         string[] logfilemasks = { "mrHelper.main.*.log", "mrHelper.second.instance.*.log" };
+         foreach (string mask in logfilemasks)
+         {
+            string[] files = Directory.GetFiles(path, mask);
+            Array.Sort(files);
+
+            int logFilesToKeep = 10;
+            files.Except(files.Reverse().Take(logFilesToKeep)).ToList().ForEach(
+               x => File.Delete(Path.Combine(path, x)));
+         }
       }
    }
 }

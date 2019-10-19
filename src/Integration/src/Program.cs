@@ -14,10 +14,13 @@ namespace mrHelper.Integration
 {
    class Program
    {
+      private static readonly string logfilename = "mrHelper.integration.log";
+
       static void Main(string[] args)
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         Trace.Listeners.Add(new CustomTraceListener("mrHelper", "mrHelper.integration.log"));
+         Trace.Listeners.Add(new CustomTraceListener(Path.Combine(getFullLogPath(), logfilename),
+            String.Format("Merge Request Helper Integration Tool {0} started", Application.ProductVersion)));
 
          if (args.Length < 1)
          {
@@ -25,9 +28,23 @@ namespace mrHelper.Integration
             return;
          }
 
-         char[] charsToTrim = { '"' };
-         string path = args[0].Trim(charsToTrim);
-         RegisterCustomProtocol(path);
+         try
+         {
+            char[] charsToTrim = { '"' };
+            string path = args[0].Trim(charsToTrim);
+            RegisterCustomProtocol(path);
+         }
+         catch (Exception ex)
+         {
+            HandleUnhandledException(ex);
+         }
+      }
+
+      private static string getFullLogPath()
+      {
+         string logFolderName = "mrHelper";
+         string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+         return System.IO.Path.Combine(appData, logFolderName);
       }
 
       private static void HandleUnhandledException(Exception ex)
@@ -52,3 +69,4 @@ namespace mrHelper.Integration
       }
    }
 }
+
