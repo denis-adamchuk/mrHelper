@@ -1032,50 +1032,49 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void checkForApplicationUpdates()
+      private bool checkForApplicationUpdates()
       {
          LatestVersionInformation? info = _serviceManager.GetLatestVersionInfo();
-         if (!info.HasValue)
+         if (!info.HasValue || info?.VersionNumber == String.Empty || info?.VersionNumber == Application.ProductVersion)
          {
-            return;
+            return false;
          }
 
-         if (info?.VersionNumber != String.Empty && info?.VersionNumber != Application.ProductVersion)
-         {
-            Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info?.VersionNumber));
+         Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info?.VersionNumber));
 
-            if (String.IsNullOrEmpty(info?.InstallerFilePath) || !File.Exists(info?.InstallerFilePath))
+         if (String.IsNullOrEmpty(info?.InstallerFilePath) || !File.Exists(info?.InstallerFilePath))
+         {
+            Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
+               info?.InstallerFilePath));
+            return false;
+         }
+
+         Task.Run(
+            () =>
+         {
+            string filename = Path.GetFileName(info?.InstallerFilePath);
+            string tempFolder = Environment.GetEnvironmentVariable("TEMP");
+            string destFilePath = Path.Combine(tempFolder, filename);
+
+            try
             {
-               Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
-                  info?.InstallerFilePath));
+               if (File.Exists(destFilePath))
+               {
+                  File.Delete(destFilePath);
+               }
+               File.Copy(info?.InstallerFilePath, destFilePath);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot download a new version");
                return;
             }
 
-            Task.Run(
-               () =>
-            {
-               string filename = Path.GetFileName(info?.InstallerFilePath);
-               string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-               string destFilePath = Path.Combine(tempFolder, filename);
+            _newVersionFilePath = destFilePath;
+            BeginInvoke(new Action(() => linkLabelNewVersion.Visible = true));
+         });
 
-               try
-               {
-                  if (File.Exists(destFilePath))
-                  {
-                     File.Delete(destFilePath);
-                  }
-                  File.Copy(info?.InstallerFilePath, destFilePath);
-               }
-               catch (Exception ex)
-               {
-                  ExceptionHandlers.Handle(ex, "Cannot download a new version");
-                  return;
-               }
-
-               _newVersionFilePath = destFilePath;
-               BeginInvoke(new Action(() => linkLabelNewVersion.Visible = true));
-            }); 
-         }
+         return true;
       }
 
       private static readonly string authorLabelPrefix = "#";

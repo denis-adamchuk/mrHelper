@@ -29,6 +29,7 @@ namespace mrHelper.App.Forms
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
+      private static readonly int checkForUpdatesTimerInterval = 1000 * 60 * 60 * 8; // 8 hours
 
       /// <summary>
       /// Tooltip timeout in seconds
@@ -90,7 +91,12 @@ namespace mrHelper.App.Forms
       private TimeTracker _timeTracker;
 
       private ColorScheme _colorScheme;
+
       private string _newVersionFilePath;
+      private readonly System.Windows.Forms.Timer _checkForUpdatesTimer = new System.Windows.Forms.Timer
+      {
+         Interval = checkForUpdatesTimerInterval
+      };
 
       private struct HostComboBoxItem
       {

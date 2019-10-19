@@ -579,6 +579,16 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void onTimerCheckForUpdates(object sender, EventArgs e)
+      {
+         Trace.TraceInformation("[CheckForUpdates] Checking for updates on timer");
+
+         if (checkForApplicationUpdates())
+         {
+            _checkForUpdatesTimer.Stop();
+         }
+      }
+
       private void onStartTimer()
       {
          Debug.Assert(!isTrackingTime());

@@ -202,6 +202,7 @@ namespace mrHelper.App.Forms
          }
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+         _checkForUpdatesTimer.Tick += new System.EventHandler(onTimerCheckForUpdates);
 
          _serviceManager = new Client.Services.ServiceManager();
          _persistentStorage = new PersistentStorage();
@@ -263,7 +264,10 @@ namespace mrHelper.App.Forms
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
-         checkForApplicationUpdates();
+         if (!checkForApplicationUpdates())
+         {
+            _checkForUpdatesTimer.Start();
+         }
       }
 
       private void subscribeToUpdates()
