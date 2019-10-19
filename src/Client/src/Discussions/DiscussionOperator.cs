@@ -63,6 +63,7 @@ namespace mrHelper.Client.Discussions
 
       async internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
       {
+         // TODO This is a copy/pasted CreateNoteAsync
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
@@ -159,12 +160,12 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
+      async internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            await client.RunAsync(async (gitlab) =>
+            return (Discussion)await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Discussions.Get(discussionId).ResolveTaskAsync(
                      new ResolveThreadParameters

@@ -80,11 +80,11 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task ResolveDiscussionAsync(bool resolved)
+      async public Task<Discussion> ResolveDiscussionAsync(bool resolved)
       {
          try
          {
-            await DiscussionOperator.ResolveDiscussionAsync(MergeRequestKey, DiscussionId, resolved);
+            return await DiscussionOperator.ResolveDiscussionAsync(MergeRequestKey, DiscussionId, resolved);
          }
          catch (OperatorException)
          {

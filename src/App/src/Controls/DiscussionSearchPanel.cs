@@ -5,31 +5,21 @@ namespace mrHelper.App.Controls
 {
    public partial class DiscussionSearchPanel : UserControl
    {
-      public DiscussionSearchPanel(Func<string, bool, int> onFind, Action onCancel)
+      public DiscussionSearchPanel(Action<string, bool> onFind)
       {
          InitializeComponent();
 
          _onFind = onFind;
-         _onCancel = onCancel;
-
-         Reset();
-      }
-
-      public void Reset()
-      {
          labelFoundCount.Visible = false;
          enableButtons();
       }
 
-      private int foundCount
+      public void DisplayFoundCount(int? count)
       {
-         set
-         {
-            labelFoundCount.Text = String.Format(
-               "Found {0} results. {1}",
-               value, value > 0 ? "Use F3/Shift-F3 to navigate between search results." : String.Empty);
-            labelFoundCount.Visible = true;
-         }
+         labelFoundCount.Visible = count.HasValue;
+         labelFoundCount.Text = count.HasValue ? String.Format(
+            "Found {0} results. {1}", count.Value,
+            count.Value > 0 ? "Use F3/Shift-F3 to navigate between search results." : String.Empty) : String.Empty;
       }
 
       private void enableButtons()
@@ -41,21 +31,17 @@ namespace mrHelper.App.Controls
 
       private void ButtonFind_Click(object sender, EventArgs e)
       {
-         foundCount = _onFind(textBoxSearch.Text, true);
+         _onFind(textBoxSearch.Text, true);
       }
 
       private void buttonFindPrev_Click(object sender, EventArgs e)
       {
-         foundCount = _onFind(textBoxSearch.Text, false);
+         _onFind(textBoxSearch.Text, false);
       }
 
       private void textBoxSearch_TextChanged(object sender, EventArgs e)
       {
          enableButtons();
-         if (labelFoundCount.Visible)
-         {
-            _onCancel();
-         }
       }
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
@@ -66,8 +52,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      readonly Func<string, bool, int> _onFind;
-      readonly Action _onCancel;
+      readonly Action<string, bool> _onFind;
    }
 }
 

@@ -11,6 +11,7 @@ namespace mrHelper.App.Helpers
    internal struct TextSearchResult
    {
       public Control Control;
+      public int InsideControlIndex;
       public int InsideControlPosition;
    }
 
@@ -36,7 +37,7 @@ namespace mrHelper.App.Helpers
          return controlList;
       }
 
-      internal SearchResults<TextSearchResult> Search(string text, bool forward)
+      internal SearchResults<TextSearchResult> Search(string text)
       {
          IEnumerable<Control> controls = getSearchableControls(_container);
          List<TextSearchResult> searchResults = new List<TextSearchResult>();
@@ -44,18 +45,21 @@ namespace mrHelper.App.Helpers
          foreach (Control control in controls)
          {
             int startPosition = 0;
+            int insideControlIndex = 0;
             while (doesMatchText(control, text, startPosition, out int insideControlPosition))
             {
                searchResults.Add(new TextSearchResult
                   {
                      Control = control,
+                     InsideControlIndex = insideControlIndex,
                      InsideControlPosition = insideControlPosition
                   });
                startPosition = insideControlPosition + 1;
+               insideControlIndex++;
             }
          }
 
-         return new SearchResults<TextSearchResult>(searchResults.ToArray(), forward);
+         return new SearchResults<TextSearchResult>(searchResults.ToArray());
       }
 
       private bool doesMatchText(Control control, string text, int startPosition, out int insideControlPosition)

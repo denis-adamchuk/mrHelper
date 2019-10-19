@@ -76,22 +76,18 @@ namespace mrHelper.App.Forms
          SearchPanel = new DiscussionSearchPanel(
             (text, forward) =>
             {
-               unhighlightSearchResult();
-               if (text != _searchText)
+               if (text == String.Empty)
                {
-                  _searchText = text;
-                  _searchResults = TextSearch.Search(text, forward);
+                  resetSearch();
+               }
+               else if (text != _searchText)
+               {
+                  startSearch(text, forward);
                }
                else
                {
-                  _searchResults.MoveNext(forward);
+                  continueSearch(forward);
                }
-               highlightSearchResult();
-               return _searchResults.Count;
-            },
-            () =>
-            {
-               resetSearch();
             });
 
          Controls.Add(FilterPanel);
@@ -112,13 +108,14 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.F3)
          {
-            unhighlightSearchResult();
-            _searchResults.MoveNext(!e.Modifiers.HasFlag(Keys.Shift));
-            highlightSearchResult();
+            continueSearch(!e.Modifiers.HasFlag(Keys.Shift));
          }
          else if (e.KeyCode == Keys.Escape)
          {
-            resetSearch();
+            if ((ActiveControl is TextBox) && (ActiveControl as TextBox).ReadOnly)
+            {
+               resetSearch();
+            }
          }
          else if (e.KeyCode == Keys.Home)
          {
@@ -164,6 +161,8 @@ namespace mrHelper.App.Forms
                MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close();
          }
+
+         updateSearch();
       }
 
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
@@ -216,8 +215,6 @@ namespace mrHelper.App.Forms
 
       private void updateLayout(List<Discussion> discussions, bool needReposition)
       {
-         resetSearch();
-
          this.Text = DefaultCaption + "   (Rendering)";
 
          SuspendLayout();
@@ -265,9 +262,9 @@ namespace mrHelper.App.Forms
 
       private void highlightSearchResult()
       {
-         if (_searchResults.Current.Control is TextBox textbox)
+         if (_searchIterator.Value.Control is TextBox textbox)
          {
-            textbox.Select(_searchResults.Current.InsideControlPosition, _searchText.Length);
+            textbox.Select(_searchIterator.Value.InsideControlPosition, _searchText.Length);
             textbox.Focus();
 
             Point controlLocationAtScreen = textbox.PointToScreen(new Point(0, -5));
@@ -285,18 +282,10 @@ namespace mrHelper.App.Forms
 
       private void unhighlightSearchResult()
       {
-         if (_searchResults.Current.Control is TextBox textbox)
+         if (_searchIterator.Value.Control is TextBox textbox)
          {
             textbox.SelectionLength = 0;
          }
-      }
-
-      private void resetSearch()
-      {
-         unhighlightSearchResult();
-         _searchResults = default(SearchResults<TextSearchResult>);
-         _searchText = String.Empty;
-         SearchPanel.Reset();
       }
 
       private void createDiscussionBoxes(List<Discussion> discussions)
@@ -311,11 +300,18 @@ namespace mrHelper.App.Forms
             DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
                _diffContextDepth, _gitRepository, _colorScheme,
+               // pre-content-change
                (sender) =>
                {
                   SuspendLayout();
                   sender.Visible = false; // to avoid flickering on repositioning
-               }, (sender) => updateLayout(null, true))
+               },
+               // post-content-change
+               (sender) =>
+               {
+                  updateLayout(null, true);
+                  updateSearch();
+               })
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -381,6 +377,119 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void startSearch(string text, bool forward)
+      {
+         unhighlightSearchResult();
+
+         _searchText = text;
+         _searchResults = TextSearch.Search(text);
+         _searchIterator = forward ? _searchResults.First() : _searchResults.Last();
+         SearchPanel.DisplayFoundCount(_searchResults.Count());
+
+         highlightSearchResult();
+      }
+
+      private void continueSearch(bool forward)
+      {
+         if (!(_searchIterator.Value.Control is TextBox) || !(_searchIterator.Value.Control as TextBox).ReadOnly)
+         {
+            return;
+         }
+
+         unhighlightSearchResult();
+
+         if (forward)
+         {
+            _searchIterator.Next();
+         }
+         else
+         {
+            _searchIterator.Prev();
+         }
+
+         highlightSearchResult();
+      }
+
+      private void resetSearch()
+      {
+         unhighlightSearchResult();
+         _searchResults = new SearchResults<TextSearchResult>();
+         _searchIterator = new SearchResultsCircularIterator<TextSearchResult>();
+         _searchText = String.Empty;
+         SearchPanel.DisplayFoundCount(null);
+      }
+
+      private void updateSearch()
+      {
+         if (!(_searchIterator.Value.Control is TextBox))
+         {
+            return;
+         }
+
+         unhighlightSearchResult();
+
+         SearchResults<TextSearchResult> newSearchResults = TextSearch.Search(_searchText);
+         if (newSearchResults.Count() == 0)
+         {
+            resetSearch();
+            return;
+         }
+
+         SearchResultsCircularIterator<TextSearchResult> current = newSearchResults.First();
+         SearchResultsCircularIterator<TextSearchResult> last = newSearchResults.Last();
+         SearchResultsCircularIterator<TextSearchResult>? bestMatch =
+            new Nullable<SearchResultsCircularIterator<TextSearchResult>>();
+         while (!current.Equals(last))
+         {
+            DiscussionNote note = (DiscussionNote)current.Value.Control.Tag;
+            if (note.Id == ((DiscussionNote)(_searchIterator.Value.Control.Tag)).Id)
+            {
+               bestMatch = current;
+               if (current.Value.InsideControlIndex == _searchIterator.Value.InsideControlIndex)
+               {
+                  break;
+               }
+            }
+            else if (bestMatch.HasValue)
+            {
+               break;
+            }
+            current.Next();
+         }
+
+         if (bestMatch.HasValue)
+         {
+            _searchResults = newSearchResults;
+            _searchIterator = bestMatch.Value;
+         }
+         else
+         {
+            // compute a distance of the previous search result
+            int distance = 0;
+            SearchResultsCircularIterator<TextSearchResult> it = _searchResults.First();
+            while (!it.Equals(_searchIterator))
+            {
+               ++distance;
+               it.Next();
+            }
+
+            // advance new search result to the same position as previous one
+            current = newSearchResults.First();
+            while (distance != 0 && !(current.Equals(newSearchResults.Last())))
+            {
+               --distance;
+               current.Next();
+            }
+
+            _searchResults = newSearchResults;
+            _searchIterator = current;
+         }
+
+         SearchPanel.DisplayFoundCount(_searchResults.Count());
+
+         highlightSearchResult();
+      }
+
       private string DefaultCaption
       {
          get
@@ -410,7 +519,8 @@ namespace mrHelper.App.Forms
       private readonly DiscussionSearchPanel SearchPanel;
       private readonly TextSearch TextSearch;
       private SearchResults<TextSearchResult> _searchResults;
-      private string _searchText;
+      private SearchResultsCircularIterator<TextSearchResult> _searchIterator;
+      private string _searchText = String.Empty;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

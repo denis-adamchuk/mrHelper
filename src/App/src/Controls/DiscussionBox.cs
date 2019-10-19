@@ -700,6 +700,8 @@ namespace mrHelper.App.Controls
             return;
          }
 
+         _onContentChanged(this);
+
          if (!textBox.IsDisposed)
          {
             _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
@@ -746,9 +748,10 @@ namespace mrHelper.App.Controls
       {
          bool wasResolved = isDiscussionResolved();
 
+         Discussion discussion;
          try
          {
-            await _editor.ResolveDiscussionAsync(!wasResolved);
+            discussion = await _editor.ResolveDiscussionAsync(!wasResolved);
          }
          catch (DiscussionEditorException)
          {
@@ -757,41 +760,47 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         await refreshDiscussion();
+         await refreshDiscussion(discussion);
       }
 
-      async private Task refreshDiscussion()
+      async private Task refreshDiscussion(Discussion? discussion = null)
       {
          if (Parent == null)
          {
             return;
          }
 
-         _preContentChange(this);
-
-         // Get rid of old text boxes
-         for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
+         Action removeTextBoxes = () =>
          {
-            if (_textboxesNotes.IndexOf(Controls[iControl]) != -1)
+            for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
             {
-               Controls.Remove(Controls[iControl]);
+               if (_textboxesNotes.IndexOf(Controls[iControl]) != -1)
+               {
+                  Controls.Remove(Controls[iControl]);
+               }
             }
-         }
-         _textboxesNotes.Clear();
+            _textboxesNotes.Clear();
+         };
+
+         _preContentChange(this);
 
          // Load updated discussion
          try
          {
-            Discussion = await _editor.GetDiscussion();
+            Discussion = discussion.HasValue ? discussion.Value : await _editor.GetDiscussion();
          }
          catch (DiscussionEditorException)
          {
+            removeTextBoxes();
             // it is not an error here, we treat it as 'last discussion item has been deleted'
             // Seems it was the only note in the discussion, remove ourselves from parents controls
             Parent.Controls.Remove(this);
             _onContentChanged(this);
             return;
          }
+
+         // Get rid of old text boxes
+         removeTextBoxes();
 
          if (Discussion.Notes.Count == 0 || Discussion.Notes[0].System)
          {

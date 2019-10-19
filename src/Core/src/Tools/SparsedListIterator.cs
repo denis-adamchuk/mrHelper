@@ -8,7 +8,7 @@ namespace mrHelper.Core.Tools
    /// <summary>
    /// Iterator for SparsedList container
    /// </summary>
-   public class SparsedListIterator<T> where T: class
+   public struct SparsedListIterator<T> where T: class
    {
       /// <summary>
       /// Initialize an iterator with a container and start position
