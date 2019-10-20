@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
          DiffCallHandler handler;
          try
          {
-            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot);
+            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, Program.Settings);
          }
          catch (ArgumentException ex)
          {

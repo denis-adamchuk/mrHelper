@@ -41,6 +41,7 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Constants\Constants.cs" />
+    <Compile Include="Exceptions\FeedbackReporterException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Exceptions\CustomCommandLoaderException.cs" />
     <Compile Include="Exceptions\DiffToolIntegrationException.cs" />

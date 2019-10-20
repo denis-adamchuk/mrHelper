@@ -28,6 +28,19 @@ namespace mrHelper.Client.Services
          }
       }
 
+      public string GetBugReportEmail()
+      {
+         int index = _services?.FindIndex(x => x.Name == "BugReport") ?? -1;
+         if (index == -1)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] BugReport entry is missing"));
+            return String.Empty;
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         return properties != null && properties.ContainsKey("email") ? properties["email"].ToString() : String.Empty;
+      }
+
       public string GetJiraServiceUrl()
       {
          int index = _services?.FindIndex(x => x.Name == "Jira") ?? -1;

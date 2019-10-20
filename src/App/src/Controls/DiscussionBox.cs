@@ -787,7 +787,7 @@ namespace mrHelper.App.Controls
          // Load updated discussion
          try
          {
-            Discussion = discussion.HasValue ? discussion.Value : await _editor.GetDiscussion();
+            Discussion = discussion ?? await _editor.GetDiscussion();
          }
          catch (DiscussionEditorException)
          {

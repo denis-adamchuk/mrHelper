@@ -51,7 +51,7 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentAccessToken()
       {
-         return _settings.GetAccessToken(getHostName());
+         return Program.Settings.GetAccessToken(getHostName());
       }
 
       public string GetCurrentProjectName()
@@ -71,7 +71,6 @@ namespace mrHelper.App.Forms
 
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
-      private UserDefinedSettings _settings;
 
       private UpdateManager _updateManager;
       private TimeTrackingManager _timeTrackingManager;
@@ -79,7 +78,6 @@ namespace mrHelper.App.Forms
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
       private PersistentStorage _persistentStorage;
-      private ServiceManager _serviceManager;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
@@ -153,7 +151,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();
+      private readonly List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();
 
       private struct ListViewSubItemInfo
       {

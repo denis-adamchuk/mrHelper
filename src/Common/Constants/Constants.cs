@@ -13,5 +13,11 @@ namespace mrHelper.Common.Constants
       public static string NewDiscussionCaption = "Create New Discussion";
 
       public static string ProjectListFileName = "projects.json";
+
+      public static string TimeStampFilenameFormat = "yyyy_MM_dd_HHmmss";
+
+      public static string BugReportLogArchiveName => String.Format(
+         "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampFilenameFormat));
    }
 }
+

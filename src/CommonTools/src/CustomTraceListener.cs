@@ -8,22 +8,28 @@ namespace mrHelper.CommonTools
       public CustomTraceListener(string filename, string firstRecord) : base(filename)
       {
          Trace.AutoFlush = true;
+         FileName = filename;
          _firstRecord = firstRecord;
       }
+
+      public string FileName { get; }
 
       public override void Write(string x)
       {
          if (!_madeFirstRecord)
          {
             _madeFirstRecord = true;
-            Trace.TraceInformation("----------------------------------------------------------------");
-            Trace.TraceInformation(_firstRecord);
+            if (!String.IsNullOrEmpty(_firstRecord))
+            {
+               Trace.TraceInformation("----------------------------------------------------------------");
+               Trace.TraceInformation(_firstRecord);
+            }
          }
 
          base.Write(String.Format("{0} UTC: {1}", DateTime.UtcNow, x));
       }
 
-      private string _firstRecord;
+      private readonly string _firstRecord;
       private bool _madeFirstRecord = false;
    }
 }

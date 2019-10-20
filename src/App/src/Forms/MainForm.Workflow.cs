@@ -26,7 +26,7 @@ namespace mrHelper.App.Forms
    {
       private void createWorkflow()
       {
-         _workflow = new Workflow(_settings);
+         _workflow = new Workflow(Program.Settings);
 
          _workflow.PreLoadCurrentUser += (hostname) => onLoadCurrentUser(hostname);
          _workflow.PostLoadCurrentUser += (user) => onCurrentUserLoaded(user);
@@ -233,7 +233,7 @@ namespace mrHelper.App.Forms
       {
          buttonReloadList.Enabled = true;
 
-         if (listViewMergeRequests.Items.Count > 0 || _settings.CheckedLabelsFilter)
+         if (listViewMergeRequests.Items.Count > 0 || Program.Settings.CheckedLabelsFilter)
          {
             enableMergeRequestFilterControls(true);
             enableListView(listViewMergeRequests);

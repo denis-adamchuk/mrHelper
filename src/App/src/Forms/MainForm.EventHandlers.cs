@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Git;
 using mrHelper.CommonControls;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
@@ -150,7 +152,7 @@ namespace mrHelper.App.Forms
             if (getGitClientFactory(newFolder) != null)
             {
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
-               _settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
+               Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
 
                MessageBox.Show("Git folder is changed, but it will not affect already opened Diff Tool and Discussions views",
                   "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -165,7 +167,7 @@ namespace mrHelper.App.Forms
       private void ComboBoxColorSchemes_SelectionChangeCommited(object sender, EventArgs e)
       {
          initializeColorScheme();
-         _settings.ColorSchemeFileName = (sender as ComboBox).Text;
+         Program.Settings.ColorSchemeFileName = (sender as ComboBox).Text;
       }
 
       async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
@@ -362,8 +364,8 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-            _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+            Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+            Program.Settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
                .Select(i => i.SubItems[1].Text).ToList();
 
             updateHostsDropdownList();
@@ -383,8 +385,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         _settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
-         _settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
+         Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+         Program.Settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
             .Select(i => i.SubItems[1].Text).ToList();
 
          updateHostsDropdownList();
@@ -397,7 +399,7 @@ namespace mrHelper.App.Forms
 
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
       {
-         _settings.MinimizeOnClose = (sender as CheckBox).Checked;
+         Program.Settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
       private void textBoxLabels_TextChanged(object sender, EventArgs e)
@@ -412,9 +414,9 @@ namespace mrHelper.App.Forms
 
       private void onTextBoxLabelsUpdate()
       {
-         _settings.LastUsedLabels = textBoxLabels.Text;
+         Program.Settings.LastUsedLabels = textBoxLabels.Text;
 
-         if (_settings.CheckedLabelsFilter)
+         if (Program.Settings.CheckedLabelsFilter)
          {
             updateVisibleMergeRequests();
          }
@@ -422,7 +424,7 @@ namespace mrHelper.App.Forms
 
       private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
-         _settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+         Program.Settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
 
          if (_workflow != null)
          {
@@ -441,7 +443,7 @@ namespace mrHelper.App.Forms
 
       private void comboBoxDCDepth_SelectedIndexChanged(object sender, EventArgs e)
       {
-         _settings.DiffContextDepth = (sender as ComboBox).Text;
+         Program.Settings.DiffContextDepth = (sender as ComboBox).Text;
       }
 
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
@@ -481,6 +483,23 @@ namespace mrHelper.App.Forms
 
          _exiting = true;
          Close();
+      }
+
+      private void linkLabelSendFeedback_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         try
+         {
+            if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
+            {
+               Program.FeedbackReporter.SendEMail("Merge Request Helper Feedback Report",
+                  "Please provide your feedback here", Program.ServiceManager.GetBugReportEmail(),
+                  Common.Constants.Constants.BugReportLogArchiveName);
+            }
+         }
+         catch (FeedbackReporterException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot send feedback");
+         }
       }
 
       protected override void WndProc(ref Message rMessage)
@@ -554,7 +573,7 @@ namespace mrHelper.App.Forms
 
       private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
       {
-         _settings.Update();
+         Program.Settings.Update();
       }
 
       private void onHideToTray(FormClosingEventArgs e)

@@ -37,6 +37,9 @@ namespace mrHelper.Client.Tools
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
+      private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
+      private static readonly int LogFilesToKeepDefaultValue = 10;
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       public UserDefinedSettings(bool changesAllowed)
@@ -119,6 +122,12 @@ namespace mrHelper.Client.Tools
       {
          get { return getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue); }
          set { setValue(ColorSchemeFileNameKeyName, value); }
+      }
+
+      public int LogFilesToKeep
+      {
+         get { return int.Parse(getValue(LogFilesToKeepKeyName, LogFilesToKeepDefaultValue.ToString())); }
+         set { setValue(LogFilesToKeepKeyName, value.ToString()); }
       }
 
       public string GetAccessToken(string hostname)

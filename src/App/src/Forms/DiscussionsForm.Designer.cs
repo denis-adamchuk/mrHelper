@@ -19,6 +19,7 @@
          }
          this.FilterPanel.Dispose();
          this.ActionsPanel.Dispose();
+         this.SearchPanel.Dispose();
          base.Dispose(disposing);
       }
 

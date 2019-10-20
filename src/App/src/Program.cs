@@ -13,6 +13,7 @@ using mrHelper.Client.Git;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
 using mrHelper.CommonTools;
+using mrHelper.Client.Services;
 
 namespace mrHelper.App
 {
@@ -21,16 +22,35 @@ namespace mrHelper.App
       private static void HandleUnhandledException(Exception ex)
       {
          Debug.Assert(false);
-         MessageBox.Show("Fatal error occurred, see details in logs",
-            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          Trace.TraceError("Unhandled exception: [{0}] {1}\nCallstack:\n{2}",
             ex.GetType().ToString(), ex.Message, ex.StackTrace);
+         if (ServiceManager != null && FeedbackReporter != null)
+         {
+            if (MessageBox.Show("Fatal error occurred, see details in logs. Do you want to report this problem?",
+               "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
+            {
+               try
+               {
+                  Program.FeedbackReporter.SendEMail("Merge Request Helper error report",
+                     "Please provide some details about the problem here",
+                     Program.ServiceManager.GetBugReportEmail(), Common.Constants.Constants.BugReportLogArchiveName);
+               }
+               catch (Exception ex2)
+               {
+                  ExceptionHandlers.Handle(ex2, "Cannot send a bug report");
+               }
+            }
+         }
          Application.Exit();
       }
 
       private static readonly Regex url_re = new Regex( String.Format(
          @"^({0}:\/\/)?((http[s]?:\/\/)?[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
-            mrHelper.Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+      internal static UserDefinedSettings Settings = new UserDefinedSettings(true);
+      internal static ServiceManager ServiceManager = new Client.Services.ServiceManager();
+      internal static FeedbackReporter FeedbackReporter;
 
       /// <summary>
       /// The main entry point for the application.
@@ -41,8 +61,24 @@ namespace mrHelper.App
          using (LaunchContext context = new LaunchContext())
          {
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-            Trace.Listeners.Add(new CustomTraceListener(getLogFileName(context),
-               String.Format("Merge Request Helper {0} started", Application.ProductVersion)));
+
+            string currentLogFileName = getLogFileName(context);
+            CustomTraceListener listener = new CustomTraceListener(currentLogFileName,
+               String.Format("Merge Request Helper {0} started", Application.ProductVersion));
+            Trace.Listeners.Add(listener);
+
+            FeedbackReporter = new FeedbackReporter(
+               () =>
+            {
+               listener.Close();
+               Trace.Listeners.Remove(listener);
+            },
+               () =>
+            {
+               listener = new CustomTraceListener(currentLogFileName, null);
+               Trace.Listeners.Add(listener);
+            },
+            getFullLogPath());
 
             if (context.IsRunningSingleInstance)
             {
@@ -67,7 +103,7 @@ namespace mrHelper.App
             {
                try
                {
-                  cleanupLogFiles();
+                  cleanupLogFiles(Settings);
                }
                catch (Exception ex)
                {
@@ -264,16 +300,15 @@ namespace mrHelper.App
       {
          bool isMainInstance = context.IsRunningSingleInstance;
 
-         string format = "yyyy_MM_dd_HHmmss";
-
          string filenamePrefix = isMainInstance ? "mrhelper.main" : "mrhelper.second.instance";
          string filenameSuffix = isMainInstance ? String.Empty : ".id" + context.CurrentProcess.Id.ToString();
-         string filename = String.Format("{0}.{1}{2}.log", filenamePrefix, DateTime.Now.ToString(format), filenameSuffix);
+         string filename = String.Format("{0}.{1}{2}.log", filenamePrefix,
+            DateTime.Now.ToString(Common.Constants.Constants.TimeStampFilenameFormat), filenameSuffix);
 
          return Path.Combine(getFullLogPath(), filename);
       }
 
-      private static void cleanupLogFiles()
+      private static void cleanupLogFiles(UserDefinedSettings settings)
       {
          string path = getFullLogPath();
 
@@ -289,8 +324,7 @@ namespace mrHelper.App
             string[] files = Directory.GetFiles(path, mask);
             Array.Sort(files);
 
-            int logFilesToKeep = 10;
-            files.Except(files.Reverse().Take(logFilesToKeep)).ToList().ForEach(
+            files.Except(files.Reverse().Take(settings.LogFilesToKeep)).ToList().ForEach(
                x => File.Delete(Path.Combine(path, x)));
          }
       }

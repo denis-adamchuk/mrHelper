@@ -102,7 +102,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] Loading configuration");
 
-         Debug.Assert(_settings.KnownHosts.Count == _settings.KnownAccessTokens.Count);
+         Debug.Assert(Program.Settings.KnownHosts.Count == Program.Settings.KnownAccessTokens.Count);
          // Remove all items except header
          for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
          {
@@ -110,30 +110,30 @@ namespace mrHelper.App.Forms
          }
 
          List<string> newKnownHosts = new List<string>();
-         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count; ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
-            string host = getHostWithPrefix(_settings.KnownHosts[iKnownHost]);
-            string accessToken = _settings.KnownAccessTokens[iKnownHost];
+            string host = getHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
+            string accessToken = Program.Settings.KnownAccessTokens[iKnownHost];
             addKnownHost(host, accessToken);
             newKnownHosts.Add(host);
          }
-         _settings.KnownHosts = newKnownHosts;
+         Program.Settings.KnownHosts = newKnownHosts;
 
-         if (_settings.ColorSchemeFileName == String.Empty)
+         if (Program.Settings.ColorSchemeFileName == String.Empty)
          {
             // Upgrade from old versions which did not have a separate file for Default color scheme
-            _settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
+            Program.Settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
          }
 
-         textBoxLocalGitFolder.Text = _settings.LocalGitFolder;
-         checkBoxLabels.Checked = _settings.CheckedLabelsFilter;
-         textBoxLabels.Text = _settings.LastUsedLabels;
-         checkBoxMinimizeOnClose.Checked = _settings.MinimizeOnClose;
+         textBoxLocalGitFolder.Text = Program.Settings.LocalGitFolder;
+         checkBoxLabels.Checked = Program.Settings.CheckedLabelsFilter;
+         textBoxLabels.Text = Program.Settings.LastUsedLabels;
+         checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
 
-         if (comboBoxDCDepth.Items.Contains(_settings.DiffContextDepth))
+         if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
          {
-            comboBoxDCDepth.Text = _settings.DiffContextDepth;
+            comboBoxDCDepth.Text = Program.Settings.DiffContextDepth;
          }
          else
          {
@@ -169,8 +169,7 @@ namespace mrHelper.App.Forms
 
       private void loadSettings()
       {
-         _settings = new UserDefinedSettings(true);
-         _settings.PropertyChanged += onSettingsPropertyChanged;
+         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
          loadConfiguration();
 
          labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
@@ -204,12 +203,11 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
          _checkForUpdatesTimer.Tick += new System.EventHandler(onTimerCheckForUpdates);
 
-         _serviceManager = new Client.Services.ServiceManager();
          _persistentStorage = new PersistentStorage();
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _discussionManager = new DiscussionManager(_settings);
+         _discussionManager = new DiscussionManager(Program.Settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
             (status) =>
@@ -268,17 +266,22 @@ namespace mrHelper.App.Forms
          {
             _checkForUpdatesTimer.Start();
          }
+
+         if (Program.ServiceManager.GetBugReportEmail() == String.Empty)
+         {
+            linkLabelSendFeedback.Visible = false;
+         }
       }
 
       private void subscribeToUpdates()
       {
-         _updateManager = new UpdateManager(_workflow, this, _settings);
+         _updateManager = new UpdateManager(_workflow, this, Program.Settings);
          _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
       }
 
       private void createTimeTrackingManager()
       {
-         _timeTrackingManager = new TimeTrackingManager(_settings, _workflow);
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow);
          _timeTrackingManager.PreLoadTotalTime += () => onLoadTotalTime();
          _timeTrackingManager.PostLoadTotalTime += (e) => onTotalTimeLoaded(e);
          _timeTrackingManager.FailedLoadTotalTime += () => onFailedLoadTotalTime();

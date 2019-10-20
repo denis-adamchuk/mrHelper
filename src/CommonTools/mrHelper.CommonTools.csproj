@@ -33,19 +33,29 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Office.Interop.Outlook, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\FeedbackReporter.cs" />
     <Compile Include="src\NativeMethods.cs" />
     <Compile Include="src\ParentProcessUtilities.cs" />
     <Compile Include="src\Win32Tools.cs" />
     <Compile Include="src\CustomProtocol.cs" />
     <Compile Include="src\CustomTraceListener.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
+      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
+      <Name>mrHelper.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

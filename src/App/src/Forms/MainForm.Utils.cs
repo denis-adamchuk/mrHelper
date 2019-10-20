@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -349,7 +350,7 @@ namespace mrHelper.App.Forms
                {
                   comboBoxColorSchemes.Items.Add(scheme);
                }
-               if (scheme == _settings.ColorSchemeFileName)
+               if (scheme == Program.Settings.ColorSchemeFileName)
                {
                   selectedScheme = scheme;
                }
@@ -615,12 +616,12 @@ namespace mrHelper.App.Forms
 
       private string[] getSelectedLabels()
       {
-         if (!_settings.CheckedLabelsFilter)
+         if (!Program.Settings.CheckedLabelsFilter)
          {
             return null;
          }
 
-         return _settings.LastUsedLabels.Split(',').Select(x => x.Trim(' ')).ToArray();
+         return Program.Settings.LastUsedLabels.Split(',').Select(x => x.Trim(' ')).ToArray();
       }
 
       private static MergeRequest GetMergeRequest(MergeRequest x) => x;
@@ -699,7 +700,7 @@ namespace mrHelper.App.Forms
       /// <returns>null if could not create a GitClient</returns>
       private GitClient getGitClient(ProjectKey key, bool showMessageBoxOnError)
       {
-         GitClientFactory factory = getGitClientFactory(_settings.LocalGitFolder);
+         GitClientFactory factory = getGitClientFactory(Program.Settings.LocalGitFolder);
          if (factory == null)
          {
             return null;
@@ -728,14 +729,14 @@ namespace mrHelper.App.Forms
       {
          // If Last Selected Host is in the list, select it as initial host.
          // Otherwise, select the first host from the list.
-         for (int iKnownHost = 0; iKnownHost < _settings.KnownHosts.Count; ++iKnownHost)
+         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count; ++iKnownHost)
          {
-            if (_settings.KnownHosts[iKnownHost] == _initialHostName)
+            if (Program.Settings.KnownHosts[iKnownHost] == _initialHostName)
             {
                return _initialHostName;
             }
          }
-         return _settings.KnownHosts.Count > 0 ? _settings.KnownHosts[0] : String.Empty;
+         return Program.Settings.KnownHosts.Count > 0 ? Program.Settings.KnownHosts[0] : String.Empty;
       }
 
       private bool isTrackingTime()
@@ -845,7 +846,7 @@ namespace mrHelper.App.Forms
          string author = String.Format("{0}\n({1}{2})",
             fmk.MergeRequest.Author.Name, authorLabelPrefix, fmk.MergeRequest.Author.Username);
 
-         string jiraServiceUrl = _serviceManager.GetJiraServiceUrl();
+         string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
          string jiraTask = getJiraTask(fmk.MergeRequest);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
@@ -1034,7 +1035,7 @@ namespace mrHelper.App.Forms
 
       private bool checkForApplicationUpdates()
       {
-         LatestVersionInformation? info = _serviceManager.GetLatestVersionInfo();
+         LatestVersionInformation? info = Program.ServiceManager.GetLatestVersionInfo();
          if (!info.HasValue || info?.VersionNumber == String.Empty || info?.VersionNumber == Application.ProductVersion)
          {
             return false;

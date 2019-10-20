@@ -16,10 +16,11 @@ namespace mrHelper.App
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot)
+      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot, UserDefinedSettings settings)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
+         Program.Settings = settings;
       }
 
       async public Task HandleAsync(IGitRepository gitRepository)
@@ -136,7 +137,7 @@ namespace mrHelper.App
          });
       }
 
-      async private static Task submitDiscussionAsync(Snapshot snapshot, MatchInfo matchInfo, DiffPosition position,
+      async private Task submitDiscussionAsync(Snapshot snapshot, MatchInfo matchInfo, DiffPosition position,
         string body, bool includeContext)
       {
          if (body.Length == 0)
@@ -154,8 +155,7 @@ namespace mrHelper.App
          };
 
 
-         UserDefinedSettings settings = new UserDefinedSettings(false);
-         DiscussionManager manager = new DiscussionManager(settings);
+         DiscussionManager manager = new DiscussionManager(Program.Settings);
 
          MergeRequestKey mergeRequestKey = new MergeRequestKey(
                snapshot.Host, snapshot.Project, snapshot.MergeRequestIId);
