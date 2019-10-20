@@ -1036,24 +1036,31 @@ namespace mrHelper.App.Forms
       private bool checkForApplicationUpdates()
       {
          LatestVersionInformation? info = Program.ServiceManager.GetLatestVersionInfo();
-         if (!info.HasValue || info?.VersionNumber == String.Empty || info?.VersionNumber == Application.ProductVersion)
+         if (!info.HasValue
+           || String.IsNullOrEmpty(info.Value.VersionNumber)
+           || info.Value.VersionNumber == Application.ProductVersion)
          {
             return false;
          }
 
-         Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info?.VersionNumber));
+         Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info.Value.VersionNumber));
 
-         if (String.IsNullOrEmpty(info?.InstallerFilePath) || !File.Exists(info?.InstallerFilePath))
+         if (String.IsNullOrEmpty(info.Value.InstallerFilePath) || !File.Exists(info.Value.InstallerFilePath))
          {
             Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
-               info?.InstallerFilePath));
+               info.Value.InstallerFilePath));
             return false;
          }
 
          Task.Run(
             () =>
          {
-            string filename = Path.GetFileName(info?.InstallerFilePath);
+            if (!info.HasValue)
+            {
+               return;
+            }
+
+            string filename = Path.GetFileName(info.Value.InstallerFilePath);
             string tempFolder = Environment.GetEnvironmentVariable("TEMP");
             string destFilePath = Path.Combine(tempFolder, filename);
 
@@ -1063,7 +1070,7 @@ namespace mrHelper.App.Forms
                {
                   File.Delete(destFilePath);
                }
-               File.Copy(info?.InstallerFilePath, destFilePath);
+               File.Copy(info.Value.InstallerFilePath, destFilePath);
             }
             catch (Exception ex)
             {

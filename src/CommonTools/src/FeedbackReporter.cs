@@ -79,7 +79,7 @@ namespace mrHelper.CommonTools
             Outlook.Attachment oAttach = message.Attachments.Add(logarchivepath, attachmentType, position, filename);
          }
 
-         message.Send();
+         message.Display();
       }
 
       private string LogPath { get; }

@@ -267,9 +267,9 @@ namespace mrHelper.App.Forms
             _checkForUpdatesTimer.Start();
          }
 
-         if (Program.ServiceManager.GetBugReportEmail() == String.Empty)
+         if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
          {
-            linkLabelSendFeedback.Visible = false;
+            linkLabelSendFeedback.Visible = true;
          }
       }
 
