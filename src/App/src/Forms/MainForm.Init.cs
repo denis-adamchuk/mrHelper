@@ -49,9 +49,10 @@ namespace mrHelper.App.Forms
          }
 
          int id = 0;
+         int offsetX = 6;
          System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
          {
-            X = 10,
+            X = offsetX,
             Y = 17
          };
          System.Drawing.Size typicalSize = new System.Drawing.Size(96, 32);
@@ -91,9 +92,9 @@ namespace mrHelper.App.Forms
                await onStopTimer(true);
             };
             groupBoxActions.Controls.Add(button);
-            offSetFromGroupBoxTopLeft.X += typicalSize.Width + 10;
+            offSetFromGroupBoxTopLeft.X += typicalSize.Width + offsetX;
             groupBoxActions.Size =
-               new System.Drawing.Size((10 + typicalSize.Width) * (id + 1) + 10, groupBoxActions.Height);
+               new System.Drawing.Size((offsetX + typicalSize.Width) * (id + 1) + offsetX, groupBoxActions.Height);
             id++;
          }
       }

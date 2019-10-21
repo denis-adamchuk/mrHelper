@@ -54,6 +54,8 @@ namespace mrHelper.App.Forms
          this.buttonDiscussions = new System.Windows.Forms.Button();
          this.buttonNewDiscussion = new System.Windows.Forms.Button();
          this.buttonDiffTool = new System.Windows.Forms.Button();
+         this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
+         this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -94,8 +96,6 @@ namespace mrHelper.App.Forms
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.panel3 = new System.Windows.Forms.Panel();
-         this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
-         this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.groupBox3 = new System.Windows.Forms.GroupBox();
          this.comboBoxRightCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
@@ -255,7 +255,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonEditTime.Enabled = false;
-         this.buttonEditTime.Location = new System.Drawing.Point(626, 19);
+         this.buttonEditTime.Location = new System.Drawing.Point(630, 19);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
          this.buttonEditTime.TabIndex = 4;
@@ -267,7 +267,7 @@ namespace mrHelper.App.Forms
          // buttonAddComment
          // 
          this.buttonAddComment.Enabled = false;
-         this.buttonAddComment.Location = new System.Drawing.Point(256, 19);
+         this.buttonAddComment.Location = new System.Drawing.Point(210, 19);
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
          this.buttonAddComment.TabIndex = 2;
@@ -279,7 +279,7 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(139, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(108, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 1;
@@ -291,7 +291,7 @@ namespace mrHelper.App.Forms
          // buttonNewDiscussion
          // 
          this.buttonNewDiscussion.Enabled = false;
-         this.buttonNewDiscussion.Location = new System.Drawing.Point(16, 19);
+         this.buttonNewDiscussion.Location = new System.Drawing.Point(6, 19);
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
          this.buttonNewDiscussion.TabIndex = 0;
@@ -306,12 +306,39 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool.Enabled = false;
          this.buttonDiffTool.Location = new System.Drawing.Point(630, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
-         this.buttonDiffTool.Size = new System.Drawing.Size(92, 48);
+         this.buttonDiffTool.Size = new System.Drawing.Size(96, 48);
          this.buttonDiffTool.TabIndex = 2;
          this.buttonDiffTool.Text = "Diff tool";
          this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
          this.buttonDiffTool.UseVisualStyleBackColor = true;
          this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
+         // 
+         // linkLabelSendFeedback
+         // 
+         this.linkLabelSendFeedback.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelSendFeedback.AutoSize = true;
+         this.linkLabelSendFeedback.Location = new System.Drawing.Point(630, 10);
+         this.linkLabelSendFeedback.Name = "linkLabelSendFeedback";
+         this.linkLabelSendFeedback.Size = new System.Drawing.Size(80, 13);
+         this.linkLabelSendFeedback.TabIndex = 6;
+         this.linkLabelSendFeedback.TabStop = true;
+         this.linkLabelSendFeedback.Text = "Send feedback";
+         this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to author. Logs are attached automatically.");
+         this.linkLabelSendFeedback.Visible = false;
+         this.linkLabelSendFeedback.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSendFeedback_LinkClicked);
+         // 
+         // linkLabelNewVersion
+         // 
+         this.linkLabelNewVersion.AutoSize = true;
+         this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 10);
+         this.linkLabelNewVersion.Name = "linkLabelNewVersion";
+         this.linkLabelNewVersion.Size = new System.Drawing.Size(226, 13);
+         this.linkLabelNewVersion.TabIndex = 5;
+         this.linkLabelNewVersion.TabStop = true;
+         this.linkLabelNewVersion.Text = "New version is available! Click here to install it.";
+         this.toolTip.SetToolTip(this.linkLabelNewVersion, "New version is already downloaded. Click to install it.");
+         this.linkLabelNewVersion.Visible = false;
+         this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
          // 
          // contextMenuStrip
          // 
@@ -684,7 +711,7 @@ namespace mrHelper.App.Forms
          // buttonTimeTrackingCancel
          // 
          this.buttonTimeTrackingCancel.Enabled = false;
-         this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(120, 19);
+         this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
          this.buttonTimeTrackingCancel.Name = "buttonTimeTrackingCancel";
          this.buttonTimeTrackingCancel.Size = new System.Drawing.Size(96, 32);
          this.buttonTimeTrackingCancel.TabIndex = 1;
@@ -719,18 +746,18 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.Controls.Add(this.buttonAddComment);
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
          this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
-         this.groupBoxReview.Location = new System.Drawing.Point(370, 6);
+         this.groupBoxReview.Location = new System.Drawing.Point(420, 6);
          this.groupBoxReview.Name = "groupBoxReview";
-         this.groupBoxReview.Size = new System.Drawing.Size(359, 63);
+         this.groupBoxReview.Size = new System.Drawing.Size(313, 63);
          this.groupBoxReview.TabIndex = 1;
          this.groupBoxReview.TabStop = false;
          this.groupBoxReview.Text = "Review";
          // 
          // groupBoxActions
          // 
-         this.groupBoxActions.Location = new System.Drawing.Point(3, 6);
+         this.groupBoxActions.Location = new System.Drawing.Point(0, 6);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(222, 63);
+         this.groupBoxActions.Size = new System.Drawing.Size(225, 63);
          this.groupBoxActions.TabIndex = 0;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
@@ -746,33 +773,6 @@ namespace mrHelper.App.Forms
          this.panel3.Name = "panel3";
          this.panel3.Size = new System.Drawing.Size(729, 34);
          this.panel3.TabIndex = 6;
-         // 
-         // linkLabelSendFeedback
-         // 
-         this.linkLabelSendFeedback.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelSendFeedback.AutoSize = true;
-         this.linkLabelSendFeedback.Location = new System.Drawing.Point(630, 10);
-         this.linkLabelSendFeedback.Name = "linkLabelSendFeedback";
-         this.linkLabelSendFeedback.Size = new System.Drawing.Size(80, 13);
-         this.linkLabelSendFeedback.TabIndex = 6;
-         this.linkLabelSendFeedback.TabStop = true;
-         this.linkLabelSendFeedback.Text = "Send feedback";
-         this.linkLabelSendFeedback.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSendFeedback_LinkClicked);
-         this.linkLabelSendFeedback.Visible = false;
-         this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to author. Logs are attached automatically.");
-         // 
-         // linkLabelNewVersion
-         // 
-         this.linkLabelNewVersion.AutoSize = true;
-         this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 10);
-         this.linkLabelNewVersion.Name = "linkLabelNewVersion";
-         this.linkLabelNewVersion.Size = new System.Drawing.Size(226, 13);
-         this.linkLabelNewVersion.TabIndex = 5;
-         this.linkLabelNewVersion.TabStop = true;
-         this.linkLabelNewVersion.Text = "New version is available! Click here to install it.";
-         this.linkLabelNewVersion.Visible = false;
-         this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
-         this.toolTip.SetToolTip(this.linkLabelNewVersion, "New version is already downloaded. Click to install it.");
          // 
          // groupBox3
          // 
@@ -797,7 +797,7 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit.FormattingEnabled = true;
          this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 46);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(613, 21);
+         this.comboBoxRightCommit.Size = new System.Drawing.Size(619, 21);
          this.comboBoxRightCommit.TabIndex = 1;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
@@ -812,7 +812,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.FormattingEnabled = true;
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(6, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(613, 21);
+         this.comboBoxLeftCommit.Size = new System.Drawing.Size(619, 21);
          this.comboBoxLeftCommit.TabIndex = 0;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
