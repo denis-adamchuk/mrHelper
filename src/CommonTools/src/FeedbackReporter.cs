@@ -57,8 +57,14 @@ namespace mrHelper.CommonTools
          }
 
          PreCollectLogFiles?.Invoke();
-         ZipFile.CreateFromDirectory(LogPath, logarchivepath);
-         PostCollectLogFiles?.Invoke();
+         try
+         {
+            ZipFile.CreateFromDirectory(LogPath, logarchivepath);
+         }
+         finally
+         {
+            PostCollectLogFiles?.Invoke();
+         }
       }
 
       private static void sendEmailFromOutlook(string logarchivepath, string recipient, string body, string subject)
