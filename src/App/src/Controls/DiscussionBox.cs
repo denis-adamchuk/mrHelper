@@ -28,7 +28,7 @@ namespace mrHelper.App.Controls
 
       internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
          int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
-         Action<DiscussionBox> preContentChange, Action<DiscussionBox> onContentChanged)
+         Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged)
       {
          Discussion = discussion;
          _editor = editor;
@@ -136,7 +136,7 @@ namespace mrHelper.App.Controls
          if (newHeight != textBox.Height)
          {
             textBox.Height = newHeight;
-            _onContentChanged(this);
+            _onContentChanged(this, true);
          }
       }
 
@@ -700,7 +700,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _onContentChanged(this);
+         _onContentChanged(this, true);
 
          if (!textBox.IsDisposed)
          {
@@ -795,7 +795,7 @@ namespace mrHelper.App.Controls
             // it is not an error here, we treat it as 'last discussion item has been deleted'
             // Seems it was the only note in the discussion, remove ourselves from parents controls
             Parent.Controls.Remove(this);
-            _onContentChanged(this);
+            _onContentChanged(this, false);
             return;
          }
 
@@ -807,7 +807,7 @@ namespace mrHelper.App.Controls
             // It happens when Discussion has System notes like 'a line changed ...'
             // along with a user note that has been just deleted
             Parent.Controls.Remove(this);
-            _onContentChanged(this);
+            _onContentChanged(this, false);
             return;
          }
 
@@ -819,7 +819,7 @@ namespace mrHelper.App.Controls
          }
 
          // To reposition new controls
-         _onContentChanged(this);
+         _onContentChanged(this, false);
       }
 
       private bool isDiscussionResolved()
@@ -877,7 +877,7 @@ namespace mrHelper.App.Controls
       private readonly ColorScheme _colorScheme;
 
       private readonly Action<DiscussionBox> _preContentChange;
-      private readonly Action<DiscussionBox> _onContentChanged;
+      private readonly Action<DiscussionBox, bool> _onContentChanged;
 
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;

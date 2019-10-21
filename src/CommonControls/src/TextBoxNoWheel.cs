@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace mrHelper.CommonControls
@@ -22,6 +23,7 @@ namespace mrHelper.CommonControls
             {
                _cachedHandle = Handle.ToInt32();
             }
+            Debug.Assert(_cachedHandle == Handle.ToInt32());
             return _cachedHandle;
          }
       }
@@ -34,6 +36,7 @@ namespace mrHelper.CommonControls
             {
                _cachedFontHeight = Font.Height;
             }
+            Debug.Assert(_cachedFontHeight == Font.Height);
             return _cachedFontHeight;
          }
       }

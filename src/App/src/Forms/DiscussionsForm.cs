@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
             () =>
             {
                DisplayFilter.Filter = FilterPanel.Filter;
-               updateLayout(null, true);
+               updateLayout(null, true, true);
             });
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
          TextSearch = new TextSearch(this,
@@ -112,6 +112,7 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.Escape)
          {
+            // to not pass Escape keystroke to a textbox being edited
             if ((ActiveControl is TextBox) && (ActiveControl as TextBox).ReadOnly)
             {
                resetSearch();
@@ -208,16 +209,19 @@ namespace mrHelper.App.Forms
 
       private bool renderDiscussions(List<Discussion> discussions, bool needReposition)
       {
-         updateLayout(discussions, needReposition);
+         updateLayout(discussions, needReposition, true);
          Focus(); // Set focus to the Form
          return discussions != null && Controls.Cast<Control>().Any((x) => x is DiscussionBox);
       }
 
-      private void updateLayout(List<Discussion> discussions, bool needReposition)
+      private void updateLayout(List<Discussion> discussions, bool needReposition, bool suspendLayout)
       {
          this.Text = DefaultCaption + "   (Rendering)";
 
-         SuspendLayout();
+         if (suspendLayout)
+         {
+            SuspendLayout();
+         }
 
          if (discussions != null)
          {
@@ -307,9 +311,10 @@ namespace mrHelper.App.Forms
                   sender.Visible = false; // to avoid flickering on repositioning
                },
                // post-content-change
-               (sender) =>
+               (sender, lite) =>
                {
-                  updateLayout(null, true);
+                  // 'lite' means that there were no a preceding PreContentChange event, so we did not suspend layout
+                  updateLayout(null, true, lite);
                   updateSearch();
                })
             {
@@ -391,6 +396,7 @@ namespace mrHelper.App.Forms
 
       private void continueSearch(bool forward)
       {
+         // To not jump inside the current control when it is being edited
          if (!(_searchIterator.Value.Control is TextBox) || !(_searchIterator.Value.Control as TextBox).ReadOnly)
          {
             return;
@@ -421,6 +427,12 @@ namespace mrHelper.App.Forms
 
       private void updateSearch()
       {
+         // to not change search state in the middle of edit
+         if ((ActiveControl is TextBox) && !(ActiveControl as TextBox).ReadOnly)
+         {
+            return;
+         }
+
          if (!(_searchIterator.Value.Control is TextBox))
          {
             return;
@@ -486,8 +498,6 @@ namespace mrHelper.App.Forms
          }
 
          SearchPanel.DisplayFoundCount(_searchResults.Count());
-
-         highlightSearchResult();
       }
 
       private string DefaultCaption
