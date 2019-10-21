@@ -865,8 +865,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         int maxLineCount = listView.Items.Cast<ListViewItem>().
+         int maxLineCountInLabels = listView.Items.Cast<ListViewItem>().
             Select((x) => formatLabels(((FullMergeRequestKey)(x.Tag)).MergeRequest).Count((y) => y == '\n')).Max() + 1;
+         int maxLineCountInAuthor = 2;
+         int maxLineCount = Math.Max(maxLineCountInLabels, maxLineCountInAuthor);
          setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
       }
 
