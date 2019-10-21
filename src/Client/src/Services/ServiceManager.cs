@@ -107,7 +107,7 @@ namespace mrHelper.Client.Services
       }
 #pragma warning restore 0649
 
-      private readonly List<Service> _services = new List<Service>();
+      private List<Service> _services = new List<Service>();
 
       private const string ServiceListFileName = "services.json";
    }

@@ -20,29 +20,27 @@ namespace mrHelper.Client.TimeTracking
 
       async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         using (GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            Settings.GetAccessToken(mrk.ProjectKey.HostName)))
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
+            Settings.GetAccessToken(mrk.ProjectKey.HostName));
+         try
          {
-            try
+            await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).AddSpentTimeAsync(
+                  new AddSpentTimeParameters
+                  {
+                     Add = add,
+                     Span = span
+                  }));
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               await client.RunAsync(async (gitlab) =>
-                  await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).AddSpentTimeAsync(
-                     new AddSpentTimeParameters
-                     {
-                        Add = add,
-                        Span = span
-                     }));
+               ExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
+               throw new OperatorException(ex);
             }
-            catch (Exception ex)
-            {
-               Debug.Assert(!(ex is GitLabClientCancelled));
-               if (ex is GitLabSharpException || ex is GitLabRequestException)
-               {
-                  ExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
-                  throw new OperatorException(ex);
-               }
-               throw;
-            }
+            throw;
          }
       }
 

@@ -23,19 +23,14 @@ namespace mrHelper.Client.Updates
 
       internal Task<List<MergeRequest>> GetMergeRequestsAsync(string host, string project)
       {
-         using (GitLabClient client = new GitLabClient(host, Settings.GetAccessToken(host)))
-         {
-            return CommonOperator.GetMergeRequestsAsync(client, project);
-         }
+         GitLabClient client = new GitLabClient(host, Settings.GetAccessToken(host));
+         return CommonOperator.GetMergeRequestsAsync(client, project);
       }
 
       internal Task<Version> GetLatestVersionAsync(MergeRequestKey mrk)
       {
-         using (GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            Settings.GetAccessToken(mrk.ProjectKey.HostName)))
-         {
-            return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
-         }
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
+         return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
       private UserDefinedSettings Settings { get; }
