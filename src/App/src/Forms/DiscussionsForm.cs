@@ -65,6 +65,7 @@ namespace mrHelper.App.Forms
             {
                DisplayFilter.Filter = FilterPanel.Filter;
                updateLayout(null, true, true);
+               updateSearch();
             });
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
          TextSearch = new TextSearch(this,
