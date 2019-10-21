@@ -68,12 +68,6 @@ namespace mrHelper.App.Forms
                updateSearch();
             });
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
-         TextSearch = new TextSearch(this,
-            (control) =>
-            {
-               return control is TextBox &&
-                  (control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion));
-            });
          SearchPanel = new DiscussionSearchPanel(
             (query, forward) =>
             {
@@ -81,12 +75,13 @@ namespace mrHelper.App.Forms
                {
                   resetSearch();
                }
-               else if (!query.Equals(_searchQuery))
+               else if (TextSearch == null || !query.Equals(TextSearch.Query))
                {
-                  startSearch(query, forward);
+                  startSearch(query, true);
                }
                else
                {
+                  MostRecentFocusedDiscussionControl?.Focus();
                   continueSearch(forward);
                }
             });
@@ -114,7 +109,7 @@ namespace mrHelper.App.Forms
          else if (e.KeyCode == Keys.Escape)
          {
             // to not pass Escape keystroke to a textbox being edited
-            if ((ActiveControl is TextBox) && (ActiveControl as TextBox).ReadOnly)
+            if (!isEditing())
             {
                resetSearch();
             }
@@ -265,11 +260,11 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void highlightSearchResult()
+      private void highlightSearchResult(TextSearchResult? result)
       {
-         if (_searchIterator.Value.Control is TextBox textbox)
+         if (result.HasValue && result.Value.Control is TextBox textbox && TextSearch != null)
          {
-            textbox.Select(_searchIterator.Value.InsideControlPosition, _searchQuery.Text.Length);
+            textbox.Select(result.Value.InsideControlPosition, TextSearch.Query.Text.Length);
             textbox.Focus();
 
             Point controlLocationAtScreen = textbox.PointToScreen(new Point(0, -5));
@@ -281,15 +276,6 @@ namespace mrHelper.App.Forms
                AutoScrollPosition = newPosition;
                PerformLayout();
             }
-
-         }
-      }
-
-      private void unhighlightSearchResult()
-      {
-         if (_searchIterator.Value.Control is TextBox textbox)
-         {
-            textbox.SelectionLength = 0;
          }
       }
 
@@ -317,7 +303,8 @@ namespace mrHelper.App.Forms
                   // 'lite' means that there were no a preceding PreContentChange event, so we did not suspend layout
                   updateLayout(null, true, lite);
                   updateSearch();
-               })
+               },
+               sender => MostRecentFocusedDiscussionControl = sender)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -349,8 +336,7 @@ namespace mrHelper.App.Forms
 
          // Prepare to stack boxes vertically
          int topOffset = Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,
-                         Math.Max(actionsPanelLocation.Y + ActionsPanel.Size.Height,
-                                  searchPanelLocation.Y + SearchPanel.Size.Height));
+                                  searchPanelLocation.Y + SearchPanel.Size.Height);
          Size previousBoxSize = new Size();
          Point previousBoxLocation = new Point();
          previousBoxLocation.Offset(0, topOffset);
@@ -383,122 +369,64 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void startSearch(SearchQuery query, bool forward)
+      private void startSearch(SearchQuery query, bool highlight)
       {
-         unhighlightSearchResult();
+         resetSearch();
 
-         _searchQuery = query;
-         _searchResults = TextSearch.Search(query);
-         _searchIterator = forward ? _searchResults.First() : _searchResults.Last();
-         SearchPanel.DisplayFoundCount(_searchResults.Count());
+         TextSearch = new TextSearch(this, query, control => isSearchableControl(control));
 
-         highlightSearchResult();
+         TextSearchResult? result = TextSearch.FindFirst(out int count);
+         SearchPanel.DisplayFoundCount(count);
+
+         if (highlight)
+         {
+            highlightSearchResult(result);
+         }
       }
 
       private void continueSearch(bool forward)
       {
          // To not jump inside the current control when it is being edited
-         if (!(_searchIterator.Value.Control is TextBox) || !(_searchIterator.Value.Control as TextBox).ReadOnly)
+         if (isEditing())
          {
             return;
          }
 
-         unhighlightSearchResult();
-
-         if (forward)
+         if (TextSearch != null)
          {
-            _searchIterator.Next();
-         }
-         else
-         {
-            _searchIterator.Prev();
-         }
+            Control startControl = MostRecentFocusedDiscussionControl != null 
+               ? MostRecentFocusedDiscussionControl : ActiveControl;
 
-         highlightSearchResult();
+            TextSearchResult current = new TextSearchResult
+            {
+               Control = startControl,
+               InsideControlPosition = ((startControl as TextBox)?.SelectionStart ?? 0)
+                          + (forward ? ((startControl as TextBox)?.SelectionLength ?? 0) : 0)
+            };
+
+            highlightSearchResult(forward ? TextSearch.FindNext(current) : TextSearch.FindPrev(current));
+         }
       }
 
       private void resetSearch()
       {
-         unhighlightSearchResult();
-         _searchResults = new SearchResults<TextSearchResult>();
-         _searchIterator = new SearchResultsCircularIterator<TextSearchResult>();
-         _searchQuery = new SearchQuery { Text = String.Empty, CaseSensitive = false };
+         TextSearch = null;
          SearchPanel.DisplayFoundCount(null);
+         MostRecentFocusedDiscussionControl = null;
       }
 
       private void updateSearch()
       {
          // to not change search state in the middle of edit
-         if ((ActiveControl is TextBox) && !(ActiveControl as TextBox).ReadOnly)
+         if (isEditing())
          {
             return;
          }
 
-         if (!(_searchIterator.Value.Control is TextBox))
+         if (TextSearch != null)
          {
-            return;
+            startSearch(TextSearch.Query, false);
          }
-
-         unhighlightSearchResult();
-
-         SearchResults<TextSearchResult> newSearchResults = TextSearch.Search(_searchQuery);
-         if (newSearchResults.Count() == 0)
-         {
-            resetSearch();
-            return;
-         }
-
-         SearchResultsCircularIterator<TextSearchResult> current = newSearchResults.First();
-         SearchResultsCircularIterator<TextSearchResult> last = newSearchResults.Last();
-         SearchResultsCircularIterator<TextSearchResult>? bestMatch =
-            new Nullable<SearchResultsCircularIterator<TextSearchResult>>();
-         while (!current.Equals(last))
-         {
-            DiscussionNote note = (DiscussionNote)current.Value.Control.Tag;
-            if (note.Id == ((DiscussionNote)(_searchIterator.Value.Control.Tag)).Id)
-            {
-               bestMatch = current;
-               if (current.Value.InsideControlIndex == _searchIterator.Value.InsideControlIndex)
-               {
-                  break;
-               }
-            }
-            else if (bestMatch.HasValue)
-            {
-               break;
-            }
-            current.Next();
-         }
-
-         if (bestMatch.HasValue)
-         {
-            _searchResults = newSearchResults;
-            _searchIterator = bestMatch.Value;
-         }
-         else
-         {
-            // compute a distance of the previous search result
-            int distance = 0;
-            SearchResultsCircularIterator<TextSearchResult> it = _searchResults.First();
-            while (!it.Equals(_searchIterator))
-            {
-               ++distance;
-               it.Next();
-            }
-
-            // advance new search result to the same position as previous one
-            current = newSearchResults.First();
-            while (distance != 0 && !(current.Equals(newSearchResults.Last())))
-            {
-               --distance;
-               current.Next();
-            }
-
-            _searchResults = newSearchResults;
-            _searchIterator = current;
-         }
-
-         SearchPanel.DisplayFoundCount(_searchResults.Count());
       }
 
       private string DefaultCaption
@@ -508,6 +436,17 @@ namespace mrHelper.App.Forms
             return String.Format("Discussions for merge request \"{0}\" with code repository in \"{1}\"",
                _mergeRequestTitle, _gitRepository?.Path ?? "no repository");
          }
+      }
+
+      private bool isEditing()
+      {
+         return (ActiveControl is TextBox) && !(ActiveControl as TextBox).ReadOnly;
+      }
+
+      private bool isSearchableControl(Control control)
+      {
+         return control is TextBox &&
+               (control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion));
       }
 
       private readonly MergeRequestKey _mergeRequestKey;
@@ -528,10 +467,12 @@ namespace mrHelper.App.Forms
       private readonly DiscussionActionsPanel ActionsPanel;
 
       private readonly DiscussionSearchPanel SearchPanel;
-      private readonly TextSearch TextSearch;
-      private SearchResults<TextSearchResult> _searchResults;
-      private SearchResultsCircularIterator<TextSearchResult> _searchIterator;
-      private SearchQuery _searchQuery;
+      private TextSearch TextSearch;
+
+      /// <summary>
+      /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
+      /// </summary>
+      private Control MostRecentFocusedDiscussionControl;
    }
 
    internal class NoDiscussionsToShow : ArgumentException { }; 

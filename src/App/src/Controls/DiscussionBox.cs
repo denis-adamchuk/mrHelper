@@ -28,7 +28,7 @@ namespace mrHelper.App.Controls
 
       internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
          int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
-         Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged)
+         Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged, Action<Control> onControlGotFocus)
       {
          Discussion = discussion;
          _editor = editor;
@@ -47,6 +47,7 @@ namespace mrHelper.App.Controls
 
          _preContentChange = preContentChange;
          _onContentChanged = onContentChanged;
+         _onControlGotFocus = onControlGotFocus;
 
          _toolTip = new ToolTip
          {
@@ -303,6 +304,7 @@ namespace mrHelper.App.Controls
             MinimumSize = new Size(600, panelHeight),
             TabStop = false
          };
+         htmlPanel.GotFocus += Control_GotFocus;
 
          DiffPosition position = convertToDiffPosition(firstNote.Position);
          htmlPanel.Text = getContext(_panelContextMaker, position,
@@ -374,6 +376,7 @@ namespace mrHelper.App.Controls
             Multiline = true,
             MinimumSize = new Size(300, 0),
          };
+         textBox.GotFocus += Control_GotFocus;
          textBox.KeyDown += FilenameTextBox_KeyDown;
          textBox.ContextMenu = createContextMenuForFilename(firstNote, textBox);
          return textBox;
@@ -426,6 +429,7 @@ namespace mrHelper.App.Controls
             MinimumSize = new Size(300, 0),
             Tag = note
          };
+         textBox.GotFocus += Control_GotFocus;
          textBox.LostFocus += TextBox_LostFocus;
          textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
          textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
@@ -433,6 +437,11 @@ namespace mrHelper.App.Controls
          _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
 
          return textBox;
+      }
+
+      private void Control_GotFocus(object sender, EventArgs e)
+      {
+         _onControlGotFocus(sender as Control);
       }
 
       private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note,
@@ -884,6 +893,7 @@ namespace mrHelper.App.Controls
 
       private readonly Action<DiscussionBox> _preContentChange;
       private readonly Action<DiscussionBox, bool> _onContentChanged;
+      private readonly Action<Control> _onControlGotFocus;
 
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;

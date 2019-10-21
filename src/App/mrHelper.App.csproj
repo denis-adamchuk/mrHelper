@@ -141,7 +141,6 @@
     </Compile>
     <Compile Include="src\Helpers\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\DiscussionFilter.cs" />
-    <Compile Include="src\Helpers\Search\SearchResults.cs" />
     <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
