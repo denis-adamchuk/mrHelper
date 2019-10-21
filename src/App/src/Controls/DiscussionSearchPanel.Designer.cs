@@ -30,12 +30,12 @@
       {
          this.components = new System.ComponentModel.Container();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
+         this.checkBoxCaseSensitive = new System.Windows.Forms.CheckBox();
          this.labelFoundCount = new System.Windows.Forms.Label();
          this.buttonFindPrev = new System.Windows.Forms.Button();
          this.buttonFindNext = new System.Windows.Forms.Button();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.toolTipSearchPanel = new System.Windows.Forms.ToolTip(this.components);
-         this.checkBoxCaseSensitive = new System.Windows.Forms.CheckBox();
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -52,6 +52,17 @@
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Search";
+         // 
+         // checkBoxCaseSensitive
+         // 
+         this.checkBoxCaseSensitive.AutoSize = true;
+         this.checkBoxCaseSensitive.Location = new System.Drawing.Point(6, 45);
+         this.checkBoxCaseSensitive.Name = "checkBoxCaseSensitive";
+         this.checkBoxCaseSensitive.Size = new System.Drawing.Size(94, 17);
+         this.checkBoxCaseSensitive.TabIndex = 4;
+         this.checkBoxCaseSensitive.Text = "Case-sensitive";
+         this.checkBoxCaseSensitive.UseVisualStyleBackColor = true;
+         this.checkBoxCaseSensitive.CheckedChanged += new System.EventHandler(this.checkBoxCaseSensitive_CheckedChanged);
          // 
          // labelFoundCount
          // 
@@ -94,16 +105,6 @@
          this.toolTipSearchPanel.SetToolTip(this.textBoxSearch, "Search text in discussions and comments.");
          this.textBoxSearch.TextChanged += new System.EventHandler(this.textBoxSearch_TextChanged);
          this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
-         // 
-         // checkBoxCaseSensitive
-         // 
-         this.checkBoxCaseSensitive.AutoSize = true;
-         this.checkBoxCaseSensitive.Location = new System.Drawing.Point(6, 45);
-         this.checkBoxCaseSensitive.Name = "checkBoxCaseSensitive";
-         this.checkBoxCaseSensitive.Size = new System.Drawing.Size(94, 17);
-         this.checkBoxCaseSensitive.TabIndex = 4;
-         this.checkBoxCaseSensitive.Text = "Case-sensitive";
-         this.checkBoxCaseSensitive.UseVisualStyleBackColor = true;
          // 
          // DiscussionSearchPanel
          // 

@@ -74,13 +74,16 @@ namespace mrHelper.App.Controls
 
          if (e.KeyCode == Keys.F4)
          {
-            if (Control.ModifierKeys == Keys.Shift)
+            if (!Discussion.Individual_Note)
             {
-               await onReplyAsyncDone();
-            }
-            else
-            {
-               await onReplyToDiscussionAsync(textBox);
+               if (Control.ModifierKeys == Keys.Shift)
+               {
+                  await onReplyAsyncDone();
+               }
+               else
+               {
+                  await onReplyToDiscussionAsync(textBox);
+               }
             }
          }
       }
@@ -99,18 +102,21 @@ namespace mrHelper.App.Controls
          }
          else if (e.KeyCode == Keys.F4)
          {
-            if (!textBox.ReadOnly)
+            if (!Discussion.Individual_Note)
             {
-               onCancelEditNote(textBox);
-               updateTextboxHeight(textBox);
-            }
-            if (Control.ModifierKeys == Keys.Shift)
-            {
-               await onReplyAsyncDone();
-            }
-            else
-            {
-               await onReplyToDiscussionAsync(textBox);
+               if (!textBox.ReadOnly)
+               {
+                  onCancelEditNote(textBox);
+                  updateTextboxHeight(textBox);
+               }
+               if (Control.ModifierKeys == Keys.Shift)
+               {
+                  await onReplyAsyncDone();
+               }
+               else
+               {
+                  await onReplyToDiscussionAsync(textBox);
+               }
             }
          }
          else if (e.KeyCode == Keys.Escape && !textBox.ReadOnly)

@@ -53,6 +53,11 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private void checkBoxCaseSensitive_CheckedChanged(object sender, EventArgs e)
+      {
+         buttonFindNext.PerformClick();
+      }
+
       readonly Action<SearchQuery, bool> _onFind;
    }
 }
