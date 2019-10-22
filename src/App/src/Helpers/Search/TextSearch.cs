@@ -103,7 +103,7 @@ namespace mrHelper.App.Helpers
             }
          }
 
-         for (int iControl = iStart; iControl != iCurrent; iControl += (forward ? 1 : -1))
+         for (int iControl = iStart; iControl != iCurrent + (forward ? 1 : -1); iControl += (forward ? 1 : -1))
          {
             Control control = _allControls[iControl];
             int startPosition = forward ? 0 : control.Text.Length;
