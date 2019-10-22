@@ -267,7 +267,7 @@ namespace mrHelper.App.Forms
          // buttonAddComment
          // 
          this.buttonAddComment.Enabled = false;
-         this.buttonAddComment.Location = new System.Drawing.Point(210, 19);
+         this.buttonAddComment.Location = new System.Drawing.Point(6, 19);
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
          this.buttonAddComment.TabIndex = 2;
@@ -279,7 +279,7 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(108, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(247, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 1;
@@ -291,7 +291,7 @@ namespace mrHelper.App.Forms
          // buttonNewDiscussion
          // 
          this.buttonNewDiscussion.Enabled = false;
-         this.buttonNewDiscussion.Location = new System.Drawing.Point(6, 19);
+         this.buttonNewDiscussion.Location = new System.Drawing.Point(108, 19);
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
          this.buttonNewDiscussion.TabIndex = 0;
@@ -746,9 +746,9 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.Controls.Add(this.buttonAddComment);
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
          this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
-         this.groupBoxReview.Location = new System.Drawing.Point(420, 6);
+         this.groupBoxReview.Location = new System.Drawing.Point(384, 6);
          this.groupBoxReview.Name = "groupBoxReview";
-         this.groupBoxReview.Size = new System.Drawing.Size(313, 63);
+         this.groupBoxReview.Size = new System.Drawing.Size(349, 63);
          this.groupBoxReview.TabIndex = 1;
          this.groupBoxReview.TabStop = false;
          this.groupBoxReview.Text = "Review";
