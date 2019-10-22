@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
-      private static readonly int checkForUpdatesTimerInterval = 1000 * 60 * 60 * 8; // 8 hours
+      private static readonly int checkForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
 
       /// <summary>
       /// Tooltip timeout in seconds
