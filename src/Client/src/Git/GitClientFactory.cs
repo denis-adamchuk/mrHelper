@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.Git
@@ -42,13 +43,13 @@ namespace mrHelper.Client.Git
       {
          string path = Path.Combine(ParentFolder, projectName.Split('/')[1]);
 
-         Key key = new Key{ HostName = hostName, ProjectName = projectName };
+         ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
          if (Clients.ContainsKey(key))
          {
             return Clients[key];
          }
 
-         GitClient client = new GitClient(hostName, projectName, path, ProjectWatcher, SynchronizeInvoke);
+         GitClient client = new GitClient(key, path, ProjectWatcher, SynchronizeInvoke);
          Clients[key] = client;
          return client;
       }
@@ -62,19 +63,14 @@ namespace mrHelper.Client.Git
 
       private void disposeClients()
       {
-         foreach (KeyValuePair<Key, GitClient> client in Clients)
+         foreach (KeyValuePair<ProjectKey, GitClient> client in Clients)
          {
             client.Value.Dispose();
          }
          Clients.Clear();
       }
 
-      private struct Key
-      {
-         public string HostName;
-         public string ProjectName;
-      }
-      private Dictionary<Key, GitClient> Clients { get; set; } = new Dictionary<Key, GitClient>();
+      private Dictionary<ProjectKey, GitClient> Clients { get; set; } = new Dictionary<ProjectKey, GitClient>();
 
       private IProjectWatcher ProjectWatcher { get; }
       private ISynchronizeInvoke SynchronizeInvoke { get; }

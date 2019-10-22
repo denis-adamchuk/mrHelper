@@ -219,6 +219,9 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
+         // Revision Cacher subscribes to Workflow notifications
+         _revisionCacher = new RevisionCacher(_workflow, this, (projectKey) => getGitClient(projectKey, false));
+
          // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
 

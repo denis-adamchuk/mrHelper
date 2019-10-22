@@ -51,6 +51,7 @@
     <Compile Include="src\Discussions\DiscussionOperator.cs" />
     <Compile Include="src\Git\GitClient.cs" />
     <Compile Include="src\Git\GitClientFactory.cs" />
+    <Compile Include="src\Git\RevisionCacher.cs" />
     <Compile Include="src\Services\ServiceManager.cs" />
     <Compile Include="src\TimeTracking\TimeTracker.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingManager.cs" />

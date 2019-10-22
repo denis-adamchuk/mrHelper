@@ -179,7 +179,7 @@ namespace mrHelper.Client.Updates
          catch (OperatorException)
          {
             string message = String.Format(
-               "[UpdateManager] Cannot load latest version. MRD: HostName={0}, ProjectName={1}, IId={2}",
+               "[UpdateManager] Cannot load latest version. MRK: HostName={0}, ProjectName={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
             Trace.TraceError(message);
          }

@@ -154,9 +154,9 @@ namespace mrHelper.Client.Workflow
       public event Action<string, string, MergeRequest, List<Commit>> PostLoadCommits;
       public event Action FailedLoadCommits;
 
-      public event Action PreLoadSystemNotes;
-      public event Action<string, string, MergeRequest, List<Note>> PostLoadSystemNotes;
-      public event Action FailedLoadSystemNotes;
+      public event Action PreLoadNotes;
+      public event Action<string, string, MergeRequest, List<Note>> PostLoadNotes;
+      public event Action FailedLoadNotes;
 
       public event Action PreLoadLatestVersion;
       public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
@@ -287,7 +287,7 @@ namespace mrHelper.Client.Workflow
          {
             return false;
          }
-         return await loadSystemNotesAsync(hostname, projectName, mergeRequest);
+         return await loadNotesAsync(hostname, projectName, mergeRequest);
       }
 
       async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
@@ -311,13 +311,13 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      async private Task<bool> loadSystemNotesAsync(string hostname, string projectname, MergeRequest mergeRequest)
+      async private Task<bool> loadNotesAsync(string hostname, string projectname, MergeRequest mergeRequest)
       {
-         PreLoadSystemNotes?.Invoke();
+         PreLoadNotes?.Invoke();
          List<Note> notes;
          try
          {
-            notes = await Operator.GetSystemNotesAsync(projectname, mergeRequest.IId);
+            notes = await Operator.GetNotesAsync(projectname, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
@@ -325,10 +325,10 @@ namespace mrHelper.Client.Workflow
                mergeRequest.IId);
             string errorMessage = String.Format("Cannot load system notes for merge request with IId {0}",
                mergeRequest.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSystemNotes);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadNotes);
             return false;
          }
-         PostLoadSystemNotes?.Invoke(hostname, projectname, mergeRequest, notes);
+         PostLoadNotes?.Invoke(hostname, projectname, mergeRequest, notes);
          return true;
       }
 

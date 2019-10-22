@@ -120,7 +120,7 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<Note>> GetSystemNotesAsync(string projectName, int iid)
+      async internal Task<List<Note>> GetNotesAsync(string projectName, int iid)
       {
          List<Note> allNotes;
          try
@@ -137,7 +137,7 @@ namespace mrHelper.Client.Workflow
             }
             throw;
          }
-         return allNotes.Where((x) => x.System == true).ToList();
+         return allNotes;
       }
 
       internal Task<Version> GetLatestVersionAsync(string projectName, int iid)

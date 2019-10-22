@@ -9,6 +9,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Updates;
 using mrHelper.Core.Git;
+using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Git
 {
@@ -18,6 +19,9 @@ namespace mrHelper.Client.Git
    /// </summary>
    public class GitClient : IGitRepository, IDisposable
    {
+      // Host Name and Project Name
+      internal ProjectKey ProjectKey { get; }
+
       // Path of this git repository
       public string Path { get; }
 
@@ -28,7 +32,7 @@ namespace mrHelper.Client.Git
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal GitClient(string hostname, string projectname, string path, IProjectWatcher projectWatcher,
+      internal GitClient(ProjectKey projectKey, string path, IProjectWatcher projectWatcher,
          ISynchronizeInvoke synchronizeInvoke)
       {
          if (!canClone(path) && !isValidRepository(path))
@@ -36,8 +40,7 @@ namespace mrHelper.Client.Git
             throw new ArgumentException("Path \"" + path + "\" already exists but it is not a valid git repository");
          }
 
-         _hostName = hostname;
-         _projectName = projectname;
+         ProjectKey = projectKey;
          Path = path;
          Updater = new GitClientUpdater(projectWatcher,
             async (reportProgress) =>
@@ -50,7 +53,7 @@ namespace mrHelper.Client.Git
 
             if (canClone(Path))
             {
-               string arguments = "clone --progress " + _hostName + "/" + _projectName + " " + Path;
+               string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
                await executeGitCommandAsync(arguments, reportProgress);
                return;
             }
@@ -61,13 +64,13 @@ namespace mrHelper.Client.Git
                return executeGitCommandAsync(arguments, reportProgress);
             }, Path);
          },
-            (hostNameToCheck, projectNameToCheck) =>
+            (projectKeyToCheck) =>
          {
-            return _hostName == hostNameToCheck && _projectName == projectNameToCheck;
+            return ProjectKey.Equals(projectKeyToCheck);
          }, synchronizeInvoke);
 
          Trace.TraceInformation(String.Format("[GitClient] Created GitClient at path {0} for host {1} and project {2}",
-            path, hostname, projectname));
+            path, ProjectKey.HostName, ProjectKey.ProjectName));
       }
 
       public void Dispose()
@@ -241,20 +244,20 @@ namespace mrHelper.Client.Git
          };
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
-            _projectName, arguments));
+            ProjectKey.ProjectName, arguments));
          _descriptor = GitUtils.gitAsync(arguments, progress);
          try
          {
             await _descriptor.TaskCompletionSource.Task;
             Trace.TraceInformation(String.Format("[GitClient] async operation -- end --  {0}: {1}",
-               _projectName, arguments));
+               ProjectKey.ProjectName, arguments));
          }
          catch (GitOperationException ex)
          {
             int cancellationExitCode = 130;
             string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
             Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
-               _projectName, arguments, status));
+               ProjectKey.ProjectName, arguments, status));
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw;
          }
@@ -266,7 +269,7 @@ namespace mrHelper.Client.Git
 
       async private Task pickupGitCommandAsync(Action<string> onProgressChange)
       {
-         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}", _projectName));
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}", ProjectKey.ProjectName));
 
          _onProgressChange = onProgressChange;
 
@@ -275,7 +278,7 @@ namespace mrHelper.Client.Git
             await Task.Delay(50);
          }
 
-         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}", _projectName));
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}", ProjectKey.ProjectName));
       }
 
       private struct DiffCacheKey
@@ -300,9 +303,6 @@ namespace mrHelper.Client.Git
          new Dictionary<RevisionCacheKey, List<string>>();
 
       private GitUtils.GitAsyncTaskDescriptor _descriptor;
-
-      private string _hostName { get; }
-      private string _projectName { get; }
 
       private Action<string> _onProgressChange;
    }

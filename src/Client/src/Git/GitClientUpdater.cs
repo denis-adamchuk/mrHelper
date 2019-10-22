@@ -18,7 +18,7 @@ namespace mrHelper.Client.Git
       /// Bind to the specific GitClient object
       /// </summary>
       internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, Task> onUpdate,
-         Func<string, string, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
+         Func<ProjectKey, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
       {
          _onUpdate = onUpdate;
          _isMyProject = isMyProject;
@@ -98,13 +98,13 @@ namespace mrHelper.Client.Git
          DateTime updateTimestamp = DateTime.MinValue;
          foreach (ProjectUpdate update in updates)
          {
-            if (_isMyProject(update.HostName, update.ProjectName))
+            if (_isMyProject(update.ProjectKey))
             {
                needUpdateGitClient = true;
                updateTimestamp = update.Timestamp;
                Trace.TraceInformation(String.Format(
                   "[GitClientUpdater] Auto-updating git repository {0}, update timestamp {1}",
-                     update.ProjectName, updateTimestamp.ToLocalTime().ToString()));
+                     update.ProjectKey.ProjectName, updateTimestamp.ToLocalTime().ToString()));
                break;
             }
          }
@@ -166,7 +166,7 @@ namespace mrHelper.Client.Git
       }
 
       private readonly Func<Action<string>, Task> _onUpdate;
-      private readonly Func<string, string, bool> _isMyProject;
+      private readonly Func<ProjectKey, bool> _isMyProject;
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
