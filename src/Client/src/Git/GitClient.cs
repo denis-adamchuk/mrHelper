@@ -10,6 +10,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Client.Updates;
 using mrHelper.Core.Git;
 using mrHelper.Client.Tools;
+using static mrHelper.Core.Git.GitUtils;
 
 namespace mrHelper.Client.Git
 {
@@ -27,6 +28,8 @@ namespace mrHelper.Client.Git
 
       // Object which keeps this git repository up-to-date
       public GitClientUpdater Updater { get; }
+
+      private static readonly int cancellationExitCode = 130;
 
       /// <summary>
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
@@ -54,14 +57,14 @@ namespace mrHelper.Client.Git
             if (canClone(Path))
             {
                string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
-               await executeGitCommandAsync(arguments, reportProgress);
+               await executeGitCommandAsync(arguments, reportProgress, true);
                return;
             }
 
             await (Task)changeCurrentDirectoryAndRun(() =>
             {
                string arguments = "fetch --progress";
-               return executeGitCommandAsync(arguments, reportProgress);
+               return executeGitCommandAsync(arguments, reportProgress, true);
             }, Path);
          },
             (projectKeyToCheck) =>
@@ -128,15 +131,8 @@ namespace mrHelper.Client.Git
 
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
-         DiffCacheKey key = new DiffCacheKey
-         {
-            sha1 = leftcommit,
-            sha2 = rightcommit,
-            filename1 = filename1,
-            filename2 = filename2,
-            context = context
-         };
-
+         DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
+            filename1 = filename1, filename2 = filename2, context = context };
          if (_cachedDiffs.ContainsKey(key))
          {
             return _cachedDiffs[key];
@@ -154,6 +150,28 @@ namespace mrHelper.Client.Git
          return result;
       }
 
+      async public Task<List<string>> DiffAsync(string leftcommit, string rightcommit,
+         string filename1, string filename2, int context)
+      {
+         DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
+            filename1 = filename1, filename2 = filename2, context = context };
+         if (_cachedDiffs.ContainsKey(key))
+         {
+            return _cachedDiffs[key];
+         }
+
+         GitOutput gitOutput = await (Task<GitOutput>)(changeCurrentDirectoryAndRun(() =>
+         {
+            string arguments =
+               "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
+               + " -- " + filename1 + " " + filename2;
+            return executeGitCommandAsync(arguments, null, false);
+         }, Path));
+
+         _cachedDiffs[key] = gitOutput.Output;
+         return gitOutput.Output;
+      }
+
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
          return (List<string>)changeCurrentDirectoryAndRun(() =>
@@ -165,12 +183,7 @@ namespace mrHelper.Client.Git
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
-         RevisionCacheKey key = new RevisionCacheKey
-         {
-            filename = filename,
-            sha = sha
-         };
-
+         RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
          if (_cachedRevisions.ContainsKey(key))
          {
             return _cachedRevisions[key];
@@ -184,6 +197,24 @@ namespace mrHelper.Client.Git
 
          _cachedRevisions[key] = result;
          return result;
+      }
+
+      async public Task<List<string>> ShowFileByRevisionAsync(string filename, string sha)
+      {
+         RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
+         if (_cachedRevisions.ContainsKey(key))
+         {
+            return _cachedRevisions[key];
+         }
+
+         GitOutput gitOutput = await (Task<GitOutput>)changeCurrentDirectoryAndRun(() =>
+         {
+            string arguments = "show " + sha + ":" + filename;
+            return executeGitCommandAsync(arguments, null, false);
+         }, Path);
+
+         _cachedRevisions[key] = gitOutput.Output;
+         return gitOutput.Output;
       }
 
       /// <summary>
@@ -233,9 +264,13 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task executeGitCommandAsync(string arguments, Action<string> onProgressChange)
+      async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange,
+         bool exclusive)
       {
-         _onProgressChange = onProgressChange;
+         if (exclusive)
+         {
+            _onProgressChange = onProgressChange;
+         }
 
          Progress<string> progress = new Progress<string>();
          progress.ProgressChanged += (sender, status) =>
@@ -245,16 +280,21 @@ namespace mrHelper.Client.Git
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             ProjectKey.ProjectName, arguments));
-         _descriptor = GitUtils.gitAsync(arguments, progress);
+         GitAsyncTaskDescriptor descriptor = GitUtils.gitAsync(arguments, progress);
+         if (exclusive)
+         {
+            _descriptor = descriptor;
+         }
+
          try
          {
-            await _descriptor.TaskCompletionSource.Task;
+            GitOutput gitOutput = await descriptor.TaskCompletionSource.Task;
             Trace.TraceInformation(String.Format("[GitClient] async operation -- end --  {0}: {1}",
                ProjectKey.ProjectName, arguments));
+            return gitOutput;
          }
          catch (GitOperationException ex)
          {
-            int cancellationExitCode = 130;
             string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
             Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
                ProjectKey.ProjectName, arguments, status));
@@ -263,22 +303,38 @@ namespace mrHelper.Client.Git
          }
          finally
          {
-            _descriptor = null;
+            if (exclusive)
+            {
+               _descriptor = null;
+            }
          }
       }
 
       async private Task pickupGitCommandAsync(Action<string> onProgressChange)
       {
-         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}", ProjectKey.ProjectName));
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}",
+            ProjectKey.ProjectName));
 
          _onProgressChange = onProgressChange;
 
-         while (_descriptor != null)
+         if (_descriptor != null)
          {
-            await Task.Delay(50);
+            try
+            {
+               await _descriptor.TaskCompletionSource.Task;
+            }
+            catch (GitOperationException ex)
+            {
+               string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+               Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- {1} --  {0}",
+                  ProjectKey.ProjectName, status));
+               ex.Cancelled = ex.ExitCode == cancellationExitCode;
+               throw;
+            }
          }
 
-         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}", ProjectKey.ProjectName));
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}",
+            ProjectKey.ProjectName));
       }
 
       private struct DiffCacheKey
@@ -302,7 +358,7 @@ namespace mrHelper.Client.Git
       private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
          new Dictionary<RevisionCacheKey, List<string>>();
 
-      private GitUtils.GitAsyncTaskDescriptor _descriptor;
+      private GitAsyncTaskDescriptor _descriptor;
 
       private Action<string> _onProgressChange;
    }

@@ -77,32 +77,31 @@ namespace mrHelper.Client.Git
          Note[] notesCopy = new Note[notes.Count];
          notes.CopyTo(notesCopy);
          SynchronizeInvoke.BeginInvoke(new Action<IGitRepository, Note[]>(
-            (repository, notesInternal) =>
+            async (repository, notesInternal) =>
          {
             Trace.TraceInformation(String.Format(
                "[RevisionCacher] Caching revisions for {0} notes in project {1} at host {2}",
                notes.Count(), projectKey.ProjectName, projectKey.HostName));
 
-            doCache(repository, notesInternal);
+            await doCacheAsync(repository, notesInternal);
          }), new object[] { GetRepository(projectKey), notesCopy });
       }
 
-      private void doCache(IGitRepository gitRepository, Note[] notes)
+      async private Task doCacheAsync(IGitRepository gitRepository, Note[] notes)
       {
          foreach (Note note in notes)
          {
-            // TODO Change to DiffAsync and ShowFileByRevisionAsync
-            gitRepository.Diff(note.Position.Base_SHA, note.Position.Head_SHA,
+            await gitRepository.DiffAsync(note.Position.Base_SHA, note.Position.Head_SHA,
                note.Position.Old_Path, note.Position.New_Path, 0);
-            gitRepository.Diff(note.Position.Base_SHA, note.Position.Head_SHA,
+            await gitRepository.DiffAsync(note.Position.Base_SHA, note.Position.Head_SHA,
                note.Position.Old_Path, note.Position.New_Path, mrHelper.Common.Constants.Constants.FullContextSize);
             if (note.Position.Old_Line != null)
             {
-               gitRepository.ShowFileByRevision(note.Position.Old_Path, note.Position.Base_SHA);
+               await gitRepository.ShowFileByRevisionAsync(note.Position.Old_Path, note.Position.Base_SHA);
             }
             if (note.Position.New_Line != null)
             {
-               gitRepository.ShowFileByRevision(note.Position.New_Path, note.Position.Head_SHA);
+               await gitRepository.ShowFileByRevisionAsync(note.Position.New_Path, note.Position.Head_SHA);
             }
          }
       }
