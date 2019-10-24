@@ -152,6 +152,7 @@ namespace mrHelper.Core.Git
          process.Exited +=
             (sender, args) =>
          {
+            process.WaitForExit();
             if (!tcs.Task.IsCompleted)
             {
                process.CancelOutputRead();
