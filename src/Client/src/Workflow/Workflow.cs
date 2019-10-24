@@ -108,7 +108,7 @@ namespace mrHelper.Client.Workflow
       {
          if (mergeRequestIId == 0)
          {
-            PrelLoadSingleMergeRequest?.Invoke(0);
+            PreLoadSingleMergeRequest?.Invoke(0);
             Operator?.CancelAsync();
             return false;
          }
@@ -146,7 +146,7 @@ namespace mrHelper.Client.Workflow
 
       public event Action<string, List<Project>> PostLoadAllMergeRequests;
 
-      public event Action<int> PrelLoadSingleMergeRequest;
+      public event Action<int> PreLoadSingleMergeRequest;
       public event Action<string, MergeRequest> PostLoadSingleMergeRequest;
       public event Action FailedLoadSingleMergeRequest;
 
@@ -265,7 +265,7 @@ namespace mrHelper.Client.Workflow
 
       async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)
       {
-         PrelLoadSingleMergeRequest?.Invoke(mergeRequestIId);
+         PreLoadSingleMergeRequest?.Invoke(mergeRequestIId);
 
          MergeRequest mergeRequest = new MergeRequest();
          try

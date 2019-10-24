@@ -19,9 +19,8 @@ namespace mrHelper.Client.Discussions
          Settings = settings;
       }
 
-      async internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      async internal Task<List<Discussion>> GetDiscussionsAsync(GitLabClient client, MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             return (List<Discussion>)(await client.RunAsync(async (gitlab) =>
@@ -38,6 +37,12 @@ namespace mrHelper.Client.Discussions
             }
             throw;
          }
+      }
+
+      async internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      {
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
+         return GetDiscussionsAsync(client, mrk);
       }
 
       async internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)

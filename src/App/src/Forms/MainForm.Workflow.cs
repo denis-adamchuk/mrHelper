@@ -49,7 +49,7 @@ namespace mrHelper.App.Forms
 
          _workflow.PostLoadAllMergeRequests += (hostname, projects) => onAllMergeRequestsLoaded(hostname, projects);
 
-         _workflow.PrelLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
+         _workflow.PreLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
          _workflow.PostLoadSingleMergeRequest += (_, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
          _workflow.FailedLoadSingleMergeRequest += () => onFailedLoadSingleMergeRequest();
 

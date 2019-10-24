@@ -84,22 +84,9 @@ namespace mrHelper.Client.Workflow
          return CommonOperator.GetMergeRequestsAsync(Client, projectName);
       }
 
-      async internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
+      internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
       {
-         try
-         {
-            return (MergeRequest)(await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return CommonOperator.GetMergeRequestAsync(Client, projectName, iid);
       }
 
       async internal Task<List<Commit>> GetCommitsAsync(string projectName, int iid)
@@ -118,26 +105,6 @@ namespace mrHelper.Client.Workflow
             }
             throw;
          }
-      }
-
-      async internal Task<List<Note>> GetNotesAsync(string projectName, int iid)
-      {
-         List<Note> allNotes;
-         try
-         {
-            allNotes = (List<Note>)(await Client.RunAsync(async (gl) =>
-               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Notes.LoadAllTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load merge request notes from GitLab");
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
-         return allNotes;
       }
 
       internal Task<Version> GetLatestVersionAsync(string projectName, int iid)

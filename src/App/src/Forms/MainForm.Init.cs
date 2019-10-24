@@ -208,7 +208,6 @@ namespace mrHelper.App.Forms
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _discussionManager = new DiscussionManager(Program.Settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
             (status) =>
@@ -219,8 +218,11 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
+         // Discussions Manager subscribers to Workflow notifications
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow);
+
          // Revision Cacher subscribes to Workflow notifications
-         _revisionCacher = new RevisionCacher(_workflow, this, (projectKey) => getGitClient(projectKey, false));
+         _revisionCacher = new RevisionCacher(_discussionManager, this, (projectKey) => getGitClient(projectKey, false));
 
          // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);

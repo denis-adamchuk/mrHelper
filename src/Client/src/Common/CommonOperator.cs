@@ -52,6 +52,24 @@ namespace mrHelper.Client.Common
             throw;
          }
       }
+
+      async internal Task<MergeRequest> GetMergeRequestAsync(GitLabClient client, string projectName, int iid)
+      {
+         try
+         {
+            return (MergeRequest)(await Client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync()));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
    }
 }
 

@@ -17,11 +17,10 @@ namespace mrHelper.Client.Git
    /// </summary>
    public class RevisionCacher
    {
-      public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+      public RevisionCacher(DiscussionManager discussionManager, ISynchronizeInvoke synchronizeInvoke,
          Func<ProjectKey, IGitRepository> getRepository)
       {
-         workflow.PostLoadNotes += (hostname, projectname, mergeRequest, notes)
-            => processNotes(new MergeRequestKey(hostname, projectname, mergeRequest.IId), notes);
+         discussionManager.PostLoadDiscusions += (mrk, discussions) => processDiscussions(mrk, discussions);
          SynchronizeInvoke = synchronizeInvoke;
          GetRepository = getRepository;
       }
@@ -49,13 +48,17 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private void processNotes(MergeRequestKey mrk, List<Note> notes)
+      private void processDiscussions(MergeRequestKey mrk, List<Discussion> discussions)
       {
          Trace.TraceInformation(String.Format(
-            "[RevisionCacher] Got {0} notes for MRK: HostName={0}, ProjectName={1}, IId={2}",
-            notes.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
-         List<Note> notesFiltered =
-            notes.Where(x => x.Type == "DiffNote" && !x.Position.Equals(default(Position))).ToList();
+            "[RevisionCacher] Got {0} discussions for MRK: HostName={0}, ProjectName={1}, IId={2}",
+            discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+         List<Note> notesFiltered = new List<Note>();
+         foreach (Discussions discussion in discussions)
+         {
+            notesFiltered.AddRange(discussions.Notes.Where(x =>
+               x.Ix.Type == "DiffNote" && !x.Position.Equals(default(Position))).ToList());
+         }
 
          if (ReadyProjects.Contains(mrk.ProjectKey))
          {

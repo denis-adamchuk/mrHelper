@@ -19,14 +19,11 @@ namespace mrHelper.Client.TimeTracking
          Settings = settings;
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
-         workflow.PreLoadNotes += () => PreLoadTotalTime?.Invoke();
-         workflow.FailedLoadNotes += () => FailedLoadTotalTime?.Invoke();
-         workflow.PostLoadNotes += (hostname, projectname, mergeRequest, notes)
-            => processNotes(new MergeRequestKey(hostname, projectname, mergeRequest.IId), notes);
+         workflow.PreLoadDiscussions += () => PreLoadTotalTime?.Invoke();
+         workflow.PostLoadDiscussions += (mrk, discussions) => processDiscussions(mrk, discussions);
       }
 
       public event Action PreLoadTotalTime;
-      public event Action FailedLoadTotalTime;
       public event Action<MergeRequestKey> PostLoadTotalTime;
 
       public TimeSpan GetTotalTime(MergeRequestKey mrk)
@@ -57,11 +54,17 @@ namespace mrHelper.Client.TimeTracking
             @"^(?'operation'added|subtracted)\s(?>(?'hours'\d*)h\s)?(?>(?'minutes'\d*)m\s)?(?>(?'seconds'\d*)s\s)?of time spent.*",
                RegexOptions.Compiled);
 
-      private void processNotes(MergeRequestKey mrk, List<Note> notes)
+      private void processDiscussions(MergeRequestKey mrk, List<Discussion> discussions)
       {
          TimeSpan span = TimeSpan.Zero;
-         foreach (Note note in notes)
+         foreach (Discussion discussion in discussions)
          {
+            if (!discussion.Individual_Note || discussions.Notes.Count < 1)
+            {
+               continue;
+            }
+
+            Note note = discussions.Notes[0];
             if (note.System && note.Author.Id == _currentUser.Id)
             {
                Match m = spentTimeRe.Match(note.Body);
