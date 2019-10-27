@@ -295,12 +295,9 @@ namespace mrHelper.App.Forms
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         if (switchMergeRequestByUser(key.HostName, key.Project, key.MergeRequest))
-         {
-            Debug.Assert(getMergeRequestKey().HasValue);
-            _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
-            return;
-         }
+         switchMergeRequestByUser(key.HostName, key.Project, key.MergeRequest);
+         Debug.Assert(getMergeRequestKey().HasValue);
+         _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
       }
 
       private void switchMergeRequestByUser(string hostname, Project project, MergeRequest mergeRequest)
@@ -327,6 +324,11 @@ namespace mrHelper.App.Forms
          enableComboBox(comboBoxLeftCommit);
          enableComboBox(comboBoxRightCommit);
 
+         Commit[] commits = _allCommits[new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+            IId = mergeRequest.IId
+         }];
          addCommitsToComboBoxes(commits, mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
          selectNotReviewedCommits(out int left, out int right);
          comboBoxLeftCommit.SelectedIndex = left;

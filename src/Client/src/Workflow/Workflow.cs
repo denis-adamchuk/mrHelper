@@ -226,12 +226,12 @@ namespace mrHelper.Client.Workflow
 
          string projectName = project.Path_With_Namespace;
 
-         List<MergeRequest> mergeRequests;
+         List<MergeRequest> mergeRequests = new List<MergeRequest>();
          try
          {
             List<MergeRequest> mergeRequestsLite = await Operator.GetMergeRequestsAsync(projectName);
-            mergeRequests = mergeRequestsLite.Select(
-               async x => await Operator.GetMergeRequestAsync(projectName, x.IId));
+            mergeRequestsLite.ForEach(
+               async x => mergeRequests.Add(await Operator.GetMergeRequestAsync(projectName, x.IId)));
          }
          catch (OperatorException ex)
          {

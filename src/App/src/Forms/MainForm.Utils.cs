@@ -540,14 +540,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addCommitsToComboBoxes(List<Commit> commits, string baseSha, string targetBranch)
+      private void addCommitsToComboBoxes(Commit[] commits, string baseSha, string targetBranch)
       {
          CommitComboBoxItem latestCommitItem = new CommitComboBoxItem(commits[0])
          {
             IsLatest = true
          };
          comboBoxLeftCommit.Items.Add(latestCommitItem);
-         for (int i = 1; i < commits.Count; i++)
+         for (int i = 1; i < commits.Count(); i++)
          {
             CommitComboBoxItem item = new CommitComboBoxItem(commits[i]);
             if (comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
