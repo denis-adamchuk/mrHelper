@@ -282,7 +282,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+      async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
          listView.Refresh();
@@ -290,51 +290,17 @@ namespace mrHelper.App.Forms
          if (listView.SelectedItems.Count < 1)
          {
             // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
-            switchMergeRequestByUser(String.Empty, default(Project), default(MergeRequest));
+            await switchMergeRequestByUserAsync(String.Empty, default(Project), 0);
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         switchMergeRequestByUser(key.HostName, key.Project, key.MergeRequest);
-         Debug.Assert(getMergeRequestKey().HasValue);
-         _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
-      }
-
-      private void switchMergeRequestByUser(string hostname, Project project, MergeRequest mergeRequest)
-      {
-         Trace.TraceInformation(String.Format("[MainForm] User requested to change merge request to IId {0}",
-            mergeRequest.IId.ToString()));
-
-         enableMergeRequestActions(false);
-         enableCommitActions(false);
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(null);
-         updateTotalTime(null);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
-         if (mergeRequest.IId == 0)
+         if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
          {
+            Debug.Assert(getMergeRequestKey().HasValue);
+            _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
             return;
          }
-
-         enableMergeRequestActions(true);
-         updateMergeRequestDetails(mergeRequest);
-         updateTimeTrackingMergeRequestDetails(mergeRequest);
-
-         enableComboBox(comboBoxLeftCommit);
-         enableComboBox(comboBoxRightCommit);
-
-         Commit[] commits = _allCommits[new MergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-            IId = mergeRequest.IId
-         }];
-         addCommitsToComboBoxes(commits, mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
-         selectNotReviewedCommits(out int left, out int right);
-         comboBoxLeftCommit.SelectedIndex = left;
-         comboBoxRightCommit.SelectedIndex = right;
-
-         enableCommitActions(true);
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
