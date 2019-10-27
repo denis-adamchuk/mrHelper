@@ -300,21 +300,21 @@ namespace mrHelper.App.Forms
                labelTimeTrackingTrackedTime.Text = "Loading...";
             }
 
-            Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading total spent time"));
+            Trace.TraceInformation(String.Format("[MainForm] Loading total spent time"));
          };
          _timeTrackingManager.PostLoadTotalTime +=
             (mrk) =>
          {
             updateTotalTime(mrk);
 
-            Trace.TraceInformation(String.Format("[MainForm.Workflow] Total spent time loaded"));
+            Trace.TraceInformation(String.Format("[MainForm] Total spent time loaded"));
          };
          _timeTrackingManager.FailedLoadTotalTime +=
             () =>
          {
             updateTotalTime(null);
 
-            Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load total spent time"));
+            Trace.TraceInformation(String.Format("[MainForm] Failed to load total spent time"));
          };
       }
    }

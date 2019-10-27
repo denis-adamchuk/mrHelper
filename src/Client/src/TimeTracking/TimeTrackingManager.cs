@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Client.Discussions;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Discussions;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -26,8 +26,8 @@ namespace mrHelper.Client.TimeTracking
       }
 
       public event Action PreLoadTotalTime;
-      public event Action<MergeRequestKey> PostLoadTotalTime;
       public event Action FailedLoadTotalTime;
+      public event Action<MergeRequestKey> PostLoadTotalTime;
 
       public TimeSpan GetTotalTime(MergeRequestKey mrk)
       {

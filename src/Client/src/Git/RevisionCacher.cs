@@ -47,13 +47,13 @@ namespace mrHelper.Client.Git
             return;
          }
 
-         ProjectKey projectKey = gitClient.ProjectKey;
-         Trace.TraceInformation(String.Format("[RevisionCacher] Processing update of project {0} at host {1}",
-            projectKey.ProjectName, projectKey.HostName));
-
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
             {
+               ProjectKey projectKey = gitClient.ProjectKey;
+               Trace.TraceInformation(String.Format("[RevisionCacher] Processing update of project {0} at host {1}",
+                  projectKey.ProjectName, projectKey.HostName));
+
                DateTime prevLatestChange = _latestChanges[gitClient];
                foreach (MergeRequest mergeRequest in _getMergeRequests(projectKey))
                {

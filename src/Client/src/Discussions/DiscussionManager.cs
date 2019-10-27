@@ -8,6 +8,7 @@ using mrHelper.Common.Exceptions;
 using System.ComponentModel;
 using GitLabSharp;
 using mrHelper.Client.Common;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Discussions
 {
@@ -27,7 +28,33 @@ namespace mrHelper.Client.Discussions
          _settings = settings;
          _operator = new DiscussionOperator(settings);
          workflow.PostLoadProjectMergeRequests +=
-            (hostname, project, mergeRequests) => requestDiscussions(hostname, project, mergeRequests);
+            (hostname, project, mergeRequests) =>
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Scheduling update of discussions for {0} merge requests on Workflow event",
+               mergeRequests.Count));
+
+            _synchronizeInvoke.BeginInvoke(new Action(
+               async () =>
+               {
+                  try
+                  {
+                     foreach (MergeRequest mergeRequest in mergeRequests)
+                     {
+                        MergeRequestKey mrk = new MergeRequestKey
+                        {
+                           ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+                           IId = mergeRequest.IId
+                        };
+                        await updateDiscussionsAsync(mrk);
+                     }
+                  }
+                  catch (OperatorException)
+                  {
+                     // already handled
+                  }
+               }), null);
+         };
 
          _synchronizeInvoke = synchronizeInvoke;
          _timer.Elapsed += onTimer;
@@ -37,6 +64,13 @@ namespace mrHelper.Client.Discussions
 
       async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
+         if (Updating.Contains(mrk))
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Waiting for completion of updating discussions for MR: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+         }
+
          while (Updating.Contains(mrk))
          {
             await Task.Delay(50);
@@ -66,33 +100,19 @@ namespace mrHelper.Client.Discussions
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         foreach (KeyValuePair<MergeRequestKey, CachedDiscussions> pair in _cachedDiscussions)
-         {
-            scheduleUpdate(pair.Key);
-         }
-      }
+         Trace.TraceInformation(String.Format(
+            "[DiscussionManager] Scheduling update of discussions for {0} merge requests on-timer",
+            _cachedDiscussions.Count));
 
-      private void requestDiscussions(string hostname, Project project, List<MergeRequest> mergeRequests)
-      {
-         foreach (MergeRequest mergeRequest in mergeRequests)
-         {
-            MergeRequestKey mrk = new MergeRequestKey
-            {
-               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-               IId = mergeRequest.IId
-            };
-            scheduleUpdate(mrk);
-         }
-      }
-
-      private void scheduleUpdate(MergeRequestKey mrk)
-      {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
             {
                try
                {
-                  await updateDiscussionsAsync(mrk);
+                  foreach (MergeRequestKey mrk in _cachedDiscussions.Keys)
+                  {
+                     await updateDiscussionsAsync(mrk);
+                  }
                }
                catch (OperatorException)
                {
@@ -110,6 +130,10 @@ namespace mrHelper.Client.Discussions
 
          if (_cachedDiscussions.ContainsKey(mrk) && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp)
          {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Discussions are up-to-date, remote time stamp {0}, cached time stamp {1}",
+               mergeRequestUpdatedAt.ToLocalTime().ToString(),
+               _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString()));
             return;
          }
 
@@ -117,8 +141,17 @@ namespace mrHelper.Client.Discussions
          {
             PreLoadDiscussions?.Invoke();
 
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Caching discussions for MR: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+
             Updating.Add(mrk);
             List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
+
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3}, cached time stamp {4}",
+               discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
+               mergeRequestUpdatedAt.ToLocalTime().ToString()));
 
             _cachedDiscussions[mrk] = new CachedDiscussions
             {

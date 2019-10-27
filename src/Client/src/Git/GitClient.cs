@@ -63,22 +63,20 @@ namespace mrHelper.Client.Git
             {
                string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
                await executeGitCommandAsync(arguments, reportProgress, true);
-               Updated?.Invoke(this, latestChange);
-               return;
             }
-
-            await (Task)changeCurrentDirectoryAndRun(() =>
+            else
             {
-               string arguments = "fetch --progress";
-               return executeGitCommandAsync(arguments, reportProgress, true);
-            }, Path);
+               await (Task)changeCurrentDirectoryAndRun(() =>
+               {
+                  string arguments = "fetch --progress";
+                  return executeGitCommandAsync(arguments, reportProgress, true);
+               }, Path);
+            }
 
             Updated?.Invoke(this, latestChange);
          },
-            (projectKeyToCheck) =>
-         {
-            return ProjectKey.Equals(projectKeyToCheck);
-         }, synchronizeInvoke);
+         projectKeyToCheck => ProjectKey.Equals(projectKeyToCheck),
+         synchronizeInvoke);
 
          Trace.TraceInformation(String.Format("[GitClient] Created GitClient at path {0} for host {1} and project {2}",
             path, ProjectKey.HostName, ProjectKey.ProjectName));
@@ -276,17 +274,16 @@ namespace mrHelper.Client.Git
       async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange,
          bool exclusive)
       {
-         // TODO Check why progress change reports for non-exclusive requests
+         // If _descriptor is non-empty, it must be a non-exclusive operation, otherwise pickup should have caught it
+         Debug.Assert(_descriptor == null || !exclusive);
+
+         // If even onProgressChange is null, but exclusive operations can
+         Progress<string> progress = exclusive ? new Progress<string>() : null;
          if (exclusive)
          {
             _onProgressChange = onProgressChange;
+            progress.ProgressChanged += (sender, status) => _onProgressChange?.Invoke(status);
          }
-
-         Progress<string> progress = new Progress<string>();
-         progress.ProgressChanged += (sender, status) =>
-         {
-            _onProgressChange?.Invoke(status);
-         };
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             ProjectKey.ProjectName, arguments));
@@ -322,25 +319,24 @@ namespace mrHelper.Client.Git
 
       async private Task pickupGitCommandAsync(Action<string> onProgressChange)
       {
+         Debug.Assert(_descriptor != null);
+
          Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}",
             ProjectKey.ProjectName));
 
          _onProgressChange = onProgressChange;
 
-         if (_descriptor != null)
+         try
          {
-            try
-            {
-               await _descriptor.TaskCompletionSource.Task;
-            }
-            catch (GitOperationException ex)
-            {
-               string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
-               Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- {1} --  {0}",
-                  ProjectKey.ProjectName, status));
-               ex.Cancelled = ex.ExitCode == cancellationExitCode;
-               throw;
-            }
+            await _descriptor.TaskCompletionSource.Task;
+         }
+         catch (GitOperationException ex)
+         {
+            string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- {1} --  {0}",
+               ProjectKey.ProjectName, status));
+            ex.Cancelled = ex.ExitCode == cancellationExitCode;
+            throw;
          }
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}",

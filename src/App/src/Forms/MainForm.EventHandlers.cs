@@ -163,7 +163,8 @@ namespace mrHelper.App.Forms
 
                if (getHostName() != String.Empty)
                {
-                  // TODO Test this use case
+                  // TODO Test this use case.
+                  // Emulating a host switch here to trigger RevisionCacher to work at the new location
                   Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
                   await switchHostAsync(getHostName());
                }
