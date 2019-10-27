@@ -64,6 +64,11 @@ namespace mrHelper.Client.Updates
          return ProjectWatcher;
       }
 
+      public List<MergeRequest> GetMergeRequests(ProjectKey projectKey)
+      {
+         return Cache.Details.GetMergeRequests(projectKey);
+      }
+
       /// <summary>
       /// Checks local cache to detect if there are project changes caused by new versions of a merge request
       /// </summary>
@@ -191,6 +196,7 @@ namespace mrHelper.Client.Updates
             Interval = 5 * 60000 // five minutes in ms
          };
 
+      // TODO Change private properties to private fields across the solution
       private Workflow.Workflow Workflow { get; }
       private WorkflowDetailsCache Cache { get; }
       private WorkflowDetailsChecker WorkflowDetailsChecker { get; }

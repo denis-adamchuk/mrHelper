@@ -43,7 +43,6 @@ namespace mrHelper.App.Forms
                // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(client,
                   _updateManager.GetRemoteProjectChecker(mrk), updateGitStatusText);
-               _revisionCacher?.Cache(client);
             }
             catch (Exception ex)
             {
@@ -375,7 +374,6 @@ namespace mrHelper.App.Forms
          try
          {
             await client.Updater.ManualUpdateAsync(instantChecker, null);
-            _revisionCacher?.Cache(client);
          }
          catch (GitOperationException)
          {

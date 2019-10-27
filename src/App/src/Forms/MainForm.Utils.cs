@@ -1032,6 +1032,8 @@ namespace mrHelper.App.Forms
             ListViewItem selected = listViewMergeRequests.SelectedItems[0];
             selected.Selected = false;
             selected.Selected = true;
+
+            // TODO Change this code in order to reload commits and schedule silent update???
          }
       }
 

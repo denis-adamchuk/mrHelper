@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
+using mrHelper.Client.Discussions;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 
@@ -14,17 +15,19 @@ namespace mrHelper.Client.TimeTracking
    /// </summary>
    public class TimeTrackingManager
    {
-      public TimeTrackingManager(UserDefinedSettings settings, Workflow.Workflow workflow)
+      public TimeTrackingManager(UserDefinedSettings settings, Workflow.Workflow workflow, DiscussionManager discussionManager)
       {
          Settings = settings;
          TimeTrackingOperator = new TimeTrackingOperator(Settings);
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
-         workflow.PreLoadDiscussions += () => PreLoadTotalTime?.Invoke();
-         workflow.PostLoadDiscussions += (mrk, discussions) => processDiscussions(mrk, discussions);
+         discussionManager.PreLoadDiscussions += () => PreLoadTotalTime?.Invoke();
+         discussionManager.PostLoadDiscussions += (mrk, discussions) => processDiscussions(mrk, discussions);
+         discussionManager.FailedLoadDiscussions += () => FailedLoadTotalTime?.Invoke();
       }
 
       public event Action PreLoadTotalTime;
       public event Action<MergeRequestKey> PostLoadTotalTime;
+      public event Action FailedLoadTotalTime;
 
       public TimeSpan GetTotalTime(MergeRequestKey mrk)
       {
@@ -59,12 +62,12 @@ namespace mrHelper.Client.TimeTracking
          TimeSpan span = TimeSpan.Zero;
          foreach (Discussion discussion in discussions)
          {
-            if (!discussion.Individual_Note || discussions.Notes.Count < 1)
+            if (!discussion.Individual_Note || discussion.Notes.Count < 1)
             {
                continue;
             }
 
-            Note note = discussions.Notes[0];
+            DiscussionNote note = discussion.Notes[0];
             if (note.System && note.Author.Id == _currentUser.Id)
             {
                Match m = spentTimeRe.Match(note.Body);

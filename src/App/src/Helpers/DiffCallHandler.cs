@@ -16,11 +16,11 @@ namespace mrHelper.App
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot, UserDefinedSettings settings)
+      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot, DiscussionManager discussionManager)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
-         Program.Settings = settings;
+         _discussionManager = discussionManager;
       }
 
       async public Task HandleAsync(IGitRepository gitRepository)
@@ -154,12 +154,9 @@ namespace mrHelper.App
             Position = includeContext ? createPositionParameters(position) : new Nullable<PositionParameters>()
          };
 
-
-         DiscussionManager manager = new DiscussionManager(Program.Settings);
-
          MergeRequestKey mergeRequestKey = new MergeRequestKey(
                snapshot.Host, snapshot.Project, snapshot.MergeRequestIId);
-         DiscussionCreator creator = manager.GetDiscussionCreator(mergeRequestKey);
+         DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mergeRequestKey);
 
          try
          {
@@ -203,6 +200,7 @@ namespace mrHelper.App
 
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
+      private readonly DiscussionManager _discussionManager;
    }
 }
 

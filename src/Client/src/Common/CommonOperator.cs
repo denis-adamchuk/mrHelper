@@ -20,7 +20,8 @@ namespace mrHelper.Client.Common
          try
          {
            return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
-              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
+              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
+                 new MergeRequestsFilter{ SimpleView = true })));
          }
          catch (Exception ex)
          {
@@ -53,11 +54,11 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async internal Task<MergeRequest> GetMergeRequestAsync(GitLabClient client, string projectName, int iid)
+      async internal static Task<MergeRequest> GetMergeRequestAsync(GitLabClient client, string projectName, int iid)
       {
          try
          {
-            return (MergeRequest)(await Client.RunAsync(async (gl) =>
+            return (MergeRequest)(await client.RunAsync(async (gl) =>
                await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync()));
          }
          catch (Exception ex)

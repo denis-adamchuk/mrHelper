@@ -39,7 +39,7 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
          return GetDiscussionsAsync(client, mrk);

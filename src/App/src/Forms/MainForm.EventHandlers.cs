@@ -143,7 +143,7 @@ namespace mrHelper.App.Forms
          this.Close();
       }
 
-      private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
+      async private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
       {
          localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
@@ -160,6 +160,13 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = "Parent folder for git repositories changed";
                Trace.TraceInformation(String.Format("[MainForm] Parent folder changed to {0}",
                   newFolder));
+
+               if (getHostName() != String.Empty)
+               {
+                  // TODO Test this use case
+                  Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
+                  await switchHostAsync(getHostName());
+               }
             }
          }
       }
@@ -275,7 +282,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+      private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
          listView.Refresh();
@@ -283,17 +290,49 @@ namespace mrHelper.App.Forms
          if (listView.SelectedItems.Count < 1)
          {
             // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
-            await switchMergeRequestByUserAsync(String.Empty, default(Project), 0);
+            switchMergeRequestByUser(String.Empty, default(Project), default(MergeRequest));
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
+         if (switchMergeRequestByUser(key.HostName, key.Project, key.MergeRequest))
          {
             Debug.Assert(getMergeRequestKey().HasValue);
             _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
             return;
          }
+      }
+
+      private void switchMergeRequestByUser(string hostname, Project project, MergeRequest mergeRequest)
+      {
+         Trace.TraceInformation(String.Format("[MainForm] User requested to change merge request to IId {0}",
+            mergeRequest.IId.ToString()));
+
+         enableMergeRequestActions(false);
+         enableCommitActions(false);
+         updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(null);
+         updateTotalTime(null);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
+         if (mergeRequest.IId == 0)
+         {
+            return;
+         }
+
+         enableMergeRequestActions(true);
+         updateMergeRequestDetails(mergeRequest);
+         updateTimeTrackingMergeRequestDetails(mergeRequest);
+
+         enableComboBox(comboBoxLeftCommit);
+         enableComboBox(comboBoxRightCommit);
+
+         addCommitsToComboBoxes(commits, mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
+         selectNotReviewedCommits(out int left, out int right);
+         comboBoxLeftCommit.SelectedIndex = left;
+         comboBoxRightCommit.SelectedIndex = right;
+
+         enableCommitActions(true);
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)

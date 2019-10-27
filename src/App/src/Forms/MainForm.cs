@@ -153,6 +153,8 @@ namespace mrHelper.App.Forms
       }
 
       private readonly List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();
+      private readonly Dictionary<MergeRequestKey, Commit[]> _allCommits =
+         new Dictionary<MergeRequestKey, Commit[]>();
 
       private struct ListViewSubItemInfo
       {

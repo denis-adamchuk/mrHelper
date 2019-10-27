@@ -88,7 +88,8 @@ namespace mrHelper.Client.Workflow
 
                foreach (MergeRequest mergeRequest in mergeRequests)
                {
-                  if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
+                  if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest)
+                   || !await loadCommitsAsync(hostname, project.Path_With_Namespace, mergeRequest))
                   {
                      return false; // cancelled
                   }
@@ -102,19 +103,6 @@ namespace mrHelper.Client.Workflow
 
          PostLoadAllMergeRequests?.Invoke(hostname, projects);
          return true;
-      }
-
-      async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
-      {
-         if (mergeRequestIId == 0)
-         {
-            PreLoadSingleMergeRequest?.Invoke(0);
-            Operator?.CancelAsync();
-            return false;
-         }
-
-         return checkParameters(hostname, projectname)
-             && await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
       }
 
       async public Task CancelAsync()
@@ -146,17 +134,9 @@ namespace mrHelper.Client.Workflow
 
       public event Action<string, List<Project>> PostLoadAllMergeRequests;
 
-      public event Action<int> PreLoadSingleMergeRequest;
-      public event Action<string, MergeRequest> PostLoadSingleMergeRequest;
-      public event Action FailedLoadSingleMergeRequest;
-
       public event Action PreLoadCommits;
       public event Action<string, string, MergeRequest, List<Commit>> PostLoadCommits;
       public event Action FailedLoadCommits;
-
-      public event Action PreLoadNotes;
-      public event Action<string, string, MergeRequest, List<Note>> PostLoadNotes;
-      public event Action FailedLoadNotes;
 
       public event Action PreLoadLatestVersion;
       public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
@@ -249,7 +229,9 @@ namespace mrHelper.Client.Workflow
          List<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await Operator.GetMergeRequestsAsync(projectName);
+            List<MergeRequest> mergeRequestsLite = await Operator.GetMergeRequestsAsync(projectName);
+            mergeRequests = mergeRequestsLite.Select(
+               async x => await Operator.GetMergeRequestAsync(projectName, x.IId));
          }
          catch (OperatorException ex)
          {
@@ -261,33 +243,6 @@ namespace mrHelper.Client.Workflow
 
          PostLoadProjectMergeRequests?.Invoke(hostname, project, mergeRequests);
          return mergeRequests;
-      }
-
-      async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)
-      {
-         PreLoadSingleMergeRequest?.Invoke(mergeRequestIId);
-
-         MergeRequest mergeRequest = new MergeRequest();
-         try
-         {
-            mergeRequest = await Operator.GetMergeRequestAsync(projectName, mergeRequestIId);
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mergeRequestIId);
-            string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);
-            return false;
-         }
-
-         PostLoadSingleMergeRequest?.Invoke(projectName, mergeRequest);
-
-         if (!await loadLatestVersionAsync(hostname, projectName, mergeRequest)
-          || !await loadCommitsAsync(hostname, projectName, mergeRequest))
-         {
-            return false;
-         }
-         return await loadNotesAsync(hostname, projectName, mergeRequest);
       }
 
       async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
@@ -308,27 +263,6 @@ namespace mrHelper.Client.Workflow
             return false;
          }
          PostLoadCommits?.Invoke(hostname, projectName, mergeRequest, commits);
-         return true;
-      }
-
-      async private Task<bool> loadNotesAsync(string hostname, string projectname, MergeRequest mergeRequest)
-      {
-         PreLoadNotes?.Invoke();
-         List<Note> notes;
-         try
-         {
-            notes = await Operator.GetNotesAsync(projectname, mergeRequest.IId);
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading system notes for merge request with IId {0}",
-               mergeRequest.IId);
-            string errorMessage = String.Format("Cannot load system notes for merge request with IId {0}",
-               mergeRequest.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadNotes);
-            return false;
-         }
-         PostLoadNotes?.Invoke(hostname, projectname, mergeRequest, notes);
          return true;
       }
 

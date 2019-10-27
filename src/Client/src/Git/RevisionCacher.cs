@@ -9,6 +9,7 @@ using mrHelper.Client.Git;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Git
 {
@@ -17,102 +18,87 @@ namespace mrHelper.Client.Git
    /// </summary>
    public class RevisionCacher
    {
-      public RevisionCacher(DiscussionManager discussionManager, ISynchronizeInvoke synchronizeInvoke,
-         Func<ProjectKey, IGitRepository> getRepository)
+      public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+         UserDefinedSettings settings, Func<ProjectKey, GitClient> getGitClient,
+         Func<ProjectKey, MergeRequest[]> getMergeRequests)
       {
-         discussionManager.PostLoadDiscusions += (mrk, discussions) => processDiscussions(mrk, discussions);
-         SynchronizeInvoke = synchronizeInvoke;
-         GetRepository = getRepository;
+         workflow.PostLoadHostProjects += (hostname, projects) =>
+         {
+            _latestChanges = projects.ToDictionary(
+               x => getGitClient(new ProjectKey { HostName = hostname, ProjectName = x.Path_With_Namespace }),
+               x => DateTime.MinValue);
+
+            Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Clients",
+               _latestChanges.Count()));
+            _latestChanges.Keys.ToList().ForEach(x => x.Updated += onGitClientUpdated);
+            _latestChanges.Keys.ToList().ForEach(x => x.Disposed += (y => _latestChanges.Remove(y)));
+         };
+
+         _synchronizeInvoke = synchronizeInvoke;
+         _operator = new VersionOperator(settings);
+         _getMergeRequests = getMergeRequests;
       }
 
-      public void Cache(GitClient gitClient)
+      private void onGitClientUpdated(GitClient gitClient, DateTime latestChange)
       {
-         ProjectKey projectKey = gitClient.ProjectKey;
-
-         if (ReadyProjects.Add(projectKey))
+         if (_latestChanges == null || !_latestChanges.ContainsKey(gitClient))
          {
-            Trace.TraceInformation(String.Format( "[RevisionCacher] Project {0} at host {1} is ready",
-               projectKey.ProjectName, projectKey.HostName));
-         }
-
-         if (PostponedNotes.Any(x => x.Key.ProjectKey.Equals(projectKey)))
-         {
-            Dictionary<MergeRequestKey, List<Note>> toCache =
-               PostponedNotes.Where(pair => pair.Key.ProjectKey.Equals(projectKey)).ToDictionary(
-                  pair => pair.Key, pair => pair.Value);
-            foreach (KeyValuePair<MergeRequestKey, List<Note>> notes in toCache)
-            {
-               scheduleCache(projectKey, notes.Value);
-               PostponedNotes.Remove(notes.Key);
-            }
-         }
-      }
-
-      private void processDiscussions(MergeRequestKey mrk, List<Discussion> discussions)
-      {
-         Trace.TraceInformation(String.Format(
-            "[RevisionCacher] Got {0} discussions for MRK: HostName={0}, ProjectName={1}, IId={2}",
-            discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
-         List<Note> notesFiltered = new List<Note>();
-         foreach (Discussions discussion in discussions)
-         {
-            notesFiltered.AddRange(discussions.Notes.Where(x =>
-               x.Ix.Type == "DiffNote" && !x.Position.Equals(default(Position))).ToList());
-         }
-
-         if (ReadyProjects.Contains(mrk.ProjectKey))
-         {
-            scheduleCache(mrk.ProjectKey, notesFiltered);
-         }
-         else
-         {
-            PostponedNotes[mrk] = notesFiltered;
-         }
-      }
-
-      private void scheduleCache(ProjectKey projectKey, List<Note> notes)
-      {
-         if (notes.Count == 0)
-         {
+            Debug.Assert(false);
             return;
          }
 
-         Note[] notesCopy = new Note[notes.Count];
-         notes.CopyTo(notesCopy);
-         SynchronizeInvoke.BeginInvoke(new Action<IGitRepository, Note[]>(
-            async (repository, notesInternal) =>
-         {
-            Trace.TraceInformation(String.Format(
-               "[RevisionCacher] Caching revisions for {0} notes in project {1} at host {2}",
-               notes.Count(), projectKey.ProjectName, projectKey.HostName));
+         ProjectKey projectKey = gitClient.ProjectKey;
+         Trace.TraceInformation(String.Format("[RevisionCacher] Processing update of project {0} at host {1}",
+            projectKey.ProjectName, projectKey.HostName));
 
-            await doCacheAsync(repository, notesInternal);
-         }), new object[] { GetRepository(projectKey), notesCopy });
+         _synchronizeInvoke.BeginInvoke(new Action(
+            async () =>
+            {
+               DateTime prevLatestChange = _latestChanges[gitClient];
+               foreach (MergeRequest mergeRequest in _getMergeRequests(projectKey))
+               {
+                  MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
+                  List<Version> newVersions = await _operator.LoadVersions(mrk);
+                  newVersions = newVersions.Where(
+                     x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
+                  List<Version> newVersionsDetailed = new List<Version>();
+                  newVersions.ForEach(async x => newVersionsDetailed.Add(await _operator.LoadVersion(x, mrk)));
+                  newVersionsDetailed.ForEach(
+                     async x =>
+                  {
+                     Trace.TraceInformation(String.Format(
+                        "[RevisionCacher] Caching revisions for project {0} at host {1}",
+                        projectKey.ProjectName, projectKey.HostName));
+                     await doCacheAsync(gitClient, x.Base_Commit_SHA, x.Head_Commit_SHA, x.Diffs);
+                  });
+               }
+               _latestChanges[gitClient] = latestChange;
+            }), null);
       }
 
-      async private Task doCacheAsync(IGitRepository gitRepository, Note[] notes)
+      async private static Task doCacheAsync(IGitRepository gitRepository,
+         string baseSha, string headSha, List<Diff> diffs)
       {
-         foreach (Note note in notes)
+         foreach (Diff diff in diffs)
          {
-            await gitRepository.DiffAsync(note.Position.Base_SHA, note.Position.Head_SHA,
-               note.Position.Old_Path, note.Position.New_Path, 0);
-            await gitRepository.DiffAsync(note.Position.Base_SHA, note.Position.Head_SHA,
-               note.Position.Old_Path, note.Position.New_Path, mrHelper.Common.Constants.Constants.FullContextSize);
-            if (note.Position.Old_Line != null)
+            await gitRepository.DiffAsync(baseSha, headSha, diff.Old_Path, diff.New_Path, 0);
+            await gitRepository.DiffAsync(baseSha, headSha, diff.Old_Path, diff.New_Path,
+               mrHelper.Common.Constants.Constants.FullContextSize);
+            if (!diff.New_File)
             {
-               await gitRepository.ShowFileByRevisionAsync(note.Position.Old_Path, note.Position.Base_SHA);
+               await gitRepository.ShowFileByRevisionAsync(diff.Old_Path, baseSha);
             }
-            if (note.Position.New_Line != null)
+            if (!diff.Deleted_File)
             {
-               await gitRepository.ShowFileByRevisionAsync(note.Position.New_Path, note.Position.Head_SHA);
+               await gitRepository.ShowFileByRevisionAsync(diff.New_Path, headSha);
             }
          }
       }
 
-      private Dictionary<MergeRequestKey, List<Note>> PostponedNotes = new Dictionary<MergeRequestKey, List<Note>>();
-      private HashSet<ProjectKey> ReadyProjects = new HashSet<ProjectKey>();
-      private ISynchronizeInvoke SynchronizeInvoke { get; }
-      private Func<ProjectKey, IGitRepository> GetRepository { get; }
+      private Dictionary<GitClient, DateTime> _latestChanges;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
+      private readonly VersionOperator _operator;
+      private readonly Func<ProjectKey, MergeRequest[]> _getMergeRequests;
    }
 }
 

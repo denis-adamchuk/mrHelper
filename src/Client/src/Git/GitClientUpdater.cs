@@ -17,7 +17,7 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Bind to the specific GitClient object
       /// </summary>
-      internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, Task> onUpdate,
+      internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, DateTime, Task> onUpdate,
          Func<ProjectKey, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
       {
          _onUpdate = onUpdate;
@@ -134,7 +134,7 @@ namespace mrHelper.Client.Git
       {
          if (newLatestChange > _latestChange)
          {
-            await doUpdate(onProgressChange);
+            await doUpdate(onProgressChange, newLatestChange);
 
             _latestChange = newLatestChange;
 
@@ -152,11 +152,11 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task doUpdate(Action<string> onProgressChange)
+      async private Task doUpdate(Action<string> onProgressChange, DateTime latestChange)
       {
          try
          {
-            await _onUpdate(onProgressChange);
+            await _onUpdate(onProgressChange, latestChange);
          }
          catch (GitOperationException ex)
          {
@@ -165,7 +165,7 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private readonly Func<Action<string>, Task> _onUpdate;
+      private readonly Func<Action<string>, DateTime, Task> _onUpdate;
       private readonly Func<ProjectKey, bool> _isMyProject;
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;

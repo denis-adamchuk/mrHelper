@@ -219,10 +219,12 @@ namespace mrHelper.App.Forms
          createWorkflow();
 
          // Discussions Manager subscribers to Workflow notifications
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, this);
 
          // Revision Cacher subscribes to Workflow notifications
-         _revisionCacher = new RevisionCacher(_discussionManager, this, (projectKey) => getGitClient(projectKey, false));
+         _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
+            (projectKey) => getGitClient(projectKey, false),
+            (projectKey) => _updateManager.GetMergeRequests(projectKey).ToArray());
 
          // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
@@ -287,10 +289,33 @@ namespace mrHelper.App.Forms
 
       private void createTimeTrackingManager()
       {
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow);
-         _timeTrackingManager.PreLoadTotalTime += () => onLoadTotalTime();
-         _timeTrackingManager.PostLoadTotalTime += (e) => onTotalTimeLoaded(e);
-         _timeTrackingManager.FailedLoadTotalTime += () => onFailedLoadTotalTime();
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
+         _timeTrackingManager.PreLoadTotalTime +=
+            () =>
+         {
+            updateTotalTime(null);
+            if (!isTrackingTime())
+            {
+               labelTimeTrackingTrackedLabel.Text = "Total Time:";
+               labelTimeTrackingTrackedTime.Text = "Loading...";
+            }
+
+            Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading total spent time"));
+         }
+         _timeTrackingManager.PostLoadTotalTime +=
+            (mrk) =>
+         {
+            updateTotalTime(mrk);
+
+            Trace.TraceInformation(String.Format("[MainForm.Workflow] Total spent time loaded"));
+         }
+         _timeTrackingManager.FailedLoadTotalTime +=
+            () =>
+         {
+            updateTotalTime(null);
+
+            Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load total spent time"));
+         }
       }
    }
 }

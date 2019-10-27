@@ -5,15 +5,17 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Updates;
 using mrHelper.Core.Git;
-using mrHelper.Client.Tools;
 using static mrHelper.Core.Git.GitUtils;
 
 namespace mrHelper.Client.Git
 {
+   // TODO Split GitClient and IGitRepository
+
    /// <summary>
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
@@ -28,6 +30,9 @@ namespace mrHelper.Client.Git
 
       // Object which keeps this git repository up-to-date
       public GitClientUpdater Updater { get; }
+
+      public event Action<GitClient, DateTime> Updated;
+      public event Action<GitClient> Disposed;
 
       private static readonly int cancellationExitCode = 130;
 
@@ -46,7 +51,7 @@ namespace mrHelper.Client.Git
          ProjectKey = projectKey;
          Path = path;
          Updater = new GitClientUpdater(projectWatcher,
-            async (reportProgress) =>
+            async (reportProgress, latestChange) =>
          {
             if (_descriptor != null)
             {
@@ -58,6 +63,7 @@ namespace mrHelper.Client.Git
             {
                string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
                await executeGitCommandAsync(arguments, reportProgress, true);
+               Updated?.Invoke(this, latestChange);
                return;
             }
 
@@ -66,6 +72,8 @@ namespace mrHelper.Client.Git
                string arguments = "fetch --progress";
                return executeGitCommandAsync(arguments, reportProgress, true);
             }, Path);
+
+            Updated?.Invoke(this, latestChange);
          },
             (projectKeyToCheck) =>
          {
@@ -81,6 +89,7 @@ namespace mrHelper.Client.Git
          Trace.TraceInformation(String.Format("[GitClient] Disposing GitClient at path {0}", Path));
          CancelAsyncOperation();
          Updater.Dispose();
+         Disposed?.Invoke(this); // TODO Test this
       }
 
       /// <summary>
@@ -267,6 +276,7 @@ namespace mrHelper.Client.Git
       async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange,
          bool exclusive)
       {
+         // TODO Check why progress change reports for non-exclusive requests
          if (exclusive)
          {
             _onProgressChange = onProgressChange;
