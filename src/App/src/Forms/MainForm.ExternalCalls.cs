@@ -200,7 +200,7 @@ namespace mrHelper.App.Forms
          else
          {
             reportErrorOnConnect(url, String.Format(
-               "Current version supports connection to URL for Open WIP merge requests of projects listed in {0} only. ",
+               "Current version supports connection to URL for Open merge requests of projects listed in {0} only. ",
                mrHelper.Common.Constants.Constants.ProjectListFileName), null, false);
          }
       }

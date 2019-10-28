@@ -101,6 +101,13 @@ namespace mrHelper.App.Controls
                onStartEditNote(textBox);
             }
          }
+         else if (e.KeyCode == Keys.Enter && !textBox.ReadOnly)
+         {
+            if (Control.ModifierKeys == Keys.Control)
+            {
+               await onSubmitNewBodyAsync(textBox);
+            }
+         }
          else if (e.KeyCode == Keys.F4)
          {
             if (!Discussion.Individual_Note)
@@ -214,7 +221,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
@@ -234,7 +241,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
@@ -251,7 +258,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          await onToggleResolveDiscussionAsync();
       }
@@ -508,6 +515,7 @@ namespace mrHelper.App.Controls
 
       private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
       {
+         // TODO Test menu item handlers. They have checks on textboxes, are not they valid for note boxes only?
          var contextMenu = new ContextMenu();
 
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
@@ -539,7 +547,6 @@ namespace mrHelper.App.Controls
 
          return contextMenu;
       }
-
 
       private static int getTextBoxPreferredHeight(TextBoxNoWheel textBox)
       {
@@ -674,12 +681,22 @@ namespace mrHelper.App.Controls
       private void onStartEditNote(TextBox textBox)
       {
          textBox.ReadOnly = false;
+         textBox.BackColor = Color.White;
          textBox.Focus();
+      }
+
+      private void stopEdit(TextBox textBox)
+      {
+         textBox.ReadOnly = true;
+         if (textBox.Tag is DiscussionNote note)
+         {
+            textBox.BackColor = getNoteColor(note);
+         }
       }
 
       private void onCancelEditNote(TextBox textBox)
       {
-         textBox.ReadOnly = true;
+         stopEdit(textBox);
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          textBox.Text = note.Body.Replace("\n", "\r\n");
@@ -687,7 +704,7 @@ namespace mrHelper.App.Controls
 
       async private Task onSubmitNewBodyAsync(TextBox textBox)
       {
-         textBox.ReadOnly = true;
+         stopEdit(textBox);
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          if (textBox.Text == note.Body)

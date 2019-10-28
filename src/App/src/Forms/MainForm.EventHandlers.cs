@@ -252,7 +252,17 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+            if (isSelected && e.ColumnIndex == 3)
+            {
+               using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest)))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
+               }
+            }
+            else
+            {
+               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+            }
          }
       }
 

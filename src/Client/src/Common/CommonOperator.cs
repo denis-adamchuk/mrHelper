@@ -20,7 +20,8 @@ namespace mrHelper.Client.Common
          try
          {
            return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
-              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
+              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
+                 new MergeRequestsFilter { WIP = MergeRequestsFilter.WorkInProgressFilter.All })));
          }
          catch (Exception ex)
          {
