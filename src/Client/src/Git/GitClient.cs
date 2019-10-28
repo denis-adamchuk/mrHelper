@@ -11,6 +11,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Git;
 using static mrHelper.Core.Git.GitUtils;
+using static mrHelper.Client.Git.Types;
 
 namespace mrHelper.Client.Git
 {
@@ -138,6 +139,9 @@ namespace mrHelper.Client.Git
 
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
+         filename1 = fixupFilename(filename1);
+         filename2 = fixupFilename(filename2);
+
          DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
             filename1 = filename1, filename2 = filename2, context = context };
          if (_cachedDiffs.ContainsKey(key))
@@ -160,6 +164,9 @@ namespace mrHelper.Client.Git
       async public Task<List<string>> DiffAsync(string leftcommit, string rightcommit,
          string filename1, string filename2, int context)
       {
+         filename1 = fixupFilename(filename1);
+         filename2 = fixupFilename(filename2);
+
          DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
             filename1 = filename1, filename2 = filename2, context = context };
          if (_cachedDiffs.ContainsKey(key))
@@ -181,15 +188,44 @@ namespace mrHelper.Client.Git
 
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)changeCurrentDirectoryAndRun(() =>
+         ListOfRenamesCacheKey key = new ListOfRenamesCacheKey { sha1 = leftcommit, sha2 = rightcommit };
+         if (_cachedListOfRenames.ContainsKey(key))
+         {
+            return _cachedListOfRenames[key];
+         }
+
+         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
             return GitUtils.git(arguments).Output;
          }, Path);
+
+         _cachedListOfRenames[key] = result;
+         return result;
+      }
+
+      async public Task<List<string>> GetListOfRenamesAsync(string leftcommit, string rightcommit)
+      {
+         ListOfRenamesCacheKey key = new ListOfRenamesCacheKey { sha1 = leftcommit, sha2 = rightcommit };
+         if (_cachedListOfRenames.ContainsKey(key))
+         {
+            return _cachedListOfRenames[key];
+         }
+
+         GitOutput gitOutput = await (Task<GitOutput>)changeCurrentDirectoryAndRun(() =>
+         {
+            string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
+            return executeLiteGitCommandAsync(arguments);
+         }, Path);
+
+         _cachedListOfRenames[key] = gitOutput.Output;
+         return gitOutput.Output;
       }
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
+         filename = fixupFilename(filename);
+
          RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
          if (_cachedRevisions.ContainsKey(key))
          {
@@ -208,6 +244,8 @@ namespace mrHelper.Client.Git
 
       async public Task<List<string>> ShowFileByRevisionAsync(string filename, string sha)
       {
+         filename = fixupFilename(filename);
+
          RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
          if (_cachedRevisions.ContainsKey(key))
          {
@@ -351,26 +389,19 @@ namespace mrHelper.Client.Git
             ProjectKey.ProjectName));
       }
 
-      private struct DiffCacheKey
+      private string fixupFilename(string filename)
       {
-         public string sha1;
-         public string sha2;
-         public string filename1;
-         public string filename2;
-         public int context;
+         return filename.Contains(' ') ? '"' + filename + '"' : filename;
       }
 
       private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs =
          new Dictionary<DiffCacheKey, List<string>>();
 
-      private struct RevisionCacheKey
-      {
-         public string sha;
-         public string filename;
-      }
-
       private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
          new Dictionary<RevisionCacheKey, List<string>>();
+
+      private readonly Dictionary<ListOfRenamesCacheKey, List<string>> _cachedListOfRenames =
+         new Dictionary<ListOfRenamesCacheKey, List<string>>();
 
       private GitAsyncTaskDescriptor _descriptor;
 

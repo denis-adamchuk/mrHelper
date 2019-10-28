@@ -515,7 +515,6 @@ namespace mrHelper.App.Controls
 
       private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
       {
-         // TODO Test menu item handlers. They have checks on textboxes, are not they valid for note boxes only?
          var contextMenu = new ContextMenu();
 
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
@@ -688,9 +687,9 @@ namespace mrHelper.App.Controls
       private void stopEdit(TextBox textBox)
       {
          textBox.ReadOnly = true;
-         if (textBox.Tag is DiscussionNote note)
+         if (_textboxesNotes.Contains(textBox))
          {
-            textBox.BackColor = getNoteColor(note);
+            textBox.BackColor = getNoteColor((DiscussionNote)textBox.Tag);
          }
       }
 

@@ -52,6 +52,7 @@
     <Compile Include="src\Git\GitClient.cs" />
     <Compile Include="src\Git\GitClientFactory.cs" />
     <Compile Include="src\Git\RevisionCacher.cs" />
+    <Compile Include="src\Git\Types.cs" />
     <Compile Include="src\Git\VersionOperator.cs" />
     <Compile Include="src\Services\ServiceManager.cs" />
     <Compile Include="src\TimeTracking\TimeTracker.cs" />
