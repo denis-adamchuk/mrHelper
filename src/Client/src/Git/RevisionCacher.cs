@@ -83,6 +83,9 @@ namespace mrHelper.Client.Git
       async private static Task doCacheAsync(IGitRepository gitRepository,
          string baseSha, string headSha, List<Diff> diffs)
       {
+         Trace.TraceInformation(String.Format(
+            "[RevisionCacher] Caching {0} files for revisions {1} vs {2}", diffs.Count, baseSha, headSha));
+
          foreach (Diff diff in diffs)
          {
             await gitRepository.DiffAsync(baseSha, headSha, diff.Old_Path, diff.New_Path, 0);
@@ -97,6 +100,8 @@ namespace mrHelper.Client.Git
                await gitRepository.ShowFileByRevisionAsync(diff.New_Path, headSha);
             }
          }
+
+         Trace.TraceInformation(String.Format("[RevisionCacher] {0} files cached", diffs.Count));
       }
 
       private Dictionary<GitClient, DateTime> _latestChanges;

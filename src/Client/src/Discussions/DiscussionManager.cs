@@ -106,7 +106,7 @@ namespace mrHelper.Client.Discussions
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
          Trace.TraceInformation(String.Format(
-            "[DiscussionManager] Scheduling update of discussions for {0} merge requests on-timer",
+            "[DiscussionManager] Scheduling update of discussions for {0} merge requests on a timer update",
             _cachedDiscussions.Count));
 
          _synchronizeInvoke.BeginInvoke(new Action(
@@ -114,7 +114,9 @@ namespace mrHelper.Client.Discussions
             {
                try
                {
-                  foreach (MergeRequestKey mrk in _cachedDiscussions.Keys)
+                  MergeRequestKey[] cachedKeys = new MergeRequestKey[_cachedDiscussions.Keys.Count];
+                  _cachedDiscussions.Keys.CopyTo(cachedKeys, 0);
+                  foreach (MergeRequestKey mrk in cachedKeys)
                   {
                      await updateDiscussionsAsync(mrk);
                   }
@@ -154,9 +156,10 @@ namespace mrHelper.Client.Discussions
             List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
 
             Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3}, cached time stamp {4}",
+               "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3}, cached time stamp {4} (was {5} before update)",
                discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
-               mergeRequestUpdatedAt.ToLocalTime().ToString()));
+               mergeRequestUpdatedAt.ToLocalTime().ToString(),
+               _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
 
             _cachedDiscussions[mrk] = new CachedDiscussions
             {
