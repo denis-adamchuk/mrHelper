@@ -218,9 +218,6 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
-         // Discussions Manager subscribers to Workflow notifications
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, this);
-
          // Revision Cacher subscribes to Workflow notifications
          _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
             (projectKey) => getGitClient(projectKey, false),
@@ -234,7 +231,11 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
 
          // Update manager indirectly subscribes to Workflow
-         subscribeToUpdates();
+         _updateManager = new UpdateManager(_workflow, this, Program.Settings);
+         _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
+
+         // Discussions Manager subscribers to Workflow and UpdateManager notifications
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _updateManager, this);
 
          // Time Tracking Manager requires Workflow
          createTimeTrackingManager();
@@ -279,12 +280,6 @@ namespace mrHelper.App.Forms
          {
             linkLabelSendFeedback.Visible = true;
          }
-      }
-
-      private void subscribeToUpdates()
-      {
-         _updateManager = new UpdateManager(_workflow, this, Program.Settings);
-         _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
       }
 
       private void createTimeTrackingManager()

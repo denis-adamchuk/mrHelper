@@ -1,14 +1,14 @@
 using System;
+using System.Linq;
+using System.Diagnostics;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Discussions;
-using mrHelper.Common.Exceptions;
-using System.ComponentModel;
 using GitLabSharp;
+using GitLabSharp.Entities;
 using mrHelper.Client.Common;
-using System.Diagnostics;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.Discussions
 {
@@ -23,7 +23,7 @@ namespace mrHelper.Client.Discussions
       public event Action<MergeRequestKey, List<Discussion>> PostLoadDiscussions;
       public event Action FailedLoadDiscussions;
 
-      public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke)
+      public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow, UpdateManager updateManager, ISynchronizeInvoke synchronizeInvoke)
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
@@ -34,26 +34,32 @@ namespace mrHelper.Client.Discussions
                "[DiscussionManager] Scheduling update of discussions for {0} merge requests on Workflow event",
                mergeRequests.Count));
 
-            _synchronizeInvoke.BeginInvoke(new Action(
-               async () =>
+            IEnumerable<MergeRequestKey> keys = mergeRequests
+               .Select(x => new MergeRequestKey
                {
-                  try
-                  {
-                     foreach (MergeRequest mergeRequest in mergeRequests)
-                     {
-                        MergeRequestKey mrk = new MergeRequestKey
-                        {
-                           ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-                           IId = mergeRequest.IId
-                        };
-                        await updateDiscussionsAsync(mrk);
-                     }
-                  }
-                  catch (OperatorException)
-                  {
-                     // already handled
-                  }
-               }), null);
+                  ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+                  IId = x.IId
+               });
+
+            scheduleUpdate(keys);
+         };
+
+         updateManager.OnUpdate +=
+            (updates) =>
+         {
+            IEnumerable<MergeRequestKey> newMergeRequests = updates
+               .Where(x => x.UpdateKind == UpdateKind.New)
+               .Select(x => new MergeRequestKey
+               {
+                  ProjectKey = new ProjectKey { HostName = x.HostName, ProjectName = x.Project.Path_With_Namespace },
+                  IId = x.MergeRequest.IId
+               });
+
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Scheduling update of discussions for {0} new merge requests on Update event",
+               newMergeRequests.Count()));
+
+            scheduleUpdate(newMergeRequests);
          };
 
          _synchronizeInvoke = synchronizeInvoke;
@@ -109,23 +115,28 @@ namespace mrHelper.Client.Discussions
             "[DiscussionManager] Scheduling update of discussions for {0} merge requests on a timer update",
             _cachedDiscussions.Count));
 
+         MergeRequestKey[] cachedKeys = new MergeRequestKey[_cachedDiscussions.Keys.Count];
+         _cachedDiscussions.Keys.CopyTo(cachedKeys, 0);
+         scheduleUpdate(cachedKeys);
+      }
+
+      private void scheduleUpdate(IEnumerable<MergeRequestKey> keys)
+      {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
+         {
+            try
             {
-               try
+               foreach (MergeRequestKey mrk in keys)
                {
-                  MergeRequestKey[] cachedKeys = new MergeRequestKey[_cachedDiscussions.Keys.Count];
-                  _cachedDiscussions.Keys.CopyTo(cachedKeys, 0);
-                  foreach (MergeRequestKey mrk in cachedKeys)
-                  {
-                     await updateDiscussionsAsync(mrk);
-                  }
+                  await updateDiscussionsAsync(mrk);
                }
-               catch (OperatorException)
-               {
-                  // already handled
-               }
-            }), null);
+            }
+            catch (OperatorException)
+            {
+            // already handled
+         }
+         }), null);
       }
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk)
