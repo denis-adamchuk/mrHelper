@@ -62,7 +62,11 @@ namespace mrHelper.Client.Git
                   newVersions = newVersions.Where(
                      x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
                   List<Version> newVersionsDetailed = new List<Version>();
-                  newVersions.ForEach(async x => newVersionsDetailed.Add(await _operator.LoadVersion(x, mrk)));
+                  foreach (Version version in newVersions)
+                  {
+                     Version versionDetailed = await _operator.LoadVersion(version, mrk);
+                     newVersionsDetailed.Add(versionDetailed);
+                  }
                   newVersionsDetailed.ForEach(
                      async x =>
                   {

@@ -17,7 +17,7 @@ namespace mrHelper.Client.Discussions
    /// <summary>
    /// Manages merge request discussions
    /// </summary>
-   public class DiscussionManager
+   public class DiscussionManager : IDisposable
    {
       public event Action PreLoadDiscussions;
       public event Action<MergeRequestKey, List<Discussion>> PostLoadDiscussions;
@@ -60,6 +60,11 @@ namespace mrHelper.Client.Discussions
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();
+      }
+
+      public void Dispose()
+      {
+         _timer.Dispose();
       }
 
       async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)

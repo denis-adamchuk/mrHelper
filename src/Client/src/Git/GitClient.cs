@@ -62,14 +62,14 @@ namespace mrHelper.Client.Git
             if (canClone(Path))
             {
                string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
-               await executeGitCommandAsync(arguments, reportProgress, true);
+               await executeGitCommandAsync(arguments, reportProgress);
             }
             else
             {
                await (Task)changeCurrentDirectoryAndRun(() =>
                {
                   string arguments = "fetch --progress";
-                  return executeGitCommandAsync(arguments, reportProgress, true);
+                  return executeGitCommandAsync(arguments, reportProgress);
                }, Path);
             }
 
@@ -172,7 +172,7 @@ namespace mrHelper.Client.Git
             string arguments =
                "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
                + " -- " + filename1 + " " + filename2;
-            return executeGitCommandAsync(arguments, null, false);
+            return executeLiteGitCommandAsync(arguments);
          }, Path));
 
          _cachedDiffs[key] = gitOutput.Output;
@@ -217,7 +217,7 @@ namespace mrHelper.Client.Git
          GitOutput gitOutput = await (Task<GitOutput>)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "show " + sha + ":" + filename;
-            return executeGitCommandAsync(arguments, null, false);
+            return executeLiteGitCommandAsync(arguments);
          }, Path);
 
          _cachedRevisions[key] = gitOutput.Output;
@@ -271,31 +271,42 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange,
-         bool exclusive)
+      async private Task<GitOutput> executeLiteGitCommandAsync(string arguments)
+      {
+         try
+         {
+            return await GitUtils.gitAsync(arguments, null).TaskCompletionSource.Task;
+         }
+         catch (GitOperationException ex)
+         {
+            string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
+               ProjectKey.ProjectName, arguments, status));
+            ex.Cancelled = ex.ExitCode == cancellationExitCode;
+            throw;
+         }
+      }
+
+      async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange)
       {
          // If _descriptor is non-empty, it must be a non-exclusive operation, otherwise pickup should have caught it
-         Debug.Assert(_descriptor == null || !exclusive);
+         Debug.Assert(_descriptor == null);
 
-         // If even onProgressChange is null, but exclusive operations can
-         Progress<string> progress = exclusive ? new Progress<string>() : null;
-         if (exclusive)
+         _onProgressChange = onProgressChange;
+
+         Progress<string> progress = new Progress<string>();
+         progress.ProgressChanged += (sender, status) =>
          {
-            _onProgressChange = onProgressChange;
-            progress.ProgressChanged += (sender, status) => _onProgressChange?.Invoke(status);
-         }
+            _onProgressChange?.Invoke(status);
+         };
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             ProjectKey.ProjectName, arguments));
-         GitAsyncTaskDescriptor descriptor = GitUtils.gitAsync(arguments, progress);
-         if (exclusive)
-         {
-            _descriptor = descriptor;
-         }
+         _descriptor = GitUtils.gitAsync(arguments, progress);
 
          try
          {
-            GitOutput gitOutput = await descriptor.TaskCompletionSource.Task;
+            GitOutput gitOutput = await _descriptor.TaskCompletionSource.Task;
             Trace.TraceInformation(String.Format("[GitClient] async operation -- end --  {0}: {1}",
                ProjectKey.ProjectName, arguments));
             return gitOutput;
@@ -310,10 +321,7 @@ namespace mrHelper.Client.Git
          }
          finally
          {
-            if (exclusive)
-            {
-               _descriptor = null;
-            }
+            _descriptor = null;
          }
       }
 

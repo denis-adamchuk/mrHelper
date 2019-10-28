@@ -20,8 +20,7 @@ namespace mrHelper.Client.Common
          try
          {
            return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
-              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
-                 new MergeRequestsFilter{ SimpleView = true })));
+              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(new MergeRequestsFilter())));
          }
          catch (Exception ex)
          {

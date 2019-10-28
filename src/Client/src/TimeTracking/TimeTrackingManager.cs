@@ -29,9 +29,9 @@ namespace mrHelper.Client.TimeTracking
       public event Action FailedLoadTotalTime;
       public event Action<MergeRequestKey> PostLoadTotalTime;
 
-      public TimeSpan GetTotalTime(MergeRequestKey mrk)
+      public TimeSpan? GetTotalTime(MergeRequestKey mrk)
       {
-         return MergeRequestTimes.ContainsKey(mrk) ? MergeRequestTimes[mrk] : default(TimeSpan);
+         return MergeRequestTimes.ContainsKey(mrk) ? MergeRequestTimes[mrk] : new Nullable<TimeSpan>();
       }
 
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)

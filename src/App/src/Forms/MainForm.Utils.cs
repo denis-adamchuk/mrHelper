@@ -57,7 +57,7 @@ namespace mrHelper.App.Forms
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
             return new MergeRequestKey(fmk.HostName, fmk.Project.Path_With_Namespace, fmk.MergeRequest.IId);
          }
-         Debug.Assert(false);
+         //Debug.Assert(false);
          return null;
       }
 
@@ -503,7 +503,9 @@ namespace mrHelper.App.Forms
          else
          {
             labelTimeTrackingTrackedLabel.Text = "Total Time:";
-            labelTimeTrackingTrackedTime.Text = _timeTrackingManager.GetTotalTime(mrk.Value).ToString(@"hh\:mm\:ss");
+            TimeSpan? totalTime = _timeTrackingManager.GetTotalTime(mrk.Value);
+            labelTimeTrackingTrackedTime.Text =
+               !totalTime.HasValue ? "Loading..." : totalTime.Value.ToString(@"hh\:mm\:ss");
             buttonEditTime.Enabled = true;
          }
       }

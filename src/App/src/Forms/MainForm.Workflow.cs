@@ -294,6 +294,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestActions(true);
          updateMergeRequestDetails(mergeRequest);
          updateTimeTrackingMergeRequestDetails(mergeRequest);
+         updateTotalTime(getMergeRequestKey().Value);
 
          labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
 

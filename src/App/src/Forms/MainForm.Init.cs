@@ -290,31 +290,19 @@ namespace mrHelper.App.Forms
       private void createTimeTrackingManager()
       {
          _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
-         _timeTrackingManager.PreLoadTotalTime +=
-            () =>
-         {
-            updateTotalTime(null);
-            if (!isTrackingTime())
-            {
-               labelTimeTrackingTrackedLabel.Text = "Total Time:";
-               labelTimeTrackingTrackedTime.Text = "Loading...";
-            }
-
-            Trace.TraceInformation(String.Format("[MainForm] Loading total spent time"));
-         };
          _timeTrackingManager.PostLoadTotalTime +=
             (mrk) =>
          {
-            updateTotalTime(mrk);
-
-            Trace.TraceInformation(String.Format("[MainForm] Total spent time loaded"));
-         };
-         _timeTrackingManager.FailedLoadTotalTime +=
-            () =>
-         {
-            updateTotalTime(null);
-
-            Trace.TraceInformation(String.Format("[MainForm] Failed to load total spent time"));
+            // TODO Test case:
+            // 1. Select MR1
+            // 2. Edit time
+            // 3. Select MR2
+            // 4. Select MR1 - Should display updated time
+            MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+            if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
+            {
+               updateTotalTime(mrk);
+            }
          };
       }
    }

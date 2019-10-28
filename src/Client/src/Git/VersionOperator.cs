@@ -28,7 +28,7 @@ namespace mrHelper.Client.Git
          {
             return (List<Version>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Versions.LoadTaskAsync(new PageFilter())));
+                  Versions.LoadAllTaskAsync()));
          }
          catch (Exception ex)
          {
