@@ -68,7 +68,6 @@ namespace mrHelper.Client.Discussions
 
       async internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
       {
-         // TODO This is a copy/pasted CreateNoteAsync
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName, Settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {

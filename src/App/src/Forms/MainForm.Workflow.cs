@@ -342,6 +342,11 @@ namespace mrHelper.App.Forms
 
             enableCommitActions(true);
          }
+         else
+         {
+            disableComboBox(comboBoxLeftCommit, String.Empty);
+            disableComboBox(comboBoxRightCommit, String.Empty);
+         }
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
 

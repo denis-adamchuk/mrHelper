@@ -22,29 +22,31 @@ namespace mrHelper.Client.Updates
       public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings)
       {
-         Settings = settings;
-         Workflow = workflow;
-         WorkflowDetailsChecker = new WorkflowDetailsChecker();
-         ProjectWatcher = new ProjectWatcher();
-         Cache = new WorkflowDetailsCache();
-         Operator = new UpdateOperator(Settings);
+         Operator = new UpdateOperator(settings);
 
          Timer.Elapsed += onTimer;
          Timer.SynchronizingObject = synchronizeInvoke;
          Timer.Start();
 
-         Workflow.PostLoadHostProjects += (hostname, projects) =>
+         workflow.PostLoadHostProjects += (hostname, projects) =>
          {
-            Trace.TraceInformation(String.Format(
-               "[UpdateManager] Set hostname for updates to {0}, will update {1} projects", hostname, projects.Count));
-            _hostname = hostname;
-            _projects = projects;
+            // TODO Current version supports updates of projects of the most recent loaded host
+            if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
+            {
+               Cache = new WorkflowDetailsCache();
+
+               Trace.TraceInformation(String.Format(
+                  "[UpdateManager] Set hostname for updates to {0}, will trace updates in {1} projects",
+                  hostname, projects.Count));
+               _hostname = hostname;
+               _projects = projects;
+            }
          };
 
-         Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
+         workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
             Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
 
-         Workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
+         workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
             Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
       }
 
@@ -60,7 +62,7 @@ namespace mrHelper.Client.Updates
 
       public List<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
-         return Cache.Details.GetMergeRequests(projectKey);
+         return new List<MergeRequest>(Cache.Details.GetMergeRequests(projectKey));
       }
 
       /// <summary>
@@ -191,12 +193,10 @@ namespace mrHelper.Client.Updates
          };
 
       // TODO Change private properties to private fields across the solution
-      private Workflow.Workflow Workflow { get; }
-      private WorkflowDetailsCache Cache { get; }
-      private WorkflowDetailsChecker WorkflowDetailsChecker { get; }
-      private ProjectWatcher ProjectWatcher { get; }
-      private UserDefinedSettings Settings { get; }
-      private UpdateOperator Operator { get; }
+      private WorkflowDetailsCache Cache = new WorkflowDetailsCache();
+      private WorkflowDetailsChecker WorkflowDetailsChecker = new WorkflowDetailsChecker();
+      private ProjectWatcher ProjectWatcher = new ProjectWatcher();
+      private UpdateOperator Operator;
 
       private string _hostname;
       private List<Project> _projects;

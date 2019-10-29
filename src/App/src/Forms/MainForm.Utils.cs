@@ -1043,7 +1043,6 @@ namespace mrHelper.App.Forms
 
          if (updateHint.ReloadCurrent)
          {
-            // TODO silent git update caused by this event may coincide with PW update
             Trace.TraceInformation("[MainForm] Reloading current Merge Request");
 
             Debug.Assert(listViewMergeRequests.SelectedItems.Count > 0);

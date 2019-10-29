@@ -163,7 +163,6 @@ namespace mrHelper.App.Forms
 
                if (getHostName() != String.Empty)
                {
-                  // TODO Test this use case.
                   // Emulating a host switch here to trigger RevisionCacher to work at the new location
                   Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
                   await switchHostAsync(getHostName());
@@ -452,7 +451,6 @@ namespace mrHelper.App.Forms
 
       async private void ButtonReloadList_Click(object sender, EventArgs e)
       {
-         // TODO Test this thoroughly
          if (getHostName() != String.Empty)
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));

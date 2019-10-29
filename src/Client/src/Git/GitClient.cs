@@ -93,7 +93,7 @@ namespace mrHelper.Client.Git
          }
          _liteDescriptors.Clear();
          Updater.Dispose();
-         Disposed?.Invoke(this); // TODO Test this
+         Disposed?.Invoke(this);
       }
 
       /// <summary>
@@ -333,6 +333,7 @@ namespace mrHelper.Client.Git
             string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
             Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
                ProjectKey.ProjectName, arguments, status));
+            ExceptionHandlers.Handle(ex, "Git operation failed");
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw;
          }
@@ -371,6 +372,7 @@ namespace mrHelper.Client.Git
             string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
             Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
                ProjectKey.ProjectName, arguments, status));
+            ExceptionHandlers.Handle(ex, "Git operation failed");
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw;
          }
@@ -398,6 +400,7 @@ namespace mrHelper.Client.Git
             string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
             Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- {1} --  {0}",
                ProjectKey.ProjectName, status));
+            ExceptionHandlers.Handle(ex, "Git operation failed");
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw;
          }

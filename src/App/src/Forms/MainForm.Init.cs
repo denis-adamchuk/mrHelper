@@ -88,7 +88,7 @@ namespace mrHelper.App.Forms
 
                Trace.TraceInformation(String.Format("Custom action {0} completed", name));
 
-               // TODO This may be unneeded in general case but so far it is ok for current list of custom actions
+               // This may be unneeded in general case but so far it is ok for current list of custom actions
                await onStopTimer(true);
             };
             groupBoxActions.Controls.Add(button);
@@ -288,11 +288,6 @@ namespace mrHelper.App.Forms
          _timeTrackingManager.PostLoadTotalTime +=
             (mrk) =>
          {
-            // TODO Test case:
-            // 1. Select MR1
-            // 2. Edit time
-            // 3. Select MR2
-            // 4. Select MR1 - Should display updated time
             MergeRequestKey? currentMergeRequest = getMergeRequestKey();
             if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
             {

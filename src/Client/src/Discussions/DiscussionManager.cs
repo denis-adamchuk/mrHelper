@@ -28,8 +28,6 @@ namespace mrHelper.Client.Discussions
          _settings = settings;
          _operator = new DiscussionOperator(settings);
 
-         // TODO Add processing of host switch here
-
          workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
          {

@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Git;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using static mrHelper.Client.Git.Types;
@@ -34,14 +35,20 @@ namespace mrHelper.Client.Git
                _latestChanges.Keys.ToList().ForEach(x => x.Disposed -= onGitClientDisposed);
             }
 
-            _latestChanges = projects.ToDictionary(
-               x => getGitClient(new ProjectKey { HostName = hostname, ProjectName = x.Path_With_Namespace }),
-               x => DateTime.MinValue);
+            // TODO Current version supports updates of projects of the most recent loaded host
+            if (_latestChanges == null
+             || _latestChanges.Count == 0
+             || _latestChanges?.Keys.First().ProjectKey.HostName != hostname)
+            {
+               _latestChanges = projects.ToDictionary(
+                  x => getGitClient(new ProjectKey { HostName = hostname, ProjectName = x.Path_With_Namespace }),
+                  x => DateTime.MinValue);
 
-            Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Clients",
-               _latestChanges.Count()));
-            _latestChanges.Keys.ToList().ForEach(x => x.Updated += onGitClientUpdated);
-            _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onGitClientDisposed);
+               Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Clients",
+                  _latestChanges.Count()));
+               _latestChanges.Keys.ToList().ForEach(x => x.Updated += onGitClientUpdated);
+               _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onGitClientDisposed);
+            }
          };
 
          _synchronizeInvoke = synchronizeInvoke;
@@ -75,16 +82,19 @@ namespace mrHelper.Client.Git
                      newVersionsDetailed.Add(await _operator.LoadVersion(version, mrk));
                   }
 
-                  gatherArguments(newVersionsDetailed,
-                     out HashSet<DiffCacheKey> diffArgs,
-                     out HashSet<RevisionCacheKey> revisionArgs,
-                     out HashSet<ListOfRenamesCacheKey> renamesArgs);
+                  if (newVersionsDetailed.Count > 0)
+                  {
+                     Trace.TraceInformation(String.Format(
+                        "[RevisionCacher] Processing merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
+                        mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
 
-                  Trace.TraceInformation(String.Format(
-                     "[RevisionCacher] Processing merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
-                     mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
+                     gatherArguments(newVersionsDetailed,
+                        out HashSet<DiffCacheKey> diffArgs,
+                        out HashSet<RevisionCacheKey> revisionArgs,
+                        out HashSet<ListOfRenamesCacheKey> renamesArgs);
 
-                  await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                     await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                  }
                }
                _latestChanges[gitClient] = latestChange;
             }), null);
@@ -183,7 +193,14 @@ namespace mrHelper.Client.Git
                .Take(maxGitInParallel)
                .Select(x => func(x));
             remaining -= maxGitInParallel;
-            await Task.WhenAll(tasks);
+            try
+            {
+               await Task.WhenAll(tasks);
+            }
+            catch (GitOperationException)
+            {
+               // already handled
+            }
          }
       }
 

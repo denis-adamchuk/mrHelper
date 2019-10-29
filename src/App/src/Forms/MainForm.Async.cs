@@ -361,8 +361,8 @@ namespace mrHelper.App.Forms
          GitClient client = getGitClient(pk, false);
          if (client == null || client.DoesRequireClone())
          {
-            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository silently: {0}",
-               (client == null ? "client is null" : "must be cloned first")));
+            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",
+               pk.ProjectName, (client == null ? "client is null" : "must be cloned first")));
             _silentUpdateInProgress.Remove(pk);
             return;
          }
@@ -370,7 +370,8 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format(
             "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
 
-         // TODO what Project Checker is better here?
+         // Use Local Project Checker here because Remote Project Checker looks overkill.
+         // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
          IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker((dynamic)key);
          try
          {

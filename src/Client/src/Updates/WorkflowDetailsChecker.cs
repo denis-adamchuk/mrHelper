@@ -138,6 +138,8 @@ namespace mrHelper.Client.Updates
       private List<UpdatedMergeRequest> getMergeRequestUpdates(string hostname,
          TwoListDifference<MergeRequestWithProject> diff, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
+         // TODO This should also check if a merge request description or properties changed
+
          List<UpdatedMergeRequest> updates = new List<UpdatedMergeRequest>();
 
          foreach (MergeRequestWithProject mergeRequest in diff.SecondOnly)

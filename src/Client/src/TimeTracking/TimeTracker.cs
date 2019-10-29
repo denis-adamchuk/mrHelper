@@ -41,7 +41,7 @@ namespace mrHelper.Client.TimeTracking
 
             Trace.TraceInformation(String.Format(
                "[TimeTracker] Time tracking stopped. Sending {0} for MR IId {1} (project {2})",
-               span.ToString(), MergeRequestKey.IId, MergeRequestKey.ProjectKey.ProjectName));
+               span.ToString(@"hh\:mm\:ss"), MergeRequestKey.IId, MergeRequestKey.ProjectKey.ProjectName));
 
             await OnStopped(span, MergeRequestKey);
          }
