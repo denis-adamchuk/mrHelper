@@ -154,12 +154,22 @@ namespace mrHelper.Core.Git
          {
             if (!tcs.Task.IsCompleted)
             {
-               process.WaitForExit();
-               process.CancelOutputRead();
-               process.CancelErrorRead();
+               int exitcode = 0;
                try
                {
-                  checkGitExitCode(arguments, process.ExitCode, errors);
+                  process.WaitForExit();
+                  process.CancelOutputRead();
+                  process.CancelErrorRead();
+                  exitcode = process.ExitCode;
+               }
+               catch (InvalidOperationException)
+               {
+                  Debug.Assert(false);
+               }
+
+               try
+               {
+                  checkGitExitCode(arguments, exitcode, errors);
                   tcs.SetResult(new GitOutput { Output = output, Errors = errors, PID = -1 });
                }
                catch (Exception ex)
