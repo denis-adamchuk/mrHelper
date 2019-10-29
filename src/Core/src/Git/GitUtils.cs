@@ -201,20 +201,14 @@ namespace mrHelper.Core.Git
          {
             throw new GitOperationException(arguments, exitcode, errors);
          }
-         else if (errors.Count > 0)
+         else if (errors.Count > 0 && errors[0].StartsWith("fatal:"))
          {
-            // TODO When it happens?
-            Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
-                     arguments, String.Join("\n", errors)));
-            if (errors[0].StartsWith("fatal:"))
-            {
-               string reasons =
-                  "Possible reasons:\n"
-                  + "-Git repository is not up-to-date\n"
-                  + "-Given commit is no longer in the repository (force push?)";
-               string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
-               throw new GitObjectException(message, exitcode);
-            }
+            string reasons =
+               "Possible reasons:\n"
+               + "-Git repository is not up-to-date\n"
+               + "-Given commit is no longer in the repository (force push?)";
+            string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
+            throw new GitObjectException(message, exitcode);
          }
       }
 
