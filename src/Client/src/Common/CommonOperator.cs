@@ -47,7 +47,28 @@ namespace mrHelper.Client.Common
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
+               ExceptionHandlers.Handle(ex, "Cannot load versions from GitLab");
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
+      async internal static Task<Note> GetMostRecentUpdatedNoteAsync(GitLabClient client, string projectName, int iid)
+      {
+         try
+         {
+            List<Note> notes = (List<Note>)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectName).MergeRequests.Get(iid).
+                  Notes.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 },
+                                      new SortFilter { Ascending = false, OrderBy = "updated_at" })));
+            return notes.Count > 0 ? notes[0] : new Note();
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               ExceptionHandlers.Handle(ex, "Cannot load notes from GitLab");
                throw new OperatorException(ex);
             }
             throw;

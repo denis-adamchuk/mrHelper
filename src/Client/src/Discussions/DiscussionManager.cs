@@ -27,6 +27,9 @@ namespace mrHelper.Client.Discussions
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
+
+         // TODO Add processing of host switch here
+
          workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
          {
@@ -144,7 +147,7 @@ namespace mrHelper.Client.Discussions
          GitLabClient client =
             new GitLabClient(mrk.ProjectKey.HostName, _settings.GetAccessToken(mrk.ProjectKey.HostName));
          DateTime mergeRequestUpdatedAt =
-            (await CommonOperator.GetMergeRequestAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
+            (await CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
 
          if (_cachedDiscussions.ContainsKey(mrk) && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp)
          {
