@@ -164,6 +164,7 @@ namespace mrHelper.Core.Git
                }
                catch (InvalidOperationException)
                {
+                  // TODO When it happens?
                   Debug.Assert(false);
                }
 
@@ -202,6 +203,7 @@ namespace mrHelper.Core.Git
          }
          else if (errors.Count > 0)
          {
+            // TODO When it happens?
             Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
                      arguments, String.Join("\n", errors)));
             if (errors[0].StartsWith("fatal:"))

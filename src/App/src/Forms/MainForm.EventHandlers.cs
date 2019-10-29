@@ -452,6 +452,7 @@ namespace mrHelper.App.Forms
 
       async private void ButtonReloadList_Click(object sender, EventArgs e)
       {
+         // TODO Test this thoroughly
          if (getHostName() != String.Empty)
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));

@@ -178,7 +178,7 @@ namespace mrHelper.Client.Git
 
       async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<List<string>>> func)
       {
-         int maxGitInParallel = 10;
+         int maxGitInParallel = 5;
 
          int remaining = args.Count;
          while (remaining > 0)
