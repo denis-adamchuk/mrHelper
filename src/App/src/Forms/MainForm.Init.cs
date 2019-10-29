@@ -298,6 +298,9 @@ namespace mrHelper.App.Forms
             {
                updateTotalTime(mrk);
             }
+
+            // Update total time column in the table
+            listViewMergeRequests.Invalidate();
          };
       }
    }

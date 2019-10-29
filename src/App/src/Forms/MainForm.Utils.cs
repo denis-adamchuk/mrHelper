@@ -494,20 +494,31 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         labelTimeTrackingTrackedTime.Text = getTotalTimeAsText(mrk); ;
          if (!mrk.HasValue)
          {
             labelTimeTrackingTrackedLabel.Text = String.Empty;
-            labelTimeTrackingTrackedTime.Text = String.Empty;
             buttonEditTime.Enabled = false;
          }
          else
          {
             labelTimeTrackingTrackedLabel.Text = "Total Time:";
-            TimeSpan? totalTime = _timeTrackingManager.GetTotalTime(mrk.Value);
-            labelTimeTrackingTrackedTime.Text =
-               !totalTime.HasValue ? "Loading..." : totalTime.Value.ToString(@"hh\:mm\:ss");
             buttonEditTime.Enabled = true;
          }
+
+         // Update total time column in the table
+         listViewMergeRequests.Invalidate();
+      }
+
+      private string getTotalTimeAsText(MergeRequestKey? mrk)
+      {
+         if (!mrk.HasValue)
+         {
+            return String.Empty;
+         }
+
+         TimeSpan? totalTime = _timeTrackingManager.GetTotalTime(mrk.Value);
+         return !totalTime.HasValue ? "Loading..." : totalTime.Value.ToString(@"hh\:mm\:ss");
       }
 
       private void enableMergeRequestActions(bool enabled)
@@ -837,6 +848,7 @@ namespace mrHelper.App.Forms
                String.Empty, // Column Title (stub)
                String.Empty, // Column Labels (stub)
                String.Empty, // Column Jira (stub)
+               String.Empty, // Column Total Time (stub)
             }, group));
          setListViewItemTag(item, fmk);
       }
@@ -844,20 +856,23 @@ namespace mrHelper.App.Forms
       private void setListViewItemTag(ListViewItem item, FullMergeRequestKey fmk)
       {
          item.Tag = fmk;
+         MergeRequest mr = fmk.MergeRequest;
 
-         string author = String.Format("{0}\n({1}{2})",
-            fmk.MergeRequest.Author.Name, authorLabelPrefix, fmk.MergeRequest.Author.Username);
+         string author = String.Format("{0}\n({1}{2})", mr.Author.Name, authorLabelPrefix, mr.Author.Username);
 
          string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
-         string jiraTask = getJiraTask(fmk.MergeRequest);
+         string jiraTask = getJiraTask(mr);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.IId.ToString(), () => fmk.MergeRequest.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                          () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => fmk.MergeRequest.Title,          () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(fmk.MergeRequest),  () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                        () => jiraTaskUrl);
+         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(), () => mr.Web_Url);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,            () => String.Empty);
+         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,          () => String.Empty);
+         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),  () => String.Empty);
+         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,          () => jiraTaskUrl);
+         item.SubItems[5].Tag = new ListViewSubItemInfo(
+            () => getTotalTimeAsText(new MergeRequestKey(fmk.HostName, fmk.Project.Path_With_Namespace, mr.IId)),
+            () => String.Empty);
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
