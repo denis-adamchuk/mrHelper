@@ -42,7 +42,7 @@ namespace mrHelper.Client.Workflow
    {
       public Workflow(UserDefinedSettings settings)
       {
-         Settings = settings;
+         _settings = settings;
       }
 
       async public Task<bool> LoadCurrentUserAsync(string hostname)
@@ -109,7 +109,7 @@ namespace mrHelper.Client.Workflow
          if (mergeRequestIId == 0)
          {
             PreLoadSingleMergeRequest?.Invoke(0);
-            Operator?.CancelAsync();
+            _operator?.CancelAsync();
             return false;
          }
 
@@ -119,15 +119,15 @@ namespace mrHelper.Client.Workflow
 
       async public Task CancelAsync()
       {
-         if (Operator != null)
+         if (_operator != null)
          {
-            await Operator.CancelAsync();
+            await _operator.CancelAsync();
          }
       }
 
       public void Dispose()
       {
-         Operator?.Dispose();
+         _operator?.Dispose();
       }
 
       public event Action<string> PreLoadCurrentUser;
@@ -160,20 +160,20 @@ namespace mrHelper.Client.Workflow
 
       private bool checkParameters(string hostname, string projectname = "")
       {
-         Operator?.CancelAsync();
+         _operator?.CancelAsync();
 
          if (hostname == String.Empty)
          {
             return false;
          }
 
-         string token = Settings.GetAccessToken(hostname);
+         string token = _settings.GetAccessToken(hostname);
          if (token == String.Empty)
          {
             throw new UnknownHostException(hostname);
          }
 
-         Operator = new WorkflowDataOperator(hostname, token);
+         _operator = new WorkflowDataOperator(hostname, token);
 
          List<Project> enabledProjects = getEnabledProjects(hostname);
          bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
@@ -198,7 +198,7 @@ namespace mrHelper.Client.Workflow
          User currentUser;
          try
          {
-            currentUser = await Operator.GetCurrentUserAsync();
+            currentUser = await _operator.GetCurrentUserAsync();
          }
          catch (OperatorException ex)
          {
@@ -222,7 +222,7 @@ namespace mrHelper.Client.Workflow
          List<Project> projects;
          try
          {
-            projects = hasEnabledProjects ?  enabledProjects : await Operator.GetProjectsAsync(Settings.ShowPublicOnly);
+            projects = hasEnabledProjects ?  enabledProjects : await _operator.GetProjectsAsync(_settings.ShowPublicOnly);
          }
          catch (OperatorException ex)
          {
@@ -245,7 +245,7 @@ namespace mrHelper.Client.Workflow
          List<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await Operator.GetMergeRequestsAsync(projectName);
+            mergeRequests = await _operator.GetMergeRequestsAsync(projectName);
          }
          catch (OperatorException ex)
          {
@@ -266,7 +266,7 @@ namespace mrHelper.Client.Workflow
          MergeRequest mergeRequest = new MergeRequest();
          try
          {
-            mergeRequest = await Operator.GetMergeRequestAsync(projectName, mergeRequestIId);
+            mergeRequest = await _operator.GetMergeRequestAsync(projectName, mergeRequestIId);
          }
          catch (OperatorException ex)
          {
@@ -288,7 +288,7 @@ namespace mrHelper.Client.Workflow
          List<Commit> commits;
          try
          {
-            commits = await Operator.GetCommitsAsync(projectName, mergeRequest.IId);
+            commits = await _operator.GetCommitsAsync(projectName, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
@@ -309,7 +309,7 @@ namespace mrHelper.Client.Workflow
          Version latestVersion;
          try
          {
-            latestVersion = await Operator.GetLatestVersionAsync(projectname, mergeRequest.IId);
+            latestVersion = await _operator.GetLatestVersionAsync(projectname, mergeRequest.IId);
          }
          catch (OperatorException ex)
          {
@@ -367,8 +367,8 @@ namespace mrHelper.Client.Workflow
          return null;
       }
 
-      private UserDefinedSettings Settings { get; }
-      private WorkflowDataOperator Operator { get; set; }
+      private readonly UserDefinedSettings _settings;
+      private WorkflowDataOperator _operator;
 
 #pragma warning disable 0649
       private struct HostInProjectsFile

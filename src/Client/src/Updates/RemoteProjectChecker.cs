@@ -17,8 +17,8 @@ namespace mrHelper.Client.Updates
    {
       internal RemoteProjectChecker(MergeRequestKey mrk, UpdateOperator updateOperator)
       {
-         MergeRequestKey = mrk;
-         Operator = updateOperator;
+         _mergeRequestKey = mrk;
+         _operator = updateOperator;
       }
 
       /// <summary>
@@ -30,7 +30,7 @@ namespace mrHelper.Client.Updates
          DateTime dateTime = DateTime.MinValue;
          try
          {
-            Version version = await Operator.GetLatestVersionAsync(MergeRequestKey);
+            Version version = await _operator.GetLatestVersionAsync(_mergeRequestKey);
             dateTime = version.Created_At;
          }
          catch (OperatorException ex)
@@ -43,11 +43,11 @@ namespace mrHelper.Client.Updates
       public override string ToString()
       {
          return String.Format("RemoteProjectChecker. MRK: HostName={0}, ProjectName={1}, IId={2}",
-            MergeRequestKey.ProjectKey.HostName, MergeRequestKey.ProjectKey.ProjectName, MergeRequestKey.IId);
+            _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId);
       }
 
-      private MergeRequestKey MergeRequestKey { get; }
-      private UpdateOperator Operator { get; }
+      private MergeRequestKey _mergeRequestKey;
+      private readonly UpdateOperator _operator;
    }
 }
 

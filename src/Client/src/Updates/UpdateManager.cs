@@ -22,18 +22,18 @@ namespace mrHelper.Client.Updates
       public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings)
       {
-         Operator = new UpdateOperator(settings);
+         _operator = new UpdateOperator(settings);
 
-         Timer.Elapsed += onTimer;
-         Timer.SynchronizingObject = synchronizeInvoke;
-         Timer.Start();
+         _timer.Elapsed += onTimer;
+         _timer.SynchronizingObject = synchronizeInvoke;
+         _timer.Start();
 
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
             // TODO Current version supports updates of projects of the most recent loaded host
             if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
             {
-               Cache = new WorkflowDetailsCache();
+               _cache = new WorkflowDetailsCache();
 
                Trace.TraceInformation(String.Format(
                   "[UpdateManager] Set hostname for updates to {0}, will trace updates in {1} projects",
@@ -44,25 +44,25 @@ namespace mrHelper.Client.Updates
          };
 
          workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
-            Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
+            _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
 
          workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
-            Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
+            _cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
       }
 
       public void Dispose()
       {
-         Timer.Dispose();
+         _timer.Dispose();
       }
 
       public IProjectWatcher GetProjectWatcher()
       {
-         return ProjectWatcher;
+         return _projectWatcher;
       }
 
       public List<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
-         return new List<MergeRequest>(Cache.Details.GetMergeRequests(projectKey));
+         return new List<MergeRequest>(_cache.Details.GetMergeRequests(projectKey));
       }
 
       /// <summary>
@@ -70,7 +70,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
-         return new LocalProjectChecker(mrk, Cache.Details.Clone());
+         return new LocalProjectChecker(mrk, _cache.Details.Clone());
       }
 
       /// <summary>
@@ -78,14 +78,14 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public IInstantProjectChecker GetLocalProjectChecker(ProjectKey pk)
       {
-         if (Cache.Details.GetMergeRequests(pk).Count == 0)
+         if (_cache.Details.GetMergeRequests(pk).Count == 0)
          {
             return GetLocalProjectChecker(default(MergeRequestKey));
          }
 
-         MergeRequestKey mrk = Cache.Details.GetMergeRequests(pk).
+         MergeRequestKey mrk = _cache.Details.GetMergeRequests(pk).
             Select(x => new MergeRequestKey(pk.HostName, pk.ProjectName, x.IId)).
-            OrderByDescending(x => Cache.Details.GetLatestChangeTimestamp(x)).First();
+            OrderByDescending(x => _cache.Details.GetLatestChangeTimestamp(x)).First();
          return GetLocalProjectChecker(mrk);
       }
 
@@ -94,7 +94,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
       {
-         return new RemoteProjectChecker(mrk, Operator);
+         return new RemoteProjectChecker(mrk, _operator);
       }
 
       /// <summary>
@@ -108,13 +108,13 @@ namespace mrHelper.Client.Updates
             return;
          }
 
-         IWorkflowDetails oldDetails = Cache.Details.Clone();
+         IWorkflowDetails oldDetails = _cache.Details.Clone();
 
          await loadDataAndUpdateCacheAsync(_hostname, _projects);
 
-         List<UpdatedMergeRequest> updates = WorkflowDetailsChecker.CheckForUpdates(_hostname, _projects,
-            oldDetails, Cache.Details);
-         ProjectWatcher.ProcessUpdates(updates, _hostname, Cache.Details);
+         List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
+            oldDetails, _cache.Details);
+         _projectWatcher.ProcessUpdates(updates, _hostname, _cache.Details);
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
@@ -148,10 +148,10 @@ namespace mrHelper.Client.Updates
                }
             }
 
-            Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
+            _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
             foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
             {
-               Cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
+               _cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
             }
          }
       }
@@ -160,7 +160,7 @@ namespace mrHelper.Client.Updates
       {
          try
          {
-            return await Operator.GetMergeRequestsAsync(hostname, projectname);
+            return await _operator.GetMergeRequestsAsync(hostname, projectname);
          }
          catch (OperatorException)
          {
@@ -175,7 +175,7 @@ namespace mrHelper.Client.Updates
       {
          try
          {
-            return await Operator.GetLatestVersionAsync(mrk);
+            return await _operator.GetLatestVersionAsync(mrk);
          }
          catch (OperatorException)
          {
@@ -187,16 +187,15 @@ namespace mrHelper.Client.Updates
          return null;
       }
 
-      private System.Timers.Timer Timer { get; } = new System.Timers.Timer
+      private System.Timers.Timer _timer = new System.Timers.Timer
          {
             Interval = 5 * 60000 // five minutes in ms
          };
 
-      // TODO Change private properties to private fields across the solution
-      private WorkflowDetailsCache Cache = new WorkflowDetailsCache();
-      private WorkflowDetailsChecker WorkflowDetailsChecker = new WorkflowDetailsChecker();
-      private ProjectWatcher ProjectWatcher = new ProjectWatcher();
-      private UpdateOperator Operator;
+      private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
+      private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();
+      private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
+      private readonly UpdateOperator _operator;
 
       private string _hostname;
       private List<Project> _projects;

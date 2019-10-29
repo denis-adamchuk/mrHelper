@@ -170,7 +170,7 @@ namespace mrHelper.Client.Git
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
-      private DateTime _latestChange { get; set; } = DateTime.MinValue;
+      private DateTime _latestChange = DateTime.MinValue;
 
       private bool _updating = false;
       private bool _subscribed = false;

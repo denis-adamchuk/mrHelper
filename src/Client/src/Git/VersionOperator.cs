@@ -64,7 +64,7 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private UserDefinedSettings _settings { get; }
+      private readonly UserDefinedSettings _settings;
    }
 }
 

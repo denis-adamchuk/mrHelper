@@ -19,19 +19,19 @@ namespace mrHelper.Client.Workflow
    {
       internal WorkflowDataOperator(string host, string token)
       {
-         Client = new GitLabClient(host, token);
+         _client = new GitLabClient(host, token);
       }
 
       public void Dispose()
       {
-         Client.Dispose();
+         _client.Dispose();
       }
 
       async internal Task<User> GetCurrentUserAsync()
       {
          try
          {
-            return (User)(await Client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
+            return (User)(await _client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
          }
          catch (Exception ex)
          {
@@ -48,7 +48,7 @@ namespace mrHelper.Client.Workflow
       {
          try
          {
-            return (List<Project>)(await Client.RunAsync(async (gl) =>
+            return (List<Project>)(await _client.RunAsync(async (gl) =>
                await gl.Projects.LoadAllTaskAsync(new ProjectsFilter { PublicOnly = publicOnly })));
          }
          catch (Exception ex)
@@ -66,7 +66,7 @@ namespace mrHelper.Client.Workflow
       {
          try
          {
-            return (Project)(await Client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
+            return (Project)(await _client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
          }
          catch (Exception ex)
          {
@@ -81,19 +81,19 @@ namespace mrHelper.Client.Workflow
 
       internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName)
       {
-         return CommonOperator.GetMergeRequestsAsync(Client, projectName);
+         return CommonOperator.GetMergeRequestsAsync(_client, projectName);
       }
 
       internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
       {
-         return CommonOperator.GetMergeRequestAsync(Client, projectName, iid);
+         return CommonOperator.GetMergeRequestAsync(_client, projectName, iid);
       }
 
       async internal Task<List<Commit>> GetCommitsAsync(string projectName, int iid)
       {
          try
          {
-            return (List<Commit>)(await Client.RunAsync(async (gl) =>
+            return (List<Commit>)(await _client.RunAsync(async (gl) =>
                await gl.Projects.Get(projectName).MergeRequests.Get(iid).Commits.LoadAllTaskAsync()));
          }
          catch (Exception ex)
@@ -109,15 +109,15 @@ namespace mrHelper.Client.Workflow
 
       internal Task<Version> GetLatestVersionAsync(string projectName, int iid)
       {
-         return CommonOperator.GetLatestVersionAsync(Client, projectName, iid);
+         return CommonOperator.GetLatestVersionAsync(_client, projectName, iid);
       }
 
       public Task CancelAsync()
       {
-         return Client.CancelAsync();
+         return _client.CancelAsync();
       }
 
-      private GitLabClient Client { get; }
+      private readonly GitLabClient _client;
    }
 }
 

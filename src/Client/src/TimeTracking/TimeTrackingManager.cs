@@ -17,8 +17,8 @@ namespace mrHelper.Client.TimeTracking
    {
       public TimeTrackingManager(UserDefinedSettings settings, Workflow.Workflow workflow, DiscussionManager discussionManager)
       {
-         Settings = settings;
-         TimeTrackingOperator = new TimeTrackingOperator(Settings);
+         _settings = settings;
+         _operator = new TimeTrackingOperator(_settings);
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          discussionManager.PreLoadDiscussions += () => PreLoadTotalTime?.Invoke();
          discussionManager.PostLoadDiscussions += (mrk, discussions) => processDiscussions(mrk, discussions);
@@ -31,19 +31,19 @@ namespace mrHelper.Client.TimeTracking
 
       public TimeSpan? GetTotalTime(MergeRequestKey mrk)
       {
-         return MergeRequestTimes.ContainsKey(mrk) ? MergeRequestTimes[mrk] : new Nullable<TimeSpan>();
+         return _times.ContainsKey(mrk) ? _times[mrk] : new Nullable<TimeSpan>();
       }
 
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         await TimeTrackingOperator.AddSpanAsync(add, span, mrk);
+         await _operator.AddSpanAsync(add, span, mrk);
          if (add)
          {
-            MergeRequestTimes[mrk] += span;
+            _times[mrk] += span;
          }
          else
          {
-            MergeRequestTimes[mrk] -= span;
+            _times[mrk] -= span;
          }
       }
 
@@ -91,13 +91,13 @@ namespace mrHelper.Client.TimeTracking
             }
          }
 
-         MergeRequestTimes[mrk] = span;
+         _times[mrk] = span;
          PostLoadTotalTime?.Invoke(mrk);
       }
 
-      private UserDefinedSettings Settings { get; }
-      private TimeTrackingOperator TimeTrackingOperator { get; }
-      private Dictionary<MergeRequestKey, TimeSpan> MergeRequestTimes { get; } =
+      private readonly UserDefinedSettings _settings;
+      private readonly TimeTrackingOperator _operator;
+      private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
          new Dictionary<MergeRequestKey, TimeSpan>();
       private User _currentUser;
    }

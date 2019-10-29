@@ -21,8 +21,8 @@ namespace mrHelper.Client.Updates
       internal void UpdateMergeRequests(string hostname, string projectname, List<MergeRequest> mergeRequests)
       {
          ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = projectname };
-         List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
-         InternalDetails.SetMergeRequests(key, mergeRequests);
+         List<MergeRequest> previouslyCachedMergeRequests = _internalDetails.GetMergeRequests(key);
+         _internalDetails.SetMergeRequests(key, mergeRequests);
 
          if (mergeRequests.Count != previouslyCachedMergeRequests.Count)
          {
@@ -39,8 +39,8 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void UpdateLatestVersion(MergeRequestKey mrk, Version latestVersion)
       {
-         DateTime previouslyCachedTimestamp = InternalDetails.GetLatestChangeTimestamp(mrk);
-         InternalDetails.SetLatestChangeTimestamp(mrk, latestVersion.Created_At);
+         DateTime previouslyCachedTimestamp = _internalDetails.GetLatestChangeTimestamp(mrk);
+         _internalDetails.SetLatestChangeTimestamp(mrk, latestVersion.Created_At);
 
          if (previouslyCachedTimestamp > latestVersion.Created_At)
          {
@@ -58,7 +58,7 @@ namespace mrHelper.Client.Updates
          }
       }
 
-      internal IWorkflowDetails Details { get { return InternalDetails; } }
+      internal IWorkflowDetails Details { get { return _internalDetails; } }
 
       private void cleanupOldRecords(ProjectKey key, List<MergeRequest> oldRecords, List<MergeRequest> newRecords)
       {
@@ -66,12 +66,12 @@ namespace mrHelper.Client.Updates
          {
             if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
             {
-               InternalDetails.CleanupTimestamps(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
+               _internalDetails.CleanupTimestamps(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
             }
          }
       }
 
-      private WorkflowDetails InternalDetails { get; } = new WorkflowDetails();
+      private readonly WorkflowDetails _internalDetails = new WorkflowDetails();
    }
 }
 

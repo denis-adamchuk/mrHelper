@@ -15,13 +15,13 @@ namespace mrHelper.Client.TimeTracking
    {
       internal TimeTrackingOperator(UserDefinedSettings settings)
       {
-         Settings = settings;
+         _settings = settings;
       }
 
       async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            Settings.GetAccessToken(mrk.ProjectKey.HostName));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -44,7 +44,7 @@ namespace mrHelper.Client.TimeTracking
          }
       }
 
-      private UserDefinedSettings Settings { get; }
+      private readonly UserDefinedSettings _settings;
    }
 }
 

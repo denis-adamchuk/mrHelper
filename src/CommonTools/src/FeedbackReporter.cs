@@ -20,9 +20,9 @@ namespace mrHelper.CommonTools
    {
       public FeedbackReporter(Action preCollectLogFiles, Action postCollectLogFiles, string logPath)
       {
-         PreCollectLogFiles = preCollectLogFiles;
-         PostCollectLogFiles = postCollectLogFiles;
-         LogPath = logPath;
+         _preCollectLogFiles = preCollectLogFiles;
+         _postCollectLogFiles = postCollectLogFiles;
+         _logPath = logPath;
       }
 
       public void SendEMail(string subject, string body, string recipient, string logarchivename)
@@ -56,14 +56,14 @@ namespace mrHelper.CommonTools
             return;
          }
 
-         PreCollectLogFiles?.Invoke();
+         _preCollectLogFiles?.Invoke();
          try
          {
-            ZipFile.CreateFromDirectory(LogPath, logarchivepath);
+            ZipFile.CreateFromDirectory(_logPath, logarchivepath);
          }
          finally
          {
-            PostCollectLogFiles?.Invoke();
+            _postCollectLogFiles?.Invoke();
          }
       }
 
@@ -88,9 +88,9 @@ namespace mrHelper.CommonTools
          message.Display();
       }
 
-      private string LogPath { get; }
-      private readonly Action PreCollectLogFiles;
-      private readonly Action PostCollectLogFiles;
+      private string _logPath;
+      private readonly Action _preCollectLogFiles;
+      private readonly Action _postCollectLogFiles;
    }
 }
 

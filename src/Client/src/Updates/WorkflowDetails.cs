@@ -15,14 +15,14 @@ namespace mrHelper.Client.Updates
    {
       internal WorkflowDetails()
       {
-         MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
-         Changes = new Dictionary<MergeRequestKey, DateTime>();
+         _mergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
+         _changes = new Dictionary<MergeRequestKey, DateTime>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
       {
-         MergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details.MergeRequests);
-         Changes = new Dictionary<MergeRequestKey, DateTime>(details.Changes);
+         _mergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details._mergeRequests);
+         _changes = new Dictionary<MergeRequestKey, DateTime>(details._changes);
       }
 
       /// <summary>
@@ -38,7 +38,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public List<MergeRequest> GetMergeRequests(ProjectKey key)
       {
-         return MergeRequests.ContainsKey(key) ? MergeRequests[key] : new List<MergeRequest>();
+         return _mergeRequests.ContainsKey(key) ? _mergeRequests[key] : new List<MergeRequest>();
       }
 
       /// <summary>
@@ -46,7 +46,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void SetMergeRequests(ProjectKey key, List<MergeRequest> mergeRequests)
       {
-         MergeRequests[key] = mergeRequests;
+         _mergeRequests[key] = mergeRequests;
       }
 
       /// <summary>
@@ -54,7 +54,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       public DateTime GetLatestChangeTimestamp(MergeRequestKey mrk)
       {
-         return Changes.ContainsKey(mrk) ? Changes[mrk] : DateTime.MinValue;
+         return _changes.ContainsKey(mrk) ? _changes[mrk] : DateTime.MinValue;
       }
 
       /// <summary>
@@ -62,7 +62,7 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void SetLatestChangeTimestamp(MergeRequestKey mrk, DateTime timestamp)
       {
-         Changes[mrk] = timestamp;
+         _changes[mrk] = timestamp;
       }
 
       /// <summary>
@@ -70,14 +70,14 @@ namespace mrHelper.Client.Updates
       /// </summary>
       internal void CleanupTimestamps(MergeRequestKey mrk)
       {
-         Changes.Remove(mrk);
+         _changes.Remove(mrk);
       }
 
       // maps unique project id to list of merge requests
-      private Dictionary<ProjectKey, List<MergeRequest>> MergeRequests;
+      private readonly Dictionary<ProjectKey, List<MergeRequest>> _mergeRequests;
 
       // maps Merge Request to a timestamp of its latest version
-      private readonly Dictionary<MergeRequestKey, DateTime> Changes;
+      private readonly Dictionary<MergeRequestKey, DateTime> _changes;
    }
 }
 
