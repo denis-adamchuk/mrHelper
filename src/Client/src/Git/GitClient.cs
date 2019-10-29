@@ -87,6 +87,11 @@ namespace mrHelper.Client.Git
       {
          Trace.TraceInformation(String.Format("[GitClient] Disposing GitClient at path {0}", Path));
          CancelAsyncOperation();
+         foreach (GitAsyncTaskDescriptor descriptor in _liteDescriptors)
+         {
+            cancelDescriptor(descriptor);
+         }
+         _liteDescriptors.Clear();
          Updater.Dispose();
          Disposed?.Invoke(this); // TODO Test this
       }
@@ -118,16 +123,21 @@ namespace mrHelper.Client.Git
       /// </summary>
       public void CancelAsyncOperation()
       {
-         if (_descriptor == null)
+         cancelDescriptor(_descriptor);
+      }
+
+      private void cancelDescriptor(GitAsyncTaskDescriptor descriptor)
+      {
+         if (descriptor == null)
          {
             return;
          }
 
-         Process p = _descriptor.Process;
-         _descriptor.Cancelled = true;
+         Process p = descriptor.Process;
+         descriptor.Cancelled = true;
          try
          {
-            GitUtils.cancelGit(_descriptor.Process);
+            GitUtils.cancelGit(descriptor.Process);
          }
          catch (InvalidOperationException)
          {
@@ -311,9 +321,12 @@ namespace mrHelper.Client.Git
 
       async private Task<GitOutput> executeLiteGitCommandAsync(string arguments)
       {
+         GitAsyncTaskDescriptor descriptor = null;
          try
          {
-            return await GitUtils.gitAsync(arguments, null).TaskCompletionSource.Task;
+            descriptor = GitUtils.gitAsync(arguments, null);
+            _liteDescriptors.Add(descriptor);
+            return await descriptor.TaskCompletionSource.Task;
          }
          catch (GitOperationException ex)
          {
@@ -322,6 +335,10 @@ namespace mrHelper.Client.Git
                ProjectKey.ProjectName, arguments, status));
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw;
+         }
+         finally
+         {
+            _liteDescriptors.Remove(descriptor);
          }
       }
 
@@ -404,6 +421,7 @@ namespace mrHelper.Client.Git
          new Dictionary<ListOfRenamesCacheKey, List<string>>();
 
       private GitAsyncTaskDescriptor _descriptor;
+      private List<GitAsyncTaskDescriptor> _liteDescriptors = new List<GitAsyncTaskDescriptor>();
 
       private Action<string> _onProgressChange;
    }
