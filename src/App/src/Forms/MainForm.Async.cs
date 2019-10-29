@@ -370,6 +370,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format(
             "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
 
+         // TODO what Project Checker is better here?
          IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker((dynamic)key);
          try
          {
@@ -377,12 +378,12 @@ namespace mrHelper.App.Forms
          }
          catch (GitOperationException)
          {
-            Trace.TraceInformation("[MainForm] Silent update cancelled");
+            Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} cancelled", pk.ProjectName));
             _silentUpdateInProgress.Remove(pk);
             return;
          }
 
-         Trace.TraceInformation("[MainForm] Silent update finished");
+         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
          _silentUpdateInProgress.Remove(pk);
       }
 

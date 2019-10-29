@@ -24,9 +24,12 @@ namespace mrHelper.Client.Updates
          List<MergeRequest> previouslyCachedMergeRequests = InternalDetails.GetMergeRequests(key);
          InternalDetails.SetMergeRequests(key, mergeRequests);
 
-         Trace.TraceInformation(String.Format(
-            "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
+         if (mergeRequests.Count != previouslyCachedMergeRequests.Count)
+         {
+            Trace.TraceInformation(String.Format(
+               "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                projectname, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count));
+         }
 
          cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
       }
@@ -45,11 +48,14 @@ namespace mrHelper.Client.Updates
             Trace.TraceWarning("[WorkflowDetailsCache] Latest version is older than a previous one");
          }
 
-         Trace.TraceInformation(String.Format(
-            "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
+         if (latestVersion.Created_At != previouslyCachedTimestamp)
+         {
+            Trace.TraceInformation(String.Format(
+               "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
                mrk.IId,
                latestVersion.Created_At.ToLocalTime().ToString(),
                previouslyCachedTimestamp.ToLocalTime().ToString()));
+         }
       }
 
       internal IWorkflowDetails Details { get { return InternalDetails; } }

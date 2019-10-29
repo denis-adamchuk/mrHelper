@@ -230,7 +230,8 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Project loaded. Loaded {0} merge requests", mergeRequests.Count));
+            "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
+           project.Path_With_Namespace, mergeRequests.Count));
       }
 
       private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)

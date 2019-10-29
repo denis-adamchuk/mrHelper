@@ -42,16 +42,10 @@ namespace mrHelper.Client.Updates
          };
 
          Workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
-         {
-            Trace.TraceInformation("[UpdateManager] Processing loaded project merge requests");
             Cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
-         };
 
          Workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
-         {
-            Trace.TraceInformation("[UpdateManager] Processing loaded latest version");
             Cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
-         };
       }
 
       public void Dispose()

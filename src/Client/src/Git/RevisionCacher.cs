@@ -61,9 +61,6 @@ namespace mrHelper.Client.Git
             async () =>
             {
                ProjectKey projectKey = gitClient.ProjectKey;
-               Trace.TraceInformation(String.Format("[RevisionCacher] Processing update of project {0} at host {1}",
-                  projectKey.ProjectName, projectKey.HostName));
-
                DateTime prevLatestChange = _latestChanges[gitClient];
                foreach (MergeRequest mergeRequest in _getMergeRequests(projectKey))
                {
@@ -84,7 +81,7 @@ namespace mrHelper.Client.Git
                      out HashSet<ListOfRenamesCacheKey> renamesArgs);
 
                   Trace.TraceInformation(String.Format(
-                     "[RevisionCacher] Caching revisions for merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
+                     "[RevisionCacher] Processing merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
                      mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
 
                   await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
@@ -162,10 +159,6 @@ namespace mrHelper.Client.Git
          HashSet<RevisionCacheKey> revisionArgs,
          HashSet<ListOfRenamesCacheKey> renamesArgs)
       {
-         Trace.TraceInformation(String.Format(
-            "[RevisionCacher] Caching records: {0} git diff, {1} git show, {2} git rename",
-            diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
-
          await doCacheSingleSetAsync(diffArgs,
             x => gitRepository.DiffAsync(x.sha1, x.sha2, x.filename1, x.filename2, x.context));
          await doCacheSingleSetAsync(revisionArgs,
@@ -173,7 +166,9 @@ namespace mrHelper.Client.Git
          await doCacheSingleSetAsync(renamesArgs,
             x => gitRepository.GetListOfRenamesAsync(x.sha1, x.sha2));
 
-         Trace.TraceInformation(String.Format("[RevisionCacher] Records cached"));
+         Trace.TraceInformation(String.Format(
+            "[RevisionCacher] Cached git results: {0} git diff, {1} git show, {2} git rename",
+            diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
       }
 
       async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<List<string>>> func)
