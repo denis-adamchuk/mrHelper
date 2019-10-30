@@ -88,7 +88,7 @@ namespace mrHelper.App.Forms
 
                Trace.TraceInformation(String.Format("Custom action {0} completed", name));
 
-               // TODO This may be unneeded in general case but so far it is ok for current list of custom actions
+               // This may be unneeded in general case but so far it is ok for current list of custom actions
                await onStopTimer(true);
             };
             groupBoxActions.Controls.Add(button);
@@ -208,7 +208,6 @@ namespace mrHelper.App.Forms
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _discussionManager = new DiscussionManager(Program.Settings);
          _gitClientUpdater = new GitClientInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
             (status) =>
@@ -219,6 +218,11 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
+         // Revision Cacher subscribes to Workflow notifications
+         _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
+            (projectKey) => getGitClient(projectKey, false),
+            (projectKey) => _updateManager.GetMergeRequests(projectKey).ToArray());
+
          // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
 
@@ -227,7 +231,11 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
 
          // Update manager indirectly subscribes to Workflow
-         subscribeToUpdates();
+         _updateManager = new UpdateManager(_workflow, this, Program.Settings);
+         _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
+
+         // Discussions Manager subscribers to Workflow and UpdateManager notifications
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _updateManager, this);
 
          // Time Tracking Manager requires Workflow
          createTimeTrackingManager();
@@ -274,18 +282,21 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void subscribeToUpdates()
-      {
-         _updateManager = new UpdateManager(_workflow, this, Program.Settings);
-         _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
-      }
-
       private void createTimeTrackingManager()
       {
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow);
-         _timeTrackingManager.PreLoadTotalTime += () => onLoadTotalTime();
-         _timeTrackingManager.PostLoadTotalTime += (e) => onTotalTimeLoaded(e);
-         _timeTrackingManager.FailedLoadTotalTime += () => onFailedLoadTotalTime();
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
+         _timeTrackingManager.PostLoadTotalTime +=
+            (mrk) =>
+         {
+            MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+            if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
+            {
+               updateTotalTime(mrk);
+            }
+
+            // Update total time column in the table
+            listViewMergeRequests.Invalidate();
+         };
       }
    }
 }

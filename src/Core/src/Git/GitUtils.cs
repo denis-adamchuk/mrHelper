@@ -34,7 +34,7 @@ namespace mrHelper.Core.Git
 
       public class GitAsyncTaskDescriptor
       {
-         public TaskCompletionSource<int> TaskCompletionSource;
+         public TaskCompletionSource<GitOutput> TaskCompletionSource;
          public Process Process;
          public bool Cancelled;
       }
@@ -91,22 +91,7 @@ namespace mrHelper.Core.Git
                }
             }
 
-            if (exitcode != 0)
-            {
-               throw new GitOperationException(arguments, exitcode, errors);
-            }
-            else if (errors.Count > 0)
-            {
-               Trace.TraceWarning(String.Format("\"git {0}\" returned exit code 0, but stderr is not empty:\n{1}",
-                  arguments, String.Join("\n", errors)));
-
-               if (errors[0].StartsWith("fatal:"))
-               {
-                  string reasons = "Possible reasons:\n-Git repository is not up-to-date\n-Given commit is no longer in the repository (force push?)";
-                  string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
-                  throw new GitObjectException(message, exitcode);
-               }
-            }
+            checkGitExitCode(arguments, exitcode, errors);
             return new GitOutput { Output = output, Errors = errors, PID = process.HasExited ? -1 : process.Id };
          }
       }
@@ -162,22 +147,36 @@ namespace mrHelper.Core.Git
             }
          };
 
-         TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
+         TaskCompletionSource<GitOutput> tcs = new TaskCompletionSource<GitOutput>();
 
          process.Exited +=
             (sender, args) =>
          {
+            process.EnableRaisingEvents = false;
             if (!tcs.Task.IsCompleted)
             {
-               process.CancelOutputRead();
-               process.CancelErrorRead();
-               if (process.ExitCode == 0)
+               int exitcode = 0;
+               try
                {
-                  tcs.SetResult(process.ExitCode);
+                  process.WaitForExit();
+                  process.CancelOutputRead();
+                  process.CancelErrorRead();
+                  exitcode = process.ExitCode;
                }
-               else
+               catch (InvalidOperationException)
                {
-                  tcs.SetException(new GitOperationException(arguments, process.ExitCode, errors));
+                  // TODO When it happens?
+                  Debug.Assert(false);
+               }
+
+               try
+               {
+                  checkGitExitCode(arguments, exitcode, errors);
+                  tcs.SetResult(new GitOutput { Output = output, Errors = errors, PID = -1 });
+               }
+               catch (Exception ex)
+               {
+                  tcs.SetException(ex);
                }
                process.Dispose();
             }
@@ -195,6 +194,23 @@ namespace mrHelper.Core.Git
             Process = process
          };
          return d;
+      }
+
+      static private void checkGitExitCode(string arguments, int exitcode, List<string> errors)
+      {
+         if (exitcode != 0)
+         {
+            throw new GitOperationException(arguments, exitcode, errors);
+         }
+         else if (errors.Count > 0 && errors[0].StartsWith("fatal:"))
+         {
+            string reasons =
+               "Possible reasons:\n"
+               + "-Git repository is not up-to-date\n"
+               + "-Given commit is no longer in the repository (force push?)";
+            string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
+            throw new GitObjectException(message, exitcode);
+         }
       }
 
       /// <summary>

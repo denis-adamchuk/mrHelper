@@ -5,30 +5,43 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Updates;
 using mrHelper.Core.Git;
+using static mrHelper.Core.Git.GitUtils;
+using static mrHelper.Client.Git.Types;
 
 namespace mrHelper.Client.Git
 {
+   // TODO Split GitClient and IGitRepository
+
    /// <summary>
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
    /// </summary>
    public class GitClient : IGitRepository, IDisposable
    {
+      // Host Name and Project Name
+      internal ProjectKey ProjectKey { get; }
+
       // Path of this git repository
       public string Path { get; }
 
       // Object which keeps this git repository up-to-date
       public GitClientUpdater Updater { get; }
 
+      public event Action<GitClient, DateTime> Updated;
+      public event Action<GitClient> Disposed;
+
+      private static readonly int cancellationExitCode = 130;
+
       /// <summary>
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal GitClient(string hostname, string projectname, string path, IProjectWatcher projectWatcher,
+      internal GitClient(ProjectKey projectKey, string path, IProjectWatcher projectWatcher,
          ISynchronizeInvoke synchronizeInvoke)
       {
          if (!canClone(path) && !isValidRepository(path))
@@ -36,11 +49,10 @@ namespace mrHelper.Client.Git
             throw new ArgumentException("Path \"" + path + "\" already exists but it is not a valid git repository");
          }
 
-         _hostName = hostname;
-         _projectName = projectname;
+         ProjectKey = projectKey;
          Path = path;
          Updater = new GitClientUpdater(projectWatcher,
-            async (reportProgress) =>
+            async (reportProgress, latestChange) =>
          {
             if (_descriptor != null)
             {
@@ -50,31 +62,41 @@ namespace mrHelper.Client.Git
 
             if (canClone(Path))
             {
-               string arguments = "clone --progress " + _hostName + "/" + _projectName + " " + Path;
+               string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
                await executeGitCommandAsync(arguments, reportProgress);
-               return;
+            }
+            else
+            {
+               await (Task)changeCurrentDirectoryAndRun(() =>
+               {
+                  string arguments = "fetch --progress";
+                  return executeGitCommandAsync(arguments, reportProgress);
+               }, Path);
             }
 
-            await (Task)changeCurrentDirectoryAndRun(() =>
-            {
-               string arguments = "fetch --progress";
-               return executeGitCommandAsync(arguments, reportProgress);
-            }, Path);
+            Updated?.Invoke(this, latestChange);
          },
-            (hostNameToCheck, projectNameToCheck) =>
-         {
-            return _hostName == hostNameToCheck && _projectName == projectNameToCheck;
-         }, synchronizeInvoke);
+         projectKeyToCheck => ProjectKey.Equals(projectKeyToCheck),
+         synchronizeInvoke);
 
          Trace.TraceInformation(String.Format("[GitClient] Created GitClient at path {0} for host {1} and project {2}",
-            path, hostname, projectname));
+            path, ProjectKey.HostName, ProjectKey.ProjectName));
       }
 
       public void Dispose()
       {
+         _isDisposed = true;
          Trace.TraceInformation(String.Format("[GitClient] Disposing GitClient at path {0}", Path));
          CancelAsyncOperation();
+         while (_liteDescriptors.Count > 0)
+         {
+            if (!cancelDescriptor(_liteDescriptors[0]))
+            {
+               _liteDescriptors.RemoveAt(0);
+            }
+         }
          Updater.Dispose();
+         Disposed?.Invoke(this);
       }
 
       /// <summary>
@@ -104,36 +126,41 @@ namespace mrHelper.Client.Git
       /// </summary>
       public void CancelAsyncOperation()
       {
-         if (_descriptor == null)
+         cancelDescriptor(_descriptor);
+      }
+
+      private bool cancelDescriptor(GitAsyncTaskDescriptor descriptor)
+      {
+         if (descriptor == null)
          {
-            return;
+            return false;
          }
 
-         Process p = _descriptor.Process;
-         _descriptor.Cancelled = true;
+         Process p = descriptor.Process;
+         descriptor.Cancelled = true;
          try
          {
-            GitUtils.cancelGit(_descriptor.Process);
+            GitUtils.cancelGit(descriptor.Process);
+            return true;
          }
          catch (InvalidOperationException)
          {
             // already exited
+            return false;
          }
-
-         p.Dispose();
+         finally
+         {
+            p.Dispose();
+         }
       }
 
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
-         DiffCacheKey key = new DiffCacheKey
-         {
-            sha1 = leftcommit,
-            sha2 = rightcommit,
-            filename1 = filename1,
-            filename2 = filename2,
-            context = context
-         };
+         filename1 = fixupFilename(filename1);
+         filename2 = fixupFilename(filename2);
 
+         DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
+            filename1 = filename1, filename2 = filename2, context = context };
          if (_cachedDiffs.ContainsKey(key))
          {
             return _cachedDiffs[key];
@@ -151,23 +178,72 @@ namespace mrHelper.Client.Git
          return result;
       }
 
+      async public Task<List<string>> DiffAsync(string leftcommit, string rightcommit,
+         string filename1, string filename2, int context)
+      {
+         filename1 = fixupFilename(filename1);
+         filename2 = fixupFilename(filename2);
+
+         DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
+            filename1 = filename1, filename2 = filename2, context = context };
+         if (_cachedDiffs.ContainsKey(key))
+         {
+            return _cachedDiffs[key];
+         }
+
+         GitOutput gitOutput = await (Task<GitOutput>)(changeCurrentDirectoryAndRun(() =>
+         {
+            string arguments =
+               "diff -U" + context.ToString() + " " + leftcommit + " " + rightcommit
+               + " -- " + filename1 + " " + filename2;
+            return executeLiteGitCommandAsync(arguments);
+         }, Path));
+
+         _cachedDiffs[key] = gitOutput.Output;
+         return gitOutput.Output;
+      }
+
       public List<string> GetListOfRenames(string leftcommit, string rightcommit)
       {
-         return (List<string>)changeCurrentDirectoryAndRun(() =>
+         ListOfRenamesCacheKey key = new ListOfRenamesCacheKey { sha1 = leftcommit, sha2 = rightcommit };
+         if (_cachedListOfRenames.ContainsKey(key))
+         {
+            return _cachedListOfRenames[key];
+         }
+
+         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
             return GitUtils.git(arguments).Output;
          }, Path);
+
+         _cachedListOfRenames[key] = result;
+         return result;
+      }
+
+      async public Task<List<string>> GetListOfRenamesAsync(string leftcommit, string rightcommit)
+      {
+         ListOfRenamesCacheKey key = new ListOfRenamesCacheKey { sha1 = leftcommit, sha2 = rightcommit };
+         if (_cachedListOfRenames.ContainsKey(key))
+         {
+            return _cachedListOfRenames[key];
+         }
+
+         GitOutput gitOutput = await (Task<GitOutput>)changeCurrentDirectoryAndRun(() =>
+         {
+            string arguments = "diff " + leftcommit + " " + rightcommit + " --numstat --diff-filter=R";
+            return executeLiteGitCommandAsync(arguments);
+         }, Path);
+
+         _cachedListOfRenames[key] = gitOutput.Output;
+         return gitOutput.Output;
       }
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
-         RevisionCacheKey key = new RevisionCacheKey
-         {
-            filename = filename,
-            sha = sha
-         };
+         filename = fixupFilename(filename);
 
+         RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
          if (_cachedRevisions.ContainsKey(key))
          {
             return _cachedRevisions[key];
@@ -181,6 +257,26 @@ namespace mrHelper.Client.Git
 
          _cachedRevisions[key] = result;
          return result;
+      }
+
+      async public Task<List<string>> ShowFileByRevisionAsync(string filename, string sha)
+      {
+         filename = fixupFilename(filename);
+
+         RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
+         if (_cachedRevisions.ContainsKey(key))
+         {
+            return _cachedRevisions[key];
+         }
+
+         GitOutput gitOutput = await (Task<GitOutput>)changeCurrentDirectoryAndRun(() =>
+         {
+            string arguments = "show " + sha + ":" + filename;
+            return executeLiteGitCommandAsync(arguments);
+         }, Path);
+
+         _cachedRevisions[key] = gitOutput.Output;
+         return gitOutput.Output;
       }
 
       /// <summary>
@@ -230,8 +326,45 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task executeGitCommandAsync(string arguments, Action<string> onProgressChange)
+      async private Task<GitOutput> executeLiteGitCommandAsync(string arguments)
       {
+         if (_isDisposed)
+         {
+            throw new ObjectDisposedException(String.Format("GitClient {0}", ProjectKey.ProjectName));
+         }
+
+         GitAsyncTaskDescriptor descriptor = null;
+         try
+         {
+            descriptor = GitUtils.gitAsync(arguments, null);
+            _liteDescriptors.Add(descriptor);
+            return await descriptor.TaskCompletionSource.Task;
+         }
+         catch (GitOperationException ex)
+         {
+            string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
+               ProjectKey.ProjectName, arguments, status));
+            ExceptionHandlers.Handle(ex, "Git operation failed");
+            ex.Cancelled = ex.ExitCode == cancellationExitCode;
+            throw;
+         }
+         finally
+         {
+            _liteDescriptors.Remove(descriptor);
+         }
+      }
+
+      async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange)
+      {
+         if (_isDisposed)
+         {
+            throw new ObjectDisposedException(String.Format("GitClient {0}", ProjectKey.ProjectName));
+         }
+
+         // If _descriptor is non-empty, it must be a non-exclusive operation, otherwise pickup should have caught it
+         Debug.Assert(_descriptor == null);
+
          _onProgressChange = onProgressChange;
 
          Progress<string> progress = new Progress<string>();
@@ -241,20 +374,22 @@ namespace mrHelper.Client.Git
          };
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
-            _projectName, arguments));
+            ProjectKey.ProjectName, arguments));
          _descriptor = GitUtils.gitAsync(arguments, progress);
+
          try
          {
-            await _descriptor.TaskCompletionSource.Task;
+            GitOutput gitOutput = await _descriptor.TaskCompletionSource.Task;
             Trace.TraceInformation(String.Format("[GitClient] async operation -- end --  {0}: {1}",
-               _projectName, arguments));
+               ProjectKey.ProjectName, arguments));
+            return gitOutput;
          }
          catch (GitOperationException ex)
          {
-            int cancellationExitCode = 130;
             string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
             Trace.TraceInformation(String.Format("[GitClient] async operation -- {2} --  {0}: {1}",
-               _projectName, arguments, status));
+               ProjectKey.ProjectName, arguments, status));
+            ExceptionHandlers.Handle(ex, "Git operation failed");
             ex.Cancelled = ex.ExitCode == cancellationExitCode;
             throw;
          }
@@ -266,43 +401,48 @@ namespace mrHelper.Client.Git
 
       async private Task pickupGitCommandAsync(Action<string> onProgressChange)
       {
-         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}", _projectName));
+         Debug.Assert(_descriptor != null);
+
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- start -- {0}",
+            ProjectKey.ProjectName));
 
          _onProgressChange = onProgressChange;
 
-         while (_descriptor != null)
+         try
          {
-            await Task.Delay(50);
+            await _descriptor.TaskCompletionSource.Task;
+         }
+         catch (GitOperationException ex)
+         {
+            string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+            Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- {1} --  {0}",
+               ProjectKey.ProjectName, status));
+            ExceptionHandlers.Handle(ex, "Git operation failed");
+            ex.Cancelled = ex.ExitCode == cancellationExitCode;
+            throw;
          }
 
-         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}", _projectName));
+         Trace.TraceInformation(String.Format("[GitClient] async operation -- picking up -- end -- {0}",
+            ProjectKey.ProjectName));
       }
 
-      private struct DiffCacheKey
+      private string fixupFilename(string filename)
       {
-         public string sha1;
-         public string sha2;
-         public string filename1;
-         public string filename2;
-         public int context;
+         return filename.Contains(' ') ? '"' + filename + '"' : filename;
       }
 
       private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs =
          new Dictionary<DiffCacheKey, List<string>>();
 
-      private struct RevisionCacheKey
-      {
-         public string sha;
-         public string filename;
-      }
-
       private readonly Dictionary<RevisionCacheKey, List<string>> _cachedRevisions =
          new Dictionary<RevisionCacheKey, List<string>>();
 
-      private GitUtils.GitAsyncTaskDescriptor _descriptor;
+      private readonly Dictionary<ListOfRenamesCacheKey, List<string>> _cachedListOfRenames =
+         new Dictionary<ListOfRenamesCacheKey, List<string>>();
 
-      private string _hostName { get; }
-      private string _projectName { get; }
+      private bool _isDisposed = false;
+      private GitAsyncTaskDescriptor _descriptor;
+      private List<GitAsyncTaskDescriptor> _liteDescriptors = new List<GitAsyncTaskDescriptor>();
 
       private Action<string> _onProgressChange;
    }

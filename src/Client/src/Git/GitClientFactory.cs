@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.Git
@@ -27,8 +28,8 @@ namespace mrHelper.Client.Git
          }
 
          ParentFolder = parentFolder;
-         ProjectWatcher = projectWatcher;
-         SynchronizeInvoke = synchronizeInvoke;
+         _projectWatcher = projectWatcher;
+         _synchronizeInvoke = synchronizeInvoke;
 
          Trace.TraceInformation(String.Format("[GitClientFactory] Created GitClientFactory for parentFolder {0}",
             parentFolder));
@@ -42,14 +43,14 @@ namespace mrHelper.Client.Git
       {
          string path = Path.Combine(ParentFolder, projectName.Split('/')[1]);
 
-         Key key = new Key{ HostName = hostName, ProjectName = projectName };
-         if (Clients.ContainsKey(key))
+         ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
+         if (_clients.ContainsKey(key))
          {
-            return Clients[key];
+            return _clients[key];
          }
 
-         GitClient client = new GitClient(hostName, projectName, path, ProjectWatcher, SynchronizeInvoke);
-         Clients[key] = client;
+         GitClient client = new GitClient(key, path, _projectWatcher, _synchronizeInvoke);
+         _clients[key] = client;
          return client;
       }
 
@@ -62,22 +63,16 @@ namespace mrHelper.Client.Git
 
       private void disposeClients()
       {
-         foreach (KeyValuePair<Key, GitClient> client in Clients)
+         foreach (KeyValuePair<ProjectKey, GitClient> client in _clients)
          {
             client.Value.Dispose();
          }
-         Clients.Clear();
+         _clients.Clear();
       }
 
-      private struct Key
-      {
-         public string HostName;
-         public string ProjectName;
-      }
-      private Dictionary<Key, GitClient> Clients { get; set; } = new Dictionary<Key, GitClient>();
-
-      private IProjectWatcher ProjectWatcher { get; }
-      private ISynchronizeInvoke SynchronizeInvoke { get; }
+      private readonly Dictionary<ProjectKey, GitClient> _clients = new Dictionary<ProjectKey, GitClient>();
+      private readonly IProjectWatcher _projectWatcher;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
    }
 }
 

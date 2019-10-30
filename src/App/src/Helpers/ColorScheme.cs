@@ -27,7 +27,7 @@ namespace mrHelper.App.Helpers
       /// </summary>
       internal ColorScheme(string filename, ExpressionResolver expressionResolver)
       {
-         ExpressionResolver = expressionResolver;
+         _expressionResolver = expressionResolver;
 
          if (!System.IO.File.Exists(filename))
          {
@@ -81,7 +81,7 @@ namespace mrHelper.App.Helpers
       {
          foreach (KeyValuePair<string, Color> color in _colors)
          {
-            string resolvedKey = ExpressionResolver.Resolve(color.Key);
+            string resolvedKey = _expressionResolver.Resolve(color.Key);
             KeyValuePair<string, Color> keyValuePair =
                new KeyValuePair<string, Color>(resolvedKey, color.Value);
             yield return keyValuePair;
@@ -97,7 +97,7 @@ namespace mrHelper.App.Helpers
       {
          foreach (KeyValuePair<string, Color> color in _colors)
          {
-            string resolvedKey = ExpressionResolver.Resolve(color.Key);
+            string resolvedKey = _expressionResolver.Resolve(color.Key);
             if (name == resolvedKey)
             {
                return found(color.Value);
@@ -114,7 +114,7 @@ namespace mrHelper.App.Helpers
 
       private readonly Dictionary<string, Color> _colors = new Dictionary<string, Color>();
 
-      private ExpressionResolver ExpressionResolver { get; }
+      private readonly ExpressionResolver _expressionResolver;
    }
 }
 

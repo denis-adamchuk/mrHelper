@@ -26,7 +26,7 @@ namespace mrHelper.Client.Updates
             {
                Trace.TraceInformation(
                   String.Format("[ProjectWatcher] Updating project: Host {0}, Name {1}, TimeStamp {2}",
-                     projectUpdate.HostName, projectUpdate.ProjectName,
+                     projectUpdate.ProjectKey.HostName, projectUpdate.ProjectKey.ProjectName,
                      projectUpdate.Timestamp.ToLocalTime().ToString()));
             }
             OnProjectUpdate?.Invoke(projectUpdates);
@@ -56,7 +56,7 @@ namespace mrHelper.Client.Updates
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectName == mergeRequest.Project.Path_With_Namespace)
+               if (projectUpdates[iUpdate].ProjectKey.ProjectName == mergeRequest.Project.Path_With_Namespace)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }
@@ -71,8 +71,11 @@ namespace mrHelper.Client.Updates
             projectUpdates.Add(
                new ProjectUpdate
                {
-                  HostName = hostname,
-                  ProjectName = mergeRequest.Project.Path_With_Namespace,
+                  ProjectKey = new ProjectKey
+                  {
+                     HostName = hostname,
+                     ProjectName = mergeRequest.Project.Path_With_Namespace
+                  },
                   Timestamp = updateTimestamp
                });
          }

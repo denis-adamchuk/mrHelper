@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace mrHelper.Common.Interfaces
 {
@@ -9,10 +10,13 @@ namespace mrHelper.Common.Interfaces
    public interface IGitRepository
    {
       List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context);
-
-      List<string> GetListOfRenames(string leftcommit, string rightcommit);
+      Task<List<string>> DiffAsync(string leftcommit, string rightcommit, string filename1, string filename2, int context);
 
       List<string> ShowFileByRevision(string filename, string sha);
+      Task<List<string>> ShowFileByRevisionAsync(string filename, string sha);
+
+      List<string> GetListOfRenames(string leftcommit, string rightcommit);
+      Task<List<string>> GetListOfRenamesAsync(string leftcommit, string rightcommit);
 
       string Path { get; }
    }

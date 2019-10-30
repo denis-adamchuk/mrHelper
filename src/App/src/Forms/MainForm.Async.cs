@@ -65,8 +65,7 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-                  ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+                  Debug.Assert(ex is GitOperationException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return;
@@ -195,8 +194,7 @@ namespace mrHelper.App.Forms
                }
                else if (!(ex is RepeatOperationException))
                {
-                  Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-                  ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+                  Debug.Assert(ex is GitOperationException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                }
@@ -361,8 +359,8 @@ namespace mrHelper.App.Forms
          GitClient client = getGitClient(pk, false);
          if (client == null || client.DoesRequireClone())
          {
-            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository silently: {0}",
-               (client == null ? "client is null" : "must be cloned first")));
+            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",
+               pk.ProjectName, (client == null ? "client is null" : "must be cloned first")));
             _silentUpdateInProgress.Remove(pk);
             return;
          }
@@ -370,6 +368,8 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format(
             "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
 
+         // Use Local Project Checker here because Remote Project Checker looks overkill.
+         // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
          IInstantProjectChecker instantChecker = _updateManager.GetLocalProjectChecker((dynamic)key);
          try
          {
@@ -377,12 +377,12 @@ namespace mrHelper.App.Forms
          }
          catch (GitOperationException)
          {
-            Trace.TraceInformation("[MainForm] Silent update cancelled");
+            Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} cancelled", pk.ProjectName));
             _silentUpdateInProgress.Remove(pk);
             return;
          }
 
-         Trace.TraceInformation("[MainForm] Silent update finished");
+         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
          _silentUpdateInProgress.Remove(pk);
       }
 

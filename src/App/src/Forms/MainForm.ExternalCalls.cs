@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
          DiffCallHandler handler;
          try
          {
-            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, Program.Settings);
+            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, _discussionManager);
          }
          catch (ArgumentException ex)
          {
@@ -200,7 +200,7 @@ namespace mrHelper.App.Forms
          else
          {
             reportErrorOnConnect(url, String.Format(
-               "Current version supports connection to URL for Open WIP merge requests of projects listed in {0} only. ",
+               "Current version supports connection to URL for Open merge requests of projects listed in {0} only. ",
                mrHelper.Common.Constants.Constants.ProjectListFileName), null, false);
          }
       }

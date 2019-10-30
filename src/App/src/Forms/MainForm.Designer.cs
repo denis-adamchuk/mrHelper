@@ -19,6 +19,7 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+         _discussionManager?.Dispose();
          _checkForUpdatesTimer?.Dispose();
          _updateManager?.Dispose();
          _gitClientFactory?.Dispose();
@@ -81,6 +82,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.panel2 = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
@@ -560,7 +562,8 @@ namespace mrHelper.App.Forms
             this.columnHeaderAuthor,
             this.columnHeaderTitle,
             this.columnHeaderLabels,
-            this.columnHeaderJira});
+            this.columnHeaderJira,
+            this.columnHeaderTotalTime});
          this.listViewMergeRequests.FullRowSelect = true;
          this.listViewMergeRequests.GridLines = true;
          this.listViewMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -603,6 +606,11 @@ namespace mrHelper.App.Forms
          // 
          this.columnHeaderJira.Text = "Jira";
          this.columnHeaderJira.Width = 80;
+         // 
+         // columnHeaderTotalTime
+         // 
+         this.columnHeaderTotalTime.Text = "Total Time";
+         this.columnHeaderTotalTime.Width = 70;
          // 
          // checkBoxLabels
          // 
@@ -960,6 +968,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.LinkLabel linkLabelNewVersion;
       private System.Windows.Forms.Panel panel3;
       private System.Windows.Forms.LinkLabel linkLabelSendFeedback;
+      private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
    }
 }
 

@@ -18,6 +18,8 @@ namespace mrHelper.Common.Constants
 
       public static string BugReportLogArchiveName => String.Format(
          "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampFilenameFormat));
+
+      public static int FullContextSize = 20000;
    }
 }
 

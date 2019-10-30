@@ -143,7 +143,7 @@ namespace mrHelper.App.Forms
          this.Close();
       }
 
-      private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
+      async private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
       {
          localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
@@ -160,6 +160,13 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = "Parent folder for git repositories changed";
                Trace.TraceInformation(String.Format("[MainForm] Parent folder changed to {0}",
                   newFolder));
+
+               if (getHostName() != String.Empty)
+               {
+                  // Emulating a host switch here to trigger RevisionCacher to work at the new location
+                  Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
+                  await switchHostAsync(getHostName());
+               }
             }
          }
       }
@@ -244,7 +251,17 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+            if (isSelected && e.ColumnIndex == 3)
+            {
+               using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest)))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
+               }
+            }
+            else
+            {
+               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+            }
          }
       }
 

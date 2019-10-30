@@ -36,7 +36,7 @@ namespace mrHelper.Client.Persistence
          return serializer.Serialize(_state);
       }
 
-      private Dictionary<string, object> _state = new Dictionary<string, object>();
+      private readonly Dictionary<string, object> _state = new Dictionary<string, object>();
    }
 }
 

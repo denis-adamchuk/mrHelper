@@ -17,8 +17,8 @@ namespace mrHelper.Client.Git
       /// <summary>
       /// Bind to the specific GitClient object
       /// </summary>
-      internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, Task> onUpdate,
-         Func<string, string, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
+      internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, DateTime, Task> onUpdate,
+         Func<ProjectKey, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
       {
          _onUpdate = onUpdate;
          _isMyProject = isMyProject;
@@ -98,13 +98,13 @@ namespace mrHelper.Client.Git
          DateTime updateTimestamp = DateTime.MinValue;
          foreach (ProjectUpdate update in updates)
          {
-            if (_isMyProject(update.HostName, update.ProjectName))
+            if (_isMyProject(update.ProjectKey))
             {
                needUpdateGitClient = true;
                updateTimestamp = update.Timestamp;
                Trace.TraceInformation(String.Format(
                   "[GitClientUpdater] Auto-updating git repository {0}, update timestamp {1}",
-                     update.ProjectName, updateTimestamp.ToLocalTime().ToString()));
+                     update.ProjectKey.ProjectName, updateTimestamp.ToLocalTime().ToString()));
                break;
             }
          }
@@ -134,7 +134,7 @@ namespace mrHelper.Client.Git
       {
          if (newLatestChange > _latestChange)
          {
-            await doUpdate(onProgressChange);
+            await doUpdate(onProgressChange, newLatestChange);
 
             _latestChange = newLatestChange;
 
@@ -152,11 +152,11 @@ namespace mrHelper.Client.Git
          }
       }
 
-      async private Task doUpdate(Action<string> onProgressChange)
+      async private Task doUpdate(Action<string> onProgressChange, DateTime latestChange)
       {
          try
          {
-            await _onUpdate(onProgressChange);
+            await _onUpdate(onProgressChange, latestChange);
          }
          catch (GitOperationException ex)
          {
@@ -165,12 +165,12 @@ namespace mrHelper.Client.Git
          }
       }
 
-      private readonly Func<Action<string>, Task> _onUpdate;
-      private readonly Func<string, string, bool> _isMyProject;
+      private readonly Func<Action<string>, DateTime, Task> _onUpdate;
+      private readonly Func<ProjectKey, bool> _isMyProject;
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
-      private DateTime _latestChange { get; set; } = DateTime.MinValue;
+      private DateTime _latestChange = DateTime.MinValue;
 
       private bool _updating = false;
       private bool _subscribed = false;

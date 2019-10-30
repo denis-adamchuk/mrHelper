@@ -101,6 +101,13 @@ namespace mrHelper.App.Controls
                onStartEditNote(textBox);
             }
          }
+         else if (e.KeyCode == Keys.Enter && !textBox.ReadOnly)
+         {
+            if (Control.ModifierKeys == Keys.Control)
+            {
+               await onSubmitNewBodyAsync(textBox);
+            }
+         }
          else if (e.KeyCode == Keys.F4)
          {
             if (!Discussion.Individual_Note)
@@ -214,7 +221,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
@@ -234,7 +241,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
@@ -251,7 +258,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         textBox.ReadOnly = true; // prevent submitting body modifications in the current handler
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          await onToggleResolveDiscussionAsync();
       }
@@ -540,7 +547,6 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-
       private static int getTextBoxPreferredHeight(TextBoxNoWheel textBox)
       {
          var numberOfLines = SendMessage(textBox.CachedHandle, EM_GETLINECOUNT, 0, 0);
@@ -674,12 +680,22 @@ namespace mrHelper.App.Controls
       private void onStartEditNote(TextBox textBox)
       {
          textBox.ReadOnly = false;
+         textBox.BackColor = Color.White;
          textBox.Focus();
+      }
+
+      private void stopEdit(TextBox textBox)
+      {
+         textBox.ReadOnly = true;
+         if (_textboxesNotes.Contains(textBox))
+         {
+            textBox.BackColor = getNoteColor((DiscussionNote)textBox.Tag);
+         }
       }
 
       private void onCancelEditNote(TextBox textBox)
       {
-         textBox.ReadOnly = true;
+         stopEdit(textBox);
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          textBox.Text = note.Body.Replace("\n", "\r\n");
@@ -687,7 +703,7 @@ namespace mrHelper.App.Controls
 
       async private Task onSubmitNewBodyAsync(TextBox textBox)
       {
-         textBox.ReadOnly = true;
+         stopEdit(textBox);
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          if (textBox.Text == note.Body)

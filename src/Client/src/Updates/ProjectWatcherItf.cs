@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
+using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Updates
 {
    public struct ProjectUpdate
    {
-      public string HostName;
-      public string ProjectName;
+      public ProjectKey ProjectKey;
 
       /// <summary>
       /// Timestamp of an event within the given project that caused this update.

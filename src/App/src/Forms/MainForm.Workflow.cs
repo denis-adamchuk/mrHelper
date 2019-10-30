@@ -49,7 +49,7 @@ namespace mrHelper.App.Forms
 
          _workflow.PostLoadAllMergeRequests += (hostname, projects) => onAllMergeRequestsLoaded(hostname, projects);
 
-         _workflow.PrelLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
+         _workflow.PreLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
          _workflow.PostLoadSingleMergeRequest += (_, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
          _workflow.FailedLoadSingleMergeRequest += () => onFailedLoadSingleMergeRequest();
 
@@ -154,6 +154,8 @@ namespace mrHelper.App.Forms
             currentUser.Id.ToString(), currentUser.Name, currentUser.Username));
       }
 
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
       private void onLoadHostProjects(string hostname)
       {
          if (hostname != String.Empty)
@@ -188,6 +190,8 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count));
       }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       private void onLoadAllMergeRequests()
       {
@@ -226,7 +230,8 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Project loaded. Loaded {0} merge requests", mergeRequests.Count));
+            "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
+           project.Path_With_Namespace, mergeRequests.Count));
       }
 
       private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)
@@ -290,6 +295,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestActions(true);
          updateMergeRequestDetails(mergeRequest);
          updateTimeTrackingMergeRequestDetails(mergeRequest);
+         updateTotalTime(getMergeRequestKey().Value);
 
          labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
 
@@ -336,6 +342,11 @@ namespace mrHelper.App.Forms
 
             enableCommitActions(true);
          }
+         else
+         {
+            disableComboBox(comboBoxLeftCommit, String.Empty);
+            disableComboBox(comboBoxRightCommit, String.Empty);
+         }
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
 
@@ -344,35 +355,7 @@ namespace mrHelper.App.Forms
          scheduleSilentUpdate(new MergeRequestKey(hostname, projectname, mergeRequest.IId));
       }
 
-      private void onLoadTotalTime()
-      {
-         updateTotalTime(null);
-         if (!isTrackingTime())
-         {
-            labelTimeTrackingTrackedLabel.Text = "Total Time:";
-            labelTimeTrackingTrackedTime.Text = "Loading...";
-         }
-
-         labelWorkflowStatus.Text = "Loading total spent time";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading total spent time"));
-      }
-
-      private void onFailedLoadTotalTime()
-      {
-         updateTotalTime(null);
-         labelWorkflowStatus.Text = "Failed to load total spent time";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load total spent time"));
-      }
-
-      private void onTotalTimeLoaded(MergeRequestKey mrk)
-      {
-         updateTotalTime(mrk);
-         labelWorkflowStatus.Text = "Total spent time loaded";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Total spent time loaded"));
-      }
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       private void disableAllUIControls(bool clearListView)
       {
@@ -387,7 +370,6 @@ namespace mrHelper.App.Forms
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
       }
-
    }
 }
 

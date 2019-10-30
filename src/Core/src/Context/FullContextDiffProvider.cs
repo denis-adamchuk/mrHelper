@@ -24,8 +24,6 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class FullContextDiffProvider
    {
-      private static readonly int maxDiffContext = 20000;
-
       public FullContextDiffProvider(IGitRepository gitRepository)
       {
          _gitRepository = gitRepository;
@@ -42,7 +40,8 @@ namespace mrHelper.Core.Context
             Left = new SparsedList<string>(),
             Right = new SparsedList<string>()
          };
-         List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName, maxDiffContext);
+         List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName,
+            mrHelper.Common.Constants.Constants.FullContextSize);
          if (fullDiff.Count == 0)
          {
             Trace.TraceWarning(String.Format(
