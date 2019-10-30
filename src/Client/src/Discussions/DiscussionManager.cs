@@ -43,6 +43,12 @@ namespace mrHelper.Client.Discussions
                });
 
             scheduleUpdate(keys);
+
+            MergeRequestKey[] toRemove = _cachedDiscussions.Keys.Where(
+               x => x.ProjectKey.HostName == hostname
+                 && x.ProjectKey.ProjectName == project.Path_With_Namespace
+                 && !mergeRequests.Any(y => x.IId == y.IId)).ToArray();
+            cleanup(toRemove);
          };
 
          updateManager.OnUpdate +=
@@ -64,6 +70,16 @@ namespace mrHelper.Client.Discussions
 
                scheduleUpdate(newMergeRequests);
             }
+
+            IEnumerable<MergeRequestKey> closedMergeRequests = updates
+               .Where(x => x.UpdateKind == UpdateKind.Closed)
+               .Select(x => new MergeRequestKey
+               {
+                  ProjectKey = new ProjectKey { HostName = x.HostName, ProjectName = x.Project.Path_With_Namespace },
+                  IId = x.MergeRequest.IId
+               });
+
+            cleanup(closedMergeRequests);
          };
 
          _synchronizeInvoke = synchronizeInvoke;
@@ -79,14 +95,14 @@ namespace mrHelper.Client.Discussions
 
       async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
-         if (Updating.Contains(mrk))
+         if (_updating.Contains(mrk))
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Waiting for completion of updating discussions for MR: Host={0}, Project={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
          }
 
-         while (Updating.Contains(mrk))
+         while (_updating.Contains(mrk))
          {
             await Task.Delay(50);
          }
@@ -166,22 +182,31 @@ namespace mrHelper.Client.Discussions
          {
             PreLoadDiscussions?.Invoke();
 
-            Updating.Add(mrk);
+            _updating.Add(mrk);
             List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
 
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3}, cached time stamp {4} (was {5} before update)",
-               discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
-               mergeRequestUpdatedAt.ToLocalTime().ToString(),
-               _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
-
-            _cachedDiscussions[mrk] = new CachedDiscussions
+            if (_updating.Contains(mrk))
             {
-               TimeStamp = mergeRequestUpdatedAt,
-               Discussions = discussions
-            };
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
+                + " cached time stamp {4} (was {5} before update)",
+                  discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
+                  mergeRequestUpdatedAt.ToLocalTime().ToString(),
+                  _cachedDiscussions.ContainsKey(mrk) ?
+                     _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
 
-            PostLoadDiscussions?.Invoke(mrk, _cachedDiscussions[mrk].Discussions);
+               _cachedDiscussions[mrk] = new CachedDiscussions
+               {
+                  TimeStamp = mergeRequestUpdatedAt,
+                  Discussions = discussions
+               };
+            }
+            else
+            {
+               // Seems that MR was closed while loading discussions, don't cache it
+            }
+
+            PostLoadDiscussions?.Invoke(mrk, discussions);
          }
          catch (OperatorException)
          {
@@ -190,7 +215,19 @@ namespace mrHelper.Client.Discussions
          }
          finally
          {
-            Updating.Remove(mrk);
+            _updating.Remove(mrk);
+         }
+      }
+
+      private void cleanup(IEnumerable<MergeRequestKey> keys)
+      {
+         foreach (MergeRequestKey mrk in keys)
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Clean up closed MR: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            _cachedDiscussions.Remove(mrk);
+            _updating.Remove(mrk);
          }
       }
 
@@ -212,7 +249,7 @@ namespace mrHelper.Client.Discussions
       private Dictionary<MergeRequestKey, CachedDiscussions> _cachedDiscussions =
          new Dictionary<MergeRequestKey, CachedDiscussions>();
 
-      private HashSet<MergeRequestKey> Updating = new HashSet<MergeRequestKey>();
+      private HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
    }
 }
 
