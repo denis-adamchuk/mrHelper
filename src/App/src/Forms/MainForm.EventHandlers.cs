@@ -564,14 +564,19 @@ namespace mrHelper.App.Forms
          }
 
          CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
+         if (item.IsBase)
+         {
+            tooltip.SetToolTip(comboBox, String.Empty);
+            return;
+         }
 
          string timestampText = String.Empty;
          if (item.TimeStamp != null)
          {
             timestampText = String.Format("({0})", item.TimeStamp.Value.ToLocalTime().ToString());
          }
-         string tooltipText = String.Format("{0} {1} {2}",
-            item.Text, timestampText, (item.IsLatest ? "[Latest]" : String.Empty));
+         string tooltipText = String.Format("{0} {1}\n{2}",
+            timestampText, (item.IsLatest ? "[Latest]" : String.Empty), item.Message);
 
          tooltip.SetToolTip(comboBox, tooltipText);
       }

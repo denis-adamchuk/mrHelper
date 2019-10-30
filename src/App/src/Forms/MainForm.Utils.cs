@@ -572,7 +572,8 @@ namespace mrHelper.App.Forms
          }
 
          // Add target branch to the right combo-box
-         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch + " [Base]", null)
+         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(
+            baseSha, targetBranch + " [Base]", null, String.Empty)
          {
             IsBase = true
          };

@@ -110,23 +110,25 @@ namespace mrHelper.App.Forms
          internal bool IsLatest;
          internal bool IsBase;
          internal DateTime? TimeStamp;
+         internal string Message;
 
          public override string ToString()
          {
             return Text;
          }
 
-         internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp)
+         internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp, string message)
          {
             SHA = sha;
             Text = text;
             TimeStamp = timeStamp;
             IsLatest = false;
             IsBase = false;
+            Message = message;
          }
 
          internal CommitComboBoxItem(Commit commit)
-            : this(commit.Id, commit.Title, commit.Created_At)
+            : this(commit.Id, commit.Title, commit.Created_At, commit.Message)
          {
          }
       }
