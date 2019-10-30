@@ -155,29 +155,31 @@ namespace mrHelper.Core.Git
             process.EnableRaisingEvents = false;
             if (!tcs.Task.IsCompleted)
             {
-               int exitcode = 0;
                try
                {
-                  process.WaitForExit();
-                  process.CancelOutputRead();
-                  process.CancelErrorRead();
-                  exitcode = process.ExitCode;
-               }
-               catch (InvalidOperationException)
-               {
-                  // TODO When it happens?
-                  Debug.Assert(false);
-               }
-
-               try
-               {
-                  checkGitExitCode(arguments, exitcode, errors);
-                  tcs.SetResult(new GitOutput { Output = output, Errors = errors, PID = -1 });
+                  checkGitExitCode(arguments, process.ExitCode, errors);
                }
                catch (Exception ex)
                {
                   tcs.SetException(ex);
+                  process.CancelOutputRead();
+                  process.CancelErrorRead();
+                  return;
                }
+
+               try
+               {
+                  Debug.Assert(process.ExitCode == 0);
+                  process.WaitForExit();
+                  process.CancelOutputRead();
+                  process.CancelErrorRead();
+               }
+               catch (InvalidOperationException)
+               {
+                  Debug.Assert(false);
+               }
+
+               tcs.SetResult(new GitOutput { Output = output, Errors = errors, PID = -1 });
                process.Dispose();
             }
          };
