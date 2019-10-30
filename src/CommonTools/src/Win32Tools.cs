@@ -101,7 +101,41 @@ namespace mrHelper.CommonTools
          return Marshal.PtrToStringAnsi(copyData.lpData);
       }
 
-      public static void ActivateWindow(IntPtr window)
+      // Taken from https://stackoverflow.com/questions/17879890/understanding-attachthreadinput-detaching-lose-focus
+      public static void ForceWindowIntoForeground(IntPtr window)
+      {
+         int currentThread = NativeMethods.GetCurrentThreadId();
+
+         IntPtr activeWindow = NativeMethods.GetForegroundWindow();
+         IntPtr activeProcess;
+         int activeThread = NativeMethods.GetWindowThreadProcessId(activeWindow, out activeProcess);
+
+         IntPtr windowProcess;
+         int windowThread = NativeMethods.GetWindowThreadProcessId(window, out windowProcess);
+
+         if (currentThread != activeThread)
+         {
+            NativeMethods.AttachThreadInput(currentThread, activeThread, 1);
+         }
+         if (windowThread != currentThread)
+         {
+            NativeMethods.AttachThreadInput(windowThread, currentThread, 1);
+         }
+
+         NativeMethods.SetForegroundWindow(window);
+         restoreWindow(window);
+
+         if (currentThread != activeThread)
+         {
+            NativeMethods.AttachThreadInput(currentThread, activeThread, 0);
+         }
+         if (windowThread != currentThread)
+         {
+            NativeMethods.AttachThreadInput(windowThread, currentThread, 0);
+         }
+      }
+
+      private static void restoreWindow(IntPtr window)
       {
          int nCmdShow = CommonTools.NativeMethods.SW_SHOWNORMAL;
          if (CommonTools.NativeMethods.IsIconic(window))
@@ -113,7 +147,6 @@ namespace mrHelper.CommonTools
             nCmdShow = CommonTools.NativeMethods.SW_SHOWMAXIMIZED;
          }
          CommonTools.NativeMethods.ShowWindowAsync(window, nCmdShow);
-         CommonTools.NativeMethods.SetForegroundWindow(window);
       }
    }
 }

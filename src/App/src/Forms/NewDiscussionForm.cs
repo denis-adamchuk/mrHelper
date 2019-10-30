@@ -6,6 +6,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Core.Context;
 using mrHelper.Core.Interprocess;
 using mrHelper.Core.Matching;
+using mrHelper.CommonTools;
 
 namespace mrHelper.App.Forms
 {
@@ -44,7 +45,7 @@ namespace mrHelper.App.Forms
       private void NewDiscussionForm_Shown(object sender, EventArgs e)
       {
          TopMost = false; // disable TopMost property which is initially true
-         Activate(); // steal Focus
+         Win32Tools.ForceWindowIntoForeground(this.Handle);
       }
 
       /// <summary>

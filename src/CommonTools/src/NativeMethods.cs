@@ -24,9 +24,18 @@ namespace mrHelper.CommonTools
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         public delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowThreadProcessId(IntPtr hwnd, out IntPtr lpdwProcessId);
+
+        [DllImport("kernel32.dll")]
+        public static extern int GetCurrentThreadId();
 
         [DllImport("user32.dll")]
         public static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
@@ -42,6 +51,9 @@ namespace mrHelper.CommonTools
 
         [DllImport("user32.dll")]
         public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
+        public static extern int AttachThreadInput(int idAttach, int idAttachTo, int fAttach);
 
         /// <summary>
         /// Win32 API Constants for ShowWindowAsync()
