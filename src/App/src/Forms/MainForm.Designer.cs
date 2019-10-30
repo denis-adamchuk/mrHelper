@@ -679,7 +679,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingCancel);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingStart);
          this.groupBoxTimeTracking.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 321);
+         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 406);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
          this.groupBoxTimeTracking.Size = new System.Drawing.Size(729, 83);
          this.groupBoxTimeTracking.TabIndex = 3;
@@ -743,7 +743,7 @@ namespace mrHelper.App.Forms
          this.panel1.Controls.Add(this.groupBoxReview);
          this.panel1.Controls.Add(this.groupBoxActions);
          this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-         this.panel1.Location = new System.Drawing.Point(0, 242);
+         this.panel1.Location = new System.Drawing.Point(0, 327);
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(729, 79);
          this.panel1.TabIndex = 2;
@@ -788,7 +788,7 @@ namespace mrHelper.App.Forms
          this.groupBox3.Controls.Add(this.comboBoxRightCommit);
          this.groupBox3.Controls.Add(this.comboBoxLeftCommit);
          this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBox3.Location = new System.Drawing.Point(0, 162);
+         this.groupBox3.Location = new System.Drawing.Point(0, 247);
          this.groupBox3.Name = "groupBox3";
          this.groupBox3.Size = new System.Drawing.Size(729, 80);
          this.groupBox3.TabIndex = 1;
@@ -832,7 +832,7 @@ namespace mrHelper.App.Forms
          this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBox2.Location = new System.Drawing.Point(0, 0);
          this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(729, 162);
+         this.groupBox2.Size = new System.Drawing.Size(729, 247);
          this.groupBox2.TabIndex = 0;
          this.groupBox2.TabStop = false;
          this.groupBox2.Text = "Merge Request";
@@ -840,7 +840,7 @@ namespace mrHelper.App.Forms
          // linkLabelConnectedTo
          // 
          this.linkLabelConnectedTo.AutoSize = true;
-         this.linkLabelConnectedTo.Location = new System.Drawing.Point(6, 137);
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 227);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
          this.linkLabelConnectedTo.Size = new System.Drawing.Size(259, 13);
          this.linkLabelConnectedTo.TabIndex = 1;
@@ -855,7 +855,7 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.ReadOnly = true;
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(723, 118);
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(723, 208);
          this.richTextBoxMergeRequestDescription.TabIndex = 0;
          this.richTextBoxMergeRequestDescription.Text = "";
          // 
