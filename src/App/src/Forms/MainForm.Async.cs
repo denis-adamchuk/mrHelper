@@ -65,8 +65,7 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-                  ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+                  Debug.Assert(ex is GitOperationException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return;
@@ -195,8 +194,7 @@ namespace mrHelper.App.Forms
                }
                else if (!(ex is RepeatOperationException))
                {
-                  Debug.Assert(ex is ArgumentException || ex is GitOperationException);
-                  ExceptionHandlers.Handle(ex, "Cannot initialize/update git repository");
+                  Debug.Assert(ex is GitOperationException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                }

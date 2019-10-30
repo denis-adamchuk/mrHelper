@@ -152,6 +152,7 @@ namespace mrHelper.Core.Git
          process.Exited +=
             (sender, args) =>
          {
+            process.EnableRaisingEvents = false;
             if (!tcs.Task.IsCompleted)
             {
                int exitcode = 0;

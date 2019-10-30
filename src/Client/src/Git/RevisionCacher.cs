@@ -33,6 +33,7 @@ namespace mrHelper.Client.Git
 
                _latestChanges.Keys.ToList().ForEach(x => x.Updated -= onGitClientUpdated);
                _latestChanges.Keys.ToList().ForEach(x => x.Disposed -= onGitClientDisposed);
+               _latestChanges.Clear();
             }
 
             // TODO Current version supports updates of projects of the most recent loaded host
@@ -93,7 +94,20 @@ namespace mrHelper.Client.Git
                         out HashSet<RevisionCacheKey> revisionArgs,
                         out HashSet<ListOfRenamesCacheKey> renamesArgs);
 
-                     await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                     try
+                     {
+                        await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                     }
+                     catch (ObjectDisposedException ex)
+                     {
+                        ExceptionHandlers.Handle(ex, "GitClient disposed");
+                        break;
+                     }
+
+                     Trace.TraceInformation(String.Format(
+                        "[RevisionCacher] Processing merge request with IId={0}."
+                      + "Cached git results: {1} git diff, {2} git show, {3} git rename",
+                        mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
                   }
                }
                _latestChanges[gitClient] = latestChange;
@@ -176,9 +190,6 @@ namespace mrHelper.Client.Git
          await doCacheSingleSetAsync(renamesArgs,
             x => gitRepository.GetListOfRenamesAsync(x.sha1, x.sha2));
 
-         Trace.TraceInformation(String.Format(
-            "[RevisionCacher] Cached git results: {0} git diff, {1} git show, {2} git rename",
-            diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
       }
 
       async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<List<string>>> func)

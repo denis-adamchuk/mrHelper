@@ -85,13 +85,16 @@ namespace mrHelper.Client.Git
 
       public void Dispose()
       {
+         _isDisposed = true;
          Trace.TraceInformation(String.Format("[GitClient] Disposing GitClient at path {0}", Path));
          CancelAsyncOperation();
-         foreach (GitAsyncTaskDescriptor descriptor in _liteDescriptors)
+         while (_liteDescriptors.Count > 0)
          {
-            cancelDescriptor(descriptor);
+            if (!cancelDescriptor(_liteDescriptors[0]))
+            {
+               _liteDescriptors.RemoveAt(0);
+            }
          }
-         _liteDescriptors.Clear();
          Updater.Dispose();
          Disposed?.Invoke(this);
       }
@@ -126,11 +129,11 @@ namespace mrHelper.Client.Git
          cancelDescriptor(_descriptor);
       }
 
-      private void cancelDescriptor(GitAsyncTaskDescriptor descriptor)
+      private bool cancelDescriptor(GitAsyncTaskDescriptor descriptor)
       {
          if (descriptor == null)
          {
-            return;
+            return false;
          }
 
          Process p = descriptor.Process;
@@ -138,13 +141,17 @@ namespace mrHelper.Client.Git
          try
          {
             GitUtils.cancelGit(descriptor.Process);
+            return true;
          }
          catch (InvalidOperationException)
          {
             // already exited
+            return false;
          }
-
-         p.Dispose();
+         finally
+         {
+            p.Dispose();
+         }
       }
 
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
@@ -321,6 +328,11 @@ namespace mrHelper.Client.Git
 
       async private Task<GitOutput> executeLiteGitCommandAsync(string arguments)
       {
+         if (_isDisposed)
+         {
+            throw new ObjectDisposedException(String.Format("GitClient {0}", ProjectKey.ProjectName));
+         }
+
          GitAsyncTaskDescriptor descriptor = null;
          try
          {
@@ -345,6 +357,11 @@ namespace mrHelper.Client.Git
 
       async private Task<GitOutput> executeGitCommandAsync(string arguments, Action<string> onProgressChange)
       {
+         if (_isDisposed)
+         {
+            throw new ObjectDisposedException(String.Format("GitClient {0}", ProjectKey.ProjectName));
+         }
+
          // If _descriptor is non-empty, it must be a non-exclusive operation, otherwise pickup should have caught it
          Debug.Assert(_descriptor == null);
 
@@ -423,6 +440,7 @@ namespace mrHelper.Client.Git
       private readonly Dictionary<ListOfRenamesCacheKey, List<string>> _cachedListOfRenames =
          new Dictionary<ListOfRenamesCacheKey, List<string>>();
 
+      private bool _isDisposed = false;
       private GitAsyncTaskDescriptor _descriptor;
       private List<GitAsyncTaskDescriptor> _liteDescriptors = new List<GitAsyncTaskDescriptor>();
 
