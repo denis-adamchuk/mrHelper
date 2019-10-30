@@ -39,7 +39,7 @@ namespace mrHelper.Client.Git
             // TODO Current version supports updates of projects of the most recent loaded host
             if (_latestChanges == null
              || _latestChanges.Count == 0
-             || _latestChanges?.Keys.First().ProjectKey.HostName != hostname)
+             || _latestChanges.Keys.First().ProjectKey.HostName != hostname)
             {
                _latestChanges = projects.ToDictionary(
                   x => getGitClient(new ProjectKey { HostName = hostname, ProjectName = x.Path_With_Namespace }),
@@ -80,7 +80,15 @@ namespace mrHelper.Client.Git
                   List<Version> newVersionsDetailed = new List<Version>();
                   foreach (Version version in newVersions)
                   {
-                     newVersionsDetailed.Add(await _operator.LoadVersion(version, mrk));
+                     Version newVersionDetailed = await _operator.LoadVersion(version, mrk);
+                     Trace.TraceInformation(String.Format(
+                        "[RevisionCacher] Found new version of MR with IId={0} (created at {1}). "
+                      + "PrevLatestChange={2}, LatestChange={3}",
+                        mrk.IId,
+                        newVersionDetailed.Created_At.ToLocalTime().ToString(),
+                        prevLatestChange.ToLocalTime().ToString(),
+                        latestChange.ToLocalTime().ToString()));
+                     newVersionsDetailed.Add(newVersionDetailed);
                   }
 
                   if (newVersionsDetailed.Count > 0)
