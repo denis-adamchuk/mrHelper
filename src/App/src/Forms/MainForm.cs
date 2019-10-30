@@ -79,6 +79,7 @@ namespace mrHelper.App.Forms
       private GitClientInteractiveUpdater _gitClientUpdater;
       private PersistentStorage _persistentStorage;
       private RevisionCacher _revisionCacher;
+      private DiscussionParser _discussionParser;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
@@ -89,6 +90,7 @@ namespace mrHelper.App.Forms
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
+      private List<ICommand> _customCommands;
       private ColorScheme _colorScheme;
 
       private string _newVersionFilePath;

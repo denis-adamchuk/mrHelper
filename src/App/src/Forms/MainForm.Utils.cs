@@ -23,6 +23,7 @@ using System.Drawing;
 using mrHelper.App.Helpers;
 using mrHelper.CommonControls;
 using static mrHelper.Client.Services.ServiceManager;
+using mrHelper.Client.Discussions;
 
 namespace mrHelper.App.Forms
 {
@@ -262,13 +263,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void showTooltipBalloon(string title, string text)
+      private void showTooltipBalloon(BalloonText balloonText)
       {
-         notifyIcon.BalloonTipTitle = title;
-         notifyIcon.BalloonTipText = text;
+         notifyIcon.BalloonTipTitle = balloonText.Title;
+         notifyIcon.BalloonTipText = balloonText.Text;
          notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
 
-         Trace.TraceInformation(String.Format("Tooltip: Title \"{0}\" Text \"{1}\"", title, text)); 
+         Trace.TraceInformation(String.Format("Tooltip: Title \"{0}\" Text \"{1}\"",
+            balloonText.Title, balloonText.Text)); 
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -602,14 +604,89 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void notifyOnMergeRequestEvent(string projectName, MergeRequest mergeRequest, string title)
+      private enum MergeRequestEvent
       {
-         showTooltipBalloon(title, "\""
-            + mergeRequest.Title
-            + "\" from "
-            + mergeRequest.Author.Name
-            + " in project "
-            + (projectName == String.Empty ? "N/A" : projectName));
+         New,
+         Closed,
+         Updated
+      }
+
+      private struct BalloonText
+      {
+         public string Title;
+         public string Text;
+      }
+
+      private BalloonText getBalloonText(string projectName, MergeRequest mergeRequest, MergeRequestEvent e)
+      {
+         projectName = projectName == String.Empty ? "N/A" : projectName;
+
+         switch (e)
+         {
+            case MergeRequestEvent.New:
+               return new BalloonText
+               {
+                  Title = "Merge Request Event",
+                  Text = String.Format("New merge request \"{0}\" from {1} in project {2}",
+                                       mergeRequest.Title, mergeRequest.Author.Name, projectName)
+               };
+
+            case MergeRequestEvent.Closed:
+               return new BalloonText
+               {
+                  Title = "Merge Request Event",
+                  Text = String.Format("Merge request \"{0}\" from {1} in project {2} was merged/closed",
+                                       mergeRequest.Title, mergeRequest.Author.Name, projectName)
+               };
+
+            case MergeRequestEvent.Updated:
+               return new BalloonText
+               {
+                  Title = "Merge Request Event",
+                  Text = String.Format("New commits in merge request \"{0}\" from {1} in project {2}",
+                                       mergeRequest.Title, mergeRequest.Author.Name, projectName)
+               };
+
+            default:
+               Debug.Assert(false);
+               return new BalloonText();
+         }
+      }
+
+      private BalloonText getBalloonText(MergeRequest mergeRequest, DiscussionParser.Event e, object o)
+      {
+         switch (e)
+         {
+            case DiscussionParser.Event.ResolvedAllThreads:
+               return new BalloonText
+               {
+                  Title = "Discussion Event",
+                  Text = String.Format("All discussions were resolved in merge request \"{0}\" from {1}",
+                                       mergeRequest.Title, mergeRequest.Author.Name)
+               };
+
+            case DiscussionParser.Event.MentionedCurrentUser:
+               User author = (User)o;
+               return new BalloonText
+               {
+                  Title = "Discsussion Event",
+                  Text = String.Format("{0} mentioned you in a discussion of merge request \"{1}\"",
+                                       author.Name, mergeRequest.Title)
+               };
+
+            case DiscussionParser.Event.Keyword:
+               DiscussionParser.KeywordDescription kd = (DiscussionParser.KeywordDescription)o;
+               return new BalloonText
+               {
+                  Title = "Discussion Event",
+                  Text = String.Format("{0} said \"{1}\" in merge request \"{2}\"",
+                                       kd.Author.Name, kd.Keyword, mergeRequest.Title)
+               };
+
+            default:
+               Debug.Assert(false);
+               return new BalloonText();
+         }
       }
 
       private void notifyOnMergeRequestUpdates(List<UpdatedMergeRequest> updates)
@@ -619,20 +696,36 @@ namespace mrHelper.App.Forms
             updates : updates.Where(x => !isFilteredMergeRequest(x, selected)).ToList();
 
          interesting.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
-            notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
-               "New merge request"));
+            showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.New)));
+
+         interesting.Where((x) => x.UpdateKind == UpdateKind.Closed).ToList().ForEach((x) =>
+            showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.Closed)));
 
          interesting.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated
                             || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated).ToList().ForEach((x) =>
-            notifyOnMergeRequestEvent(x.Project.Path_With_Namespace, x.MergeRequest,
-               "New commits in merge request"));
+            showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.Updated)));
+      }
+
+      private void notifyOnDiscussionEvent(MergeRequestKey mrk, DiscussionParser.Event e, object o)
+      {
+         string[] selected = getSelectedLabels();
+         int index = _allMergeRequests.FindIndex(
+            x => x.HostName == mrk.ProjectKey.HostName
+              && x.Project.Path_With_Namespace == mrk.ProjectKey.ProjectName
+              && x.MergeRequest.IId == mrk.IId);
+         if (index == -1 || isFilteredMergeRequest(_allMergeRequests[index].MergeRequest, selected))
+         {
+            return;
+         }
+
+         showTooltipBalloon(getBalloonText(_allMergeRequests[index].MergeRequest, e, o));
       }
 
       private string[] getSelectedLabels()
       {
          if (!Program.Settings.CheckedLabelsFilter)
          {
-            return null;
+             return null;
          }
 
          return Program.Settings.LastUsedLabels.Split(',').Select(x => x.Trim(' ')).ToArray();
@@ -985,7 +1078,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void processUpdatesAsync(List<UpdatedMergeRequest> updates)
+      private void processUpdates(List<UpdatedMergeRequest> updates)
       {
          notifyOnMergeRequestUpdates(updates);
 

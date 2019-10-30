@@ -12,6 +12,7 @@ namespace mrHelper.Client.TimeTracking
 {
    /// <summary>
    /// Manages time tracking for merge requests
+   /// TODO Clean up merged/closed merge requests
    /// </summary>
    public class TimeTrackingManager
    {
@@ -21,7 +22,7 @@ namespace mrHelper.Client.TimeTracking
          _operator = new TimeTrackingOperator(_settings);
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          discussionManager.PreLoadDiscussions += () => PreLoadTotalTime?.Invoke();
-         discussionManager.PostLoadDiscussions += (mrk, discussions) => processDiscussions(mrk, discussions);
+         discussionManager.PostLoadDiscussions += (mrk, discussions, _, __) => processDiscussions(mrk, discussions);
          discussionManager.FailedLoadDiscussions += () => FailedLoadTotalTime?.Invoke();
       }
 

@@ -23,6 +23,11 @@ namespace mrHelper.CustomActions
          return _name;
       }
 
+      public string GetBody()
+      {
+         return _body;
+      }
+
       public string GetDependency()
       {
          return _dependency;

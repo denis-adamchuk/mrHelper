@@ -20,7 +20,7 @@ namespace mrHelper.Client.Discussions
    public class DiscussionManager : IDisposable
    {
       public event Action PreLoadDiscussions;
-      public event Action<MergeRequestKey, List<Discussion>> PostLoadDiscussions;
+      public event Action<MergeRequestKey, List<Discussion>, DateTime, bool> PostLoadDiscussions;
       public event Action FailedLoadDiscussions;
 
       public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow, UpdateManager updateManager, ISynchronizeInvoke synchronizeInvoke)
@@ -42,7 +42,7 @@ namespace mrHelper.Client.Discussions
                   IId = x.IId
                });
 
-            scheduleUpdate(keys);
+            scheduleUpdate(keys, true);
 
             MergeRequestKey[] toRemove = _cachedDiscussions.Keys.Where(
                x => x.ProjectKey.HostName == hostname
@@ -68,7 +68,7 @@ namespace mrHelper.Client.Discussions
                   "[DiscussionManager] Scheduling update of discussions for {0} new merge requests on Update event",
                   newMergeRequests.Count()));
 
-               scheduleUpdate(newMergeRequests);
+               scheduleUpdate(newMergeRequests, false);
             }
 
             IEnumerable<MergeRequestKey> closedMergeRequests = updates
@@ -109,7 +109,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await updateDiscussionsAsync(mrk, true);
+            await updateDiscussionsAsync(mrk, true, false);
          }
          catch (OperatorException)
          {
@@ -137,10 +137,10 @@ namespace mrHelper.Client.Discussions
 
          MergeRequestKey[] cachedKeys = new MergeRequestKey[_cachedDiscussions.Keys.Count];
          _cachedDiscussions.Keys.CopyTo(cachedKeys, 0);
-         scheduleUpdate(cachedKeys);
+         scheduleUpdate(cachedKeys, false);
       }
 
-      private void scheduleUpdate(IEnumerable<MergeRequestKey> keys)
+      private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, bool initialSnapshot)
       {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
@@ -149,7 +149,7 @@ namespace mrHelper.Client.Discussions
             {
                foreach (MergeRequestKey mrk in keys)
                {
-                  await updateDiscussionsAsync(mrk, false);
+                  await updateDiscussionsAsync(mrk, false, initialSnapshot);
                }
             }
             catch (OperatorException)
@@ -159,7 +159,7 @@ namespace mrHelper.Client.Discussions
          }), null);
       }
 
-      async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging)
+      async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
          GitLabClient client =
             new GitLabClient(mrk.ProjectKey.HostName, _settings.GetAccessToken(mrk.ProjectKey.HostName));
@@ -206,7 +206,7 @@ namespace mrHelper.Client.Discussions
                // Seems that MR was closed while loading discussions, don't cache it
             }
 
-            PostLoadDiscussions?.Invoke(mrk, discussions);
+            PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
          }
          catch (OperatorException)
          {

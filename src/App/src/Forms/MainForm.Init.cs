@@ -30,11 +30,11 @@ namespace mrHelper.App.Forms
       private void addCustomActions()
       {
          CustomCommandLoader loader = new CustomCommandLoader(this);
-         List<ICommand> commands = null;
+         _customCommands = null;
          try
          {
             string CustomActionsFileName = "CustomActions.xml";
-            commands = loader.LoadCommands(CustomActionsFileName);
+            _customCommands = loader.LoadCommands(CustomActionsFileName);
          }
          catch (CustomCommandLoaderException ex)
          {
@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle(ex, "Cannot load custom actions");
          }
 
-         if (commands == null)
+         if (_customCommands == null)
          {
             return;
          }
@@ -56,7 +56,7 @@ namespace mrHelper.App.Forms
             Y = 17
          };
          System.Drawing.Size typicalSize = new System.Drawing.Size(96, 32);
-         foreach (ICommand command in commands)
+         foreach (ICommand command in _customCommands)
          {
             string name = command.GetName();
             var button = new System.Windows.Forms.Button
@@ -232,13 +232,20 @@ namespace mrHelper.App.Forms
 
          // Update manager indirectly subscribes to Workflow
          _updateManager = new UpdateManager(_workflow, this, Program.Settings);
-         _updateManager.OnUpdate += (updates) => processUpdatesAsync(updates);
+
+         // It is important to subcribe MainForm to updates before other subscribers because
+         // it stores _allMergeRequests which may be needed to other subscribers
+         _updateManager.OnUpdate += (updates) => processUpdates(updates);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
          _discussionManager = new DiscussionManager(Program.Settings, _workflow, _updateManager, this);
 
-         // Time Tracking Manager requires Workflow
+         // Time Tracking Manager requires Workflow and Discussion Manager
          createTimeTrackingManager();
+
+         // Discussion Parser requires Workflow and Discussion Manager
+         _discussionParser = new DiscussionParser(_workflow, _discussionManager, _customCommands);
+         _discussionParser.DiscussionEvent += (mrk, e, o) => notifyOnDiscussionEvent(mrk, e, o);
 
          try
          {

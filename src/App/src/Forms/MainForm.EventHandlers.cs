@@ -605,7 +605,7 @@ namespace mrHelper.App.Forms
          {
             // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
             // so it's only shown once in a lifetime
-            showTooltipBalloon("Information", "I will now live in your tray");
+            showTooltipBalloon(new BalloonText { Title = "Information", Text = "I will now live in your tray" });
             _requireShowingTooltipOnHideToTray = false;
          }
          Hide();
