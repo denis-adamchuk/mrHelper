@@ -49,7 +49,7 @@ namespace mrHelper.App
             Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       internal static UserDefinedSettings Settings = new UserDefinedSettings(true);
-      internal static ServiceManager ServiceManager = new Client.Services.ServiceManager();
+      internal static ServiceManager ServiceManager;
       internal static FeedbackReporter FeedbackReporter;
 
       /// <summary>
@@ -66,6 +66,9 @@ namespace mrHelper.App
             CustomTraceListener listener = new CustomTraceListener(currentLogFileName,
                String.Format("Merge Request Helper {0} started", Application.ProductVersion));
             Trace.Listeners.Add(listener);
+
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
+            ServiceManager = new ServiceManager();
 
             FeedbackReporter = new FeedbackReporter(
                () =>
@@ -122,7 +125,6 @@ namespace mrHelper.App
                return;
             }
 
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
             Application.Run(new MainForm());
          }
          catch (Exception ex) // whatever unhandled exception
