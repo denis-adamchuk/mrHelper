@@ -8,7 +8,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
-using mrHelper.CustomActions;
 
 namespace mrHelper.Client.Discussions
 {
@@ -19,11 +18,9 @@ namespace mrHelper.Client.Discussions
    public class DiscussionParser
    {
       public DiscussionParser(Workflow.Workflow workflow, DiscussionManager discussionManager,
-         List<ICommand> customCommands)
+         IEnumerable<string> keywords)
       {
-         _keywords = customCommands?
-            .Where(x => x is SendNoteCommand)
-            .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
+         _keywords = keywords;
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          discussionManager.PostLoadDiscussions +=
             (mrk, discussions, updatedAt, initialSnapshot) =>
@@ -74,7 +71,7 @@ namespace mrHelper.Client.Discussions
                {
                   DiscussionEvent?.Invoke(mrk, Event.ResolvedAllThreads, null);
                }
-               if (note.Body.Contains('@' + _currentUser.Username) || note.Body.Contains(_currentUser.Name))
+               else if (note.Body.Contains('@' + _currentUser.Username) || note.Body.Contains(_currentUser.Name))
                {
                   DiscussionEvent?.Invoke(mrk, Event.MentionedCurrentUser, note.Author);
                }
@@ -98,7 +95,7 @@ namespace mrHelper.Client.Discussions
       private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =
          new Dictionary<MergeRequestKey, DateTime>();
       private User _currentUser;
-      private IEnumerable<string> _keywords;
+      private readonly IEnumerable<string> _keywords;
    }
 }
 

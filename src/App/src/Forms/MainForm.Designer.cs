@@ -249,7 +249,7 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Size = new System.Drawing.Size(709, 20);
          this.textBoxLabels.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following: #{username} o" +
-        "r @{username} or {username}");
+        "r @{username} or any substring from MR title/author name/IId");
          this.textBoxLabels.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
          // 

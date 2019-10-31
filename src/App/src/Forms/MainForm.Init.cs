@@ -244,7 +244,10 @@ namespace mrHelper.App.Forms
          createTimeTrackingManager();
 
          // Discussion Parser requires Workflow and Discussion Manager
-         _discussionParser = new DiscussionParser(_workflow, _discussionManager, _customCommands);
+         IEnumerable<string> keywords = _customCommands ?
+            .Where(x => x is SendNoteCommand)
+            .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
+         _discussionParser = new DiscussionParser(_workflow, _discussionManager, keywords);
          _discussionParser.DiscussionEvent += (mrk, e, o) => notifyOnDiscussionEvent(mrk, e, o);
 
          try

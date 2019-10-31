@@ -1,16 +1,7 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Configuration;
-using System.ComponentModel;
 using System.Web.Script.Serialization;
-using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
-using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
-using mrHelper.CustomActions;
 
 namespace mrHelper.Client.Tools
 {

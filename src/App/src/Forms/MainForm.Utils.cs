@@ -728,7 +728,7 @@ namespace mrHelper.App.Forms
              return null;
          }
 
-         return Program.Settings.LastUsedLabels.Split(',').Select(x => x.Trim(' ')).ToArray();
+         return Program.Settings.LastUsedLabels .Split(',').Select(x => x.Trim(' ')).ToArray();
       }
 
       private static MergeRequest GetMergeRequest(MergeRequest x) => x;
@@ -736,7 +736,7 @@ namespace mrHelper.App.Forms
 
       private bool isFilteredMergeRequest<T>(T mergeRequestT, string[] selected)
       {
-         if (selected == null)
+         if (selected == null || (selected.Length == 1 && selected[0] == String.Empty))
          {
             return false;
          }
@@ -758,10 +758,13 @@ namespace mrHelper.App.Forms
                   return false;
                }
             }
-            else if (item.All(x => Char.IsLetter(x)))
+            else if (item != String.Empty)
             {
-               if (mergeRequest.Author.Username.StartsWith(item)
-                  || mergeRequest.Labels.Any(x => x.StartsWith(gitlabLabelPrefix + item)))
+               if (mergeRequest.IId.ToString().Contains(item)
+                || mergeRequest.Author.Username.Contains(item)
+                || mergeRequest.Author.Name.Contains(item)
+                || mergeRequest.Labels.Any(x => x.Contains(item))
+                || mergeRequest.Title.Contains(item))
                {
                   return false;
                }
