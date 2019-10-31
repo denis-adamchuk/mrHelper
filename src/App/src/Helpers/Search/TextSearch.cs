@@ -85,10 +85,9 @@ namespace mrHelper.App.Helpers
 
       internal TextSearchResult? find(int iStart, int iEnd, int iCurrent, int iCurrentInsideControlPosition, bool forward)
       {
-         int insideControlPosition = 0;
          Control currentControl = _allControls[iCurrent];
          if (_isSearchableControl(currentControl) &&
-             doesMatchText(currentControl, Query, forward, iCurrentInsideControlPosition, out insideControlPosition))
+             doesMatchText(currentControl, Query, forward, iCurrentInsideControlPosition, out int insideControlPosition))
          {
             return new TextSearchResult { Control = currentControl, InsideControlPosition = insideControlPosition };
          }

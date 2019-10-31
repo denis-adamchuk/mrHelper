@@ -394,8 +394,7 @@ namespace mrHelper.App.Forms
 
          if (TextSearch != null)
          {
-            Control startControl = MostRecentFocusedDiscussionControl != null 
-               ? MostRecentFocusedDiscussionControl : ActiveControl;
+            Control startControl = MostRecentFocusedDiscussionControl ?? ActiveControl;
 
             TextSearchResult current = new TextSearchResult
             {

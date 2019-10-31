@@ -88,7 +88,7 @@ namespace mrHelper.CommonTools
          message.Display();
       }
 
-      private string _logPath;
+      private readonly string _logPath;
       private readonly Action _preCollectLogFiles;
       private readonly Action _postCollectLogFiles;
    }
