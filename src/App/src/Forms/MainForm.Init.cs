@@ -131,6 +131,13 @@ namespace mrHelper.App.Forms
          checkBoxLabels.Checked = Program.Settings.CheckedLabelsFilter;
          textBoxLabels.Text = Program.Settings.LastUsedLabels;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
+         checkBoxShowNewMergeRequests.Checked = Program.Settings.Notifications_NewMergeRequests;
+         checkBoxShowMergedMergeRequests.Checked = Program.Settings.Notifications_MergedMergeRequests;
+         checkBoxShowUpdatedMergeRequests.Checked = Program.Settings.Notifications_UpdatedMergeRequests;
+         checkBoxShowResolvedAll.Checked = Program.Settings.Notifications_ResolvedAllThreads;
+         checkBoxShowOnMention.Checked = Program.Settings.Notifications_OnMention;
+         checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
+         checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
          {
@@ -243,10 +250,12 @@ namespace mrHelper.App.Forms
          // Time Tracking Manager requires Workflow and Discussion Manager
          createTimeTrackingManager();
 
-         // Discussion Parser requires Workflow and Discussion Manager
          IEnumerable<string> keywords = _customCommands ?
             .Where(x => x is SendNoteCommand)
             .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
+         checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
+
+         // Discussion Parser requires Workflow and Discussion Manager
          _discussionParser = new DiscussionParser(_workflow, _discussionManager, keywords);
          _discussionParser.DiscussionEvent += (mrk, e, o) => notifyOnDiscussionEvent(mrk, e, o);
 

@@ -69,7 +69,7 @@ namespace mrHelper.Client.Discussions
 
                if (note.System && note.Body == "resolved all threads")
                {
-                  DiscussionEvent?.Invoke(mrk, Event.ResolvedAllThreads, null);
+                  DiscussionEvent?.Invoke(mrk, Event.ResolvedAllThreads, note.Author);
                }
                // TODO Use regex to not treat @abcd as mentioning of @abcdef
                else if (note.Body.Contains('@' + _currentUser.Username) || note.Body.Contains(_currentUser.Name))
@@ -80,7 +80,7 @@ namespace mrHelper.Client.Discussions
                {
                   foreach (string keyword in _keywords)
                   {
-                     if (note.Body.StartsWith(keyword, StringComparison.CurrentCultureIgnoreCase))
+                     if (note.Body.Trim().StartsWith(keyword, StringComparison.CurrentCultureIgnoreCase))
                      {
                         DiscussionEvent?.Invoke(mrk, Event.Keyword,
                            new KeywordDescription{ Keyword = keyword, Author = note.Author });

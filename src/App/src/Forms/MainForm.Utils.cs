@@ -695,14 +695,27 @@ namespace mrHelper.App.Forms
          List<UpdatedMergeRequest> interesting = selected == null ?
             updates : updates.Where(x => !isFilteredMergeRequest(x, selected)).ToList();
 
-         interesting.Where((x) => x.UpdateKind == UpdateKind.New).ToList().ForEach((x) =>
+         interesting = interesting
+            .Where(x => checkBoxShowMyActivity.Checked || !isCurrentUserActivity(_currentUser ?? new User(), x))
+            .ToList();
+
+         interesting
+            .Where(x => checkBoxShowNewMergeRequests.Checked && x.UpdateKind == UpdateKind.New)
+            .ToList()
+            .ForEach(x =>
             showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.New)));
 
-         interesting.Where((x) => x.UpdateKind == UpdateKind.Closed).ToList().ForEach((x) =>
+         interesting
+            .Where(x => checkBoxShowMergedMergeRequests.Checked && x.UpdateKind == UpdateKind.Closed)
+            .ToList()
+            .ForEach(x =>
             showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.Closed)));
 
-         interesting.Where((x) => x.UpdateKind == UpdateKind.CommitsUpdated
-                            || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated).ToList().ForEach((x) =>
+         interesting
+            .Where(x => checkBoxShowUpdatedMergeRequests.Checked &&
+                  (x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated))
+            .ToList()
+            .ForEach(x =>
             showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.Updated)));
       }
 
@@ -718,10 +731,42 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         if ((isCurrentUserActivity(_currentUser ?? new User(), e, o) && !checkBoxShowMyActivity.Checked)  ||
+             (e == DiscussionParser.Event.ResolvedAllThreads          && !checkBoxShowResolvedAll.Checked) ||
+             (e == DiscussionParser.Event.MentionedCurrentUser        && !checkBoxShowOnMention.Checked)   ||
+             (e == DiscussionParser.Event.Keyword                     && !checkBoxShowKeywords.Checked))
+         {
+            return;
+         }
+
          showTooltipBalloon(getBalloonText(_allMergeRequests[index].MergeRequest, e, o));
       }
 
-      private string[] getSelectedLabels()
+      private static bool isCurrentUserActivity(User currentUser, UpdatedMergeRequest m)
+      {
+         return m.MergeRequest.Author.Id == currentUser.Id;
+      }
+
+      private static bool isCurrentUserActivity(User currentUser, DiscussionParser.Event e, object o)
+      {
+         switch (e)
+         {
+            case DiscussionParser.Event.ResolvedAllThreads:
+               return ((User)o).Id == currentUser.Id;
+
+            case DiscussionParser.Event.MentionedCurrentUser:
+               return ((User)o).Id == currentUser.Id;
+
+            case DiscussionParser.Event.Keyword:
+               return ((DiscussionParser.KeywordDescription)o).Author.Id == currentUser.Id;
+
+            default:
+               Debug.Assert(false);
+               return false;
+         }
+      }
+
+      private static string[] getSelectedLabels()
       {
          if (!Program.Settings.CheckedLabelsFilter)
          {

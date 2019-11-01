@@ -419,6 +419,39 @@ namespace mrHelper.App.Forms
          Program.Settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
+      private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
+      {
+         bool state = (sender as CheckBox).Checked;
+         if (sender == checkBoxShowNewMergeRequests)
+         {
+            Program.Settings.Notifications_NewMergeRequests = state;
+         }
+         else if (sender == checkBoxShowMergedMergeRequests)
+         {
+            Program.Settings.Notifications_MergedMergeRequests = state;
+         }
+         else if (sender == checkBoxShowUpdatedMergeRequests)
+         {
+            Program.Settings.Notifications_UpdatedMergeRequests = state;
+         }
+         else if (sender == checkBoxShowResolvedAll)
+         {
+            Program.Settings.Notifications_ResolvedAllThreads = state;
+         }
+         else if (sender == checkBoxShowOnMention)
+         {
+            Program.Settings.Notifications_OnMention = state;
+         }
+         else if (sender == checkBoxShowKeywords)
+         {
+            Program.Settings.Notifications_Keywords = state;
+         }
+         else if (sender == checkBoxShowMyActivity)
+         {
+            Program.Settings.Notifications_MyActivity = state;
+         }
+      }
+
       private void textBoxLabels_TextChanged(object sender, EventArgs e)
       {
          onTextBoxLabelsUpdate();

@@ -38,7 +38,28 @@ namespace mrHelper.Client.Tools
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
-      private static readonly int LogFilesToKeepDefaultValue = 10;
+      private static readonly int    LogFilesToKeepDefaultValue = 10;
+
+      private static readonly string Notifications_NewMergeRequests_KeyName      = "Notifications_NewMergeRequests";
+      private static readonly bool   Notifications_NewMergeRequests_DefaultValue = true;
+
+      private static readonly string Notifications_MergedMergeRequests_KeyName      = "Notifications_MergedMergeRequests";
+      private static readonly bool   Notifications_MergedMergeRequests_DefaultValue = true;
+
+      private static readonly string Notifications_UpdatedMergeRequests_KeyName      = "Notifications_UpdatedMergeRequests";
+      private static readonly bool   Notifications_UpdatedMergeRequests_DefaultValue = true;
+
+      private static readonly string Notifications_ResolvedAllThreads_KeyName      = "Notifications_ResolvedAllThreads";
+      private static readonly bool   Notifications_ResolvedAllThreads_DefaultValue = true;
+
+      private static readonly string Notifications_OnMention_KeyName      = "Notifications_OnMention";
+      private static readonly bool   Notifications_OnMention_DefaultValue = true;
+
+      private static readonly string Notifications_Keywords_KeyName      = "Notifications_Keywords";
+      private static readonly bool   Notifications_Keywords_DefaultValue = true;
+
+      private static readonly string Notifications_MyActivity_KeyName      = "Notifications_MyActivity";
+      private static readonly bool   Notifications_MyActivity_DefaultValue = false;
 
       public event PropertyChangedEventHandler PropertyChanged;
 
@@ -128,6 +149,48 @@ namespace mrHelper.Client.Tools
       {
          get { return int.Parse(getValue(LogFilesToKeepKeyName, LogFilesToKeepDefaultValue.ToString())); }
          set { setValue(LogFilesToKeepKeyName, value.ToString()); }
+      }
+
+      public bool Notifications_NewMergeRequests
+      {
+         get { return bool.Parse(getValue(Notifications_NewMergeRequests_KeyName, Notifications_NewMergeRequests_DefaultValue.ToString())); }
+         set { setValue(Notifications_NewMergeRequests_KeyName, value.ToString().ToLower()); }
+      }
+
+      public bool Notifications_MergedMergeRequests
+      {
+         get { return bool.Parse(getValue(Notifications_MergedMergeRequests_KeyName, Notifications_MergedMergeRequests_DefaultValue.ToString())); }
+         set { setValue(Notifications_MergedMergeRequests_KeyName, value.ToString().ToLower()); }
+      }
+
+      public bool Notifications_UpdatedMergeRequests
+      {
+         get { return bool.Parse(getValue(Notifications_UpdatedMergeRequests_KeyName, Notifications_UpdatedMergeRequests_DefaultValue.ToString())); }
+         set { setValue(Notifications_UpdatedMergeRequests_KeyName, value.ToString().ToLower()); }
+      }
+
+      public bool Notifications_ResolvedAllThreads
+      {
+         get { return bool.Parse(getValue(Notifications_ResolvedAllThreads_KeyName, Notifications_ResolvedAllThreads_DefaultValue.ToString())); }
+         set { setValue(Notifications_ResolvedAllThreads_KeyName, value.ToString().ToLower()); }
+      }
+
+      public bool Notifications_OnMention
+      {
+         get { return bool.Parse(getValue(Notifications_OnMention_KeyName, Notifications_OnMention_DefaultValue.ToString())); }
+         set { setValue(Notifications_OnMention_KeyName, value.ToString().ToLower()); }
+      }
+
+      public bool Notifications_Keywords
+      {
+         get { return bool.Parse(getValue(Notifications_Keywords_KeyName, Notifications_Keywords_DefaultValue.ToString())); }
+         set { setValue(Notifications_Keywords_KeyName, value.ToString().ToLower()); }
+      }
+
+      public bool Notifications_MyActivity
+      {
+         get { return bool.Parse(getValue(Notifications_MyActivity_KeyName, Notifications_MyActivity_DefaultValue.ToString())); }
+         set { setValue(Notifications_MyActivity_KeyName, value.ToString().ToLower()); }
       }
 
       public string GetAccessToken(string hostname)
