@@ -41,9 +41,16 @@ namespace mrHelper.Client.Git
              || _latestChanges.Count == 0
              || _latestChanges.Keys.First().ProjectKey.HostName != hostname)
             {
-               _latestChanges = projects.ToDictionary(
-                  x => getGitClient(new ProjectKey { HostName = hostname, ProjectName = x.Path_With_Namespace }),
-                  x => DateTime.MinValue);
+               _latestChanges = new Dictionary<GitClient, DateTime>();
+               foreach (Project project in projects)
+               {
+                  ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+                  GitClient client = getGitClient(key);
+                  if (client != null)
+                  {
+                     _latestChanges.Add(client, DateTime.MinValue);
+                  }
+               }
 
                Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Clients",
                   _latestChanges.Count()));

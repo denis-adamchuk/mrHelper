@@ -109,7 +109,7 @@ namespace mrHelper.App.Forms
                   try
                   {
                      GitClient gitClient = getGitClient(key.ProjectKey, true);
-                     if (!gitClient.DoesRequireClone())
+                     if (gitClient != null && !gitClient.DoesRequireClone())
                      {
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
