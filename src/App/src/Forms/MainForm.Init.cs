@@ -148,6 +148,21 @@ namespace mrHelper.App.Forms
             comboBoxDCDepth.SelectedIndex = 0;
          }
 
+         Dictionary<string, int> columnWidths = Program.Settings.ListViewMergeRequestsColumnWidths;
+         foreach (ColumnHeader column in listViewMergeRequests.Columns)
+         {
+            string columnName = (string)column.Tag;
+            if (columnWidths.ContainsKey(columnName))
+            {
+               column.Width = columnWidths[columnName];
+            }
+         }
+
+         if (Program.Settings.MainWindowSplitterDistance != 0)
+         {
+            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
+         }
+
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 

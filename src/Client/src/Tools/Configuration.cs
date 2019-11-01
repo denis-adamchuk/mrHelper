@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
@@ -60,6 +61,9 @@ namespace mrHelper.Client.Tools
 
       private static readonly string Notifications_MyActivity_KeyName      = "Notifications_MyActivity";
       private static readonly bool   Notifications_MyActivity_DefaultValue = false;
+
+      private static readonly string ListViewMergeRequestsColumnWidthsKeyName = "LVMR_ColWidths";
+      private static readonly string MainWindowSplitterDistanceKeyName = "MWSplitterDistance";
 
       public event PropertyChangedEventHandler PropertyChanged;
 
@@ -193,6 +197,27 @@ namespace mrHelper.Client.Tools
          set { setValue(Notifications_MyActivity_KeyName, value.ToString().ToLower()); }
       }
 
+      public Dictionary<string, int> ListViewMergeRequestsColumnWidths
+      {
+         get { return stringToDictionary(getValue(ListViewMergeRequestsColumnWidthsKeyName, String.Empty))
+               .ToDictionary(item => item.Key, item => int.Parse(item.Value)); }
+         set
+         {
+            setValue(ListViewMergeRequestsColumnWidthsKeyName,
+               dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
+         }
+      }
+
+      public int MainWindowSplitterDistance
+      {
+         get
+         {
+            string val = getValue(MainWindowSplitterDistanceKeyName, String.Empty);
+            return val == String.Empty ? 0 : int.Parse(val);
+         }
+         set { setValue(MainWindowSplitterDistanceKeyName, value.ToString()); }
+      }
+
       public string GetAccessToken(string hostname)
       {
          for (int iKnownHost = 0; iKnownHost < KnownHosts.Count; ++iKnownHost)
@@ -265,6 +290,36 @@ namespace mrHelper.Client.Tools
       {
          string valuesString = string.Join(";", values);
          setValue(key, valuesString);
+      }
+
+      private Dictionary<string, string> stringToDictionary(string value)
+      {
+         Dictionary<string, string> result = new Dictionary<string, string>();
+
+         string[] splitted = value.Split(';');
+         foreach (string splittedItem in splitted)
+         {
+            if (!splittedItem.Contains("|"))
+            {
+               Debug.Assert(splittedItem == String.Empty);
+               continue;
+            }
+            string[] subsplitted = splittedItem.Split('|');
+            Debug.Assert(subsplitted.Length == 2);
+            result.Add(subsplitted[0], subsplitted[1]);
+         }
+
+         return result;
+      }
+
+      private string dictionaryToString(Dictionary<string, string> value)
+      {
+         List<string> result = new List<string>();
+         foreach (KeyValuePair<string, string> pair in value)
+         {
+            result.Add(pair.Key + "|" + pair.Value);
+         }
+         return String.Join(";", result);
       }
 
       private void OnPropertyChanged(string name)

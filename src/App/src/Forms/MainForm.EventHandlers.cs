@@ -452,6 +452,21 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void listViewMergeRequests_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+      {
+         Dictionary<string, int> columnWidths = new Dictionary<string, int>();
+         foreach (ColumnHeader column in listViewMergeRequests.Columns)
+         {
+            columnWidths[(string)column.Tag] = column.Width;
+         }
+         Program.Settings.ListViewMergeRequestsColumnWidths = columnWidths;
+      }
+
+      private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
+      {
+         Program.Settings.MainWindowSplitterDistance = splitContainer1.SplitterDistance;
+      }
+
       private void textBoxLabels_TextChanged(object sender, EventArgs e)
       {
          onTextBoxLabelsUpdate();
