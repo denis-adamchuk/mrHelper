@@ -162,8 +162,15 @@ namespace mrHelper.Core.Git
                catch (Exception ex)
                {
                   tcs.SetException(ex);
-                  process.CancelOutputRead();
-                  process.CancelErrorRead();
+                  try
+                  {
+                     process.CancelOutputRead();
+                     process.CancelErrorRead();
+                  }
+                  catch (InvalidOperationException)
+                  {
+                     Debug.Assert(false);
+                  }
                   return;
                }
 
@@ -171,8 +178,15 @@ namespace mrHelper.Core.Git
                {
                   Debug.Assert(process.ExitCode == 0);
                   process.WaitForExit();
-                  process.CancelOutputRead();
-                  process.CancelErrorRead();
+                  try
+                  {
+                     process.CancelOutputRead();
+                     process.CancelErrorRead();
+                  }
+                  catch (InvalidOperationException)
+                  {
+                     Debug.Assert(false);
+                  }
                }
                catch (InvalidOperationException)
                {
