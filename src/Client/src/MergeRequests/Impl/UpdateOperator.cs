@@ -9,7 +9,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Common;
 using Version = GitLabSharp.Entities.Version;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Implements Updates-related interaction with GitLab

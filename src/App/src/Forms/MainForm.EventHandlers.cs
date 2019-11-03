@@ -17,6 +17,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Git;
 using mrHelper.CommonControls;
 using mrHelper.Common.Exceptions;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -672,7 +673,8 @@ namespace mrHelper.App.Forms
          {
             // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
             // so it's only shown once in a lifetime
-            showTooltipBalloon(new BalloonText { Title = "Information", Text = "I will now live in your tray" });
+            _trayIcon.ShowTooltipBalloon(
+               new TrayIcon.BalloonText { Title = "Information", Text = "I will now live in your tray" });
             _requireShowingTooltipOnHideToTray = false;
          }
          Hide();

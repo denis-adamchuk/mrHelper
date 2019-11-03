@@ -9,45 +9,28 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Client.Updates;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Manages updates
    /// </summary>
-   public class UpdateManager : IDisposable
+   internal class UpdateManager : IDisposable, IUpdateManager
    {
-      public event Action<List<UpdatedMergeRequest>> OnUpdate;
+      internal event Action<List<UpdatedMergeRequest>> OnUpdate;
 
-      public UpdateManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
-         UserDefinedSettings settings)
+      internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, UserDefinedSettings settings,
+         string hostname, List<Project> projects, WorkflowDetailsCache cache)
       {
          _operator = new UpdateOperator(settings);
+         _hostname = hostname;
+         _projects = projects;
+         _cache = cache;
 
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();
-
-         workflow.PostLoadHostProjects += (hostname, projects) =>
-         {
-            // TODO Current version supports updates of projects of the most recent loaded host
-            if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
-            {
-               _cache = new WorkflowDetailsCache();
-
-               Trace.TraceInformation(String.Format(
-                  "[UpdateManager] Set hostname for updates to {0}, will trace updates in {1} projects",
-                  hostname, projects.Count));
-               _hostname = hostname;
-               _projects = projects;
-            }
-         };
-
-         workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
-            _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
-
-         workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
-            _cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
       }
 
       public void Dispose()
@@ -60,22 +43,11 @@ namespace mrHelper.Client.Updates
          return _projectWatcher;
       }
 
-      public List<MergeRequest> GetMergeRequests(ProjectKey projectKey)
-      {
-         return new List<MergeRequest>(_cache.Details.GetMergeRequests(projectKey));
-      }
-
-      /// <summary>
-      /// Checks local cache to detect if there are project changes caused by new versions of a merge request
-      /// </summary>
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
          return new LocalProjectChecker(mrk, _cache.Details.Clone());
       }
 
-      /// <summary>
-      /// Checks local cache to detect if there are project changes caused by new versions of any merge request
-      /// </summary>
       public IInstantProjectChecker GetLocalProjectChecker(ProjectKey pk)
       {
          if (_cache.Details.GetMergeRequests(pk).Count == 0)
@@ -89,12 +61,14 @@ namespace mrHelper.Client.Updates
          return GetLocalProjectChecker(mrk);
       }
 
-      /// <summary>
-      /// Makes a request to GitLab to detect if there are project changes caused by new versions of a merge request
-      /// </summary>
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
       {
          return new RemoteProjectChecker(mrk, _operator);
+      }
+
+      internal List<MergeRequest> GetMergeRequests(ProjectKey projectKey)
+      {
+         return new List<MergeRequest>(_cache.Details.GetMergeRequests(projectKey));
       }
 
       /// <summary>
@@ -104,6 +78,7 @@ namespace mrHelper.Client.Updates
       {
          if (String.IsNullOrEmpty(_hostname) || _projects == null)
          {
+            Debug.Assert(false);
             Trace.TraceWarning("[UpdateManager] Auto-update is cancelled");
             return;
          }
@@ -192,7 +167,7 @@ namespace mrHelper.Client.Updates
             Interval = 5 * 60000 // five minutes in ms
          };
 
-      private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
+      private WorkflowDetailsCache _cache;
       private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();
       private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private readonly UpdateOperator _operator;

@@ -22,7 +22,7 @@ namespace mrHelper.Client.Git
    {
       public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings, Func<ProjectKey, GitClient> getGitClient,
-         Func<ProjectKey, MergeRequest[]> getMergeRequests)
+         Func<ProjectKey, IEnumerable<MergeRequest>> getMergeRequests)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
@@ -233,7 +233,7 @@ namespace mrHelper.Client.Git
       private Dictionary<GitClient, DateTime> _latestChanges;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionOperator _operator;
-      private readonly Func<ProjectKey, MergeRequest[]> _getMergeRequests;
+      private readonly Func<ProjectKey, IEnumerable<MergeRequest>> _getMergeRequests;
    }
 }
 

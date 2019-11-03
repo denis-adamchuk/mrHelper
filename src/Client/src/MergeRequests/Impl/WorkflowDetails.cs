@@ -9,7 +9,7 @@ using mrHelper.Client.Workflow;
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    internal class WorkflowDetails : IWorkflowDetails
    {

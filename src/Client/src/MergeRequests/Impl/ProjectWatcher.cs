@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
+using mrHelper.Client.Updates;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Converts MergeRequestUpdates into ProjectUpdates and notifies subscribers
@@ -56,28 +57,19 @@ namespace mrHelper.Client.Updates
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectKey.ProjectName == mergeRequest.Project.Path_With_Namespace)
+               if (projectUpdates[iUpdate].ProjectKey.ProjectName == mergeRequest.MergeRequestKey.ProjectKey.ProjectName)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }
             }
 
             MergeRequestKey mrk = new MergeRequestKey(hostname,
-               mergeRequest.Project.Path_With_Namespace, mergeRequest.MergeRequest.IId);
+               mergeRequest.MergeRequestKey.ProjectKey.ProjectName, mergeRequest.MergeRequestKey.IId);
 
             updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
                details.GetLatestChangeTimestamp(mrk) : updateTimestamp;
 
-            projectUpdates.Add(
-               new ProjectUpdate
-               {
-                  ProjectKey = new ProjectKey
-                  {
-                     HostName = hostname,
-                     ProjectName = mergeRequest.Project.Path_With_Namespace
-                  },
-                  Timestamp = updateTimestamp
-               });
+            projectUpdates.Add(new ProjectUpdate { ProjectKey = mrk.ProjectKey, Timestamp = updateTimestamp });
          }
 
          return projectUpdates;

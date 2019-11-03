@@ -9,9 +9,9 @@ using mrHelper.Client.Workflow;
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
-   public enum UpdateKind
+   internal enum UpdateKind
    {
       New,
       Closed,
@@ -20,19 +20,15 @@ namespace mrHelper.Client.Updates
       CommitsAndLabelsUpdated
    }
 
-   public struct UpdatedMergeRequest
+   internal struct UpdatedMergeRequest
    {
       public UpdateKind UpdateKind;
-      public MergeRequest MergeRequest;
-      public string HostName;
-      public Project Project;
+      public MergeRequestKey MergeRequestKey;
 
-      public UpdatedMergeRequest(UpdateKind kind, MergeRequest mergeRequest, string hostname, Project project)
+      internal UpdatedMergeRequest(UpdateKind kind, MergeRequestKey mergeRequestKey)
       {
          UpdateKind = kind;
-         MergeRequest = mergeRequest;
-         HostName = hostname;
-         Project = project;
+         MergeRequestKey = mergeRequestKey;
       }
    }
 
@@ -144,14 +140,24 @@ namespace mrHelper.Client.Updates
 
          foreach (MergeRequestWithProject mergeRequest in diff.SecondOnly)
          {
-            updates.Add(new UpdatedMergeRequest(
-               UpdateKind.New, mergeRequest.MergeRequest, hostname, mergeRequest.Project));
+            ProjectKey projectKey = new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = mergeRequest.Project.Path_With_Namespace
+            };
+            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.MergeRequest.IId };
+            updates.Add(new UpdatedMergeRequest(UpdateKind.New, mrk));
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
          {
-            updates.Add(new UpdatedMergeRequest(
-               UpdateKind.Closed, mergeRequest.MergeRequest, hostname, mergeRequest.Project));
+            ProjectKey projectKey = new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = mergeRequest.Project.Path_With_Namespace
+            };
+            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.MergeRequest.IId };
+            updates.Add(new UpdatedMergeRequest(UpdateKind.Closed, mrk));
          }
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
@@ -173,7 +179,7 @@ namespace mrHelper.Client.Updates
             {
                UpdateKind kind = (labelsUpdated && commitsUpdated ? UpdateKind.CommitsAndLabelsUpdated :
                                  (labelsUpdated ? UpdateKind.LabelsUpdated : UpdateKind.CommitsUpdated));
-               updates.Add(new UpdatedMergeRequest(kind, mergeRequest, hostname, project));
+               updates.Add(new UpdatedMergeRequest(kind, mergeRequestKey));
             }
          }
 

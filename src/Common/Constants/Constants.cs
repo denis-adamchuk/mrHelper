@@ -20,6 +20,9 @@ namespace mrHelper.Common.Constants
          "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampFilenameFormat));
 
       public static int FullContextSize = 20000;
+
+      public static string AuthorLabelPrefix = "#";
+      public static string GitLabLabelPrefix = "@";
    }
 }
 

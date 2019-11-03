@@ -230,6 +230,16 @@ namespace mrHelper.Client.Tools
          return String.Empty;
       }
 
+      public string[] GetLabels()
+      {
+         if (!CheckedLabelsFilter)
+         {
+             return null;
+         }
+
+         return LastUsedLabels .Split(',').Select(x => x.Trim(' ')).ToArray();
+      }
+
       private string getValue(string key, string defaultValue)
       {
          if (_config.AppSettings.Settings[key] != null)
