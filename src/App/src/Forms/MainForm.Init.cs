@@ -158,11 +158,6 @@ namespace mrHelper.App.Forms
             }
          }
 
-         if (Program.Settings.MainWindowSplitterDistance != 0)
-         {
-            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
-         }
-
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 

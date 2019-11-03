@@ -71,6 +71,7 @@ namespace mrHelper.App.Forms
 
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
+      private bool _userIsMovingSplitter = false;
 
       private UpdateManager _updateManager;
       private TimeTrackingManager _timeTrackingManager;

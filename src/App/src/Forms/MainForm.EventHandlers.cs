@@ -35,6 +35,12 @@ namespace mrHelper.App.Forms
 
          this.WindowState = FormWindowState.Maximized;
          this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
+
+         if (Program.Settings.MainWindowSplitterDistance != 0)
+         {
+            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
+         }
+
          await onApplicationStarted();
       }
 
@@ -464,7 +470,20 @@ namespace mrHelper.App.Forms
 
       private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
       {
-         Program.Settings.MainWindowSplitterDistance = splitContainer1.SplitterDistance;
+         if (_userIsMovingSplitter)
+         {
+            Program.Settings.MainWindowSplitterDistance = splitContainer1.SplitterDistance;
+            _userIsMovingSplitter = false;
+         }
+      }
+
+      private void splitContainer1_SplitterMoving(object sender, SplitterCancelEventArgs e)
+      {
+         _userIsMovingSplitter = true;
+      }
+
+      private void splitContainer1_MouseUp(object sender, MouseEventArgs e)
+      {
       }
 
       private void textBoxLabels_TextChanged(object sender, EventArgs e)

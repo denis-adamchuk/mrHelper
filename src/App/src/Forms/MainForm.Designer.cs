@@ -255,7 +255,7 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Enabled = false;
          this.textBoxLabels.Location = new System.Drawing.Point(82, 17);
          this.textBoxLabels.Name = "textBoxLabels";
-         this.textBoxLabels.Size = new System.Drawing.Size(308, 20);
+         this.textBoxLabels.Size = new System.Drawing.Size(108, 20);
          this.textBoxLabels.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following: #{username} o" +
         "r @{username} or any substring from MR title/author name/IId");
@@ -266,7 +266,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonEditTime.Enabled = false;
-         this.buttonEditTime.Location = new System.Drawing.Point(611, 19);
+         this.buttonEditTime.Location = new System.Drawing.Point(811, 19);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
          this.buttonEditTime.TabIndex = 4;
@@ -315,7 +315,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiffTool.Enabled = false;
-         this.buttonDiffTool.Location = new System.Drawing.Point(611, 19);
+         this.buttonDiffTool.Location = new System.Drawing.Point(811, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(96, 48);
          this.buttonDiffTool.TabIndex = 2;
@@ -328,7 +328,7 @@ namespace mrHelper.App.Forms
          // 
          this.linkLabelSendFeedback.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.linkLabelSendFeedback.AutoSize = true;
-         this.linkLabelSendFeedback.Location = new System.Drawing.Point(611, 10);
+         this.linkLabelSendFeedback.Location = new System.Drawing.Point(811, 10);
          this.linkLabelSendFeedback.Name = "linkLabelSendFeedback";
          this.linkLabelSendFeedback.Size = new System.Drawing.Size(80, 13);
          this.linkLabelSendFeedback.TabIndex = 6;
@@ -438,6 +438,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMyActivity.TabIndex = 6;
          this.checkBoxShowMyActivity.Text = "Include my activity";
          this.checkBoxShowMyActivity.UseVisualStyleBackColor = true;
+         this.checkBoxShowMyActivity.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowKeywords
          // 
@@ -448,6 +449,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowKeywords.TabIndex = 5;
          this.checkBoxShowKeywords.Text = "Keywords:";
          this.checkBoxShowKeywords.UseVisualStyleBackColor = true;
+         this.checkBoxShowKeywords.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowOnMention
          // 
@@ -458,6 +460,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention.TabIndex = 4;
          this.checkBoxShowOnMention.Text = "When someone mentions you in a discussion";
          this.checkBoxShowOnMention.UseVisualStyleBackColor = true;
+         this.checkBoxShowOnMention.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowResolvedAll
          // 
@@ -468,6 +471,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowResolvedAll.TabIndex = 3;
          this.checkBoxShowResolvedAll.Text = "Resolved All Discussions";
          this.checkBoxShowResolvedAll.UseVisualStyleBackColor = true;
+         this.checkBoxShowResolvedAll.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowUpdatedMergeRequests
          // 
@@ -478,6 +482,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowUpdatedMergeRequests.TabIndex = 2;
          this.checkBoxShowUpdatedMergeRequests.Text = "New commits in Merge Requests";
          this.checkBoxShowUpdatedMergeRequests.UseVisualStyleBackColor = true;
+         this.checkBoxShowUpdatedMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowMergedMergeRequests
          // 
@@ -488,6 +493,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests.TabIndex = 1;
          this.checkBoxShowMergedMergeRequests.Text = "Merged Merge Requests";
          this.checkBoxShowMergedMergeRequests.UseVisualStyleBackColor = true;
+         this.checkBoxShowMergedMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowNewMergeRequests
          // 
@@ -619,9 +625,10 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Panel2.Controls.Add(this.groupBox2);
          this.splitContainer1.Panel2MinSize = 710;
          this.splitContainer1.Size = new System.Drawing.Size(1270, 858);
-         this.splitContainer1.SplitterDistance = 552;
+         this.splitContainer1.SplitterDistance = 352;
          this.splitContainer1.SplitterWidth = 8;
          this.splitContainer1.TabIndex = 0;
+         this.splitContainer1.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer1_SplitterMoving);
          this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
          // 
          // groupBoxSelectMergeRequest
@@ -633,7 +640,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
-         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(552, 858);
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(352, 858);
          this.groupBoxSelectMergeRequest.TabIndex = 0;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
@@ -642,7 +649,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonReloadList.Enabled = false;
-         this.buttonReloadList.Location = new System.Drawing.Point(450, 9);
+         this.buttonReloadList.Location = new System.Drawing.Point(250, 9);
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
          this.buttonReloadList.TabIndex = 3;
@@ -670,7 +677,7 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.MultiSelect = false;
          this.listViewMergeRequests.Name = "listViewMergeRequests";
          this.listViewMergeRequests.OwnerDraw = true;
-         this.listViewMergeRequests.Size = new System.Drawing.Size(540, 809);
+         this.listViewMergeRequests.Size = new System.Drawing.Size(340, 809);
          this.listViewMergeRequests.TabIndex = 2;
          this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
@@ -739,14 +746,14 @@ namespace mrHelper.App.Forms
          this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
          this.panel2.Location = new System.Drawing.Point(0, 768);
          this.panel2.Name = "panel2";
-         this.panel2.Size = new System.Drawing.Size(710, 56);
+         this.panel2.Size = new System.Drawing.Size(910, 56);
          this.panel2.TabIndex = 4;
          // 
          // linkLabelAbortGit
          // 
          this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.linkLabelAbortGit.AutoSize = true;
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(659, 32);
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(859, 32);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
          this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
          this.linkLabelAbortGit.TabIndex = 2;
@@ -786,7 +793,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 406);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
-         this.groupBoxTimeTracking.Size = new System.Drawing.Size(710, 83);
+         this.groupBoxTimeTracking.Size = new System.Drawing.Size(910, 83);
          this.groupBoxTimeTracking.TabIndex = 3;
          this.groupBoxTimeTracking.TabStop = false;
          this.groupBoxTimeTracking.Text = "Time tracking";
@@ -805,7 +812,7 @@ namespace mrHelper.App.Forms
          // 
          this.labelTimeTrackingTrackedTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.labelTimeTrackingTrackedTime.AutoSize = true;
-         this.labelTimeTrackingTrackedTime.Location = new System.Drawing.Point(551, 29);
+         this.labelTimeTrackingTrackedTime.Location = new System.Drawing.Point(751, 29);
          this.labelTimeTrackingTrackedTime.Name = "labelTimeTrackingTrackedTime";
          this.labelTimeTrackingTrackedTime.Size = new System.Drawing.Size(49, 13);
          this.labelTimeTrackingTrackedTime.TabIndex = 3;
@@ -815,7 +822,7 @@ namespace mrHelper.App.Forms
          // 
          this.labelTimeTrackingTrackedLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.labelTimeTrackingTrackedLabel.AutoSize = true;
-         this.labelTimeTrackingTrackedLabel.Location = new System.Drawing.Point(472, 29);
+         this.labelTimeTrackingTrackedLabel.Location = new System.Drawing.Point(672, 29);
          this.labelTimeTrackingTrackedLabel.Name = "labelTimeTrackingTrackedLabel";
          this.labelTimeTrackingTrackedLabel.Size = new System.Drawing.Size(57, 13);
          this.labelTimeTrackingTrackedLabel.TabIndex = 2;
@@ -850,7 +857,7 @@ namespace mrHelper.App.Forms
          this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
          this.panel1.Location = new System.Drawing.Point(0, 327);
          this.panel1.Name = "panel1";
-         this.panel1.Size = new System.Drawing.Size(710, 79);
+         this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 2;
          // 
          // groupBoxReview
@@ -859,7 +866,7 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.Controls.Add(this.buttonAddComment);
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
          this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
-         this.groupBoxReview.Location = new System.Drawing.Point(365, 6);
+         this.groupBoxReview.Location = new System.Drawing.Point(565, 6);
          this.groupBoxReview.Name = "groupBoxReview";
          this.groupBoxReview.Size = new System.Drawing.Size(349, 63);
          this.groupBoxReview.TabIndex = 1;
@@ -884,7 +891,7 @@ namespace mrHelper.App.Forms
          this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
          this.panel3.Location = new System.Drawing.Point(0, 824);
          this.panel3.Name = "panel3";
-         this.panel3.Size = new System.Drawing.Size(710, 34);
+         this.panel3.Size = new System.Drawing.Size(910, 34);
          this.panel3.TabIndex = 6;
          // 
          // groupBox3
@@ -895,7 +902,7 @@ namespace mrHelper.App.Forms
          this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBox3.Location = new System.Drawing.Point(0, 247);
          this.groupBox3.Name = "groupBox3";
-         this.groupBox3.Size = new System.Drawing.Size(710, 80);
+         this.groupBox3.Size = new System.Drawing.Size(910, 80);
          this.groupBox3.TabIndex = 1;
          this.groupBox3.TabStop = false;
          this.groupBox3.Text = "Select commits";
@@ -910,7 +917,7 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit.FormattingEnabled = true;
          this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 46);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(600, 21);
+         this.comboBoxRightCommit.Size = new System.Drawing.Size(800, 21);
          this.comboBoxRightCommit.TabIndex = 1;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
@@ -925,7 +932,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.FormattingEnabled = true;
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(6, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(600, 21);
+         this.comboBoxLeftCommit.Size = new System.Drawing.Size(800, 21);
          this.comboBoxLeftCommit.TabIndex = 0;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
@@ -937,7 +944,7 @@ namespace mrHelper.App.Forms
          this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBox2.Location = new System.Drawing.Point(0, 0);
          this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(710, 247);
+         this.groupBox2.Size = new System.Drawing.Size(910, 247);
          this.groupBox2.TabIndex = 0;
          this.groupBox2.TabStop = false;
          this.groupBox2.Text = "Merge Request";
@@ -960,7 +967,7 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.ReadOnly = true;
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(704, 208);
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(904, 208);
          this.richTextBoxMergeRequestDescription.TabIndex = 0;
          this.richTextBoxMergeRequestDescription.Text = "";
          // 
