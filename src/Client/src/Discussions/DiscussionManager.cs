@@ -9,6 +9,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
+using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.Client.Discussions
 {
@@ -23,10 +24,14 @@ namespace mrHelper.Client.Discussions
       public event Action<MergeRequestKey, List<Discussion>, DateTime, bool> PostLoadDiscussions;
       public event Action FailedLoadDiscussions;
 
-      public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow, UpdateManager updateManager, ISynchronizeInvoke synchronizeInvoke)
+      public event Action<UserEvents.DiscussionEvent> OnEvent;
+
+      public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow,
+         MergeRequestManager mergeRequestManager, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords)
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
+         new DiscussionParser(workflow, this, keywords, e => OnEvent?.Invoke(e));
 
          workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
@@ -51,35 +56,40 @@ namespace mrHelper.Client.Discussions
             cleanup(toRemove);
          };
 
-         updateManager.OnUpdate +=
-            (updates) =>
+         mergeRequestManager.OnEvent +=
+            (e) =>
          {
-            IEnumerable<MergeRequestKey> newMergeRequests = updates
-               .Where(x => x.UpdateKind == UpdateKind.New)
-               .Select(x => new MergeRequestKey
-               {
-                  ProjectKey = new ProjectKey { HostName = x.HostName, ProjectName = x.Project.Path_With_Namespace },
-                  IId = x.MergeRequest.IId
-               });
-
-            if (newMergeRequests.Count() > 0)
+            switch (e.EventType)
             {
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Scheduling update of discussions for {0} new merge requests on Update event",
-                  newMergeRequests.Count()));
+               case UserEvents.MergeRequestEvent.Type.NewMergeRequest:
+                  Trace.TraceInformation(String.Format(
+                     "[DiscussionManager] Scheduling update of discussions for a new merge request with IId",
+                     e.FullMergeRequestKey.MergeRequest.IId));
+                  MergeRequestKey mrk = new MergeRequestKey
+                  {
+                     ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                     IId = e.FullMergeRequestKey.MergeRequest.IId
+                  };
+                  if (_closed.Contains(mrk))
+                  {
+                     Trace.TraceInformation(String.Format(
+                        "[DiscussionManager] MR IId {0} reopened", e.FullMergeRequestKey.MergeRequest.IId));
+                     _closed.Remove(mrk);
+                  }
+                  scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+                  break;
 
-               scheduleUpdate(newMergeRequests, false);
+               case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
+                  cleanup(new List<MergeRequestKey>
+                  {
+                     new MergeRequestKey
+                     {
+                        ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                        IId = e.FullMergeRequestKey.MergeRequest.IId
+                     }
+                  });
+                  break;
             }
-
-            IEnumerable<MergeRequestKey> closedMergeRequests = updates
-               .Where(x => x.UpdateKind == UpdateKind.Closed)
-               .Select(x => new MergeRequestKey
-               {
-                  ProjectKey = new ProjectKey { HostName = x.HostName, ProjectName = x.Project.Path_With_Namespace },
-                  IId = x.MergeRequest.IId
-               });
-
-            cleanup(closedMergeRequests);
          };
 
          _synchronizeInvoke = synchronizeInvoke;
@@ -109,13 +119,14 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await updateDiscussionsAsync(mrk, true, false);
+            await updateDiscussionsAsync(mrk, true, !_updating.Contains(mrk));
          }
          catch (OperatorException)
          {
             throw new DiscussionManagerException();
          }
 
+         Debug.Assert(_cachedDiscussions.ContainsKey(mrk));
          return _cachedDiscussions[mrk].Discussions;
       }
 
@@ -162,7 +173,8 @@ namespace mrHelper.Client.Discussions
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
          GitLabClient client =
-            new GitLabClient(mrk.ProjectKey.HostName, _settings.GetAccessToken(mrk.ProjectKey.HostName));
+            new GitLabClient(mrk.ProjectKey.HostName,
+            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
          DateTime mergeRequestUpdatedAt =
             (await CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
 
@@ -178,6 +190,15 @@ namespace mrHelper.Client.Discussions
             return;
          }
 
+         if (_closed.Contains(mrk))
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Will not update MR because it is closed: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            _closed.Remove(mrk);
+            return;
+         }
+
          try
          {
             PreLoadDiscussions?.Invoke();
@@ -185,7 +206,7 @@ namespace mrHelper.Client.Discussions
             _updating.Add(mrk);
             List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
 
-            if (_updating.Contains(mrk))
+            if (!_closed.Contains(mrk))
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
@@ -203,7 +224,10 @@ namespace mrHelper.Client.Discussions
             }
             else
             {
-               // Seems that MR was closed while loading discussions, don't cache it
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Will not cache MR because it is closed: Host={0}, Project={1}, IId={2}",
+                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+               _closed.Remove(mrk);
             }
 
             PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
@@ -228,6 +252,7 @@ namespace mrHelper.Client.Discussions
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _cachedDiscussions.Remove(mrk);
             _updating.Remove(mrk);
+            _closed.Add(mrk);
          }
       }
 
@@ -250,6 +275,7 @@ namespace mrHelper.Client.Discussions
          new Dictionary<MergeRequestKey, CachedDiscussions>();
 
       private HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
+      private HashSet<MergeRequestKey> _closed = new HashSet<MergeRequestKey>();
    }
 }
 

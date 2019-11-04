@@ -6,8 +6,9 @@ using System.IO;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
+using mrHelper.Client.Updates;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Detects the latest change in a merge request using Local cache only

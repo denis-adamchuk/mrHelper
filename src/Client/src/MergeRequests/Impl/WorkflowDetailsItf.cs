@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    internal interface IWorkflowDetails
    {

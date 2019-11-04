@@ -7,8 +7,9 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Git;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Client.Updates;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Detects the latest change in a merge request by means of a request to GitLab

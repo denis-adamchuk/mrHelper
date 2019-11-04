@@ -24,6 +24,7 @@ using mrHelper.App.Helpers;
 using mrHelper.CommonControls;
 using static mrHelper.Client.Services.ServiceManager;
 using mrHelper.Client.Discussions;
+using static mrHelper.Client.Common.UserEvents;
 
 namespace mrHelper.App.Forms
 {
@@ -56,7 +57,11 @@ namespace mrHelper.App.Forms
          if (listViewMergeRequests.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
-            return new MergeRequestKey(fmk.HostName, fmk.Project.Path_With_Namespace, fmk.MergeRequest.IId);
+            return new MergeRequestKey
+            {
+               ProjectKey = fmk.ProjectKey,
+               IId = fmk.MergeRequest.IId
+            };
          }
          //Debug.Assert(false);
          return null;
@@ -141,7 +146,7 @@ namespace mrHelper.App.Forms
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
             if (projectname == String.Empty ||
-                (iid == key.MergeRequest.IId && projectname == key.Project.Path_With_Namespace))
+                (iid == key.MergeRequest.IId && projectname == key.ProjectKey.ProjectName))
             {
                item.Selected = true;
                return true;
@@ -261,16 +266,6 @@ namespace mrHelper.App.Forms
             Debug.Assert(comboBoxRightCommit.SelectedItem != null);
             return ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).SHA;
          }
-      }
-
-      private void showTooltipBalloon(BalloonText balloonText)
-      {
-         notifyIcon.BalloonTipTitle = balloonText.Title;
-         notifyIcon.BalloonTipText = balloonText.Text;
-         notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
-
-         Trace.TraceInformation(String.Format("Tooltip: Title \"{0}\" Text \"{1}\"",
-            balloonText.Title, balloonText.Text)); 
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -604,221 +599,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private enum MergeRequestEvent
-      {
-         New,
-         Closed,
-         Updated
-      }
-
-      private struct BalloonText
-      {
-         public string Title;
-         public string Text;
-      }
-
-      private BalloonText getBalloonText(string projectName, MergeRequest mergeRequest, MergeRequestEvent e)
-      {
-         projectName = projectName == String.Empty ? "N/A" : projectName;
-
-         switch (e)
-         {
-            case MergeRequestEvent.New:
-               return new BalloonText
-               {
-                  Title = "Merge Request Event",
-                  Text = String.Format("New merge request \"{0}\" from {1} in project {2}",
-                                       mergeRequest.Title, mergeRequest.Author.Name, projectName)
-               };
-
-            case MergeRequestEvent.Closed:
-               return new BalloonText
-               {
-                  Title = "Merge Request Event",
-                  Text = String.Format("Merge request \"{0}\" from {1} in project {2} was merged/closed",
-                                       mergeRequest.Title, mergeRequest.Author.Name, projectName)
-               };
-
-            case MergeRequestEvent.Updated:
-               return new BalloonText
-               {
-                  Title = "Merge Request Event",
-                  Text = String.Format("New commits in merge request \"{0}\" from {1} in project {2}",
-                                       mergeRequest.Title, mergeRequest.Author.Name, projectName)
-               };
-
-            default:
-               Debug.Assert(false);
-               return new BalloonText();
-         }
-      }
-
-      private BalloonText getBalloonText(MergeRequest mergeRequest, DiscussionParser.Event e, object o)
-      {
-         switch (e)
-         {
-            case DiscussionParser.Event.ResolvedAllThreads:
-               return new BalloonText
-               {
-                  Title = "Discussion Event",
-                  Text = String.Format("All discussions were resolved in merge request \"{0}\" from {1}",
-                                       mergeRequest.Title, mergeRequest.Author.Name)
-               };
-
-            case DiscussionParser.Event.MentionedCurrentUser:
-               User author = (User)o;
-               return new BalloonText
-               {
-                  Title = "Discsussion Event",
-                  Text = String.Format("{0} mentioned you in a discussion of merge request \"{1}\"",
-                                       author.Name, mergeRequest.Title)
-               };
-
-            case DiscussionParser.Event.Keyword:
-               DiscussionParser.KeywordDescription kd = (DiscussionParser.KeywordDescription)o;
-               return new BalloonText
-               {
-                  Title = "Discussion Event",
-                  Text = String.Format("{0} said \"{1}\" in merge request \"{2}\"",
-                                       kd.Author.Name, kd.Keyword, mergeRequest.Title)
-               };
-
-            default:
-               Debug.Assert(false);
-               return new BalloonText();
-         }
-      }
-
-      private void notifyOnMergeRequestUpdates(List<UpdatedMergeRequest> updates)
-      {
-         string[] selected = getSelectedLabels();
-         List<UpdatedMergeRequest> interesting = selected == null ?
-            updates : updates.Where(x => !isFilteredMergeRequest(x, selected)).ToList();
-
-         interesting = interesting
-            .Where(x => checkBoxShowMyActivity.Checked || !isCurrentUserActivity(_currentUser ?? new User(), x))
-            .ToList();
-
-         interesting
-            .Where(x => checkBoxShowNewMergeRequests.Checked && x.UpdateKind == UpdateKind.New)
-            .ToList()
-            .ForEach(x =>
-            showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.New)));
-
-         interesting
-            .Where(x => checkBoxShowMergedMergeRequests.Checked && x.UpdateKind == UpdateKind.Closed)
-            .ToList()
-            .ForEach(x =>
-            showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.Closed)));
-
-         interesting
-            .Where(x => checkBoxShowUpdatedMergeRequests.Checked &&
-                  (x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated))
-            .ToList()
-            .ForEach(x =>
-            showTooltipBalloon(getBalloonText(x.Project.Path_With_Namespace, x.MergeRequest, MergeRequestEvent.Updated)));
-      }
-
-      private void notifyOnDiscussionEvent(MergeRequestKey mrk, DiscussionParser.Event e, object o)
-      {
-         string[] selected = getSelectedLabels();
-         int index = _allMergeRequests.FindIndex(
-            x => x.HostName == mrk.ProjectKey.HostName
-              && x.Project.Path_With_Namespace == mrk.ProjectKey.ProjectName
-              && x.MergeRequest.IId == mrk.IId);
-         if (index == -1 || isFilteredMergeRequest(_allMergeRequests[index].MergeRequest, selected))
-         {
-            return;
-         }
-
-         if ((isCurrentUserActivity(_currentUser ?? new User(), e, o) && !checkBoxShowMyActivity.Checked)  ||
-             (e == DiscussionParser.Event.ResolvedAllThreads          && !checkBoxShowResolvedAll.Checked) ||
-             (e == DiscussionParser.Event.MentionedCurrentUser        && !checkBoxShowOnMention.Checked)   ||
-             (e == DiscussionParser.Event.Keyword                     && !checkBoxShowKeywords.Checked))
-         {
-            return;
-         }
-
-         showTooltipBalloon(getBalloonText(_allMergeRequests[index].MergeRequest, e, o));
-      }
-
-      private static bool isCurrentUserActivity(User currentUser, UpdatedMergeRequest m)
-      {
-         return m.MergeRequest.Author.Id == currentUser.Id;
-      }
-
-      private static bool isCurrentUserActivity(User currentUser, DiscussionParser.Event e, object o)
-      {
-         switch (e)
-         {
-            case DiscussionParser.Event.ResolvedAllThreads:
-               return ((User)o).Id == currentUser.Id;
-
-            case DiscussionParser.Event.MentionedCurrentUser:
-               return ((User)o).Id == currentUser.Id;
-
-            case DiscussionParser.Event.Keyword:
-               return ((DiscussionParser.KeywordDescription)o).Author.Id == currentUser.Id;
-
-            default:
-               Debug.Assert(false);
-               return false;
-         }
-      }
-
-      private static string[] getSelectedLabels()
-      {
-         if (!Program.Settings.CheckedLabelsFilter)
-         {
-             return null;
-         }
-
-         return Program.Settings.LastUsedLabels .Split(',').Select(x => x.Trim(' ')).ToArray();
-      }
-
-      private static MergeRequest GetMergeRequest(MergeRequest x) => x;
-      private static MergeRequest GetMergeRequest(UpdatedMergeRequest x) => x.MergeRequest;
-
-      private bool isFilteredMergeRequest<T>(T mergeRequestT, string[] selected)
-      {
-         if (selected == null || (selected.Length == 1 && selected[0] == String.Empty))
-         {
-            return false;
-         }
-
-         MergeRequest mergeRequest = GetMergeRequest((dynamic)mergeRequestT);
-         foreach (string item in selected)
-         {
-            if (item.StartsWith(authorLabelPrefix))
-            {
-               if (mergeRequest.Author.Username.StartsWith(item.Substring(1)))
-               {
-                  return false;
-               }
-            }
-            else if (item.StartsWith(gitlabLabelPrefix))
-            {
-               if (mergeRequest.Labels.Any(x => x.StartsWith(item)))
-               {
-                  return false;
-               }
-            }
-            else if (item != String.Empty)
-            {
-               if (mergeRequest.IId.ToString().Contains(item)
-                || mergeRequest.Author.Username.Contains(item)
-                || mergeRequest.Author.Name.Contains(item)
-                || mergeRequest.Labels.Any(x => x.Contains(item))
-                || mergeRequest.Title.Contains(item))
-               {
-                  return false;
-               }
-            }
-         }
-
-         return true;
-      }
-
       private GitClientFactory getGitClientFactory(string localFolder)
       {
          if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
@@ -827,7 +607,8 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new GitClientFactory(localFolder, _updateManager.GetProjectWatcher(), this);
+               _gitClientFactory = new GitClientFactory(localFolder,
+                  _mergeRequestManager.GetUpdateManager().GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {
@@ -951,26 +732,34 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         foreach (FullMergeRequestKey fmk in _allMergeRequests)
+         foreach (ProjectKey projectKey in listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag))
          {
-            int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
-               x => FullMergeRequestKey.SameMergeRequest((FullMergeRequestKey)x.Tag, fmk));
-            if (index == -1)
+            foreach (MergeRequest mergeRequest in _mergeRequestManager.GetMergeRequests(projectKey))
             {
-               addListViewMergeRequestItem(fmk);
-            }
-            else
-            {
-               setListViewItemTag(listViewMergeRequests.Items[index], fmk);
+               MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
+               int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
+                  x =>
+               {
+                  FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
+                  return fmk.ProjectKey.Equals(mrk.ProjectKey) && fmk.MergeRequest.IId == mrk.IId;
+               });
+               if (index == -1)
+               {
+                  addListViewMergeRequestItem(mrk);
+               }
+               else
+               {
+                  setListViewItemTag(listViewMergeRequests.Items[index], mrk);
+               }
             }
          }
 
-         string[] selected = getSelectedLabels();
+         string[] selected = ConfigurationHelper.GetLabels(Program.Settings);
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
-            if (!_allMergeRequests.Any(x => FullMergeRequestKey.SameMergeRequest(x, fmk))
-               || isFilteredMergeRequest(fmk.MergeRequest, selected))
+            if (!_mergeRequestManager.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
+               || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
             {
                listViewMergeRequests.Items.RemoveAt(index);
             }
@@ -980,9 +769,9 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.Invalidate();
       }
 
-      private void addListViewMergeRequestItem(FullMergeRequestKey fmk)
+      private void addListViewMergeRequestItem(MergeRequestKey mrk)
       {
-         ListViewGroup group = listViewMergeRequests.Groups[fmk.Project.Path_With_Namespace];
+         ListViewGroup group = listViewMergeRequests.Groups[mrk.ProjectKey.ProjectName];
          ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
             {
                String.Empty, // Column IId (stub)
@@ -992,29 +781,41 @@ namespace mrHelper.App.Forms
                String.Empty, // Column Jira (stub)
                String.Empty, // Column Total Time (stub)
             }, group));
-         setListViewItemTag(item, fmk);
+         Debug.Assert(item.SubItems.Count == listViewMergeRequests.Columns.Count);
+         setListViewItemTag(item, mrk);
       }
 
-      private void setListViewItemTag(ListViewItem item, FullMergeRequestKey fmk)
+      private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         item.Tag = fmk;
-         MergeRequest mr = fmk.MergeRequest;
+         MergeRequest? mergeRequest = _mergeRequestManager.GetMergeRequest(mrk);
+         if (!mergeRequest.HasValue)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
-         string author = String.Format("{0}\n({1}{2})", mr.Author.Name, authorLabelPrefix, mr.Author.Username);
+         MergeRequest mr = mergeRequest.Value;
+
+         item.Tag = new FullMergeRequestKey
+         {
+            ProjectKey = mrk.ProjectKey,
+            MergeRequest = mr
+         };
+
+         string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
+            Common.Constants.Constants.AuthorLabelPrefix, mr.Author.Username);
 
          string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
          string jiraTask = getJiraTask(mr);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(), () => mr.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,            () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,          () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),  () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,          () => jiraTaskUrl);
-         item.SubItems[5].Tag = new ListViewSubItemInfo(
-            () => getTotalTimeAsText(new MergeRequestKey(fmk.HostName, fmk.Project.Path_With_Namespace, mr.IId)),
-            () => String.Empty);
+         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                  () => String.Empty);
+         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,                () => String.Empty);
+         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty);
+         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl);
+         item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeAsText(mrk), () => String.Empty);
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -1036,7 +837,7 @@ namespace mrHelper.App.Forms
          mergeRequest.Labels.Sort();
 
          var query = mergeRequest.Labels.GroupBy(
-            (label) => label.StartsWith(gitlabLabelPrefix) && label.IndexOf('-') != -1 ?
+            (label) => label.StartsWith(Common.Constants.Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1 ?
                label.Substring(0, label.IndexOf('-')) : label,
             (label) => label,
             (baseLabel, labels) => new
@@ -1085,105 +886,22 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private int GetIndex<T>(ListView.ListViewItemCollection collection, Func<T, bool> match)
+      private void processUpdate(MergeRequestEvent e)
       {
-         for (int index = collection.Count - 1; index >= 0; --index)
-         {
-            if (match((dynamic)(collection[index].Tag)))
-            {
-               return index;
-            }
-         }
-         return -1;
-      }
+         updateVisibleMergeRequests();
 
-      private int GetIndex<T>(List<FullMergeRequestKey> collection, Func<T, bool> match)
-      {
-         return collection.FindIndex(x => match((dynamic)x));
-      }
+         if (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest && listViewMergeRequests.Items.Cast<ListViewItem>()
+             .Any(x =>
+             {
+                if (!x.Selected)
+                {
+                   return false;
+                }
 
-      private void findAndProcess<T, U>(T collection, Func<U, bool> match, Action<int> action)
-      {
-         int index = GetIndex((dynamic)collection, match);
-         if (index != -1)
-         {
-            action(index);
-         }
-      }
-
-      private struct UpdateHint
-      {
-         public bool UpdateAllVisibleRows;
-         public bool ReloadCurrent;
-
-         public static UpdateHint operator + (UpdateHint a, UpdateHint b)
-         {
-            return new UpdateHint
-            {
-               UpdateAllVisibleRows = a.UpdateAllVisibleRows || b.UpdateAllVisibleRows,
-               ReloadCurrent = a.ReloadCurrent || b.ReloadCurrent,
-            };
-         }
-      }
-
-      private void processUpdates(List<UpdatedMergeRequest> updates)
-      {
-         notifyOnMergeRequestUpdates(updates);
-
-         Func<FullMergeRequestKey, UpdateHint> processNew = (fmk) =>
-         {
-            _allMergeRequests.Add(fmk);
-            return new UpdateHint { UpdateAllVisibleRows = true };
-         };
-
-         Func<FullMergeRequestKey, UpdateHint> processClosed = (fmk) =>
-         {
-            findAndProcess<List<FullMergeRequestKey>, FullMergeRequestKey>(
-               _allMergeRequests, x => FullMergeRequestKey.SameMergeRequest(x, fmk),
-               (index) => _allMergeRequests.RemoveAt(index));
-            return new UpdateHint { UpdateAllVisibleRows = true };
-         };
-
-         Func<FullMergeRequestKey, UpdateHint> processLabelsUpdated = (fmk) =>
-         {
-            findAndProcess<List<FullMergeRequestKey>, FullMergeRequestKey>(
-               _allMergeRequests, x => FullMergeRequestKey.SameMergeRequest(x, fmk),
-               (index) => _allMergeRequests[index] = fmk);
-            return new UpdateHint { UpdateAllVisibleRows = true };
-         };
-
-         Func<FullMergeRequestKey, UpdateHint> processCommitsUpdated = (fmk) =>
-         {
-            bool reloadCurrent = false;
-            findAndProcess<ListView.ListViewItemCollection, FullMergeRequestKey>(
-               listViewMergeRequests.Items, x => FullMergeRequestKey.SameMergeRequest(x, fmk),
-               (index) => reloadCurrent = reloadCurrent || listViewMergeRequests.Items[index].Selected);
-            return new UpdateHint { ReloadCurrent = reloadCurrent };
-         };
-
-         UpdateHint updateHint = new UpdateHint();
-         foreach (UpdatedMergeRequest mergeRequest in updates)
-         {
-            FullMergeRequestKey fmk = new FullMergeRequestKey(
-               mergeRequest.HostName, mergeRequest.Project, mergeRequest.MergeRequest);
-
-            switch (mergeRequest.UpdateKind)
-            {
-               case UpdateKind.New:                      updateHint += processNew(fmk);            break;
-               case UpdateKind.Closed:                   updateHint += processClosed(fmk);         break;
-               case UpdateKind.CommitsUpdated:           updateHint += processCommitsUpdated(fmk); break;
-               case UpdateKind.LabelsUpdated:            updateHint += processLabelsUpdated(fmk);  break;
-               case UpdateKind.CommitsAndLabelsUpdated:  updateHint += processCommitsUpdated(fmk)
-                                                                     + processLabelsUpdated(fmk);  break;
-            }
-         }
-
-         if (updateHint.UpdateAllVisibleRows)
-         {
-            updateVisibleMergeRequests();
-         }
-
-         if (updateHint.ReloadCurrent)
+                FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
+                return fmk.ProjectKey.Equals(e.FullMergeRequestKey.ProjectKey)
+                    && fmk.MergeRequest.IId == e.FullMergeRequestKey.MergeRequest.IId;
+             }))
          {
             Trace.TraceInformation("[MainForm] Reloading current Merge Request");
 
@@ -1245,9 +963,6 @@ namespace mrHelper.App.Forms
 
          return true;
       }
-
-      private static readonly string authorLabelPrefix = "#";
-      private static readonly string gitlabLabelPrefix = "@";
    }
 }
 

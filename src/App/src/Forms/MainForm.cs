@@ -20,6 +20,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.Services;
+using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.App.Forms
 {
@@ -31,17 +32,13 @@ namespace mrHelper.App.Forms
       private static readonly int timeTrackingTimerInterval = 1000; // ms
       private static readonly int checkForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
 
-      /// <summary>
-      /// Tooltip timeout in seconds
-      /// </summary>
-      private const int notifyTooltipTimeout = 5;
-
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
       internal MainForm()
       {
          InitializeComponent();
+         _trayIcon = new TrayIcon(notifyIcon);
       }
 
       public string GetCurrentHostName()
@@ -51,7 +48,7 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentAccessToken()
       {
-         return Program.Settings.GetAccessToken(getHostName());
+         return ConfigurationHelper.GetAccessToken(getHostName(), Program.Settings);
       }
 
       public string GetCurrentProjectName()
@@ -72,15 +69,15 @@ namespace mrHelper.App.Forms
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
       private bool _userIsMovingSplitter = false;
+      private TrayIcon _trayIcon;
 
-      private UpdateManager _updateManager;
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
       private GitClientFactory _gitClientFactory;
       private GitClientInteractiveUpdater _gitClientUpdater;
       private PersistentStorage _persistentStorage;
       private RevisionCacher _revisionCacher;
-      private DiscussionParser _discussionParser;
+      private UserNotifier _userNotifier;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
@@ -136,28 +133,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private struct FullMergeRequestKey
-      {
-         public string HostName;
-         public Project Project;
-         public MergeRequest MergeRequest;
-
-         public FullMergeRequestKey(string hostname, Project project, MergeRequest mergeRequest)
-         {
-            HostName = hostname;
-            Project = project;
-            MergeRequest = mergeRequest;
-         }
-
-         public static bool SameMergeRequest(FullMergeRequestKey fmk1, FullMergeRequestKey fmk2)
-         {
-            return fmk1.HostName == fmk2.HostName
-                && fmk1.Project.Path_With_Namespace == fmk2.Project.Path_With_Namespace
-                && fmk1.MergeRequest.IId == fmk2.MergeRequest.IId;
-         }
-      }
-
-      private readonly List<FullMergeRequestKey> _allMergeRequests = new List<FullMergeRequestKey>();
+      private MergeRequestManager _mergeRequestManager;
 
       private struct ListViewSubItemInfo
       {

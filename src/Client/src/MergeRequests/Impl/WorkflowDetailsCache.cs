@@ -11,7 +11,7 @@ using System.Diagnostics;
 using Version = GitLabSharp.Entities.Version;
 using GitLabSharp;
 
-namespace mrHelper.Client.Updates
+namespace mrHelper.Client.MergeRequests
 {
    internal class WorkflowDetailsCache
    {

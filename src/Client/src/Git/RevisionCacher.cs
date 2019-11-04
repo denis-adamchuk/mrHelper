@@ -22,7 +22,7 @@ namespace mrHelper.Client.Git
    {
       public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings, Func<ProjectKey, GitClient> getGitClient,
-         Func<ProjectKey, MergeRequest[]> getMergeRequests)
+         Func<ProjectKey, IEnumerable<MergeRequest>> getMergeRequests)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
@@ -77,7 +77,13 @@ namespace mrHelper.Client.Git
             {
                ProjectKey projectKey = gitClient.ProjectKey;
                DateTime prevLatestChange = _latestChanges[gitClient];
-               foreach (MergeRequest mergeRequest in _getMergeRequests(projectKey))
+
+               // Make a copy because the original collection may change during async/await in a loop below
+               MergeRequest[] origMergeRequests = _getMergeRequests(projectKey).ToArray();
+               MergeRequest[] copyMergeRequests = new MergeRequest[origMergeRequests.Length];
+               Array.Copy(origMergeRequests, copyMergeRequests, origMergeRequests.Length);
+
+               foreach (MergeRequest mergeRequest in copyMergeRequests)
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                   List<Version> newVersions = await _operator.LoadVersions(mrk);
@@ -233,7 +239,7 @@ namespace mrHelper.Client.Git
       private Dictionary<GitClient, DateTime> _latestChanges;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionOperator _operator;
-      private readonly Func<ProjectKey, MergeRequest[]> _getMergeRequests;
+      private readonly Func<ProjectKey, IEnumerable<MergeRequest>> _getMergeRequests;
    }
 }
 

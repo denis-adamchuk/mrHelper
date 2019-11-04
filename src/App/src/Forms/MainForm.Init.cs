@@ -22,6 +22,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.Persistence;
 using mrHelper.Core.Git;
+using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.App.Forms
 {
@@ -134,7 +135,7 @@ namespace mrHelper.App.Forms
          checkBoxShowNewMergeRequests.Checked = Program.Settings.Notifications_NewMergeRequests;
          checkBoxShowMergedMergeRequests.Checked = Program.Settings.Notifications_MergedMergeRequests;
          checkBoxShowUpdatedMergeRequests.Checked = Program.Settings.Notifications_UpdatedMergeRequests;
-         checkBoxShowResolvedAll.Checked = Program.Settings.Notifications_ResolvedAllThreads;
+         checkBoxShowResolvedAll.Checked = Program.Settings.Notifications_AllThreadsResolved;
          checkBoxShowOnMention.Checked = Program.Settings.Notifications_OnMention;
          checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
@@ -235,11 +236,6 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
-         // Revision Cacher subscribes to Workflow notifications
-         _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
-            (projectKey) => getGitClient(projectKey, false),
-            (projectKey) => _updateManager.GetMergeRequests(projectKey).ToArray());
-
          // Expression resolver requires Workflow 
          _expressionResolver = new ExpressionResolver(_workflow);
 
@@ -247,27 +243,27 @@ namespace mrHelper.App.Forms
          fillColorSchemesList();
          initializeColorScheme();
 
-         // Update manager indirectly subscribes to Workflow
-         _updateManager = new UpdateManager(_workflow, this, Program.Settings);
-
-         // It is important to subcribe MainForm to updates before other subscribers because
-         // it stores _allMergeRequests which may be needed to other subscribers
-         _updateManager.OnUpdate += (updates) => processUpdates(updates);
+         _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings);
+         _mergeRequestManager.OnEvent += (e) => processUpdate(e);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _updateManager, this);
-
-         // Time Tracking Manager requires Workflow and Discussion Manager
-         createTimeTrackingManager();
-
          IEnumerable<string> keywords = _customCommands ?
             .Where(x => x is SendNoteCommand)
             .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
          checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords);
 
-         // Discussion Parser requires Workflow and Discussion Manager
-         _discussionParser = new DiscussionParser(_workflow, _discussionManager, keywords);
-         _discussionParser.DiscussionEvent += (mrk, e, o) => notifyOnDiscussionEvent(mrk, e, o);
+         EventFilter eventFilter = new EventFilter(Program.Settings, _workflow,
+            x => _mergeRequestManager.GetMergeRequest(x));
+         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestManager, _discussionManager, eventFilter);
+
+         // Revision Cacher subscribes to Workflow notifications
+         _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
+            projectKey => getGitClient(projectKey, false),
+            projectKey => _mergeRequestManager.GetMergeRequests(projectKey));
+
+         // Time Tracking Manager requires Workflow and Discussion Manager
+         createTimeTrackingManager();
 
          try
          {
