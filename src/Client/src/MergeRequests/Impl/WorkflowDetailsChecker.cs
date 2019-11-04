@@ -23,12 +23,12 @@ namespace mrHelper.Client.MergeRequests
    internal struct UpdatedMergeRequest
    {
       public UpdateKind UpdateKind;
-      public MergeRequestKey MergeRequestKey;
+      public FullMergeRequestKey FullMergeRequestKey;
 
-      internal UpdatedMergeRequest(UpdateKind kind, MergeRequestKey mergeRequestKey)
+      internal UpdatedMergeRequest(UpdateKind kind, FullMergeRequestKey fmk)
       {
          UpdateKind = kind;
-         MergeRequestKey = mergeRequestKey;
+         FullMergeRequestKey = fmk;
       }
    }
 
@@ -145,8 +145,8 @@ namespace mrHelper.Client.MergeRequests
                HostName = hostname,
                ProjectName = mergeRequest.Project.Path_With_Namespace
             };
-            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.MergeRequest.IId };
-            updates.Add(new UpdatedMergeRequest(UpdateKind.New, mrk));
+            FullMergeRequestKey fmk = new FullMergeRequestKey { ProjectKey = projectKey, MergeRequest = mergeRequest.MergeRequest };
+            updates.Add(new UpdatedMergeRequest(UpdateKind.New, fmk));
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
@@ -156,8 +156,8 @@ namespace mrHelper.Client.MergeRequests
                HostName = hostname,
                ProjectName = mergeRequest.Project.Path_With_Namespace
             };
-            MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.MergeRequest.IId };
-            updates.Add(new UpdatedMergeRequest(UpdateKind.Closed, mrk));
+            FullMergeRequestKey fmk = new FullMergeRequestKey { ProjectKey = projectKey, MergeRequest = mergeRequest.MergeRequest };
+            updates.Add(new UpdatedMergeRequest(UpdateKind.Closed, fmk));
          }
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
@@ -180,9 +180,14 @@ namespace mrHelper.Client.MergeRequests
 
             if (labelsUpdated || commitsUpdated)
             {
+               FullMergeRequestKey fmk = new FullMergeRequestKey
+               {
+                  ProjectKey = mergeRequestKey.ProjectKey,
+                  MergeRequest = mergeRequest
+               };
                UpdateKind kind = (labelsUpdated && commitsUpdated ? UpdateKind.CommitsAndLabelsUpdated :
                                  (labelsUpdated ? UpdateKind.LabelsUpdated : UpdateKind.CommitsUpdated));
-               updates.Add(new UpdatedMergeRequest(kind, mergeRequestKey));
+               updates.Add(new UpdatedMergeRequest(kind, fmk));
             }
          }
 

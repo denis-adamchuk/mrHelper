@@ -30,9 +30,9 @@ namespace mrHelper.App.Helpers
 
       private TrayIcon.BalloonText getBalloonText(UserEvents.MergeRequestEvent e)
       {
-         MergeRequest mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
-         string projectName = e.MergeRequestKey.ProjectKey.ProjectName;
+         string projectName = e.FullMergeRequestKey.ProjectKey.ProjectName;
          projectName = projectName == String.Empty ? "N/A" : projectName;
 
          switch (e.EventType)
@@ -54,6 +54,7 @@ namespace mrHelper.App.Helpers
                };
 
             case MergeRequestEvent.Type.UpdatedMergeRequest:
+               Debug.Assert(((MergeRequestEvent.UpdateDetails)e.Details).NewCommits);
                return new BalloonText
                {
                   Title = "Merge Request Event",
@@ -69,7 +70,7 @@ namespace mrHelper.App.Helpers
 
       private BalloonText getBalloonText(UserEvents.DiscussionEvent e)
       {
-         MergeRequest mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         MergeRequest? mergeRequest = _getMergeRequest(e.MergeRequestKey);
 
          switch (e.EventType)
          {
@@ -77,8 +78,9 @@ namespace mrHelper.App.Helpers
                return new BalloonText
                {
                   Title = "Discussion Event",
-                  Text = String.Format("All discussions were resolved in merge request \"{0}\" from {1}",
-                                       mergeRequest.Title, mergeRequest.Author.Name)
+                  Text = String.Format("All discussions were resolved in merge request \"{0}\"",
+                                       mergeRequest?.Title ?? e.MergeRequestKey.IId.ToString(),
+                                       mergeRequest.HasValue ? " from " + mergeRequest.Value.Author.Name : String.Empty)
                };
 
             case DiscussionEvent.Type.MentionedCurrentUser:
@@ -87,7 +89,7 @@ namespace mrHelper.App.Helpers
                {
                   Title = "Discsussion Event",
                   Text = String.Format("{0} mentioned you in a discussion of merge request \"{1}\"",
-                                       author.Name, mergeRequest.Title)
+                                       author.Name, mergeRequest?.Title ?? e.MergeRequestKey.IId.ToString())
                };
 
             case DiscussionEvent.Type.Keyword:
@@ -96,7 +98,8 @@ namespace mrHelper.App.Helpers
                {
                   Title = "Discussion Event",
                   Text = String.Format("{0} said \"{1}\" in merge request \"{2}\"",
-                                       kd.Author.Name, kd.Keyword, mergeRequest.Title)
+                                       kd.Author.Name, kd.Keyword,
+                                       mergeRequest?.Title ?? e.MergeRequestKey.IId.ToString())
                };
 
             default:
@@ -119,6 +122,6 @@ namespace mrHelper.App.Helpers
       private readonly UserDefinedSettings _settings;
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
-      private readonly Func<MergeRequestKey, MergeRequest> _getMergeRequest;
+      private readonly Func<MergeRequestKey, MergeRequest?> _getMergeRequest;
    }
 }

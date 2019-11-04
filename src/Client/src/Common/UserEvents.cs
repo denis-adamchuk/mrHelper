@@ -20,7 +20,13 @@ namespace mrHelper.Client.Common
             ClosedMergeRequest
          }
 
-         public MergeRequestKey MergeRequestKey;
+         public struct UpdateDetails
+         {
+            public bool NewCommits;
+            public bool ChangedLabels;
+         }
+
+         public FullMergeRequestKey FullMergeRequestKey;
          public Type EventType;
          public object Details;
       }

@@ -1,9 +1,9 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.Client.Tools
 {
-   internal struct FullMergeRequestKey
+   public struct FullMergeRequestKey
    {
       public ProjectKey ProjectKey;
       public MergeRequest MergeRequest;

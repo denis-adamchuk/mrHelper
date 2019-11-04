@@ -58,14 +58,22 @@ namespace mrHelper.Client.MergeRequests
          _updateManager?.Dispose();
       }
 
+      /// <summary>
+      /// Return open merge requests in the given project
+      /// </summary>
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
          return _cache.Details.GetMergeRequests(projectKey);
       }
 
-      public MergeRequest GetMergeRequest(MergeRequestKey mrk)
+      /// <summary>
+      /// Return currently cached Merge Request by its key or null if nothing is cached
+      /// </summary>
+      public MergeRequest? GetMergeRequest(MergeRequestKey mrk)
       {
-         return _cache.Details.GetMergeRequests(mrk.ProjectKey).Find(x => x.IId == mrk.IId);
+         IEnumerable<MergeRequest> mergeRequests = GetMergeRequests(mrk.ProjectKey);
+         MergeRequest result = mergeRequests.FirstOrDefault(x => x.IId == mrk.IId);
+         return result.Id == default(MergeRequest).Id ? new MergeRequest?() : result;
       }
 
       public IUpdateManager GetUpdateManager()
@@ -101,9 +109,16 @@ namespace mrHelper.Client.MergeRequests
 
             OnEvent?.Invoke(new UserEvents.MergeRequestEvent
             {
-               MergeRequestKey = mergeRequest.MergeRequestKey,
+               FullMergeRequestKey = mergeRequest.FullMergeRequestKey,
                EventType = type,
-               Details = null
+               Details = type == UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest ?
+                  new UserEvents.MergeRequestEvent.UpdateDetails
+                  {
+                     NewCommits = mergeRequest.UpdateKind == UpdateKind.CommitsUpdated ||
+                                  mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated,
+                     ChangedLabels = mergeRequest.UpdateKind == UpdateKind.LabelsUpdated ||
+                                     mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated
+                  } : new object()
             });
          }
       }

@@ -14,7 +14,7 @@ namespace mrHelper.App.Helpers
    internal class EventFilter
    {
       internal EventFilter(UserDefinedSettings settings, Workflow workflow,
-         Func<MergeRequestKey, MergeRequest> getMergeRequest)
+         Func<MergeRequestKey, MergeRequest?> getMergeRequest)
       {
          _settings = settings;
          _getMergeRequest = getMergeRequest;
@@ -23,22 +23,26 @@ namespace mrHelper.App.Helpers
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
       {
-         MergeRequest mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
-         string[] selected = _settings.GetLabels();
-         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, selected)
+         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, _settings.GetLabels())
             || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
             || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !_settings.Notifications_UpdatedMergeRequests)
+            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !((MergeRequestEvent.UpdateDetails)e.Details).NewCommits)
             || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest        && !_settings.Notifications_MergedMergeRequests));
       }
 
       internal bool NeedSuppressEvent(DiscussionEvent e)
       {
-         MergeRequest mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         MergeRequest? mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         if (!mergeRequest.HasValue)
+         {
+            // TODO Consider not supressing OnMention event even if MR is closed
+            return true;
+         }
 
-         string[] selected = _settings.GetLabels();
-         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, selected)
+         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest.Value, _settings.GetLabels())
             || (isCurrentUserActivity(_currentUser ?? new User(), e)            && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_ResolvedAllThreads)
             || (e.EventType == DiscussionEvent.Type.MentionedCurrentUser        && !_settings.Notifications_OnMention)
@@ -71,6 +75,7 @@ namespace mrHelper.App.Helpers
 
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
-      private readonly Func<MergeRequestKey, MergeRequest> _getMergeRequest;
+      private readonly Func<MergeRequestKey, MergeRequest?> _getMergeRequest;
    }
 }
+

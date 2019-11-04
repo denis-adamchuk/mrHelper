@@ -57,13 +57,17 @@ namespace mrHelper.Client.MergeRequests
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectKey.ProjectName == mergeRequest.MergeRequestKey.ProjectKey.ProjectName)
+               if (projectUpdates[iUpdate].ProjectKey.ProjectName == mergeRequest.FullMergeRequestKey.ProjectKey.ProjectName)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }
             }
 
-            MergeRequestKey mrk = mergeRequest.MergeRequestKey;
+            MergeRequestKey mrk = new MergeRequestKey
+            {
+               ProjectKey = mergeRequest.FullMergeRequestKey.ProjectKey,
+               IId = mergeRequest.FullMergeRequestKey.MergeRequest.IId
+            };
 
             updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
                details.GetLatestChangeTimestamp(mrk) : updateTimestamp;

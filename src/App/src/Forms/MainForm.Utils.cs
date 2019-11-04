@@ -787,7 +787,15 @@ namespace mrHelper.App.Forms
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         MergeRequest mr = _mergeRequestManager.GetMergeRequest(mrk);
+         MergeRequest? mergeRequest = _mergeRequestManager.GetMergeRequest(mrk);
+         if (!mergeRequest.HasValue)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         MergeRequest mr = mergeRequest.Value;
+
          item.Tag = new FullMergeRequestKey
          {
             ProjectKey = mrk.ProjectKey,
@@ -891,7 +899,8 @@ namespace mrHelper.App.Forms
                 }
 
                 FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
-                return fmk.ProjectKey.Equals(e.MergeRequestKey.ProjectKey) && fmk.MergeRequest.IId == e.MergeRequestKey.IId;
+                return fmk.ProjectKey.Equals(e.FullMergeRequestKey.ProjectKey)
+                    && fmk.MergeRequest.IId == e.FullMergeRequestKey.MergeRequest.IId;
              }))
          {
             Trace.TraceInformation("[MainForm] Reloading current Merge Request");

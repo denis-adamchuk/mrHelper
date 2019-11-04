@@ -143,7 +143,6 @@
     <Compile Include="src\Helpers\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\MergeRequestFilter.cs" />
     <Compile Include="src\Helpers\Notifications\EventFilter.cs" />
-    <Compile Include="src\Helpers\FullMergeRequestKey.cs" />
     <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\Helpers\Notifications\TrayIcon.cs" />
     <Compile Include="src\Helpers\Notifications\UserNotifier.cs" />

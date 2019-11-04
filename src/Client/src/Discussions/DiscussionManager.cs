@@ -31,7 +31,7 @@ namespace mrHelper.Client.Discussions
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
-         _parser = new DiscussionParser(workflow, this, keywords, (e) => OnEvent?.Invoke(e));
+         _parser = new DiscussionParser(workflow, this, keywords, e => OnEvent?.Invoke(e));
 
          workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
@@ -64,12 +64,26 @@ namespace mrHelper.Client.Discussions
                case UserEvents.MergeRequestEvent.Type.NewMergeRequest:
                   Trace.TraceInformation(String.Format(
                      "[DiscussionManager] Scheduling update of discussions for a new merge request with IId",
-                     e.MergeRequestKey.IId));
-                  scheduleUpdate(new List<MergeRequestKey> { e.MergeRequestKey }, false);
+                     e.FullMergeRequestKey.MergeRequest.IId));
+                  scheduleUpdate(new List<MergeRequestKey>
+                  {
+                     new MergeRequestKey
+                     {
+                        ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                        IId = e.FullMergeRequestKey.MergeRequest.IId
+                     }
+                  }, false);
                   break;
 
                case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
-                  cleanup(new List<MergeRequestKey> { e.MergeRequestKey });
+                  cleanup(new List<MergeRequestKey>
+                  {
+                     new MergeRequestKey
+                     {
+                        ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                        IId = e.FullMergeRequestKey.MergeRequest.IId
+                     }
+                  });
                   break;
             }
          };
@@ -167,6 +181,11 @@ namespace mrHelper.Client.Discussions
                   mergeRequestUpdatedAt.ToLocalTime().ToString(),
                   _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString()));
             }
+            return;
+         }
+
+         if (!initialSnapshot && !_cachedDiscussions.ContainsKey(mrk))
+         {
             return;
          }
 
