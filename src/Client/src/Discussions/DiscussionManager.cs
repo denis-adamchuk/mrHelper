@@ -31,7 +31,7 @@ namespace mrHelper.Client.Discussions
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
-         _parser = new DiscussionParser(workflow, this, keywords, e => OnEvent?.Invoke(e));
+         new DiscussionParser(workflow, this, keywords, e => OnEvent?.Invoke(e));
 
          workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
@@ -65,14 +65,18 @@ namespace mrHelper.Client.Discussions
                   Trace.TraceInformation(String.Format(
                      "[DiscussionManager] Scheduling update of discussions for a new merge request with IId",
                      e.FullMergeRequestKey.MergeRequest.IId));
-                  scheduleUpdate(new List<MergeRequestKey>
+                  MergeRequestKey mrk = new MergeRequestKey
                   {
-                     new MergeRequestKey
-                     {
-                        ProjectKey = e.FullMergeRequestKey.ProjectKey,
-                        IId = e.FullMergeRequestKey.MergeRequest.IId
-                     }
-                  }, false);
+                     ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                     IId = e.FullMergeRequestKey.MergeRequest.IId
+                  };
+                  if (_closed.Contains(mrk))
+                  {
+                     Trace.TraceInformation(String.Format(
+                        "[DiscussionManager] MR IId {0} reopened", e.FullMergeRequestKey.MergeRequest.IId));
+                     _closed.Remove(mrk);
+                  }
+                  scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
                   break;
 
                case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
@@ -115,13 +119,14 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await updateDiscussionsAsync(mrk, true, false);
+            await updateDiscussionsAsync(mrk, true, !_updating.Contains(mrk));
          }
          catch (OperatorException)
          {
             throw new DiscussionManagerException();
          }
 
+         Debug.Assert(_cachedDiscussions.ContainsKey(mrk));
          return _cachedDiscussions[mrk].Discussions;
       }
 
@@ -185,8 +190,12 @@ namespace mrHelper.Client.Discussions
             return;
          }
 
-         if (!initialSnapshot && !_cachedDiscussions.ContainsKey(mrk))
+         if (_closed.Contains(mrk))
          {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Will not update MR because it is closed: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            _closed.Remove(mrk);
             return;
          }
 
@@ -197,7 +206,7 @@ namespace mrHelper.Client.Discussions
             _updating.Add(mrk);
             List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
 
-            if (_updating.Contains(mrk))
+            if (!_closed.Contains(mrk))
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
@@ -215,7 +224,10 @@ namespace mrHelper.Client.Discussions
             }
             else
             {
-               // Seems that MR was closed while loading discussions, don't cache it
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Will not cache MR because it is closed: Host={0}, Project={1}, IId={2}",
+                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+               _closed.Remove(mrk);
             }
 
             PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
@@ -240,6 +252,7 @@ namespace mrHelper.Client.Discussions
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _cachedDiscussions.Remove(mrk);
             _updating.Remove(mrk);
+            _closed.Add(mrk);
          }
       }
 
@@ -251,7 +264,6 @@ namespace mrHelper.Client.Discussions
       private ISynchronizeInvoke _synchronizeInvoke;
       private readonly UserDefinedSettings _settings;
       private readonly DiscussionOperator _operator;
-      private readonly DiscussionParser _parser;
 
       private struct CachedDiscussions
       {
@@ -263,6 +275,7 @@ namespace mrHelper.Client.Discussions
          new Dictionary<MergeRequestKey, CachedDiscussions>();
 
       private HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
+      private HashSet<MergeRequestKey> _closed = new HashSet<MergeRequestKey>();
    }
 }
 

@@ -77,7 +77,13 @@ namespace mrHelper.Client.Git
             {
                ProjectKey projectKey = gitClient.ProjectKey;
                DateTime prevLatestChange = _latestChanges[gitClient];
-               foreach (MergeRequest mergeRequest in _getMergeRequests(projectKey))
+
+               // Make a copy because the original collection may change during async/await in a loop below
+               MergeRequest[] origMergeRequests = _getMergeRequests(projectKey).ToArray();
+               MergeRequest[] copyMergeRequests = new MergeRequest[origMergeRequests.Length];
+               Array.Copy(origMergeRequests, copyMergeRequests, origMergeRequests.Length);
+
+               foreach (MergeRequest mergeRequest in copyMergeRequests)
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                   List<Version> newVersions = await _operator.LoadVersions(mrk);

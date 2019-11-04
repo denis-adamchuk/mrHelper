@@ -123,7 +123,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                CheckedLabelsFilterKeyName, boolToString(CheckedLabelsFilterDefaultValue)),
-                  out bool result) ? CheckedLabelsFilterDefaultValue : result;
+                  out bool result) ? result : CheckedLabelsFilterDefaultValue;
          }
          set { setValue(CheckedLabelsFilterKeyName, boolToString(value)); }
       }
@@ -140,7 +140,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                ShowPublicOnlyKeyName, boolToString(ShowPublicOnlyDefaultValue)),
-                  out bool result) ? ShowPublicOnlyDefaultValue : result;
+                  out bool result) ? result : ShowPublicOnlyDefaultValue;
          }
          set { setValue(ShowPublicOnlyKeyName, boolToString(value)); }
       }
@@ -151,7 +151,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                MinimizeOnCloseKeyName, boolToString(MinimizeOnCloseDefaultValue)),
-                  out bool result) ? MinimizeOnCloseDefaultValue : result;
+                  out bool result) ? result : MinimizeOnCloseDefaultValue;
          }
          set { setValue(MinimizeOnCloseKeyName, boolToString(value)); }
       }
@@ -185,7 +185,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_NewMergeRequests_KeyName, boolToString(Notifications_NewMergeRequests_DefaultValue)),
-                  out bool result) ? Notifications_NewMergeRequests_DefaultValue : result;
+                  out bool result) ? result : Notifications_NewMergeRequests_DefaultValue;
          }
          set { setValue(Notifications_NewMergeRequests_KeyName, boolToString(value)); }
       }
@@ -196,7 +196,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_MergedMergeRequests_KeyName, boolToString(Notifications_MergedMergeRequests_DefaultValue)),
-                  out bool result) ? Notifications_MergedMergeRequests_DefaultValue : result;
+                  out bool result) ? result : Notifications_MergedMergeRequests_DefaultValue;
          }
          set { setValue(Notifications_MergedMergeRequests_KeyName, boolToString(value)); }
       }
@@ -207,7 +207,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_UpdatedMergeRequests_KeyName, boolToString(Notifications_UpdatedMergeRequests_DefaultValue)),
-                  out bool result) ? Notifications_UpdatedMergeRequests_DefaultValue : result;
+                  out bool result) ? result : Notifications_UpdatedMergeRequests_DefaultValue;
          }
          set { setValue(Notifications_UpdatedMergeRequests_KeyName, boolToString(value)); }
       }
@@ -218,7 +218,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_AllThreadsResolved_KeyName, boolToString(Notifications_AllThreadsResolved_DefaultValue)),
-                  out bool result) ? Notifications_AllThreadsResolved_DefaultValue : result;
+                  out bool result) ? result : Notifications_AllThreadsResolved_DefaultValue;
          }
          set { setValue(Notifications_AllThreadsResolved_KeyName, boolToString(value)); }
       }
@@ -229,7 +229,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_OnMention_KeyName, boolToString(Notifications_OnMention_DefaultValue)),
-                  out bool result) ? Notifications_OnMention_DefaultValue : result;
+                  out bool result) ? result : Notifications_OnMention_DefaultValue;
          }
          set { setValue(Notifications_OnMention_KeyName, boolToString(value)); }
       }
@@ -240,7 +240,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_Keywords_KeyName, boolToString(Notifications_Keywords_DefaultValue)),
-                  out bool result) ? Notifications_Keywords_DefaultValue : result;
+                  out bool result) ? result : Notifications_Keywords_DefaultValue;
          }
          set { setValue(Notifications_Keywords_KeyName, boolToString(value)); }
       }
@@ -251,7 +251,7 @@ namespace mrHelper.Client.Tools
          {
             return bool.TryParse(getValue(
                Notifications_MyActivity_KeyName, boolToString(Notifications_MyActivity_DefaultValue)),
-                  out bool result) ? Notifications_MyActivity_DefaultValue : result;
+                  out bool result) ? result : Notifications_MyActivity_DefaultValue;
          }
          set { setValue(Notifications_MyActivity_KeyName, boolToString(value)); }
       }

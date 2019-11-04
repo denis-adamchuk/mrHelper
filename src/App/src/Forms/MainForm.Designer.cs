@@ -489,9 +489,9 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests.AutoSize = true;
          this.checkBoxShowMergedMergeRequests.Location = new System.Drawing.Point(9, 42);
          this.checkBoxShowMergedMergeRequests.Name = "checkBoxShowMergedMergeRequests";
-         this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(143, 17);
+         this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(189, 17);
          this.checkBoxShowMergedMergeRequests.TabIndex = 1;
-         this.checkBoxShowMergedMergeRequests.Text = "Merged Merge Requests";
+         this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests";
          this.checkBoxShowMergedMergeRequests.UseVisualStyleBackColor = true;
          this.checkBoxShowMergedMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
