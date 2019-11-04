@@ -243,24 +243,24 @@ namespace mrHelper.App.Forms
          fillColorSchemesList();
          initializeColorScheme();
 
-         _mergeRequestStorage = new MergeRequestManager(_workflow, this, Program.Settings);
-         _mergeRequestStorage.OnEvent += (e) => processUpdate(e);
+         _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings);
+         _mergeRequestManager.OnEvent += (e) => processUpdate(e);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
          IEnumerable<string> keywords = _customCommands ?
             .Where(x => x is SendNoteCommand)
             .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
          checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestStorage, this, keywords);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords);
 
          EventFilter eventFilter = new EventFilter(Program.Settings, _workflow,
-            x => _mergeRequestStorage.GetMergeRequest(x));
-         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestStorage, _discussionManager, eventFilter);
+            x => _mergeRequestManager.GetMergeRequest(x));
+         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestManager, _discussionManager, eventFilter);
 
          // Revision Cacher subscribes to Workflow notifications
          _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
             projectKey => getGitClient(projectKey, false),
-            projectKey => _mergeRequestStorage.GetMergeRequests(projectKey));
+            projectKey => _mergeRequestManager.GetMergeRequests(projectKey));
 
          // Time Tracking Manager requires Workflow and Discussion Manager
          createTimeTrackingManager();

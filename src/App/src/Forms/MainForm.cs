@@ -133,7 +133,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private MergeRequestManager _mergeRequestStorage;
+      private MergeRequestManager _mergeRequestManager;
 
       private struct ListViewSubItemInfo
       {

@@ -191,7 +191,7 @@ namespace mrHelper.App.Forms
          }
 
          ProjectKey projectKey = new ProjectKey { HostName = mergeRequestUrl.Host, ProjectName = mergeRequestUrl.Project };
-         if (_mergeRequestStorage.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
+         if (_mergeRequestManager.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
          {
             unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
          }

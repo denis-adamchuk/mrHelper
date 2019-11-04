@@ -604,7 +604,7 @@ namespace mrHelper.App.Forms
             try
             {
                _gitClientFactory = new GitClientFactory(localFolder,
-                  _mergeRequestStorage.GetUpdateManager().GetProjectWatcher(), this);
+                  _mergeRequestManager.GetUpdateManager().GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {
@@ -730,7 +730,7 @@ namespace mrHelper.App.Forms
       {
          foreach (ProjectKey projectKey in listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag))
          {
-            foreach (MergeRequest mergeRequest in _mergeRequestStorage.GetMergeRequests(projectKey))
+            foreach (MergeRequest mergeRequest in _mergeRequestManager.GetMergeRequests(projectKey))
             {
                MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
@@ -746,12 +746,13 @@ namespace mrHelper.App.Forms
             }
          }
 
+         string[] selected = Program.Settings.GetLabels();
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
             ProjectKey projectKey = new ProjectKey { HostName = fmk.HostName, ProjectName = fmk.Project.Path_With_Namespace };
-            if (!_mergeRequestStorage.GetMergeRequests(projectKey).Any(x => x.IId == fmk.MergeRequest.IId)
-               || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, Program.Settings.GetLabels()))
+            if (!_mergeRequestManager.GetMergeRequests(projectKey).Any(x => x.IId == fmk.MergeRequest.IId)
+               || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
             {
                listViewMergeRequests.Items.RemoveAt(index);
             }
@@ -773,13 +774,14 @@ namespace mrHelper.App.Forms
                String.Empty, // Column Jira (stub)
                String.Empty, // Column Total Time (stub)
             }, group));
+         Debug.Assert(item.SubItems.Count == listViewMergeRequests.Columns.Count);
          setListViewItemTag(item, mrk);
       }
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
          item.Tag = mrk;
-         MergeRequest mr = _mergeRequestStorage.GetMergeRequest(mrk);
+         MergeRequest mr = _mergeRequestManager.GetMergeRequest(mrk);
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Common.Constants.Constants.AuthorLabelPrefix, mr.Author.Username);

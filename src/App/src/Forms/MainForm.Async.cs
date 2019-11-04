@@ -42,7 +42,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(client,
-                  _mergeRequestStorage.GetUpdateManager().GetRemoteProjectChecker(mrk), updateGitStatusText);
+                  _mergeRequestManager.GetUpdateManager().GetRemoteProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -114,7 +114,7 @@ namespace mrHelper.App.Forms
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
                         await gitClient.Updater.ManualUpdateAsync(
-                           _mergeRequestStorage.GetUpdateManager().GetRemoteProjectChecker(key), null);
+                           _mergeRequestManager.GetUpdateManager().GetRemoteProjectChecker(key), null);
                      }
                   }
                   catch (GitOperationException ex)
@@ -183,7 +183,7 @@ namespace mrHelper.App.Forms
                // user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version
                await _gitClientUpdater.UpdateAsync(client,
-                  _mergeRequestStorage.GetUpdateManager().GetLocalProjectChecker(mrk), updateGitStatusText);
+                  _mergeRequestManager.GetUpdateManager().GetLocalProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -372,7 +372,7 @@ namespace mrHelper.App.Forms
          // Use Local Project Checker here because Remote Project Checker looks overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
          IInstantProjectChecker instantChecker =
-            _mergeRequestStorage.GetUpdateManager().GetLocalProjectChecker((dynamic)key);
+            _mergeRequestManager.GetUpdateManager().GetLocalProjectChecker((dynamic)key);
          try
          {
             await client.Updater.ManualUpdateAsync(instantChecker, null);
