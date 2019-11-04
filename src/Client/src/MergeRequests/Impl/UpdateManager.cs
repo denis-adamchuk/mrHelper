@@ -56,8 +56,11 @@ namespace mrHelper.Client.MergeRequests
          }
 
          MergeRequestKey mrk = _cache.Details.GetMergeRequests(pk).
-            Select(x => new MergeRequestKey(pk.HostName, pk.ProjectName, x.IId)).
-            OrderByDescending(x => _cache.Details.GetLatestChangeTimestamp(x)).First();
+            Select(x => new MergeRequestKey
+            {
+               ProjectKey = pk,
+               IId = x.IId
+            }).OrderByDescending(x => _cache.Details.GetLatestChangeTimestamp(x)).First();
          return GetLocalProjectChecker(mrk);
       }
 
@@ -114,7 +117,12 @@ namespace mrHelper.Client.MergeRequests
             Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               MergeRequestKey mrk = new MergeRequestKey(hostname, project.Path_With_Namespace, mergeRequest.IId);
+               ProjectKey pk = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+               MergeRequestKey mrk = new MergeRequestKey
+               {
+                  ProjectKey = pk,
+                  IId = mergeRequest.IId
+               };
 
                Version? latestVersion = await loadLatestVersionAsync(mrk);
                if (latestVersion != null)

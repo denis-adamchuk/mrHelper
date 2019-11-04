@@ -99,14 +99,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<bool> switchMergeRequestByUserAsync(string hostname, Project project, int mergeRequestIId)
+      async private Task<bool> switchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             mergeRequestIId.ToString()));
 
          try
          {
-            return await _workflow.LoadMergeRequestAsync(hostname, project.Path_With_Namespace, mergeRequestIId);
+            return await _workflow.LoadMergeRequestAsync(projectKey.HostName, projectKey.ProjectName, mergeRequestIId);
          }
          catch (WorkflowException ex)
          {
@@ -218,8 +218,6 @@ namespace mrHelper.App.Forms
 
       private void onProjectMergeRequestsLoaded(string hostname, Project project, List<MergeRequest> mergeRequests)
       {
-         updateVisibleMergeRequests();
-
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
@@ -229,6 +227,8 @@ namespace mrHelper.App.Forms
 
       private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)
       {
+         updateVisibleMergeRequests();
+
          buttonReloadList.Enabled = true;
 
          if (listViewMergeRequests.Items.Count > 0 || Program.Settings.CheckedLabelsFilter)
@@ -345,7 +345,11 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count));
 
-         scheduleSilentUpdate(new MergeRequestKey(hostname, projectname, mergeRequest.IId));
+         scheduleSilentUpdate(new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+            IId = mergeRequest.IId
+         });
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

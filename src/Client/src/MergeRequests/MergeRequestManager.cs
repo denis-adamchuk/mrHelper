@@ -37,7 +37,7 @@ namespace mrHelper.Client.MergeRequests
                _updateManager.OnUpdate += onUpdate;
 
                Trace.TraceInformation(String.Format(
-                  "[UpdateManager] Set hostname for updates to {0}, will trace updates in {1} projects",
+                  "[MergeRequestManager] Set hostname for updates to {0}, will trace updates in {1} projects",
                   hostname, projects.Count));
             }
          };
@@ -46,7 +46,11 @@ namespace mrHelper.Client.MergeRequests
             _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
 
          workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
-            _cache.UpdateLatestVersion(new MergeRequestKey(hostname, projectname, mergeRequest.IId), version);
+            _cache.UpdateLatestVersion(new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+               IId = mergeRequest.IId
+            }, version);
       }
 
       public void Dispose()

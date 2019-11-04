@@ -23,8 +23,8 @@ namespace mrHelper.App.Helpers
          _settings = settings;
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
-         mergeRequestManager.OnEvent += (e) => notifyOnMergeRequestEvent(e);
-         discussionManager.OnEvent += (e) => notifyOnDiscussionEvent(e);
+         mergeRequestManager.OnEvent += (e) => notifyOnEvent(e);
+         discussionManager.OnEvent += (e) => notifyOnEvent(e);
          _getMergeRequest = x => mergeRequestManager.GetMergeRequest(x);
       }
 
@@ -105,25 +105,14 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void notifyOnMergeRequestEvent(MergeRequestEvent e)
+      private void notifyOnEvent<EventT>(EventT e)
       {
-         if (_eventFilter.NeedSuppressEvent(e))
+         if (_eventFilter.NeedSuppressEvent((dynamic)e))
          {
             return;
          }
 
-         BalloonText balloonText = getBalloonText(e);
-         _trayIcon.ShowTooltipBalloon(balloonText);
-      }
-
-      private void notifyOnDiscussionEvent(DiscussionEvent e)
-      {
-         if (_eventFilter.NeedSuppressEvent(e))
-         {
-            return;
-         }
-
-         BalloonText balloonText = getBalloonText(e);
+         BalloonText balloonText = getBalloonText((dynamic)e);
          _trayIcon.ShowTooltipBalloon(balloonText);
       }
 

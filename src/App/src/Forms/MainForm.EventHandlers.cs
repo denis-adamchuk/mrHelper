@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,11 +10,6 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Persistence;
 using mrHelper.Client.TimeTracking;
-using mrHelper.Core.Interprocess;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.Workflow;
-using mrHelper.Client.Git;
-using mrHelper.CommonControls;
 using mrHelper.Common.Exceptions;
 using mrHelper.App.Helpers;
 
@@ -307,15 +301,15 @@ namespace mrHelper.App.Forms
          if (listView.SelectedItems.Count < 1)
          {
             // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
-            await switchMergeRequestByUserAsync(String.Empty, default(Project), 0);
+            await switchMergeRequestByUserAsync(default(ProjectKey), 0);
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         if (await switchMergeRequestByUserAsync(key.HostName, key.Project, key.MergeRequest.IId))
+         if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId))
          {
             Debug.Assert(getMergeRequestKey().HasValue);
-            _lastMergeRequestsByHosts[key.HostName] = getMergeRequestKey().Value;
+            _lastMergeRequestsByHosts[key.ProjectKey.HostName] = getMergeRequestKey().Value;
             return;
          }
       }
@@ -820,7 +814,11 @@ namespace mrHelper.App.Forms
                   string host = splitted[0];
                   string projectName = splitted[1];
                   int iid = int.Parse(splitted[2]);
-                  return new MergeRequestKey(host, projectName, iid);
+                  return new MergeRequestKey
+                  {
+                     ProjectKey = new ProjectKey { HostName = host, ProjectName = projectName },
+                     IId = iid
+                  };
                },
                item =>
                {
@@ -852,7 +850,11 @@ namespace mrHelper.App.Forms
                   string hostname2 = splitted[0];
                   string projectname = splitted[1];
                   int iid = int.Parse((string)item.Value);
-                  return new MergeRequestKey(hostname2, projectname, iid);
+                  return new MergeRequestKey
+                  {
+                     ProjectKey = new ProjectKey { HostName = hostname2, ProjectName = projectname },
+                     IId = iid
+                  };
                });
          }
       }

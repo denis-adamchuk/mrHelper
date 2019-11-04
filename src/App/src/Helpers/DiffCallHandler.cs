@@ -154,8 +154,11 @@ namespace mrHelper.App
             Position = includeContext ? createPositionParameters(position) : new Nullable<PositionParameters>()
          };
 
-         MergeRequestKey mergeRequestKey = new MergeRequestKey(
-               snapshot.Host, snapshot.Project, snapshot.MergeRequestIId);
+         MergeRequestKey mergeRequestKey = new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
+            IId = snapshot.MergeRequestIId
+         };
          DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mergeRequestKey);
 
          try

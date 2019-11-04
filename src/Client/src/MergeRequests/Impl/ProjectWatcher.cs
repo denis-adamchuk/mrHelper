@@ -63,8 +63,7 @@ namespace mrHelper.Client.MergeRequests
                }
             }
 
-            MergeRequestKey mrk = new MergeRequestKey(hostname,
-               mergeRequest.MergeRequestKey.ProjectKey.ProjectName, mergeRequest.MergeRequestKey.IId);
+            MergeRequestKey mrk = mergeRequest.MergeRequestKey;
 
             updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
                details.GetLatestChangeTimestamp(mrk) : updateTimestamp;

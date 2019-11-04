@@ -166,8 +166,11 @@ namespace mrHelper.Client.MergeRequests
             MergeRequest mergeRequest = mrPair.Item2.MergeRequest;
             Project project = mrPair.Item2.Project;
 
-            MergeRequestKey mergeRequestKey = new MergeRequestKey(
-               hostname, project.Path_With_Namespace, mergeRequest.IId);
+            MergeRequestKey mergeRequestKey = new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+               IId = mergeRequest.IId
+            };
             DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestChangeTimestamp(mergeRequestKey);
             DateTime newCachedChangeTimestamp = newDetails.GetLatestChangeTimestamp(mergeRequestKey);
 

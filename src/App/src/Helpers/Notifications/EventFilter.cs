@@ -39,7 +39,7 @@ namespace mrHelper.App.Helpers
 
          string[] selected = _settings.GetLabels();
          return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, selected)
-            || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
+            || (isCurrentUserActivity(_currentUser ?? new User(), e)            && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_ResolvedAllThreads)
             || (e.EventType == DiscussionEvent.Type.MentionedCurrentUser        && !_settings.Notifications_OnMention)
             || (e.EventType == DiscussionEvent.Type.Keyword                     && !_settings.Notifications_Keywords));
@@ -50,18 +50,18 @@ namespace mrHelper.App.Helpers
          return m.Author.Id == currentUser.Id;
       }
 
-      private static bool isCurrentUserActivity(User currentUser, DiscussionEvent e, object o)
+      private static bool isCurrentUserActivity(User currentUser, DiscussionEvent e)
       {
          switch (e.EventType)
          {
             case DiscussionEvent.Type.ResolvedAllThreads:
-               return ((User)o).Id == currentUser.Id;
+               return ((User)e.Details).Id == currentUser.Id;
 
             case DiscussionEvent.Type.MentionedCurrentUser:
-               return ((User)o).Id == currentUser.Id;
+               return ((User)e.Details).Id == currentUser.Id;
 
             case DiscussionEvent.Type.Keyword:
-               return ((DiscussionEvent.KeywordDescription)o).Author.Id == currentUser.Id;
+               return ((DiscussionEvent.KeywordDescription)e.Details).Author.Id == currentUser.Id;
 
             default:
                Debug.Assert(false);

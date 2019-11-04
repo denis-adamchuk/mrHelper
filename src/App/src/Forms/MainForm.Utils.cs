@@ -57,7 +57,11 @@ namespace mrHelper.App.Forms
          if (listViewMergeRequests.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
-            return new MergeRequestKey(fmk.HostName, fmk.Project.Path_With_Namespace, fmk.MergeRequest.IId);
+            return new MergeRequestKey
+            {
+               ProjectKey = fmk.ProjectKey,
+               IId = fmk.MergeRequest.IId
+            };
          }
          //Debug.Assert(false);
          return null;
@@ -142,7 +146,7 @@ namespace mrHelper.App.Forms
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
             if (projectname == String.Empty ||
-                (iid == key.MergeRequest.IId && projectname == key.Project.Path_With_Namespace))
+                (iid == key.MergeRequest.IId && projectname == key.ProjectKey.ProjectName))
             {
                item.Selected = true;
                return true;
@@ -734,7 +738,11 @@ namespace mrHelper.App.Forms
             {
                MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
-                  x => FullMergeRequestKey.SameMergeRequest((FullMergeRequestKey)x.Tag, mrk));
+                  x =>
+               {
+                  FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
+                  return fmk.ProjectKey.Equals(mrk.ProjectKey) && fmk.MergeRequest.IId == mrk.IId;
+               });
                if (index == -1)
                {
                   addListViewMergeRequestItem(mrk);
@@ -750,8 +758,7 @@ namespace mrHelper.App.Forms
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
-            ProjectKey projectKey = new ProjectKey { HostName = fmk.HostName, ProjectName = fmk.Project.Path_With_Namespace };
-            if (!_mergeRequestManager.GetMergeRequests(projectKey).Any(x => x.IId == fmk.MergeRequest.IId)
+            if (!_mergeRequestManager.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
                || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
             {
                listViewMergeRequests.Items.RemoveAt(index);
@@ -780,8 +787,12 @@ namespace mrHelper.App.Forms
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         item.Tag = mrk;
          MergeRequest mr = _mergeRequestManager.GetMergeRequest(mrk);
+         item.Tag = new FullMergeRequestKey
+         {
+            ProjectKey = mrk.ProjectKey,
+            MergeRequest = mr
+         };
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Common.Constants.Constants.AuthorLabelPrefix, mr.Author.Username);
@@ -791,14 +802,12 @@ namespace mrHelper.App.Forms
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(), () => mr.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,            () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,          () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),  () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,          () => jiraTaskUrl);
-         item.SubItems[5].Tag = new ListViewSubItemInfo(
-            () => getTotalTimeAsText(new MergeRequestKey(mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mr.IId)),
-            () => String.Empty);
+         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url);
+         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                  () => String.Empty);
+         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,                () => String.Empty);
+         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty);
+         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl);
+         item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeAsText(mrk), () => String.Empty);
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -874,7 +883,16 @@ namespace mrHelper.App.Forms
          updateVisibleMergeRequests();
 
          if (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest && listViewMergeRequests.Items.Cast<ListViewItem>()
-             .Any(x => FullMergeRequestKey.SameMergeRequest((FullMergeRequestKey)x.Tag, e.MergeRequestKey) && x.Selected))
+             .Any(x =>
+             {
+                if (!x.Selected)
+                {
+                   return false;
+                }
+
+                FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
+                return fmk.ProjectKey.Equals(e.MergeRequestKey.ProjectKey) && fmk.MergeRequest.IId == e.MergeRequestKey.IId;
+             }))
          {
             Trace.TraceInformation("[MainForm] Reloading current Merge Request");
 

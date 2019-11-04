@@ -134,7 +134,11 @@ namespace mrHelper.App.Forms
          }
 
          _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
-            new MergeRequestKey(mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+            new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = mergeRequestUrl.Host, ProjectName = mergeRequestUrl.Project },
+            IId = mergeRequestUrl.IId
+         };
 
          checkBoxLabels.Checked = false;
 
