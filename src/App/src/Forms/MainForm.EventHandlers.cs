@@ -437,7 +437,7 @@ namespace mrHelper.App.Forms
          }
          else if (sender == checkBoxShowResolvedAll)
          {
-            Program.Settings.Notifications_ResolvedAllThreads = state;
+            Program.Settings.Notifications_AllThreadsResolved = state;
          }
          else if (sender == checkBoxShowOnMention)
          {

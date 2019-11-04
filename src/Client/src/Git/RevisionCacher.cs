@@ -111,7 +111,7 @@ namespace mrHelper.Client.Git
 
                      try
                      {
-                        //await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                        await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
                      }
                      catch (ObjectDisposedException ex)
                      {

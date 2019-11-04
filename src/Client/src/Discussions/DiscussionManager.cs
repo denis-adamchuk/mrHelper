@@ -168,7 +168,8 @@ namespace mrHelper.Client.Discussions
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
          GitLabClient client =
-            new GitLabClient(mrk.ProjectKey.HostName, _settings.GetAccessToken(mrk.ProjectKey.HostName));
+            new GitLabClient(mrk.ProjectKey.HostName,
+            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
          DateTime mergeRequestUpdatedAt =
             (await CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
 

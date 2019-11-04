@@ -21,19 +21,19 @@ namespace mrHelper.Client.Tools
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
       private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
-      private static readonly string CheckedLabelsFilterDefaultValue = "false";
+      private static readonly bool   CheckedLabelsFilterDefaultValue = false;
 
       private static readonly string LastUsedLabelsKeyName = "LastUsedLabels";
       private static readonly string LastUsedLabelsDefaultValue = "";
 
       private static readonly string ShowPublicOnlyKeyName = "ShowPublicOnly";
-      private static readonly string ShowPublicOnlyDefaultValue = "true";
+      private static readonly bool   ShowPublicOnlyDefaultValue = true;
 
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
 
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
-      private static readonly string MinimizeOnCloseDefaultValue = "false";
+      private static readonly bool   MinimizeOnCloseDefaultValue = false;
 
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
@@ -50,8 +50,8 @@ namespace mrHelper.Client.Tools
       private static readonly string Notifications_UpdatedMergeRequests_KeyName      = "Notifications_UpdatedMergeRequests";
       private static readonly bool   Notifications_UpdatedMergeRequests_DefaultValue = true;
 
-      private static readonly string Notifications_ResolvedAllThreads_KeyName      = "Notifications_ResolvedAllThreads";
-      private static readonly bool   Notifications_ResolvedAllThreads_DefaultValue = true;
+      private static readonly string Notifications_AllThreadsResolved_KeyName      = "Notifications_AllThreadsResolved";
+      private static readonly bool   Notifications_AllThreadsResolved_DefaultValue = true;
 
       private static readonly string Notifications_OnMention_KeyName      = "Notifications_OnMention";
       private static readonly bool   Notifications_OnMention_DefaultValue = true;
@@ -62,8 +62,12 @@ namespace mrHelper.Client.Tools
       private static readonly string Notifications_MyActivity_KeyName      = "Notifications_MyActivity";
       private static readonly bool   Notifications_MyActivity_DefaultValue = false;
 
-      private static readonly string ListViewMergeRequestsColumnWidthsKeyName = "LVMR_ColWidths";
-      private static readonly string MainWindowSplitterDistanceKeyName = "MWSplitterDistance";
+      private static readonly string ListViewMergeRequestsColumnWidthsKeyName      = "LVMR_ColWidths";
+      private static readonly string ListViewMergeRequestsColumnWidthsDefaultValue = String.Empty;
+      private static readonly int    ListViewMergeRequestsSingleColumnWidthDefaultValue = 100;
+
+      private static readonly string MainWindowSplitterDistanceKeyName      = "MWSplitterDistance";
+      private static readonly int    MainWindowSplitterDistanceDefaultValue = 0;
 
       public event PropertyChangedEventHandler PropertyChanged;
 
@@ -115,8 +119,13 @@ namespace mrHelper.Client.Tools
 
       public bool CheckedLabelsFilter
       {
-         get { return bool.Parse(getValue(CheckedLabelsFilterKeyName, CheckedLabelsFilterDefaultValue)); }
-         set { setValue(CheckedLabelsFilterKeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               CheckedLabelsFilterKeyName, boolToString(CheckedLabelsFilterDefaultValue)),
+                  out bool result) ? CheckedLabelsFilterDefaultValue : result;
+         }
+         set { setValue(CheckedLabelsFilterKeyName, boolToString(value)); }
       }
 
       public string LastUsedLabels
@@ -127,14 +136,24 @@ namespace mrHelper.Client.Tools
 
       public bool ShowPublicOnly
       {
-         get { return bool.Parse(getValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue)); }
-         set { setValue(ShowPublicOnlyKeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               ShowPublicOnlyKeyName, boolToString(ShowPublicOnlyDefaultValue)),
+                  out bool result) ? ShowPublicOnlyDefaultValue : result;
+         }
+         set { setValue(ShowPublicOnlyKeyName, boolToString(value)); }
       }
 
       public bool MinimizeOnClose
       {
-         get { return bool.Parse(getValue(MinimizeOnCloseKeyName, MinimizeOnCloseDefaultValue)); }
-         set { setValue(MinimizeOnCloseKeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               MinimizeOnCloseKeyName, boolToString(MinimizeOnCloseDefaultValue)),
+                  out bool result) ? MinimizeOnCloseDefaultValue : result;
+         }
+         set { setValue(MinimizeOnCloseKeyName, boolToString(value)); }
       }
 
       public string DiffContextDepth
@@ -151,56 +170,103 @@ namespace mrHelper.Client.Tools
 
       public int LogFilesToKeep
       {
-         get { return int.Parse(getValue(LogFilesToKeepKeyName, LogFilesToKeepDefaultValue.ToString())); }
+         get
+         {
+            return int.TryParse(getValue(
+               LogFilesToKeepKeyName, LogFilesToKeepDefaultValue.ToString()),
+                  out int result) ? LogFilesToKeepDefaultValue : result;
+         }
          set { setValue(LogFilesToKeepKeyName, value.ToString()); }
       }
 
       public bool Notifications_NewMergeRequests
       {
-         get { return bool.Parse(getValue(Notifications_NewMergeRequests_KeyName, Notifications_NewMergeRequests_DefaultValue.ToString())); }
-         set { setValue(Notifications_NewMergeRequests_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_NewMergeRequests_KeyName, boolToString(Notifications_NewMergeRequests_DefaultValue)),
+                  out bool result) ? Notifications_NewMergeRequests_DefaultValue : result;
+         }
+         set { setValue(Notifications_NewMergeRequests_KeyName, boolToString(value)); }
       }
 
       public bool Notifications_MergedMergeRequests
       {
-         get { return bool.Parse(getValue(Notifications_MergedMergeRequests_KeyName, Notifications_MergedMergeRequests_DefaultValue.ToString())); }
-         set { setValue(Notifications_MergedMergeRequests_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_MergedMergeRequests_KeyName, boolToString(Notifications_MergedMergeRequests_DefaultValue)),
+                  out bool result) ? Notifications_MergedMergeRequests_DefaultValue : result;
+         }
+         set { setValue(Notifications_MergedMergeRequests_KeyName, boolToString(value)); }
       }
 
       public bool Notifications_UpdatedMergeRequests
       {
-         get { return bool.Parse(getValue(Notifications_UpdatedMergeRequests_KeyName, Notifications_UpdatedMergeRequests_DefaultValue.ToString())); }
-         set { setValue(Notifications_UpdatedMergeRequests_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_UpdatedMergeRequests_KeyName, boolToString(Notifications_UpdatedMergeRequests_DefaultValue)),
+                  out bool result) ? Notifications_UpdatedMergeRequests_DefaultValue : result;
+         }
+         set { setValue(Notifications_UpdatedMergeRequests_KeyName, boolToString(value)); }
       }
 
-      public bool Notifications_ResolvedAllThreads
+      public bool Notifications_AllThreadsResolved
       {
-         get { return bool.Parse(getValue(Notifications_ResolvedAllThreads_KeyName, Notifications_ResolvedAllThreads_DefaultValue.ToString())); }
-         set { setValue(Notifications_ResolvedAllThreads_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_AllThreadsResolved_KeyName, boolToString(Notifications_AllThreadsResolved_DefaultValue)),
+                  out bool result) ? Notifications_AllThreadsResolved_DefaultValue : result;
+         }
+         set { setValue(Notifications_AllThreadsResolved_KeyName, boolToString(value)); }
       }
 
       public bool Notifications_OnMention
       {
-         get { return bool.Parse(getValue(Notifications_OnMention_KeyName, Notifications_OnMention_DefaultValue.ToString())); }
-         set { setValue(Notifications_OnMention_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_OnMention_KeyName, boolToString(Notifications_OnMention_DefaultValue)),
+                  out bool result) ? Notifications_OnMention_DefaultValue : result;
+         }
+         set { setValue(Notifications_OnMention_KeyName, boolToString(value)); }
       }
 
       public bool Notifications_Keywords
       {
-         get { return bool.Parse(getValue(Notifications_Keywords_KeyName, Notifications_Keywords_DefaultValue.ToString())); }
-         set { setValue(Notifications_Keywords_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_Keywords_KeyName, boolToString(Notifications_Keywords_DefaultValue)),
+                  out bool result) ? Notifications_Keywords_DefaultValue : result;
+         }
+         set { setValue(Notifications_Keywords_KeyName, boolToString(value)); }
       }
 
       public bool Notifications_MyActivity
       {
-         get { return bool.Parse(getValue(Notifications_MyActivity_KeyName, Notifications_MyActivity_DefaultValue.ToString())); }
-         set { setValue(Notifications_MyActivity_KeyName, value.ToString().ToLower()); }
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_MyActivity_KeyName, boolToString(Notifications_MyActivity_DefaultValue)),
+                  out bool result) ? Notifications_MyActivity_DefaultValue : result;
+         }
+         set { setValue(Notifications_MyActivity_KeyName, boolToString(value)); }
       }
 
       public Dictionary<string, int> ListViewMergeRequestsColumnWidths
       {
-         get { return stringToDictionary(getValue(ListViewMergeRequestsColumnWidthsKeyName, String.Empty))
-               .ToDictionary(item => item.Key, item => int.Parse(item.Value)); }
+         get
+         {
+            return stringToDictionary(getValue(
+               ListViewMergeRequestsColumnWidthsKeyName, ListViewMergeRequestsColumnWidthsDefaultValue))
+               .ToDictionary(
+                  item => item.Key,
+                  item => int.TryParse(item.Value, out int result) ?
+                     result : ListViewMergeRequestsSingleColumnWidthDefaultValue);
+         }
          set
          {
             setValue(ListViewMergeRequestsColumnWidthsKeyName,
@@ -212,32 +278,11 @@ namespace mrHelper.Client.Tools
       {
          get
          {
-            string val = getValue(MainWindowSplitterDistanceKeyName, String.Empty);
-            return val == String.Empty ? 0 : int.Parse(val);
+            return int.TryParse(getValue(
+               MainWindowSplitterDistanceKeyName, MainWindowSplitterDistanceDefaultValue.ToString()),
+                  out int result) ? result : MainWindowSplitterDistanceDefaultValue;
          }
          set { setValue(MainWindowSplitterDistanceKeyName, value.ToString()); }
-      }
-
-      public string GetAccessToken(string hostname)
-      {
-         for (int iKnownHost = 0; iKnownHost < KnownHosts.Count; ++iKnownHost)
-         {
-            if (hostname == KnownHosts[iKnownHost])
-            {
-               return KnownAccessTokens[iKnownHost];
-            }
-         }
-         return String.Empty;
-      }
-
-      public string[] GetLabels()
-      {
-         if (!CheckedLabelsFilter)
-         {
-             return null;
-         }
-
-         return LastUsedLabels .Split(',').Select(x => x.Trim(' ')).ToArray();
       }
 
       private string getValue(string key, string defaultValue)
@@ -314,8 +359,13 @@ namespace mrHelper.Client.Tools
                Debug.Assert(splittedItem == String.Empty);
                continue;
             }
+
             string[] subsplitted = splittedItem.Split('|');
-            Debug.Assert(subsplitted.Length == 2);
+            if (subsplitted.Length != 2)
+            {
+               Debug.Assert(false);
+               continue;
+            }
             result.Add(subsplitted[0], subsplitted[1]);
          }
 
@@ -330,6 +380,11 @@ namespace mrHelper.Client.Tools
             result.Add(pair.Key + "|" + pair.Value);
          }
          return String.Join(";", result);
+      }
+
+      private string boolToString(bool value)
+      {
+         return value.ToString().ToLower();
       }
 
       private void OnPropertyChanged(string name)

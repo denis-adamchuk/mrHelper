@@ -48,7 +48,7 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentAccessToken()
       {
-         return Program.Settings.GetAccessToken(getHostName());
+         return ConfigurationHelper.GetAccessToken(getHostName(), Program.Settings);
       }
 
       public string GetCurrentProjectName()

@@ -754,7 +754,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         string[] selected = Program.Settings.GetLabels();
+         string[] selected = ConfigurationHelper.GetLabels(Program.Settings);
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;

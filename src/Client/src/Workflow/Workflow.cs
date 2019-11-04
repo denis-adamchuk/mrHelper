@@ -167,7 +167,7 @@ namespace mrHelper.Client.Workflow
             return false;
          }
 
-         string token = _settings.GetAccessToken(hostname);
+         string token = ConfigurationHelper.GetAccessToken(hostname, _settings);
          if (token == String.Empty)
          {
             throw new UnknownHostException(hostname);

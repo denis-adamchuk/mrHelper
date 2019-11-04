@@ -23,7 +23,7 @@ namespace mrHelper.Client.Git
       async internal Task<List<Version>> LoadVersions(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
+            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
          try
          {
             return (List<Version>)(await client.RunAsync(async (gitlab) =>
@@ -45,7 +45,7 @@ namespace mrHelper.Client.Git
       async internal Task<Version> LoadVersion(Version version, MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
+            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
          try
          {
             return (Version)(await client.RunAsync(async (gitlab) =>

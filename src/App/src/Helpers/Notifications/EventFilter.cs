@@ -25,7 +25,7 @@ namespace mrHelper.App.Helpers
       {
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
-         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, _settings.GetLabels())
+         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, ConfigurationHelper.GetLabels(_settings))
             || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
             || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !_settings.Notifications_UpdatedMergeRequests)
@@ -42,9 +42,9 @@ namespace mrHelper.App.Helpers
             return true;
          }
 
-         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest.Value, _settings.GetLabels())
+         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest.Value, ConfigurationHelper.GetLabels(_settings))
             || (isCurrentUserActivity(_currentUser ?? new User(), e)            && !_settings.Notifications_MyActivity)
-            || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_ResolvedAllThreads)
+            || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_AllThreadsResolved)
             || (e.EventType == DiscussionEvent.Type.MentionedCurrentUser        && !_settings.Notifications_OnMention)
             || (e.EventType == DiscussionEvent.Type.Keyword                     && !_settings.Notifications_Keywords));
       }

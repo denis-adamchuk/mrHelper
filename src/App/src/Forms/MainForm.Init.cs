@@ -135,7 +135,7 @@ namespace mrHelper.App.Forms
          checkBoxShowNewMergeRequests.Checked = Program.Settings.Notifications_NewMergeRequests;
          checkBoxShowMergedMergeRequests.Checked = Program.Settings.Notifications_MergedMergeRequests;
          checkBoxShowUpdatedMergeRequests.Checked = Program.Settings.Notifications_UpdatedMergeRequests;
-         checkBoxShowResolvedAll.Checked = Program.Settings.Notifications_ResolvedAllThreads;
+         checkBoxShowResolvedAll.Checked = Program.Settings.Notifications_AllThreadsResolved;
          checkBoxShowOnMention.Checked = Program.Settings.Notifications_OnMention;
          checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
