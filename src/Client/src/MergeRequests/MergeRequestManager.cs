@@ -55,7 +55,7 @@ namespace mrHelper.Client.MergeRequests
 
       public void Dispose()
       {
-         _updateManager.Dispose();
+         _updateManager?.Dispose();
       }
 
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
