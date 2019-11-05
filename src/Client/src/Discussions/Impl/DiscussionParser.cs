@@ -19,15 +19,16 @@ namespace mrHelper.Client.Discussions
    internal class DiscussionParser
    {
       internal DiscussionParser(Workflow.Workflow workflow, DiscussionManager discussionManager,
-         IEnumerable<string> keywords, Action<UserEvents.DiscussionEvent> onEvent)
+         IEnumerable<string> keywords)
       {
          _keywords = keywords;
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          discussionManager.PostLoadDiscussions +=
             (mrk, discussions, updatedAt, initialSnapshot) =>
                processDiscussions(mrk, discussions, updatedAt, initialSnapshot);
-         _onEvent = onEvent;
       }
+
+      internal event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
       private void processDiscussions(MergeRequestKey mrk, List<Discussion> discussions,
          DateTime updatedAt, bool initialSnapshot)
@@ -56,7 +57,7 @@ namespace mrHelper.Client.Discussions
 
                if (note.System && note.Body == "resolved all threads")
                {
-                  _onEvent(new UserEvents.DiscussionEvent
+                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
                   {
                      EventType = UserEvents.DiscussionEvent.Type.ResolvedAllThreads,
                      Details = note.Author,
@@ -66,7 +67,7 @@ namespace mrHelper.Client.Discussions
                // TODO Use regex to not treat @abcd as mentioning of @abcdef
                else if (note.Body.Contains('@' + _currentUser.Username) || note.Body.Contains(_currentUser.Name))
                {
-                  _onEvent(new UserEvents.DiscussionEvent
+                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
                   {
                      EventType = UserEvents.DiscussionEvent.Type.MentionedCurrentUser,
                      Details = note.Author,
@@ -79,10 +80,14 @@ namespace mrHelper.Client.Discussions
                   {
                      if (note.Body.Trim().StartsWith(keyword, StringComparison.CurrentCultureIgnoreCase))
                      {
-                        _onEvent(new UserEvents.DiscussionEvent
+                        DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
                         {
                            EventType = UserEvents.DiscussionEvent.Type.Keyword,
-                           Details = new UserEvents.DiscussionEvent.KeywordDescription { Keyword = keyword, Author = note.Author },
+                           Details = new UserEvents.DiscussionEvent.KeywordDescription
+                           {
+                              Keyword = keyword,
+                              Author = note.Author
+                           },
                            MergeRequestKey = mrk
                         });
                      }
@@ -98,7 +103,6 @@ namespace mrHelper.Client.Discussions
          new Dictionary<MergeRequestKey, DateTime>();
       private User _currentUser;
       private readonly IEnumerable<string> _keywords;
-      private Action<UserEvents.DiscussionEvent> _onEvent;
    }
 }
 

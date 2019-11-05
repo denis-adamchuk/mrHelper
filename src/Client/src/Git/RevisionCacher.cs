@@ -12,6 +12,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using static mrHelper.Client.Git.Types;
+using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.Client.Git
 {
@@ -22,7 +23,7 @@ namespace mrHelper.Client.Git
    {
       public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          UserDefinedSettings settings, Func<ProjectKey, GitClient> getGitClient,
-         Func<ProjectKey, IEnumerable<MergeRequest>> getMergeRequests)
+         IMergeRequestProvider mergeRequestProvider)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
@@ -61,7 +62,7 @@ namespace mrHelper.Client.Git
 
          _synchronizeInvoke = synchronizeInvoke;
          _operator = new VersionOperator(settings);
-         _getMergeRequests = getMergeRequests;
+         _mergeRequestProvider = mergeRequestProvider;
       }
 
       private void onGitClientUpdated(GitClient gitClient, DateTime latestChange)
@@ -78,12 +79,7 @@ namespace mrHelper.Client.Git
                ProjectKey projectKey = gitClient.ProjectKey;
                DateTime prevLatestChange = _latestChanges[gitClient];
 
-               // Make a copy because the original collection may change during async/await in a loop below
-               MergeRequest[] origMergeRequests = _getMergeRequests(projectKey).ToArray();
-               MergeRequest[] copyMergeRequests = new MergeRequest[origMergeRequests.Length];
-               Array.Copy(origMergeRequests, copyMergeRequests, origMergeRequests.Length);
-
-               foreach (MergeRequest mergeRequest in copyMergeRequests)
+               foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(projectKey))
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                   List<Version> newVersions = await _operator.LoadVersions(mrk);
@@ -239,7 +235,7 @@ namespace mrHelper.Client.Git
       private Dictionary<GitClient, DateTime> _latestChanges;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionOperator _operator;
-      private readonly Func<ProjectKey, IEnumerable<MergeRequest>> _getMergeRequests;
+      private readonly IMergeRequestProvider _mergeRequestProvider;
    }
 }
 

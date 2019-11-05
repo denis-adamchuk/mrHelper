@@ -20,9 +20,9 @@ using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
-using mrHelper.Client.Persistence;
-using mrHelper.Core.Git;
+using mrHelper.CommonTools.Persistence;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Core.Git;
 
 namespace mrHelper.App.Forms
 {
@@ -244,7 +244,7 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
 
          _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings);
-         _mergeRequestManager.OnEvent += (e) => processUpdate(e);
+         _mergeRequestManager.MergeRequestEvent += e => processUpdate(e);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
          IEnumerable<string> keywords = _customCommands ?
@@ -253,14 +253,12 @@ namespace mrHelper.App.Forms
          checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
          _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords);
 
-         EventFilter eventFilter = new EventFilter(Program.Settings, _workflow,
-            x => _mergeRequestManager.GetMergeRequest(x));
+         EventFilter eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestManager);
          _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestManager, _discussionManager, eventFilter);
 
          // Revision Cacher subscribes to Workflow notifications
          _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
-            projectKey => getGitClient(projectKey, false),
-            projectKey => _mergeRequestManager.GetMergeRequests(projectKey));
+            projectKey => getGitClient(projectKey, false), _mergeRequestManager);
 
          // Time Tracking Manager requires Workflow and Discussion Manager
          createTimeTrackingManager();

@@ -12,14 +12,12 @@ using mrHelper.Client.Updates;
 
 namespace mrHelper.Client.MergeRequests
 {
-   public class MergeRequestManager : IDisposable
+   public class MergeRequestManager : IDisposable, IMergeRequestProvider
    {
-      public event Action<Common.UserEvents.MergeRequestEvent> OnEvent;
+      public event Action<Common.UserEvents.MergeRequestEvent> MergeRequestEvent;
 
       public MergeRequestManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke, UserDefinedSettings settings)
       {
-         _settings = settings;
-
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
             // TODO Current version supports updates of projects of the most recent loaded host only
@@ -58,17 +56,11 @@ namespace mrHelper.Client.MergeRequests
          _updateManager?.Dispose();
       }
 
-      /// <summary>
-      /// Return open merge requests in the given project
-      /// </summary>
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
          return _cache.Details.GetMergeRequests(projectKey);
       }
 
-      /// <summary>
-      /// Return currently cached Merge Request by its key or null if nothing is cached
-      /// </summary>
       public MergeRequest? GetMergeRequest(MergeRequestKey mrk)
       {
          IEnumerable<MergeRequest> mergeRequests = GetMergeRequests(mrk.ProjectKey);
@@ -107,7 +99,7 @@ namespace mrHelper.Client.MergeRequests
                   return;
             }
 
-            OnEvent?.Invoke(new UserEvents.MergeRequestEvent
+            MergeRequestEvent?.Invoke(new UserEvents.MergeRequestEvent
             {
                FullMergeRequestKey = mergeRequest.FullMergeRequestKey,
                EventType = type,
@@ -125,9 +117,7 @@ namespace mrHelper.Client.MergeRequests
 
       private string _hostname;
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
-      private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private UpdateManager _updateManager;
-      private readonly UserDefinedSettings _settings;
    }
 }
 

@@ -442,7 +442,7 @@ namespace mrHelper.Client.Git
 
       private bool _isDisposed = false;
       private GitAsyncTaskDescriptor _descriptor;
-      private List<GitAsyncTaskDescriptor> _liteDescriptors = new List<GitAsyncTaskDescriptor>();
+      private readonly List<GitAsyncTaskDescriptor> _liteDescriptors = new List<GitAsyncTaskDescriptor>();
 
       private Action<string> _onProgressChange;
    }

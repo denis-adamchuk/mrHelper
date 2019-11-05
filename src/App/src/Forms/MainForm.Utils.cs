@@ -732,7 +732,8 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         foreach (ProjectKey projectKey in listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag))
+         IEnumerable<ProjectKey> projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
+         foreach (ProjectKey projectKey in projectKeys)
          {
             foreach (MergeRequest mergeRequest in _mergeRequestManager.GetMergeRequests(projectKey))
             {
@@ -790,6 +791,7 @@ namespace mrHelper.App.Forms
          MergeRequest? mergeRequest = _mergeRequestManager.GetMergeRequest(mrk);
          if (!mergeRequest.HasValue)
          {
+            Trace.TraceError(String.Format("[MainForm] setListViewItemTag() cannot find MR with IId {0}", mrk.IId));
             Debug.Assert(false);
             return;
          }

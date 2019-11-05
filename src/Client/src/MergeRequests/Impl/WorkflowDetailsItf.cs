@@ -15,7 +15,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
-      List<MergeRequest> GetMergeRequests(ProjectKey key);
+      IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key);
 
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request

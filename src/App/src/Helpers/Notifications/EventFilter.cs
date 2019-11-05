@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
+using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using static mrHelper.Client.Common.UserEvents;
@@ -13,12 +14,11 @@ namespace mrHelper.App.Helpers
 {
    internal class EventFilter
    {
-      internal EventFilter(UserDefinedSettings settings, Workflow workflow,
-         Func<MergeRequestKey, MergeRequest?> getMergeRequest)
+      internal EventFilter(UserDefinedSettings settings, Workflow workflow, IMergeRequestProvider mergeRequestProvider)
       {
          _settings = settings;
-         _getMergeRequest = getMergeRequest;
-         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
+         _mergeRequestProvider = mergeRequestProvider;
+         workflow.PostLoadCurrentUser += user => _currentUser = user;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -35,7 +35,7 @@ namespace mrHelper.App.Helpers
 
       internal bool NeedSuppressEvent(DiscussionEvent e)
       {
-         MergeRequest? mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
          if (!mergeRequest.HasValue)
          {
             // TODO Consider not supressing OnMention event even if MR is closed
@@ -75,7 +75,7 @@ namespace mrHelper.App.Helpers
 
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
-      private readonly Func<MergeRequestKey, MergeRequest?> _getMergeRequest;
+      private readonly IMergeRequestProvider _mergeRequestProvider;
    }
 }
 

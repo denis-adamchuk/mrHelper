@@ -80,11 +80,11 @@ namespace mrHelper.Client.MergeRequests
             Common = new List<Tuple<MergeRequestWithProject, MergeRequestWithProject>>()
          };
 
-         foreach (var project in enabledProjects)
+         foreach (Project project in enabledProjects)
          {
             ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace };
-            List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(key);
-            List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(key);
+            List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(key).ToList();
+            List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(key).ToList();
 
             previouslyCachedMergeRequests.Sort((x, y) => x.Id.CompareTo(y.Id));
             newCachedMergeRequests.Sort((x, y) => x.Id.CompareTo(y.Id));
@@ -140,23 +140,29 @@ namespace mrHelper.Client.MergeRequests
 
          foreach (MergeRequestWithProject mergeRequest in diff.SecondOnly)
          {
-            ProjectKey projectKey = new ProjectKey
+            FullMergeRequestKey fmk = new FullMergeRequestKey
             {
-               HostName = hostname,
-               ProjectName = mergeRequest.Project.Path_With_Namespace
+               ProjectKey = new ProjectKey
+               {
+                  HostName = hostname,
+                  ProjectName = mergeRequest.Project.Path_With_Namespace
+               },
+               MergeRequest = mergeRequest.MergeRequest
             };
-            FullMergeRequestKey fmk = new FullMergeRequestKey { ProjectKey = projectKey, MergeRequest = mergeRequest.MergeRequest };
             updates.Add(new UpdatedMergeRequest(UpdateKind.New, fmk));
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
          {
-            ProjectKey projectKey = new ProjectKey
+            FullMergeRequestKey fmk = new FullMergeRequestKey
             {
-               HostName = hostname,
-               ProjectName = mergeRequest.Project.Path_With_Namespace
+               ProjectKey = new ProjectKey
+               {
+                  HostName = hostname,
+                  ProjectName = mergeRequest.Project.Path_With_Namespace
+               },
+               MergeRequest = mergeRequest.MergeRequest
             };
-            FullMergeRequestKey fmk = new FullMergeRequestKey { ProjectKey = projectKey, MergeRequest = mergeRequest.MergeRequest };
             updates.Add(new UpdatedMergeRequest(UpdateKind.Closed, fmk));
          }
 

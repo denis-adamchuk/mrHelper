@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
-using mrHelper.Client.Persistence;
+using mrHelper.CommonTools.Persistence;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Exceptions;
 using mrHelper.App.Helpers;
@@ -475,10 +475,6 @@ namespace mrHelper.App.Forms
       private void splitContainer1_SplitterMoving(object sender, SplitterCancelEventArgs e)
       {
          _userIsMovingSplitter = true;
-      }
-
-      private void splitContainer1_MouseUp(object sender, MouseEventArgs e)
-      {
       }
 
       private void textBoxLabels_TextChanged(object sender, EventArgs e)

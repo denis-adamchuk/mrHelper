@@ -42,7 +42,7 @@ namespace mrHelper.App.Forms
          _workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
          {
-            onProjectMergeRequestsLoaded(hostname, project, mergeRequests);
+            onProjectMergeRequestsLoaded(project, mergeRequests);
             cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
          };
          _workflow.FailedLoadProjectMergeRequests += () => onFailedLoadProjectMergeRequests();
@@ -216,7 +216,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load merge requests"));
       }
 
-      private void onProjectMergeRequestsLoaded(string hostname, Project project, List<MergeRequest> mergeRequests)
+      private void onProjectMergeRequestsLoaded(Project project, List<MergeRequest> mergeRequests)
       {
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 

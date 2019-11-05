@@ -23,9 +23,9 @@ namespace mrHelper.App.Helpers
          _settings = settings;
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
-         mergeRequestManager.OnEvent += (e) => notifyOnEvent(e);
-         discussionManager.OnEvent += (e) => notifyOnEvent(e);
-         _getMergeRequest = x => mergeRequestManager.GetMergeRequest(x);
+         mergeRequestManager.MergeRequestEvent += (e) => notifyOnEvent(e);
+         discussionManager.DiscussionEvent += (e) => notifyOnEvent(e);
+         _mergeRequestProvider = mergeRequestManager;
       }
 
       private TrayIcon.BalloonText getBalloonText(UserEvents.MergeRequestEvent e)
@@ -70,7 +70,7 @@ namespace mrHelper.App.Helpers
 
       private BalloonText getBalloonText(UserEvents.DiscussionEvent e)
       {
-         MergeRequest? mergeRequest = _getMergeRequest(e.MergeRequestKey);
+         MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
 
          switch (e.EventType)
          {
@@ -123,6 +123,6 @@ namespace mrHelper.App.Helpers
       private readonly UserDefinedSettings _settings;
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
-      private readonly Func<MergeRequestKey, MergeRequest?> _getMergeRequest;
+      private readonly IMergeRequestProvider _mergeRequestProvider;
    }
 }

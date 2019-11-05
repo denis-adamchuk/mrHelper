@@ -17,9 +17,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(List<UpdatedMergeRequest> updates, string hostname, IWorkflowDetails details)
+      internal void ProcessUpdates(List<UpdatedMergeRequest> updates, IWorkflowDetails details)
       {
-         List<ProjectUpdate> projectUpdates = getProjectUpdates(updates, hostname, details);
+         List<ProjectUpdate> projectUpdates = getProjectUpdates(updates, details);
 
          if (projectUpdates.Count > 0)
          {
@@ -37,7 +37,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates(List<UpdatedMergeRequest> mergeRequests, string hostname,
+      private List<ProjectUpdate> getProjectUpdates(List<UpdatedMergeRequest> mergeRequests,
          IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
@@ -57,7 +57,8 @@ namespace mrHelper.Client.MergeRequests
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectKey.ProjectName == mergeRequest.FullMergeRequestKey.ProjectKey.ProjectName)
+               if (projectUpdates[iUpdate].ProjectKey.ProjectName ==
+                      mergeRequest.FullMergeRequestKey.ProjectKey.ProjectName)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }

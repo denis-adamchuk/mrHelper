@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
-namespace mrHelper.Client.Persistence
+namespace mrHelper.CommonTools.Persistence
 {
    public class PersistenceStateSerializationException : Exception
    {

@@ -39,6 +39,7 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
@@ -47,6 +48,9 @@
     <Compile Include="src\FeedbackReporter.cs" />
     <Compile Include="src\NativeMethods.cs" />
     <Compile Include="src\ParentProcessUtilities.cs" />
+    <Compile Include="src\Persistence\PersistentState.cs" />
+    <Compile Include="src\Persistence\PersistentStateItf.cs" />
+    <Compile Include="src\Persistence\PersistentStorage.cs" />
     <Compile Include="src\Win32Tools.cs" />
     <Compile Include="src\CustomProtocol.cs" />
     <Compile Include="src\CustomTraceListener.cs" />

@@ -17,7 +17,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
-using mrHelper.Client.Persistence;
+using mrHelper.CommonTools.Persistence;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.Services;
 using mrHelper.Client.MergeRequests;
@@ -69,7 +69,7 @@ namespace mrHelper.App.Forms
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
       private bool _userIsMovingSplitter = false;
-      private TrayIcon _trayIcon;
+      private readonly TrayIcon _trayIcon;
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;

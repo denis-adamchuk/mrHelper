@@ -24,14 +24,16 @@ namespace mrHelper.Client.Discussions
       public event Action<MergeRequestKey, List<Discussion>, DateTime, bool> PostLoadDiscussions;
       public event Action FailedLoadDiscussions;
 
-      public event Action<UserEvents.DiscussionEvent> OnEvent;
+      public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
       public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow,
          MergeRequestManager mergeRequestManager, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords)
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
-         new DiscussionParser(workflow, this, keywords, e => OnEvent?.Invoke(e));
+
+         DiscussionParser parser = new DiscussionParser(workflow, this, keywords);
+         parser.DiscussionEvent += e => DiscussionEvent?.Invoke(e);
 
          workflow.PostLoadProjectMergeRequests +=
             (hostname, project, mergeRequests) =>
@@ -56,7 +58,7 @@ namespace mrHelper.Client.Discussions
             cleanup(toRemove);
          };
 
-         mergeRequestManager.OnEvent +=
+         mergeRequestManager.MergeRequestEvent +=
             (e) =>
          {
             switch (e.EventType)
@@ -73,7 +75,8 @@ namespace mrHelper.Client.Discussions
                   if (_closed.Contains(mrk))
                   {
                      Trace.TraceInformation(String.Format(
-                        "[DiscussionManager] MR IId {0} reopened", e.FullMergeRequestKey.MergeRequest.IId));
+                        "[DiscussionManager] Merge Request with IId {0} was reopened",
+                        e.FullMergeRequestKey.MergeRequest.IId));
                      _closed.Remove(mrk);
                   }
                   scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
@@ -180,8 +183,7 @@ namespace mrHelper.Client.Discussions
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
-         GitLabClient client =
-            new GitLabClient(mrk.ProjectKey.HostName,
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
             ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
          DateTime mergeRequestUpdatedAt =
             (await CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
@@ -264,12 +266,12 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private System.Timers.Timer _timer = new System.Timers.Timer
+      private readonly System.Timers.Timer _timer = new System.Timers.Timer
       {
          Interval = 5 * 60000 // five minutes in ms
       };
 
-      private ISynchronizeInvoke _synchronizeInvoke;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly UserDefinedSettings _settings;
       private readonly DiscussionOperator _operator;
 
@@ -279,11 +281,11 @@ namespace mrHelper.Client.Discussions
          public List<Discussion> Discussions;
       }
 
-      private Dictionary<MergeRequestKey, CachedDiscussions> _cachedDiscussions =
+      private readonly Dictionary<MergeRequestKey, CachedDiscussions> _cachedDiscussions =
          new Dictionary<MergeRequestKey, CachedDiscussions>();
 
-      private HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
-      private HashSet<MergeRequestKey> _closed = new HashSet<MergeRequestKey>();
+      private readonly HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
+      private readonly HashSet<MergeRequestKey> _closed = new HashSet<MergeRequestKey>();
    }
 }
 

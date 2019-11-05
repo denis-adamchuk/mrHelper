@@ -1,17 +1,15 @@
-﻿using GitLabSharp.Entities;
-using mrHelper.Client.Updates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GitLabSharp.Entities;
+using mrHelper.Client.Updates;
 
 namespace mrHelper.App.Helpers
 {
    internal static class MergeRequestFilter
    {
-      private static MergeRequest GetMergeRequest(MergeRequest x) => x;
-
       public static bool IsFilteredMergeRequest(MergeRequest mergeRequest, string[] selected)
       {
          if (selected == null || (selected.Length == 1 && selected[0] == String.Empty))

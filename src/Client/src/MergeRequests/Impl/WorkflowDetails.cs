@@ -36,9 +36,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Return a list of merge requests by unique project id
       /// </summary>
-      public List<MergeRequest> GetMergeRequests(ProjectKey key)
+      public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key)
       {
-         return _mergeRequests.ContainsKey(key) ? _mergeRequests[key] : new List<MergeRequest>();
+         return _mergeRequests.ContainsKey(key) ? new List<MergeRequest>(_mergeRequests[key]) : new List<MergeRequest>();
       }
 
       /// <summary>

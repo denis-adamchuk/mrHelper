@@ -35,6 +35,7 @@ namespace mrHelper.Client.MergeRequests
 
       public void Dispose()
       {
+         _timer.Stop();
          _timer.Dispose();
       }
 
@@ -50,28 +51,18 @@ namespace mrHelper.Client.MergeRequests
 
       public IInstantProjectChecker GetLocalProjectChecker(ProjectKey pk)
       {
-         if (_cache.Details.GetMergeRequests(pk).Count == 0)
-         {
-            return GetLocalProjectChecker(default(MergeRequestKey));
-         }
-
          MergeRequestKey mrk = _cache.Details.GetMergeRequests(pk).
             Select(x => new MergeRequestKey
             {
                ProjectKey = pk,
                IId = x.IId
-            }).OrderByDescending(x => _cache.Details.GetLatestChangeTimestamp(x)).First();
+            }).OrderByDescending(x => _cache.Details.GetLatestChangeTimestamp(x)).FirstOrDefault();
          return GetLocalProjectChecker(mrk);
       }
 
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
       {
          return new RemoteProjectChecker(mrk, _operator);
-      }
-
-      internal List<MergeRequest> GetMergeRequests(ProjectKey projectKey)
-      {
-         return new List<MergeRequest>(_cache.Details.GetMergeRequests(projectKey));
       }
 
       /// <summary>
@@ -92,7 +83,7 @@ namespace mrHelper.Client.MergeRequests
 
          List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
             oldDetails, _cache.Details);
-         _projectWatcher.ProcessUpdates(updates, _hostname, _cache.Details);
+         _projectWatcher.ProcessUpdates(updates, _cache.Details);
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
@@ -170,18 +161,18 @@ namespace mrHelper.Client.MergeRequests
          return null;
       }
 
-      private System.Timers.Timer _timer = new System.Timers.Timer
+      private readonly System.Timers.Timer _timer = new System.Timers.Timer
          {
             Interval = 5 * 60000 // five minutes in ms
          };
 
-      private WorkflowDetailsCache _cache;
+      private readonly WorkflowDetailsCache _cache;
       private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();
       private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private readonly UpdateOperator _operator;
 
-      private string _hostname;
-      private List<Project> _projects;
+      private readonly string _hostname;
+      private readonly List<Project> _projects;
    }
 }
 
