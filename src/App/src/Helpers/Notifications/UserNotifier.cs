@@ -78,18 +78,19 @@ namespace mrHelper.App.Helpers
                return new BalloonText
                {
                   Title = "Discussion Event",
-                  Text = String.Format("All discussions were resolved in merge request \"{0}\"",
-                                       mergeRequest?.Title ?? e.MergeRequestKey.IId.ToString(),
-                                       mergeRequest.HasValue ? " from " + mergeRequest.Value.Author.Name : String.Empty)
+                  Text = String.Format("All discussions were resolved in merge request \"{0}\"{1}",
+                                    mergeRequest.HasValue ? mergeRequest.Value.Title : e.MergeRequestKey.IId.ToString(),
+                                    mergeRequest.HasValue ? " from " + mergeRequest.Value.Author.Name : String.Empty)
                };
 
             case DiscussionEvent.Type.MentionedCurrentUser:
                User author = (User)e.Details;
                return new BalloonText
                {
-                  Title = "Discsussion Event",
+                  Title = "Discussion Event",
                   Text = String.Format("{0} mentioned you in a discussion of merge request \"{1}\"",
-                                       author.Name, mergeRequest?.Title ?? e.MergeRequestKey.IId.ToString())
+                                    author.Name,
+                                    mergeRequest.HasValue ? mergeRequest.Value.Title : e.MergeRequestKey.IId.ToString())
                };
 
             case DiscussionEvent.Type.Keyword:
@@ -98,8 +99,8 @@ namespace mrHelper.App.Helpers
                {
                   Title = "Discussion Event",
                   Text = String.Format("{0} said \"{1}\" in merge request \"{2}\"",
-                                       kd.Author.Name, kd.Keyword,
-                                       mergeRequest?.Title ?? e.MergeRequestKey.IId.ToString())
+                                    kd.Author.Name, kd.Keyword,
+                                    mergeRequest.HasValue ? mergeRequest.Value.Title : e.MergeRequestKey.IId.ToString())
                };
 
             default:

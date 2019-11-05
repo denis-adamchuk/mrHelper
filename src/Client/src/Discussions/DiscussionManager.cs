@@ -63,7 +63,7 @@ namespace mrHelper.Client.Discussions
             {
                case UserEvents.MergeRequestEvent.Type.NewMergeRequest:
                   Trace.TraceInformation(String.Format(
-                     "[DiscussionManager] Scheduling update of discussions for a new merge request with IId",
+                     "[DiscussionManager] Scheduling update of discussions for a new merge request with IId {0}",
                      e.FullMergeRequestKey.MergeRequest.IId));
                   MergeRequestKey mrk = new MergeRequestKey
                   {
@@ -88,6 +88,14 @@ namespace mrHelper.Client.Discussions
                         IId = e.FullMergeRequestKey.MergeRequest.IId
                      }
                   });
+                  break;
+
+               case UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest:
+                  // do nothing
+                  break;
+
+               default:
+                  Debug.Assert(false);
                   break;
             }
          };
