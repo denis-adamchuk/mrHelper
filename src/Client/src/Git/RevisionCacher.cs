@@ -133,6 +133,7 @@ namespace mrHelper.Client.Git
 
       private void onGitClientDisposed(GitClient client)
       {
+         client.Disposed -= onGitClientDisposed;
          client.Updated -= onGitClientUpdated;
          _latestChanges.Remove(client);
       }

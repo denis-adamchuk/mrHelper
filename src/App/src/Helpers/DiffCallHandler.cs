@@ -31,6 +31,7 @@ namespace mrHelper.App
             return;
          }
 
+         // This happens when a git parent folder was changed when a diff tool was being launched
          Trace.TraceWarning(String.Format(
             "[DiffCallHandler] Creating temporary GitClient for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));

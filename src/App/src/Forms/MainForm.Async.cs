@@ -86,6 +86,7 @@ namespace mrHelper.App.Forms
             }
             else
             {
+               Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
                client = null;
             }
          }
@@ -115,12 +116,20 @@ namespace mrHelper.App.Forms
                         // by other users on newer commits
                         await gitClient.Updater.ManualUpdateAsync(
                            _mergeRequestManager.GetUpdateManager().GetRemoteProjectChecker(key), null);
+                        return gitClient;
+                     }
+                     else
+                     {
+                        Trace.TraceInformation("[MainForm] User tried to refresh Discussions w/o git repository");
+                        MessageBox.Show("Cannot update git folder, some context code snippets may be missing. ",
+                           "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                      }
                   }
                   catch (GitOperationException ex)
                   {
                      ExceptionHandlers.Handle(ex, "Cannot update git repository on refreshing discussions");
                   }
+                  return null;
                });
             form = discussionsForm;
          }
