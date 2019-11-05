@@ -156,7 +156,10 @@ namespace mrHelper.App.Forms
       private void onGitClientDisposed(GitClient client)
       {
          client.Disposed -= onGitClientDisposed;
-         BeginInvoke(new Action(async () => await onRefresh()));
+         if (IsHandleCreated)
+         {
+            BeginInvoke(new Action(async () => await onRefresh()));
+         }
       }
 
       private async Task onRefresh()
