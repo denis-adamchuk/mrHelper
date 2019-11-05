@@ -43,7 +43,6 @@ namespace mrHelper.CustomActions
                   {
                      Body = _body
                   }));
-         client.Dispose();
       }
 
       private readonly ICommandCallback _callback;

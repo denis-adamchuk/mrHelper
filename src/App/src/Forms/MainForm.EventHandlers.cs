@@ -63,7 +63,6 @@ namespace mrHelper.App.Forms
                Hide();
                e.Cancel = true;
                await _workflow.CancelAsync();
-               _workflow.Dispose();
                _workflow = null;
                Close();
             }

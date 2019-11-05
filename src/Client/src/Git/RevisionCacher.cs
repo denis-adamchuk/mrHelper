@@ -115,7 +115,7 @@ namespace mrHelper.Client.Git
                      {
                         await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
                      }
-                     catch (ObjectDisposedException ex)
+                     catch (GitClientDisposedException ex)
                      {
                         ExceptionHandlers.Handle(ex, "GitClient disposed");
                         break;

@@ -15,16 +15,11 @@ namespace mrHelper.Client.Workflow
    /// <summary>
    /// Implements Workflow-related interaction with GitLab
    /// </summary>
-   internal class WorkflowDataOperator : IDisposable
+   internal class WorkflowDataOperator
    {
       internal WorkflowDataOperator(string host, string token)
       {
          _client = new GitLabClient(host, token);
-      }
-
-      public void Dispose()
-      {
-         _client.Dispose();
       }
 
       async internal Task<User> GetCurrentUserAsync()

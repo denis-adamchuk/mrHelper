@@ -28,6 +28,7 @@ namespace mrHelper.Client.MergeRequests
          _projects = projects;
          _cache = cache;
 
+         _timer = new System.Timers.Timer { Interval = settings.AutoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();
@@ -161,10 +162,7 @@ namespace mrHelper.Client.MergeRequests
          return null;
       }
 
-      private readonly System.Timers.Timer _timer = new System.Timers.Timer
-         {
-            Interval = 5 * 60000 // five minutes in ms
-         };
+      private readonly System.Timers.Timer _timer;
 
       private readonly WorkflowDetailsCache _cache;
       private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();

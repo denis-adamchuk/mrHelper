@@ -103,7 +103,7 @@ namespace mrHelper.Client.Discussions
             }
          };
 
-         _synchronizeInvoke = synchronizeInvoke;
+         _timer = new System.Timers.Timer { Interval = settings.AutoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();
@@ -164,7 +164,7 @@ namespace mrHelper.Client.Discussions
 
       private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, bool initialSnapshot)
       {
-         _synchronizeInvoke.BeginInvoke(new Action(
+         _timer.SynchronizingObject.BeginInvoke(new Action(
             async () =>
          {
             try
@@ -266,12 +266,8 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private readonly System.Timers.Timer _timer = new System.Timers.Timer
-      {
-         Interval = 5 * 60000 // five minutes in ms
-      };
+      private readonly System.Timers.Timer _timer;
 
-      private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly UserDefinedSettings _settings;
       private readonly DiscussionOperator _operator;
 

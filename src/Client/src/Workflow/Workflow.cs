@@ -38,7 +38,7 @@ namespace mrHelper.Client.Workflow
    /// <summary>
    /// Client workflow related to Hosts/Projects/Merge Requests
    /// </summary>
-   public class Workflow : IDisposable
+   public class Workflow
    {
       public Workflow(UserDefinedSettings settings)
       {
@@ -123,11 +123,6 @@ namespace mrHelper.Client.Workflow
          {
             await _operator.CancelAsync();
          }
-      }
-
-      public void Dispose()
-      {
-         _operator?.Dispose();
       }
 
       public event Action<string> PreLoadCurrentUser;

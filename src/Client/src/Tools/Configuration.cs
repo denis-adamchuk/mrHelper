@@ -38,6 +38,9 @@ namespace mrHelper.Client.Tools
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
+      private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
+      private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
+
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
 
@@ -285,6 +288,17 @@ namespace mrHelper.Client.Tools
          set { setValue(MainWindowSplitterDistanceKeyName, value.ToString()); }
       }
 
+      public int AutoUpdatePeriodMs
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               AutoUpdatePeriodMsKeyName, AutoUpdatePeriodMsDefaultValue.ToString()),
+                  out int result) ? result : AutoUpdatePeriodMsDefaultValue;
+         }
+         set { setValue(AutoUpdatePeriodMsKeyName, value.ToString()); }
+      }
+
       private string getValue(string key, string defaultValue)
       {
          if (_config.AppSettings.Settings[key] != null)
@@ -396,3 +410,4 @@ namespace mrHelper.Client.Tools
       private readonly bool _changesAllowed;
    }
 }
+

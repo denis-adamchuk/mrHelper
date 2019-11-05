@@ -330,7 +330,7 @@ namespace mrHelper.Client.Git
       {
          if (_isDisposed)
          {
-            throw new ObjectDisposedException(String.Format("GitClient {0}", ProjectKey.ProjectName));
+            throw new GitClientDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
          }
 
          GitAsyncTaskDescriptor descriptor = null;
@@ -359,7 +359,7 @@ namespace mrHelper.Client.Git
       {
          if (_isDisposed)
          {
-            throw new ObjectDisposedException(String.Format("GitClient {0}", ProjectKey.ProjectName));
+            throw new GitClientDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
          }
 
          // If _descriptor is non-empty, it must be a non-exclusive operation, otherwise pickup should have caught it
