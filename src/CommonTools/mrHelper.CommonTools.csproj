@@ -45,6 +45,7 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\AppFinder.cs" />
     <Compile Include="src\FeedbackReporter.cs" />
     <Compile Include="src\NativeMethods.cs" />
     <Compile Include="src\ParentProcessUtilities.cs" />

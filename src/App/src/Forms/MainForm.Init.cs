@@ -162,8 +162,27 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 
-      private void integrateInTools()
+      private bool integrateInTools()
       {
+         if (!System.IO.File.Exists(Common.Constants.Constants.ProjectListFileName))
+         {
+            MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
+               Common.Constants.Constants.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
+
+         string gitPath = CommonTools.AppFinder.GetInstallPath(new string[] { "Git version 2" });
+         if (String.IsNullOrEmpty(gitPath))
+         {
+            MessageBox.Show("Git for Windows (version 2) is not installed. Application cannot start.",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
+
+         string gitBinaryFolder = Path.Combine(gitPath, "bin");
+         string pathEV = System.Environment.GetEnvironmentVariable("PATH");
+         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + gitBinaryFolder);
+
          IIntegratedDiffTool diffTool = new BC3Tool();
          DiffToolIntegration integration = new DiffToolIntegration(new GlobalGitConfiguration());
 
@@ -173,17 +192,21 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            MessageBox.Show("Diff tool integration failed. Application cannot start. See logs for details",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-            if (ex is DiffToolIntegrationException || ex is GitOperationException)
+            if (ex is DiffToolNotInstalledException)
             {
-               ExceptionHandlers.Handle(ex,
-                  String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()));
-               return;
+               MessageBox.Show("Beyond Compare 3 is not installed. Application cannot start",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            throw;
+            else
+            {
+               MessageBox.Show("Beyond Compare 3 integration failed. Application cannot start. See logs for details",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               ExceptionHandlers.Handle(ex, String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()));
+            }
+            return false;
          }
+
+         return true;
       }
 
       private void loadSettings()
@@ -211,14 +234,6 @@ namespace mrHelper.App.Forms
 
       async private Task onApplicationStarted()
       {
-         if (!System.IO.File.Exists(Common.Constants.Constants.ProjectListFileName))
-         {
-            MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
-               Common.Constants.Constants.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Close();
-            return;
-         }
-
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
          _checkForUpdatesTimer.Tick += new System.EventHandler(onTimerCheckForUpdates);
 

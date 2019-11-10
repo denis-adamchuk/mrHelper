@@ -333,7 +333,7 @@ namespace mrHelper.App.Forms
          this.linkLabelSendFeedback.TabIndex = 6;
          this.linkLabelSendFeedback.TabStop = true;
          this.linkLabelSendFeedback.Text = "Send feedback";
-         this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to author. Logs are attached automatically.");
+         this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to developer. Logs are attached automatically.");
          this.linkLabelSendFeedback.Visible = false;
          this.linkLabelSendFeedback.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSendFeedback_LinkClicked);
          // 

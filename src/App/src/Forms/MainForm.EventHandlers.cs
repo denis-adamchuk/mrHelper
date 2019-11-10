@@ -26,7 +26,11 @@ namespace mrHelper.App.Forms
 
          loadSettings();
          addCustomActions();
-         integrateInTools();
+         if (!integrateInTools())
+         {
+            Close();
+            return;
+         }
 
          this.WindowState = FormWindowState.Maximized;
          this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);

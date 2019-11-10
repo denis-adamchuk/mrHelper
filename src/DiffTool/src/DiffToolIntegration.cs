@@ -24,7 +24,13 @@ namespace mrHelper.DiffTool
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
-         registerInGit(diffTool, GitDiffToolName);
+         string toolpath = CommonTools.AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
+         if (!isInstalled(toolpath))
+         {
+            throw new DiffToolNotInstalledException("Diff tool not installed", null);
+         }
+
+         registerInGit(diffTool, GitDiffToolName, toolpath);
 
          try
          {
@@ -52,11 +58,6 @@ namespace mrHelper.DiffTool
       /// </summary>
       private void registerInTool(IIntegratedDiffTool diffTool)
       {
-         if (!isInstalled(diffTool))
-         {
-            throw new DiffToolIntegrationException("Diff tool not installed", null);
-         }
-
          try
          {
             diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
@@ -75,71 +76,21 @@ namespace mrHelper.DiffTool
       /// Throws GitOperationException if integration failed
       /// Throws DiffToolIntegrationException if diff tool is not installed
       /// </summary>
-      private void registerInGit(IIntegratedDiffTool diffTool, string name)
+      private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
       {
-         if (!isInstalled(diffTool))
-         {
-            throw new DiffToolIntegrationException("Diff tool not installed", null);
-         }
-
-         _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand(diffTool));
+         _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand(diffTool, toolpath));
       }
 
-      public bool isInstalled(IIntegratedDiffTool diffTool)
+      public bool isInstalled(string toolpath)
       {
-         return getToolPath(diffTool) != null;
+         return !String.IsNullOrEmpty(toolpath);
       }
 
-      static private string getInstallPath(string[] applicationNames)
+      private string getGitCommand(IIntegratedDiffTool diffTool, string toolPath)
       {
-         Debug.Assert(applicationNames != null);
-
-         var installPath = findApplicationPath(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-            applicationNames);
-         if (installPath == null)
-         {
-            installPath = findApplicationPath(@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-               applicationNames);
-         }
-
-         return installPath;
-      }
-
-      static private string findApplicationPath(string keyPath, string[] applicationNames)
-      {
-         var hklm = Registry.LocalMachine;
-         var uninstall = hklm.OpenSubKey(keyPath);
-         foreach (var productSubKey in uninstall.GetSubKeyNames())
-         {
-            var product = uninstall.OpenSubKey(productSubKey);
-            var displayName = product.GetValue("DisplayName");
-            foreach (var appName in applicationNames)
-            {
-               if (displayName != null && displayName.ToString().Contains(appName))
-               {
-                  return product.GetValue("InstallLocation").ToString();
-               }
-            }
-         }
-         return null;
-      }
-
-      private string getGitCommand(IIntegratedDiffTool diffTool)
-      {
-         string toolPath = getToolPath(diffTool);
-         if (toolPath == null)
-         {
-            throw new DiffToolIntegrationException(String.Format("Cannot find installation location in registry"));
-         }
-
          var path = System.IO.Path.Combine(toolPath, diffTool.GetToolCommand());
          path = path.Replace(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
          return "\"\\\"" + path + "\\\"" + diffTool.GetToolCommandArguments() + "\"";
-      }
-
-      private string getToolPath(IIntegratedDiffTool diffTool)
-      {
-         return getInstallPath(diffTool.GetToolRegistryNames());
       }
 
       private readonly IGlobalGitConfiguration _globalGitConfiguration;
