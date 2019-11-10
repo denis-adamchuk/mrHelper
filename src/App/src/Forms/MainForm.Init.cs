@@ -182,6 +182,8 @@ namespace mrHelper.App.Forms
          string gitBinaryFolder = Path.Combine(gitPath, "bin");
          string pathEV = System.Environment.GetEnvironmentVariable("PATH");
          System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + gitBinaryFolder);
+         Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
+            System.Environment.GetEnvironmentVariable("PATH")));
 
          IIntegratedDiffTool diffTool = new BC3Tool();
          DiffToolIntegration integration = new DiffToolIntegration(new GlobalGitConfiguration());

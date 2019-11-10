@@ -30,6 +30,8 @@ namespace mrHelper.DiffTool
             throw new DiffToolNotInstalledException("Diff tool not installed", null);
          }
 
+         Trace.TraceInformation(String.Format("Diff Tool installed at: {0}", toolpath));
+
          registerInGit(diffTool, GitDiffToolName, toolpath);
 
          try
