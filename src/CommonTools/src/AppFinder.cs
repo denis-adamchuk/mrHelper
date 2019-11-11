@@ -13,19 +13,23 @@ namespace mrHelper.CommonTools
       static public string GetInstallPath(string[] applicationNames)
       {
          Debug.Assert(applicationNames != null);
-
-         var installPath = findApplicationPath(RegistryView.Registry64, applicationNames);
-         if (installPath == null)
+         foreach (RegistryHive hive in new RegistryHive[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser })
          {
-            installPath = findApplicationPath(RegistryView.Registry32, applicationNames);
+            foreach (RegistryView view in new RegistryView[] { RegistryView.Registry32, RegistryView.Registry64 })
+            {
+               string installPath = findApplicationPath(hive, view, applicationNames);
+               if (!String.IsNullOrEmpty(installPath))
+               {
+                  return installPath;
+               }
+            }
          }
-
-         return installPath;
+         return null;
       }
 
-      static private string findApplicationPath(RegistryView view, string[] applicationNames)
+      static private string findApplicationPath(RegistryHive hive, RegistryView view, string[] applicationNames)
       {
-         var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
+         var hklm = RegistryKey.OpenBaseKey(hive, view);
          var uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
          foreach (var productSubKey in uninstall.GetSubKeyNames())
          {

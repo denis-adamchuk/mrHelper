@@ -174,7 +174,8 @@ namespace mrHelper.App.Forms
          string gitPath = CommonTools.AppFinder.GetInstallPath(new string[] { "Git version 2" });
          if (String.IsNullOrEmpty(gitPath))
          {
-            MessageBox.Show("Git for Windows (version 2) is not installed. Application cannot start.",
+            MessageBox.Show(
+               "Git for Windows (version 2) is not installed. It must be installed at least for the current user. Application cannot start.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
          }
@@ -196,7 +197,8 @@ namespace mrHelper.App.Forms
          {
             if (ex is DiffToolNotInstalledException)
             {
-               MessageBox.Show("Beyond Compare 3 is not installed. Application cannot start",
+               MessageBox.Show(
+                  "Beyond Compare 3 is not installed. It must be installed at least for the current user. Application cannot start",
                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
