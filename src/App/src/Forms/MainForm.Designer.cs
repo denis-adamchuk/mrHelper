@@ -90,6 +90,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.panel2 = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
@@ -111,6 +112,7 @@ namespace mrHelper.App.Forms
          this.groupBox2 = new System.Windows.Forms.GroupBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
          this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
+         this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -667,7 +669,9 @@ namespace mrHelper.App.Forms
             this.columnHeaderTitle,
             this.columnHeaderLabels,
             this.columnHeaderJira,
-            this.columnHeaderTotalTime});
+            this.columnHeaderTotalTime,
+            this.columnHeaderSourceBranch,
+            this.columnHeaderTargetBranch});
          this.listViewMergeRequests.FullRowSelect = true;
          this.listViewMergeRequests.GridLines = true;
          this.listViewMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -722,6 +726,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderTotalTime.Tag = "TotalTime";
          this.columnHeaderTotalTime.Text = "Total Time";
          this.columnHeaderTotalTime.Width = 70;
+         // 
+         // columnHeaderSourceBranch
+         // 
+         this.columnHeaderSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderSourceBranch.Text = "Source Branch";
+         this.columnHeaderSourceBranch.Width = 100;
          // 
          // checkBoxLabels
          // 
@@ -970,6 +980,12 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.TabIndex = 0;
          this.richTextBoxMergeRequestDescription.Text = "";
          // 
+         // columnHeaderTargetBranch
+         // 
+         this.columnHeaderTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderTargetBranch.Text = "Target Branch";
+         this.columnHeaderTargetBranch.Width = 100;
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1090,6 +1106,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxShowUpdatedMergeRequests;
       private System.Windows.Forms.CheckBox checkBoxShowMergedMergeRequests;
       private System.Windows.Forms.CheckBox checkBoxShowMyActivity;
+      private System.Windows.Forms.ColumnHeader columnHeaderSourceBranch;
+      private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
    }
 }
 

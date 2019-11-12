@@ -781,6 +781,8 @@ namespace mrHelper.App.Forms
                String.Empty, // Column Labels (stub)
                String.Empty, // Column Jira (stub)
                String.Empty, // Column Total Time (stub)
+               String.Empty, // Column Source Branch (stub)
+               String.Empty, // Column Target Branch (stub)
             }, group));
          Debug.Assert(item.SubItems.Count == listViewMergeRequests.Columns.Count);
          setListViewItemTag(item, mrk);
@@ -818,6 +820,8 @@ namespace mrHelper.App.Forms
          item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty);
          item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl);
          item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeAsText(mrk), () => String.Empty);
+         item.SubItems[6].Tag = new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty);
+         item.SubItems[7].Tag = new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty);
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
