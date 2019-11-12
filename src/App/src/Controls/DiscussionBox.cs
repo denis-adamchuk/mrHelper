@@ -414,7 +414,7 @@ namespace mrHelper.App.Controls
                continue;
             }
 
-            Control textBox = createTextBox(note, discussionResolved);
+            Control textBox = createTextBox(note, discussionResolved, notes[0].Author);
             boxes.Add(textBox);
          }
          return boxes;
@@ -425,12 +425,22 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private Control createTextBox(DiscussionNote note, bool discussionResolved)
+      private string getNoteText(ref DiscussionNote note, ref User firstNoteAuthor)
+      {
+         bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
+         Debug.Assert(!appendNoteAuthor || !canBeModified(note));
+
+         string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
+         string body = note.Body.Replace("\n", "\r\n");
+         return prefix + body;
+      }
+
+      private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
          TextBox textBox = new TextBoxNoWheel()
          {
             ReadOnly = true,
-            Text = note.Body.Replace("\n", "\r\n"),
+            Text =  getNoteText(ref note, ref firstNoteAuthor),
             Multiline = true,
             BackColor = getNoteColor(note),
             MinimumSize = new Size(300, 0),

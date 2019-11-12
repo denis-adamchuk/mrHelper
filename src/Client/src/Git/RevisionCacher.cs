@@ -82,49 +82,56 @@ namespace mrHelper.Client.Git
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(projectKey))
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
-                  List<Version> newVersions = await _operator.LoadVersions(mrk);
-                  newVersions = newVersions
-                     .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
-
-                  List<Version> newVersionsDetailed = new List<Version>();
-                  foreach (Version version in newVersions)
+                  try
                   {
-                     Version newVersionDetailed = await _operator.LoadVersion(version, mrk);
-                     Trace.TraceInformation(String.Format(
-                        "[RevisionCacher] Found new version of MR with IId={0} (created at {1}). "
-                      + "PrevLatestChange={2}, LatestChange={3}",
-                        mrk.IId,
-                        newVersionDetailed.Created_At.ToLocalTime().ToString(),
-                        prevLatestChange.ToLocalTime().ToString(),
-                        latestChange.ToLocalTime().ToString()));
-                     newVersionsDetailed.Add(newVersionDetailed);
+                     List<Version> newVersions  = await _operator.LoadVersions(mrk);
+                     newVersions = newVersions
+                        .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
+
+                     List<Version> newVersionsDetailed = new List<Version>();
+                     foreach (Version version in newVersions)
+                     {
+                        Version newVersionDetailed = await _operator.LoadVersion(version, mrk);
+                        Trace.TraceInformation(String.Format(
+                           "[RevisionCacher] Found new version of MR with IId={0} (created at {1}). "
+                         + "PrevLatestChange={2}, LatestChange={3}",
+                           mrk.IId,
+                           newVersionDetailed.Created_At.ToLocalTime().ToString(),
+                           prevLatestChange.ToLocalTime().ToString(),
+                           latestChange.ToLocalTime().ToString()));
+                        newVersionsDetailed.Add(newVersionDetailed);
+                     }
+
+                     if (newVersionsDetailed.Count > 0)
+                     {
+                        Trace.TraceInformation(String.Format(
+                           "[RevisionCacher] Processing merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
+                           mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
+
+                        gatherArguments(newVersionsDetailed,
+                           out HashSet<DiffCacheKey> diffArgs,
+                           out HashSet<RevisionCacheKey> revisionArgs,
+                           out HashSet<ListOfRenamesCacheKey> renamesArgs);
+
+                        try
+                        {
+                           await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                        }
+                        catch (GitClientDisposedException ex)
+                        {
+                           ExceptionHandlers.Handle(ex, "GitClient disposed");
+                           break;
+                        }
+
+                        Trace.TraceInformation(String.Format(
+                           "[RevisionCacher] Processing merge request with IId={0}."
+                         + "Cached git results: {1} git diff, {2} git show, {3} git rename",
+                           mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
+                     }
                   }
-
-                  if (newVersionsDetailed.Count > 0)
+                  catch (OperatorException)
                   {
-                     Trace.TraceInformation(String.Format(
-                        "[RevisionCacher] Processing merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
-                        mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
-
-                     gatherArguments(newVersionsDetailed,
-                        out HashSet<DiffCacheKey> diffArgs,
-                        out HashSet<RevisionCacheKey> revisionArgs,
-                        out HashSet<ListOfRenamesCacheKey> renamesArgs);
-
-                     try
-                     {
-                        await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
-                     }
-                     catch (GitClientDisposedException ex)
-                     {
-                        ExceptionHandlers.Handle(ex, "GitClient disposed");
-                        break;
-                     }
-
-                     Trace.TraceInformation(String.Format(
-                        "[RevisionCacher] Processing merge request with IId={0}."
-                      + "Cached git results: {1} git diff, {2} git show, {3} git rename",
-                        mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
+                     // already handled
                   }
                }
                _latestChanges[gitClient] = latestChange;
