@@ -77,7 +77,15 @@ namespace mrHelper.App
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
-               await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
+               try
+               {
+                  await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
+               }
+               catch (DiscussionCreatorException)
+               {
+                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
             }
          }
       }

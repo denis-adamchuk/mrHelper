@@ -278,7 +278,15 @@ namespace mrHelper.App.Forms
                DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Adding a comment...";
-               await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
+               try
+               {
+                  await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
+               }
+               catch (DiscussionCreatorException)
+               {
+                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
                labelWorkflowStatus.Text = "Comment added";
             }
          }
@@ -307,7 +315,15 @@ namespace mrHelper.App.Forms
                DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Creating a discussion...";
-               await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body });
+               try
+               {
+                  await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body });
+               }
+               catch (DiscussionCreatorException)
+               {
+                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
                labelWorkflowStatus.Text = "Discussion created";
             }
          }
