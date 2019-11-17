@@ -75,7 +75,6 @@ namespace mrHelper.App.Forms
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
       {
-         ShowInTaskbar = true;
          CommonTools.Win32Tools.ForceWindowIntoForeground(this.Handle);
       }
 
@@ -672,7 +671,6 @@ namespace mrHelper.App.Forms
             _requireShowingTooltipOnHideToTray = false;
          }
          Hide();
-         ShowInTaskbar = false;
       }
 
       private void onTimer(object sender, EventArgs e)
