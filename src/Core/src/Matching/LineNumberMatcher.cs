@@ -39,8 +39,18 @@ namespace mrHelper.Core.Matching
          DiffRefs refs = inDiffPosition.Refs;
          int currentLine = matchInfo.LineNumber;
          bool isLeftSide = matchInfo.IsLeftSideLineNumber;
-         int? oppositeLine = getOppositeLine(refs, isLeftSide, inDiffPosition.LeftPath, inDiffPosition.RightPath,
-            currentLine);
+
+         int? oppositeLine;
+         try
+         {
+            oppositeLine = getOppositeLine(refs, isLeftSide, inDiffPosition.LeftPath, inDiffPosition.RightPath,
+               currentLine);
+         }
+         catch (BadPosition)
+         {
+            throw new ArgumentException(
+               String.Format("Bad match info: {0}", matchInfo.ToString()));
+         }
 
          string currentLineAsString = currentLine.ToString();
          string oppositeLineAsString = oppositeLine?.ToString();

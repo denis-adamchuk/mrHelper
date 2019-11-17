@@ -64,6 +64,9 @@ namespace mrHelper.App
          {
             Debug.Assert((ex is ArgumentException) || (ex is GitOperationException));
             ExceptionHandlers.Handle(ex, "Cannot create DiffPosition");
+            MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
             return;
          }
 
@@ -84,7 +87,8 @@ namespace mrHelper.App
                catch (DiscussionCreatorException)
                {
                   MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                     MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                }
             }
          }

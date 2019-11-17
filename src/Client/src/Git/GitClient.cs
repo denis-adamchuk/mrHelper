@@ -62,7 +62,8 @@ namespace mrHelper.Client.Git
 
             if (canClone(Path))
             {
-               string arguments = "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + Path;
+               string arguments =
+                  "clone --progress " + ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " + escapeSpaces(Path);
                await executeGitCommandAsync(arguments, reportProgress);
             }
             else
@@ -156,8 +157,8 @@ namespace mrHelper.Client.Git
 
       public List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context)
       {
-         filename1 = fixupFilename(filename1);
-         filename2 = fixupFilename(filename2);
+         filename1 = escapeSpaces(filename1);
+         filename2 = escapeSpaces(filename2);
 
          DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
             filename1 = filename1, filename2 = filename2, context = context };
@@ -181,8 +182,8 @@ namespace mrHelper.Client.Git
       async public Task<List<string>> DiffAsync(string leftcommit, string rightcommit,
          string filename1, string filename2, int context)
       {
-         filename1 = fixupFilename(filename1);
-         filename2 = fixupFilename(filename2);
+         filename1 = escapeSpaces(filename1);
+         filename2 = escapeSpaces(filename2);
 
          DiffCacheKey key = new DiffCacheKey { sha1 = leftcommit, sha2 = rightcommit,
             filename1 = filename1, filename2 = filename2, context = context };
@@ -241,7 +242,7 @@ namespace mrHelper.Client.Git
 
       public List<string> ShowFileByRevision(string filename, string sha)
       {
-         filename = fixupFilename(filename);
+         filename = escapeSpaces(filename);
 
          RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
          if (_cachedRevisions.ContainsKey(key))
@@ -261,7 +262,7 @@ namespace mrHelper.Client.Git
 
       async public Task<List<string>> ShowFileByRevisionAsync(string filename, string sha)
       {
-         filename = fixupFilename(filename);
+         filename = escapeSpaces(filename);
 
          RevisionCacheKey key = new RevisionCacheKey { filename = filename, sha = sha };
          if (_cachedRevisions.ContainsKey(key))
@@ -426,9 +427,9 @@ namespace mrHelper.Client.Git
             ProjectKey.ProjectName));
       }
 
-      private string fixupFilename(string filename)
+      private static string escapeSpaces(string unescaped)
       {
-         return filename.Contains(' ') ? '"' + filename + '"' : filename;
+         return unescaped.Contains(' ') ? '"' + unescaped + '"' : unescaped;
       }
 
       private readonly Dictionary<DiffCacheKey, List<string>> _cachedDiffs =

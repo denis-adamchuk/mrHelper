@@ -21,7 +21,13 @@ namespace mrHelper.Core.Interprocess
       {
          Debug.Assert(arguments[1] == "diff");
 
-         if (arguments.Length == 5)
+         if (arguments.Length != 5)
+         {
+            throw new ArgumentException(
+               String.Format("Bad number of arguments ({0} were given, 4 or 5 are expected)", arguments.Length));
+         }
+
+         if (arguments[4] != String.Empty)
          {
             // Expected arguments (when comparing two files):
             // (0) Current-pane file name with path 
@@ -30,18 +36,13 @@ namespace mrHelper.Core.Interprocess
             _arguments = new string[3];
             Array.Copy(arguments, 2, _arguments, 0, 3);
          }
-         else if (arguments.Length == 4)
+         else
          {
             // Expected arguments (when a single file is opened in a diff tool):
             // (0) Current-pane file name with path 
             // (1) Current-pane line number 
             _arguments = new string[2];
             Array.Copy(arguments, 2, _arguments, 0, 2);
-         }
-         else
-         {
-            throw new ArgumentException(
-               String.Format("Bad number of arguments ({0} were given, 4 or 5 are expected)", arguments.Length));
          }
       }
 
