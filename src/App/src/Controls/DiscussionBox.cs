@@ -81,9 +81,9 @@ namespace mrHelper.App.Controls
                {
                   await onReplyAsyncDone();
                }
-               else
+               else if (textBox?.Parent?.Parent != null)
                {
-                  await onReplyToDiscussionAsync(textBox);
+                  await onReplyToDiscussionAsync();
                }
             }
          }
@@ -121,9 +121,9 @@ namespace mrHelper.App.Controls
                {
                   await onReplyAsyncDone();
                }
-               else
+               else if (textBox?.Parent?.Parent != null)
                {
-                  await onReplyToDiscussionAsync(textBox);
+                  await onReplyToDiscussionAsync();
                }
             }
          }
@@ -131,6 +131,26 @@ namespace mrHelper.App.Controls
          {
             onCancelEditNote(textBox);
             updateTextboxHeight(textBox);
+         }
+      }
+
+      async private void DiscussionNoteHtmlPanel_KeyDown(object sender, KeyEventArgs e)
+      {
+         HtmlPanel htmlPanel = (HtmlPanel)(sender);
+
+         if (e.KeyCode == Keys.F4)
+         {
+            if (!Discussion.Individual_Note)
+            {
+               if (Control.ModifierKeys == Keys.Shift)
+               {
+                  await onReplyAsyncDone();
+               }
+               else if (htmlPanel?.Parent?.Parent != null)
+               {
+                  await onReplyToDiscussionAsync();
+               }
+            }
          }
       }
 
@@ -165,13 +185,8 @@ namespace mrHelper.App.Controls
          await onSubmitNewBodyAsync(textBox);
       }
 
-      async private Task onReplyToDiscussionAsync(TextBox textBox)
+      async private Task onReplyToDiscussionAsync()
       {
-         if (textBox?.Parent?.Parent == null)
-         {
-            return;
-         }
-
          using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -191,13 +206,45 @@ namespace mrHelper.App.Controls
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         await onReplyToDiscussionAsync(textBox);
+         if (menuItem.Tag is TextBox)
+         {
+            TextBox textBox = (TextBox)(menuItem.Tag);
+            if (textBox?.Parent?.Parent != null)
+            {
+               await onReplyToDiscussionAsync();
+            }
+         }
+         else
+         {
+            Debug.Assert(menuItem.Tag is HtmlPanel);
+            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
+            if (htmlPanel?.Parent?.Parent != null)
+            {
+               await onReplyToDiscussionAsync();
+            }
+         }
       }
 
       async private void MenuItemReplyDone_Click(object sender, EventArgs e)
       {
-         await onReplyAsyncDone();
+         MenuItem menuItem = (MenuItem)(sender);
+         if (menuItem.Tag is TextBox)
+         {
+            TextBox textBox = (TextBox)(menuItem.Tag);
+            if (textBox?.Parent?.Parent != null)
+            {
+               await onReplyAsyncDone();
+            }
+         }
+         else
+         {
+            Debug.Assert(menuItem.Tag is HtmlPanel);
+            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
+            if (htmlPanel?.Parent?.Parent != null)
+            {
+               await onReplyAsyncDone();
+            }
+         }
       }
 
       private void MenuItemEditNote_Click(object sender, EventArgs e)
@@ -235,30 +282,56 @@ namespace mrHelper.App.Controls
       async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent == null)
+         if (menuItem.Tag is TextBox)
          {
-            return;
+            TextBox textBox = (TextBox)(menuItem.Tag);
+            if (textBox?.Parent?.Parent == null)
+            {
+               return;
+            }
+
+            stopEdit(textBox); // prevent submitting body modifications in the current handler
+
+            DiscussionNote note = (DiscussionNote)(textBox.Tag);
+            Debug.Assert(note.Resolvable);
+
+            await onToggleResolveNoteAsync((DiscussionNote)textBox.Tag);
          }
+         else
+         {
+            Debug.Assert(menuItem.Tag is HtmlPanel);
+            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
+            if (htmlPanel?.Parent?.Parent == null)
+            {
+               return;
+            }
 
-         stopEdit(textBox); // prevent submitting body modifications in the current handler
-
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         Debug.Assert(note.Resolvable);
-
-         await onToggleResolveNoteAsync(textBox);
+            await onToggleResolveNoteAsync((DiscussionNote)htmlPanel.Tag);
+         }
       }
 
       async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent == null)
+         if (menuItem.Tag is TextBox)
          {
-            return;
-         }
+            TextBox textBox = (TextBox)(menuItem.Tag);
+            if (textBox?.Parent?.Parent == null)
+            {
+               return;
+            }
 
-         stopEdit(textBox); // prevent submitting body modifications in the current handler
+            stopEdit(textBox); // prevent submitting body modifications in the current handler
+         }
+         else
+         {
+            Debug.Assert(menuItem.Tag is HtmlPanel);
+            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
+            if (htmlPanel?.Parent?.Parent == null)
+            {
+               return;
+            }
+         }
 
          await onToggleResolveDiscussionAsync();
       }
@@ -425,35 +498,113 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private string getNoteText(ref DiscussionNote note, ref User firstNoteAuthor)
+      private string getNoteText(ref DiscussionNote note, ref User firstNoteAuthor, bool convert)
       {
          bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
          Debug.Assert(!appendNoteAuthor || !canBeModified(note));
 
          string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
-         string body = note.Body.Replace("\n", "\r\n");
+         var options = new Markdig.Extensions.Tables.PipeTableOptions();
+         options.RequireHeaderSeparator = false;
+         var pipeline = Markdig.MarkdownExtensions.UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options).Build();
+         string htmlbody = System.Net.WebUtility.HtmlDecode(Markdig.Markdown.ToHtml(System.Net.WebUtility.HtmlEncode(note.Body), pipeline) + "</details>");
+         string body = convert ? htmlbody : note.Body.Replace("\n", "\r\n");
          return prefix + body;
+      }
+
+      private string getHtmlNoteText(ref DiscussionNote note, ref User firstNoteAuthor)
+      {
+         string customStyle =
+            @"body {
+                 width: 100%;
+                 margin: 0;
+              }
+              body div { 
+                 font-family: Microsoft Sans Serif, Sans Serif;
+                 font-size: 8.25pt;
+                 padding: 1px;
+                 border: 1px solid white;
+              }
+table {
+    border: solid 1px #DDEEEE;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font: normal 9Consolas, monospace;
+}
+table thead th {
+    background-color: #DDEFEF;
+    border: solid 1px #DDEEEE;
+    color: #336B6B;
+    padding: 5px;
+    text-align: left;
+    text-shadow: 1px 1px 1px #fff;
+}
+table tbody td {
+    border: solid 1px #DDEEEE;
+    color: #333;
+    padding: 5px;
+    text-shadow: 1px 1px 1px #fff;
+}
+              p {
+                margin: 0;
+              }";
+
+         string commonBegin = string.Format(@"
+            <html>
+               <head>
+                  <style>{0}</style>
+               </head>
+               <body>
+                  <div>", customStyle);
+
+         string commonEnd = @"
+                  </div>
+               </body>
+            </html>";
+
+         return commonBegin + getNoteText(ref note, ref firstNoteAuthor, true) + commonEnd;
       }
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
-         TextBox textBox = new TextBoxNoWheel()
+         if (canBeModified(note))
          {
-            ReadOnly = true,
-            Text =  getNoteText(ref note, ref firstNoteAuthor),
-            Multiline = true,
-            BackColor = getNoteColor(note),
-            MinimumSize = new Size(300, 0),
-            Tag = note
-         };
-         textBox.GotFocus += Control_GotFocus;
-         textBox.LostFocus += TextBox_LostFocus;
-         textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
-         textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
-         textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
-         _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
+            TextBox textBox = new TextBoxNoWheel()
+            {
+               ReadOnly = true,
+               Text = getNoteText(ref note, ref firstNoteAuthor, false),
+               Multiline = true,
+               BackColor = getNoteColor(note),
+               MinimumSize = new Size(300, 0),
+               Tag = note
+            };
+            textBox.GotFocus += Control_GotFocus;
+            textBox.LostFocus += TextBox_LostFocus;
+            textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
+            textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
+            textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
+            _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
 
-         return textBox;
+            return textBox;
+         }
+         else
+         {
+            HtmlPanel htmlPanel = new HtmlPanel
+            {
+               IsContextMenuEnabled = false,
+               BackColor = getNoteColor(note),
+               BorderStyle = BorderStyle.FixedSingle,
+               Text = getHtmlNoteText(ref note, ref firstNoteAuthor),
+               MinimumSize = new Size(300, 0),
+               Tag = note
+            };
+            htmlPanel.GotFocus += Control_GotFocus;
+            htmlPanel.KeyDown += DiscussionNoteHtmlPanel_KeyDown;
+            htmlPanel.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, htmlPanel);
+            _toolTip.SetToolTip(htmlPanel, getNoteTooltipText(note));
+
+            return htmlPanel;
+         }
       }
 
       private void Control_GotFocus(object sender, EventArgs e)
@@ -522,6 +673,53 @@ namespace mrHelper.App.Controls
 
          return contextMenu;
       }
+
+      private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note,
+         bool discussionResolved, HtmlPanel htmlPanel)
+      {
+         Debug.Assert(!canBeModified(note));
+
+         var contextMenu = new ContextMenu();
+
+         MenuItem menuItemToggleDiscussionResolve = new MenuItem
+         {
+            Tag = htmlPanel,
+            Text = (discussionResolved ? "Unresolve" : "Resolve") + " Discussion",
+            Enabled = note.Resolvable
+         };
+         menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
+         contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
+
+         MenuItem menuItemToggleResolve = new MenuItem
+         {
+            Tag = htmlPanel,
+            Text = (note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note",
+            Enabled = note.Resolvable
+         };
+         menuItemToggleResolve.Click += MenuItemToggleResolveNote_Click;
+         contextMenu.MenuItems.Add(menuItemToggleResolve);
+
+         MenuItem menuItemReply = new MenuItem
+         {
+            Tag = htmlPanel,
+            Enabled = !Discussion.Individual_Note,
+            Text = "Reply\t(F4)"
+         };
+         menuItemReply.Click += MenuItemReply_Click;
+         contextMenu.MenuItems.Add(menuItemReply);
+
+         MenuItem menuItemReplyDone = new MenuItem
+         {
+            Tag = htmlPanel,
+            Enabled = !Discussion.Individual_Note,
+            Text = "Reply \"Done\"\t(Shift-F4)"
+         };
+         menuItemReplyDone.Click += MenuItemReplyDone_Click;
+         contextMenu.MenuItems.Add(menuItemReplyDone);
+
+         return contextMenu;
+      }
+
 
       private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
       {
@@ -604,7 +802,14 @@ namespace mrHelper.App.Controls
          foreach (var textbox in _textboxesNotes)
          {
             textbox.Width = width * NotesWidth / 100;
-            textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
+            if (textbox is TextBoxNoWheel)
+            {
+               textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
+            }
+            else if (textbox is HtmlPanel)
+            {
+               textbox.Height = textbox.DisplayRectangle.Height + 2;
+            }
          }
 
          if (_panelContext != null)
@@ -766,9 +971,8 @@ namespace mrHelper.App.Controls
          await refreshDiscussion();
       }
 
-      async private Task onToggleResolveNoteAsync(TextBox textBox)
+      async private Task onToggleResolveNoteAsync(DiscussionNote note)
       {
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
          bool wasResolved = note.Resolved;
 
          try
