@@ -56,7 +56,7 @@ namespace mrHelper.App.Forms
             X = offsetX,
             Y = 17
          };
-         System.Drawing.Size typicalSize = new System.Drawing.Size(96, 32);
+         System.Drawing.Size typicalSize = new System.Drawing.Size(80, 32);
          foreach (ICommand command in _customCommands)
          {
             string name = command.GetName();
