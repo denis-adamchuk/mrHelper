@@ -64,6 +64,14 @@ namespace mrHelper.App.Controls
             BaseStylesheet = ".htmltooltip { padding: 1px; }"
          };
 
+         Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
+         {
+            RequireHeaderSeparator = false
+         };
+         _specialDiscussionNoteMarkdownPipeline = Markdig.MarkdownExtensions
+            .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
+            .Build();
+
          onCreate();
       }
 
@@ -81,9 +89,9 @@ namespace mrHelper.App.Controls
                {
                   await onReplyAsyncDone();
                }
-               else
+               else if (textBox?.Parent?.Parent != null)
                {
-                  await onReplyToDiscussionAsync(textBox);
+                  await onReplyToDiscussionAsync();
                }
             }
          }
@@ -121,9 +129,9 @@ namespace mrHelper.App.Controls
                {
                   await onReplyAsyncDone();
                }
-               else
+               else if (textBox?.Parent?.Parent != null)
                {
-                  await onReplyToDiscussionAsync(textBox);
+                  await onReplyToDiscussionAsync();
                }
             }
          }
@@ -165,13 +173,8 @@ namespace mrHelper.App.Controls
          await onSubmitNewBodyAsync(textBox);
       }
 
-      async private Task onReplyToDiscussionAsync(TextBox textBox)
+      async private Task onReplyToDiscussionAsync()
       {
-         if (textBox?.Parent?.Parent == null)
-         {
-            return;
-         }
-
          using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -192,12 +195,20 @@ namespace mrHelper.App.Controls
       {
          MenuItem menuItem = (MenuItem)(sender);
          TextBox textBox = (TextBox)(menuItem.Tag);
-         await onReplyToDiscussionAsync(textBox);
+         if (textBox?.Parent?.Parent != null)
+         {
+            await onReplyToDiscussionAsync();
+         }
       }
 
       async private void MenuItemReplyDone_Click(object sender, EventArgs e)
       {
-         await onReplyAsyncDone();
+         MenuItem menuItem = (MenuItem)(sender);
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent != null)
+         {
+            await onReplyAsyncDone();
+         }
       }
 
       private void MenuItemEditNote_Click(object sender, EventArgs e)
@@ -246,7 +257,7 @@ namespace mrHelper.App.Controls
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
 
-         await onToggleResolveNoteAsync(textBox);
+         await onToggleResolveNoteAsync((DiscussionNote)textBox.Tag);
       }
 
       async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
@@ -435,25 +446,73 @@ namespace mrHelper.App.Controls
          return prefix + body;
       }
 
+      private string getHtmlDiscussionNoteText(ref DiscussionNote note)
+      {
+         string css = mrHelper.App.Properties.Resources.DiscussionNoteCSS;
+
+         string commonBegin = string.Format(@"
+            <html>
+               <head>
+                  <style>{0}</style>
+               </head>
+               <body>
+                  <div>", css);
+
+         string commonEnd = @"
+                  </div>
+               </body>
+            </html>";
+
+         string htmlbody =
+            System.Net.WebUtility.HtmlDecode(
+               Markdig.Markdown.ToHtml(
+                  System.Net.WebUtility.HtmlEncode(note.Body), _specialDiscussionNoteMarkdownPipeline));
+
+         return commonBegin + htmlbody + commonEnd;
+      }
+
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
-         TextBox textBox = new TextBoxNoWheel()
+         if (shouldBeTextBox(note))
          {
-            ReadOnly = true,
-            Text =  getNoteText(ref note, ref firstNoteAuthor),
-            Multiline = true,
-            BackColor = getNoteColor(note),
-            MinimumSize = new Size(300, 0),
-            Tag = note
-         };
-         textBox.GotFocus += Control_GotFocus;
-         textBox.LostFocus += TextBox_LostFocus;
-         textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
-         textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
-         textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
-         _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
+            TextBox textBox = new TextBoxNoWheel()
+            {
+               ReadOnly = true,
+               Text = getNoteText(ref note, ref firstNoteAuthor),
+               Multiline = true,
+               BackColor = getNoteColor(note),
+               MinimumSize = new Size(300, 0),
+               Tag = note
+            };
+            textBox.GotFocus += Control_GotFocus;
+            textBox.LostFocus += TextBox_LostFocus;
+            textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
+            textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
+            textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
+            _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
 
-         return textBox;
+            return textBox;
+         }
+         else
+         {
+            HtmlPanel htmlPanel = new HtmlPanel
+            {
+               BackColor = getNoteColor(note),
+               BorderStyle = BorderStyle.FixedSingle,
+               Text = getHtmlDiscussionNoteText(ref note),
+               MinimumSize = new Size(300, 0),
+               Tag = note
+            };
+            htmlPanel.GotFocus += Control_GotFocus;
+
+            return htmlPanel;
+         }
+      }
+
+      private bool shouldBeTextBox(DiscussionNote note)
+      {
+         // Let's introduce this way to distinct ordinary notes from special ones
+         return note.Author.Name != note.Author.Username;
       }
 
       private void Control_GotFocus(object sender, EventArgs e)
@@ -604,7 +663,14 @@ namespace mrHelper.App.Controls
          foreach (var textbox in _textboxesNotes)
          {
             textbox.Width = width * NotesWidth / 100;
-            textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
+            if (textbox is TextBoxNoWheel)
+            {
+               textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
+            }
+            else if (textbox is HtmlPanel)
+            {
+               textbox.Height = textbox.DisplayRectangle.Height + 2;
+            }
          }
 
          if (_panelContext != null)
@@ -766,9 +832,8 @@ namespace mrHelper.App.Controls
          await refreshDiscussion();
       }
 
-      async private Task onToggleResolveNoteAsync(TextBox textBox)
+      async private Task onToggleResolveNoteAsync(DiscussionNote note)
       {
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
          bool wasResolved = note.Resolved;
 
          try
@@ -924,5 +989,6 @@ namespace mrHelper.App.Controls
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlToolTip;
+      private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }

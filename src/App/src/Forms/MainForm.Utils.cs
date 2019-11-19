@@ -458,9 +458,34 @@ namespace mrHelper.App.Forms
       private void updateMergeRequestDetails(MergeRequest? mergeRequest)
       {
          richTextBoxMergeRequestDescription.Text =
-            mergeRequest.HasValue ? mergeRequest.Value.Description : String.Empty;
+            mergeRequest.HasValue ? getMergeRequestDescriptionHtmlText(mergeRequest.Value) : String.Empty;
          richTextBoxMergeRequestDescription.Update();
          linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
+      }
+
+      private string getMergeRequestDescriptionHtmlText(MergeRequest mergeRequest)
+      {
+         string css = mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
+
+         string commonBegin = string.Format(@"
+            <html>
+               <head>
+                  <style>{0}</style>
+               </head>
+               <body>
+                  <div>", css);
+
+         string commonEnd = @"
+                  </div>
+               </body>
+            </html>";
+
+         string htmlbody =
+            System.Net.WebUtility.HtmlDecode(
+               Markdig.Markdown.ToHtml(
+                  System.Net.WebUtility.HtmlEncode(mergeRequest.Description), _mergeRequestDescriptionMarkdownPipeline));
+
+         return commonBegin + htmlbody + commonEnd;
       }
 
       private void updateTimeTrackingMergeRequestDetails(MergeRequest? mergeRequest)

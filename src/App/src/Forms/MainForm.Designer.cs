@@ -91,6 +91,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.panel2 = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
@@ -110,9 +111,8 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.groupBox2 = new System.Windows.Forms.GroupBox();
+         this.richTextBoxMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
-         this.richTextBoxMergeRequestDescription = new System.Windows.Forms.RichTextBox();
-         this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -733,6 +733,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderSourceBranch.Text = "Source Branch";
          this.columnHeaderSourceBranch.Width = 100;
          // 
+         // columnHeaderTargetBranch
+         // 
+         this.columnHeaderTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderTargetBranch.Text = "Target Branch";
+         this.columnHeaderTargetBranch.Width = 100;
+         // 
          // checkBoxLabels
          // 
          this.checkBoxLabels.AutoSize = true;
@@ -948,8 +954,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBox2
          // 
-         this.groupBox2.Controls.Add(this.linkLabelConnectedTo);
          this.groupBox2.Controls.Add(this.richTextBoxMergeRequestDescription);
+         this.groupBox2.Controls.Add(this.linkLabelConnectedTo);
          this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBox2.Location = new System.Drawing.Point(0, 0);
          this.groupBox2.Name = "groupBox2";
@@ -957,6 +963,20 @@ namespace mrHelper.App.Forms
          this.groupBox2.TabIndex = 0;
          this.groupBox2.TabStop = false;
          this.groupBox2.Text = "Merge Request";
+         // 
+         // richTextBoxMergeRequestDescription
+         // 
+         this.richTextBoxMergeRequestDescription.AutoScroll = true;
+         this.richTextBoxMergeRequestDescription.AutoScrollMinSize = new System.Drawing.Size(902, 20);
+         this.richTextBoxMergeRequestDescription.BackColor = System.Drawing.SystemColors.Window;
+         this.richTextBoxMergeRequestDescription.BaseStylesheet = null;
+         this.richTextBoxMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.richTextBoxMergeRequestDescription.Dock = System.Windows.Forms.DockStyle.Top;
+         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
+         this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(904, 208);
+         this.richTextBoxMergeRequestDescription.TabIndex = 2;
+         this.richTextBoxMergeRequestDescription.Text = "Merge Request Description in HTML format";
          // 
          // linkLabelConnectedTo
          // 
@@ -969,22 +989,6 @@ namespace mrHelper.App.Forms
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
          this.linkLabelConnectedTo.Visible = false;
          this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
-         // 
-         // richTextBoxMergeRequestDescription
-         // 
-         this.richTextBoxMergeRequestDescription.Dock = System.Windows.Forms.DockStyle.Top;
-         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
-         this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
-         this.richTextBoxMergeRequestDescription.ReadOnly = true;
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(904, 208);
-         this.richTextBoxMergeRequestDescription.TabIndex = 0;
-         this.richTextBoxMergeRequestDescription.Text = "";
-         // 
-         // columnHeaderTargetBranch
-         // 
-         this.columnHeaderTargetBranch.Tag = "TargetBranch";
-         this.columnHeaderTargetBranch.Text = "Target Branch";
-         this.columnHeaderTargetBranch.Width = 100;
          // 
          // MainForm
          // 
@@ -1091,7 +1095,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Label labelGitStatus;
       private System.Windows.Forms.Label labelWorkflowStatus;
       private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
-      private System.Windows.Forms.RichTextBox richTextBoxMergeRequestDescription;
       private SelectionPreservingComboBox comboBoxHost;
       private System.Windows.Forms.Button buttonReloadList;
       private System.Windows.Forms.LinkLabel linkLabelNewVersion;
@@ -1108,6 +1111,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxShowMyActivity;
       private System.Windows.Forms.ColumnHeader columnHeaderSourceBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
+      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel richTextBoxMergeRequestDescription;
    }
 }
 
