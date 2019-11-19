@@ -64,6 +64,14 @@ namespace mrHelper.App.Controls
             BaseStylesheet = ".htmltooltip { padding: 1px; }"
          };
 
+         Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
+         {
+            RequireHeaderSeparator = false
+         };
+         _markdownPipeline = Markdig.MarkdownExtensions
+            .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
+            .Build();
+
          onCreate();
       }
 
@@ -134,26 +142,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private void DiscussionNoteHtmlPanel_KeyDown(object sender, KeyEventArgs e)
-      {
-         HtmlPanel htmlPanel = (HtmlPanel)(sender);
-
-         if (e.KeyCode == Keys.F4)
-         {
-            if (!Discussion.Individual_Note)
-            {
-               if (Control.ModifierKeys == Keys.Shift)
-               {
-                  await onReplyAsyncDone();
-               }
-               else if (htmlPanel?.Parent?.Parent != null)
-               {
-                  await onReplyToDiscussionAsync();
-               }
-            }
-         }
-      }
-
       private void DiscussionNoteTextBox_KeyUp(object sender, KeyEventArgs e)
       {
          TextBox textBox = (TextBox)(sender);
@@ -206,44 +194,20 @@ namespace mrHelper.App.Controls
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         if (menuItem.Tag is TextBox)
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent != null)
          {
-            TextBox textBox = (TextBox)(menuItem.Tag);
-            if (textBox?.Parent?.Parent != null)
-            {
-               await onReplyToDiscussionAsync();
-            }
-         }
-         else
-         {
-            Debug.Assert(menuItem.Tag is HtmlPanel);
-            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
-            if (htmlPanel?.Parent?.Parent != null)
-            {
-               await onReplyToDiscussionAsync();
-            }
+            await onReplyToDiscussionAsync();
          }
       }
 
       async private void MenuItemReplyDone_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         if (menuItem.Tag is TextBox)
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent != null)
          {
-            TextBox textBox = (TextBox)(menuItem.Tag);
-            if (textBox?.Parent?.Parent != null)
-            {
-               await onReplyAsyncDone();
-            }
-         }
-         else
-         {
-            Debug.Assert(menuItem.Tag is HtmlPanel);
-            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
-            if (htmlPanel?.Parent?.Parent != null)
-            {
-               await onReplyAsyncDone();
-            }
+            await onReplyAsyncDone();
          }
       }
 
@@ -282,56 +246,30 @@ namespace mrHelper.App.Controls
       async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         if (menuItem.Tag is TextBox)
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
          {
-            TextBox textBox = (TextBox)(menuItem.Tag);
-            if (textBox?.Parent?.Parent == null)
-            {
-               return;
-            }
-
-            stopEdit(textBox); // prevent submitting body modifications in the current handler
-
-            DiscussionNote note = (DiscussionNote)(textBox.Tag);
-            Debug.Assert(note.Resolvable);
-
-            await onToggleResolveNoteAsync((DiscussionNote)textBox.Tag);
+            return;
          }
-         else
-         {
-            Debug.Assert(menuItem.Tag is HtmlPanel);
-            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
-            if (htmlPanel?.Parent?.Parent == null)
-            {
-               return;
-            }
 
-            await onToggleResolveNoteAsync((DiscussionNote)htmlPanel.Tag);
-         }
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
+
+         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         Debug.Assert(note.Resolvable);
+
+         await onToggleResolveNoteAsync((DiscussionNote)textBox.Tag);
       }
 
       async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         if (menuItem.Tag is TextBox)
+         TextBox textBox = (TextBox)(menuItem.Tag);
+         if (textBox?.Parent?.Parent == null)
          {
-            TextBox textBox = (TextBox)(menuItem.Tag);
-            if (textBox?.Parent?.Parent == null)
-            {
-               return;
-            }
+            return;
+         }
 
-            stopEdit(textBox); // prevent submitting body modifications in the current handler
-         }
-         else
-         {
-            Debug.Assert(menuItem.Tag is HtmlPanel);
-            HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
-            if (htmlPanel?.Parent?.Parent == null)
-            {
-               return;
-            }
-         }
+         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          await onToggleResolveDiscussionAsync();
       }
@@ -498,56 +436,19 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private string getNoteText(ref DiscussionNote note, ref User firstNoteAuthor, bool convert)
+      private string getNoteText(ref DiscussionNote note, ref User firstNoteAuthor)
       {
          bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
          Debug.Assert(!appendNoteAuthor || !canBeModified(note));
 
          string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
-         var options = new Markdig.Extensions.Tables.PipeTableOptions();
-         options.RequireHeaderSeparator = false;
-         var pipeline = Markdig.MarkdownExtensions.UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options).Build();
-         string htmlbody = System.Net.WebUtility.HtmlDecode(Markdig.Markdown.ToHtml(System.Net.WebUtility.HtmlEncode(note.Body), pipeline) + "</details>");
-         string body = convert ? htmlbody : note.Body.Replace("\n", "\r\n");
+         string body = note.Body.Replace("\n", "\r\n");
          return prefix + body;
       }
 
-      private string getHtmlNoteText(ref DiscussionNote note, ref User firstNoteAuthor)
+      private string getHtmlDiscussionNoteText(ref DiscussionNote note)
       {
-         string customStyle =
-            @"body {
-                 width: 100%;
-                 margin: 0;
-              }
-              body div { 
-                 font-family: Microsoft Sans Serif, Sans Serif;
-                 font-size: 8.25pt;
-                 padding: 1px;
-                 border: 1px solid white;
-              }
-table {
-    border: solid 1px #DDEEEE;
-    border-collapse: collapse;
-    border-spacing: 0;
-    font: normal 9Consolas, monospace;
-}
-table thead th {
-    background-color: #DDEFEF;
-    border: solid 1px #DDEEEE;
-    color: #336B6B;
-    padding: 5px;
-    text-align: left;
-    text-shadow: 1px 1px 1px #fff;
-}
-table tbody td {
-    border: solid 1px #DDEEEE;
-    color: #333;
-    padding: 5px;
-    text-shadow: 1px 1px 1px #fff;
-}
-              p {
-                margin: 0;
-              }";
+         string css = mrHelper.App.Properties.Resources.DiscussionNoteCSS;
 
          string commonBegin = string.Format(@"
             <html>
@@ -555,24 +456,29 @@ table tbody td {
                   <style>{0}</style>
                </head>
                <body>
-                  <div>", customStyle);
+                  <div>", css);
 
          string commonEnd = @"
                   </div>
                </body>
             </html>";
 
-         return commonBegin + getNoteText(ref note, ref firstNoteAuthor, true) + commonEnd;
+         string htmlbody =
+            System.Net.WebUtility.HtmlDecode(
+               Markdig.Markdown.ToHtml(
+                  System.Net.WebUtility.HtmlEncode(note.Body), _markdownPipeline));
+
+         return commonBegin + htmlbody + commonEnd;
       }
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
-         if (canBeModified(note))
+         if (shouldBeTextBox(note))
          {
             TextBox textBox = new TextBoxNoWheel()
             {
                ReadOnly = true,
-               Text = getNoteText(ref note, ref firstNoteAuthor, false),
+               Text = getNoteText(ref note, ref firstNoteAuthor),
                Multiline = true,
                BackColor = getNoteColor(note),
                MinimumSize = new Size(300, 0),
@@ -591,20 +497,22 @@ table tbody td {
          {
             HtmlPanel htmlPanel = new HtmlPanel
             {
-               IsContextMenuEnabled = false,
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
-               Text = getHtmlNoteText(ref note, ref firstNoteAuthor),
+               Text = getHtmlDiscussionNoteText(ref note),
                MinimumSize = new Size(300, 0),
                Tag = note
             };
             htmlPanel.GotFocus += Control_GotFocus;
-            htmlPanel.KeyDown += DiscussionNoteHtmlPanel_KeyDown;
-            htmlPanel.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, htmlPanel);
-            _toolTip.SetToolTip(htmlPanel, getNoteTooltipText(note));
 
             return htmlPanel;
          }
+      }
+
+      private bool shouldBeTextBox(DiscussionNote note)
+      {
+         // Let's introduce this way to distinct ordinary notes from special ones
+         return note.Author.Name != note.Author.Username;
       }
 
       private void Control_GotFocus(object sender, EventArgs e)
@@ -673,53 +581,6 @@ table tbody td {
 
          return contextMenu;
       }
-
-      private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note,
-         bool discussionResolved, HtmlPanel htmlPanel)
-      {
-         Debug.Assert(!canBeModified(note));
-
-         var contextMenu = new ContextMenu();
-
-         MenuItem menuItemToggleDiscussionResolve = new MenuItem
-         {
-            Tag = htmlPanel,
-            Text = (discussionResolved ? "Unresolve" : "Resolve") + " Discussion",
-            Enabled = note.Resolvable
-         };
-         menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
-         contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
-
-         MenuItem menuItemToggleResolve = new MenuItem
-         {
-            Tag = htmlPanel,
-            Text = (note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note",
-            Enabled = note.Resolvable
-         };
-         menuItemToggleResolve.Click += MenuItemToggleResolveNote_Click;
-         contextMenu.MenuItems.Add(menuItemToggleResolve);
-
-         MenuItem menuItemReply = new MenuItem
-         {
-            Tag = htmlPanel,
-            Enabled = !Discussion.Individual_Note,
-            Text = "Reply\t(F4)"
-         };
-         menuItemReply.Click += MenuItemReply_Click;
-         contextMenu.MenuItems.Add(menuItemReply);
-
-         MenuItem menuItemReplyDone = new MenuItem
-         {
-            Tag = htmlPanel,
-            Enabled = !Discussion.Individual_Note,
-            Text = "Reply \"Done\"\t(Shift-F4)"
-         };
-         menuItemReplyDone.Click += MenuItemReplyDone_Click;
-         contextMenu.MenuItems.Add(menuItemReplyDone);
-
-         return contextMenu;
-      }
-
 
       private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
       {
@@ -1128,5 +989,6 @@ table tbody td {
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlToolTip;
+      private readonly Markdig.MarkdownPipeline _markdownPipeline;
    }
 }

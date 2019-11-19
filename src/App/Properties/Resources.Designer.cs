@@ -19,7 +19,7 @@ namespace mrHelper.App.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,6 +57,44 @@ namespace mrHelper.App.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to body {
+        ///   width: 100%;
+        ///   margin: 0;
+        ///}
+        ///
+        ///body div { 
+        ///   font-family: Microsoft Sans Serif, Sans Serif;
+        ///   font-size: 8.25pt;
+        ///   padding: 1px;
+        ///   border: 1px solid white;
+        ///}
+        ///
+        ///table {
+        ///   border: solid 1px #DDEEEE;
+        ///   border-collapse: collapse;
+        ///   border-spacing: 0;
+        ///}
+        ///
+        ///table thead th {
+        ///   background-color: #DDEFEF;
+        ///   border: solid 1px #DDEEEE;
+        ///   color: #336B6B;
+        ///   padding: 5px;
+        ///   text-align: left;
+        ///   text-shadow: 1px 1px 1px #fff;
+        ///}
+        ///
+        ///table tbody td {
+        ///   background-color: #FBFBF5;
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string DiscussionNoteCSS {
+            get {
+                return ResourceManager.GetString("DiscussionNoteCSS", resourceCulture);
             }
         }
     }

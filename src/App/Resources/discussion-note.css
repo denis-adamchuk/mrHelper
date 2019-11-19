@@ -1,0 +1,39 @@
+body {
+   width: 100%;
+   margin: 0;
+}
+
+body div { 
+   font-family: Microsoft Sans Serif, Sans Serif;
+   font-size: 8.25pt;
+   padding: 1px;
+   border: 1px solid white;
+}
+
+table {
+   border: solid 1px #DDEEEE;
+   border-collapse: collapse;
+   border-spacing: 0;
+}
+
+table thead th {
+   background-color: #DDEFEF;
+   border: solid 1px #DDEEEE;
+   color: #336B6B;
+   padding: 5px;
+   text-align: left;
+   text-shadow: 1px 1px 1px #fff;
+}
+
+table tbody td {
+   background-color: #FBFBF5;
+   border: solid 1px #DDEEEE;
+   color: #333;
+   padding: 5px;
+   text-shadow: 1px 1px 1px #fff;
+}
+
+p {
+   margin: 0;
+}
+

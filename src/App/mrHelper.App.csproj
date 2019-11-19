@@ -244,6 +244,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\resources\gitlab.ico" />
+    <Content Include="Resources\discussion-note.css" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
