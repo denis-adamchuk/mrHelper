@@ -557,6 +557,26 @@ namespace mrHelper.App.Forms
          enableCustomActions(enabled);
       }
 
+      private bool isCustomActionEnabled(MergeRequest mergeRequest, string dependency)
+      {
+         if (String.IsNullOrEmpty(dependency))
+         {
+            return true;
+         }
+
+         if (mergeRequest.Labels.Any(x => String.Format("{{Label:{0}}}", x) == dependency))
+         {
+            return true;
+         }
+
+         if (String.Format("{{Author:{0}}}", mergeRequest.Author.Username) == dependency)
+         {
+            return true;
+         }
+
+         return false;
+      }
+
       private void enableCustomActions(bool enabled)
       {
          if (!enabled || !getMergeRequest().HasValue)
@@ -569,9 +589,9 @@ namespace mrHelper.App.Forms
          foreach (Control control in groupBoxActions.Controls)
          {
             string dependency = (string)control.Tag;
-            string resolved = String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
-            control.Enabled = resolved == String.Empty ||
-               mergeRequest.Labels.Any(x => String.Format("{{Label:{0}}}", x) == resolved);
+            string resolvedDependency =
+               String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
+            control.Enabled = isCustomActionEnabled(mergeRequest, resolvedDependency);
          }
       }
 

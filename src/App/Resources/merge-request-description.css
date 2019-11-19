@@ -37,7 +37,7 @@ p {
    margin: 0;
 }
 
-ul {
+ul, ol {
    padding-left: 12px;
    margin-top: 2px;
    margin-bottom: 2px;
