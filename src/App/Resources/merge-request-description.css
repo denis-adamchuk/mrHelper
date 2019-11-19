@@ -37,3 +37,10 @@ p {
    margin: 0;
 }
 
+ul {
+   padding-left: 12px;
+   margin-top: 2px;
+   margin-bottom: 2px;
+   margin-left: 0px;
+}
+

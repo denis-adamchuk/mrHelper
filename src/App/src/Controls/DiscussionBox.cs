@@ -68,7 +68,7 @@ namespace mrHelper.App.Controls
          {
             RequireHeaderSeparator = false
          };
-         _markdownPipeline = Markdig.MarkdownExtensions
+         _specialDiscussionNoteMarkdownPipeline = Markdig.MarkdownExtensions
             .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
             .Build();
 
@@ -466,7 +466,7 @@ namespace mrHelper.App.Controls
          string htmlbody =
             System.Net.WebUtility.HtmlDecode(
                Markdig.Markdown.ToHtml(
-                  System.Net.WebUtility.HtmlEncode(note.Body), _markdownPipeline));
+                  System.Net.WebUtility.HtmlEncode(note.Body), _specialDiscussionNoteMarkdownPipeline));
 
          return commonBegin + htmlbody + commonEnd;
       }
@@ -989,6 +989,6 @@ namespace mrHelper.App.Controls
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlToolTip;
-      private readonly Markdig.MarkdownPipeline _markdownPipeline;
+      private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }

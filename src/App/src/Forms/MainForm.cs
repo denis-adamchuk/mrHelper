@@ -39,6 +39,14 @@ namespace mrHelper.App.Forms
       {
          InitializeComponent();
          _trayIcon = new TrayIcon(notifyIcon);
+
+         Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
+         {
+            RequireHeaderSeparator = false
+         };
+         _mergeRequestDescriptionMarkdownPipeline = Markdig.MarkdownExtensions
+            .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
+            .Build();
       }
 
       public string GetCurrentHostName()
@@ -70,6 +78,7 @@ namespace mrHelper.App.Forms
       private bool _requireShowingTooltipOnHideToTray = true;
       private bool _userIsMovingSplitter = false;
       private readonly TrayIcon _trayIcon;
+      private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
