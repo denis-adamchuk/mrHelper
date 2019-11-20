@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using System.Drawing;
+
+namespace mrHelper.App.Forms
 {
    partial class AddKnownHostForm
    {
@@ -28,7 +30,6 @@
       /// </summary>
       private void InitializeComponent()
       {
-         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddKnownHostForm));
          this.label1 = new System.Windows.Forms.Label();
          this.label2 = new System.Windows.Forms.Label();
          this.textBoxHost = new System.Windows.Forms.TextBox();
@@ -103,7 +104,9 @@
          this.Controls.Add(this.textBoxHost);
          this.Controls.Add(this.label2);
          this.Controls.Add(this.label1);
-         this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+         this.MaximizeBox = false;
+         this.MinimizeBox = false;
          this.Name = "AddKnownHostForm";
          this.Text = "Add Known Host";
          this.ResumeLayout(false);

@@ -20,7 +20,7 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionManager : IDisposable
    {
-      public event Action PreLoadDiscussions;
+      public event Action<MergeRequestKey> PreLoadDiscussions;
       public event Action<MergeRequestKey, List<Discussion>, DateTime, bool> PostLoadDiscussions;
       public event Action FailedLoadDiscussions;
 
@@ -211,7 +211,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            PreLoadDiscussions?.Invoke();
+            PreLoadDiscussions?.Invoke(mrk);
 
             _updating.Add(mrk);
             List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);

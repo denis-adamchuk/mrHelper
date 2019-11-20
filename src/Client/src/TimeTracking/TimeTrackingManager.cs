@@ -21,12 +21,12 @@ namespace mrHelper.Client.TimeTracking
          _settings = settings;
          _operator = new TimeTrackingOperator(_settings);
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
-         discussionManager.PreLoadDiscussions += () => PreLoadTotalTime?.Invoke();
+         discussionManager.PreLoadDiscussions += (mrk) => PreLoadTotalTime?.Invoke(mrk);
          discussionManager.PostLoadDiscussions += (mrk, discussions, _, __) => processDiscussions(mrk, discussions);
          discussionManager.FailedLoadDiscussions += () => FailedLoadTotalTime?.Invoke();
       }
 
-      public event Action PreLoadTotalTime;
+      public event Action<MergeRequestKey> PreLoadTotalTime;
       public event Action FailedLoadTotalTime;
       public event Action<MergeRequestKey> PostLoadTotalTime;
 
@@ -38,7 +38,12 @@ namespace mrHelper.Client.TimeTracking
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
          await _operator.AddSpanAsync(add, span, mrk);
-         if (add)
+         if (!_times.ContainsKey(mrk))
+         {
+            Debug.Assert(add);
+            _times[mrk] = span;
+         }
+         else if (add)
          {
             _times[mrk] += span;
          }

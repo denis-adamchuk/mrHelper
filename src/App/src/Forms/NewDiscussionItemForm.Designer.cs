@@ -72,6 +72,8 @@
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.textBox);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+         this.MaximizeBox = false;
+         this.MinimizeBox = false;
          this.Name = "NewDiscussionItemForm";
          this.Text = "Dialog caption";
          this.Load += new System.EventHandler(this.NewDiscussionItemForm_Load);

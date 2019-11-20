@@ -516,31 +516,37 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         labelTimeTrackingTrackedTime.Text = getTotalTimeAsText(mrk); ;
          if (!mrk.HasValue)
          {
+            labelTimeTrackingTrackedTime.Text = String.Empty;
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             buttonEditTime.Enabled = false;
          }
          else
          {
+            TimeSpan? span = getTotalTime(mrk.Value);
+            labelTimeTrackingTrackedTime.Text = convertTotalTimeToText(span);
             labelTimeTrackingTrackedLabel.Text = "Total Time:";
-            buttonEditTime.Enabled = true;
+            buttonEditTime.Enabled = span.HasValue;
          }
 
          // Update total time column in the table
          listViewMergeRequests.Invalidate();
       }
 
-      private string getTotalTimeAsText(MergeRequestKey? mrk)
+      private TimeSpan? getTotalTime(MergeRequestKey? mrk)
       {
          if (!mrk.HasValue)
          {
-            return String.Empty;
+            return null;
          }
 
-         TimeSpan? totalTime = _timeTrackingManager.GetTotalTime(mrk.Value);
-         return !totalTime.HasValue ? "Loading..." : totalTime.Value.ToString(@"hh\:mm\:ss");
+         return _timeTrackingManager.GetTotalTime(mrk.Value);
+      }
+
+      private string convertTotalTimeToText(TimeSpan? span)
+      {
+         return !span.HasValue ? "Loading..." : span.Value.ToString(@"hh\:mm\:ss");
       }
 
       private void enableMergeRequestActions(bool enabled)
@@ -859,12 +865,14 @@ namespace mrHelper.App.Forms
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
+         Func<MergeRequestKey, string> getTotalTimeText = (key) => convertTotalTimeToText(getTotalTime(key));
+
          item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url);
          item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                  () => String.Empty);
          item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,                () => String.Empty);
          item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty);
          item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl);
-         item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeAsText(mrk), () => String.Empty);
+         item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty);
          item.SubItems[6].Tag = new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty);
          item.SubItems[7].Tag = new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty);
       }

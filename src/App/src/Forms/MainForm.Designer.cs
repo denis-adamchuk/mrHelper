@@ -378,7 +378,7 @@ namespace mrHelper.App.Forms
          // 
          this.notifyIcon.BalloonTipText = "I will now live in your tray";
          this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
-         this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
+         this.notifyIcon.Icon = Properties.Resources.BlueAppIcon;
          this.notifyIcon.Text = "Merge Request Helper";
          this.notifyIcon.Visible = true;
          this.notifyIcon.DoubleClick += new System.EventHandler(this.NotifyIcon_DoubleClick);
@@ -996,7 +996,7 @@ namespace mrHelper.App.Forms
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(1284, 890);
          this.Controls.Add(this.tabControl);
-         this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+         this.Icon = Properties.Resources.BlueAppIcon;
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);

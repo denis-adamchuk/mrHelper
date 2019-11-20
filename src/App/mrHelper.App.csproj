@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>..\..\resources\gitlab.ico</ApplicationIcon>
+    <ApplicationIcon>gitlab.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HtmlRenderer, Version=1.5.0.6, Culture=neutral, processorArchitecture=MSIL">
@@ -243,7 +243,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\resources\gitlab.ico" />
+    <None Include="Resources\gitlab-tracking.ico" />
+    <None Include="Resources\gitlab.ico" />
+    <Content Include="gitlab.ico" />
     <Content Include="Resources\merge-request-description.css" />
     <Content Include="Resources\discussion-note.css" />
   </ItemGroup>

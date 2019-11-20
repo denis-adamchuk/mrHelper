@@ -327,12 +327,23 @@ namespace mrHelper.App.Forms
       private void createTimeTrackingManager()
       {
          _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
+         _timeTrackingManager.PreLoadTotalTime +=
+            (mrk) =>
+         {
+            MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+            if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
+            {
+               // change control enabled state
+               updateTotalTime(mrk);
+            }
+         };
          _timeTrackingManager.PostLoadTotalTime +=
             (mrk) =>
          {
             MergeRequestKey? currentMergeRequest = getMergeRequestKey();
             if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
             {
+               // change control enabled state and update text
                updateTotalTime(mrk);
             }
 

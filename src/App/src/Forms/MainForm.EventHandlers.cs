@@ -113,12 +113,15 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
-         Debug.Assert(getMergeRequestKey().HasValue);
+         if (!TimeSpan.TryParse(labelTimeTrackingTrackedTime.Text, out TimeSpan oldSpan))
+         {
+            return;
+         }
 
          // Store data before opening a modal dialog
+         Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
 
-         TimeSpan oldSpan = TimeSpan.Parse(labelTimeTrackingTrackedTime.Text);
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -693,6 +696,8 @@ namespace mrHelper.App.Forms
 
       private void onStartTimer()
       {
+         notifyIcon.Icon = Properties.Resources.GreenAppIcon;
+
          Debug.Assert(!isTrackingTime());
 
          // Update button text and enabled state
@@ -716,6 +721,8 @@ namespace mrHelper.App.Forms
 
       async private Task onStopTimer(bool send)
       {
+         notifyIcon.Icon = Properties.Resources.BlueAppIcon;
+
          if (!isTrackingTime())
          {
             return;
