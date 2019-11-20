@@ -455,15 +455,15 @@ namespace mrHelper.App.Forms
          textBoxLabels.Enabled = enabled;
       }
 
-      private void updateMergeRequestDetails(MergeRequest? mergeRequest)
+      private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
       {
          richTextBoxMergeRequestDescription.Text =
-            mergeRequest.HasValue ? getMergeRequestDescriptionHtmlText(mergeRequest.Value) : String.Empty;
+            fmk.HasValue ? getMergeRequestDescriptionHtmlText(fmk.Value) : String.Empty;
          richTextBoxMergeRequestDescription.Update();
-         linkLabelConnectedTo.Text = mergeRequest.HasValue ? mergeRequest.Value.Web_Url : String.Empty;
+         linkLabelConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
       }
 
-      private string getMergeRequestDescriptionHtmlText(MergeRequest mergeRequest)
+      private string getMergeRequestDescriptionHtmlText(FullMergeRequestKey fmk)
       {
          string css = mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
 
@@ -483,7 +483,11 @@ namespace mrHelper.App.Forms
          string htmlbody =
             System.Net.WebUtility.HtmlDecode(
                Markdig.Markdown.ToHtml(
-                  System.Net.WebUtility.HtmlEncode(mergeRequest.Description), _mergeRequestDescriptionMarkdownPipeline));
+                  System.Net.WebUtility.HtmlEncode(fmk.MergeRequest.Description),
+                     _mergeRequestDescriptionMarkdownPipeline));
+
+         htmlbody = htmlbody.Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/{1}/uploads/",
+            getHostWithPrefix(fmk.ProjectKey.HostName), fmk.ProjectKey.ProjectName));
 
          return commonBegin + htmlbody + commonEnd;
       }

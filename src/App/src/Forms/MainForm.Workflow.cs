@@ -50,7 +50,8 @@ namespace mrHelper.App.Forms
          _workflow.PostLoadAllMergeRequests += (hostname, projects) => onAllMergeRequestsLoaded(hostname, projects);
 
          _workflow.PreLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
-         _workflow.PostLoadSingleMergeRequest += (_, mergeRequest) => onSingleMergeRequestLoaded(mergeRequest);
+         _workflow.PostLoadSingleMergeRequest += (hostname, projectname, mergeRequest) =>
+            onSingleMergeRequestLoaded(hostname, projectname, mergeRequest);
          _workflow.FailedLoadSingleMergeRequest += () => onFailedLoadSingleMergeRequest();
 
          _workflow.PreLoadCommits += () => onLoadCommits();
@@ -281,12 +282,17 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load merge request"));
       }
 
-      private void onSingleMergeRequestLoaded(MergeRequest mergeRequest)
+      private void onSingleMergeRequestLoaded(string hostname, string projectname, MergeRequest mergeRequest)
       {
          Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
 
          enableMergeRequestActions(true);
-         updateMergeRequestDetails(mergeRequest);
+         FullMergeRequestKey fmk = new FullMergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+            MergeRequest = mergeRequest
+         };
+         updateMergeRequestDetails(fmk);
          updateTimeTrackingMergeRequestDetails(mergeRequest);
          updateTotalTime(getMergeRequestKey().Value);
 

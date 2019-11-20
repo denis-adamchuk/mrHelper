@@ -142,7 +142,7 @@ namespace mrHelper.Client.Workflow
       public event Action<string, List<Project>> PostLoadAllMergeRequests;
 
       public event Action<int> PreLoadSingleMergeRequest;
-      public event Action<string, MergeRequest> PostLoadSingleMergeRequest;
+      public event Action<string, string, MergeRequest> PostLoadSingleMergeRequest;
       public event Action FailedLoadSingleMergeRequest;
 
       public event Action PreLoadCommits;
@@ -271,7 +271,7 @@ namespace mrHelper.Client.Workflow
             return false;
          }
 
-         PostLoadSingleMergeRequest?.Invoke(projectName, mergeRequest);
+         PostLoadSingleMergeRequest?.Invoke(hostname, projectName, mergeRequest);
 
          return await loadLatestVersionAsync(hostname, projectName, mergeRequest)
              && await loadCommitsAsync(hostname, projectName, mergeRequest);
