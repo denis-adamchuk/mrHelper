@@ -262,8 +262,8 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(108, 20);
          this.textBoxLabels.TabIndex = 1;
-         this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following: #{username} o" +
-        "r @{username} or any substring from MR title/author name/IId");
+         this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following:\t#{username} o" +
+        "r label or MR IId or any substring from MR title/author name/label/branch");
          this.textBoxLabels.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
          // 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Updates;
+using mrHelper.CommonTools;
 
 namespace mrHelper.App.Helpers
 {
@@ -21,25 +22,28 @@ namespace mrHelper.App.Helpers
          {
             if (item.StartsWith(Common.Constants.Constants.AuthorLabelPrefix))
             {
-               if (mergeRequest.Author.Username.StartsWith(item.Substring(1)))
+               if (mergeRequest.Author.Username.StartsWith(item.Substring(1),
+                     StringComparison.CurrentCultureIgnoreCase))
                {
                   return false;
                }
             }
             else if (item.StartsWith(Common.Constants.Constants.GitLabLabelPrefix))
             {
-               if (mergeRequest.Labels.Any(x => x.StartsWith(item)))
+               if (mergeRequest.Labels.Any(x => x.StartsWith(item,
+                     StringComparison.CurrentCultureIgnoreCase)))
                {
                   return false;
                }
             }
             else if (item != String.Empty)
             {
-               if (mergeRequest.IId.ToString().Contains(item)
-                || mergeRequest.Author.Username.Contains(item)
-                || mergeRequest.Author.Name.Contains(item)
-                || mergeRequest.Labels.Any(x => x.Contains(item))
-                || mergeRequest.Title.Contains(item))
+               if (mergeRequest.IId.ToString() == item
+                || StringUtils.ContainsNoCase(mergeRequest.Author.Username, item)
+                || StringUtils.ContainsNoCase(mergeRequest.Title, item)
+                || StringUtils.ContainsNoCase(mergeRequest.Source_Branch, item)
+                || StringUtils.ContainsNoCase(mergeRequest.Target_Branch, item)
+                || mergeRequest.Labels.Any(x => StringUtils.ContainsNoCase(x, item)))
                {
                   return false;
                }
@@ -50,3 +54,4 @@ namespace mrHelper.App.Helpers
       }
    }
 }
+

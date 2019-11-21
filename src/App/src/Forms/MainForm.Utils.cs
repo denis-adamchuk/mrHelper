@@ -574,12 +574,12 @@ namespace mrHelper.App.Forms
             return true;
          }
 
-         if (mergeRequest.Labels.Any(x => String.Format("{{Label:{0}}}", x) == dependency))
+         if (mergeRequest.Labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
          {
             return true;
          }
 
-         if (String.Format("{{Author:{0}}}", mergeRequest.Author.Username) == dependency)
+         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", mergeRequest.Author.Username))
          {
             return true;
          }
@@ -630,12 +630,6 @@ namespace mrHelper.App.Forms
             IsBase = true
          };
          comboBoxRightCommit.Items.Add(baseCommitItem);
-      }
-
-      private static string formatMergeRequestForDropdown(MergeRequest mergeRequest)
-      {
-         return String.Format("{0} [{1}] [{2}]",
-            mergeRequest.Title, mergeRequest.Author.Username, String.Join(", ", mergeRequest.Labels.ToArray()));
       }
 
       /// <summary>
@@ -741,8 +735,7 @@ namespace mrHelper.App.Forms
          {
             // by author
             {
-               string colorName = String.Format("MergeRequests_{{Author:{0}}}", mergeRequest.Author.Username);
-               if (colorName == color.Key)
+               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Author:{0}}}", mergeRequest.Author.Username))
                {
                   return color.Value;
                }
@@ -751,8 +744,7 @@ namespace mrHelper.App.Forms
             // by labels
             foreach (string label in mergeRequest.Labels)
             {
-               string colorName = String.Format("MergeRequests_{{Label:{0}}}", label);
-               if (colorName == color.Key)
+               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Label:{0}}}", label))
                {
                   return color.Value;
                }

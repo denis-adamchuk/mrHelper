@@ -93,6 +93,10 @@
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CommonTools\mrHelper.CommonTools.csproj">
+      <Project>{3170d188-51ab-4634-975c-9daa826570c9}</Project>
+      <Name>mrHelper.CommonTools</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>

@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Common;
+using mrHelper.CommonTools;
 
 namespace mrHelper.Client.Discussions
 {
@@ -64,8 +66,7 @@ namespace mrHelper.Client.Discussions
                      MergeRequestKey = mrk
                   });
                }
-               // TODO Use regex to not treat @abcd as mentioning of @abcdef
-               else if (note.Body.Contains('@' + _currentUser.Username) || note.Body.Contains(_currentUser.Name))
+               else if (isUserMentioned(note.Body, _currentUser))
                {
                   DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
                   {
@@ -97,6 +98,36 @@ namespace mrHelper.Client.Discussions
          }
 
          _latestParsingTime[mrk] = updatedAt;
+      }
+
+      private static bool isUserMentioned(string text, User user)
+      {
+         if (StringUtils.ContainsNoCase(text, user.Name))
+         {
+            return true;
+         }
+
+         string label = Constants.GitLabLabelPrefix + user.Username;
+         int idx = text.IndexOf(label, StringComparison.CurrentCultureIgnoreCase);
+         while (idx >= 0)
+         {
+            if (idx == text.Length - label.Length)
+            {
+               // text ends with label
+               return true;
+            }
+
+            if (!Char.IsLetter(text[idx + label.Length]))
+            {
+               // label is in the middle of text
+               return true;
+            }
+
+            Debug.Assert(idx != text.Length - 1);
+            idx = text.IndexOf(label, idx + 1, StringComparison.CurrentCultureIgnoreCase);
+         }
+
+         return false;
       }
 
       private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =

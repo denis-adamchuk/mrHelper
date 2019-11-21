@@ -52,6 +52,7 @@
     <Compile Include="src\Persistence\PersistentState.cs" />
     <Compile Include="src\Persistence\PersistentStateItf.cs" />
     <Compile Include="src\Persistence\PersistentStorage.cs" />
+    <Compile Include="src\StringUtils.cs" />
     <Compile Include="src\Win32Tools.cs" />
     <Compile Include="src\CustomProtocol.cs" />
     <Compile Include="src\CustomTraceListener.cs" />
