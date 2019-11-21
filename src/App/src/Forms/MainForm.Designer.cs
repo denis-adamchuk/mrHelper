@@ -630,8 +630,8 @@ namespace mrHelper.App.Forms
          this.splitContainer1.SplitterDistance = 352;
          this.splitContainer1.SplitterWidth = 8;
          this.splitContainer1.TabIndex = 0;
-         this.splitContainer1.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer1_SplitterMoving);
-         this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
+         this.splitContainer1.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
          // groupBoxSelectMergeRequest
          // 
@@ -774,6 +774,8 @@ namespace mrHelper.App.Forms
          this.splitContainer2.SplitterDistance = 280;
          this.splitContainer2.SplitterWidth = 8;
          this.splitContainer2.TabIndex = 7;
+         this.splitContainer2.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         this.splitContainer2.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
          // groupBox2
          // 
@@ -902,7 +904,7 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.Controls.Add(this.buttonAddComment);
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
          this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
-         this.groupBoxReview.Location = new System.Drawing.Point(565, 6);
+         this.groupBoxReview.Location = new System.Drawing.Point(561, 6);
          this.groupBoxReview.Name = "groupBoxReview";
          this.groupBoxReview.Size = new System.Drawing.Size(349, 63);
          this.groupBoxReview.TabIndex = 1;

@@ -40,6 +40,11 @@ namespace mrHelper.App.Forms
             splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
          }
 
+         if (Program.Settings.RightPaneSplitterDistance != 0)
+         {
+            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
+         }
+
          await onApplicationStarted();
       }
 
@@ -469,18 +474,52 @@ namespace mrHelper.App.Forms
          Program.Settings.ListViewMergeRequestsColumnWidths = columnWidths;
       }
 
-      private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
+      private bool isUserMovingSplitter(SplitContainer splitter)
       {
-         if (_userIsMovingSplitter)
+         Debug.Assert(splitter == splitContainer1 || splitter == splitContainer2);
+
+         return splitter == splitContainer1 ? _userIsMovingSplitter1 : _userIsMovingSplitter2;
+      }
+
+      private void onUserIsMovingSplitter(SplitContainer splitter, bool value)
+      {
+         Debug.Assert(splitter == splitContainer1 || splitter == splitContainer2);
+
+         if (splitter == splitContainer1)
          {
-            Program.Settings.MainWindowSplitterDistance = splitContainer1.SplitterDistance;
-            _userIsMovingSplitter = false;
+            if (!value)
+            {
+               // move is finished, store the value
+               Program.Settings.MainWindowSplitterDistance = splitter.SplitterDistance;
+            }
+            _userIsMovingSplitter1 = value;
+         }
+         else
+         {
+            if (!value)
+            {
+               // move is finished, store the value
+               Program.Settings.RightPaneSplitterDistance = splitter.SplitterDistance;
+            }
+            _userIsMovingSplitter2 = value;
          }
       }
 
-      private void splitContainer1_SplitterMoving(object sender, SplitterCancelEventArgs e)
+      private void splitContainer_SplitterMoved(object sender, SplitterEventArgs e)
       {
-         _userIsMovingSplitter = true;
+         SplitContainer splitter = sender as SplitContainer;
+
+         if (isUserMovingSplitter(splitter))
+         {
+            onUserIsMovingSplitter(splitter, false);
+         }
+      }
+
+      private void splitContainer_SplitterMoving(object sender, SplitterCancelEventArgs e)
+      {
+         SplitContainer splitter = sender as SplitContainer;
+
+         onUserIsMovingSplitter(splitter, true);
       }
 
       private void textBoxLabels_TextChanged(object sender, EventArgs e)

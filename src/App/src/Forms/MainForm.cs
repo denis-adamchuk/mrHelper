@@ -76,7 +76,8 @@ namespace mrHelper.App.Forms
 
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
-      private bool _userIsMovingSplitter = false;
+      private bool _userIsMovingSplitter1 = false;
+      private bool _userIsMovingSplitter2 = false;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
 

@@ -72,6 +72,9 @@ namespace mrHelper.Client.Tools
       private static readonly string MainWindowSplitterDistanceKeyName      = "MWSplitterDistance";
       private static readonly int    MainWindowSplitterDistanceDefaultValue = 0;
 
+      private static readonly string RightPaneSplitterDistanceKeyName      = "RPSplitterDistance";
+      private static readonly int    RightPaneSplitterDistanceDefaultValue = 0;
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       public UserDefinedSettings(bool changesAllowed)
@@ -286,6 +289,17 @@ namespace mrHelper.Client.Tools
                   out int result) ? result : MainWindowSplitterDistanceDefaultValue;
          }
          set { setValue(MainWindowSplitterDistanceKeyName, value.ToString()); }
+      }
+
+      public int RightPaneSplitterDistance
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               RightPaneSplitterDistanceKeyName, RightPaneSplitterDistanceDefaultValue.ToString()),
+                  out int result) ? result : RightPaneSplitterDistanceDefaultValue;
+         }
+         set { setValue(RightPaneSplitterDistanceKeyName, value.ToString()); }
       }
 
       public int AutoUpdatePeriodMs
