@@ -156,7 +156,14 @@ namespace mrHelper.Client.Git
 
          foreach (Version version in versions)
          {
-            foreach (Diff diff in version.Diffs)
+            if (version.Diffs.Count > MaxDiffsInVersion)
+            {
+               Trace.TraceWarning(String.Format(
+                  "Number of diffs in version {0} is {1}. It exceeds {2} and will be truncated",
+                  version.Id, version.Diffs.Count, MaxDiffsInVersion));
+            }
+
+            foreach (Diff diff in version.Diffs.Take(MaxDiffsInVersion))
             {
                diffArgs.Add(new DiffCacheKey
                {
@@ -244,6 +251,8 @@ namespace mrHelper.Client.Git
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionOperator _operator;
       private readonly IMergeRequestProvider _mergeRequestProvider;
+
+      private static int MaxDiffsInVersion = 200;
    }
 }
 
