@@ -9,8 +9,6 @@ namespace mrHelper.Client.Updates
 {
    public interface IUpdateManager
    {
-      IProjectWatcher GetProjectWatcher();
-
       /// <summary>
       /// Checks local cache to detect if there are project changes caused by new versions of a merge request
       /// </summary>

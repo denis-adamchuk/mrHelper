@@ -54,10 +54,13 @@ namespace mrHelper.App
             Refs = _snapshot.Refs
          };
 
-         bool matchSucceded;
          try
          {
-            matchSucceded = fileNameMatcher.Match(_matchInfo, position, out position);
+            if (!fileNameMatcher.Match(_matchInfo, position, out position))
+            {
+               return;
+            }
+
             lineNumberMatcher.Match(_matchInfo, position, out position);
          }
          catch (Exception ex)
@@ -67,11 +70,6 @@ namespace mrHelper.App
             MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-            return;
-         }
-
-         if (!matchSucceded)
-         {
             return;
          }
 

@@ -73,8 +73,15 @@ namespace mrHelper.Client.MergeRequests
          return _updateManager;
       }
 
+      public IProjectWatcher GetProjectWatcher()
+      {
+         return _projectWatcher;
+      }
+
       private void onUpdate(List<UpdatedMergeRequest> updates)
       {
+         _projectWatcher.ProcessUpdates(updates, _cache.Details);
+
          foreach (UpdatedMergeRequest mergeRequest in updates)
          {
             UserEvents.MergeRequestEvent.Type type;
@@ -117,6 +124,7 @@ namespace mrHelper.Client.MergeRequests
 
       private string _hostname;
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
+      private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private UpdateManager _updateManager;
    }
 }

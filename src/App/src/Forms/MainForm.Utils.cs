@@ -657,7 +657,7 @@ namespace mrHelper.App.Forms
             try
             {
                _gitClientFactory = new GitClientFactory(localFolder,
-                  _mergeRequestManager.GetUpdateManager().GetProjectWatcher(), this);
+                  _mergeRequestManager.GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {

@@ -40,11 +40,6 @@ namespace mrHelper.Client.MergeRequests
          _timer.Dispose();
       }
 
-      public IProjectWatcher GetProjectWatcher()
-      {
-         return _projectWatcher;
-      }
-
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
          return new LocalProjectChecker(mrk, _cache.Details.Clone());
@@ -84,7 +79,6 @@ namespace mrHelper.Client.MergeRequests
 
          List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
             oldDetails, _cache.Details);
-         _projectWatcher.ProcessUpdates(updates, _cache.Details);
 
          Trace.TraceInformation(
             String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
@@ -166,7 +160,6 @@ namespace mrHelper.Client.MergeRequests
 
       private readonly WorkflowDetailsCache _cache;
       private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();
-      private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private readonly UpdateOperator _operator;
 
       private readonly string _hostname;
