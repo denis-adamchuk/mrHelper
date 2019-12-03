@@ -41,6 +41,9 @@ namespace mrHelper.Client.Tools
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
 
+      private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
+      private static readonly bool   CacheRevisionsDefaultValue   = true;
+
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
 
@@ -311,6 +314,17 @@ namespace mrHelper.Client.Tools
                   out int result) ? result : AutoUpdatePeriodMsDefaultValue;
          }
          set { setValue(AutoUpdatePeriodMsKeyName, value.ToString()); }
+      }
+
+      public bool CacheRevisionsInBackground
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               CacheRevisionsKeyName, CacheRevisionsDefaultValue.ToString()),
+                  out bool result) ? result : CacheRevisionsDefaultValue;
+         }
+         set { setValue(CacheRevisionsKeyName, value.ToString()); }
       }
 
       private string getValue(string key, string defaultValue)

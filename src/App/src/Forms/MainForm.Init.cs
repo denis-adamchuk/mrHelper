@@ -276,8 +276,11 @@ namespace mrHelper.App.Forms
          _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestManager, _discussionManager, eventFilter);
 
          // Revision Cacher subscribes to Workflow notifications
-         _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
-            projectKey => getGitClient(projectKey, false), _mergeRequestManager);
+         if (Program.Settings.CacheRevisionsInBackground)
+         {
+            _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
+               projectKey => getGitClient(projectKey, false), _mergeRequestManager);
+         }
 
          // Time Tracking Manager requires Workflow and Discussion Manager
          createTimeTrackingManager();
