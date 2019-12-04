@@ -159,7 +159,7 @@ namespace mrHelper.Client.Git
             if (version.Diffs.Count > MaxDiffsInVersion)
             {
                Trace.TraceWarning(String.Format(
-                  "Number of diffs in version {0} is {1}. It exceeds {2} and will be truncated",
+                  "[RevisionCacher] Number of diffs in version {0} is {1}. It exceeds {2} and will be truncated",
                   version.Id, version.Diffs.Count, MaxDiffsInVersion));
             }
 
