@@ -129,7 +129,7 @@ namespace mrHelper.App.Controls
                {
                   await onReplyAsyncDone();
                }
-               else if (textBox?.Parent?.Parent != null)
+               else if (textBox.Parent?.Parent != null)
                {
                   await onReplyToDiscussionAsync();
                }
