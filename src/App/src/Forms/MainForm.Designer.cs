@@ -248,7 +248,7 @@ namespace mrHelper.App.Forms
          this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 47);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
-         this.comboBoxDCDepth.TabIndex = 8;
+         this.comboBoxDCDepth.TabIndex = 7;
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
@@ -274,7 +274,7 @@ namespace mrHelper.App.Forms
          this.linkLabelSendFeedback.Location = new System.Drawing.Point(811, 10);
          this.linkLabelSendFeedback.Name = "linkLabelSendFeedback";
          this.linkLabelSendFeedback.Size = new System.Drawing.Size(80, 13);
-         this.linkLabelSendFeedback.TabIndex = 6;
+         this.linkLabelSendFeedback.TabIndex = 14;
          this.linkLabelSendFeedback.TabStop = true;
          this.linkLabelSendFeedback.Text = "Send feedback";
          this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to developer. Logs are attached automatically.");
@@ -287,7 +287,7 @@ namespace mrHelper.App.Forms
          this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 10);
          this.linkLabelNewVersion.Name = "linkLabelNewVersion";
          this.linkLabelNewVersion.Size = new System.Drawing.Size(226, 13);
-         this.linkLabelNewVersion.TabIndex = 5;
+         this.linkLabelNewVersion.TabIndex = 16;
          this.linkLabelNewVersion.TabStop = true;
          this.linkLabelNewVersion.Text = "New version is available! Click here to install it.";
          this.toolTip.SetToolTip(this.linkLabelNewVersion, "New version is already downloaded. Click to install it.");
@@ -301,7 +301,7 @@ namespace mrHelper.App.Forms
          this.buttonEditTime.Location = new System.Drawing.Point(811, 19);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
-         this.buttonEditTime.TabIndex = 4;
+         this.buttonEditTime.TabIndex = 13;
          this.buttonEditTime.Text = "Edit";
          this.toolTip.SetToolTip(this.buttonEditTime, "Edit total time tracked on this merge request");
          this.buttonEditTime.UseVisualStyleBackColor = true;
@@ -313,7 +313,7 @@ namespace mrHelper.App.Forms
          this.buttonAddComment.Location = new System.Drawing.Point(6, 19);
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
-         this.buttonAddComment.TabIndex = 2;
+         this.buttonAddComment.TabIndex = 8;
          this.buttonAddComment.Text = "Add comment";
          this.toolTip.SetToolTip(this.buttonAddComment, "Leave a comment (cannot be resolved and replied)");
          this.buttonAddComment.UseVisualStyleBackColor = true;
@@ -322,10 +322,10 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(247, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(250, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
-         this.buttonDiscussions.TabIndex = 1;
+         this.buttonDiscussions.TabIndex = 10;
          this.buttonDiscussions.Text = "Discussions";
          this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of Discussions");
          this.buttonDiscussions.UseVisualStyleBackColor = true;
@@ -337,7 +337,7 @@ namespace mrHelper.App.Forms
          this.buttonNewDiscussion.Location = new System.Drawing.Point(108, 19);
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
-         this.buttonNewDiscussion.TabIndex = 0;
+         this.buttonNewDiscussion.TabIndex = 9;
          this.buttonNewDiscussion.Text = "New discussion";
          this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable discussion");
          this.buttonNewDiscussion.UseVisualStyleBackColor = true;
@@ -350,7 +350,7 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool.Location = new System.Drawing.Point(811, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(96, 48);
-         this.buttonDiffTool.TabIndex = 2;
+         this.buttonDiffTool.TabIndex = 7;
          this.buttonDiffTool.Text = "Diff tool";
          this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
          this.buttonDiffTool.UseVisualStyleBackColor = true;
@@ -440,7 +440,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMyActivity.Location = new System.Drawing.Point(9, 106);
          this.checkBoxShowMyActivity.Name = "checkBoxShowMyActivity";
          this.checkBoxShowMyActivity.Size = new System.Drawing.Size(113, 17);
-         this.checkBoxShowMyActivity.TabIndex = 6;
+         this.checkBoxShowMyActivity.TabIndex = 13;
          this.checkBoxShowMyActivity.Text = "Include my activity";
          this.checkBoxShowMyActivity.UseVisualStyleBackColor = true;
          this.checkBoxShowMyActivity.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -451,7 +451,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowKeywords.Location = new System.Drawing.Point(234, 65);
          this.checkBoxShowKeywords.Name = "checkBoxShowKeywords";
          this.checkBoxShowKeywords.Size = new System.Drawing.Size(75, 17);
-         this.checkBoxShowKeywords.TabIndex = 5;
+         this.checkBoxShowKeywords.TabIndex = 16;
          this.checkBoxShowKeywords.Text = "Keywords:";
          this.checkBoxShowKeywords.UseVisualStyleBackColor = true;
          this.checkBoxShowKeywords.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -462,7 +462,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention.Location = new System.Drawing.Point(234, 42);
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
          this.checkBoxShowOnMention.Size = new System.Drawing.Size(238, 17);
-         this.checkBoxShowOnMention.TabIndex = 4;
+         this.checkBoxShowOnMention.TabIndex = 15;
          this.checkBoxShowOnMention.Text = "When someone mentions you in a discussion";
          this.checkBoxShowOnMention.UseVisualStyleBackColor = true;
          this.checkBoxShowOnMention.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -473,7 +473,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(234, 19);
          this.checkBoxShowResolvedAll.Name = "checkBoxShowResolvedAll";
          this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(144, 17);
-         this.checkBoxShowResolvedAll.TabIndex = 3;
+         this.checkBoxShowResolvedAll.TabIndex = 14;
          this.checkBoxShowResolvedAll.Text = "Resolved All Discussions";
          this.checkBoxShowResolvedAll.UseVisualStyleBackColor = true;
          this.checkBoxShowResolvedAll.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -484,7 +484,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowUpdatedMergeRequests.Location = new System.Drawing.Point(9, 65);
          this.checkBoxShowUpdatedMergeRequests.Name = "checkBoxShowUpdatedMergeRequests";
          this.checkBoxShowUpdatedMergeRequests.Size = new System.Drawing.Size(181, 17);
-         this.checkBoxShowUpdatedMergeRequests.TabIndex = 2;
+         this.checkBoxShowUpdatedMergeRequests.TabIndex = 12;
          this.checkBoxShowUpdatedMergeRequests.Text = "New commits in Merge Requests";
          this.checkBoxShowUpdatedMergeRequests.UseVisualStyleBackColor = true;
          this.checkBoxShowUpdatedMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -495,7 +495,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests.Location = new System.Drawing.Point(9, 42);
          this.checkBoxShowMergedMergeRequests.Name = "checkBoxShowMergedMergeRequests";
          this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(189, 17);
-         this.checkBoxShowMergedMergeRequests.TabIndex = 1;
+         this.checkBoxShowMergedMergeRequests.TabIndex = 11;
          this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests";
          this.checkBoxShowMergedMergeRequests.UseVisualStyleBackColor = true;
          this.checkBoxShowMergedMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -506,7 +506,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowNewMergeRequests.Location = new System.Drawing.Point(9, 19);
          this.checkBoxShowNewMergeRequests.Name = "checkBoxShowNewMergeRequests";
          this.checkBoxShowNewMergeRequests.Size = new System.Drawing.Size(129, 17);
-         this.checkBoxShowNewMergeRequests.TabIndex = 0;
+         this.checkBoxShowNewMergeRequests.TabIndex = 10;
          this.checkBoxShowNewMergeRequests.Text = "New Merge Requests";
          this.checkBoxShowNewMergeRequests.UseVisualStyleBackColor = true;
          this.checkBoxShowNewMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
@@ -532,7 +532,7 @@ namespace mrHelper.App.Forms
          this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 13);
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
          this.comboBoxColorSchemes.Size = new System.Drawing.Size(159, 21);
-         this.comboBoxColorSchemes.TabIndex = 9;
+         this.comboBoxColorSchemes.TabIndex = 6;
          this.comboBoxColorSchemes.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxColorSchemes_SelectionChangeCommited);
          // 
          // labelColorScheme
@@ -559,7 +559,7 @@ namespace mrHelper.App.Forms
          this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(9, 74);
          this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
          this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
-         this.checkBoxMinimizeOnClose.TabIndex = 7;
+         this.checkBoxMinimizeOnClose.TabIndex = 8;
          this.checkBoxMinimizeOnClose.Text = "Minimize on close";
          this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
          this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
@@ -593,7 +593,7 @@ namespace mrHelper.App.Forms
          this.comboBoxHost.Location = new System.Drawing.Point(6, 31);
          this.comboBoxHost.Name = "comboBoxHost";
          this.comboBoxHost.Size = new System.Drawing.Size(259, 21);
-         this.comboBoxHost.TabIndex = 0;
+         this.comboBoxHost.TabIndex = 5;
          this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
@@ -629,7 +629,8 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Size = new System.Drawing.Size(1270, 858);
          this.splitContainer1.SplitterDistance = 352;
          this.splitContainer1.SplitterWidth = 8;
-         this.splitContainer1.TabIndex = 0;
+         this.splitContainer1.TabIndex = 4;
+         this.splitContainer1.TabStop = false;
          this.splitContainer1.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
          this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
@@ -654,7 +655,7 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.Location = new System.Drawing.Point(250, 9);
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
-         this.buttonReloadList.TabIndex = 3;
+         this.buttonReloadList.TabIndex = 2;
          this.buttonReloadList.Text = "Reload List";
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
@@ -682,7 +683,7 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.Name = "listViewMergeRequests";
          this.listViewMergeRequests.OwnerDraw = true;
          this.listViewMergeRequests.Size = new System.Drawing.Size(340, 809);
-         this.listViewMergeRequests.TabIndex = 2;
+         this.listViewMergeRequests.TabIndex = 3;
          this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
          this.listViewMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
@@ -774,6 +775,7 @@ namespace mrHelper.App.Forms
          this.splitContainer2.SplitterDistance = 280;
          this.splitContainer2.SplitterWidth = 8;
          this.splitContainer2.TabIndex = 7;
+         this.splitContainer2.TabStop = false;
          this.splitContainer2.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
          this.splitContainer2.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
@@ -798,7 +800,7 @@ namespace mrHelper.App.Forms
          this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 260);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
          this.linkLabelConnectedTo.Size = new System.Drawing.Size(259, 13);
-         this.linkLabelConnectedTo.TabIndex = 1;
+         this.linkLabelConnectedTo.TabIndex = 4;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
          this.linkLabelConnectedTo.Visible = false;
@@ -818,6 +820,7 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(904, 241);
          this.richTextBoxMergeRequestDescription.TabIndex = 2;
+         this.richTextBoxMergeRequestDescription.TabStop = false;
          this.richTextBoxMergeRequestDescription.Text = "Merge Request Description in HTML format";
          // 
          // groupBoxTimeTracking
@@ -872,7 +875,7 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
          this.buttonTimeTrackingCancel.Name = "buttonTimeTrackingCancel";
          this.buttonTimeTrackingCancel.Size = new System.Drawing.Size(96, 32);
-         this.buttonTimeTrackingCancel.TabIndex = 1;
+         this.buttonTimeTrackingCancel.TabIndex = 12;
          this.buttonTimeTrackingCancel.Text = "Cancel";
          this.buttonTimeTrackingCancel.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingCancel.Click += new System.EventHandler(this.ButtonTimeTrackingCancel_Click);
@@ -883,7 +886,7 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingStart.Location = new System.Drawing.Point(6, 19);
          this.buttonTimeTrackingStart.Name = "buttonTimeTrackingStart";
          this.buttonTimeTrackingStart.Size = new System.Drawing.Size(96, 32);
-         this.buttonTimeTrackingStart.TabIndex = 0;
+         this.buttonTimeTrackingStart.TabIndex = 11;
          this.buttonTimeTrackingStart.Text = "Start Timer";
          this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
@@ -944,7 +947,7 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 46);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
          this.comboBoxRightCommit.Size = new System.Drawing.Size(800, 21);
-         this.comboBoxRightCommit.TabIndex = 1;
+         this.comboBoxRightCommit.TabIndex = 6;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          // 
@@ -959,7 +962,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(6, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
          this.comboBoxLeftCommit.Size = new System.Drawing.Size(800, 21);
-         this.comboBoxLeftCommit.TabIndex = 0;
+         this.comboBoxLeftCommit.TabIndex = 5;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          // 
@@ -983,7 +986,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit.Location = new System.Drawing.Point(859, 32);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
          this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
-         this.linkLabelAbortGit.TabIndex = 2;
+         this.linkLabelAbortGit.TabIndex = 15;
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
          this.linkLabelAbortGit.Visible = false;
