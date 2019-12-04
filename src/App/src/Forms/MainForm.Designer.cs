@@ -298,7 +298,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonEditTime.Enabled = false;
-         this.buttonEditTime.Location = new System.Drawing.Point(811, 19);
+         this.buttonEditTime.Location = new System.Drawing.Point(808, 19);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
          this.buttonEditTime.TabIndex = 13;
@@ -322,7 +322,7 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(250, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(247, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 10;
@@ -347,7 +347,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiffTool.Enabled = false;
-         this.buttonDiffTool.Location = new System.Drawing.Point(811, 19);
+         this.buttonDiffTool.Location = new System.Drawing.Point(808, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(96, 48);
          this.buttonDiffTool.TabIndex = 7;
@@ -946,7 +946,7 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit.FormattingEnabled = true;
          this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 46);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(800, 21);
+         this.comboBoxRightCommit.Size = new System.Drawing.Size(794, 21);
          this.comboBoxRightCommit.TabIndex = 6;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
@@ -961,7 +961,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.FormattingEnabled = true;
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(6, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(800, 21);
+         this.comboBoxLeftCommit.Size = new System.Drawing.Size(794, 21);
          this.comboBoxLeftCommit.TabIndex = 5;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
