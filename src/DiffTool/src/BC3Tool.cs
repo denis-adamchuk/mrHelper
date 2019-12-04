@@ -48,7 +48,7 @@ namespace mrHelper.DiffTool
 
          string integrationKey = "mrhelper-bc3-integration";
          string defaultShortcut = "32843"; // Alt-K
-         var arguments = " \"%25f1\" %l1 \"%25f2\"";
+         var arguments = " %22%25f1%22 %l1 %22%25f2%22";
 
          XmlDocument document = new XmlDocument();
          document.Load(prefs);
