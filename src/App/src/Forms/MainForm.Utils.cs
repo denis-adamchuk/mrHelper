@@ -63,7 +63,6 @@ namespace mrHelper.App.Forms
                IId = fmk.MergeRequest.IId
             };
          }
-         //Debug.Assert(false);
          return null;
       }
 
@@ -755,7 +754,11 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
-         Debug.Assert(getMergeRequestKey().HasValue);
+         if (!getMergeRequestKey().HasValue)
+         {
+            return SystemColors.Window;
+         }
+
          MergeRequestKey mrk = getMergeRequestKey().Value;
          bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
          return wasReviewed || item.IsBase ? SystemColors.Window :
