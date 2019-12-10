@@ -91,9 +91,20 @@ namespace mrHelper.App.Forms
                }
             });
 
+         DiscussionSortState sortState = DiscussionSortState.Default;
+         DisplaySort = new DiscussionSort(sortState);
+         SortPanel = new DiscussionSortPanel(DisplaySort.SortState,
+            () =>
+            {
+               DisplaySort.SortState = SortPanel.SortState;
+               updateLayout(null, true, true);
+               updateSearch();
+            });
+
          Controls.Add(FilterPanel);
          Controls.Add(ActionsPanel);
          Controls.Add(SearchPanel);
+         Controls.Add(SortPanel);
 
          if (!renderDiscussions(discussions, false))
          {
@@ -295,7 +306,7 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionBoxes(List<Discussion> discussions)
       {
-         foreach (var discussion in discussions)
+         foreach (var discussion in DisplaySort.Sort(discussions))
          {
             if (!SystemFilter.DoesMatchFilter(discussion))
             {
@@ -337,14 +348,19 @@ namespace mrHelper.App.Forms
 
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
-         actionsPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
+
+         sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
+         actionsPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
-                                    actionsPanelLocation.Y + ActionsPanel.Size.Height);
+                                    Math.Max(actionsPanelLocation.Y + ActionsPanel.Size.Height,
+                                            (sortPanelLocation.Y + SortPanel.Size.Height)));
 
          // Stack panels horizontally
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
+         SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
          ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
          SearchPanel.Location = searchPanelLocation + (Size)AutoScrollPosition;
 
@@ -481,6 +497,9 @@ namespace mrHelper.App.Forms
 
       private readonly DiscussionSearchPanel SearchPanel;
       private TextSearch TextSearch;
+
+      private readonly DiscussionSortPanel SortPanel;
+      private readonly DiscussionSort DisplaySort;
 
       /// <summary>
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search

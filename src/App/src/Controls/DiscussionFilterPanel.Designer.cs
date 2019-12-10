@@ -67,7 +67,7 @@
          this.groupBoxFilter.Size = new System.Drawing.Size(457, 145);
          this.groupBoxFilter.TabIndex = 0;
          this.groupBoxFilter.TabStop = false;
-         this.groupBoxFilter.Text = "Discussion Filter";
+         this.groupBoxFilter.Text = "Sort and Filter";
          // 
          // groupBox2
          // 

@@ -461,9 +461,9 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention.AutoSize = true;
          this.checkBoxShowOnMention.Location = new System.Drawing.Point(234, 42);
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
-         this.checkBoxShowOnMention.Size = new System.Drawing.Size(238, 17);
+         this.checkBoxShowOnMention.Size = new System.Drawing.Size(242, 17);
          this.checkBoxShowOnMention.TabIndex = 15;
-         this.checkBoxShowOnMention.Text = "When someone mentions you in a discussion";
+         this.checkBoxShowOnMention.Text = "When someone mentioned me in a discussion";
          this.checkBoxShowOnMention.UseVisualStyleBackColor = true;
          this.checkBoxShowOnMention.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
