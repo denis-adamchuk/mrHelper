@@ -40,6 +40,9 @@
          // 
          // textBoxDiscussionBody
          // 
+         this.textBoxDiscussionBody.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 175);
          this.textBoxDiscussionBody.Multiline = true;
          this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
@@ -49,6 +52,7 @@
          // 
          // buttonCancel
          // 
+         this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(775, 229);
          this.buttonCancel.Name = "buttonCancel";
@@ -59,6 +63,7 @@
          // 
          // buttonOK
          // 
+         this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
          this.buttonOK.Location = new System.Drawing.Point(775, 175);
          this.buttonOK.Name = "buttonOK";
@@ -69,6 +74,8 @@
          // 
          // textBoxFileName
          // 
+         this.textBoxFileName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxFileName.Location = new System.Drawing.Point(12, 25);
          this.textBoxFileName.Name = "textBoxFileName";
          this.textBoxFileName.ReadOnly = true;
@@ -104,6 +111,7 @@
          // 
          // checkBoxIncludeContext
          // 
+         this.checkBoxIncludeContext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxIncludeContext.AutoSize = true;
          this.checkBoxIncludeContext.Checked = true;
          this.checkBoxIncludeContext.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -128,9 +136,10 @@
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.textBoxDiscussionBody);
-         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+         this.Icon = global::mrHelper.App.Properties.Resources.BlueAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
+         this.MinimumSize = new System.Drawing.Size(900, 303);
          this.Name = "NewDiscussionForm";
          this.Text = "Create New Discussion";
          this.TopMost = true;

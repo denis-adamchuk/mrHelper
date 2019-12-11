@@ -35,6 +35,9 @@
          // 
          // textBox
          // 
+         this.textBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.textBox.Location = new System.Drawing.Point(12, 12);
          this.textBox.Multiline = true;
          this.textBox.Name = "textBox";
@@ -44,6 +47,7 @@
          // 
          // buttonOK
          // 
+         this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
          this.buttonOK.Location = new System.Drawing.Point(421, 88);
          this.buttonOK.Name = "buttonOK";
@@ -54,6 +58,7 @@
          // 
          // buttonCancel
          // 
+         this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(537, 88);
          this.buttonCancel.Name = "buttonCancel";
@@ -71,9 +76,10 @@
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.textBox);
-         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+         this.Icon = global::mrHelper.App.Properties.Resources.BlueAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
+         this.MinimumSize = new System.Drawing.Size(640, 162);
          this.Name = "NewDiscussionItemForm";
          this.Text = "Dialog caption";
          this.Load += new System.EventHandler(this.NewDiscussionItemForm_Load);

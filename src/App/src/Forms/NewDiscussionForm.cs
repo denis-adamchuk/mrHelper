@@ -21,6 +21,7 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
          htmlPanel.Location = new Point(12, 73);
+         htmlPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
          htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
 
