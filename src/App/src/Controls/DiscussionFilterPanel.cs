@@ -26,6 +26,7 @@ namespace mrHelper.App.Controls
          bindRadioToFlags();
 
          checkBoxCreatedByMe.Checked = initialFilter.ByCurrentUserOnly;
+         checkBoxShowSpecial.Checked = initialFilter.SpecialDiscussions;
          setFilter(_byAnswersRadioToFlags, (int)initialFilter.ByAnswers);
          setFilter(_byResolutionRadioToFlags, (int)initialFilter.ByResolution);
 
@@ -42,6 +43,7 @@ namespace mrHelper.App.Controls
             return new DiscussionFilterState
             {
                ByCurrentUserOnly = checkBoxCreatedByMe.Checked,
+               SpecialDiscussions = checkBoxShowSpecial.Checked,
                ByAnswers = getFilter<FilterByAnswers>(_byAnswersRadioToFlags),
                ByResolution = getFilter<FilterByResolution>(_byResolutionRadioToFlags)
             };

@@ -29,7 +29,7 @@ namespace mrHelper.App.Helpers
 
       public DiscussionSortState SortState { get; set; }
 
-      public IEnumerable<Discussion> Sort(IEnumerable<Discussion> discussions)
+      public IEnumerable<T> Sort<T>(IEnumerable<T> discussions, Func<T, List<DiscussionNote>> fnGetNotes)
       {
          switch (SortState)
          {
@@ -38,8 +38,8 @@ namespace mrHelper.App.Helpers
 
             case DiscussionSortState.ByAuthor:
                return discussions
-                  .Where(x => x.Notes.Count > 0)
-                  .OrderByDescending(x => x.Notes[0].Author.Name);
+                  .Where(x => fnGetNotes((dynamic)x).Count > 0)
+                  .OrderByDescending(x => fnGetNotes((dynamic)x)[0].Author.Name);
          }
 
          Debug.Assert(false);

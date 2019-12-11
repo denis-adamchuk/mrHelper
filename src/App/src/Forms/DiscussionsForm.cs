@@ -58,6 +58,7 @@ namespace mrHelper.App.Forms
          DiscussionFilterState state = new DiscussionFilterState
             {
                ByCurrentUserOnly = false,
+               SpecialDiscussions = true,
                ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
             };
@@ -72,7 +73,9 @@ namespace mrHelper.App.Forms
                updateLayout(null, true, true);
                updateSearch();
             });
+
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
+
          SearchPanel = new DiscussionSearchPanel(
             (query, forward) =>
             {
@@ -306,7 +309,7 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionBoxes(List<Discussion> discussions)
       {
-         foreach (var discussion in DisplaySort.Sort(discussions))
+         foreach (var discussion in discussions)
          {
             if (!SystemFilter.DoesMatchFilter(discussion))
             {
@@ -371,14 +374,18 @@ namespace mrHelper.App.Forms
          Point previousBoxLocation = new Point();
          previousBoxLocation.Offset(0, topOffset);
 
-         // Stack boxes vertically
-         foreach (Control control in Controls)
-         {
-            if (!(control is DiscussionBox box))
-            {
-               continue;
-            }
+         // Filter out boxes
+         IEnumerable<DiscussionBox> boxes = Controls
+            .Cast<Control>()
+            .Where(x => x is DiscussionBox)
+            .Cast<DiscussionBox>();
 
+         // Sort boxes
+         IEnumerable<DiscussionBox> sortedBoxes = DisplaySort.Sort(boxes, x => x.Discussion.Notes);
+
+         // Stack boxes vertically
+         foreach (DiscussionBox box in sortedBoxes)
+         {
             // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
             // Cannot check Visible property because it is not set so far, we're trying to avoid flickering.
             if (!DisplayFilter.DoesMatchFilter(box.Discussion))
