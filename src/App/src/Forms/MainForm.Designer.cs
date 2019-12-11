@@ -48,6 +48,7 @@ namespace mrHelper.App.Forms
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
+         this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
          this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.buttonEditTime = new System.Windows.Forms.Button();
@@ -267,16 +268,30 @@ namespace mrHelper.App.Forms
          this.textBoxLabels.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
          this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
          // 
+         // linkLabelHelp
+         // 
+         this.linkLabelHelp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelHelp.AutoSize = true;
+         this.linkLabelHelp.Location = new System.Drawing.Point(788, 10);
+         this.linkLabelHelp.Name = "linkLabelHelp";
+         this.linkLabelHelp.Size = new System.Drawing.Size(29, 13);
+         this.linkLabelHelp.TabIndex = 14;
+         this.linkLabelHelp.TabStop = true;
+         this.linkLabelHelp.Text = "Help";
+         this.toolTip.SetToolTip(this.linkLabelHelp, "Open a web page with documentation");
+         this.linkLabelHelp.Visible = false;
+         this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
+         // 
          // linkLabelSendFeedback
          // 
          this.linkLabelSendFeedback.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.linkLabelSendFeedback.AutoSize = true;
-         this.linkLabelSendFeedback.Location = new System.Drawing.Point(811, 10);
+         this.linkLabelSendFeedback.Location = new System.Drawing.Point(836, 10);
          this.linkLabelSendFeedback.Name = "linkLabelSendFeedback";
-         this.linkLabelSendFeedback.Size = new System.Drawing.Size(80, 13);
-         this.linkLabelSendFeedback.TabIndex = 14;
+         this.linkLabelSendFeedback.Size = new System.Drawing.Size(55, 13);
+         this.linkLabelSendFeedback.TabIndex = 15;
          this.linkLabelSendFeedback.TabStop = true;
-         this.linkLabelSendFeedback.Text = "Send feedback";
+         this.linkLabelSendFeedback.Text = "Feedback";
          this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to developer. Logs are attached automatically.");
          this.linkLabelSendFeedback.Visible = false;
          this.linkLabelSendFeedback.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSendFeedback_LinkClicked);
@@ -284,9 +299,10 @@ namespace mrHelper.App.Forms
          // linkLabelNewVersion
          // 
          this.linkLabelNewVersion.AutoSize = true;
-         this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 10);
+         this.linkLabelNewVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+         this.linkLabelNewVersion.Location = new System.Drawing.Point(6, 7);
          this.linkLabelNewVersion.Name = "linkLabelNewVersion";
-         this.linkLabelNewVersion.Size = new System.Drawing.Size(226, 13);
+         this.linkLabelNewVersion.Size = new System.Drawing.Size(299, 17);
          this.linkLabelNewVersion.TabIndex = 16;
          this.linkLabelNewVersion.TabStop = true;
          this.linkLabelNewVersion.Text = "New version is available! Click here to install it.";
@@ -1016,6 +1032,7 @@ namespace mrHelper.App.Forms
          // 
          this.panel3.BackColor = System.Drawing.Color.WhiteSmoke;
          this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panel3.Controls.Add(this.linkLabelHelp);
          this.panel3.Controls.Add(this.linkLabelSendFeedback);
          this.panel3.Controls.Add(this.linkLabelNewVersion);
          this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -1118,6 +1135,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonReloadList;
       private System.Windows.Forms.LinkLabel linkLabelNewVersion;
       private System.Windows.Forms.Panel panel3;
+      private System.Windows.Forms.LinkLabel linkLabelHelp;
       private System.Windows.Forms.LinkLabel linkLabelSendFeedback;
       private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
       private System.Windows.Forms.GroupBox groupBoxNotifications;

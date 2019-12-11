@@ -321,6 +321,11 @@ namespace mrHelper.App.Forms
             _checkForUpdatesTimer.Start();
          }
 
+         if (Program.ServiceManager.GetHelpUrl() != String.Empty)
+         {
+            linkLabelHelp.Visible = true;
+         }
+
          if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
          {
             linkLabelSendFeedback.Visible = true;

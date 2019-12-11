@@ -605,6 +605,15 @@ namespace mrHelper.App.Forms
          Close();
       }
 
+      private void linkLabelHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         string helpUrl = Program.ServiceManager.GetHelpUrl();
+         if (helpUrl != String.Empty)
+         {
+            openBrowser(helpUrl);
+         }
+      }
+
       private void linkLabelSendFeedback_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          try

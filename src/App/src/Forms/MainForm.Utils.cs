@@ -1016,7 +1016,12 @@ namespace mrHelper.App.Forms
             }
 
             _newVersionFilePath = destFilePath;
-            BeginInvoke(new Action(() => linkLabelNewVersion.Visible = true));
+            BeginInvoke(new Action(() =>
+            {
+               Debug.Assert(!linkLabelNewVersion.Visible);
+               linkLabelNewVersion.Visible = true;
+               Text += "   New version is available!";
+            }));
          });
 
          return true;
