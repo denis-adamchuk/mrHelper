@@ -39,7 +39,7 @@ namespace mrHelper.App.Helpers
             case DiscussionSortState.ByAuthor:
                return discussions
                   .Where(x => fnGetNotes((dynamic)x).Count > 0)
-                  .OrderByDescending(x => fnGetNotes((dynamic)x)[0].Author.Name);
+                  .OrderBy(x => fnGetNotes((dynamic)x)[0].Author.Name);
          }
 
          Debug.Assert(false);

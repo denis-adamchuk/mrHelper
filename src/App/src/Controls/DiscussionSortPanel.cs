@@ -19,11 +19,13 @@ namespace mrHelper.App.Controls
          _onSortChanged = onSortChanged;
 
          InitializeComponent();
-         bindRadioToFlags();
 
-         setSort(_radioToFlags, (int)initialSort);
+         _radioButtonGroup.AddRadioButton(radioButtonSortDefault, (int)(DiscussionSortState.Default));
+         _radioButtonGroup.AddRadioButton(radioButtonSortByAuthor, (int)(DiscussionSortState.ByAuthor));
+         _radioButtonGroup.UpdateCheckedState((int)initialSort);
 
-         subscribeToEvents();
+         radioButtonSortDefault.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
+         radioButtonSortByAuthor.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
       }
 
       /// <summary>
@@ -33,7 +35,7 @@ namespace mrHelper.App.Controls
       {
          get
          {
-            return getSort<DiscussionSortState>(_radioToFlags);
+            return _radioButtonGroup.GetState<DiscussionSortState>();
          }
       }
 
@@ -45,37 +47,9 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void bindRadioToFlags()
-      {
-         _radioToFlags.Add(radioButtonSortDefault, (int)(DiscussionSortState.Default));
-         _radioToFlags.Add(radioButtonSortByAuthor, (int)(DiscussionSortState.ByAuthor));
-      }
-
-      private static void setSort(Dictionary<RadioButton, int> flags, int value)
-      {
-         foreach (var radio in flags)
-         {
-            radio.Key.Checked = radio.Value == (int)value;
-         }
-      }
-
-      private static T getSort<T>(Dictionary<RadioButton, int> flags)
-      {
-         foreach (var radio in flags)
-         {
-            if (radio.Key.Checked)
-            {
-               return (T)(object)radio.Value;
-            }
-         }
-
-         Debug.Assert(false);
-         return (T)(object)0;
-      }
-
       private readonly Action _onSortChanged;
 
-      private readonly Dictionary<RadioButton, int> _radioToFlags = new Dictionary<RadioButton, int>();
+      private readonly RadioButtonGroup _radioButtonGroup = new RadioButtonGroup();
    }
 }
 

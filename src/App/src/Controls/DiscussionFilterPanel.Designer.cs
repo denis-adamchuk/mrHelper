@@ -20,18 +20,6 @@
          base.Dispose(disposing);
       }
 
-      private void subscribeToEvents()
-      {
-         this.radioButtonShowNotResolvedOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.radioButtonShowResolvedOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.radioButtonNoFilterByResolution.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.radioButtonShowUnansweredOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.radioButtonShowAnsweredOnly.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.radioButtonNoFilterByAnswers.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.checkBoxCreatedByMe.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-         this.checkBoxShowSpecial.CheckedChanged += new System.EventHandler(this.FilterElement_CheckedChanged);
-      }
-
       #region Component Designer generated code
 
       /// <summary> 
@@ -50,7 +38,7 @@
          this.radioButtonShowAnsweredOnly = new System.Windows.Forms.RadioButton();
          this.radioButtonNoFilterByAnswers = new System.Windows.Forms.RadioButton();
          this.checkBoxCreatedByMe = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowSpecial = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowService = new System.Windows.Forms.CheckBox();
          this.groupBoxFilter.SuspendLayout();
          this.groupBox2.SuspendLayout();
          this.groupBox1.SuspendLayout();
@@ -61,7 +49,7 @@
          this.groupBoxFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxFilter.Controls.Add(this.checkBoxShowSpecial);
+         this.groupBoxFilter.Controls.Add(this.checkBoxShowService);
          this.groupBoxFilter.Controls.Add(this.groupBox2);
          this.groupBoxFilter.Controls.Add(this.groupBox1);
          this.groupBoxFilter.Controls.Add(this.checkBoxCreatedByMe);
@@ -172,15 +160,15 @@
          this.checkBoxCreatedByMe.Text = "Show discussions started by me only";
          this.checkBoxCreatedByMe.UseVisualStyleBackColor = true;
          // 
-         // checkBoxShowSpecial
+         // checkBoxShowService
          // 
-         this.checkBoxShowSpecial.AutoSize = true;
-         this.checkBoxShowSpecial.Location = new System.Drawing.Point(232, 19);
-         this.checkBoxShowSpecial.Name = "checkBoxShowSpecial";
-         this.checkBoxShowSpecial.Size = new System.Drawing.Size(146, 17);
-         this.checkBoxShowSpecial.TabIndex = 4;
-         this.checkBoxShowSpecial.Text = "Show special discussions";
-         this.checkBoxShowSpecial.UseVisualStyleBackColor = true;
+         this.checkBoxShowService.AutoSize = true;
+         this.checkBoxShowService.Location = new System.Drawing.Point(232, 19);
+         this.checkBoxShowService.Name = "checkBoxShowService";
+         this.checkBoxShowService.Size = new System.Drawing.Size(146, 17);
+         this.checkBoxShowService.TabIndex = 4;
+         this.checkBoxShowService.Text = "Show service messages";
+         this.checkBoxShowService.UseVisualStyleBackColor = true;
          // 
          // DiscussionFilterPanel
          // 
@@ -211,6 +199,6 @@
       private System.Windows.Forms.RadioButton radioButtonShowNotResolvedOnly;
       private System.Windows.Forms.RadioButton radioButtonShowResolvedOnly;
       private System.Windows.Forms.RadioButton radioButtonNoFilterByResolution;
-      private System.Windows.Forms.CheckBox checkBoxShowSpecial;
+      private System.Windows.Forms.CheckBox checkBoxShowService;
    }
 }

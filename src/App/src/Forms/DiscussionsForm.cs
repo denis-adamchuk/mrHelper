@@ -58,7 +58,7 @@ namespace mrHelper.App.Forms
          DiscussionFilterState state = new DiscussionFilterState
             {
                ByCurrentUserOnly = false,
-               SpecialDiscussions = true,
+               ServiceMessages = true,
                ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
             };
@@ -279,13 +279,12 @@ namespace mrHelper.App.Forms
 
       private void updateVisibilityOfBoxes()
       {
-         foreach (Control control in Controls)
-         {
-            if (control is DiscussionBox box)
-            {
-               box.Visible = DisplayFilter.DoesMatchFilter(box.Discussion);
-            }
-         }
+         IEnumerable<DiscussionBox> boxes = Controls
+            .Cast<Control>()
+            .Where(x => x is DiscussionBox)
+            .Cast<DiscussionBox>();
+
+         boxes.ToList().ForEach(x => x.Visible = DisplayFilter.DoesMatchFilter(x.Discussion));
       }
 
       private void highlightSearchResult(TextSearchResult? result)
