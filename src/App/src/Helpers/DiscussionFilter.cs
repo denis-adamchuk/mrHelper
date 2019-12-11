@@ -33,6 +33,7 @@ namespace mrHelper.App.Helpers
    public struct DiscussionFilterState
    {
       public bool ByCurrentUserOnly;
+      public bool ServiceMessages;
       public FilterByAnswers ByAnswers;
       public FilterByResolution ByResolution;
    }
@@ -59,6 +60,11 @@ namespace mrHelper.App.Helpers
          }
 
          if (Filter.ByCurrentUserOnly && discussion.Notes[0].Author.Id != CurrentUser.Id)
+         {
+            return false;
+         }
+
+         if (!Filter.ServiceMessages && discussion.Notes[0].Author.Name == discussion.Notes[0].Author.Username)
          {
             return false;
          }

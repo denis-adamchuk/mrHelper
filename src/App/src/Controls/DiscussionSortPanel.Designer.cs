@@ -1,0 +1,96 @@
+﻿namespace mrHelper.App.Controls
+{
+   partial class DiscussionSortPanel
+   {
+      /// <summary> 
+      /// Required designer variable.
+      /// </summary>
+      private System.ComponentModel.IContainer components = null;
+
+      /// <summary> 
+      /// Clean up any resources being used.
+      /// </summary>
+      /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+      protected override void Dispose(bool disposing)
+      {
+         if (disposing && (components != null))
+         {
+            components.Dispose();
+         }
+         base.Dispose(disposing);
+      }
+
+      private void subscribeToEvents()
+      {
+         this.radioButtonSortDefault.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
+         this.radioButtonSortByAuthor.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
+      }
+
+      #region Component Designer generated code
+
+      /// <summary> 
+      /// Required method for Designer support - do not modify 
+      /// the contents of this method with the code editor.
+      /// </summary>
+      private void InitializeComponent()
+      {
+         this.groupBox1 = new System.Windows.Forms.GroupBox();
+         this.radioButtonSortByAuthor = new System.Windows.Forms.RadioButton();
+         this.radioButtonSortDefault = new System.Windows.Forms.RadioButton();
+         this.groupBox1.SuspendLayout();
+         this.SuspendLayout();
+         // 
+         // groupBox1
+         // 
+         this.groupBox1.Controls.Add(this.radioButtonSortByAuthor);
+         this.groupBox1.Controls.Add(this.radioButtonSortDefault);
+         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBox1.Location = new System.Drawing.Point(0, 0);
+         this.groupBox1.Name = "groupBox1";
+         this.groupBox1.Size = new System.Drawing.Size(260, 54);
+         this.groupBox1.TabIndex = 0;
+         this.groupBox1.TabStop = false;
+         this.groupBox1.Text = "Sort";
+         // 
+         // radioButtonSortByAuthor
+         // 
+         this.radioButtonSortByAuthor.AutoSize = true;
+         this.radioButtonSortByAuthor.Location = new System.Drawing.Point(84, 19);
+         this.radioButtonSortByAuthor.Name = "radioButtonSortByAuthor";
+         this.radioButtonSortByAuthor.Size = new System.Drawing.Size(70, 17);
+         this.radioButtonSortByAuthor.TabIndex = 1;
+         this.radioButtonSortByAuthor.TabStop = true;
+         this.radioButtonSortByAuthor.Text = "By author";
+         this.radioButtonSortByAuthor.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonSortDefault
+         // 
+         this.radioButtonSortDefault.AutoSize = true;
+         this.radioButtonSortDefault.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonSortDefault.Name = "radioButtonSortDefault";
+         this.radioButtonSortDefault.Size = new System.Drawing.Size(59, 17);
+         this.radioButtonSortDefault.TabIndex = 0;
+         this.radioButtonSortDefault.TabStop = true;
+         this.radioButtonSortDefault.Text = "Default";
+         this.radioButtonSortDefault.UseVisualStyleBackColor = true;
+         // 
+         // DiscussionSortPanel
+         // 
+         this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.Controls.Add(this.groupBox1);
+         this.Name = "DiscussionSortPanel";
+         this.Size = new System.Drawing.Size(260, 54);
+         this.groupBox1.ResumeLayout(false);
+         this.groupBox1.PerformLayout();
+         this.ResumeLayout(false);
+
+      }
+
+      #endregion
+
+      private System.Windows.Forms.GroupBox groupBox1;
+      private System.Windows.Forms.RadioButton radioButtonSortByAuthor;
+      private System.Windows.Forms.RadioButton radioButtonSortDefault;
+   }
+}

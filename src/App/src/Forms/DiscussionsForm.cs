@@ -58,6 +58,7 @@ namespace mrHelper.App.Forms
          DiscussionFilterState state = new DiscussionFilterState
             {
                ByCurrentUserOnly = false,
+               ServiceMessages = true,
                ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
             };
@@ -72,7 +73,9 @@ namespace mrHelper.App.Forms
                updateLayout(null, true, true);
                updateSearch();
             });
+
          ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
+
          SearchPanel = new DiscussionSearchPanel(
             (query, forward) =>
             {
@@ -91,9 +94,20 @@ namespace mrHelper.App.Forms
                }
             });
 
+         DiscussionSortState sortState = DiscussionSortState.Default;
+         DisplaySort = new DiscussionSort(sortState);
+         SortPanel = new DiscussionSortPanel(DisplaySort.SortState,
+            () =>
+            {
+               DisplaySort.SortState = SortPanel.SortState;
+               updateLayout(null, true, true);
+               updateSearch();
+            });
+
          Controls.Add(FilterPanel);
          Controls.Add(ActionsPanel);
          Controls.Add(SearchPanel);
+         Controls.Add(SortPanel);
 
          if (!renderDiscussions(discussions, false))
          {
@@ -265,13 +279,12 @@ namespace mrHelper.App.Forms
 
       private void updateVisibilityOfBoxes()
       {
-         foreach (Control control in Controls)
-         {
-            if (control is DiscussionBox box)
-            {
-               box.Visible = DisplayFilter.DoesMatchFilter(box.Discussion);
-            }
-         }
+         IEnumerable<DiscussionBox> boxes = Controls
+            .Cast<Control>()
+            .Where(x => x is DiscussionBox)
+            .Cast<DiscussionBox>();
+
+         boxes.ToList().ForEach(x => x.Visible = DisplayFilter.DoesMatchFilter(x.Discussion));
       }
 
       private void highlightSearchResult(TextSearchResult? result)
@@ -337,14 +350,19 @@ namespace mrHelper.App.Forms
 
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
-         actionsPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
+
+         sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
+         actionsPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
-                                    actionsPanelLocation.Y + ActionsPanel.Size.Height);
+                                    Math.Max(actionsPanelLocation.Y + ActionsPanel.Size.Height,
+                                            (sortPanelLocation.Y + SortPanel.Size.Height)));
 
          // Stack panels horizontally
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
+         SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
          ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
          SearchPanel.Location = searchPanelLocation + (Size)AutoScrollPosition;
 
@@ -355,14 +373,18 @@ namespace mrHelper.App.Forms
          Point previousBoxLocation = new Point();
          previousBoxLocation.Offset(0, topOffset);
 
-         // Stack boxes vertically
-         foreach (Control control in Controls)
-         {
-            if (!(control is DiscussionBox box))
-            {
-               continue;
-            }
+         // Filter out boxes
+         IEnumerable<DiscussionBox> boxes = Controls
+            .Cast<Control>()
+            .Where(x => x is DiscussionBox)
+            .Cast<DiscussionBox>();
 
+         // Sort boxes
+         IEnumerable<DiscussionBox> sortedBoxes = DisplaySort.Sort(boxes, x => x.Discussion.Notes);
+
+         // Stack boxes vertically
+         foreach (DiscussionBox box in sortedBoxes)
+         {
             // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
             // Cannot check Visible property because it is not set so far, we're trying to avoid flickering.
             if (!DisplayFilter.DoesMatchFilter(box.Discussion))
@@ -481,6 +503,9 @@ namespace mrHelper.App.Forms
 
       private readonly DiscussionSearchPanel SearchPanel;
       private TextSearch TextSearch;
+
+      private readonly DiscussionSortPanel SortPanel;
+      private readonly DiscussionSort DisplaySort;
 
       /// <summary>
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
