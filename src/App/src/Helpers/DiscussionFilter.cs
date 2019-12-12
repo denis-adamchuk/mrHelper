@@ -64,7 +64,7 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         if (!Filter.ServiceMessages && discussion.Notes[0].Author.Name == discussion.Notes[0].Author.Username)
+         if (!Filter.ServiceMessages && isServiceDiscussioNote(discussion.Notes[0]))
          {
             return false;
          }
@@ -89,6 +89,11 @@ namespace mrHelper.App.Helpers
          }
 
          return true;
+      }
+
+      private static bool isServiceDiscussioNote(DiscussionNote note)
+      {
+         return note.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
       }
 
       private User CurrentUser;

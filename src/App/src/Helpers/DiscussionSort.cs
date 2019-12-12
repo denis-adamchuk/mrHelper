@@ -14,7 +14,7 @@ namespace mrHelper.App.Helpers
    public enum DiscussionSortState
    {
       Default,
-      ByAuthor
+      ByReviewer
    };
 
    /// <summary>
@@ -36,7 +36,7 @@ namespace mrHelper.App.Helpers
             case DiscussionSortState.Default:
                return discussions;
 
-            case DiscussionSortState.ByAuthor:
+            case DiscussionSortState.ByReviewer:
                return discussions
                   .Where(x => fnGetNotes((dynamic)x).Count > 0)
                   .OrderBy(x => fnGetNotes((dynamic)x)[0].Author.Name);

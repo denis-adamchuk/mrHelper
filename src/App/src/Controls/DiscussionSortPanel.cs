@@ -21,11 +21,11 @@ namespace mrHelper.App.Controls
          InitializeComponent();
 
          _radioButtonGroup.AddRadioButton(radioButtonSortDefault, (int)(DiscussionSortState.Default));
-         _radioButtonGroup.AddRadioButton(radioButtonSortByAuthor, (int)(DiscussionSortState.ByAuthor));
+         _radioButtonGroup.AddRadioButton(radioButtonSortByReviewer, (int)(DiscussionSortState.ByReviewer));
          _radioButtonGroup.UpdateCheckedState((int)initialSort);
 
          radioButtonSortDefault.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
-         radioButtonSortByAuthor.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
+         radioButtonSortByReviewer.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
       }
 
       /// <summary>

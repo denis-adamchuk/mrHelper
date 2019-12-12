@@ -23,7 +23,7 @@
       private void subscribeToEvents()
       {
          this.radioButtonSortDefault.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
-         this.radioButtonSortByAuthor.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
+         this.radioButtonSortByReviewer.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
       }
 
       #region Component Designer generated code
@@ -35,14 +35,14 @@
       private void InitializeComponent()
       {
          this.groupBox1 = new System.Windows.Forms.GroupBox();
-         this.radioButtonSortByAuthor = new System.Windows.Forms.RadioButton();
+         this.radioButtonSortByReviewer = new System.Windows.Forms.RadioButton();
          this.radioButtonSortDefault = new System.Windows.Forms.RadioButton();
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBox1
          // 
-         this.groupBox1.Controls.Add(this.radioButtonSortByAuthor);
+         this.groupBox1.Controls.Add(this.radioButtonSortByReviewer);
          this.groupBox1.Controls.Add(this.radioButtonSortDefault);
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
@@ -52,16 +52,16 @@
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Sort";
          // 
-         // radioButtonSortByAuthor
+         // radioButtonSortByReviewer
          // 
-         this.radioButtonSortByAuthor.AutoSize = true;
-         this.radioButtonSortByAuthor.Location = new System.Drawing.Point(84, 19);
-         this.radioButtonSortByAuthor.Name = "radioButtonSortByAuthor";
-         this.radioButtonSortByAuthor.Size = new System.Drawing.Size(70, 17);
-         this.radioButtonSortByAuthor.TabIndex = 1;
-         this.radioButtonSortByAuthor.TabStop = true;
-         this.radioButtonSortByAuthor.Text = "By author";
-         this.radioButtonSortByAuthor.UseVisualStyleBackColor = true;
+         this.radioButtonSortByReviewer.AutoSize = true;
+         this.radioButtonSortByReviewer.Location = new System.Drawing.Point(84, 19);
+         this.radioButtonSortByReviewer.Name = "radioButtonSortByReviewer";
+         this.radioButtonSortByReviewer.Size = new System.Drawing.Size(80, 17);
+         this.radioButtonSortByReviewer.TabIndex = 1;
+         this.radioButtonSortByReviewer.TabStop = true;
+         this.radioButtonSortByReviewer.Text = "By reviewer";
+         this.radioButtonSortByReviewer.UseVisualStyleBackColor = true;
          // 
          // radioButtonSortDefault
          // 
@@ -90,7 +90,7 @@
       #endregion
 
       private System.Windows.Forms.GroupBox groupBox1;
-      private System.Windows.Forms.RadioButton radioButtonSortByAuthor;
+      private System.Windows.Forms.RadioButton radioButtonSortByReviewer;
       private System.Windows.Forms.RadioButton radioButtonSortDefault;
    }
 }

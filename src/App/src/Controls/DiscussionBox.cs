@@ -473,7 +473,7 @@ namespace mrHelper.App.Controls
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
-         if (isServiceMessage(note))
+         if (!isServiceDiscussionNote(note))
          {
             TextBox textBox = new TextBoxNoWheel()
             {
@@ -509,10 +509,9 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private bool isServiceMessage(DiscussionNote note)
+      private bool isServiceDiscussionNote(DiscussionNote note)
       {
-         // Let's introduce this way to distinct ordinary notes from special ones
-         return note.Author.Name != note.Author.Username;
+         return note.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
       }
 
       private void Control_GotFocus(object sender, EventArgs e)

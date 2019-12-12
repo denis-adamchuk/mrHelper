@@ -68,6 +68,9 @@ namespace mrHelper.Client.Tools
       private static readonly string Notifications_MyActivity_KeyName      = "Notifications_MyActivity";
       private static readonly bool   Notifications_MyActivity_DefaultValue = false;
 
+      private static readonly string Notifications_Service_KeyName      = "Notifications_Service";
+      private static readonly bool   Notifications_Service_DefaultValue = false;
+
       private static readonly string ListViewMergeRequestsColumnWidthsKeyName      = "LVMR_ColWidths";
       private static readonly string ListViewMergeRequestsColumnWidthsDefaultValue = String.Empty;
       private static readonly int    ListViewMergeRequestsSingleColumnWidthDefaultValue = 100;
@@ -263,6 +266,17 @@ namespace mrHelper.Client.Tools
                   out bool result) ? result : Notifications_MyActivity_DefaultValue;
          }
          set { setValue(Notifications_MyActivity_KeyName, boolToString(value)); }
+      }
+
+      public bool Notifications_Service
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               Notifications_Service_KeyName, boolToString(Notifications_Service_DefaultValue)),
+                  out bool result) ? result : Notifications_Service_DefaultValue;
+         }
+         set { setValue(Notifications_Service_KeyName, boolToString(value)); }
       }
 
       public Dictionary<string, int> ListViewMergeRequestsColumnWidths

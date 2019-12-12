@@ -462,6 +462,10 @@ namespace mrHelper.App.Forms
          {
             Program.Settings.Notifications_MyActivity = state;
          }
+         else if (sender == checkBoxShowServiceNotifications)
+         {
+            Program.Settings.Notifications_Service = state;
+         }
       }
 
       private void listViewMergeRequests_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)

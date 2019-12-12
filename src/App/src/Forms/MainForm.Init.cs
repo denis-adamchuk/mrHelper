@@ -139,6 +139,7 @@ namespace mrHelper.App.Forms
          checkBoxShowOnMention.Checked = Program.Settings.Notifications_OnMention;
          checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
+         checkBoxShowServiceNotifications.Checked = Program.Settings.Notifications_Service;
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
          {

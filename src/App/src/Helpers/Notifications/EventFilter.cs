@@ -26,6 +26,7 @@ namespace mrHelper.App.Helpers
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
          return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, ConfigurationHelper.GetLabels(_settings))
+            || (isServiceEvent(mergeRequest)                                    && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
             || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !_settings.Notifications_UpdatedMergeRequests)
@@ -38,11 +39,12 @@ namespace mrHelper.App.Helpers
          MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
          if (!mergeRequest.HasValue)
          {
-            // TODO Consider not supressing OnMention event even if MR is closed
+            // TODO Consider not suppressing OnMention event even if MR is closed
             return true;
          }
 
          return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest.Value, ConfigurationHelper.GetLabels(_settings))
+            || (isServiceEvent(e)                                               && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser ?? new User(), e)            && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_AllThreadsResolved)
             || (e.EventType == DiscussionEvent.Type.MentionedCurrentUser        && !_settings.Notifications_OnMention)
@@ -66,6 +68,31 @@ namespace mrHelper.App.Helpers
 
             case DiscussionEvent.Type.Keyword:
                return ((DiscussionEvent.KeywordDescription)e.Details).Author.Id == currentUser.Id;
+
+            default:
+               Debug.Assert(false);
+               return false;
+         }
+      }
+
+      private static bool isServiceEvent(MergeRequest m)
+      {
+         return m.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
+      }
+
+      private static bool isServiceEvent(DiscussionEvent e)
+      {
+         switch (e.EventType)
+         {
+            case DiscussionEvent.Type.ResolvedAllThreads:
+               return ((User)e.Details).Username == Program.ServiceManager.GetServiceMessageUsername();
+
+            case DiscussionEvent.Type.MentionedCurrentUser:
+               return ((User)e.Details).Username == Program.ServiceManager.GetServiceMessageUsername();
+
+            case DiscussionEvent.Type.Keyword:
+               return ((DiscussionEvent.KeywordDescription)e.Details).Author.Username ==
+                  Program.ServiceManager.GetServiceMessageUsername();
 
             default:
                Debug.Assert(false);

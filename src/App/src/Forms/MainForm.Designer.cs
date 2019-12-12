@@ -114,6 +114,7 @@ namespace mrHelper.App.Forms
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.panel3 = new System.Windows.Forms.Panel();
+         this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -436,6 +437,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxNotifications
          // 
+         this.groupBoxNotifications.Controls.Add(this.checkBoxShowServiceNotifications);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowMyActivity);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowKeywords);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowOnMention);
@@ -1041,6 +1043,17 @@ namespace mrHelper.App.Forms
          this.panel3.Size = new System.Drawing.Size(910, 34);
          this.panel3.TabIndex = 6;
          // 
+         // checkBoxShowServiceNotifications
+         // 
+         this.checkBoxShowServiceNotifications.AutoSize = true;
+         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(234, 106);
+         this.checkBoxShowServiceNotifications.Name = "checkBoxShowServiceNotifications";
+         this.checkBoxShowServiceNotifications.Size = new System.Drawing.Size(149, 17);
+         this.checkBoxShowServiceNotifications.TabIndex = 17;
+         this.checkBoxShowServiceNotifications.Text = "Show service notifications";
+         this.checkBoxShowServiceNotifications.UseVisualStyleBackColor = true;
+         this.checkBoxShowServiceNotifications.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1169,6 +1182,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonDiffTool;
       private SelectionPreservingComboBox comboBoxRightCommit;
       private SelectionPreservingComboBox comboBoxLeftCommit;
+      private System.Windows.Forms.CheckBox checkBoxShowServiceNotifications;
    }
 }
 

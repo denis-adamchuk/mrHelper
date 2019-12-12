@@ -67,6 +67,19 @@ namespace mrHelper.Client.Services
          return properties != null && properties.ContainsKey("url") ? properties["url"].ToString() : String.Empty;
       }
 
+      public string GetServiceMessageUsername()
+      {
+         int index = _services?.FindIndex(x => x.Name == "ServiceMessages") ?? -1;
+         if (index == -1)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] ServiceMessages entry is missing"));
+            return String.Empty;
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         return properties != null && properties.ContainsKey("username") ? properties["username"].ToString() : String.Empty;
+      }
+
       public struct LatestVersionInformation
       {
          public string VersionNumber;
