@@ -29,6 +29,7 @@
       private void InitializeComponent()
       {
          this.groupBoxFilter = new System.Windows.Forms.GroupBox();
+         this.checkBoxShowService = new System.Windows.Forms.CheckBox();
          this.groupBox2 = new System.Windows.Forms.GroupBox();
          this.radioButtonShowNotResolvedOnly = new System.Windows.Forms.RadioButton();
          this.radioButtonShowResolvedOnly = new System.Windows.Forms.RadioButton();
@@ -38,7 +39,6 @@
          this.radioButtonShowAnsweredOnly = new System.Windows.Forms.RadioButton();
          this.radioButtonNoFilterByAnswers = new System.Windows.Forms.RadioButton();
          this.checkBoxCreatedByMe = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowService = new System.Windows.Forms.CheckBox();
          this.groupBoxFilter.SuspendLayout();
          this.groupBox2.SuspendLayout();
          this.groupBox1.SuspendLayout();
@@ -58,7 +58,17 @@
          this.groupBoxFilter.Size = new System.Drawing.Size(457, 145);
          this.groupBoxFilter.TabIndex = 0;
          this.groupBoxFilter.TabStop = false;
-         this.groupBoxFilter.Text = "Sort and Filter";
+         this.groupBoxFilter.Text = "Filter";
+         // 
+         // checkBoxShowService
+         // 
+         this.checkBoxShowService.AutoSize = true;
+         this.checkBoxShowService.Location = new System.Drawing.Point(232, 19);
+         this.checkBoxShowService.Name = "checkBoxShowService";
+         this.checkBoxShowService.Size = new System.Drawing.Size(140, 17);
+         this.checkBoxShowService.TabIndex = 4;
+         this.checkBoxShowService.Text = "Show service messages";
+         this.checkBoxShowService.UseVisualStyleBackColor = true;
          // 
          // groupBox2
          // 
@@ -159,16 +169,6 @@
          this.checkBoxCreatedByMe.TabIndex = 0;
          this.checkBoxCreatedByMe.Text = "Show discussions started by me only";
          this.checkBoxCreatedByMe.UseVisualStyleBackColor = true;
-         // 
-         // checkBoxShowService
-         // 
-         this.checkBoxShowService.AutoSize = true;
-         this.checkBoxShowService.Location = new System.Drawing.Point(232, 19);
-         this.checkBoxShowService.Name = "checkBoxShowService";
-         this.checkBoxShowService.Size = new System.Drawing.Size(146, 17);
-         this.checkBoxShowService.TabIndex = 4;
-         this.checkBoxShowService.Text = "Show service messages";
-         this.checkBoxShowService.UseVisualStyleBackColor = true;
          // 
          // DiscussionFilterPanel
          // 
