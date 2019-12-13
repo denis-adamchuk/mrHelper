@@ -40,7 +40,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
          this.ClientSize = new System.Drawing.Size(1353, 456);
-         this.Icon = Properties.Resources.BlueAppIcon;
+         this.Icon = Properties.Resources.DefaultAppIcon;
          this.KeyPreview = true;
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";

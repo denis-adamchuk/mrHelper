@@ -262,6 +262,7 @@ namespace mrHelper.App.Forms
          // Color Scheme requires Expression Resolver
          fillColorSchemesList();
          initializeColorScheme();
+         initializeIconScheme();
 
          _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings);
          _mergeRequestManager.MergeRequestEvent += e => processUpdate(e);

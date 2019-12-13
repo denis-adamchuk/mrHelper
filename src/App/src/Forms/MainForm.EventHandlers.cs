@@ -748,8 +748,6 @@ namespace mrHelper.App.Forms
 
       private void onStartTimer()
       {
-         notifyIcon.Icon = Properties.Resources.GreenAppIcon;
-
          Debug.Assert(!isTrackingTime());
 
          // Update button text and enabled state
@@ -769,12 +767,12 @@ namespace mrHelper.App.Forms
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(null);
          labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
+
+         updateTrayIcon();
       }
 
       async private Task onStopTimer(bool send)
       {
-         notifyIcon.Icon = Properties.Resources.BlueAppIcon;
-
          if (!isTrackingTime())
          {
             return;
@@ -831,6 +829,8 @@ namespace mrHelper.App.Forms
 
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(isMergeRequestSelected ? getMergeRequestKey().Value : new Nullable<MergeRequestKey>());
+
+         updateTrayIcon();
       }
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)

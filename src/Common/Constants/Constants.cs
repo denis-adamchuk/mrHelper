@@ -12,6 +12,7 @@ namespace mrHelper.Common.Constants
       public static string MainWindowCaption  = "Merge Request Helper";
       public static string NewDiscussionCaption = "Create New Discussion";
 
+      public static string IconSchemeFileName = "icons.json";
       public static string ProjectListFileName = "projects.json";
 
       public static string TimeStampFilenameFormat = "yyyy_MM_dd_HHmmss";

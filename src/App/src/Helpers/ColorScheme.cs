@@ -34,20 +34,7 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
-         string json = System.IO.File.ReadAllText(filename);
-
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-
-         Dictionary<string, object> colors;
-         try
-         {
-            colors = (Dictionary<string, object>)serializer.DeserializeObject(json);
-         }
-         catch (Exception) // whatever JSON exception
-         {
-            throw;
-         }
-
+         Dictionary<string, object> colors = Tools.LoadDictFromFile(filename);
          foreach (var record in colors)
          {
             string[] rgbs = record.Value.ToString().Split(',');

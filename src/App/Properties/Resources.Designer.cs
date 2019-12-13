@@ -63,9 +63,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon BlueAppIcon {
+        internal static System.Drawing.Icon DefaultAppIcon {
             get {
-                object obj = ResourceManager.GetObject("BlueAppIcon", resourceCulture);
+                object obj = ResourceManager.GetObject("DefaultAppIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -105,16 +105,6 @@ namespace mrHelper.App.Properties {
         internal static string DiscussionNoteCSS {
             get {
                 return ResourceManager.GetString("DiscussionNoteCSS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon GreenAppIcon {
-            get {
-                object obj = ResourceManager.GetObject("GreenAppIcon", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
             }
         }
         

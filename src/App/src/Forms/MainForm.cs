@@ -100,6 +100,7 @@ namespace mrHelper.App.Forms
 
       private List<ICommand> _customCommands;
       private ColorScheme _colorScheme;
+      private Dictionary<string, string> _iconScheme;
 
       private string _newVersionFilePath;
       private readonly System.Windows.Forms.Timer _checkForUpdatesTimer = new System.Windows.Forms.Timer

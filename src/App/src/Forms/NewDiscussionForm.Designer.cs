@@ -136,7 +136,7 @@
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.textBoxDiscussionBody);
-         this.Icon = global::mrHelper.App.Properties.Resources.BlueAppIcon;
+         this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
          this.MinimumSize = new System.Drawing.Size(900, 303);

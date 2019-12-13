@@ -394,6 +394,24 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void initializeIconScheme()
+      {
+         if (!System.IO.File.Exists(Common.Constants.Constants.IconSchemeFileName))
+         {
+            return;
+         }
+
+         try
+         {
+            _iconScheme = Tools.LoadDictFromFile(Common.Constants.Constants.IconSchemeFileName).ToDictionary(
+               item => item.Key, item => item.Value.ToString());
+         }
+         catch (Exception ex) // whatever de-deserialization exception
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load icon scheme");
+         }
+      }
+
       private void disableListView(ListView listView, bool clear)
       {
          listView.Enabled = false;
@@ -818,6 +836,8 @@ namespace mrHelper.App.Forms
 
          recalcRowHeightForMergeRequestListView(listViewMergeRequests);
          listViewMergeRequests.Invalidate();
+
+         updateTrayIcon();
       }
 
       private void addListViewMergeRequestItem(MergeRequestKey mrk)
@@ -1025,6 +1045,52 @@ namespace mrHelper.App.Forms
          });
 
          return true;
+      }
+
+      private void updateTrayIcon()
+      {
+         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+         if (_iconScheme == null || _iconScheme.Count == 0)
+         {
+            return;
+         }
+
+         Action<string> loadNotifyIconFromFile =
+            (filename) =>
+         {
+            try
+            {
+               notifyIcon.Icon = new Icon(filename);
+            }
+            catch (ArgumentException ex)
+            {
+               ExceptionHandlers.Handle(ex, String.Format("Cannot create an icon from file \"{0}\"", filename));
+            }
+         };
+
+         if (isTrackingTime())
+         {
+            if (_iconScheme.ContainsKey("Icon_Tracking"))
+            {
+               loadNotifyIconFromFile(_iconScheme["Icon_Tracking"]);
+            };
+            return;
+         }
+
+         foreach (KeyValuePair<string, string> nameToFilename in _iconScheme)
+         {
+            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
+            if (listViewMergeRequests.Items
+               .Cast<ListViewItem>()
+               .Select(x => x.Tag)
+               .Cast<FullMergeRequestKey>()
+               .Select(x => x.MergeRequest)
+               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Icon_{{Label:{0}}}", y))))
+            {
+               loadNotifyIconFromFile(nameToFilename.Value);
+               break;
+            }
+         }
       }
    }
 }

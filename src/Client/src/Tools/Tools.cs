@@ -33,6 +33,25 @@ namespace mrHelper.Client.Tools
 
          return items;
       }
+
+      static public Dictionary<string, object> LoadDictFromFile(string filename)
+      {
+         string json = System.IO.File.ReadAllText(filename);
+
+         JavaScriptSerializer serializer = new JavaScriptSerializer();
+
+         Dictionary<string, object> items;
+         try
+         {
+            items = (Dictionary<string, object>)serializer.DeserializeObject(json);
+         }
+         catch (Exception) // whatever JSON exception
+         {
+            throw;
+         }
+
+         return items;
+      }
    }
 }
 
