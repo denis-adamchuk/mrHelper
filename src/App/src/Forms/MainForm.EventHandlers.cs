@@ -243,36 +243,43 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
 
-         e.DrawBackground();
+         //e.DrawBackground();
 
          bool isSelected = e.Item.Selected;
-         fillRectangle(e, getMergeRequestColor(fmk.MergeRequest), isSelected);
+         fillRectangle(e, getMergeRequestColor(fmk.MergeRequest, Color.Transparent), isSelected);
 
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
 
+         StringFormat format =
+            new StringFormat
+            {
+               Trimming = StringTrimming.EllipsisCharacter,
+               FormatFlags = StringFormatFlags.NoWrap
+            };
+
          if (isClickable)
          {
             using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
             {
                Brush brush = Brushes.Blue;
-               e.Graphics.DrawString(text, font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
+               e.Graphics.DrawString(text, font, brush, e.Bounds, format);
             }
          }
          else
          {
             if (isSelected && e.ColumnIndex == 3)
             {
-               using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest)))
+               using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest, SystemColors.Window)))
                {
-                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, new PointF(e.Bounds.X, e.Bounds.Y));
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, e.Bounds, format);
                }
             }
             else
             {
-               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, new PointF(e.Bounds.X, e.Bounds.Y));
+               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, e.Bounds, format);
             }
          }
       }
@@ -290,7 +297,6 @@ namespace mrHelper.App.Forms
          bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
          listView.Cursor = clickable ? Cursors.Hand : Cursors.Default;
       }
-
 
       private void ListViewMergeRequests_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
       {
@@ -914,6 +920,16 @@ namespace mrHelper.App.Forms
                   };
                });
          }
+      }
+
+      private void comboBoxThemes_SelectionChangeCommitted(object sender, EventArgs e)
+      {
+         if (comboBoxThemes.SelectedItem == null)
+         {
+            return;
+         }
+
+         applyTheme(comboBoxThemes.SelectedItem.ToString());
       }
    }
 }

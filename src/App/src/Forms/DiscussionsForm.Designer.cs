@@ -32,7 +32,19 @@
       private void InitializeComponent()
       {
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DiscussionsForm));
+         this.pictureBox1 = new System.Windows.Forms.PictureBox();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
          this.SuspendLayout();
+         // 
+         // pictureBox1
+         // 
+         this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.pictureBox1.Location = new System.Drawing.Point(854, 12);
+         this.pictureBox1.Name = "pictureBox1";
+         this.pictureBox1.Size = new System.Drawing.Size(487, 284);
+         this.pictureBox1.TabIndex = 0;
+         this.pictureBox1.TabStop = false;
+         this.pictureBox1.Visible = false;
          // 
          // DiscussionsForm
          // 
@@ -40,18 +52,21 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
          this.ClientSize = new System.Drawing.Size(1353, 456);
-         this.Icon = Properties.Resources.DefaultAppIcon;
+         this.Controls.Add(this.pictureBox1);
+         this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.KeyPreview = true;
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
          this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
          this.Layout += new System.Windows.Forms.LayoutEventHandler(this.DiscussionsForm_Layout);
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.ResumeLayout(false);
 
       }
 
       #endregion
 
+      private System.Windows.Forms.PictureBox pictureBox1;
    }
 }

@@ -474,37 +474,37 @@ namespace mrHelper.App.Forms
 
       private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
       {
-         richTextBoxMergeRequestDescription.Text =
-            fmk.HasValue ? getMergeRequestDescriptionHtmlText(fmk.Value) : String.Empty;
+         richTextBoxMergeRequestDescription.Text = getMergeRequestDescriptionHtmlText(fmk);
          richTextBoxMergeRequestDescription.Update();
          linkLabelConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
       }
 
-      private string getMergeRequestDescriptionHtmlText(FullMergeRequestKey fmk)
+      private string getMergeRequestDescriptionHtmlText(FullMergeRequestKey? fmk)
       {
-         string css = mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
-
          string commonBegin = string.Format(@"
             <html>
                <head>
-                  <style>{0}</style>
                </head>
                <body>
-                  <div>", css);
+                  <div>");
 
          string commonEnd = @"
                   </div>
                </body>
             </html>";
 
-         string htmlbody =
-            System.Net.WebUtility.HtmlDecode(
-               Markdig.Markdown.ToHtml(
-                  System.Net.WebUtility.HtmlEncode(fmk.MergeRequest.Description),
-                     _mergeRequestDescriptionMarkdownPipeline));
+         string htmlbody = String.Empty;
+         if (fmk.HasValue)
+         {
+            htmlbody =
+               System.Net.WebUtility.HtmlDecode(
+                  Markdig.Markdown.ToHtml(
+                     System.Net.WebUtility.HtmlEncode(fmk.Value.MergeRequest.Description),
+                        _mergeRequestDescriptionMarkdownPipeline));
 
-         htmlbody = htmlbody.Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/{1}/uploads/",
-            getHostWithPrefix(fmk.ProjectKey.HostName), fmk.ProjectKey.ProjectName));
+            htmlbody = htmlbody.Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/{1}/uploads/",
+               getHostWithPrefix(fmk.Value.ProjectKey.HostName), fmk.Value.ProjectKey.ProjectName));
+         }
 
          return commonBegin + htmlbody + commonEnd;
       }
@@ -746,7 +746,7 @@ namespace mrHelper.App.Forms
          return _timeTracker != null;
       }
 
-      private System.Drawing.Color getMergeRequestColor(MergeRequest mergeRequest)
+      private System.Drawing.Color getMergeRequestColor(MergeRequest mergeRequest, Color defaultColor)
       {
          foreach (KeyValuePair<string, Color> color in _colorScheme)
          {
@@ -767,7 +767,7 @@ namespace mrHelper.App.Forms
                }
             }
          }
-         return SystemColors.Window;
+         return defaultColor;
       }
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
@@ -1091,6 +1091,34 @@ namespace mrHelper.App.Forms
                break;
             }
          }
+      }
+
+      private void applyTheme(string theme)
+      {
+         if (theme == "New Year 2020")
+         {
+            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.PleaseInspect;
+            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            pictureBox1.Visible = true;
+            pictureBox2.BackgroundImage = mrHelper.App.Properties.Resources.Tree;
+            pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            pictureBox2.Visible = true;
+            listViewMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
+            listViewMergeRequests.BackgroundImageTiled = true;
+            richTextBoxMergeRequestDescription.BaseStylesheet =
+                 mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS
+               + mrHelper.App.Properties.Resources.NewYear2020_CSS;
+         }
+         else
+         {
+            pictureBox1.Visible = false;
+            pictureBox2.Visible = false;
+            listViewMergeRequests.BackgroundImage = null;
+            richTextBoxMergeRequestDescription.BaseStylesheet =
+               mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
+         }
+
+         Program.Settings.VisualThemeName = theme;
       }
    }
 }

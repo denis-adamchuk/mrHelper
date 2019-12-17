@@ -36,6 +36,8 @@
          this.labelContext = new System.Windows.Forms.Label();
          this.labelDiscussionBody = new System.Windows.Forms.Label();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
+         this.pictureBox1 = new System.Windows.Forms.PictureBox();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
          this.SuspendLayout();
          // 
          // textBoxDiscussionBody
@@ -122,6 +124,16 @@
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
+         // pictureBox1
+         // 
+         this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.pictureBox1.Location = new System.Drawing.Point(748, 47);
+         this.pictureBox1.Name = "pictureBox1";
+         this.pictureBox1.Size = new System.Drawing.Size(124, 125);
+         this.pictureBox1.TabIndex = 10;
+         this.pictureBox1.TabStop = false;
+         this.pictureBox1.Visible = false;
+         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -136,6 +148,7 @@
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.textBoxDiscussionBody);
+         this.Controls.Add(this.pictureBox1);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
@@ -144,6 +157,7 @@
          this.Text = "Create New Discussion";
          this.TopMost = true;
          this.Shown += new System.EventHandler(this.NewDiscussionForm_Shown);
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -160,5 +174,6 @@
       private System.Windows.Forms.Label labelDiscussionBody;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanel = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
-   }
+        private System.Windows.Forms.PictureBox pictureBox1;
+    }
 }

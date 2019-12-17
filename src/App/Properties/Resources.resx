@@ -118,13 +118,34 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Balls" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ny2020\balls.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="DefaultAppIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\gitlab.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DiscussionNoteCSS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\discussion-note.css;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="HappyNY2020" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ny2020\happy_ny2002.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="MergeRequestDescriptionCSS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\merge-request-description.css;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="NewYear2020_CSS" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\ny2020\ny2020-theme.css;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="Penguin" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ny2020\penguin.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PleaseInspect" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ny2020\please_inspect.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SnowflakeBg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ny2020\snowflake-bg.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Tree" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ny2020\tree.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

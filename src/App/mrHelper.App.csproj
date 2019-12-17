@@ -61,6 +61,11 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\DiscussionActionsPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -193,14 +198,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -254,10 +254,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\ny2020\balls.png" />
+    <Content Include="Resources\ny2020\happy_ny2002.png" />
+    <Content Include="Resources\ny2020\ny2020-theme.css" />
+    <Content Include="Resources\ny2020\penguin.png" />
+    <Content Include="Resources\ny2020\please_inspect.png" />
+    <Content Include="Resources\ny2020\snowflake-bg.png" />
+    <Content Include="Resources\ny2020\tree.gif" />
     <None Include="Resources\gitlab.ico" />
     <Content Include="gitlab.ico" />
     <Content Include="Resources\merge-request-description.css" />
     <Content Include="Resources\discussion-note.css" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

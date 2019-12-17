@@ -28,6 +28,24 @@ namespace mrHelper.App.Forms
          this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
+
+         applyTheme(Program.Settings.VisualThemeName);
+      }
+
+      private void applyTheme(string theme)
+      {
+         if (theme == "New Year 2020")
+         {
+            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.Penguin;
+            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            pictureBox1.Visible = true;
+            htmlPanel.Width = 730;
+         }
+         else
+         {
+            pictureBox1.Visible = false;
+            htmlPanel.Width = 860;
+         }
       }
 
       public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }

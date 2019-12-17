@@ -19,7 +19,7 @@ namespace mrHelper.App.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,6 +57,16 @@ namespace mrHelper.App.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Balls {
+            get {
+                object obj = ResourceManager.GetObject("Balls", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -109,6 +119,16 @@ namespace mrHelper.App.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap HappyNY2020 {
+            get {
+                object obj = ResourceManager.GetObject("HappyNY2020", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to body {
         ///   width: 100%;
         ///   margin: 0;
@@ -143,6 +163,64 @@ namespace mrHelper.App.Properties {
         internal static string MergeRequestDescriptionCSS {
             get {
                 return ResourceManager.GetString("MergeRequestDescriptionCSS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to @import url(&apos;ny2020-theme.css&apos;);
+        ///body {
+        ///  background-image: url(&apos;balls.png&apos;);
+        ///  background-repeat: repeat-x;
+        ///  background-attachment: fixed;
+        ///  background-position: 0 0;
+        ///  padding-top: 50px;
+        ///}
+        ///
+        ///.
+        /// </summary>
+        internal static string NewYear2020_CSS {
+            get {
+                return ResourceManager.GetString("NewYear2020_CSS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Penguin {
+            get {
+                object obj = ResourceManager.GetObject("Penguin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PleaseInspect {
+            get {
+                object obj = ResourceManager.GetObject("PleaseInspect", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SnowflakeBg {
+            get {
+                object obj = ResourceManager.GetObject("SnowflakeBg", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Tree {
+            get {
+                object obj = ResourceManager.GetObject("Tree", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

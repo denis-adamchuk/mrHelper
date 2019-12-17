@@ -109,9 +109,25 @@ namespace mrHelper.App.Forms
          Controls.Add(SearchPanel);
          Controls.Add(SortPanel);
 
+         applyTheme(Program.Settings.VisualThemeName);
+
          if (!renderDiscussions(discussions, false))
          {
             throw new NoDiscussionsToShow();
+         }
+      }
+
+      private void applyTheme(string theme)
+      {
+         if (theme == "New Year 2020")
+         {
+            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.HappyNY2020;
+            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            pictureBox1.Visible = true;
+         }
+         else
+         {
+            pictureBox1.Visible = false;
          }
       }
 

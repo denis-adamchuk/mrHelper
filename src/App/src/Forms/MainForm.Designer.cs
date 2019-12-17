@@ -64,6 +64,7 @@ namespace mrHelper.App.Forms
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
          this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
+         this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
          this.checkBoxShowMyActivity = new System.Windows.Forms.CheckBox();
          this.checkBoxShowKeywords = new System.Windows.Forms.CheckBox();
          this.checkBoxShowOnMention = new System.Windows.Forms.CheckBox();
@@ -72,6 +73,8 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
          this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.comboBoxThemes = new System.Windows.Forms.ComboBox();
+         this.labelVisualTheme = new System.Windows.Forms.Label();
          this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
          this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelDepth = new System.Windows.Forms.Label();
@@ -97,6 +100,8 @@ namespace mrHelper.App.Forms
          this.groupBox2 = new System.Windows.Forms.GroupBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
          this.richTextBoxMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
+         this.pictureBox2 = new System.Windows.Forms.PictureBox();
+         this.pictureBox1 = new System.Windows.Forms.PictureBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
          this.labelTimeTrackingTrackedTime = new System.Windows.Forms.Label();
@@ -114,7 +119,6 @@ namespace mrHelper.App.Forms
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.panel3 = new System.Windows.Forms.Panel();
-         this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -134,6 +138,8 @@ namespace mrHelper.App.Forms
          this.splitContainer2.Panel2.SuspendLayout();
          this.splitContainer2.SuspendLayout();
          this.groupBox2.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
          this.groupBoxTimeTracking.SuspendLayout();
          this.panel1.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
@@ -247,7 +253,7 @@ namespace mrHelper.App.Forms
             "2",
             "3",
             "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 47);
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(116, 79);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
          this.comboBoxDCDepth.TabIndex = 7;
@@ -452,6 +458,17 @@ namespace mrHelper.App.Forms
          this.groupBoxNotifications.TabStop = false;
          this.groupBoxNotifications.Text = "Notifications";
          // 
+         // checkBoxShowServiceNotifications
+         // 
+         this.checkBoxShowServiceNotifications.AutoSize = true;
+         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(234, 106);
+         this.checkBoxShowServiceNotifications.Name = "checkBoxShowServiceNotifications";
+         this.checkBoxShowServiceNotifications.Size = new System.Drawing.Size(149, 17);
+         this.checkBoxShowServiceNotifications.TabIndex = 17;
+         this.checkBoxShowServiceNotifications.Text = "Show service notifications";
+         this.checkBoxShowServiceNotifications.UseVisualStyleBackColor = true;
+         this.checkBoxShowServiceNotifications.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
+         // 
          // checkBoxShowMyActivity
          // 
          this.checkBoxShowMyActivity.AutoSize = true;
@@ -531,6 +548,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.comboBoxThemes);
+         this.groupBoxOther.Controls.Add(this.labelVisualTheme);
          this.groupBoxOther.Controls.Add(this.comboBoxColorSchemes);
          this.groupBoxOther.Controls.Add(this.labelColorScheme);
          this.groupBoxOther.Controls.Add(this.labelDepth);
@@ -538,18 +557,37 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(525, 81);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(277, 108);
+         this.groupBoxOther.Size = new System.Drawing.Size(277, 135);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // comboBoxThemes
+         // 
+         this.comboBoxThemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxThemes.FormattingEnabled = true;
+         this.comboBoxThemes.Location = new System.Drawing.Point(83, 41);
+         this.comboBoxThemes.Name = "comboBoxThemes";
+         this.comboBoxThemes.Size = new System.Drawing.Size(182, 21);
+         this.comboBoxThemes.TabIndex = 10;
+         this.comboBoxThemes.SelectionChangeCommitted += new System.EventHandler(this.comboBoxThemes_SelectionChangeCommitted);
+         // 
+         // labelVisualTheme
+         // 
+         this.labelVisualTheme.AutoSize = true;
+         this.labelVisualTheme.Location = new System.Drawing.Point(6, 47);
+         this.labelVisualTheme.Name = "labelVisualTheme";
+         this.labelVisualTheme.Size = new System.Drawing.Size(40, 13);
+         this.labelVisualTheme.TabIndex = 9;
+         this.labelVisualTheme.Text = "Theme";
          // 
          // comboBoxColorSchemes
          // 
          this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxColorSchemes.FormattingEnabled = true;
-         this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 13);
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(83, 13);
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
-         this.comboBoxColorSchemes.Size = new System.Drawing.Size(159, 21);
+         this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
          this.comboBoxColorSchemes.TabIndex = 6;
          this.comboBoxColorSchemes.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxColorSchemes_SelectionChangeCommited);
          // 
@@ -565,7 +603,7 @@ namespace mrHelper.App.Forms
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(6, 47);
+         this.labelDepth.Location = new System.Drawing.Point(6, 82);
          this.labelDepth.Name = "labelDepth";
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
@@ -574,7 +612,7 @@ namespace mrHelper.App.Forms
          // checkBoxMinimizeOnClose
          // 
          this.checkBoxMinimizeOnClose.AutoSize = true;
-         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(9, 74);
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 112);
          this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
          this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
          this.checkBoxMinimizeOnClose.TabIndex = 8;
@@ -785,6 +823,8 @@ namespace mrHelper.App.Forms
          // 
          // splitContainer2.Panel2
          // 
+         this.splitContainer2.Panel2.Controls.Add(this.pictureBox2);
+         this.splitContainer2.Panel2.Controls.Add(this.pictureBox1);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxTimeTracking);
          this.splitContainer2.Panel2.Controls.Add(this.panel1);
          this.splitContainer2.Panel2.Controls.Add(this.groupBox3);
@@ -840,6 +880,26 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.TabIndex = 2;
          this.richTextBoxMergeRequestDescription.TabStop = false;
          this.richTextBoxMergeRequestDescription.Text = "Merge Request Description in HTML format";
+         // 
+         // pictureBox2
+         // 
+         this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Right;
+         this.pictureBox2.Location = new System.Drawing.Point(624, 242);
+         this.pictureBox2.Name = "pictureBox2";
+         this.pictureBox2.Size = new System.Drawing.Size(286, 238);
+         this.pictureBox2.TabIndex = 8;
+         this.pictureBox2.TabStop = false;
+         this.pictureBox2.Visible = false;
+         // 
+         // pictureBox1
+         // 
+         this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Left;
+         this.pictureBox1.Location = new System.Drawing.Point(0, 242);
+         this.pictureBox1.Name = "pictureBox1";
+         this.pictureBox1.Size = new System.Drawing.Size(315, 238);
+         this.pictureBox1.TabIndex = 7;
+         this.pictureBox1.TabStop = false;
+         this.pictureBox1.Visible = false;
          // 
          // groupBoxTimeTracking
          // 
@@ -1043,17 +1103,6 @@ namespace mrHelper.App.Forms
          this.panel3.Size = new System.Drawing.Size(910, 34);
          this.panel3.TabIndex = 6;
          // 
-         // checkBoxShowServiceNotifications
-         // 
-         this.checkBoxShowServiceNotifications.AutoSize = true;
-         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(234, 106);
-         this.checkBoxShowServiceNotifications.Name = "checkBoxShowServiceNotifications";
-         this.checkBoxShowServiceNotifications.Size = new System.Drawing.Size(149, 17);
-         this.checkBoxShowServiceNotifications.TabIndex = 17;
-         this.checkBoxShowServiceNotifications.Text = "Show service notifications";
-         this.checkBoxShowServiceNotifications.UseVisualStyleBackColor = true;
-         this.checkBoxShowServiceNotifications.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1089,6 +1138,8 @@ namespace mrHelper.App.Forms
          this.splitContainer2.ResumeLayout(false);
          this.groupBox2.ResumeLayout(false);
          this.groupBox2.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxTimeTracking.PerformLayout();
          this.panel1.ResumeLayout(false);
@@ -1183,6 +1234,10 @@ namespace mrHelper.App.Forms
       private SelectionPreservingComboBox comboBoxRightCommit;
       private SelectionPreservingComboBox comboBoxLeftCommit;
       private System.Windows.Forms.CheckBox checkBoxShowServiceNotifications;
+      private System.Windows.Forms.PictureBox pictureBox1;
+      private System.Windows.Forms.PictureBox pictureBox2;
+      private System.Windows.Forms.ComboBox comboBoxThemes;
+      private System.Windows.Forms.Label labelVisualTheme;
    }
 }
 

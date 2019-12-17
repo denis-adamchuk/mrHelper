@@ -160,6 +160,29 @@ namespace mrHelper.App.Forms
             }
          }
 
+         comboBoxThemes.Items.Add("Default");
+         comboBoxThemes.Items.Add("New Year 2020");
+
+         string selectedTheme = null;
+         foreach (string theme in comboBoxThemes.Items.Cast<string>())
+         {
+            if (theme == Program.Settings.VisualThemeName)
+            {
+               selectedTheme = theme;
+            }
+         }
+
+         if (selectedTheme != null)
+         {
+            comboBoxThemes.SelectedItem = selectedTheme;
+         }
+         else
+         {
+            comboBoxThemes.SelectedIndex = 0;
+         }
+
+         applyTheme(comboBoxThemes.SelectedItem.ToString());
+
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 

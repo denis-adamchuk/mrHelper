@@ -81,6 +81,9 @@ namespace mrHelper.Client.Tools
       private static readonly string RightPaneSplitterDistanceKeyName      = "RPSplitterDistance";
       private static readonly int    RightPaneSplitterDistanceDefaultValue = 0;
 
+      private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
+      private static readonly string VisualThemeNameDefaultValue  = "New Year 2020";
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       public UserDefinedSettings(bool changesAllowed)
@@ -178,6 +181,12 @@ namespace mrHelper.Client.Tools
       {
          get { return getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue); }
          set { setValue(ColorSchemeFileNameKeyName, value); }
+      }
+
+      public string VisualThemeName
+      {
+         get { return getValue(VisualThemeNameKeyName, VisualThemeNameDefaultValue); }
+         set { setValue(VisualThemeNameKeyName, value); }
       }
 
       public int LogFilesToKeep
