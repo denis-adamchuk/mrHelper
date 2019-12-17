@@ -124,6 +124,7 @@ namespace mrHelper.App.Forms
             pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.HappyNY2020;
             pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             pictureBox1.Visible = true;
+            pictureBox1.SendToBack();
          }
          else
          {
