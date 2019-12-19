@@ -59,22 +59,11 @@ namespace mrHelper.Client.Workflow
 
          PreLoadAllMergeRequests?.Invoke();
 
-         List<Project> projects = await loadHostProjectsAsync(hostname);
+         List<Project> projects = loadHostProjects(hostname);
          if (projects == null)
          {
             return false; // cancelled
          }
-
-#if DEBUG
-         List<Project> enabledProjects = getEnabledProjects(hostname);
-         projects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
-         enabledProjects.Sort((x, y) => x.Id == y.Id ? 0 : (x.Id < y.Id ? -1 : 1));
-         Debug.Assert(projects.Count == enabledProjects.Count);
-         for (int iProject = 0; iProject < Math.Min(projects.Count, enabledProjects.Count); ++iProject)
-         {
-            Debug.Assert(projects[iProject].Id == enabledProjects[iProject].Id);
-         }
-#endif
 
          foreach (Project project in projects)
          {
@@ -131,7 +120,6 @@ namespace mrHelper.Client.Workflow
 
       public event Action<string> PreLoadHostProjects;
       public event Action<string, List<Project>> PostLoadHostProjects;
-      public event Action FailedLoadHostProjects;
 
       public event Action PreLoadAllMergeRequests;
 
@@ -197,8 +185,8 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled loading current user from host {0}", hostName);
-            string errorMessage = String.Format("Cannot load user from host {0}", hostName);
+            string cancelMessage = String.Format("Cancelled loading current user from host \"{0}\"", hostName);
+            string errorMessage = String.Format("Cannot load user from host \"{0}\"", hostName);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCurrentUser);
             return false;
          }
@@ -207,28 +195,16 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      async private Task<List<Project>> loadHostProjectsAsync(string hostName)
+      private List<Project> loadHostProjects(string hostName)
       {
          PreLoadHostProjects?.Invoke(hostName);
 
          List<Project> enabledProjects = getEnabledProjects(hostName);
          bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         Debug.Assert(hasEnabledProjects); // guaranteed by checkParameters()
 
-         List<Project> projects;
-         try
-         {
-            projects = hasEnabledProjects ?  enabledProjects : await _operator.GetProjectsAsync(_settings.ShowPublicOnly);
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading projects from host {0}", hostName);
-            string errorMessage = String.Format("Cannot load projects from host {0}", hostName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadHostProjects);
-            return null;
-         }
-
-         PostLoadHostProjects?.Invoke(hostName, projects);
-         return projects;
+         PostLoadHostProjects?.Invoke(hostName, enabledProjects);
+         return enabledProjects;
       }
 
       async private Task<List<MergeRequest>> loadProjectMergeRequestsAsync(string hostname, Project project)
@@ -244,8 +220,8 @@ namespace mrHelper.Client.Workflow
          }
          catch (OperatorException ex)
          {
-            string cancelMessage = String.Format("Cancelled loading project merge requests from {0}", projectName);
-            string errorMessage = String.Format("Cannot load project {0}", projectName);
+            string cancelMessage = String.Format("Cancelled loading merge requests for project \"{0}\"", projectName);
+            string errorMessage = String.Format("Cannot load project \"{0}\"", projectName);
             handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
             return null;
          }
@@ -344,34 +320,12 @@ namespace mrHelper.Client.Workflow
 
       private List<Project> getEnabledProjects(string hostname)
       {
-         // Check if file exists. If it does not, it is not an error.
-         if (System.IO.File.Exists(mrHelper.Common.Constants.Constants.ProjectListFileName))
-         {
-            try
-            {
-               List<HostInProjectsFile> hosts =
-                  Tools.Tools.LoadListFromFile<HostInProjectsFile>(mrHelper.Common.Constants.Constants.ProjectListFileName);
-               return hosts.FirstOrDefault((x) => x.Name == hostname).Projects;
-            }
-            catch (Exception ex) // whatever de-serialization exception
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load projects from file");
-            }
-         }
-
-         return null;
+         return ConfigurationHelper.GetProjectsForHost(hostname, _settings)
+            ?.Select(x => new Project{ Path_With_Namespace = x }).ToList() ?? null;
       }
 
       private readonly UserDefinedSettings _settings;
       private WorkflowDataOperator _operator;
-
-#pragma warning disable 0649
-      private struct HostInProjectsFile
-      {
-         public string Name;
-         public List<Project> Projects;
-      }
-#pragma warning restore 0649
    }
 }
 

@@ -107,8 +107,7 @@ namespace mrHelper.App.Forms
          {
             if (ex is NoProjectsException)
             {
-               reportErrorOnConnect(url, String.Format("Check {0} file. ",
-                  mrHelper.Common.Constants.Constants.ProjectListFileName), ex, true);
+               reportErrorOnConnect(url, "URL contains a project that is missing in settings. ", ex, true);
             }
             else if (ex is WorkflowException)
             {
@@ -199,15 +198,14 @@ namespace mrHelper.App.Forms
             HostName = mergeRequestUrl.Host,
             ProjectName = mergeRequestUrl.Project
          };
+
          if (_mergeRequestManager.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
          {
             unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
          }
          else
          {
-            reportErrorOnConnect(url, String.Format(
-               "Current version supports connection to URL for Open merge requests of projects listed in {0} only. ",
-               mrHelper.Common.Constants.Constants.ProjectListFileName), null, false);
+            reportErrorOnConnect(url, "Current version supports Open merge requests only", null, false);
          }
       }
    }

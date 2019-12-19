@@ -84,6 +84,9 @@ namespace mrHelper.Client.Tools
       private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
       private static readonly string VisualThemeNameDefaultValue  = "New Year 2020";
 
+      private static readonly string SelectedProjectsKeyName      = "SelectedProjects";
+      private static readonly string SelectedProjectsDefaultValue = String.Empty;
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       public UserDefinedSettings(bool changesAllowed)
@@ -348,6 +351,23 @@ namespace mrHelper.Client.Tools
                   out bool result) ? result : CacheRevisionsDefaultValue;
          }
          set { setValue(CacheRevisionsKeyName, value.ToString()); }
+      }
+
+      public bool HasSelectedProjects()
+      {
+         return _config.AppSettings.Settings[SelectedProjectsKeyName] != null;
+      }
+
+      public Dictionary<string, string> SelectedProjects
+      {
+         get
+         {
+            return stringToDictionary(getValue(SelectedProjectsKeyName, SelectedProjectsDefaultValue));
+         }
+         set
+         {
+            setValue(SelectedProjectsKeyName, dictionaryToString(value));
+         }
       }
 
       private string getValue(string key, string defaultValue)

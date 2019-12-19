@@ -24,7 +24,7 @@ namespace mrHelper.Client.Git
       {
          if (!Directory.Exists(parentFolder))
          {
-            throw new ArgumentException("Bad \"" + parentFolder + "\" argument");
+            throw new ArgumentException("Bad parent folder \"" + parentFolder + "\"");
          }
 
          ParentFolder = parentFolder;
@@ -41,7 +41,13 @@ namespace mrHelper.Client.Git
       /// </summary>
       public GitClient GetClient(string hostName, string projectName)
       {
-         string path = Path.Combine(ParentFolder, projectName.Split('/')[1]);
+         string[] splitted = projectName.Split('/');
+         if (splitted.Length < 2)
+         {
+            throw new ArgumentException("Bad project name \"" + projectName + "\"");
+         }
+
+         string path = Path.Combine(ParentFolder, splitted[1]);
 
          ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
          if (_clients.ContainsKey(key))

@@ -183,18 +183,18 @@ namespace mrHelper.App.Forms
 
          applyTheme(comboBoxThemes.SelectedItem.ToString());
 
+         if (!Program.Settings.HasSelectedProjects())
+         {
+            setupDefaultProjectList();
+         }
+
+         // TODO Load Program.Settings.SelectedProjects into UI
+
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
 
       private bool integrateInTools()
       {
-         if (!System.IO.File.Exists(Common.Constants.Constants.ProjectListFileName))
-         {
-            MessageBox.Show(String.Format("Cannot find {0} file. Current version cannot run without it.",
-               Common.Constants.Constants.ProjectListFileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
-         }
-
          string gitPath = CommonTools.AppFinder.GetInstallPath(new string[] { "Git version 2" });
          if (String.IsNullOrEmpty(gitPath))
          {
@@ -222,8 +222,8 @@ namespace mrHelper.App.Forms
             if (ex is DiffToolNotInstalledException)
             {
                MessageBox.Show(
-                  "Beyond Compare 3 is not installed. It must be installed at least for the current user. Application cannot start",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  "Beyond Compare 3 is not installed. It must be installed at least for the current user. " +
+                  "Application cannot start", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -383,6 +383,26 @@ namespace mrHelper.App.Forms
             // Update total time column in the table
             listViewMergeRequests.Invalidate();
          };
+      }
+
+      private void setupDefaultProjectList()
+      {
+         // Check if file exists. If it does not, it is not an error.
+         if (!System.IO.File.Exists(mrHelper.Common.Constants.Constants.ProjectListFileName))
+         {
+            return;
+         }
+
+         try
+         {
+            ConfigurationHelper.SetProjects(Tools.LoadListFromFile<ConfigurationHelper.HostInProjectsFile>(
+               mrHelper.Common.Constants.Constants.ProjectListFileName), Program.Settings);
+         }
+         catch (Exception ex) // whatever de-serialization exception
+         {
+            ExceptionHandlers.Handle(ex, "Cannot load projects from file");
+            return;
+         }
       }
    }
 }
