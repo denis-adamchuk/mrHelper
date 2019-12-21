@@ -395,8 +395,9 @@ namespace mrHelper.App.Forms
 
          try
          {
-            ConfigurationHelper.SetupProjects(Tools.LoadListFromFile<ConfigurationHelper.HostInProjectsFile>(
-               mrHelper.Common.Constants.Constants.ProjectListFileName), Program.Settings);
+            ConfigurationHelper.SetupProjects(CommonTools.JsonFileReader.
+               LoadFromFile<List<ConfigurationHelper.HostInProjectsFile>>(
+                  mrHelper.Common.Constants.Constants.ProjectListFileName), Program.Settings);
          }
          catch (Exception ex) // whatever de-serialization exception
          {

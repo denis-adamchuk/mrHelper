@@ -49,7 +49,7 @@ namespace mrHelper.Client.Tools
             .Where(x => x.Name != String.Empty && (x.Projects?.Count ?? 0) > 0)
             .ToDictionary(
                item => item.Name,
-               item => String.Join(",", item.Projects.Select(x => x.Path_With_Namespace + ":true")));
+               item => String.Join(",", item.Projects.Select(x => x.Path_With_Namespace + ":" + bool.TrueString)));
       }
 
       public static void SetProjectsForHost(string host, Tuple<string, bool>[] projects, UserDefinedSettings settings)

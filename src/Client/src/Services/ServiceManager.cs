@@ -19,7 +19,7 @@ namespace mrHelper.Client.Services
          {
             try
             {
-               _services = Tools.Tools.LoadListFromFile<Service>(ServiceListFileName);
+               _services = CommonTools.JsonFileReader.LoadFromFile<List<Service>>(ServiceListFileName);
             }
             catch (Exception ex) // whatever de-serialization exception
             {

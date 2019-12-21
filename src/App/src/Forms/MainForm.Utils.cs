@@ -405,8 +405,10 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _iconScheme = Tools.LoadDictFromFile(Common.Constants.Constants.IconSchemeFileName).ToDictionary(
-               item => item.Key, item => item.Value.ToString());
+            _iconScheme = CommonTools.JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+               Common.Constants.Constants.IconSchemeFileName).ToDictionary(
+                  item => item.Key,
+                  item => item.Value.ToString());
          }
          catch (Exception ex) // whatever de-deserialization exception
          {
