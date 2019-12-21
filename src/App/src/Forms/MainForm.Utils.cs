@@ -532,10 +532,18 @@ namespace mrHelper.App.Forms
 
       private void updateTotalTime(MergeRequestKey? mrk)
       {
+         Action updateTotalTimeLabelPosition = () =>
+         {
+            labelTimeTrackingTrackedTime.Location =
+               new Point(labelTimeTrackingTrackedLabel.Location.X + labelTimeTrackingTrackedLabel.Width,
+                         labelTimeTrackingTrackedTime.Location.Y);
+         };
+
          if (isTrackingTime())
          {
             labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
             buttonEditTime.Enabled = false;
+            updateTotalTimeLabelPosition();
             return;
          }
 
@@ -553,6 +561,8 @@ namespace mrHelper.App.Forms
             buttonEditTime.Enabled = span.HasValue;
          }
 
+         updateTotalTimeLabelPosition();
+
          // Update total time column in the table
          listViewMergeRequests.Invalidate();
       }
@@ -569,7 +579,8 @@ namespace mrHelper.App.Forms
 
       private string convertTotalTimeToText(TimeSpan? span)
       {
-         return !span.HasValue ? "Loading..." : span.Value.ToString(@"hh\:mm\:ss");
+         return !span.HasValue ? "Loading..." :
+            (span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss"));
       }
 
       private void enableMergeRequestActions(bool enabled)
