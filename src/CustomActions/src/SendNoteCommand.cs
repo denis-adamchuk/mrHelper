@@ -10,12 +10,15 @@ namespace mrHelper.CustomActions
 {
    public class SendNoteCommand : ICommand
    {
-      public SendNoteCommand(ICommandCallback callback, string name, string body, string dependency)
+      public SendNoteCommand(ICommandCallback callback, string name, string body, string dependency,
+         bool stopTimer, bool reload)
       {
          _callback = callback;
          _name = name;
          _body = body;
          _dependency = dependency;
+         _stopTimer = stopTimer;
+         _reload = reload;
       }
 
       public string GetName()
@@ -31,6 +34,16 @@ namespace mrHelper.CustomActions
       public string GetDependency()
       {
          return _dependency;
+      }
+
+      public bool GetStopTimer()
+      {
+         return _stopTimer;
+      }
+
+      public bool GetReload()
+      {
+         return _reload;
       }
 
       async public Task Run()
@@ -49,5 +62,7 @@ namespace mrHelper.CustomActions
       private readonly string _name;
       private readonly string _body;
       private readonly string _dependency;
+      private readonly bool _stopTimer;
+      private readonly bool _reload;
    }
 }

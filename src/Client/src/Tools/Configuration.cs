@@ -41,6 +41,9 @@ namespace mrHelper.Client.Tools
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
 
+      private static readonly string OneShotUpdateDelayMsKeyName        = "OneShotUpdateDelayMs";
+      private static readonly int    OneShotUpdateDelayMsDefaultValue   = 20 * 1000; // 20 seconds
+
       private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
       private static readonly bool   CacheRevisionsDefaultValue   = true;
 
@@ -340,6 +343,17 @@ namespace mrHelper.Client.Tools
                   out int result) ? result : AutoUpdatePeriodMsDefaultValue;
          }
          set { setValue(AutoUpdatePeriodMsKeyName, value.ToString()); }
+      }
+
+      public int OneShotUpdateDelayMs
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               OneShotUpdateDelayMsKeyName, OneShotUpdateDelayMsDefaultValue.ToString()),
+                  out int result) ? result : OneShotUpdateDelayMsDefaultValue;
+         }
+         set { setValue(OneShotUpdateDelayMsKeyName, value.ToString()); }
       }
 
       public bool CacheRevisionsInBackground

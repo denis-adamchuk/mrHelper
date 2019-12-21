@@ -61,6 +61,48 @@ namespace mrHelper.Client.MergeRequests
          return new RemoteProjectChecker(mrk, _operator);
       }
 
+      public void RequestOneShotUpdate(MergeRequestKey mrk, int delay)
+      {
+         System.Timers.Timer oneShotTimer = new System.Timers.Timer { Interval = delay };
+         oneShotTimer.AutoReset = false;
+         oneShotTimer.SynchronizingObject = _timer.SynchronizingObject;
+         oneShotTimer.Elapsed +=
+            async (s, e) =>
+         {
+            if (String.IsNullOrEmpty(_hostname) || _projects == null)
+            {
+               Debug.Assert(false);
+               Trace.TraceWarning("[UpdateManager] OneShot Update is cancelled");
+               return;
+            }
+
+            IWorkflowDetails oldDetails = _cache.Details.Clone();
+
+            await loadDataAndUpdateCacheAsync(mrk);
+
+            List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
+               oldDetails, _cache.Details);
+
+            int legitUpdates =
+               updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated) +
+               updates.Count(x => x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated);
+
+            Debug.Assert(legitUpdates == 0 || legitUpdates == 1);
+            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.New) == 0);
+            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated) == 0);
+            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.Closed) == 0);
+
+            Trace.TraceInformation(
+               String.Format(
+                  "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
+                  legitUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+
+            OnUpdate?.Invoke(updates);
+         };
+
+         oneShotTimer.Start();
+      }
+
       /// <summary>
       /// Process a timer event
       /// </summary>
@@ -81,7 +123,8 @@ namespace mrHelper.Client.MergeRequests
             oldDetails, _cache.Details);
 
          Trace.TraceInformation(
-            String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
+            String.Format(
+               "[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
                updates.Count(x => x.UpdateKind == UpdateKind.New),
                updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
                updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
@@ -125,6 +168,15 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
+      async private Task loadDataAndUpdateCacheAsync(MergeRequestKey mrk)
+      {
+         MergeRequest? mergeRequest = await loadMergeRequestAsync(mrk);
+         if (mergeRequest.HasValue)
+         {
+            _cache.UpdateMergeRequest(mrk, mergeRequest.Value);
+         }
+      }
+
       async private Task<List<MergeRequest>> loadMergeRequestsAsync(string hostname, string projectname)
       {
          try
@@ -150,6 +202,22 @@ namespace mrHelper.Client.MergeRequests
          {
             string message = String.Format(
                "[UpdateManager] Cannot load latest version. MRK: HostName={0}, ProjectName={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
+            Trace.TraceError(message);
+         }
+         return null;
+      }
+
+      async private Task<MergeRequest?> loadMergeRequestAsync(MergeRequestKey mrk)
+      {
+         try
+         {
+            return await _operator.GetMergeRequestAsync(mrk);
+         }
+         catch (OperatorException)
+         {
+            string message = String.Format(
+               "[UpdateManager] Cannot load merge request. MRK: HostName={0}, ProjectName={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
             Trace.TraceError(message);
          }

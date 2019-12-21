@@ -66,6 +66,21 @@ namespace mrHelper.Client.MergeRequests
       }
 
       /// <summary>
+      /// Updates a merge request
+      /// </summary>
+      internal void UpdateMergeRequest(MergeRequestKey mrk, MergeRequest mergeRequest)
+      {
+         if (_mergeRequests.ContainsKey(mrk.ProjectKey))
+         {
+            int index = _mergeRequests[mrk.ProjectKey].FindIndex(x => x.IId == mrk.IId);
+            if (index != -1)
+            {
+               _mergeRequests[mrk.ProjectKey][index] = mergeRequest;
+            }
+         }
+      }
+
+      /// <summary>
       /// Remove records from Changes collection
       /// </summary>
       internal void CleanupTimestamps(MergeRequestKey mrk)
