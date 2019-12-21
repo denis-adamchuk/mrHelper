@@ -107,7 +107,7 @@ namespace mrHelper.App.Forms
          {
             if (ex is NoProjectsException)
             {
-               reportErrorOnConnect(url, "URL contains a project that is missing in settings. ", ex, true);
+               reportErrorOnConnect(url, "URL contains a project that is missing or disabled in settings. ", ex, true);
             }
             else if (ex is WorkflowException)
             {

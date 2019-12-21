@@ -1143,13 +1143,9 @@ namespace mrHelper.App.Forms
       {
          listViewProjects.Items.Clear();
 
-         string[] enabledProjects = ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings);
-         if (enabledProjects != null)
-         {
-            enabledProjects
+         ConfigurationHelper.GetEnabledProjectsForHost(getHostName(), Program.Settings)
             .ToList()
             .ForEach(x => listViewProjects.Items.Add(x));
-         }
       }
    }
 }

@@ -94,6 +94,7 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException ex)
          {
+            disableAllUIControls(true);
             ExceptionHandlers.Handle(ex, "Cannot switch host");
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }

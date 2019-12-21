@@ -72,7 +72,7 @@
          this.buttonAddProject.Location = new System.Drawing.Point(230, 12);
          this.buttonAddProject.Name = "buttonAddProject";
          this.buttonAddProject.Size = new System.Drawing.Size(75, 23);
-         this.buttonAddProject.TabIndex = 2;
+         this.buttonAddProject.TabIndex = 1;
          this.buttonAddProject.Text = "Add...";
          this.buttonAddProject.UseVisualStyleBackColor = true;
          this.buttonAddProject.Click += new System.EventHandler(this.buttonAddProject_Click);
@@ -84,7 +84,7 @@
          this.buttonRemoveProject.Location = new System.Drawing.Point(230, 41);
          this.buttonRemoveProject.Name = "buttonRemoveProject";
          this.buttonRemoveProject.Size = new System.Drawing.Size(75, 23);
-         this.buttonRemoveProject.TabIndex = 3;
+         this.buttonRemoveProject.TabIndex = 2;
          this.buttonRemoveProject.Text = "Remove";
          this.buttonRemoveProject.UseVisualStyleBackColor = true;
          this.buttonRemoveProject.Click += new System.EventHandler(this.buttonRemoveProject_Click);
@@ -96,7 +96,7 @@
          this.buttonToggleState.Location = new System.Drawing.Point(230, 70);
          this.buttonToggleState.Name = "buttonToggleState";
          this.buttonToggleState.Size = new System.Drawing.Size(75, 23);
-         this.buttonToggleState.TabIndex = 4;
+         this.buttonToggleState.TabIndex = 3;
          this.buttonToggleState.Text = "Enable";
          this.buttonToggleState.UseVisualStyleBackColor = true;
          this.buttonToggleState.Click += new System.EventHandler(this.buttonToggleState_Click);
@@ -108,7 +108,7 @@
          this.buttonOK.Location = new System.Drawing.Point(230, 196);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
-         this.buttonOK.TabIndex = 5;
+         this.buttonOK.TabIndex = 6;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
@@ -119,7 +119,7 @@
          this.buttonCancel.Location = new System.Drawing.Point(230, 225);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-         this.buttonCancel.TabIndex = 6;
+         this.buttonCancel.TabIndex = 7;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
@@ -130,7 +130,7 @@
          this.buttonUp.Location = new System.Drawing.Point(230, 119);
          this.buttonUp.Name = "buttonUp";
          this.buttonUp.Size = new System.Drawing.Size(75, 23);
-         this.buttonUp.TabIndex = 7;
+         this.buttonUp.TabIndex = 4;
          this.buttonUp.Text = "Up";
          this.buttonUp.UseVisualStyleBackColor = true;
          this.buttonUp.Click += new System.EventHandler(this.buttonUp_Click);
@@ -142,7 +142,7 @@
          this.buttonDown.Location = new System.Drawing.Point(230, 148);
          this.buttonDown.Name = "buttonDown";
          this.buttonDown.Size = new System.Drawing.Size(75, 23);
-         this.buttonDown.TabIndex = 8;
+         this.buttonDown.TabIndex = 5;
          this.buttonDown.Text = "Down";
          this.buttonDown.UseVisualStyleBackColor = true;
          this.buttonDown.Click += new System.EventHandler(this.buttonDown_Click);
@@ -151,6 +151,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(316, 260);
          this.Controls.Add(this.buttonDown);
          this.Controls.Add(this.buttonUp);

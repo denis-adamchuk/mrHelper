@@ -940,10 +940,7 @@ namespace mrHelper.App.Forms
          }
 
          Tuple<string, bool>[] projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
-         if (projects == null || projects.Length == 0)
-         {
-            return;
-         }
+         Debug.Assert(projects != null);
 
          using (EditProjectsForm form = new EditProjectsForm(projects))
          {
@@ -952,7 +949,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            if (projects != form.Projects)
+            if (!projects.SequenceEqual(form.Projects))
             {
                ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
                updateProjectsListView();

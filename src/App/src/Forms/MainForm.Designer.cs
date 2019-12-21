@@ -456,7 +456,7 @@ namespace mrHelper.App.Forms
          this.groupBoxProjects.Size = new System.Drawing.Size(277, 135);
          this.groupBoxProjects.TabIndex = 5;
          this.groupBoxProjects.TabStop = false;
-         this.groupBoxProjects.Text = "Projects";
+         this.groupBoxProjects.Text = "Enabled Projects for Selected Host";
          // 
          // buttonEditProjects
          // 
@@ -918,7 +918,6 @@ namespace mrHelper.App.Forms
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.richTextBoxMergeRequestDescription.AutoScroll = true;
-         this.richTextBoxMergeRequestDescription.AutoScrollMinSize = new System.Drawing.Size(902, 20);
          this.richTextBoxMergeRequestDescription.BackColor = System.Drawing.SystemColors.Window;
          this.richTextBoxMergeRequestDescription.BaseStylesheet = null;
          this.richTextBoxMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -927,7 +926,7 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(904, 241);
          this.richTextBoxMergeRequestDescription.TabIndex = 2;
          this.richTextBoxMergeRequestDescription.TabStop = false;
-         this.richTextBoxMergeRequestDescription.Text = "Merge Request Description in HTML format";
+         this.richTextBoxMergeRequestDescription.Text = null;
          // 
          // pictureBox2
          // 

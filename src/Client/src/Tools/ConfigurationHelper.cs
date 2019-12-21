@@ -1,6 +1,7 @@
 ﻿using GitLabSharp.Entities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace mrHelper.Client.Tools
@@ -51,17 +52,9 @@ namespace mrHelper.Client.Tools
                item => String.Join(",", item.Projects.Select(x => x.Path_With_Namespace + ":true")));
       }
 
-      public static Dictionary<string, Tuple<string, bool>[]> GetAllProjects(UserDefinedSettings settings)
-      {
-         return settings.SelectedProjects
-            .ToDictionary(
-               item => item.Key,
-               item => parseProjectString(item.Value));
-      }
-
       public static void SetProjectsForHost(string host, Tuple<string, bool>[] projects, UserDefinedSettings settings)
       {
-         Dictionary<string, Tuple<string, bool>[]> allProjects = GetAllProjects(settings);
+         Dictionary<string, Tuple<string, bool>[]> allProjects = getAllProjects(settings);
 
          allProjects[host] = projects;
 
@@ -74,25 +67,22 @@ namespace mrHelper.Client.Tools
       {
          if (String.IsNullOrEmpty(host) || !settings.SelectedProjects.ContainsKey(host))
          {
-            return null;
+            return new Tuple<string, bool>[0];
          }
 
          string projectString = settings.SelectedProjects[host];
          return parseProjectString(projectString);
       }
 
-      public static string[] GetEnabledProjects(string host, UserDefinedSettings settings)
+      public static string[] GetEnabledProjectsForHost(string host, UserDefinedSettings settings)
       {
          if (String.IsNullOrEmpty(host))
          {
-            return null;
+            return new string[0];
          }
 
          Tuple<string, bool>[] projects = ConfigurationHelper.GetProjectsForHost(host, settings);
-         if (projects == null || projects.Length == 0)
-         {
-            return null;
-         }
+         Debug.Assert(projects != null);
 
          return projects
             .Where(x => x.Item2)
@@ -100,11 +90,19 @@ namespace mrHelper.Client.Tools
             .ToArray();
       }
 
+      private static Dictionary<string, Tuple<string, bool>[]> getAllProjects(UserDefinedSettings settings)
+      {
+         return settings.SelectedProjects
+            .ToDictionary(
+               item => item.Key,
+               item => parseProjectString(item.Value));
+      }
+
       private static Tuple<string, bool>[] parseProjectString(string projectString)
       {
          if (projectString == String.Empty)
          {
-            return null;
+            return new Tuple<string, bool>[0];
          }
 
          string[] projectsToFlags = projectString.Split(',');
