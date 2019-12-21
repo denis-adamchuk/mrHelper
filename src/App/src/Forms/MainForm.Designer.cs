@@ -63,6 +63,10 @@ namespace mrHelper.App.Forms
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
+         this.groupBoxProjects = new System.Windows.Forms.GroupBox();
+         this.buttonEditProjects = new System.Windows.Forms.Button();
+         this.listViewProjects = new System.Windows.Forms.ListView();
+         this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
          this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
          this.checkBoxShowMyActivity = new System.Windows.Forms.CheckBox();
@@ -123,6 +127,7 @@ namespace mrHelper.App.Forms
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
          this.tabPageSettings.SuspendLayout();
+         this.groupBoxProjects.SuspendLayout();
          this.groupBoxNotifications.SuspendLayout();
          this.groupBoxOther.SuspendLayout();
          this.groupBoxGit.SuspendLayout();
@@ -428,6 +433,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageSettings
          // 
+         this.tabPageSettings.Controls.Add(this.groupBoxProjects);
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
          this.tabPageSettings.Controls.Add(this.groupBoxOther);
          this.tabPageSettings.Controls.Add(this.groupBoxGit);
@@ -440,6 +446,48 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxProjects
+         // 
+         this.groupBoxProjects.Controls.Add(this.buttonEditProjects);
+         this.groupBoxProjects.Controls.Add(this.listViewProjects);
+         this.groupBoxProjects.Location = new System.Drawing.Point(525, 81);
+         this.groupBoxProjects.Name = "groupBoxProjects";
+         this.groupBoxProjects.Size = new System.Drawing.Size(277, 135);
+         this.groupBoxProjects.TabIndex = 5;
+         this.groupBoxProjects.TabStop = false;
+         this.groupBoxProjects.Text = "Projects";
+         // 
+         // buttonEditProjects
+         // 
+         this.buttonEditProjects.Location = new System.Drawing.Point(188, 19);
+         this.buttonEditProjects.Name = "buttonEditProjects";
+         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditProjects.TabIndex = 1;
+         this.buttonEditProjects.Text = "Edit...";
+         this.buttonEditProjects.UseVisualStyleBackColor = true;
+         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
+         // 
+         // listViewProjects
+         // 
+         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderName});
+         this.listViewProjects.FullRowSelect = true;
+         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewProjects.HideSelection = false;
+         this.listViewProjects.Location = new System.Drawing.Point(9, 19);
+         this.listViewProjects.MultiSelect = false;
+         this.listViewProjects.Name = "listViewProjects";
+         this.listViewProjects.ShowGroups = false;
+         this.listViewProjects.Size = new System.Drawing.Size(173, 105);
+         this.listViewProjects.TabIndex = 0;
+         this.listViewProjects.UseCompatibleStateImageBehavior = false;
+         this.listViewProjects.View = System.Windows.Forms.View.Details;
+         // 
+         // columnHeaderName
+         // 
+         this.columnHeaderName.Text = "Name";
+         this.columnHeaderName.Width = 160;
          // 
          // groupBoxNotifications
          // 
@@ -555,7 +603,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.labelDepth);
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
-         this.groupBoxOther.Location = new System.Drawing.Point(525, 81);
+         this.groupBoxOther.Location = new System.Drawing.Point(525, 222);
          this.groupBoxOther.Name = "groupBoxOther";
          this.groupBoxOther.Size = new System.Drawing.Size(277, 135);
          this.groupBoxOther.TabIndex = 2;
@@ -1118,6 +1166,7 @@ namespace mrHelper.App.Forms
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);
          this.tabPageSettings.ResumeLayout(false);
+         this.groupBoxProjects.ResumeLayout(false);
          this.groupBoxNotifications.ResumeLayout(false);
          this.groupBoxNotifications.PerformLayout();
          this.groupBoxOther.ResumeLayout(false);
@@ -1238,6 +1287,10 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.ComboBox comboBoxThemes;
       private System.Windows.Forms.Label labelVisualTheme;
-   }
+      private System.Windows.Forms.GroupBox groupBoxProjects;
+      private System.Windows.Forms.Button buttonEditProjects;
+      private System.Windows.Forms.ListView listViewProjects;
+      private System.Windows.Forms.ColumnHeader columnHeaderName;
+    }
 }
 

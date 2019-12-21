@@ -320,8 +320,14 @@ namespace mrHelper.Client.Workflow
 
       private List<Project> getEnabledProjects(string hostname)
       {
-         return ConfigurationHelper.GetProjectsForHost(hostname, _settings)
-            ?.Select(x => new Project{ Path_With_Namespace = x }).ToList() ?? null;
+         string[] enabledProjects = ConfigurationHelper.GetEnabledProjects(hostname, _settings);
+         if (enabledProjects == null)
+         {
+            return null;
+         }
+
+         return enabledProjects
+            .Select(x => new Project{ Path_With_Namespace = x }).ToList();
       }
 
       private readonly UserDefinedSettings _settings;

@@ -137,6 +137,8 @@ namespace mrHelper.App.Forms
                comboBoxHost.SelectedItem = defaultSelectedItem;
                break;
          }
+
+         onHostSelected();
       }
 
       private bool selectMergeRequest(string projectname, int iid, bool exact)
@@ -281,7 +283,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         var item = new ListViewItem(host);
+         ListViewItem item = new ListViewItem(host);
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
          return true;
@@ -1119,6 +1121,24 @@ namespace mrHelper.App.Forms
          }
 
          Program.Settings.VisualThemeName = theme;
+      }
+
+      private void onHostSelected()
+      {
+         updateProjectsListView();
+      }
+
+      private void updateProjectsListView()
+      {
+         listViewProjects.Items.Clear();
+
+         string[] enabledProjects = ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings);
+         if (enabledProjects != null)
+         {
+            enabledProjects
+            .ToList()
+            .ForEach(x => listViewProjects.Items.Add(x));
+         }
       }
    }
 }

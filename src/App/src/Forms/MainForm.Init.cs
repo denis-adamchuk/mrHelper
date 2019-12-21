@@ -395,7 +395,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            ConfigurationHelper.SetProjects(Tools.LoadListFromFile<ConfigurationHelper.HostInProjectsFile>(
+            ConfigurationHelper.SetupProjects(Tools.LoadListFromFile<ConfigurationHelper.HostInProjectsFile>(
                mrHelper.Common.Constants.Constants.ProjectListFileName), Program.Settings);
          }
          catch (Exception ex) // whatever de-serialization exception
