@@ -69,7 +69,6 @@
     <Compile Include="src\Tools\MergeRequestKey.cs" />
     <Compile Include="src\Tools\OperatorException.cs" />
     <Compile Include="src\Tools\ProjectKey.cs" />
-    <Compile Include="src\Tools\Tools.cs" />
     <Compile Include="src\Git\GitClientUpdater.cs" />
     <Compile Include="src\Tools\ExpressionResolver.cs" />
     <Compile Include="src\MergeRequests\MergeRequestManager.cs" />

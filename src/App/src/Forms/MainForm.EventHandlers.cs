@@ -195,6 +195,7 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
 
+         onHostSelected();
          await switchHostToSelected();
       }
 
@@ -242,8 +243,6 @@ namespace mrHelper.App.Forms
          }
 
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
-
-         //e.DrawBackground();
 
          bool isSelected = e.Item.Selected;
          fillRectangle(e, getMergeRequestColor(fmk.MergeRequest, Color.Transparent), isSelected);
@@ -567,7 +566,7 @@ namespace mrHelper.App.Forms
          if (getHostName() != String.Empty)
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
-            await switchHostAsync(getHostName());
+            await switchHostToSelected();
          }
       }
 
@@ -931,6 +930,35 @@ namespace mrHelper.App.Forms
 
          applyTheme(comboBoxThemes.SelectedItem.ToString());
       }
+
+     async private void buttonEditProjects_Click(object sender, EventArgs e)
+     {
+         string host = getHostName();
+         if (host == String.Empty)
+         {
+            return;
+         }
+
+         Tuple<string, bool>[] projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
+         Debug.Assert(projects != null);
+
+         using (EditProjectsForm form = new EditProjectsForm(projects))
+         {
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+               return;
+            }
+
+            if (!projects.SequenceEqual(form.Projects))
+            {
+               ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
+               updateProjectsListView();
+
+               Trace.TraceInformation(String.Format("[MainForm] Reloading merge request list after project list change"));
+               await switchHostToSelected();
+            }
+         }
+     }
    }
 }
 

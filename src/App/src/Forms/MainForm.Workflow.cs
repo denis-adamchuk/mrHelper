@@ -34,7 +34,6 @@ namespace mrHelper.App.Forms
 
          _workflow.PreLoadHostProjects += (hostname) => onLoadHostProjects(hostname);
          _workflow.PostLoadHostProjects += (hostname, projects) => onHostProjectsLoaded(hostname, projects);
-         _workflow.FailedLoadHostProjects += () => onFailedLoadHostProjects();
 
          _workflow.PreLoadAllMergeRequests += () => onLoadAllMergeRequests();
 
@@ -95,6 +94,7 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException ex)
          {
+            disableAllUIControls(true);
             ExceptionHandlers.Handle(ex, "Cannot switch host");
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
@@ -167,13 +167,6 @@ namespace mrHelper.App.Forms
          disableAllUIControls(true);
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading projects from {0}", hostname));
-      }
-
-      private void onFailedLoadHostProjects()
-      {
-         labelWorkflowStatus.Text = "Failed to load projects";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load projects"));
       }
 
       private void onHostProjectsLoaded(string hostname, List<Project> projects)

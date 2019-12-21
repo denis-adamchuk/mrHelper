@@ -47,6 +47,7 @@
     </Compile>
     <Compile Include="src\AppFinder.cs" />
     <Compile Include="src\FeedbackReporter.cs" />
+    <Compile Include="src\JsonFileReader.cs" />
     <Compile Include="src\NativeMethods.cs" />
     <Compile Include="src\ParentProcessUtilities.cs" />
     <Compile Include="src\Persistence\PersistentState.cs" />

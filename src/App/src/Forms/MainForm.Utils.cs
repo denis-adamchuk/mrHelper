@@ -137,6 +137,8 @@ namespace mrHelper.App.Forms
                comboBoxHost.SelectedItem = defaultSelectedItem;
                break;
          }
+
+         onHostSelected();
       }
 
       private bool selectMergeRequest(string projectname, int iid, bool exact)
@@ -281,7 +283,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         var item = new ListViewItem(host);
+         ListViewItem item = new ListViewItem(host);
          item.SubItems.Add(accessToken);
          listViewKnownHosts.Items.Add(item);
          return true;
@@ -403,8 +405,10 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _iconScheme = Tools.LoadDictFromFile(Common.Constants.Constants.IconSchemeFileName).ToDictionary(
-               item => item.Key, item => item.Value.ToString());
+            _iconScheme = CommonTools.JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+               Common.Constants.Constants.IconSchemeFileName).ToDictionary(
+                  item => item.Key,
+                  item => item.Value.ToString());
          }
          catch (Exception ex) // whatever de-deserialization exception
          {
@@ -530,10 +534,18 @@ namespace mrHelper.App.Forms
 
       private void updateTotalTime(MergeRequestKey? mrk)
       {
+         Action updateTotalTimeLabelPosition = () =>
+         {
+            labelTimeTrackingTrackedTime.Location =
+               new Point(labelTimeTrackingTrackedLabel.Location.X + labelTimeTrackingTrackedLabel.Width,
+                         labelTimeTrackingTrackedTime.Location.Y);
+         };
+
          if (isTrackingTime())
          {
             labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
             buttonEditTime.Enabled = false;
+            updateTotalTimeLabelPosition();
             return;
          }
 
@@ -551,6 +563,8 @@ namespace mrHelper.App.Forms
             buttonEditTime.Enabled = span.HasValue;
          }
 
+         updateTotalTimeLabelPosition();
+
          // Update total time column in the table
          listViewMergeRequests.Invalidate();
       }
@@ -567,7 +581,8 @@ namespace mrHelper.App.Forms
 
       private string convertTotalTimeToText(TimeSpan? span)
       {
-         return !span.HasValue ? "Loading..." : span.Value.ToString(@"hh\:mm\:ss");
+         return !span.HasValue ? "Loading..." :
+            (span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss"));
       }
 
       private void enableMergeRequestActions(bool enabled)
@@ -1119,6 +1134,20 @@ namespace mrHelper.App.Forms
          }
 
          Program.Settings.VisualThemeName = theme;
+      }
+
+      private void onHostSelected()
+      {
+         updateProjectsListView();
+      }
+
+      private void updateProjectsListView()
+      {
+         listViewProjects.Items.Clear();
+
+         ConfigurationHelper.GetEnabledProjectsForHost(getHostName(), Program.Settings)
+            .ToList()
+            .ForEach(x => listViewProjects.Items.Add(x));
       }
    }
 }

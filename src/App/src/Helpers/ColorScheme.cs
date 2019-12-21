@@ -34,7 +34,8 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
-         Dictionary<string, object> colors = Tools.LoadDictFromFile(filename);
+         Dictionary<string, object> colors = CommonTools.JsonFileReader.
+            LoadFromFile<Dictionary<string, object>>(filename);
          foreach (var record in colors)
          {
             string[] rgbs = record.Value.ToString().Split(',');

@@ -39,24 +39,6 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<List<Project>> GetProjectsAsync(bool publicOnly)
-      {
-         try
-         {
-            return (List<Project>)(await _client.RunAsync(async (gl) =>
-               await gl.Projects.LoadAllTaskAsync(new ProjectsFilter { PublicOnly = publicOnly })));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               ExceptionHandlers.Handle(ex, "Cannot load projects from GitLab");
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
-      }
-
       async internal Task<Project> GetProjectAsync(string projectName)
       {
          try
