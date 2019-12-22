@@ -112,6 +112,7 @@ namespace mrHelper.Client.Discussions
       public void Dispose()
       {
          _timer.Dispose();
+         _oneShotTimer?.Dispose();
       }
 
       async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
@@ -151,8 +152,34 @@ namespace mrHelper.Client.Discussions
          return new DiscussionEditor(mrk, discussionId, _operator);
       }
 
+      /// <summary>
+      /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
+      /// </summary>
+      public void CheckForUpdates(MergeRequestKey mrk, int delay)
+      {
+         cancelOneShotTimer();
+
+         _oneShotTimer = new System.Timers.Timer { Interval = delay };
+         _oneShotTimer.AutoReset = false;
+         _oneShotTimer.SynchronizingObject = _timer.SynchronizingObject;
+         _oneShotTimer.Elapsed += (s, e) => scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+
+         _oneShotTimer.Start();
+      }
+
+      private void cancelOneShotTimer()
+      {
+         if (_oneShotTimer?.Enabled ?? false)
+         {
+            _oneShotTimer.Stop();
+            _oneShotTimer.Dispose();
+         }
+      }
+
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+         cancelOneShotTimer();
+
          Trace.TraceInformation(String.Format(
             "[DiscussionManager] Scheduling update of discussions for {0} merge requests on a timer update",
             _cachedDiscussions.Count));
@@ -267,6 +294,7 @@ namespace mrHelper.Client.Discussions
       }
 
       private readonly System.Timers.Timer _timer;
+      private System.Timers.Timer _oneShotTimer;
 
       private readonly UserDefinedSettings _settings;
       private readonly DiscussionOperator _operator;

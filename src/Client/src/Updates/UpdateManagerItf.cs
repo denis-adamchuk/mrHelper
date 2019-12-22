@@ -23,10 +23,5 @@ namespace mrHelper.Client.Updates
       /// Makes a request to GitLab to detect if there are project changes caused by new versions of a merge request
       /// </summary>
       IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk);
-
-      /// <summary>
-      /// Request Update Manager to update the specified MR after the specified time period (in milliseconds)
-      /// </summary>
-      void RequestOneShotUpdate(MergeRequestKey mrk, int delay);
    }
 }

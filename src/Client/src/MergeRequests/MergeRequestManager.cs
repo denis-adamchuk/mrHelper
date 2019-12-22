@@ -78,6 +78,14 @@ namespace mrHelper.Client.MergeRequests
          return _projectWatcher;
       }
 
+      /// <summary>
+      /// Request to update the specified MR after the specified time period (in milliseconds)
+      /// </summary>
+      public void CheckForUpdates(MergeRequestKey mrk, int delay)
+      {
+         _updateManager.RequestOneShotUpdate(mrk, delay);
+      }
+
       private void onUpdate(List<UpdatedMergeRequest> updates)
       {
          _projectWatcher.ProcessUpdates(updates, _cache.Details);
