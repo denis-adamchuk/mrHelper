@@ -111,7 +111,9 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
+         _timer.Stop();
          _timer.Dispose();
+         _oneShotTimer?.Stop();
          _oneShotTimer?.Dispose();
       }
 
@@ -162,7 +164,14 @@ namespace mrHelper.Client.Discussions
          _oneShotTimer = new System.Timers.Timer { Interval = delay };
          _oneShotTimer.AutoReset = false;
          _oneShotTimer.SynchronizingObject = _timer.SynchronizingObject;
-         _oneShotTimer.Elapsed += (s, e) => scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+         _oneShotTimer.Elapsed += (s, e) =>
+        {
+           Trace.TraceInformation(String.Format(
+              "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
+              mrk.IId));
+
+           scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+        };
 
          _oneShotTimer.Start();
       }
@@ -171,6 +180,7 @@ namespace mrHelper.Client.Discussions
       {
          if (_oneShotTimer?.Enabled ?? false)
          {
+            Trace.TraceInformation("[UpdateManager] One-Shot Timer cancelled");
             _oneShotTimer.Stop();
             _oneShotTimer.Dispose();
          }

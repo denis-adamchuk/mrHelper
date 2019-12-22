@@ -38,6 +38,8 @@ namespace mrHelper.Client.MergeRequests
       {
          _timer.Stop();
          _timer.Dispose();
+         _oneShotTimer?.Stop();
+         _oneShotTimer?.Dispose();
       }
 
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
@@ -74,7 +76,7 @@ namespace mrHelper.Client.MergeRequests
             if (String.IsNullOrEmpty(_hostname) || _projects == null)
             {
                Debug.Assert(false);
-               Trace.TraceWarning("[UpdateManager] OneShot Update is cancelled");
+               Trace.TraceWarning("[UpdateManager] One-Shot Timer update is cancelled");
                return;
             }
 
@@ -85,11 +87,11 @@ namespace mrHelper.Client.MergeRequests
             List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
                oldDetails, _cache.Details);
 
-            int legitUpdates =
+            int legalUpdates =
                updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated) +
                updates.Count(x => x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated);
 
-            Debug.Assert(legitUpdates == 0 || legitUpdates == 1);
+            Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
             Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.New) == 0);
             Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated) == 0);
             Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.Closed) == 0);
@@ -97,7 +99,7 @@ namespace mrHelper.Client.MergeRequests
             Trace.TraceInformation(
                String.Format(
                   "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
-                  legitUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+                  legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
 
             OnUpdate?.Invoke(updates);
          };
@@ -109,6 +111,7 @@ namespace mrHelper.Client.MergeRequests
       {
          if (_oneShotTimer?.Enabled ?? false)
          {
+            Trace.TraceInformation("[UpdateManager] One-Shot Timer cancelled");
             _oneShotTimer.Stop();
             _oneShotTimer.Dispose();
          }
