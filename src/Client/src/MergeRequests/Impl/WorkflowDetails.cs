@@ -21,7 +21,9 @@ namespace mrHelper.Client.MergeRequests
 
       private WorkflowDetails(WorkflowDetails details)
       {
-         _mergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details._mergeRequests);
+         _mergeRequests = details._mergeRequests.ToDictionary(
+            item => item.Key,
+            item => new List<MergeRequest>(item.Value));
          _changes = new Dictionary<MergeRequestKey, DateTime>(details._changes);
       }
 

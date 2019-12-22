@@ -115,7 +115,14 @@ namespace mrHelper.Client.Tools
             throw new ChangesNotAllowedException();
          }
 
-         _config.Save(ConfigurationSaveMode.Full);
+         try
+         {
+            _config.Save(ConfigurationSaveMode.Full);
+         }
+         catch (System.Configuration.ConfigurationErrorsException ex)
+         {
+            ExceptionHandlers.Handle(ex, "Cannot save configuration to disk");
+         }
          ConfigurationManager.RefreshSection("appSettings");
       }
 
