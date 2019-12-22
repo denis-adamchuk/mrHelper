@@ -103,6 +103,7 @@ namespace mrHelper.App.Forms
       private Dictionary<string, string> _iconScheme;
 
       private string _newVersionFilePath;
+      private string _newVersionNumber;
       private readonly System.Windows.Forms.Timer _checkForUpdatesTimer = new System.Windows.Forms.Timer
       {
          Interval = checkForUpdatesTimerInterval

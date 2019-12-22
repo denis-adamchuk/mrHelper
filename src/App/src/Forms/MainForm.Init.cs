@@ -257,7 +257,7 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
          labelGitStatus.Text = String.Empty;
-         Text = Common.Constants.Constants.MainWindowCaption + " (" + Application.ProductVersion + ")";
+         updateCaption();
 
          bool configured = listViewKnownHosts.Items.Count > 0
                         && textBoxLocalGitFolder.Text.Length > 0;
@@ -352,10 +352,8 @@ namespace mrHelper.App.Forms
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
-         if (!checkForApplicationUpdates())
-         {
-            _checkForUpdatesTimer.Start();
-         }
+         checkForApplicationUpdates();
+         _checkForUpdatesTimer.Start();
 
          if (Program.ServiceManager.GetHelpUrl() != String.Empty)
          {

@@ -1005,14 +1005,15 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private bool checkForApplicationUpdates()
+      private void checkForApplicationUpdates()
       {
          LatestVersionInformation? info = Program.ServiceManager.GetLatestVersionInfo();
          if (!info.HasValue
            || String.IsNullOrEmpty(info.Value.VersionNumber)
-           || info.Value.VersionNumber == Application.ProductVersion)
+           || info.Value.VersionNumber == Application.ProductVersion
+           || (!String.IsNullOrEmpty(_newVersionNumber) && info.Value.VersionNumber == _newVersionNumber))
          {
-            return false;
+            return;
          }
 
          Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info.Value.VersionNumber));
@@ -1021,7 +1022,7 @@ namespace mrHelper.App.Forms
          {
             Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
                info.Value.InstallerFilePath));
-            return false;
+            return;
          }
 
          Task.Run(
@@ -1036,12 +1037,10 @@ namespace mrHelper.App.Forms
             string tempFolder = Environment.GetEnvironmentVariable("TEMP");
             string destFilePath = Path.Combine(tempFolder, filename);
 
+            Debug.Assert(!File.Exists(destFilePath));
+
             try
             {
-               if (File.Exists(destFilePath))
-               {
-                  File.Delete(destFilePath);
-               }
                File.Copy(info.Value.InstallerFilePath, destFilePath);
             }
             catch (Exception ex)
@@ -1051,15 +1050,36 @@ namespace mrHelper.App.Forms
             }
 
             _newVersionFilePath = destFilePath;
+            _newVersionNumber = info.Value.VersionNumber;
             BeginInvoke(new Action(() =>
             {
-               Debug.Assert(!linkLabelNewVersion.Visible);
                linkLabelNewVersion.Visible = true;
-               Text += "   New version is available!";
+               updateCaption();
             }));
          });
+      }
 
-         return true;
+      private void cleanUpInstallers()
+      {
+         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
+         foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, "mrHelper.*.msi"))
+         {
+            try
+            {
+               System.IO.File.Delete(f);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(ex, String.Format("Cannot delete installer \"{0}\"", f));
+            }
+         }
+      }
+
+      private void updateCaption()
+      {
+         Text = Common.Constants.Constants.MainWindowCaption
+           + " (" + Application.ProductVersion + ")"
+           + (linkLabelNewVersion.Visible ? "   New version is available!" : String.Empty);
       }
 
       private void updateTrayIcon()

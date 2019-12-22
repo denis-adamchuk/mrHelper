@@ -24,6 +24,8 @@ namespace mrHelper.App.Forms
       {
          CommonTools.Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
+         cleanUpInstallers();
+
          loadSettings();
          addCustomActions();
          if (!integrateInTools())
@@ -745,10 +747,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[CheckForUpdates] Checking for updates on timer");
 
-         if (checkForApplicationUpdates())
-         {
-            _checkForUpdatesTimer.Stop();
-         }
+         checkForApplicationUpdates();
       }
 
       private void onStartTimer()
