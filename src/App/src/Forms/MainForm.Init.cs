@@ -73,6 +73,8 @@ namespace mrHelper.App.Forms
             };
             button.Click += async (x, y) =>
             {
+               MergeRequestKey? mergeRequestKey = getMergeRequestKey();
+
                labelWorkflowStatus.Text = "Command " + name + " is in progress";
                try
                {
@@ -89,8 +91,17 @@ namespace mrHelper.App.Forms
 
                Trace.TraceInformation(String.Format("Custom action {0} completed", name));
 
-               // This may be unneeded in general case but so far it is ok for current list of custom actions
-               await onStopTimer(true);
+               if (command.GetStopTimer())
+               {
+                  await onStopTimer(true);
+               }
+
+               bool reload = command.GetReload();
+               if (reload && mergeRequestKey.HasValue)
+               {
+                  _mergeRequestManager.CheckForUpdates(mergeRequestKey.Value, Program.Settings.OneShotUpdateDelayMs);
+                  _discussionManager.CheckForUpdates(mergeRequestKey.Value, Program.Settings.OneShotUpdateDelayMs);
+               }
             };
             groupBoxActions.Controls.Add(button);
             offSetFromGroupBoxTopLeft.X += typicalSize.Width + offsetX;

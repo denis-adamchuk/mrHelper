@@ -8,6 +8,10 @@ namespace mrHelper.Common.Interfaces
 
       string GetDependency();
 
+      bool GetStopTimer();
+
+      bool GetReload();
+
       Task Run();
    }
 }

@@ -79,7 +79,10 @@ namespace mrHelper.CustomActions
             {
                XmlNode body = obj.Attributes.GetNamedItem("Body");
                XmlNode dependency = obj.Attributes.GetNamedItem("Dependency");
-               results.Add(new SendNoteCommand(_callback, name.Value, body.Value, dependency?.Value ?? String.Empty));
+               XmlNode stopTimer = obj.Attributes.GetNamedItem("StopTimer");
+               XmlNode reload = obj.Attributes.GetNamedItem("Reload");
+               results.Add(new SendNoteCommand(_callback, name.Value, body.Value, dependency?.Value ?? String.Empty,
+                  (stopTimer?.Value ?? "0") == "1", (reload?.Value ?? "0") == "1"));
             }
             else
             {

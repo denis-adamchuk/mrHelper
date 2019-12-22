@@ -38,6 +38,8 @@ namespace mrHelper.Client.MergeRequests
       {
          _timer.Stop();
          _timer.Dispose();
+         _oneShotTimer?.Stop();
+         _oneShotTimer?.Dispose();
       }
 
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
@@ -61,6 +63,60 @@ namespace mrHelper.Client.MergeRequests
          return new RemoteProjectChecker(mrk, _operator);
       }
 
+      public void RequestOneShotUpdate(MergeRequestKey mrk, int delay)
+      {
+         cancelOneShotTimer();
+
+         _oneShotTimer = new System.Timers.Timer { Interval = delay };
+         _oneShotTimer.AutoReset = false;
+         _oneShotTimer.SynchronizingObject = _timer.SynchronizingObject;
+         _oneShotTimer.Elapsed +=
+            async (s, e) =>
+         {
+            if (String.IsNullOrEmpty(_hostname) || _projects == null)
+            {
+               Debug.Assert(false);
+               Trace.TraceWarning("[UpdateManager] One-Shot Timer update is cancelled");
+               return;
+            }
+
+            IWorkflowDetails oldDetails = _cache.Details.Clone();
+
+            await loadDataAndUpdateCacheAsync(mrk);
+
+            List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
+               oldDetails, _cache.Details);
+
+            int legalUpdates =
+               updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated) +
+               updates.Count(x => x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated);
+
+            Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
+            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.New) == 0);
+            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated) == 0);
+            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.Closed) == 0);
+
+            Trace.TraceInformation(
+               String.Format(
+                  "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
+                  legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+
+            OnUpdate?.Invoke(updates);
+         };
+
+         _oneShotTimer.Start();
+      }
+
+      private void cancelOneShotTimer()
+      {
+         if (_oneShotTimer?.Enabled ?? false)
+         {
+            Trace.TraceInformation("[UpdateManager] One-Shot Timer cancelled");
+            _oneShotTimer.Stop();
+            _oneShotTimer.Dispose();
+         }
+      }
+
       /// <summary>
       /// Process a timer event
       /// </summary>
@@ -73,6 +129,8 @@ namespace mrHelper.Client.MergeRequests
             return;
          }
 
+         cancelOneShotTimer();
+
          IWorkflowDetails oldDetails = _cache.Details.Clone();
 
          await loadDataAndUpdateCacheAsync(_hostname, _projects);
@@ -81,7 +139,8 @@ namespace mrHelper.Client.MergeRequests
             oldDetails, _cache.Details);
 
          Trace.TraceInformation(
-            String.Format("[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
+            String.Format(
+               "[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
                updates.Count(x => x.UpdateKind == UpdateKind.New),
                updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
                updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
@@ -125,6 +184,15 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
+      async private Task loadDataAndUpdateCacheAsync(MergeRequestKey mrk)
+      {
+         MergeRequest? mergeRequest = await loadMergeRequestAsync(mrk);
+         if (mergeRequest.HasValue)
+         {
+            _cache.UpdateMergeRequest(mrk, mergeRequest.Value);
+         }
+      }
+
       async private Task<List<MergeRequest>> loadMergeRequestsAsync(string hostname, string projectname)
       {
          try
@@ -156,7 +224,24 @@ namespace mrHelper.Client.MergeRequests
          return null;
       }
 
+      async private Task<MergeRequest?> loadMergeRequestAsync(MergeRequestKey mrk)
+      {
+         try
+         {
+            return await _operator.GetMergeRequestAsync(mrk);
+         }
+         catch (OperatorException)
+         {
+            string message = String.Format(
+               "[UpdateManager] Cannot load merge request. MRK: HostName={0}, ProjectName={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
+            Trace.TraceError(message);
+         }
+         return null;
+      }
+
       private readonly System.Timers.Timer _timer;
+      private System.Timers.Timer _oneShotTimer;
 
       private readonly WorkflowDetailsCache _cache;
       private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();

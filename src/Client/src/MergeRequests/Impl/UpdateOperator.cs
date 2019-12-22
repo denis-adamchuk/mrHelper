@@ -35,6 +35,13 @@ namespace mrHelper.Client.MergeRequests
          return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
+      internal Task<MergeRequest> GetMergeRequestAsync(MergeRequestKey mrk)
+      {
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
+            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+         return CommonOperator.GetMergeRequestAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
+      }
+
       private readonly UserDefinedSettings _settings;
    }
 }

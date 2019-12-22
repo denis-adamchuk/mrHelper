@@ -21,7 +21,9 @@ namespace mrHelper.Client.MergeRequests
 
       private WorkflowDetails(WorkflowDetails details)
       {
-         _mergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>(details._mergeRequests);
+         _mergeRequests = details._mergeRequests.ToDictionary(
+            item => item.Key,
+            item => new List<MergeRequest>(item.Value));
          _changes = new Dictionary<MergeRequestKey, DateTime>(details._changes);
       }
 
@@ -63,6 +65,21 @@ namespace mrHelper.Client.MergeRequests
       internal void SetLatestChangeTimestamp(MergeRequestKey mrk, DateTime timestamp)
       {
          _changes[mrk] = timestamp;
+      }
+
+      /// <summary>
+      /// Updates a merge request
+      /// </summary>
+      internal void UpdateMergeRequest(MergeRequestKey mrk, MergeRequest mergeRequest)
+      {
+         if (_mergeRequests.ContainsKey(mrk.ProjectKey))
+         {
+            int index = _mergeRequests[mrk.ProjectKey].FindIndex(x => x.IId == mrk.IId);
+            if (index != -1)
+            {
+               _mergeRequests[mrk.ProjectKey][index] = mergeRequest;
+            }
+         }
       }
 
       /// <summary>

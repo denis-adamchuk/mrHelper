@@ -58,6 +58,14 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
+      /// <summary>
+      /// Cache passed merge request
+      /// </summary>
+      internal void UpdateMergeRequest(MergeRequestKey mrk, MergeRequest mergeRequest)
+      {
+         _internalDetails.UpdateMergeRequest(mrk, mergeRequest);
+      }
+
       internal IWorkflowDetails Details { get { return _internalDetails; } }
 
       private void cleanupOldRecords(ProjectKey key, IEnumerable<MergeRequest> oldRecords, List<MergeRequest> newRecords)
