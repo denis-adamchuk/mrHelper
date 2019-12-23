@@ -41,8 +41,11 @@ namespace mrHelper.Client.Tools
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
 
-      private static readonly string OneShotUpdateDelayMsKeyName        = "OneShotUpdateDelayMs";
-      private static readonly int    OneShotUpdateDelayMsDefaultValue   = 20 * 1000; // 20 seconds
+      private static readonly string OneShotUpdateFirstChanceDelayMsKeyName        = "OneShotUpdateFirstChanceDelayMs";
+      private static readonly int    OneShotUpdateFirstChanceDelayMsDefaultValue   = 5 * 1000; // 5 seconds
+
+      private static readonly string OneShotUpdateSecondChanceDelayMsKeyName        = "OneShotUpdateSecondChanceDelayMs";
+      private static readonly int    OneShotUpdateSecondChanceDelayMsDefaultValue   = 15 * 1000; // 15 seconds
 
       private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
       private static readonly bool   CacheRevisionsDefaultValue   = true;
@@ -352,15 +355,26 @@ namespace mrHelper.Client.Tools
          set { setValue(AutoUpdatePeriodMsKeyName, value.ToString()); }
       }
 
-      public int OneShotUpdateDelayMs
+      public int OneShotUpdateFirstChanceDelayMs
       {
          get
          {
             return int.TryParse(getValue(
-               OneShotUpdateDelayMsKeyName, OneShotUpdateDelayMsDefaultValue.ToString()),
-                  out int result) ? result : OneShotUpdateDelayMsDefaultValue;
+               OneShotUpdateFirstChanceDelayMsKeyName, OneShotUpdateFirstChanceDelayMsDefaultValue.ToString()),
+                  out int result) ? result : OneShotUpdateFirstChanceDelayMsDefaultValue;
          }
-         set { setValue(OneShotUpdateDelayMsKeyName, value.ToString()); }
+         set { setValue(OneShotUpdateFirstChanceDelayMsKeyName, value.ToString()); }
+      }
+
+      public int OneShotUpdateSecondChanceDelayMs
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               OneShotUpdateSecondChanceDelayMsKeyName, OneShotUpdateSecondChanceDelayMsDefaultValue.ToString()),
+                  out int result) ? result : OneShotUpdateSecondChanceDelayMsDefaultValue;
+         }
+         set { setValue(OneShotUpdateSecondChanceDelayMsKeyName, value.ToString()); }
       }
 
       public bool CacheRevisionsInBackground

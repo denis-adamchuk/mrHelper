@@ -99,8 +99,12 @@ namespace mrHelper.App.Forms
                bool reload = command.GetReload();
                if (reload && mergeRequestKey.HasValue)
                {
-                  _mergeRequestManager.CheckForUpdates(mergeRequestKey.Value, Program.Settings.OneShotUpdateDelayMs);
-                  _discussionManager.CheckForUpdates(mergeRequestKey.Value, Program.Settings.OneShotUpdateDelayMs);
+                  _mergeRequestManager.CheckForUpdates(mergeRequestKey.Value,
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs);
+                  _discussionManager.CheckForUpdates(mergeRequestKey.Value,
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs);
                }
             };
             groupBoxActions.Controls.Add(button);

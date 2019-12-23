@@ -157,21 +157,31 @@ namespace mrHelper.Client.Discussions
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public void CheckForUpdates(MergeRequestKey mrk, int delay)
+      public void CheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
          cancelOneShotTimer();
 
-         _oneShotTimer = new System.Timers.Timer { Interval = delay };
-         _oneShotTimer.AutoReset = false;
-         _oneShotTimer.SynchronizingObject = _timer.SynchronizingObject;
-         _oneShotTimer.Elapsed += (s, e) =>
-        {
-           Trace.TraceInformation(String.Format(
-              "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
-              mrk.IId));
+         _oneShotTimer = new System.Timers.Timer
+         {
+            Interval = firstChanceDelay,
+            AutoReset = false,
+            SynchronizingObject = _timer.SynchronizingObject
+         };
 
-           scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
-        };
+         _oneShotTimer.Elapsed += (s, e) =>
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
+               mrk.IId));
+
+            scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+
+            if (_oneShotTimer.Interval == firstChanceDelay)
+            {
+               _oneShotTimer.Interval = secondChanceDelay;
+               _oneShotTimer.Start();
+            }
+         };
 
          _oneShotTimer.Start();
       }

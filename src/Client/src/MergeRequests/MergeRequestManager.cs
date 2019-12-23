@@ -81,9 +81,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Request to update the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public void CheckForUpdates(MergeRequestKey mrk, int delay)
+      public void CheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
-         _updateManager.RequestOneShotUpdate(mrk, delay);
+         _updateManager.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
       }
 
       private void onUpdate(List<UpdatedMergeRequest> updates)

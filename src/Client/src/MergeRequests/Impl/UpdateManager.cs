@@ -63,13 +63,17 @@ namespace mrHelper.Client.MergeRequests
          return new RemoteProjectChecker(mrk, _operator);
       }
 
-      public void RequestOneShotUpdate(MergeRequestKey mrk, int delay)
+      public void RequestOneShotUpdate(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
          cancelOneShotTimer();
 
-         _oneShotTimer = new System.Timers.Timer { Interval = delay };
-         _oneShotTimer.AutoReset = false;
-         _oneShotTimer.SynchronizingObject = _timer.SynchronizingObject;
+         _oneShotTimer = new System.Timers.Timer
+         {
+            Interval = firstChanceDelay,
+            AutoReset = false,
+            SynchronizingObject = _timer.SynchronizingObject
+         };
+
          _oneShotTimer.Elapsed +=
             async (s, e) =>
          {
@@ -102,6 +106,12 @@ namespace mrHelper.Client.MergeRequests
                   legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
 
             OnUpdate?.Invoke(updates);
+
+            if (_oneShotTimer.Interval == firstChanceDelay)
+            {
+              _oneShotTimer.Interval = secondChanceDelay;
+              _oneShotTimer.Start();
+            }
          };
 
          _oneShotTimer.Start();
