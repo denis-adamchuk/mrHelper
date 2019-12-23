@@ -54,7 +54,7 @@ namespace mrHelper.App.Helpers
                };
 
             case MergeRequestEvent.Type.UpdatedMergeRequest:
-               Debug.Assert(((MergeRequestEvent.UpdateDetails)e.Details).NewCommits);
+               Debug.Assert(((MergeRequestEvent.UpdateScope)e.Scope).Commits);
                return new BalloonText
                {
                   Title = "Merge Request Event",

@@ -1,37 +1,17 @@
 using System;
 using System.Linq;
+using System.Diagnostics;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
+using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
-using System.ComponentModel;
-using System.Diagnostics;
 
 namespace mrHelper.Client.MergeRequests
 {
-   internal enum UpdateKind
-   {
-      New,
-      Closed,
-      CommitsUpdated,
-      LabelsUpdated,
-      CommitsAndLabelsUpdated
-   }
-
-   internal struct UpdatedMergeRequest
-   {
-      public UpdateKind UpdateKind;
-      public FullMergeRequestKey FullMergeRequestKey;
-
-      internal UpdatedMergeRequest(UpdateKind kind, FullMergeRequestKey fmk)
-      {
-         UpdateKind = kind;
-         FullMergeRequestKey = fmk;
-      }
-   }
-
    /// <summary>
    /// Checks WorkflowDetails for updates
    /// </summary>
@@ -59,7 +39,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Process a timer event
       /// </summary>
-      internal List<UpdatedMergeRequest> CheckForUpdates(string hostname, List<Project> enabledProjects,
+      internal List<UserEvents.MergeRequestEvent> CheckForUpdates(string hostname, List<Project> enabledProjects,
          IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequestWithProject> diff = getMergeRequestDiff(
@@ -131,12 +111,12 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
-      private List<UpdatedMergeRequest> getMergeRequestUpdates(string hostname,
+      private List<UserEvents.MergeRequestEvent> getMergeRequestUpdates(string hostname,
          TwoListDifference<MergeRequestWithProject> diff, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          // TODO This should also check if a merge request description or properties changed
 
-         List<UpdatedMergeRequest> updates = new List<UpdatedMergeRequest>();
+         List<UserEvents.MergeRequestEvent> updates = new List<UserEvents.MergeRequestEvent>();
 
          foreach (MergeRequestWithProject mergeRequest in diff.SecondOnly)
          {
@@ -149,7 +129,13 @@ namespace mrHelper.Client.MergeRequests
                },
                MergeRequest = mergeRequest.MergeRequest
             };
-            updates.Add(new UpdatedMergeRequest(UpdateKind.New, fmk));
+
+            updates.Add(new UserEvents.MergeRequestEvent
+               {
+                  FullMergeRequestKey = fmk,
+                  EventType = UserEvents.MergeRequestEvent.Type.NewMergeRequest,
+                  Scope = null
+               });
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
@@ -163,7 +149,13 @@ namespace mrHelper.Client.MergeRequests
                },
                MergeRequest = mergeRequest.MergeRequest
             };
-            updates.Add(new UpdatedMergeRequest(UpdateKind.Closed, fmk));
+
+            updates.Add(new UserEvents.MergeRequestEvent
+               {
+                  FullMergeRequestKey = fmk,
+                  EventType = UserEvents.MergeRequestEvent.Type.ClosedMergeRequest,
+                  Scope = null
+               });
          }
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
@@ -184,16 +176,32 @@ namespace mrHelper.Client.MergeRequests
                                                            mrPair.Item2.MergeRequest.Labels);
             bool commitsUpdated = newCachedChangeTimestamp > previouslyCachedChangeTimestamp;
 
-            if (labelsUpdated || commitsUpdated)
+            bool detailsUpdated =
+                  mrPair.Item1.MergeRequest.Author.Id     != mrPair.Item2.MergeRequest.Author.Id
+               || mrPair.Item1.MergeRequest.Source_Branch != mrPair.Item2.MergeRequest.Source_Branch
+               || mrPair.Item1.MergeRequest.Target_Branch != mrPair.Item2.MergeRequest.Target_Branch
+               || mrPair.Item1.MergeRequest.Title         != mrPair.Item2.MergeRequest.Title
+               || mrPair.Item1.MergeRequest.Description   != mrPair.Item2.MergeRequest.Description;
+
+            if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
                FullMergeRequestKey fmk = new FullMergeRequestKey
                {
                   ProjectKey = mergeRequestKey.ProjectKey,
                   MergeRequest = mergeRequest
                };
-               UpdateKind kind = (labelsUpdated && commitsUpdated ? UpdateKind.CommitsAndLabelsUpdated :
-                                 (labelsUpdated ? UpdateKind.LabelsUpdated : UpdateKind.CommitsUpdated));
-               updates.Add(new UpdatedMergeRequest(kind, fmk));
+
+               updates.Add(new UserEvents.MergeRequestEvent
+                  {
+                     FullMergeRequestKey = fmk,
+                     EventType = UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
+                     Scope = new UserEvents.MergeRequestEvent.UpdateScope
+                     {
+                        Commits = commitsUpdated,
+                        Labels = labelsUpdated,
+                        Details = detailsUpdated
+                     }
+                  });
             }
          }
 

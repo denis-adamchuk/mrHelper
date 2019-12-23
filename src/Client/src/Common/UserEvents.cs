@@ -20,15 +20,22 @@ namespace mrHelper.Client.Common
             ClosedMergeRequest
          }
 
-         public struct UpdateDetails
+         public struct UpdateScope
          {
-            public bool NewCommits;
-            public bool ChangedLabels;
+            public bool Commits;
+            public bool Labels;
+            public bool Details;
          }
 
          public FullMergeRequestKey FullMergeRequestKey;
          public Type EventType;
-         public object Details;
+         public object Scope;
+
+         public bool New => EventType == Type.NewMergeRequest;
+         public bool Commits => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Commits;
+         public bool Labels => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Labels;
+         public bool Details => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Details;
+         public bool Closed => EventType == Type.ClosedMergeRequest;
       }
 
       public struct DiscussionEvent

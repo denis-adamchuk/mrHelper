@@ -948,7 +948,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            if (!projects.SequenceEqual(form.Projects))
+            if (!Enumerable.SequenceEqual(projects, form.Projects))
             {
                ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
                updateProjectsListView();

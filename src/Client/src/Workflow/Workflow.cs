@@ -60,11 +60,6 @@ namespace mrHelper.Client.Workflow
          PreLoadAllMergeRequests?.Invoke();
 
          List<Project> projects = loadHostProjects(hostname);
-         if (projects == null)
-         {
-            return false; // cancelled
-         }
-
          foreach (Project project in projects)
          {
             try
@@ -159,7 +154,7 @@ namespace mrHelper.Client.Workflow
          _operator = new WorkflowDataOperator(hostname, token);
 
          List<Project> enabledProjects = getEnabledProjects(hostname);
-         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         bool hasEnabledProjects = enabledProjects.Count != 0;
          if (!hasEnabledProjects)
          {
             throw new NoProjectsException(hostname);
@@ -200,7 +195,7 @@ namespace mrHelper.Client.Workflow
          PreLoadHostProjects?.Invoke(hostName);
 
          List<Project> enabledProjects = getEnabledProjects(hostName);
-         bool hasEnabledProjects = (enabledProjects?.Count ?? 0) != 0;
+         bool hasEnabledProjects = enabledProjects.Count != 0;
          Debug.Assert(hasEnabledProjects); // guaranteed by checkParameters()
 
          PostLoadHostProjects?.Invoke(hostName, enabledProjects);

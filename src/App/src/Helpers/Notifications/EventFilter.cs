@@ -30,7 +30,7 @@ namespace mrHelper.App.Helpers
             || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
             || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !_settings.Notifications_UpdatedMergeRequests)
-            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !((MergeRequestEvent.UpdateDetails)e.Details).NewCommits)
+            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
             || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest        && !_settings.Notifications_MergedMergeRequests));
       }
 

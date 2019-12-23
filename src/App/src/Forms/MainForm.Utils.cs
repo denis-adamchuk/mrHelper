@@ -983,25 +983,30 @@ namespace mrHelper.App.Forms
       {
          updateVisibleMergeRequests();
 
-         if (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest && listViewMergeRequests.Items.Cast<ListViewItem>()
-             .Any(x =>
-             {
-                if (!x.Selected)
-                {
-                   return false;
-                }
-
-                FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
-                return fmk.ProjectKey.Equals(e.FullMergeRequestKey.ProjectKey)
-                    && fmk.MergeRequest.IId == e.FullMergeRequestKey.MergeRequest.IId;
-             }))
+         if (listViewMergeRequests.SelectedItems.Count == 0)
          {
-            Trace.TraceInformation("[MainForm] Reloading current Merge Request");
+            return;
+         }
 
-            Debug.Assert(listViewMergeRequests.SelectedItems.Count > 0);
-            ListViewItem selected = listViewMergeRequests.SelectedItems[0];
-            selected.Selected = false;
-            selected.Selected = true;
+         ListViewItem selected = listViewMergeRequests.SelectedItems[0];
+         FullMergeRequestKey fmk = (FullMergeRequestKey)selected.Tag;
+
+         if (fmk.ProjectKey.Equals(e.FullMergeRequestKey.ProjectKey) &&
+             fmk.MergeRequest.IId == e.FullMergeRequestKey.MergeRequest.IId)
+         {
+            if (e.Details)
+            {
+               // Details are partially updated here and partially in updateVisibleMergeRequests() above
+               updateMergeRequestDetails(fmk);
+            }
+
+            if (e.Commits)
+            {
+               Trace.TraceInformation("[MainForm] Reloading current Merge Request");
+
+               selected.Selected = false;
+               selected.Selected = true;
+            }
          }
       }
 

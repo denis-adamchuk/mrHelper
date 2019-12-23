@@ -86,47 +86,13 @@ namespace mrHelper.Client.MergeRequests
          _updateManager.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
       }
 
-      private void onUpdate(List<UpdatedMergeRequest> updates)
+      private void onUpdate(List<UserEvents.MergeRequestEvent> updates)
       {
          _projectWatcher.ProcessUpdates(updates, _cache.Details);
 
-         foreach (UpdatedMergeRequest mergeRequest in updates)
+         foreach (UserEvents.MergeRequestEvent update in updates)
          {
-            UserEvents.MergeRequestEvent.Type type;
-            switch (mergeRequest.UpdateKind)
-            {
-               case UpdateKind.New:
-                  type = UserEvents.MergeRequestEvent.Type.NewMergeRequest;
-                  break;
-
-               case UpdateKind.Closed:
-                  type = UserEvents.MergeRequestEvent.Type.ClosedMergeRequest;
-                  break;
-
-               case UpdateKind.LabelsUpdated:
-               case UpdateKind.CommitsUpdated:
-               case UpdateKind.CommitsAndLabelsUpdated:
-                  type = UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest;
-                  break;
-
-               default:
-                  Debug.Assert(false);
-                  return;
-            }
-
-            MergeRequestEvent?.Invoke(new UserEvents.MergeRequestEvent
-            {
-               FullMergeRequestKey = mergeRequest.FullMergeRequestKey,
-               EventType = type,
-               Details = type == UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest ?
-                  new UserEvents.MergeRequestEvent.UpdateDetails
-                  {
-                     NewCommits = mergeRequest.UpdateKind == UpdateKind.CommitsUpdated ||
-                                  mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated,
-                     ChangedLabels = mergeRequest.UpdateKind == UpdateKind.LabelsUpdated ||
-                                     mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated
-                  } : new object()
-            });
+            MergeRequestEvent?.Invoke(update);
          }
       }
 

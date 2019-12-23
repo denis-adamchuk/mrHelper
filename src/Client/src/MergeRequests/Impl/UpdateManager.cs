@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Updates;
+using mrHelper.Client.Common;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -18,7 +19,7 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class UpdateManager : IDisposable, IUpdateManager
    {
-      internal event Action<List<UpdatedMergeRequest>> OnUpdate;
+      internal event Action<List<UserEvents.MergeRequestEvent>> OnUpdate;
 
       internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, UserDefinedSettings settings,
          string hostname, List<Project> projects, WorkflowDetailsCache cache)
@@ -88,17 +89,11 @@ namespace mrHelper.Client.MergeRequests
 
             await loadDataAndUpdateCacheAsync(mrk);
 
-            List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
+            List<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
                oldDetails, _cache.Details);
 
-            int legalUpdates =
-               updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated) +
-               updates.Count(x => x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated);
-
+            int legalUpdates = updates.Count(x => x.Labels);
             Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
-            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.New) == 0);
-            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated) == 0);
-            Debug.Assert(updates.Count(x => x.UpdateKind == UpdateKind.Closed) == 0);
 
             Trace.TraceInformation(
                String.Format(
@@ -107,7 +102,7 @@ namespace mrHelper.Client.MergeRequests
 
             OnUpdate?.Invoke(updates);
 
-            if (_oneShotTimer.Interval == firstChanceDelay)
+            if (Convert.ToInt32(_oneShotTimer.Interval) == firstChanceDelay)
             {
               _oneShotTimer.Interval = secondChanceDelay;
               _oneShotTimer.Start();
@@ -145,16 +140,16 @@ namespace mrHelper.Client.MergeRequests
 
          await loadDataAndUpdateCacheAsync(_hostname, _projects);
 
-         List<UpdatedMergeRequest> updates = _checker.CheckForUpdates(_hostname, _projects,
+         List<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
             oldDetails, _cache.Details);
 
          Trace.TraceInformation(
             String.Format(
                "[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
-               updates.Count(x => x.UpdateKind == UpdateKind.New),
-               updates.Count(x => x.UpdateKind == UpdateKind.CommitsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
-               updates.Count(x => x.UpdateKind == UpdateKind.LabelsUpdated || x.UpdateKind == UpdateKind.CommitsAndLabelsUpdated),
-               updates.Count(x => x.UpdateKind == UpdateKind.Closed)));
+               updates.Count(x => x.New),
+               updates.Count(x => x.Commits),
+               updates.Count(x => x.Labels),
+               updates.Count(x => x.Closed)));
 
          OnUpdate?.Invoke(updates);
       }

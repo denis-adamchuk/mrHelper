@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
+using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Updates;
 
@@ -17,7 +18,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(List<UpdatedMergeRequest> updates, IWorkflowDetails details)
+      internal void ProcessUpdates(List<UserEvents.MergeRequestEvent> updates, IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = getProjectUpdates(updates, details);
 
@@ -37,18 +38,16 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates(List<UpdatedMergeRequest> mergeRequests,
+      private List<ProjectUpdate> getProjectUpdates(List<UserEvents.MergeRequestEvent> updates,
          IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
 
          // Check all the updated merge request to figure out the latest change among them
          DateTime updateTimestamp = DateTime.MinValue;
-         foreach (UpdatedMergeRequest mergeRequest in mergeRequests)
+         foreach (UserEvents.MergeRequestEvent update in updates)
          {
-            bool mayCauseProjectChange = mergeRequest.UpdateKind == UpdateKind.New
-                                      || mergeRequest.UpdateKind == UpdateKind.CommitsUpdated
-                                      || mergeRequest.UpdateKind == UpdateKind.CommitsAndLabelsUpdated;
+            bool mayCauseProjectChange = update.New || update.Commits;
             if (!mayCauseProjectChange)
             {
                continue;
@@ -57,8 +56,7 @@ namespace mrHelper.Client.MergeRequests
             // Excluding duplicates
             for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
             {
-               if (projectUpdates[iUpdate].ProjectKey.ProjectName ==
-                      mergeRequest.FullMergeRequestKey.ProjectKey.ProjectName)
+               if (projectUpdates[iUpdate].ProjectKey.ProjectName == update.FullMergeRequestKey.ProjectKey.ProjectName)
                {
                   projectUpdates.RemoveAt(iUpdate);
                }
@@ -66,8 +64,8 @@ namespace mrHelper.Client.MergeRequests
 
             MergeRequestKey mrk = new MergeRequestKey
             {
-               ProjectKey = mergeRequest.FullMergeRequestKey.ProjectKey,
-               IId = mergeRequest.FullMergeRequestKey.MergeRequest.IId
+               ProjectKey = update.FullMergeRequestKey.ProjectKey,
+               IId = update.FullMergeRequestKey.MergeRequest.IId
             };
 
             updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?

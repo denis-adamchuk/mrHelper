@@ -176,7 +176,7 @@ namespace mrHelper.Client.Discussions
 
             scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
 
-            if (_oneShotTimer.Interval == firstChanceDelay)
+            if (Convert.ToInt32(_oneShotTimer.Interval) == firstChanceDelay)
             {
                _oneShotTimer.Interval = secondChanceDelay;
                _oneShotTimer.Start();
