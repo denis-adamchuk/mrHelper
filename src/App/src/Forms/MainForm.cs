@@ -46,6 +46,8 @@ namespace mrHelper.App.Forms
          _mergeRequestDescriptionMarkdownPipeline = Markdig.MarkdownExtensions
             .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
             .Build();
+
+         this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
       }
 
       public string GetCurrentHostName()

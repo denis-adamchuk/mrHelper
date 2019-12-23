@@ -63,7 +63,6 @@ namespace mrHelper.App.Forms
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
-         this.groupBoxProjects = new System.Windows.Forms.GroupBox();
          this.buttonEditProjects = new System.Windows.Forms.Button();
          this.listViewProjects = new System.Windows.Forms.ListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -127,7 +126,6 @@ namespace mrHelper.App.Forms
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
          this.tabPageSettings.SuspendLayout();
-         this.groupBoxProjects.SuspendLayout();
          this.groupBoxNotifications.SuspendLayout();
          this.groupBoxOther.SuspendLayout();
          this.groupBoxGit.SuspendLayout();
@@ -258,7 +256,7 @@ namespace mrHelper.App.Forms
             "2",
             "3",
             "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(116, 79);
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(107, 68);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
          this.comboBoxDCDepth.TabIndex = 7;
@@ -433,7 +431,6 @@ namespace mrHelper.App.Forms
          // 
          // tabPageSettings
          // 
-         this.tabPageSettings.Controls.Add(this.groupBoxProjects);
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
          this.tabPageSettings.Controls.Add(this.groupBoxOther);
          this.tabPageSettings.Controls.Add(this.groupBoxGit);
@@ -447,20 +444,9 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
          // 
-         // groupBoxProjects
-         // 
-         this.groupBoxProjects.Controls.Add(this.buttonEditProjects);
-         this.groupBoxProjects.Controls.Add(this.listViewProjects);
-         this.groupBoxProjects.Location = new System.Drawing.Point(525, 81);
-         this.groupBoxProjects.Name = "groupBoxProjects";
-         this.groupBoxProjects.Size = new System.Drawing.Size(277, 135);
-         this.groupBoxProjects.TabIndex = 5;
-         this.groupBoxProjects.TabStop = false;
-         this.groupBoxProjects.Text = "Enabled Projects for Selected Host";
-         // 
          // buttonEditProjects
          // 
-         this.buttonEditProjects.Location = new System.Drawing.Point(188, 19);
+         this.buttonEditProjects.Location = new System.Drawing.Point(6, 312);
          this.buttonEditProjects.Name = "buttonEditProjects";
          this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
          this.buttonEditProjects.TabIndex = 1;
@@ -475,11 +461,11 @@ namespace mrHelper.App.Forms
          this.listViewProjects.FullRowSelect = true;
          this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
          this.listViewProjects.HideSelection = false;
-         this.listViewProjects.Location = new System.Drawing.Point(9, 19);
+         this.listViewProjects.Location = new System.Drawing.Point(6, 58);
          this.listViewProjects.MultiSelect = false;
          this.listViewProjects.Name = "listViewProjects";
          this.listViewProjects.ShowGroups = false;
-         this.listViewProjects.Size = new System.Drawing.Size(173, 105);
+         this.listViewProjects.Size = new System.Drawing.Size(259, 248);
          this.listViewProjects.TabIndex = 0;
          this.listViewProjects.UseCompatibleStateImageBehavior = false;
          this.listViewProjects.View = System.Windows.Forms.View.Details;
@@ -603,9 +589,9 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.labelDepth);
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
-         this.groupBoxOther.Location = new System.Drawing.Point(525, 222);
+         this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(277, 135);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 121);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -614,7 +600,7 @@ namespace mrHelper.App.Forms
          // 
          this.comboBoxThemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxThemes.FormattingEnabled = true;
-         this.comboBoxThemes.Location = new System.Drawing.Point(83, 41);
+         this.comboBoxThemes.Location = new System.Drawing.Point(107, 41);
          this.comboBoxThemes.Name = "comboBoxThemes";
          this.comboBoxThemes.Size = new System.Drawing.Size(182, 21);
          this.comboBoxThemes.TabIndex = 10;
@@ -623,7 +609,7 @@ namespace mrHelper.App.Forms
          // labelVisualTheme
          // 
          this.labelVisualTheme.AutoSize = true;
-         this.labelVisualTheme.Location = new System.Drawing.Point(6, 47);
+         this.labelVisualTheme.Location = new System.Drawing.Point(3, 44);
          this.labelVisualTheme.Name = "labelVisualTheme";
          this.labelVisualTheme.Size = new System.Drawing.Size(40, 13);
          this.labelVisualTheme.TabIndex = 9;
@@ -633,7 +619,7 @@ namespace mrHelper.App.Forms
          // 
          this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxColorSchemes.FormattingEnabled = true;
-         this.comboBoxColorSchemes.Location = new System.Drawing.Point(83, 13);
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(107, 13);
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
          this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
          this.comboBoxColorSchemes.TabIndex = 6;
@@ -642,7 +628,7 @@ namespace mrHelper.App.Forms
          // labelColorScheme
          // 
          this.labelColorScheme.AutoSize = true;
-         this.labelColorScheme.Location = new System.Drawing.Point(6, 16);
+         this.labelColorScheme.Location = new System.Drawing.Point(3, 16);
          this.labelColorScheme.Name = "labelColorScheme";
          this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
          this.labelColorScheme.TabIndex = 8;
@@ -651,7 +637,7 @@ namespace mrHelper.App.Forms
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(6, 82);
+         this.labelDepth.Location = new System.Drawing.Point(3, 71);
          this.labelDepth.Name = "labelDepth";
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
@@ -660,7 +646,7 @@ namespace mrHelper.App.Forms
          // checkBoxMinimizeOnClose
          // 
          this.checkBoxMinimizeOnClose.AutoSize = true;
-         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 112);
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 95);
          this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
          this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
          this.checkBoxMinimizeOnClose.TabIndex = 8;
@@ -682,13 +668,15 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxHost
          // 
+         this.groupBoxHost.Controls.Add(this.buttonEditProjects);
          this.groupBoxHost.Controls.Add(this.comboBoxHost);
+         this.groupBoxHost.Controls.Add(this.listViewProjects);
          this.groupBoxHost.Location = new System.Drawing.Point(525, 6);
          this.groupBoxHost.Name = "groupBoxHost";
-         this.groupBoxHost.Size = new System.Drawing.Size(277, 69);
+         this.groupBoxHost.Size = new System.Drawing.Size(277, 351);
          this.groupBoxHost.TabIndex = 3;
          this.groupBoxHost.TabStop = false;
-         this.groupBoxHost.Text = "Select Host";
+         this.groupBoxHost.Text = "Select Host and Projects";
          // 
          // comboBoxHost
          // 
@@ -1165,7 +1153,6 @@ namespace mrHelper.App.Forms
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);
          this.tabPageSettings.ResumeLayout(false);
-         this.groupBoxProjects.ResumeLayout(false);
          this.groupBoxNotifications.ResumeLayout(false);
          this.groupBoxNotifications.PerformLayout();
          this.groupBoxOther.ResumeLayout(false);
@@ -1286,7 +1273,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.ComboBox comboBoxThemes;
       private System.Windows.Forms.Label labelVisualTheme;
-      private System.Windows.Forms.GroupBox groupBoxProjects;
       private System.Windows.Forms.Button buttonEditProjects;
       private System.Windows.Forms.ListView listViewProjects;
       private System.Windows.Forms.ColumnHeader columnHeaderName;
