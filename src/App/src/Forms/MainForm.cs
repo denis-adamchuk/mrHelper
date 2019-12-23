@@ -30,7 +30,6 @@ namespace mrHelper.App.Forms
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
-      private static readonly int checkForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
 
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
@@ -106,7 +105,7 @@ namespace mrHelper.App.Forms
       private string _newVersionNumber;
       private readonly System.Windows.Forms.Timer _checkForUpdatesTimer = new System.Windows.Forms.Timer
       {
-         Interval = checkForUpdatesTimerInterval
+         Interval = Common.Constants.Constants.CheckForUpdatesTimerInterval
       };
 
       private struct HostComboBoxItem
