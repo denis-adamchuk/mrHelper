@@ -1079,7 +1079,8 @@ namespace mrHelper.App.Forms
       {
          Text = Common.Constants.Constants.MainWindowCaption
            + " (" + Application.ProductVersion + ")"
-           + (linkLabelNewVersion.Visible ? "   New version is available!" : String.Empty);
+           + (!String.IsNullOrEmpty(_newVersionNumber) ? String.Format(
+              "   New version {0} is available!", _newVersionNumber) : String.Empty);
       }
 
       private void updateTrayIcon()
