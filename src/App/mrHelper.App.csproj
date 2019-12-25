@@ -102,6 +102,9 @@
     <Compile Include="src\Forms\EditProjectsForm.Designer.cs">
       <DependentUpon>EditProjectsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\CustomFontForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -2,11 +2,13 @@
 
 namespace mrHelper.App.Forms
 {
-   internal partial class AddKnownHostForm : Form
+   internal partial class AddKnownHostForm : CustomFontForm
    {
       internal AddKnownHostForm()
       {
          InitializeComponent();
+
+         applyFont(Program.Settings.FontSizeName);
       }
 
       internal string Host => textBoxHost.Text;

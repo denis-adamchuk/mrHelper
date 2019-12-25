@@ -10,7 +10,7 @@ using mrHelper.CommonTools;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class NewDiscussionForm : Form
+   internal partial class NewDiscussionForm : CustomFontForm
    {
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
@@ -25,11 +25,12 @@ namespace mrHelper.App.Forms
          htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
 
+         applyFont(Program.Settings.FontSizeName);
+         applyTheme(Program.Settings.VisualThemeName);
+
          this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
-
-         applyTheme(Program.Settings.VisualThemeName);
       }
 
       private void applyTheme(string theme)
@@ -79,7 +80,7 @@ namespace mrHelper.App.Forms
          DiffContext context = textContextMaker.GetContext(position, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
-         htmlPanel.Text = formatter.FormatAsHTML(context);
+         htmlPanel.Text = formatter.FormatAsHTML(context, this.Font.Height);
 
          textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);

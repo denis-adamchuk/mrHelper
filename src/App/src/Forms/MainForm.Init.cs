@@ -175,35 +175,16 @@ namespace mrHelper.App.Forms
             }
          }
 
-         comboBoxThemes.Items.Add("Default");
-         comboBoxThemes.Items.Add("New Year 2020");
+         selectInitialFont();
+         applyFont(Program.Settings.FontSizeName);
 
-         string selectedTheme = null;
-         foreach (string theme in comboBoxThemes.Items.Cast<string>())
-         {
-            if (theme == Program.Settings.VisualThemeName)
-            {
-               selectedTheme = theme;
-            }
-         }
-
-         if (selectedTheme != null)
-         {
-            comboBoxThemes.SelectedItem = selectedTheme;
-         }
-         else
-         {
-            comboBoxThemes.SelectedIndex = 0;
-         }
-
-         applyTheme(comboBoxThemes.SelectedItem.ToString());
+         selectInitialTheme();
+         applyTheme(Program.Settings.VisualThemeName);
 
          if (!Program.Settings.HasSelectedProjects())
          {
             setupDefaultProjectList();
          }
-
-         // TODO Load Program.Settings.SelectedProjects into UI
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }

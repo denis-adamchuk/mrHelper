@@ -308,7 +308,7 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         int fontSizePx = 12;
+         int fontSizePx = this.Font.Height;
          int rowsVPaddingPx = 2;
          int rowHeight = (fontSizePx + rowsVPaddingPx * 2 + 1 /* border of control */ + 2);
          // we're adding 2 extra pixels for each row because HtmlRenderer does not support CSS line-height property

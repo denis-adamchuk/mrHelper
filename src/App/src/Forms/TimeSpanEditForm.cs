@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   public partial class EditTimeForm : Form
+   public partial class EditTimeForm : CustomFontForm
    {
       public EditTimeForm(TimeSpan span)
       {
@@ -18,6 +18,8 @@ namespace mrHelper.App.Forms
          numericUpDownH.Value = span.Hours;
          numericUpDownM.Value = span.Minutes;
          numericUpDownS.Value = span.Seconds;
+
+         applyFont(Program.Settings.FontSizeName);
       }
 
       private void NumericUpDown_KeyDown(object sender, KeyEventArgs e)

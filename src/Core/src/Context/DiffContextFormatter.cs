@@ -22,7 +22,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public string FormatAsHTML(DiffContext context, int fontSizePx = 12, int rowsVPaddingPx = 2)
+      public string FormatAsHTML(DiffContext context, int fontSizePx, int rowsVPaddingPx = 2)
       {
          return getContextHTML(context, fontSizePx, rowsVPaddingPx);
       }

@@ -21,7 +21,7 @@ using mrHelper.Client.Git;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class DiscussionsForm : Form
+   internal partial class DiscussionsForm : CustomFontForm
    {
       /// <summary>
       /// Throws:
@@ -109,6 +109,7 @@ namespace mrHelper.App.Forms
          Controls.Add(SearchPanel);
          Controls.Add(SortPanel);
 
+         applyFont(Program.Settings.FontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
          if (!renderDiscussions(discussions, false))

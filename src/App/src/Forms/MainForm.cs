@@ -24,7 +24,7 @@ using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm : Form, ICommandCallback
+   internal partial class MainForm : CustomFontForm, ICommandCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";

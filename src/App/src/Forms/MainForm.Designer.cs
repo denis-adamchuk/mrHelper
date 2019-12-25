@@ -63,9 +63,6 @@ namespace mrHelper.App.Forms
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
-         this.buttonEditProjects = new System.Windows.Forms.Button();
-         this.listViewProjects = new System.Windows.Forms.ListView();
-         this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
          this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
          this.checkBoxShowMyActivity = new System.Windows.Forms.CheckBox();
@@ -76,6 +73,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
          this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.comboBoxFonts = new System.Windows.Forms.ComboBox();
          this.comboBoxThemes = new System.Windows.Forms.ComboBox();
          this.labelVisualTheme = new System.Windows.Forms.Label();
          this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
@@ -84,7 +82,10 @@ namespace mrHelper.App.Forms
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
+         this.buttonEditProjects = new System.Windows.Forms.Button();
          this.comboBoxHost = new mrHelper.CommonControls.SelectionPreservingComboBox();
+         this.listViewProjects = new System.Windows.Forms.ListView();
+         this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
@@ -122,6 +123,7 @@ namespace mrHelper.App.Forms
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.panel3 = new System.Windows.Forms.Panel();
+         this.labelFontSize = new System.Windows.Forms.Label();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -256,7 +258,7 @@ namespace mrHelper.App.Forms
             "2",
             "3",
             "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(107, 68);
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(107, 95);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
          this.comboBoxDCDepth.TabIndex = 7;
@@ -444,37 +446,6 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
          // 
-         // buttonEditProjects
-         // 
-         this.buttonEditProjects.Location = new System.Drawing.Point(6, 312);
-         this.buttonEditProjects.Name = "buttonEditProjects";
-         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditProjects.TabIndex = 1;
-         this.buttonEditProjects.Text = "Edit...";
-         this.buttonEditProjects.UseVisualStyleBackColor = true;
-         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
-         // 
-         // listViewProjects
-         // 
-         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderName});
-         this.listViewProjects.FullRowSelect = true;
-         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewProjects.HideSelection = false;
-         this.listViewProjects.Location = new System.Drawing.Point(6, 58);
-         this.listViewProjects.MultiSelect = false;
-         this.listViewProjects.Name = "listViewProjects";
-         this.listViewProjects.ShowGroups = false;
-         this.listViewProjects.Size = new System.Drawing.Size(259, 248);
-         this.listViewProjects.TabIndex = 0;
-         this.listViewProjects.UseCompatibleStateImageBehavior = false;
-         this.listViewProjects.View = System.Windows.Forms.View.Details;
-         // 
-         // columnHeaderName
-         // 
-         this.columnHeaderName.Text = "Name";
-         this.columnHeaderName.Width = 160;
-         // 
          // groupBoxNotifications
          // 
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowServiceNotifications);
@@ -582,6 +553,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.labelFontSize);
+         this.groupBoxOther.Controls.Add(this.comboBoxFonts);
          this.groupBoxOther.Controls.Add(this.comboBoxThemes);
          this.groupBoxOther.Controls.Add(this.labelVisualTheme);
          this.groupBoxOther.Controls.Add(this.comboBoxColorSchemes);
@@ -591,10 +564,20 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 121);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 151);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // comboBoxFonts
+         // 
+         this.comboBoxFonts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxFonts.FormattingEnabled = true;
+         this.comboBoxFonts.Location = new System.Drawing.Point(107, 13);
+         this.comboBoxFonts.Name = "comboBoxFonts";
+         this.comboBoxFonts.Size = new System.Drawing.Size(182, 21);
+         this.comboBoxFonts.TabIndex = 10;
+         this.comboBoxFonts.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFonts_SelectionChangeCommitted);
          // 
          // comboBoxThemes
          // 
@@ -609,7 +592,7 @@ namespace mrHelper.App.Forms
          // labelVisualTheme
          // 
          this.labelVisualTheme.AutoSize = true;
-         this.labelVisualTheme.Location = new System.Drawing.Point(3, 44);
+         this.labelVisualTheme.Location = new System.Drawing.Point(7, 71);
          this.labelVisualTheme.Name = "labelVisualTheme";
          this.labelVisualTheme.Size = new System.Drawing.Size(40, 13);
          this.labelVisualTheme.TabIndex = 9;
@@ -619,7 +602,7 @@ namespace mrHelper.App.Forms
          // 
          this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxColorSchemes.FormattingEnabled = true;
-         this.comboBoxColorSchemes.Location = new System.Drawing.Point(107, 13);
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(107, 68);
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
          this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
          this.comboBoxColorSchemes.TabIndex = 6;
@@ -628,7 +611,7 @@ namespace mrHelper.App.Forms
          // labelColorScheme
          // 
          this.labelColorScheme.AutoSize = true;
-         this.labelColorScheme.Location = new System.Drawing.Point(3, 16);
+         this.labelColorScheme.Location = new System.Drawing.Point(7, 44);
          this.labelColorScheme.Name = "labelColorScheme";
          this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
          this.labelColorScheme.TabIndex = 8;
@@ -637,7 +620,7 @@ namespace mrHelper.App.Forms
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(3, 71);
+         this.labelDepth.Location = new System.Drawing.Point(7, 98);
          this.labelDepth.Name = "labelDepth";
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
@@ -646,7 +629,7 @@ namespace mrHelper.App.Forms
          // checkBoxMinimizeOnClose
          // 
          this.checkBoxMinimizeOnClose.AutoSize = true;
-         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 95);
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 128);
          this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
          this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
          this.checkBoxMinimizeOnClose.TabIndex = 8;
@@ -678,6 +661,16 @@ namespace mrHelper.App.Forms
          this.groupBoxHost.TabStop = false;
          this.groupBoxHost.Text = "Select Host and Projects";
          // 
+         // buttonEditProjects
+         // 
+         this.buttonEditProjects.Location = new System.Drawing.Point(6, 312);
+         this.buttonEditProjects.Name = "buttonEditProjects";
+         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditProjects.TabIndex = 1;
+         this.buttonEditProjects.Text = "Edit...";
+         this.buttonEditProjects.UseVisualStyleBackColor = true;
+         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
+         // 
          // comboBoxHost
          // 
          this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -688,6 +681,27 @@ namespace mrHelper.App.Forms
          this.comboBoxHost.TabIndex = 5;
          this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
+         // 
+         // listViewProjects
+         // 
+         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderName});
+         this.listViewProjects.FullRowSelect = true;
+         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewProjects.HideSelection = false;
+         this.listViewProjects.Location = new System.Drawing.Point(6, 58);
+         this.listViewProjects.MultiSelect = false;
+         this.listViewProjects.Name = "listViewProjects";
+         this.listViewProjects.ShowGroups = false;
+         this.listViewProjects.Size = new System.Drawing.Size(259, 248);
+         this.listViewProjects.TabIndex = 0;
+         this.listViewProjects.UseCompatibleStateImageBehavior = false;
+         this.listViewProjects.View = System.Windows.Forms.View.Details;
+         // 
+         // columnHeaderName
+         // 
+         this.columnHeaderName.Text = "Name";
+         this.columnHeaderName.Width = 160;
          // 
          // tabPageMR
          // 
@@ -1138,6 +1152,15 @@ namespace mrHelper.App.Forms
          this.panel3.Size = new System.Drawing.Size(910, 34);
          this.panel3.TabIndex = 6;
          // 
+         // labelFontSize
+         // 
+         this.labelFontSize.AutoSize = true;
+         this.labelFontSize.Location = new System.Drawing.Point(7, 16);
+         this.labelFontSize.Name = "labelFontSize";
+         this.labelFontSize.Size = new System.Drawing.Size(49, 13);
+         this.labelFontSize.TabIndex = 11;
+         this.labelFontSize.Text = "Font size";
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1272,10 +1295,12 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.PictureBox pictureBox1;
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.ComboBox comboBoxThemes;
+      private System.Windows.Forms.ComboBox comboBoxFonts;
       private System.Windows.Forms.Label labelVisualTheme;
       private System.Windows.Forms.Button buttonEditProjects;
       private System.Windows.Forms.ListView listViewProjects;
       private System.Windows.Forms.ColumnHeader columnHeaderName;
-    }
+      private System.Windows.Forms.Label labelFontSize;
+   }
 }
 

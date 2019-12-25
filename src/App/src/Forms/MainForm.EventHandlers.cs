@@ -122,7 +122,7 @@ namespace mrHelper.App.Forms
       {
          if (!TimeSpan.TryParse(labelTimeTrackingTrackedTime.Text, out TimeSpan oldSpan))
          {
-            return;
+            oldSpan = TimeSpan.Zero; // e.g. "Not Started"
          }
 
          // Store data before opening a modal dialog
@@ -927,11 +927,25 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         applyTheme(comboBoxThemes.SelectedItem.ToString());
+         string theme = comboBoxThemes.SelectedItem.ToString();
+         Program.Settings.VisualThemeName = theme;
+         applyTheme(theme);
       }
 
-     async private void buttonEditProjects_Click(object sender, EventArgs e)
-     {
+      private void comboBoxFonts_SelectionChangeCommitted(object sender, EventArgs e)
+      {
+         if (comboBoxFonts.SelectedItem == null)
+         {
+            return;
+         }
+
+         string font = comboBoxFonts.SelectedItem.ToString();
+         Program.Settings.FontSizeName = font;
+         applyFont(font);
+      }
+
+      async private void buttonEditProjects_Click(object sender, EventArgs e)
+      {
          string host = getHostName();
          if (host == String.Empty)
          {
@@ -957,7 +971,7 @@ namespace mrHelper.App.Forms
                await switchHostToSelected();
             }
          }
-     }
+      }
    }
 }
 

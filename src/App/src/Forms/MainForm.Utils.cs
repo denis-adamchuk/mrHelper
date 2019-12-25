@@ -25,6 +25,7 @@ using mrHelper.CommonControls;
 using static mrHelper.Client.Services.ServiceManager;
 using mrHelper.Client.Discussions;
 using static mrHelper.Client.Common.UserEvents;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Forms
 {
@@ -1134,6 +1135,58 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void selectInitialFont()
+      {
+         foreach (string choice in Constants.FontSizeChoices.Keys)
+         {
+            comboBoxFonts.Items.Add(choice);
+         }
+
+         string selectedFontName = null;
+         foreach (string theme in comboBoxFonts.Items.Cast<string>())
+         {
+            if (theme == Program.Settings.FontSizeName)
+            {
+               selectedFontName = theme;
+            }
+         }
+
+         if (selectedFontName != null)
+         {
+            comboBoxFonts.SelectedItem = selectedFontName;
+         }
+         else
+         {
+            comboBoxFonts.SelectedIndex = 0;
+         }
+      }
+
+      private void selectInitialTheme()
+      {
+         foreach (string choice in Constants.ThemeNames)
+         {
+            comboBoxThemes.Items.Add(choice);
+         }
+
+         string selectedTheme = null;
+         foreach (string theme in comboBoxThemes.Items.Cast<string>())
+         {
+            if (theme == Program.Settings.VisualThemeName)
+            {
+               selectedTheme = theme;
+            }
+         }
+
+         if (selectedTheme != null)
+         {
+            comboBoxThemes.SelectedItem = selectedTheme;
+         }
+         else
+         {
+            comboBoxThemes.SelectedIndex = 0;
+         }
+      }
+
       private void applyTheme(string theme)
       {
          if (theme == "New Year 2020")
@@ -1158,6 +1211,9 @@ namespace mrHelper.App.Forms
             richTextBoxMergeRequestDescription.BaseStylesheet =
                mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
          }
+
+         richTextBoxMergeRequestDescription.BaseStylesheet +=
+            String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
 
          Program.Settings.VisualThemeName = theme;
       }
