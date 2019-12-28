@@ -32,11 +32,13 @@ namespace mrHelper.Common.Constants
 
       public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>
       {
-         { "Small",  1.00 },
-         { "Medium", 1.25 },
-         { "Large",  1.50 }
+         { "Tiny",   1.00 },
+         { "Small",  1.10 },
+         { "Medium", 1.20 },
+         { "Large",  1.30 },
+         { "Giant",  1.40 }
       };
-      public static string DefaultFontSizeChoice = "Small";
+      public static string DefaultFontSizeChoice = "Tiny";
 
       public static double OriginalFontEmSize = 0;
    }

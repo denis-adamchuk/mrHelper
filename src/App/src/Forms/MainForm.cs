@@ -48,6 +48,8 @@ namespace mrHelper.App.Forms
             .Build();
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
+
+         FontApplied += MainForm_FontApplied;
       }
 
       public string GetCurrentHostName()

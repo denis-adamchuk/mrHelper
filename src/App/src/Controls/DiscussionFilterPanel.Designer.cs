@@ -46,16 +46,14 @@
          // 
          // groupBoxFilter
          // 
-         this.groupBoxFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxFilter.Controls.Add(this.checkBoxShowService);
          this.groupBoxFilter.Controls.Add(this.groupBox2);
          this.groupBoxFilter.Controls.Add(this.groupBox1);
          this.groupBoxFilter.Controls.Add(this.checkBoxCreatedByMe);
-         this.groupBoxFilter.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxFilter.Location = new System.Drawing.Point(0, 0);
          this.groupBoxFilter.Name = "groupBoxFilter";
-         this.groupBoxFilter.Size = new System.Drawing.Size(457, 145);
+         this.groupBoxFilter.Size = new System.Drawing.Size(457, 139);
          this.groupBoxFilter.TabIndex = 0;
          this.groupBoxFilter.TabStop = false;
          this.groupBoxFilter.Text = "Filter";
@@ -176,7 +174,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.Controls.Add(this.groupBoxFilter);
          this.Name = "DiscussionFilterPanel";
-         this.Size = new System.Drawing.Size(463, 151);
+         this.Size = new System.Drawing.Size(457, 139);
          this.groupBoxFilter.ResumeLayout(false);
          this.groupBoxFilter.PerformLayout();
          this.groupBox2.ResumeLayout(false);

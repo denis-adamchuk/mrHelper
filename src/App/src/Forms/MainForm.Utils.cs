@@ -1231,6 +1231,42 @@ namespace mrHelper.App.Forms
             .ToList()
             .ForEach(x => listViewProjects.Items.Add(x));
       }
+
+      private void updateMinimumSizes()
+      {
+         Func<Control, int, Size> calcMinSizeOfHorzBox = (box, minGap) =>
+            new Size
+            {
+               Width = box.Controls.Cast<Control>().Sum(x => x.Width) + box.Controls.Count * minGap,
+               Height = box.Height
+            };
+
+         int groupBoxTimeTrackingMinWidth =
+            buttonTimeTrackingStart.Width + buttonTimeTrackingCancel.Width + buttonEditTime.Width + 50 +
+            labelTimeTrackingTrackedLabel.Width + labelTimeTrackingTrackedTime.Width;
+
+         splitContainer1.Panel2MinSize =
+            Math.Max(groupBoxTimeTrackingMinWidth,
+            Math.Max(calcMinSizeOfHorzBox(groupBoxActions, 10).Width, calcMinSizeOfHorzBox(groupBoxReview, 10).Width));
+
+         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
+      }
+
+      private void updateLayout()
+      {
+         // Update Custom Actions group box content
+         Func<Control, int, int> getControlPosition = (control, index) =>
+             control.Width * index +
+                (groupBoxActions.Width - _customCommands.Count * control.Width) * (index + 1) / (_customCommands.Count + 1);
+
+         for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
+         {
+            Control c = groupBoxActions.Controls[id];
+            c.Location = new Point { X = getControlPosition(c, id), Y = c.Location.Y };
+         }
+
+         updateMinimumSizes();
+      }
    }
 }
 
