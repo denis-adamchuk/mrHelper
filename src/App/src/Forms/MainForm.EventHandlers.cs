@@ -26,8 +26,8 @@ namespace mrHelper.App.Forms
 
          cleanUpInstallers();
 
-         loadSettings();
          addCustomActions();
+         loadSettings();
          if (!integrateInTools())
          {
             Close();
@@ -46,7 +46,6 @@ namespace mrHelper.App.Forms
             splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
          }
 
-         updateLayout();
          await onApplicationStarted();
       }
 
@@ -525,7 +524,6 @@ namespace mrHelper.App.Forms
          if (isUserMovingSplitter(splitter))
          {
             onUserIsMovingSplitter(splitter, false);
-            updateLayout();
          }
       }
 
@@ -989,9 +987,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void MainForm_FontApplied(string font)
+      private void groupBoxActions_SizeChanged(object sender, EventArgs e)
       {
-         updateLayout();
+         repositionCustomCommands(); // update position of custom actions
+      }
+
+      protected override void OnFontChanged(EventArgs e)
+      {
+         base.OnFontChanged(e);
+
+         updateMinimumSizes(); // update splitter restrictions
+         repositionCustomCommands(); // update position of custom actions
+         updateVisibleMergeRequests(); // update row height of List View
+         applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
       }
    }
 }

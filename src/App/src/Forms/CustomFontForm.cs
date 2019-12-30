@@ -15,12 +15,9 @@ namespace mrHelper.App.Forms
 
       private double _originalFontSize;
 
-      protected event Action<string> FontApplied;
-
       protected void applyFont(string font)
       {
          this.Font = new Font(this.Font.FontFamily, (float)(_originalFontSize * Constants.FontSizeChoices[font]));
-         FontApplied?.Invoke(font);
       }
    }
 }

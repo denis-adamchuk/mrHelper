@@ -48,8 +48,6 @@ namespace mrHelper.App.Forms
             .Build();
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
-
-         FontApplied += MainForm_FontApplied;
       }
 
       public string GetCurrentHostName()
@@ -73,9 +71,9 @@ namespace mrHelper.App.Forms
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
-         {
-            Interval = timeTrackingTimerInterval
-         };
+      {
+         Interval = timeTrackingTimerInterval
+      };
 
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;

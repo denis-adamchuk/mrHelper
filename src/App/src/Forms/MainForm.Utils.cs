@@ -1242,30 +1242,33 @@ namespace mrHelper.App.Forms
             };
 
          int groupBoxTimeTrackingMinWidth =
-            buttonTimeTrackingStart.Width + buttonTimeTrackingCancel.Width + buttonEditTime.Width + 50 +
+            buttonTimeTrackingStart.Width + buttonTimeTrackingCancel.Width + buttonEditTime.Width + 100 +
             labelTimeTrackingTrackedLabel.Width + labelTimeTrackingTrackedTime.Width;
 
+         int groupBoxActionsMinWidth = calcMinSizeOfHorzBox(groupBoxActions, 10).Width;
+         int groupBoxReviewMinWidth = calcMinSizeOfHorzBox(groupBoxReview, 10).Width;
+
          splitContainer1.Panel2MinSize =
-            Math.Max(groupBoxTimeTrackingMinWidth,
-            Math.Max(calcMinSizeOfHorzBox(groupBoxActions, 10).Width, calcMinSizeOfHorzBox(groupBoxReview, 10).Width));
+            Math.Max(groupBoxTimeTrackingMinWidth, Math.Max(groupBoxActionsMinWidth, groupBoxReviewMinWidth));
+
+         Debug.WriteLine(
+            "Changed Panel2MinSize to {0}. groupBoxTimeTrackingMinWidth = {1}. groupBoxActionsMinWidth = {2}. groupBoxReviewMinWidth = {3}",
+            splitContainer1.Panel2MinSize, groupBoxTimeTrackingMinWidth, groupBoxActionsMinWidth, groupBoxReviewMinWidth);
 
          this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
       }
 
-      private void updateLayout()
+      private void repositionCustomCommands()
       {
-         // Update Custom Actions group box content
-         Func<Control, int, int> getControlPosition = (control, index) =>
+         Func<Control, int, int> getControlX = (control, index) =>
              control.Width * index +
                 (groupBoxActions.Width - _customCommands.Count * control.Width) * (index + 1) / (_customCommands.Count + 1);
 
          for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
          {
             Control c = groupBoxActions.Controls[id];
-            c.Location = new Point { X = getControlPosition(c, id), Y = c.Location.Y };
+            c.Location = new Point { X = getControlX(c, id), Y = c.Location.Y };
          }
-
-         updateMinimumSizes();
       }
    }
 }

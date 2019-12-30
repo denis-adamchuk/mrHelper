@@ -56,7 +56,7 @@ namespace mrHelper.App.Forms
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
-               Location = new System.Drawing.Point { X = 0, Y = 17 },
+               Location = new System.Drawing.Point { X = 0, Y = 19 },
                Size = new System.Drawing.Size{ Width = 96, Height = 32},
                Text = name,
                UseVisualStyleBackColor = true,
@@ -265,7 +265,7 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
-         // Expression resolver requires Workflow 
+         // Expression resolver requires Workflow
          _expressionResolver = new ExpressionResolver(_workflow);
 
          // Color Scheme requires Expression Resolver
