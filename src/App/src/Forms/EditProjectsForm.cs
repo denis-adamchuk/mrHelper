@@ -16,7 +16,7 @@ namespace mrHelper.App.Forms
 
          updateProjectsListView(projects);
 
-         applyFont(Program.Settings.FontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       public Tuple<string, bool>[] Projects

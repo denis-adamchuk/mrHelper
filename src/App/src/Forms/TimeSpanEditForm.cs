@@ -19,7 +19,7 @@ namespace mrHelper.App.Forms
          numericUpDownM.Value = span.Minutes;
          numericUpDownS.Value = span.Seconds;
 
-         applyFont(Program.Settings.FontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       private void NumericUpDown_KeyDown(object sender, KeyEventArgs e)

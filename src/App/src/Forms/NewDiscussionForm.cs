@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
          htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
 
-         applyFont(Program.Settings.FontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
          this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;

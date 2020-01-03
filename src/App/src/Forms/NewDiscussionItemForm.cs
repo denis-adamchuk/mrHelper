@@ -17,7 +17,7 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          this.Text = caption;
 
-         applyFont(Program.Settings.FontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       internal string Body => textBox.Text;

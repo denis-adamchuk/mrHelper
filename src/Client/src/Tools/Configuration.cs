@@ -95,9 +95,9 @@ namespace mrHelper.Client.Tools
       private static readonly string SelectedProjectsKeyName      = "SelectedProjects";
       private static readonly string SelectedProjectsDefaultValue = String.Empty;
 
-      private static readonly string FontSizeNameKeyName       = "FontSize";
-      private static readonly string FontSizeNameDefaultValue  =
-         Constants.DefaultFontSizeChoice; 
+      private static readonly string MainWindowFontSizeNameKeyName       = "MWFontSize";
+      private static readonly string MainWindowFontSizeNameDefaultValue  =
+         Constants.DefaultMainWindowFontSizeChoice;
 
       public event PropertyChangedEventHandler PropertyChanged;
 
@@ -211,10 +211,10 @@ namespace mrHelper.Client.Tools
          set { setValue(VisualThemeNameKeyName, value); }
       }
 
-      public string FontSizeName
+      public string MainWindowFontSizeName
       {
-         get { return getValue(FontSizeNameKeyName, FontSizeNameDefaultValue); }
-         set { setValue(FontSizeNameKeyName, value); }
+         get { return getValue(MainWindowFontSizeNameKeyName, MainWindowFontSizeNameDefaultValue); }
+         set { setValue(MainWindowFontSizeNameKeyName, value); }
       }
 
       public int LogFilesToKeep

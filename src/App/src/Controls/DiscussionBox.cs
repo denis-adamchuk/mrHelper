@@ -695,21 +695,28 @@ namespace mrHelper.App.Controls
             }
          }
 
-         if (_panelContext != null)
-         {
-            _panelContext.Width = Convert.ToInt32(
-               width * ContextWidth *
-                  (1 / ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier)) / 100);
-            _panelContext.Height = _panelContext.DisplayRectangle.Height + 2;
-            _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
-         }
-         _labelAuthor.Width = Convert.ToInt32(
-            width * LabelAuthorWidth *
-               ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier) / 100);
+         int realLabelAuthorPercents = Convert.ToInt32(
+            LabelAuthorWidth * ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier));
+
+         _labelAuthor.Width = width * realLabelAuthorPercents / 100;
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
             _textboxFilename.Height = getTextBoxPreferredHeight(_textboxFilename as TextBoxNoWheel);
+         }
+
+         int remainingPercents = 100
+            - HorzMarginWidth - realLabelAuthorPercents
+            - HorzMarginWidth - NotesWidth
+            - HorzMarginWidth
+            - HorzMarginWidth
+            - HorzMarginWidth;
+
+         if (_panelContext != null)
+         {
+            _panelContext.Width = width * remainingPercents / 100;
+            _panelContext.Height = _panelContext.DisplayRectangle.Height + 2;
+            _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
       }
 
@@ -987,8 +994,7 @@ namespace mrHelper.App.Controls
       // Widths in %
       private readonly int HorzMarginWidth = 1;
       private readonly int LabelAuthorWidth = 5;
-      private readonly double LabelAuthorWidthMultiplier = 1.20;
-      private readonly int ContextWidth = 55;
+      private readonly double LabelAuthorWidthMultiplier = 1.15;
       private readonly int NotesWidth = 34;
       private readonly int LabelFilenameWidth = 34;
 

@@ -32,13 +32,22 @@ namespace mrHelper.Common.Constants
 
       public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>
       {
-         { "Tiny",   1.00 },
-         { "Small",  1.10 },
-         { "Medium", 1.20 },
-         { "Large",  1.50 },
-         { "Giant",  1.60 }
+         { "Tiny",    8.25 },
+         { "Small",   9.00 },
+         { "Medium",  9.75 },
+         { "Large",  11.25 },
+         // skip 12.00
+         // skip 14.25
+         { "Meeting Mode",  15.75 }
       };
-      public static string DefaultFontSizeChoice = "Tiny";
+
+      public static IEnumerable<string> MainWindowFontSizeChoices = new string[]
+         { "Tiny", "Small", "Medium", "Large" };
+
+      public static string DefaultMainWindowFontSizeChoice = "Small";
+
+      public static IEnumerable<string> DiscussionsWindowFontSizeChoices = new string[]
+         { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
    }
 }
 

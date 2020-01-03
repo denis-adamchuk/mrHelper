@@ -42,7 +42,7 @@
          this.groupBox1.Size = new System.Drawing.Size(150, 50);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
-         this.groupBox1.Text = "Font";
+         this.groupBox1.Text = "Font Size";
          // 
          // comboBoxFonts
          // 

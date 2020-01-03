@@ -104,11 +104,7 @@ namespace mrHelper.App.Forms
                updateSearch();
             });
 
-         FontSelectionPanel = new DiscussionFontSelectionPanel(
-            (font) =>
-            {
-               applyFont(font);
-            });
+         FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
 
          Controls.Add(FilterPanel);
          Controls.Add(ActionsPanel);
@@ -116,7 +112,7 @@ namespace mrHelper.App.Forms
          Controls.Add(SortPanel);
          Controls.Add(FontSelectionPanel);
 
-         applyFont(Program.Settings.FontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
          if (!renderDiscussions(discussions, false))
@@ -377,23 +373,24 @@ namespace mrHelper.App.Forms
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point fontSelectionPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
-         Point fontSelectionPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
 
          sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
-         actionsPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
+         fontSelectionPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
+         actionsPanelLocation.Offset(fontSelectionPanelLocation.X + FontSelectionPanel.Size.Width, 0);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
-                                    Math.Max(actionsPanelLocation.Y + ActionsPanel.Size.Height,
-                                            (sortPanelLocation.Y + SortPanel.Size.Height)));
-         fontSelectionPanelLocation.Offset(actionsPanelLocation.X + ActionsPanel.Size.Width, 0);
+                                    Math.Max(sortPanelLocation.Y + SortPanel.Size.Height,
+                                    Math.Max(fontSelectionPanelLocation.Y + FontSelectionPanel.Size.Height,
+                                             actionsPanelLocation.Y + ActionsPanel.Size.Height)));
 
          // Stack panels horizontally
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
          SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
+         FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
          ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
          SearchPanel.Location = searchPanelLocation + (Size)AutoScrollPosition;
-         FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
 
          // Prepare to stack boxes vertically
          int topOffset = Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,

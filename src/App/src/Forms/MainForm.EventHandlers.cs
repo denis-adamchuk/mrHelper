@@ -954,7 +954,7 @@ namespace mrHelper.App.Forms
          }
 
          string font = comboBoxFonts.SelectedItem.ToString();
-         Program.Settings.FontSizeName = font;
+         Program.Settings.MainWindowFontSizeName = font;
          applyFont(font);
       }
 

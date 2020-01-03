@@ -8,7 +8,7 @@ namespace mrHelper.App.Forms
       {
          InitializeComponent();
 
-         applyFont(Program.Settings.FontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       internal string ProjectName => textBoxProjectName.Text;

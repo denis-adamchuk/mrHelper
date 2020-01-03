@@ -166,8 +166,8 @@ namespace mrHelper.App.Forms
          }
 
          WinFormsHelpers.FillComboBox(comboBoxFonts,
-            Common.Constants.Constants.FontSizeChoices.Keys, Program.Settings.FontSizeName);
-         applyFont(Program.Settings.FontSizeName);
+            Common.Constants.Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
 
          WinFormsHelpers.FillComboBox(comboBoxThemes,
             Common.Constants.Constants.ThemeNames, Program.Settings.VisualThemeName);

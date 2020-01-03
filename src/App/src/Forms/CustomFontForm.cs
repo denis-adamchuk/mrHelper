@@ -17,7 +17,12 @@ namespace mrHelper.App.Forms
 
       protected void applyFont(string font)
       {
-         this.Font = new Font(this.Font.FontFamily, (float)(_originalFontSize * Constants.FontSizeChoices[font]));
+         if (!Constants.FontSizeChoices.ContainsKey(font))
+         {
+            return;
+         }
+
+         this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font]);
       }
 
       public float CurrentFontMultiplier

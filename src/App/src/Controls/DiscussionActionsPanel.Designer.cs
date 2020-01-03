@@ -41,14 +41,14 @@
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(90, 54);
+         this.groupBox1.Size = new System.Drawing.Size(90, 50);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Actions";
          // 
          // buttonDiscussionsRefresh
          // 
-         this.buttonDiscussionsRefresh.Location = new System.Drawing.Point(6, 19);
+         this.buttonDiscussionsRefresh.Location = new System.Drawing.Point(7, 16);
          this.buttonDiscussionsRefresh.Name = "buttonDiscussionsRefresh";
          this.buttonDiscussionsRefresh.Size = new System.Drawing.Size(75, 23);
          this.buttonDiscussionsRefresh.TabIndex = 0;
@@ -62,7 +62,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionActionsPanel";
-         this.Size = new System.Drawing.Size(90, 54);
+         this.Size = new System.Drawing.Size(90, 50);
          this.groupBox1.ResumeLayout(false);
          this.ResumeLayout(false);
 
