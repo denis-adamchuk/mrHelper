@@ -78,6 +78,12 @@
     <Compile Include="src\Controls\DiscussionFilterPanel.Designer.cs">
       <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\DiscussionFontSelectionPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DiscussionFontSelectionPanel.Designer.cs">
+      <DependentUpon>DiscussionFontSelectionPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\DiscussionSearchPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -177,6 +183,7 @@
     <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\Helpers\Notifications\TrayIcon.cs" />
     <Compile Include="src\Helpers\Notifications\UserNotifier.cs" />
+    <Compile Include="src\Helpers\WinFormsHelpers.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
@@ -186,6 +193,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionFilterPanel.resx">
       <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\DiscussionFontSelectionPanel.resx">
+      <DependentUpon>DiscussionFontSelectionPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionSearchPanel.resx">
       <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>

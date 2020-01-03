@@ -165,10 +165,12 @@ namespace mrHelper.App.Forms
             }
          }
 
-         selectInitialFont();
+         WinFormsHelpers.FillComboBox(comboBoxFonts,
+            Common.Constants.Constants.FontSizeChoices.Keys, Program.Settings.FontSizeName);
          applyFont(Program.Settings.FontSizeName);
 
-         selectInitialTheme();
+         WinFormsHelpers.FillComboBox(comboBoxThemes,
+            Common.Constants.Constants.ThemeNames, Program.Settings.VisualThemeName);
          applyTheme(Program.Settings.VisualThemeName);
 
          if (!Program.Settings.HasSelectedProjects())

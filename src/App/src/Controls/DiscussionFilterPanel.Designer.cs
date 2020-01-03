@@ -53,7 +53,7 @@
          this.groupBoxFilter.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxFilter.Location = new System.Drawing.Point(0, 0);
          this.groupBoxFilter.Name = "groupBoxFilter";
-         this.groupBoxFilter.Size = new System.Drawing.Size(457, 139);
+         this.groupBoxFilter.Size = new System.Drawing.Size(473, 139);
          this.groupBoxFilter.TabIndex = 0;
          this.groupBoxFilter.TabStop = false;
          this.groupBoxFilter.Text = "Filter";
@@ -61,7 +61,7 @@
          // checkBoxShowService
          // 
          this.checkBoxShowService.AutoSize = true;
-         this.checkBoxShowService.Location = new System.Drawing.Point(232, 19);
+         this.checkBoxShowService.Location = new System.Drawing.Point(253, 19);
          this.checkBoxShowService.Name = "checkBoxShowService";
          this.checkBoxShowService.Size = new System.Drawing.Size(140, 17);
          this.checkBoxShowService.TabIndex = 4;
@@ -73,7 +73,7 @@
          this.groupBox2.Controls.Add(this.radioButtonShowNotResolvedOnly);
          this.groupBox2.Controls.Add(this.radioButtonShowResolvedOnly);
          this.groupBox2.Controls.Add(this.radioButtonNoFilterByResolution);
-         this.groupBox2.Location = new System.Drawing.Point(232, 42);
+         this.groupBox2.Location = new System.Drawing.Point(247, 42);
          this.groupBox2.Name = "groupBox2";
          this.groupBox2.Size = new System.Drawing.Size(220, 94);
          this.groupBox2.TabIndex = 3;
@@ -120,7 +120,7 @@
          this.groupBox1.Controls.Add(this.radioButtonNoFilterByAnswers);
          this.groupBox1.Location = new System.Drawing.Point(6, 42);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(220, 94);
+         this.groupBox1.Size = new System.Drawing.Size(235, 94);
          this.groupBox1.TabIndex = 1;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Filter by answers";
@@ -173,7 +173,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBoxFilter);
          this.Name = "DiscussionFilterPanel";
-         this.Size = new System.Drawing.Size(457, 139);
+         this.Size = new System.Drawing.Size(473, 139);
          this.groupBoxFilter.ResumeLayout(false);
          this.groupBoxFilter.PerformLayout();
          this.groupBox2.ResumeLayout(false);

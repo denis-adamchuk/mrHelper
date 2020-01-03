@@ -35,12 +35,10 @@ namespace mrHelper.Common.Constants
          { "Tiny",   1.00 },
          { "Small",  1.10 },
          { "Medium", 1.20 },
-         { "Large",  1.30 },
-         { "Giant",  1.40 }
+         { "Large",  1.50 },
+         { "Giant",  1.60 }
       };
       public static string DefaultFontSizeChoice = "Tiny";
-
-      public static double OriginalFontEmSize = 0;
    }
 }
 

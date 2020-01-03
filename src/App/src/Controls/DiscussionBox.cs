@@ -28,8 +28,11 @@ namespace mrHelper.App.Controls
 
       internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
          int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
-         Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged, Action<Control> onControlGotFocus)
+         Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged,
+         Action<Control> onControlGotFocus, CustomFontForm parent)
       {
+         Parent = parent;
+
          Discussion = discussion;
          _editor = editor;
          _mergeRequestAuthor = mergeRequestAuthor;
@@ -76,6 +79,22 @@ namespace mrHelper.App.Controls
       }
 
       internal Discussion Discussion { get; private set; }
+
+      protected override void OnFontChanged(EventArgs e)
+      {
+         base.OnFontChanged(e);
+
+         if (Discussion.Notes == null || Discussion.Notes.Count < 1)
+         {
+            return;
+         }
+
+         DiscussionNote firstNote = Discussion.Notes[0];
+         if (_panelContext != null)
+         {
+            setHtmlPanelProperties(_panelContext as HtmlPanel, firstNote);
+         }
+      }
 
       async private void FilenameTextBox_KeyDown(object sender, KeyEventArgs e)
       {
@@ -290,6 +309,10 @@ namespace mrHelper.App.Controls
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
+         if (_panelContext != null)
+         {
+            setHtmlPanelProperties(_panelContext as HtmlPanel, firstNote);
+         }
          _textboxesNotes = createTextBoxes(Discussion.Notes);
 
          Controls.Add(_labelAuthor);
@@ -308,6 +331,20 @@ namespace mrHelper.App.Controls
             return null;
          }
 
+         HtmlPanel htmlPanel = new HtmlPanel
+         {
+            BorderStyle = BorderStyle.FixedSingle,
+            TabStop = false
+         };
+         htmlPanel.GotFocus += Control_GotFocus;
+
+         return htmlPanel;
+      }
+
+      private void setHtmlPanelProperties(HtmlPanel htmlPanel, DiscussionNote firstNote)
+      {
+         Debug.Assert(firstNote.Type == "DiffNote");
+
          int fontSizePx = this.Font.Height;
          int rowsVPaddingPx = 2;
          int rowHeight = (fontSizePx + rowsVPaddingPx * 2 + 1 /* border of control */ + 2);
@@ -316,21 +353,11 @@ namespace mrHelper.App.Controls
 
          int panelHeight = (_diffContextDepth.Size + 1) * rowHeight;
 
-         HtmlPanel htmlPanel = new HtmlPanel
-         {
-            BorderStyle = BorderStyle.FixedSingle,
-            MinimumSize = new Size(600, panelHeight),
-            TabStop = false
-         };
-         htmlPanel.GotFocus += Control_GotFocus;
-
          DiffPosition position = convertToDiffPosition(firstNote.Position);
          htmlPanel.Text = getContext(_panelContextMaker, position,
             _diffContextDepth, fontSizePx, rowsVPaddingPx);
          _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
             _tooltipContextDepth, fontSizePx, rowsVPaddingPx));
-
-         return htmlPanel;
       }
 
       private string getContext(IContextMaker contextMaker, DiffPosition position,
@@ -391,8 +418,7 @@ namespace mrHelper.App.Controls
          {
             ReadOnly = true,
             Text = result,
-            Multiline = true,
-            MinimumSize = new Size(300, 0),
+            Multiline = true
          };
          textBox.GotFocus += Control_GotFocus;
          textBox.KeyDown += FilenameTextBox_KeyDown;
@@ -406,8 +432,7 @@ namespace mrHelper.App.Controls
          Label labelAuthor = new Label
          {
             Text = firstNote.Author.Name,
-            AutoEllipsis = true,
-            MinimumSize = new Size(100, 0)
+            AutoEllipsis = true
          };
          return labelAuthor;
       }
@@ -481,7 +506,6 @@ namespace mrHelper.App.Controls
                Text = getNoteText(ref note, ref firstNoteAuthor),
                Multiline = true,
                BackColor = getNoteColor(note),
-               MinimumSize = new Size(300, 0),
                Tag = note
             };
             textBox.GotFocus += Control_GotFocus;
@@ -500,7 +524,6 @@ namespace mrHelper.App.Controls
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
                Text = getHtmlDiscussionNoteText(ref note),
-               MinimumSize = new Size(300, 0),
                Tag = note
             };
             htmlPanel.GotFocus += Control_GotFocus;
@@ -674,11 +697,15 @@ namespace mrHelper.App.Controls
 
          if (_panelContext != null)
          {
-            _panelContext.Width = width * ContextWidth / 100;
+            _panelContext.Width = Convert.ToInt32(
+               width * ContextWidth *
+                  (1 / ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier)) / 100);
             _panelContext.Height = _panelContext.DisplayRectangle.Height + 2;
             _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
-         _labelAuthor.Width = width * LabelAuthorWidth / 100;
+         _labelAuthor.Width = Convert.ToInt32(
+            width * LabelAuthorWidth *
+               ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier) / 100);
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
@@ -960,6 +987,7 @@ namespace mrHelper.App.Controls
       // Widths in %
       private readonly int HorzMarginWidth = 1;
       private readonly int LabelAuthorWidth = 5;
+      private readonly double LabelAuthorWidthMultiplier = 1.20;
       private readonly int ContextWidth = 55;
       private readonly int NotesWidth = 34;
       private readonly int LabelFilenameWidth = 34;

@@ -13,11 +13,16 @@ namespace mrHelper.App.Forms
          _originalFontSize = this.Font.Size;
       }
 
-      private double _originalFontSize;
+      private float _originalFontSize;
 
       protected void applyFont(string font)
       {
          this.Font = new Font(this.Font.FontFamily, (float)(_originalFontSize * Constants.FontSizeChoices[font]));
+      }
+
+      public float CurrentFontMultiplier
+      {
+         get { return this.Font.Size / _originalFontSize; }
       }
    }
 }

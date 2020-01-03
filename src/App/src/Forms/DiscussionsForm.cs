@@ -104,10 +104,17 @@ namespace mrHelper.App.Forms
                updateSearch();
             });
 
+         FontSelectionPanel = new DiscussionFontSelectionPanel(
+            (font) =>
+            {
+               applyFont(font);
+            });
+
          Controls.Add(FilterPanel);
          Controls.Add(ActionsPanel);
          Controls.Add(SearchPanel);
          Controls.Add(SortPanel);
+         Controls.Add(FontSelectionPanel);
 
          applyFont(Program.Settings.FontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
@@ -349,7 +356,8 @@ namespace mrHelper.App.Forms
                   updateLayout(null, true, lite);
                   updateSearch();
                },
-               sender => MostRecentFocusedDiscussionControl = sender)
+               sender => MostRecentFocusedDiscussionControl = sender,
+               this)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -371,18 +379,21 @@ namespace mrHelper.App.Forms
          Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point fontSelectionPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
 
          sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
          actionsPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
                                     Math.Max(actionsPanelLocation.Y + ActionsPanel.Size.Height,
                                             (sortPanelLocation.Y + SortPanel.Size.Height)));
+         fontSelectionPanelLocation.Offset(actionsPanelLocation.X + ActionsPanel.Size.Width, 0);
 
          // Stack panels horizontally
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
          SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
          ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
          SearchPanel.Location = searchPanelLocation + (Size)AutoScrollPosition;
+         FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
 
          // Prepare to stack boxes vertically
          int topOffset = Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,
@@ -525,12 +536,14 @@ namespace mrHelper.App.Forms
       private readonly DiscussionSortPanel SortPanel;
       private readonly DiscussionSort DisplaySort;
 
+      private readonly DiscussionFontSelectionPanel FontSelectionPanel;
+
       /// <summary>
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control MostRecentFocusedDiscussionControl;
    }
 
-   internal class NoDiscussionsToShow : ArgumentException { }; 
+   internal class NoDiscussionsToShow : ArgumentException { };
 }
 
