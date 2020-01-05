@@ -28,7 +28,7 @@ namespace mrHelper.Common.Constants
       public static int CheckForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
 
       public static string[] ThemeNames = { "Default", "New Year 2020" };
-      public static string DefaultThemeName = "New Year 2020";
+      public static string DefaultThemeName = "Default";
 
       public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>
       {
