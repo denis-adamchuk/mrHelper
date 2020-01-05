@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   public partial class EditProjectsForm : Form
+   public partial class EditProjectsForm : CustomFontForm
    {
       public EditProjectsForm(Tuple<string, bool>[] projects)
       {
@@ -15,6 +15,8 @@ namespace mrHelper.App.Forms
          InitializeComponent();
 
          updateProjectsListView(projects);
+
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       public Tuple<string, bool>[] Projects

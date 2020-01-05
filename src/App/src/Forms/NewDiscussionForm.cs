@@ -10,7 +10,7 @@ using mrHelper.CommonTools;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class NewDiscussionForm : Form
+   internal partial class NewDiscussionForm : CustomFontForm
    {
       /// <summary>
       /// Throws GitOperationException in case of problems with git.
@@ -22,8 +22,9 @@ namespace mrHelper.App.Forms
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
          htmlPanel.Location = new Point(12, 73);
          htmlPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-         htmlPanel.Size = new Size(860, 76);
          Controls.Add(htmlPanel);
+
+         applyFont(Program.Settings.MainWindowFontSizeName);
 
          this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;
          this.ActiveControl = textBoxDiscussionBody;
@@ -39,12 +40,12 @@ namespace mrHelper.App.Forms
             pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.Penguin;
             pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             pictureBox1.Visible = true;
-            htmlPanel.Width = 730;
+            htmlPanel.Width = pictureBox1.Location.X - 50 - htmlPanel.Location.X;
          }
          else
          {
             pictureBox1.Visible = false;
-            htmlPanel.Width = 860;
+            htmlPanel.Width = textBoxDiscussionBody.Width;
          }
       }
 
@@ -79,7 +80,8 @@ namespace mrHelper.App.Forms
          DiffContext context = textContextMaker.GetContext(position, depth);
 
          DiffContextFormatter formatter = new DiffContextFormatter();
-         htmlPanel.Text = formatter.FormatAsHTML(context);
+         htmlPanel.Text = formatter.FormatAsHTML(context, htmlPanel.Font.Height, 2);
+         htmlPanel.Height = htmlPanel.DisplayRectangle.Height + 2;
 
          textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);

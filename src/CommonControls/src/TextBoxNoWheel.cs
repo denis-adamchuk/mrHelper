@@ -15,6 +15,13 @@ namespace mrHelper.CommonControls
          base.WndProc(ref m);
       }
 
+      protected override void OnFontChanged(System.EventArgs e)
+      {
+         base.OnFontChanged(e);
+
+         _cachedFontHeight = 0;
+      }
+
       public int CachedHandle
       {
          get

@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Controls
 {
-   partial class DiscussionActionsPanel
+   partial class DiscussionFontSelectionPanel
    {
       /// <summary> 
       /// Required designer variable.
@@ -28,41 +28,38 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.components = new System.ComponentModel.Container();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
-         this.buttonDiscussionsRefresh = new System.Windows.Forms.Button();
-         this.toolTipActionsPanel = new System.Windows.Forms.ToolTip(this.components);
+         this.comboBoxFonts = new System.Windows.Forms.ComboBox();
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBox1
          // 
-         this.groupBox1.Controls.Add(this.buttonDiscussionsRefresh);
+         this.groupBox1.Controls.Add(this.comboBoxFonts);
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(90, 50);
+         this.groupBox1.Size = new System.Drawing.Size(150, 50);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
-         this.groupBox1.Text = "Actions";
+         this.groupBox1.Text = "Font Size";
          // 
-         // buttonDiscussionsRefresh
+         // comboBoxFonts
          // 
-         this.buttonDiscussionsRefresh.Location = new System.Drawing.Point(7, 16);
-         this.buttonDiscussionsRefresh.Name = "buttonDiscussionsRefresh";
-         this.buttonDiscussionsRefresh.Size = new System.Drawing.Size(75, 23);
-         this.buttonDiscussionsRefresh.TabIndex = 0;
-         this.buttonDiscussionsRefresh.Text = "Refresh";
-         this.toolTipActionsPanel.SetToolTip(this.buttonDiscussionsRefresh, "Reload discussions from Server");
-         this.buttonDiscussionsRefresh.UseVisualStyleBackColor = true;
-         this.buttonDiscussionsRefresh.Click += new System.EventHandler(this.ButtonDiscussionsRefresh_Click);
+         this.comboBoxFonts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxFonts.FormattingEnabled = true;
+         this.comboBoxFonts.Location = new System.Drawing.Point(6, 19);
+         this.comboBoxFonts.Name = "comboBoxFonts";
+         this.comboBoxFonts.Size = new System.Drawing.Size(138, 21);
+         this.comboBoxFonts.TabIndex = 0;
+         this.comboBoxFonts.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFonts_SelectionChangeCommitted);
          // 
-         // DiscussionActionsPanel
+         // DiscussionFontSelectionPanel
          // 
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
-         this.Name = "DiscussionActionsPanel";
-         this.Size = new System.Drawing.Size(90, 50);
+         this.Name = "DiscussionFontSelectionPanel";
+         this.Size = new System.Drawing.Size(150, 50);
          this.groupBox1.ResumeLayout(false);
          this.ResumeLayout(false);
 
@@ -71,7 +68,6 @@
       #endregion
 
       private System.Windows.Forms.GroupBox groupBox1;
-      private System.Windows.Forms.Button buttonDiscussionsRefresh;
-      private System.Windows.Forms.ToolTip toolTipActionsPanel;
+      private System.Windows.Forms.ComboBox comboBoxFonts;
    }
 }

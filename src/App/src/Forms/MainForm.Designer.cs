@@ -52,10 +52,10 @@ namespace mrHelper.App.Forms
          this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.buttonEditTime = new System.Windows.Forms.Button();
+         this.buttonDiffTool = new System.Windows.Forms.Button();
          this.buttonAddComment = new System.Windows.Forms.Button();
          this.buttonDiscussions = new System.Windows.Forms.Button();
          this.buttonNewDiscussion = new System.Windows.Forms.Button();
-         this.buttonDiffTool = new System.Windows.Forms.Button();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,9 +63,6 @@ namespace mrHelper.App.Forms
          this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
-         this.buttonEditProjects = new System.Windows.Forms.Button();
-         this.listViewProjects = new System.Windows.Forms.ListView();
-         this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
          this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
          this.checkBoxShowMyActivity = new System.Windows.Forms.CheckBox();
@@ -76,6 +73,8 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
          this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.labelFontSize = new System.Windows.Forms.Label();
+         this.comboBoxFonts = new System.Windows.Forms.ComboBox();
          this.comboBoxThemes = new System.Windows.Forms.ComboBox();
          this.labelVisualTheme = new System.Windows.Forms.Label();
          this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
@@ -84,7 +83,10 @@ namespace mrHelper.App.Forms
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
+         this.buttonEditProjects = new System.Windows.Forms.Button();
          this.comboBoxHost = new mrHelper.CommonControls.SelectionPreservingComboBox();
+         this.listViewProjects = new System.Windows.Forms.ListView();
+         this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
@@ -111,10 +113,13 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
          this.buttonTimeTrackingCancel = new System.Windows.Forms.Button();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
-         this.panel1 = new System.Windows.Forms.Panel();
-         this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
+         this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBox3 = new System.Windows.Forms.GroupBox();
+         this.labelRightCommitTimestamp = new System.Windows.Forms.Label();
+         this.labelLeftCommitTimestamp = new System.Windows.Forms.Label();
+         this.labelRightCommitTimestampLabel = new System.Windows.Forms.Label();
+         this.labelLeftCommitTimestampLabel = new System.Windows.Forms.Label();
          this.comboBoxRightCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
          this.panel2 = new System.Windows.Forms.Panel();
@@ -122,6 +127,8 @@ namespace mrHelper.App.Forms
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.panel3 = new System.Windows.Forms.Panel();
+         this.panel4 = new System.Windows.Forms.Panel();
+         this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -144,7 +151,6 @@ namespace mrHelper.App.Forms
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
          this.groupBoxTimeTracking.SuspendLayout();
-         this.panel1.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
          this.groupBox3.SuspendLayout();
          this.panel2.SuspendLayout();
@@ -256,7 +262,7 @@ namespace mrHelper.App.Forms
             "2",
             "3",
             "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(107, 68);
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(107, 95);
          this.comboBoxDCDepth.Name = "comboBoxDCDepth";
          this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
          this.comboBoxDCDepth.TabIndex = 7;
@@ -333,6 +339,19 @@ namespace mrHelper.App.Forms
          this.buttonEditTime.UseVisualStyleBackColor = true;
          this.buttonEditTime.Click += new System.EventHandler(this.ButtonTimeEdit_Click);
          // 
+         // buttonDiffTool
+         // 
+         this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonDiffTool.Enabled = false;
+         this.buttonDiffTool.Location = new System.Drawing.Point(808, 19);
+         this.buttonDiffTool.Name = "buttonDiffTool";
+         this.buttonDiffTool.Size = new System.Drawing.Size(96, 32);
+         this.buttonDiffTool.TabIndex = 7;
+         this.buttonDiffTool.Text = "Diff tool";
+         this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
+         this.buttonDiffTool.UseVisualStyleBackColor = true;
+         this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
+         // 
          // buttonAddComment
          // 
          this.buttonAddComment.Enabled = false;
@@ -347,8 +366,9 @@ namespace mrHelper.App.Forms
          // 
          // buttonDiscussions
          // 
+         this.buttonDiscussions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(247, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(704, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 10;
@@ -368,19 +388,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable discussion");
          this.buttonNewDiscussion.UseVisualStyleBackColor = true;
          this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
-         // 
-         // buttonDiffTool
-         // 
-         this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonDiffTool.Enabled = false;
-         this.buttonDiffTool.Location = new System.Drawing.Point(808, 19);
-         this.buttonDiffTool.Name = "buttonDiffTool";
-         this.buttonDiffTool.Size = new System.Drawing.Size(96, 48);
-         this.buttonDiffTool.TabIndex = 7;
-         this.buttonDiffTool.Text = "Diff tool";
-         this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to review diff between selected commits");
-         this.buttonDiffTool.UseVisualStyleBackColor = true;
-         this.buttonDiffTool.Click += new System.EventHandler(this.ButtonDifftool_Click);
          // 
          // contextMenuStrip
          // 
@@ -443,37 +450,6 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.TabIndex = 0;
          this.tabPageSettings.Text = "Settings";
          this.tabPageSettings.UseVisualStyleBackColor = true;
-         // 
-         // buttonEditProjects
-         // 
-         this.buttonEditProjects.Location = new System.Drawing.Point(6, 312);
-         this.buttonEditProjects.Name = "buttonEditProjects";
-         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditProjects.TabIndex = 1;
-         this.buttonEditProjects.Text = "Edit...";
-         this.buttonEditProjects.UseVisualStyleBackColor = true;
-         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
-         // 
-         // listViewProjects
-         // 
-         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderName});
-         this.listViewProjects.FullRowSelect = true;
-         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewProjects.HideSelection = false;
-         this.listViewProjects.Location = new System.Drawing.Point(6, 58);
-         this.listViewProjects.MultiSelect = false;
-         this.listViewProjects.Name = "listViewProjects";
-         this.listViewProjects.ShowGroups = false;
-         this.listViewProjects.Size = new System.Drawing.Size(259, 248);
-         this.listViewProjects.TabIndex = 0;
-         this.listViewProjects.UseCompatibleStateImageBehavior = false;
-         this.listViewProjects.View = System.Windows.Forms.View.Details;
-         // 
-         // columnHeaderName
-         // 
-         this.columnHeaderName.Text = "Name";
-         this.columnHeaderName.Width = 160;
          // 
          // groupBoxNotifications
          // 
@@ -582,6 +558,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.labelFontSize);
+         this.groupBoxOther.Controls.Add(this.comboBoxFonts);
          this.groupBoxOther.Controls.Add(this.comboBoxThemes);
          this.groupBoxOther.Controls.Add(this.labelVisualTheme);
          this.groupBoxOther.Controls.Add(this.comboBoxColorSchemes);
@@ -591,10 +569,29 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 121);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 151);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // labelFontSize
+         // 
+         this.labelFontSize.AutoSize = true;
+         this.labelFontSize.Location = new System.Drawing.Point(7, 16);
+         this.labelFontSize.Name = "labelFontSize";
+         this.labelFontSize.Size = new System.Drawing.Size(49, 13);
+         this.labelFontSize.TabIndex = 11;
+         this.labelFontSize.Text = "Font size";
+         // 
+         // comboBoxFonts
+         // 
+         this.comboBoxFonts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxFonts.FormattingEnabled = true;
+         this.comboBoxFonts.Location = new System.Drawing.Point(107, 13);
+         this.comboBoxFonts.Name = "comboBoxFonts";
+         this.comboBoxFonts.Size = new System.Drawing.Size(182, 21);
+         this.comboBoxFonts.TabIndex = 10;
+         this.comboBoxFonts.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFonts_SelectionChangeCommitted);
          // 
          // comboBoxThemes
          // 
@@ -609,7 +606,7 @@ namespace mrHelper.App.Forms
          // labelVisualTheme
          // 
          this.labelVisualTheme.AutoSize = true;
-         this.labelVisualTheme.Location = new System.Drawing.Point(3, 44);
+         this.labelVisualTheme.Location = new System.Drawing.Point(7, 71);
          this.labelVisualTheme.Name = "labelVisualTheme";
          this.labelVisualTheme.Size = new System.Drawing.Size(40, 13);
          this.labelVisualTheme.TabIndex = 9;
@@ -619,7 +616,7 @@ namespace mrHelper.App.Forms
          // 
          this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxColorSchemes.FormattingEnabled = true;
-         this.comboBoxColorSchemes.Location = new System.Drawing.Point(107, 13);
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(107, 68);
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
          this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
          this.comboBoxColorSchemes.TabIndex = 6;
@@ -628,7 +625,7 @@ namespace mrHelper.App.Forms
          // labelColorScheme
          // 
          this.labelColorScheme.AutoSize = true;
-         this.labelColorScheme.Location = new System.Drawing.Point(3, 16);
+         this.labelColorScheme.Location = new System.Drawing.Point(7, 44);
          this.labelColorScheme.Name = "labelColorScheme";
          this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
          this.labelColorScheme.TabIndex = 8;
@@ -637,7 +634,7 @@ namespace mrHelper.App.Forms
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
-         this.labelDepth.Location = new System.Drawing.Point(3, 71);
+         this.labelDepth.Location = new System.Drawing.Point(7, 98);
          this.labelDepth.Name = "labelDepth";
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
@@ -646,7 +643,7 @@ namespace mrHelper.App.Forms
          // checkBoxMinimizeOnClose
          // 
          this.checkBoxMinimizeOnClose.AutoSize = true;
-         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 95);
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 128);
          this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
          this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
          this.checkBoxMinimizeOnClose.TabIndex = 8;
@@ -678,6 +675,16 @@ namespace mrHelper.App.Forms
          this.groupBoxHost.TabStop = false;
          this.groupBoxHost.Text = "Select Host and Projects";
          // 
+         // buttonEditProjects
+         // 
+         this.buttonEditProjects.Location = new System.Drawing.Point(6, 312);
+         this.buttonEditProjects.Name = "buttonEditProjects";
+         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditProjects.TabIndex = 1;
+         this.buttonEditProjects.Text = "Edit...";
+         this.buttonEditProjects.UseVisualStyleBackColor = true;
+         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
+         // 
          // comboBoxHost
          // 
          this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -688,6 +695,27 @@ namespace mrHelper.App.Forms
          this.comboBoxHost.TabIndex = 5;
          this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
+         // 
+         // listViewProjects
+         // 
+         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderName});
+         this.listViewProjects.FullRowSelect = true;
+         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewProjects.HideSelection = false;
+         this.listViewProjects.Location = new System.Drawing.Point(6, 58);
+         this.listViewProjects.MultiSelect = false;
+         this.listViewProjects.Name = "listViewProjects";
+         this.listViewProjects.ShowGroups = false;
+         this.listViewProjects.Size = new System.Drawing.Size(259, 248);
+         this.listViewProjects.TabIndex = 0;
+         this.listViewProjects.UseCompatibleStateImageBehavior = false;
+         this.listViewProjects.View = System.Windows.Forms.View.Details;
+         // 
+         // columnHeaderName
+         // 
+         this.columnHeaderName.Text = "Name";
+         this.columnHeaderName.Width = 160;
          // 
          // tabPageMR
          // 
@@ -862,7 +890,8 @@ namespace mrHelper.App.Forms
          this.splitContainer2.Panel2.Controls.Add(this.pictureBox2);
          this.splitContainer2.Panel2.Controls.Add(this.pictureBox1);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxTimeTracking);
-         this.splitContainer2.Panel2.Controls.Add(this.panel1);
+         this.splitContainer2.Panel2.Controls.Add(this.groupBoxActions);
+         this.splitContainer2.Panel2.Controls.Add(this.groupBoxReview);
          this.splitContainer2.Panel2.Controls.Add(this.groupBox3);
          this.splitContainer2.Panel2MinSize = 250;
          this.splitContainer2.Size = new System.Drawing.Size(910, 768);
@@ -919,9 +948,9 @@ namespace mrHelper.App.Forms
          // pictureBox2
          // 
          this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Right;
-         this.pictureBox2.Location = new System.Drawing.Point(624, 242);
+         this.pictureBox2.Location = new System.Drawing.Point(660, 327);
          this.pictureBox2.Name = "pictureBox2";
-         this.pictureBox2.Size = new System.Drawing.Size(286, 238);
+         this.pictureBox2.Size = new System.Drawing.Size(250, 153);
          this.pictureBox2.TabIndex = 8;
          this.pictureBox2.TabStop = false;
          this.pictureBox2.Visible = false;
@@ -929,9 +958,9 @@ namespace mrHelper.App.Forms
          // pictureBox1
          // 
          this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Left;
-         this.pictureBox1.Location = new System.Drawing.Point(0, 242);
+         this.pictureBox1.Location = new System.Drawing.Point(0, 327);
          this.pictureBox1.Name = "pictureBox1";
-         this.pictureBox1.Size = new System.Drawing.Size(315, 238);
+         this.pictureBox1.Size = new System.Drawing.Size(250, 153);
          this.pictureBox1.TabIndex = 7;
          this.pictureBox1.TabStop = false;
          this.pictureBox1.Visible = false;
@@ -945,7 +974,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingCancel);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingStart);
          this.groupBoxTimeTracking.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 159);
+         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 244);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
          this.groupBoxTimeTracking.Size = new System.Drawing.Size(910, 83);
          this.groupBoxTimeTracking.TabIndex = 6;
@@ -1004,50 +1033,82 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
          // 
-         // panel1
-         // 
-         this.panel1.Controls.Add(this.groupBoxReview);
-         this.panel1.Controls.Add(this.groupBoxActions);
-         this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-         this.panel1.Location = new System.Drawing.Point(0, 80);
-         this.panel1.Name = "panel1";
-         this.panel1.Size = new System.Drawing.Size(910, 79);
-         this.panel1.TabIndex = 5;
-         // 
-         // groupBoxReview
-         // 
-         this.groupBoxReview.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxReview.Controls.Add(this.buttonAddComment);
-         this.groupBoxReview.Controls.Add(this.buttonDiscussions);
-         this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
-         this.groupBoxReview.Location = new System.Drawing.Point(561, 6);
-         this.groupBoxReview.Name = "groupBoxReview";
-         this.groupBoxReview.Size = new System.Drawing.Size(349, 63);
-         this.groupBoxReview.TabIndex = 1;
-         this.groupBoxReview.TabStop = false;
-         this.groupBoxReview.Text = "Review";
-         // 
          // groupBoxActions
          // 
-         this.groupBoxActions.Location = new System.Drawing.Point(0, 6);
+         this.groupBoxActions.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxActions.Location = new System.Drawing.Point(0, 181);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(225, 63);
+         this.groupBoxActions.Size = new System.Drawing.Size(910, 63);
          this.groupBoxActions.TabIndex = 0;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
+         this.groupBoxActions.SizeChanged += new System.EventHandler(this.groupBoxActions_SizeChanged);
+         // 
+         // groupBoxReview
+         // 
+         this.groupBoxReview.Controls.Add(this.buttonDiffTool);
+         this.groupBoxReview.Controls.Add(this.buttonAddComment);
+         this.groupBoxReview.Controls.Add(this.buttonDiscussions);
+         this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
+         this.groupBoxReview.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxReview.Location = new System.Drawing.Point(0, 118);
+         this.groupBoxReview.Name = "groupBoxReview";
+         this.groupBoxReview.Size = new System.Drawing.Size(910, 63);
+         this.groupBoxReview.TabIndex = 2;
+         this.groupBoxReview.TabStop = false;
+         this.groupBoxReview.Text = "Review";
          // 
          // groupBox3
          // 
-         this.groupBox3.Controls.Add(this.buttonDiffTool);
+         this.groupBox3.Controls.Add(this.labelRightCommitTimestamp);
+         this.groupBox3.Controls.Add(this.labelLeftCommitTimestamp);
+         this.groupBox3.Controls.Add(this.labelRightCommitTimestampLabel);
+         this.groupBox3.Controls.Add(this.labelLeftCommitTimestampLabel);
          this.groupBox3.Controls.Add(this.comboBoxRightCommit);
          this.groupBox3.Controls.Add(this.comboBoxLeftCommit);
          this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBox3.Location = new System.Drawing.Point(0, 0);
          this.groupBox3.Name = "groupBox3";
-         this.groupBox3.Size = new System.Drawing.Size(910, 80);
+         this.groupBox3.Size = new System.Drawing.Size(910, 118);
          this.groupBox3.TabIndex = 4;
          this.groupBox3.TabStop = false;
          this.groupBox3.Text = "Select commits";
+         // 
+         // labelRightCommitTimestamp
+         // 
+         this.labelRightCommitTimestamp.AutoSize = true;
+         this.labelRightCommitTimestamp.Location = new System.Drawing.Point(71, 94);
+         this.labelRightCommitTimestamp.Name = "labelRightCommitTimestamp";
+         this.labelRightCommitTimestamp.Size = new System.Drawing.Size(27, 13);
+         this.labelRightCommitTimestamp.TabIndex = 10;
+         this.labelRightCommitTimestamp.Text = "N/A";
+         // 
+         // labelLeftCommitTimestamp
+         // 
+         this.labelLeftCommitTimestamp.AutoSize = true;
+         this.labelLeftCommitTimestamp.Location = new System.Drawing.Point(71, 43);
+         this.labelLeftCommitTimestamp.Name = "labelLeftCommitTimestamp";
+         this.labelLeftCommitTimestamp.Size = new System.Drawing.Size(27, 13);
+         this.labelLeftCommitTimestamp.TabIndex = 9;
+         this.labelLeftCommitTimestamp.Text = "N/A";
+         // 
+         // labelRightCommitTimestampLabel
+         // 
+         this.labelRightCommitTimestampLabel.AutoSize = true;
+         this.labelRightCommitTimestampLabel.Location = new System.Drawing.Point(6, 94);
+         this.labelRightCommitTimestampLabel.Name = "labelRightCommitTimestampLabel";
+         this.labelRightCommitTimestampLabel.Size = new System.Drawing.Size(59, 13);
+         this.labelRightCommitTimestampLabel.TabIndex = 8;
+         this.labelRightCommitTimestampLabel.Text = "Created at:";
+         // 
+         // labelLeftCommitTimestampLabel
+         // 
+         this.labelLeftCommitTimestampLabel.AutoSize = true;
+         this.labelLeftCommitTimestampLabel.Location = new System.Drawing.Point(6, 43);
+         this.labelLeftCommitTimestampLabel.Name = "labelLeftCommitTimestampLabel";
+         this.labelLeftCommitTimestampLabel.Size = new System.Drawing.Size(59, 13);
+         this.labelLeftCommitTimestampLabel.TabIndex = 7;
+         this.labelLeftCommitTimestampLabel.Text = "Created at:";
          // 
          // comboBoxRightCommit
          // 
@@ -1057,9 +1118,9 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxRightCommit.FormattingEnabled = true;
-         this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 46);
+         this.comboBoxRightCommit.Location = new System.Drawing.Point(6, 70);
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(794, 21);
+         this.comboBoxRightCommit.Size = new System.Drawing.Size(898, 21);
          this.comboBoxRightCommit.TabIndex = 6;
          this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
@@ -1074,7 +1135,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.FormattingEnabled = true;
          this.comboBoxLeftCommit.Location = new System.Drawing.Point(6, 19);
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(794, 21);
+         this.comboBoxLeftCommit.Size = new System.Drawing.Size(898, 21);
          this.comboBoxLeftCommit.TabIndex = 5;
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
@@ -1138,6 +1199,22 @@ namespace mrHelper.App.Forms
          this.panel3.Size = new System.Drawing.Size(910, 34);
          this.panel3.TabIndex = 6;
          // 
+         // panel4
+         // 
+         this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
+         this.panel4.Location = new System.Drawing.Point(0, 159);
+         this.panel4.Name = "panel4";
+         this.panel4.Size = new System.Drawing.Size(910, 79);
+         this.panel4.TabIndex = 14;
+         // 
+         // panel1
+         // 
+         this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+         this.panel1.Location = new System.Drawing.Point(0, 80);
+         this.panel1.Name = "panel1";
+         this.panel1.Size = new System.Drawing.Size(910, 79);
+         this.panel1.TabIndex = 5;
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1177,9 +1254,9 @@ namespace mrHelper.App.Forms
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxTimeTracking.PerformLayout();
-         this.panel1.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBox3.ResumeLayout(false);
+         this.groupBox3.PerformLayout();
          this.panel2.ResumeLayout(false);
          this.panel2.PerformLayout();
          this.panel3.ResumeLayout(false);
@@ -1259,10 +1336,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonTimeTrackingCancel;
       private System.Windows.Forms.Button buttonTimeTrackingStart;
       private System.Windows.Forms.Panel panel1;
-      private System.Windows.Forms.GroupBox groupBoxReview;
-      private System.Windows.Forms.Button buttonAddComment;
-      private System.Windows.Forms.Button buttonDiscussions;
-      private System.Windows.Forms.Button buttonNewDiscussion;
       private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBox3;
       private System.Windows.Forms.Button buttonDiffTool;
@@ -1272,10 +1345,21 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.PictureBox pictureBox1;
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.ComboBox comboBoxThemes;
+      private System.Windows.Forms.ComboBox comboBoxFonts;
       private System.Windows.Forms.Label labelVisualTheme;
       private System.Windows.Forms.Button buttonEditProjects;
       private System.Windows.Forms.ListView listViewProjects;
       private System.Windows.Forms.ColumnHeader columnHeaderName;
+      private System.Windows.Forms.Label labelFontSize;
+      private System.Windows.Forms.Panel panel4;
+      private System.Windows.Forms.GroupBox groupBoxReview;
+      private System.Windows.Forms.Button buttonAddComment;
+      private System.Windows.Forms.Button buttonDiscussions;
+      private System.Windows.Forms.Button buttonNewDiscussion;
+        private System.Windows.Forms.Label labelRightCommitTimestampLabel;
+        private System.Windows.Forms.Label labelLeftCommitTimestampLabel;
+        private System.Windows.Forms.Label labelRightCommitTimestamp;
+        private System.Windows.Forms.Label labelLeftCommitTimestamp;
     }
 }
 

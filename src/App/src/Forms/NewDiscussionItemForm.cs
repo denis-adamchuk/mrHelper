@@ -10,12 +10,14 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class NewDiscussionItemForm : Form
+   internal partial class NewDiscussionItemForm : CustomFontForm
    {
       internal NewDiscussionItemForm(string caption)
       {
          InitializeComponent();
          this.Text = caption;
+
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       internal string Body => textBox.Text;
@@ -26,7 +28,7 @@ namespace mrHelper.App.Forms
          {
             e.Handled = false;
 
-            buttonOK.PerformClick(); 
+            buttonOK.PerformClick();
          }
       }
 

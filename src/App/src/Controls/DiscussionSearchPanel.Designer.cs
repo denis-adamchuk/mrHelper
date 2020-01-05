@@ -46,9 +46,10 @@
          this.groupBox1.Controls.Add(this.buttonFindPrev);
          this.groupBox1.Controls.Add(this.buttonFindNext);
          this.groupBox1.Controls.Add(this.textBoxSearch);
+         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(416, 84);
+         this.groupBox1.Size = new System.Drawing.Size(418, 85);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Search";
@@ -108,8 +109,7 @@
          // 
          // DiscussionSearchPanel
          // 
-         this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionSearchPanel";
          this.Size = new System.Drawing.Size(418, 85);

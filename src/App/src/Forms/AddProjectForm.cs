@@ -2,11 +2,13 @@
 
 namespace mrHelper.App.Forms
 {
-   internal partial class AddProjectForm : Form
+   internal partial class AddProjectForm : CustomFontForm
    {
       internal AddProjectForm()
       {
          InitializeComponent();
+
+         applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
       internal string ProjectName => textBoxProjectName.Text;

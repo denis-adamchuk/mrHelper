@@ -50,21 +50,14 @@ namespace mrHelper.App.Forms
          }
 
          int id = 0;
-         int offsetX = 6;
-         System.Drawing.Point offSetFromGroupBoxTopLeft = new System.Drawing.Point
-         {
-            X = offsetX,
-            Y = 17
-         };
-         System.Drawing.Size typicalSize = new System.Drawing.Size(80, 32);
          foreach (ICommand command in _customCommands)
          {
             string name = command.GetName();
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
-               Location = offSetFromGroupBoxTopLeft,
-               Size = typicalSize,
+               Location = new System.Drawing.Point { X = 0, Y = 19 },
+               Size = new System.Drawing.Size{ Width = 96, Height = 32},
                Text = name,
                UseVisualStyleBackColor = true,
                Enabled = false,
@@ -108,9 +101,6 @@ namespace mrHelper.App.Forms
                }
             };
             groupBoxActions.Controls.Add(button);
-            offSetFromGroupBoxTopLeft.X += typicalSize.Width + offsetX;
-            groupBoxActions.Size =
-               new System.Drawing.Size((offsetX + typicalSize.Width) * (id + 1) + offsetX, groupBoxActions.Height);
             id++;
          }
       }
@@ -175,35 +165,18 @@ namespace mrHelper.App.Forms
             }
          }
 
-         comboBoxThemes.Items.Add("Default");
-         comboBoxThemes.Items.Add("New Year 2020");
+         WinFormsHelpers.FillComboBox(comboBoxFonts,
+            Common.Constants.Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
+         applyFont(Program.Settings.MainWindowFontSizeName);
 
-         string selectedTheme = null;
-         foreach (string theme in comboBoxThemes.Items.Cast<string>())
-         {
-            if (theme == Program.Settings.VisualThemeName)
-            {
-               selectedTheme = theme;
-            }
-         }
-
-         if (selectedTheme != null)
-         {
-            comboBoxThemes.SelectedItem = selectedTheme;
-         }
-         else
-         {
-            comboBoxThemes.SelectedIndex = 0;
-         }
-
-         applyTheme(comboBoxThemes.SelectedItem.ToString());
+         WinFormsHelpers.FillComboBox(comboBoxThemes,
+            Common.Constants.Constants.ThemeNames, Program.Settings.VisualThemeName);
+         applyTheme(Program.Settings.VisualThemeName);
 
          if (!Program.Settings.HasSelectedProjects())
          {
             setupDefaultProjectList();
          }
-
-         // TODO Load Program.Settings.SelectedProjects into UI
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
       }
@@ -294,7 +267,7 @@ namespace mrHelper.App.Forms
 
          createWorkflow();
 
-         // Expression resolver requires Workflow 
+         // Expression resolver requires Workflow
          _expressionResolver = new ExpressionResolver(_workflow);
 
          // Color Scheme requires Expression Resolver

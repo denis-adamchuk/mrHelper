@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
 using System.Diagnostics;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.Client.Tools
 {
@@ -88,10 +89,15 @@ namespace mrHelper.Client.Tools
       private static readonly int    RightPaneSplitterDistanceDefaultValue = 0;
 
       private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
-      private static readonly string VisualThemeNameDefaultValue  = "New Year 2020";
+      private static readonly string VisualThemeNameDefaultValue  =
+         Constants.DefaultThemeName;
 
       private static readonly string SelectedProjectsKeyName      = "SelectedProjects";
       private static readonly string SelectedProjectsDefaultValue = String.Empty;
+
+      private static readonly string MainWindowFontSizeNameKeyName       = "MWFontSize";
+      private static readonly string MainWindowFontSizeNameDefaultValue  =
+         Constants.DefaultMainWindowFontSizeChoice;
 
       public event PropertyChangedEventHandler PropertyChanged;
 
@@ -203,6 +209,12 @@ namespace mrHelper.Client.Tools
       {
          get { return getValue(VisualThemeNameKeyName, VisualThemeNameDefaultValue); }
          set { setValue(VisualThemeNameKeyName, value); }
+      }
+
+      public string MainWindowFontSizeName
+      {
+         get { return getValue(MainWindowFontSizeNameKeyName, MainWindowFontSizeNameDefaultValue); }
+         set { setValue(MainWindowFontSizeNameKeyName, value); }
       }
 
       public int LogFilesToKeep

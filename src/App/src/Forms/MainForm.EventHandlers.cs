@@ -26,8 +26,8 @@ namespace mrHelper.App.Forms
 
          cleanUpInstallers();
 
-         loadSettings();
          addCustomActions();
+         loadSettings();
          if (!integrateInTools())
          {
             Close();
@@ -35,7 +35,6 @@ namespace mrHelper.App.Forms
          }
 
          this.WindowState = FormWindowState.Maximized;
-         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
 
          if (Program.Settings.MainWindowSplitterDistance != 0)
          {
@@ -122,7 +121,7 @@ namespace mrHelper.App.Forms
       {
          if (!TimeSpan.TryParse(labelTimeTrackingTrackedTime.Text, out TimeSpan oldSpan))
          {
-            return;
+            oldSpan = TimeSpan.Zero; // e.g. "Not Started"
          }
 
          // Store data before opening a modal dialog
@@ -365,12 +364,14 @@ namespace mrHelper.App.Forms
       {
          checkComboboxCommitsOrder(true /* I'm left one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
+         setCommitComboboxLabels(sender as ComboBox, labelLeftCommitTimestamp);
       }
 
       private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
          checkComboboxCommitsOrder(false /* because I'm the right one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
+         setCommitComboboxLabels(sender as ComboBox, labelRightCommitTimestamp);
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -680,28 +681,41 @@ namespace mrHelper.App.Forms
 
       private static void setCommitComboboxTooltipText(ComboBox comboBox, ToolTip tooltip)
       {
+         tooltip.SetToolTip(comboBox, String.Empty);
+
          if (comboBox.SelectedItem == null)
          {
-            tooltip.SetToolTip(comboBox, String.Empty);
             return;
          }
 
          CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
          if (item.IsBase)
          {
-            tooltip.SetToolTip(comboBox, String.Empty);
             return;
          }
 
-         string timestampText = String.Empty;
+         tooltip.SetToolTip(comboBox, String.Format("{0}", item.Message));
+      }
+
+      private static void setCommitComboboxLabels(ComboBox comboBox, Label labelTimestamp)
+      {
+         labelTimestamp.Text = "N/A";
+
+         if (comboBox.SelectedItem == null)
+         {
+            return;
+         }
+
+         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
+         if (item.IsBase)
+         {
+            return;
+         }
+
          if (item.TimeStamp != null)
          {
-            timestampText = String.Format("({0})", item.TimeStamp.Value.ToLocalTime().ToString());
+            labelTimestamp.Text = String.Format("{0}", item.TimeStamp.Value.ToLocalTime().ToString());
          }
-         string tooltipText = String.Format("{0} {1}\n{2}",
-            timestampText, (item.IsLatest ? "[Latest]" : String.Empty), item.Message);
-
-         tooltip.SetToolTip(comboBox, tooltipText);
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)
@@ -927,11 +941,25 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         applyTheme(comboBoxThemes.SelectedItem.ToString());
+         string theme = comboBoxThemes.SelectedItem.ToString();
+         Program.Settings.VisualThemeName = theme;
+         applyTheme(theme);
       }
 
-     async private void buttonEditProjects_Click(object sender, EventArgs e)
-     {
+      private void comboBoxFonts_SelectionChangeCommitted(object sender, EventArgs e)
+      {
+         if (comboBoxFonts.SelectedItem == null)
+         {
+            return;
+         }
+
+         string font = comboBoxFonts.SelectedItem.ToString();
+         Program.Settings.MainWindowFontSizeName = font;
+         applyFont(font);
+      }
+
+      async private void buttonEditProjects_Click(object sender, EventArgs e)
+      {
          string host = getHostName();
          if (host == String.Empty)
          {
@@ -957,7 +985,21 @@ namespace mrHelper.App.Forms
                await switchHostToSelected();
             }
          }
-     }
+      }
+
+      private void groupBoxActions_SizeChanged(object sender, EventArgs e)
+      {
+         repositionCustomCommands(); // update position of custom actions
+      }
+
+      protected override void OnFontChanged(EventArgs e)
+      {
+         base.OnFontChanged(e);
+
+         repositionCustomCommands(); // update position of custom actions
+         updateVisibleMergeRequests(); // update row height of List View
+         applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
+      }
    }
 }
 

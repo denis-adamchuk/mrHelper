@@ -26,6 +26,28 @@ namespace mrHelper.Common.Constants
       public static string GitLabLabelPrefix = "@";
 
       public static int CheckForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
+
+      public static string[] ThemeNames = { "Default", "New Year 2020" };
+      public static string DefaultThemeName = "Default";
+
+      public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>
+      {
+         { "Tiny",    8.25 },
+         { "Small",   9.00 },
+         { "Medium",  9.75 },
+         { "Large",  11.25 },
+         // skip 12.00
+         // skip 14.25
+         { "Meeting Mode",  15.75 }
+      };
+
+      public static IEnumerable<string> MainWindowFontSizeChoices = new string[]
+         { "Tiny", "Small", "Medium", "Large" };
+
+      public static string DefaultMainWindowFontSizeChoice = "Small";
+
+      public static IEnumerable<string> DiscussionsWindowFontSizeChoices = new string[]
+         { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
    }
 }
 

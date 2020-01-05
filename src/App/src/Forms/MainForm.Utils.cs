@@ -25,6 +25,7 @@ using mrHelper.CommonControls;
 using static mrHelper.Client.Services.ServiceManager;
 using mrHelper.Client.Discussions;
 using static mrHelper.Client.Common.UserEvents;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Forms
 {
@@ -1152,14 +1153,21 @@ namespace mrHelper.App.Forms
          }
          else
          {
+            pictureBox1.BackgroundImage = null;
             pictureBox1.Visible = false;
+            pictureBox2.BackgroundImage = null;
             pictureBox2.Visible = false;
             listViewMergeRequests.BackgroundImage = null;
             richTextBoxMergeRequestDescription.BaseStylesheet =
                mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
          }
 
+         richTextBoxMergeRequestDescription.BaseStylesheet +=
+            String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
+
          Program.Settings.VisualThemeName = theme;
+
+         updateMinimumSizes(); // update splitter restrictions
       }
 
       private void onHostSelected()
@@ -1174,6 +1182,51 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.GetEnabledProjectsForHost(getHostName(), Program.Settings)
             .ToList()
             .ForEach(x => listViewProjects.Items.Add(x));
+      }
+
+      private void updateMinimumSizes()
+      {
+         Func<Control, int, Size> calcMinSizeOfHorzBox = (box, minGap) =>
+            new Size
+            {
+               Width = box.Controls.Cast<Control>().Sum(x => x.Width) + box.Controls.Count * minGap,
+               Height = box.Height
+            };
+
+         int groupBoxTimeTrackingMinWidth =
+            buttonTimeTrackingStart.Width + buttonTimeTrackingCancel.Width + buttonEditTime.Width + 100 +
+            labelTimeTrackingTrackedLabel.Width + labelTimeTrackingTrackedTime.Width;
+
+         int groupBoxActionsMinWidth = calcMinSizeOfHorzBox(groupBoxActions, 10).Width;
+         int groupBoxReviewMinWidth = calcMinSizeOfHorzBox(groupBoxReview, 10).Width;
+
+         int picturesMinWidth = (pictureBox1.BackgroundImage != null ? pictureBox1.Width : 0)
+                              + (pictureBox2.BackgroundImage != null ? pictureBox2.Width : 0);
+
+         int panel2MinSize =
+            Math.Max(groupBoxTimeTrackingMinWidth,
+               Math.Max(picturesMinWidth, Math.Max(groupBoxActionsMinWidth, groupBoxReviewMinWidth)));
+
+         if (panel2MinSize > splitContainer1.Panel2.Width)
+         {
+            splitContainer1.SplitterDistance = splitContainer1.Width - panel2MinSize - splitContainer1.SplitterWidth;
+         }
+         splitContainer1.Panel2MinSize = panel2MinSize;
+
+         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
+      }
+
+      private void repositionCustomCommands()
+      {
+         Func<Control, int, int> getControlX = (control, index) =>
+             control.Width * index +
+                (groupBoxActions.Width - _customCommands.Count * control.Width) * (index + 1) / (_customCommands.Count + 1);
+
+         for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
+         {
+            Control c = groupBoxActions.Controls[id];
+            c.Location = new Point { X = getControlX(c, id), Y = c.Location.Y };
+         }
       }
    }
 }
