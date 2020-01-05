@@ -331,7 +331,8 @@ namespace mrHelper.App.Controls
          Debug.Assert(note.Type == "DiffNote");
 
          DiffPosition position = convertToDiffPosition(note.Position);
-         htmlPanel.Text = getContext(_panelContextMaker, position, _diffContextDepth, htmlPanel.Font.Height);
+         htmlPanel.Text = getContext(_panelContextMaker, position,
+            _diffContextDepth, htmlPanel.Font.Height);
          _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
             _tooltipContextDepth, htmlPanel.Font.Height));
       }
