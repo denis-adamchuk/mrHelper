@@ -330,18 +330,14 @@ namespace mrHelper.App.Controls
          DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
          Debug.Assert(note.Type == "DiffNote");
 
-         int fontSizePx = htmlPanel.Font.Height;
-         int rowsVPaddingPx = 2;
-
          DiffPosition position = convertToDiffPosition(note.Position);
-         htmlPanel.Text = getContext(_panelContextMaker, position,
-            _diffContextDepth, fontSizePx, rowsVPaddingPx);
+         htmlPanel.Text = getContext(_panelContextMaker, position, _diffContextDepth, htmlPanel.Font.Height);
          _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
-            _tooltipContextDepth, fontSizePx, rowsVPaddingPx));
+            _tooltipContextDepth, htmlPanel.Font.Height));
       }
 
       private string getContext(IContextMaker contextMaker, DiffPosition position,
-         ContextDepth depth, int fontSizePx, int rowsVPaddingPx)
+         ContextDepth depth, int fontSizePx)
       {
          if (contextMaker == null || _formatter == null)
          {
@@ -351,7 +347,7 @@ namespace mrHelper.App.Controls
          try
          {
             DiffContext context = contextMaker.GetContext(position, depth);
-            return _formatter.FormatAsHTML(context, fontSizePx, rowsVPaddingPx);
+            return _formatter.FormatAsHTML(context, fontSizePx);
          }
          catch (Exception ex)
          {

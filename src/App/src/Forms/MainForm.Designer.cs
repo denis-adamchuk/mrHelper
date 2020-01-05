@@ -948,9 +948,9 @@ namespace mrHelper.App.Forms
          // pictureBox2
          // 
          this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Right;
-         this.pictureBox2.Location = new System.Drawing.Point(624, 327);
+         this.pictureBox2.Location = new System.Drawing.Point(660, 327);
          this.pictureBox2.Name = "pictureBox2";
-         this.pictureBox2.Size = new System.Drawing.Size(286, 153);
+         this.pictureBox2.Size = new System.Drawing.Size(250, 153);
          this.pictureBox2.TabIndex = 8;
          this.pictureBox2.TabStop = false;
          this.pictureBox2.Visible = false;
@@ -960,7 +960,7 @@ namespace mrHelper.App.Forms
          this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Left;
          this.pictureBox1.Location = new System.Drawing.Point(0, 327);
          this.pictureBox1.Name = "pictureBox1";
-         this.pictureBox1.Size = new System.Drawing.Size(315, 153);
+         this.pictureBox1.Size = new System.Drawing.Size(250, 153);
          this.pictureBox1.TabIndex = 7;
          this.pictureBox1.TabStop = false;
          this.pictureBox1.Visible = false;

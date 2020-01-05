@@ -1153,7 +1153,9 @@ namespace mrHelper.App.Forms
          }
          else
          {
+            pictureBox1.BackgroundImage = null;
             pictureBox1.Visible = false;
+            pictureBox2.BackgroundImage = null;
             pictureBox2.Visible = false;
             listViewMergeRequests.BackgroundImage = null;
             richTextBoxMergeRequestDescription.BaseStylesheet =
@@ -1164,6 +1166,8 @@ namespace mrHelper.App.Forms
             String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
 
          Program.Settings.VisualThemeName = theme;
+
+         updateMinimumSizes(); // update splitter restrictions
       }
 
       private void onHostSelected()
@@ -1196,12 +1200,18 @@ namespace mrHelper.App.Forms
          int groupBoxActionsMinWidth = calcMinSizeOfHorzBox(groupBoxActions, 10).Width;
          int groupBoxReviewMinWidth = calcMinSizeOfHorzBox(groupBoxReview, 10).Width;
 
-         splitContainer1.Panel2MinSize =
-            Math.Max(groupBoxTimeTrackingMinWidth, Math.Max(groupBoxActionsMinWidth, groupBoxReviewMinWidth));
+         int picturesMinWidth = (pictureBox1.BackgroundImage != null ? pictureBox1.Width : 0)
+                              + (pictureBox2.BackgroundImage != null ? pictureBox2.Width : 0);
 
-         Debug.WriteLine(
-            "Changed Panel2MinSize to {0}. groupBoxTimeTrackingMinWidth = {1}. groupBoxActionsMinWidth = {2}. groupBoxReviewMinWidth = {3}",
-            splitContainer1.Panel2MinSize, groupBoxTimeTrackingMinWidth, groupBoxActionsMinWidth, groupBoxReviewMinWidth);
+         int panel2MinSize =
+            Math.Max(groupBoxTimeTrackingMinWidth,
+               Math.Max(picturesMinWidth, Math.Max(groupBoxActionsMinWidth, groupBoxReviewMinWidth)));
+
+         if (panel2MinSize > splitContainer1.Panel2.Width)
+         {
+            splitContainer1.SplitterDistance = splitContainer1.Width - panel2MinSize - splitContainer1.SplitterWidth;
+         }
+         splitContainer1.Panel2MinSize = panel2MinSize;
 
          this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
       }
