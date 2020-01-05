@@ -674,9 +674,9 @@ namespace mrHelper.App.Controls
             {
                textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
             }
-            else if (textbox is HtmlPanel)
+            else if (textbox is HtmlPanel textboxHtml)
             {
-               textbox.Height = textbox.DisplayRectangle.Height + 2;
+               textbox.Height = textboxHtml.AutoScrollMinSize.Height + 2;
             }
          }
 
@@ -700,7 +700,7 @@ namespace mrHelper.App.Controls
          if (_panelContext != null)
          {
             _panelContext.Width = width * remainingPercents / 100;
-            _panelContext.Height = _panelContext.DisplayRectangle.Height + 2;
+            _panelContext.Height = (_panelContext as HtmlPanel).AutoScrollMinSize.Height + 2;
             _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
       }
