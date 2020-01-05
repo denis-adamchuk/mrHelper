@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.MergeRequests
 {

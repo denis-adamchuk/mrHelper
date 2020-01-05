@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Services
 {

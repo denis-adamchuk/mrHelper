@@ -4,7 +4,7 @@ using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {

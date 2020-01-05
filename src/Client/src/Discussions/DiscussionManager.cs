@@ -8,8 +8,8 @@ using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Discussions
 {
@@ -26,8 +26,9 @@ namespace mrHelper.Client.Discussions
 
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
-      public DiscussionManager(UserDefinedSettings settings, Workflow.Workflow workflow,
-         MergeRequestManager mergeRequestManager, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords)
+      public DiscussionManager(IHostProperties settings, Workflow.Workflow workflow,
+         MergeRequestManager mergeRequestManager, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords,
+         int autoUpdatePeriodMs)
       {
          _settings = settings;
          _operator = new DiscussionOperator(settings);
@@ -103,7 +104,7 @@ namespace mrHelper.Client.Discussions
             }
          };
 
-         _timer = new System.Timers.Timer { Interval = settings.AutoUpdatePeriodMs };
+         _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();
@@ -223,15 +224,15 @@ namespace mrHelper.Client.Discussions
             }
             catch (OperatorException)
             {
-            // already handled
-         }
+               // already handled
+            }
          }), null);
       }
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          DateTime mergeRequestUpdatedAt =
             (await CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
 
@@ -316,7 +317,7 @@ namespace mrHelper.Client.Discussions
       private readonly System.Timers.Timer _timer;
       private System.Timers.Timer _oneShotTimer;
 
-      private readonly UserDefinedSettings _settings;
+      private readonly IHostProperties _settings;
       private readonly DiscussionOperator _operator;
 
       private struct CachedDiscussions

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
+using mrHelper.Client.Types;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -16,7 +14,8 @@ namespace mrHelper.Client.MergeRequests
    {
       public event Action<Common.UserEvents.MergeRequestEvent> MergeRequestEvent;
 
-      public MergeRequestManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke, UserDefinedSettings settings)
+      public MergeRequestManager(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+         IHostProperties settings, int autoUpdatePeriodMs)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
@@ -31,7 +30,8 @@ namespace mrHelper.Client.MergeRequests
                }
 
                _cache = new WorkflowDetailsCache();
-               _updateManager = new UpdateManager(synchronizeInvoke, settings, _hostname, projects, _cache);
+               _updateManager = new UpdateManager(synchronizeInvoke, settings, _hostname, projects, _cache,
+                  autoUpdatePeriodMs);
                _updateManager.OnUpdate += onUpdate;
 
                Trace.TraceInformation(String.Format(

@@ -7,6 +7,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -16,10 +17,9 @@ namespace mrHelper.Client.TimeTracking
    /// </summary>
    public class TimeTrackingManager
    {
-      public TimeTrackingManager(UserDefinedSettings settings, Workflow.Workflow workflow, DiscussionManager discussionManager)
+      public TimeTrackingManager(IHostProperties settings, Workflow.Workflow workflow, DiscussionManager discussionManager)
       {
-         _settings = settings;
-         _operator = new TimeTrackingOperator(_settings);
+         _operator = new TimeTrackingOperator(settings);
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
          discussionManager.PreLoadDiscussions += (mrk) => PreLoadTotalTime?.Invoke(mrk);
          discussionManager.PostLoadDiscussions += (mrk, discussions, _, __) => processDiscussions(mrk, discussions);
@@ -101,7 +101,6 @@ namespace mrHelper.Client.TimeTracking
          PostLoadTotalTime?.Invoke(mrk);
       }
 
-      private readonly UserDefinedSettings _settings;
       private readonly TimeTrackingOperator _operator;
       private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
          new Dictionary<MergeRequestKey, TimeSpan>();

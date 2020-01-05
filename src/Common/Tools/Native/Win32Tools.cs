@@ -1,0 +1,151 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+namespace mrHelper.Common.Tools
+{
+   public static class Win32Tools
+   {
+      /// <summary>
+      /// Contains data to be passed to another application by the WM_COPYDATA message.
+      /// </summary>
+      [StructLayout(LayoutKind.Sequential)]
+      public struct COPYDATASTRUCT
+      {
+         /// <summary>
+         /// User defined data to be passed to the receiving application.
+         /// </summary>
+         public IntPtr dwData;
+
+         /// <summary>
+         /// The size, in bytes, of the data pointed to by the lpData member.
+         /// </summary>
+         public int cbData;
+
+         /// <summary>
+         /// The data to be passed to the receiving application. This member can be IntPtr.Zero.
+         /// </summary>
+         public IntPtr lpData;
+      }
+
+      [DllImport("user32.dll", CharSet = CharSet.Ansi)]
+      public static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+      public class CopyDataAccessException : Exception
+      {
+         public CopyDataAccessException(string message) : base(message) { }
+      }
+
+      public static void EnableCopyDataMessageHandling(IntPtr handle)
+      {
+         NativeMethods.CHANGEFILTERSTRUCT changeFilter = new NativeMethods.CHANGEFILTERSTRUCT();
+         changeFilter.size = (uint)Marshal.SizeOf(changeFilter);
+         changeFilter.info = 0;
+         if (!NativeMethods.ChangeWindowMessageFilterEx(handle, NativeMethods.WM_COPYDATA,
+            NativeMethods.ChangeWindowMessageFilterExAction.Allow, ref changeFilter))
+         {
+            int error = Marshal.GetLastWin32Error();
+            throw new CopyDataAccessException(String.Format(
+               "ChangeWindowMessageFilterEx() failed with error code {0}", error));
+         }
+      }
+
+      public static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId)
+      {
+         List<IntPtr> handles = new List<IntPtr>();
+
+         foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+         {
+            NativeMethods.EnumThreadWindows(thread.Id,
+               (hWnd, lParam) =>
+            {
+               handles.Add(hWnd);
+               return true;
+            }, IntPtr.Zero);
+         }
+
+         return handles;
+      }
+
+      public static void SendMessageToWindow(IntPtr window, string message)
+      {
+         IntPtr ptrCopyData = IntPtr.Zero;
+         try
+         {
+            NativeMethods.COPYDATASTRUCT copyData = new NativeMethods.COPYDATASTRUCT
+            {
+               dwData = new IntPtr(0),
+               cbData = message.Length + 1,
+               lpData = Marshal.StringToHGlobalAnsi(message)
+            };
+
+            ptrCopyData = Marshal.AllocCoTaskMem(Marshal.SizeOf(copyData));
+            Marshal.StructureToPtr(copyData, ptrCopyData, false);
+
+            NativeMethods.SendMessage(window, NativeMethods.WM_COPYDATA, IntPtr.Zero, ptrCopyData);
+         }
+         finally
+         {
+            if (ptrCopyData != IntPtr.Zero)
+            {
+               Marshal.FreeCoTaskMem(ptrCopyData);
+            }
+         }
+      }
+
+      public static string ConvertMessageToText(IntPtr message)
+      {
+         NativeMethods.COPYDATASTRUCT copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(
+            message, typeof(NativeMethods.COPYDATASTRUCT));
+         return Marshal.PtrToStringAnsi(copyData.lpData);
+      }
+
+      // Taken from https://stackoverflow.com/questions/17879890/understanding-attachthreadinput-detaching-lose-focus
+      public static void ForceWindowIntoForeground(IntPtr window)
+      {
+         int currentThread = NativeMethods.GetCurrentThreadId();
+
+         IntPtr activeWindow = NativeMethods.GetForegroundWindow();
+         int activeThread = NativeMethods.GetWindowThreadProcessId(activeWindow, out IntPtr activeProcess);
+
+         int windowThread = NativeMethods.GetWindowThreadProcessId(window, out IntPtr windowProcess);
+
+         if (currentThread != activeThread)
+         {
+            NativeMethods.AttachThreadInput(currentThread, activeThread, 1);
+         }
+         if (windowThread != currentThread)
+         {
+            NativeMethods.AttachThreadInput(windowThread, currentThread, 1);
+         }
+
+         NativeMethods.SetForegroundWindow(window);
+         restoreWindow(window);
+
+         if (currentThread != activeThread)
+         {
+            NativeMethods.AttachThreadInput(currentThread, activeThread, 0);
+         }
+         if (windowThread != currentThread)
+         {
+            NativeMethods.AttachThreadInput(windowThread, currentThread, 0);
+         }
+      }
+
+      private static void restoreWindow(IntPtr window)
+      {
+         int nCmdShow = CommonTools.NativeMethods.SW_SHOWNORMAL;
+         if (CommonTools.NativeMethods.IsIconic(window))
+         {
+            nCmdShow = CommonTools.NativeMethods.SW_RESTORE;
+         }
+         else if (CommonTools.NativeMethods.IsZoomed(window))
+         {
+            nCmdShow = CommonTools.NativeMethods.SW_SHOWMAXIMIZED;
+         }
+         CommonTools.NativeMethods.ShowWindowAsync(window, nCmdShow);
+      }
+   }
+}
+

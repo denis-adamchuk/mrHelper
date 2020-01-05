@@ -2,15 +2,13 @@ using System;
 using System.ComponentModel;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Client.Git;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Workflow;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Version = GitLabSharp.Entities.Version;
-using mrHelper.Client.Updates;
 using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -21,15 +19,15 @@ namespace mrHelper.Client.MergeRequests
    {
       internal event Action<List<UserEvents.MergeRequestEvent>> OnUpdate;
 
-      internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, UserDefinedSettings settings,
-         string hostname, List<Project> projects, WorkflowDetailsCache cache)
+      internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, IHostProperties settings,
+         string hostname, List<Project> projects, WorkflowDetailsCache cache, int autoUpdatePeriodMs)
       {
          _operator = new UpdateOperator(settings);
          _hostname = hostname;
          _projects = projects;
          _cache = cache;
 
-         _timer = new System.Timers.Timer { Interval = settings.AutoUpdatePeriodMs };
+         _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();

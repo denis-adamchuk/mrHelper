@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Git;
-using mrHelper.Client.Updates;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.MergeRequests
 {

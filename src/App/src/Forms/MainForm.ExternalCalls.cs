@@ -9,6 +9,7 @@ using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Git;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {

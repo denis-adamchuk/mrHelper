@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Git;
-using Version = GitLabSharp.Entities.Version;
-using mrHelper.Client.Updates;
+using mrHelper.Client.Types;
+using mrHelper.Client.Common;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -28,17 +22,15 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       async public Task<DateTime> GetLatestChangeTimestampAsync()
       {
-         DateTime dateTime = DateTime.MinValue;
          try
          {
-            Version version = await _operator.GetLatestVersionAsync(_mergeRequestKey);
-            dateTime = version.Created_At;
+            return (await _operator.GetLatestVersionAsync(_mergeRequestKey)).Created_At;
          }
-         catch (OperatorException ex)
+         catch (OperatorException)
          {
-            ExceptionHandlers.Handle(ex, "Cannot check for commits");
+            // already handled
          }
-         return dateTime;
+         return DateTime.MinValue;
       }
 
       public override string ToString()

@@ -32,7 +32,7 @@ namespace mrHelper.Client.Workflow
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load current user from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load current user from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -49,7 +49,7 @@ namespace mrHelper.Client.Workflow
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load project from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load project from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -77,7 +77,7 @@ namespace mrHelper.Client.Workflow
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge request commits from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load merge request commits from GitLab");
                throw new OperatorException(ex);
             }
             throw;

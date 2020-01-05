@@ -6,6 +6,8 @@ using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Tools;
 using System.Diagnostics;
+using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Discussions
 {
@@ -14,7 +16,7 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    internal class DiscussionOperator
    {
-      internal DiscussionOperator(UserDefinedSettings settings) 
+      internal DiscussionOperator(IHostProperties settings)
       {
          _settings = settings;
       }
@@ -32,7 +34,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load discussions from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -42,14 +44,14 @@ namespace mrHelper.Client.Discussions
       internal Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          return GetDiscussionsAsync(client, mrk);
       }
 
       async internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             return (Discussion)(await client.RunAsync(async (gitlab) =>
@@ -61,7 +63,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load discussion from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load discussion from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -71,7 +73,7 @@ namespace mrHelper.Client.Discussions
       async internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -87,7 +89,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
+               GitLabExceptionHandlers.Handle(ex, "Cannot create a reply to discussion");
                throw new OperatorException(ex);
             }
             throw;
@@ -97,7 +99,7 @@ namespace mrHelper.Client.Discussions
       async internal Task ModifyNoteBodyAsync(MergeRequestKey mrk, string discussionId, int noteId, string body)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -114,7 +116,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot update discussion text");
+               GitLabExceptionHandlers.Handle(ex, "Cannot update discussion text");
                throw new OperatorException(ex);
             }
             throw;
@@ -124,7 +126,7 @@ namespace mrHelper.Client.Discussions
       async internal Task DeleteNoteAsync(MergeRequestKey mrk, int noteId)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -136,7 +138,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot delete a note");
+               GitLabExceptionHandlers.Handle(ex, "Cannot delete a note");
                throw new OperatorException(ex);
             }
             throw;
@@ -146,7 +148,7 @@ namespace mrHelper.Client.Discussions
       async internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolved)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -163,7 +165,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a note");
+               GitLabExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a note");
                throw new OperatorException(ex);
             }
             throw;
@@ -173,7 +175,7 @@ namespace mrHelper.Client.Discussions
       async internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             return (Discussion)await client.RunAsync(async (gitlab) =>
@@ -189,7 +191,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
+               GitLabExceptionHandlers.Handle(ex, "Cannot toggle 'Resolved' state of a discussion");
                throw new OperatorException(ex);
             }
             throw;
@@ -199,7 +201,7 @@ namespace mrHelper.Client.Discussions
       async internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -211,7 +213,7 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot create a discussion");
+               GitLabExceptionHandlers.Handle(ex, "Cannot create a discussion");
                throw new OperatorException(ex);
             }
             throw;
@@ -221,7 +223,7 @@ namespace mrHelper.Client.Discussions
       async internal Task CreateNoteAsync(MergeRequestKey mrk, CreateNewNoteParameters parameters)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -233,14 +235,14 @@ namespace mrHelper.Client.Discussions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot create a note");
+               GitLabExceptionHandlers.Handle(ex, "Cannot create a note");
                throw new OperatorException(ex);
             }
             throw;
          }
       }
 
-      private readonly UserDefinedSettings _settings;
+      private readonly IHostProperties _settings;
    }
 }
 

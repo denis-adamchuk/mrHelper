@@ -14,6 +14,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
 using mrHelper.CommonTools;
 using mrHelper.Client.Services;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App
 {
@@ -35,7 +36,7 @@ namespace mrHelper.App
                      "Please provide some details about the problem here",
                      Program.ServiceManager.GetBugReportEmail(), Common.Constants.Constants.BugReportLogArchiveName);
                }
-               catch (Exception ex2)
+               catch (FeedbackReporterException ex2)
                {
                   ExceptionHandlers.Handle(ex2, "Cannot send a bug report");
                }

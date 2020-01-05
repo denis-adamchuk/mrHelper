@@ -26,6 +26,7 @@ using static mrHelper.Client.Services.ServiceManager;
 using mrHelper.Client.Discussions;
 using static mrHelper.Client.Common.UserEvents;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
@@ -1179,7 +1180,7 @@ namespace mrHelper.App.Forms
       {
          listViewProjects.Items.Clear();
 
-         ConfigurationHelper.GetEnabledProjectsForHost(getHostName(), Program.Settings)
+         Program.Settings.GetEnabledProjects(getHostName())
             .ToList()
             .ForEach(x => listViewProjects.Items.Add(x));
       }

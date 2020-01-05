@@ -2,13 +2,12 @@ using System;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Collections;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
-using mrHelper.Client.Tools;
-using mrHelper.Common;
+using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Workflow
 {
@@ -40,7 +39,7 @@ namespace mrHelper.Client.Workflow
    /// </summary>
    public class Workflow
    {
-      public Workflow(UserDefinedSettings settings)
+      public Workflow(IHostProperties settings)
       {
          _settings = settings;
       }
@@ -145,7 +144,7 @@ namespace mrHelper.Client.Workflow
             return false;
          }
 
-         string token = ConfigurationHelper.GetAccessToken(hostname, _settings);
+         string token = _settings.GetAccessToken(hostname);
          if (token == String.Empty)
          {
             throw new UnknownHostException(hostname);
@@ -315,12 +314,12 @@ namespace mrHelper.Client.Workflow
 
       private List<Project> getEnabledProjects(string hostname)
       {
-         return ConfigurationHelper.GetEnabledProjectsForHost(hostname, _settings)
+         return _settings.GetEnabledProjects(hostname)
             .Select(x => new Project{ Path_With_Namespace = x })
             .ToList();
       }
 
-      private readonly UserDefinedSettings _settings;
+      private readonly IHostProperties _settings;
       private WorkflowDataOperator _operator;
    }
 }

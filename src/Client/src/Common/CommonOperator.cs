@@ -27,7 +27,7 @@ namespace mrHelper.Client.Common
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load merge requests from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -47,7 +47,7 @@ namespace mrHelper.Client.Common
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load versions from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load versions from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -68,7 +68,7 @@ namespace mrHelper.Client.Common
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load notes from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load notes from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -86,7 +86,7 @@ namespace mrHelper.Client.Common
          {
             if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
-               ExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot load merge request from GitLab");
                throw new OperatorException(ex);
             }
             throw;

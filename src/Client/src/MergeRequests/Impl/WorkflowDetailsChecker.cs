@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
 using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.MergeRequests

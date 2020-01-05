@@ -45,24 +45,15 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="src\AppFinder.cs" />
-    <Compile Include="src\FeedbackReporter.cs" />
-    <Compile Include="src\JsonFileReader.cs" />
-    <Compile Include="src\NativeMethods.cs" />
-    <Compile Include="src\ParentProcessUtilities.cs" />
-    <Compile Include="src\Persistence\PersistentState.cs" />
-    <Compile Include="src\Persistence\PersistentStateItf.cs" />
-    <Compile Include="src\Persistence\PersistentStorage.cs" />
-    <Compile Include="src\StringUtils.cs" />
-    <Compile Include="src\Win32Tools.cs" />
-    <Compile Include="src\CustomProtocol.cs" />
-    <Compile Include="src\CustomTraceListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

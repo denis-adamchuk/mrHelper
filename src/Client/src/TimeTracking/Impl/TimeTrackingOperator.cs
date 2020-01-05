@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
+using mrHelper.Client.Common;
 using mrHelper.Client.Tools;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -13,7 +15,7 @@ namespace mrHelper.Client.TimeTracking
    /// </summary>
    internal class TimeTrackingOperator
    {
-      internal TimeTrackingOperator(UserDefinedSettings settings)
+      internal TimeTrackingOperator(IHostProperties settings)
       {
          _settings = settings;
       }
@@ -21,7 +23,7 @@ namespace mrHelper.Client.TimeTracking
       async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
             await client.RunAsync(async (gitlab) =>
@@ -37,14 +39,14 @@ namespace mrHelper.Client.TimeTracking
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
+               GitLabExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
                throw new OperatorException(ex);
             }
             throw;
          }
       }
 
-      private readonly UserDefinedSettings _settings;
+      private readonly IHostProperties _settings;
    }
 }
 

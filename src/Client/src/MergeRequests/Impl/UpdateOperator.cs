@@ -3,11 +3,11 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
-using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
+using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -16,33 +16,32 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class UpdateOperator
    {
-      internal UpdateOperator(UserDefinedSettings settings)
+      internal UpdateOperator(IHostProperties settings)
       {
          _settings = settings;
       }
 
       internal Task<List<MergeRequest>> GetMergeRequestsAsync(string host, string project)
       {
-         GitLabClient client = new GitLabClient(host,
-            ConfigurationHelper.GetAccessToken(host, _settings));
+         GitLabClient client = new GitLabClient(host, _settings.GetAccessToken(host));
          return CommonOperator.GetMergeRequestsAsync(client, project);
       }
 
       internal Task<Version> GetLatestVersionAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
       internal Task<MergeRequest> GetMergeRequestAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            ConfigurationHelper.GetAccessToken(mrk.ProjectKey.HostName, _settings));
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          return CommonOperator.GetMergeRequestAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
-      private readonly UserDefinedSettings _settings;
+      private readonly IHostProperties _settings;
    }
 }
 
