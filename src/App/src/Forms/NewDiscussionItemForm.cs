@@ -28,7 +28,7 @@ namespace mrHelper.App.Forms
          {
             e.Handled = false;
 
-            buttonOK.PerformClick(); 
+            buttonOK.PerformClick();
          }
       }
 

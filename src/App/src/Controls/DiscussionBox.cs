@@ -80,22 +80,6 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
-      protected override void OnFontChanged(EventArgs e)
-      {
-         base.OnFontChanged(e);
-
-         if (Discussion.Notes == null || Discussion.Notes.Count < 1)
-         {
-            return;
-         }
-
-         DiscussionNote firstNote = Discussion.Notes[0];
-         if (_panelContext != null)
-         {
-            setHtmlPanelProperties(_panelContext as HtmlPanel, firstNote);
-         }
-      }
-
       async private void FilenameTextBox_KeyDown(object sender, KeyEventArgs e)
       {
          TextBox textBox = (TextBox)(sender);
@@ -309,10 +293,6 @@ namespace mrHelper.App.Controls
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
-         if (_panelContext != null)
-         {
-            setHtmlPanelProperties(_panelContext as HtmlPanel, firstNote);
-         }
          _textboxesNotes = createTextBoxes(Discussion.Notes);
 
          Controls.Add(_labelAuthor);
@@ -334,26 +314,26 @@ namespace mrHelper.App.Controls
          HtmlPanel htmlPanel = new HtmlPanel
          {
             BorderStyle = BorderStyle.FixedSingle,
-            TabStop = false
+            TabStop = false,
+            Tag = firstNote
          };
          htmlPanel.GotFocus += Control_GotFocus;
+         htmlPanel.FontChanged += (sender, e) => setDiffContextText(sender as HtmlPanel);
+
+         setDiffContextText(htmlPanel);
 
          return htmlPanel;
       }
 
-      private void setHtmlPanelProperties(HtmlPanel htmlPanel, DiscussionNote firstNote)
+      private void setDiffContextText(HtmlPanel htmlPanel)
       {
-         Debug.Assert(firstNote.Type == "DiffNote");
+         DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
+         Debug.Assert(note.Type == "DiffNote");
 
-         int fontSizePx = this.Font.Height;
+         int fontSizePx = htmlPanel.Font.Height;
          int rowsVPaddingPx = 2;
-         int rowHeight = (fontSizePx + rowsVPaddingPx * 2 + 1 /* border of control */ + 2);
-         // we're adding 2 extra pixels for each row because HtmlRenderer does not support CSS line-height property
-         // this value was found experimentally
 
-         int panelHeight = (_diffContextDepth.Size + 1) * rowHeight;
-
-         DiffPosition position = convertToDiffPosition(firstNote.Position);
+         DiffPosition position = convertToDiffPosition(note.Position);
          htmlPanel.Text = getContext(_panelContextMaker, position,
             _diffContextDepth, fontSizePx, rowsVPaddingPx);
          _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
@@ -471,9 +451,10 @@ namespace mrHelper.App.Controls
          return prefix + body;
       }
 
-      private string getHtmlDiscussionNoteText(ref DiscussionNote note)
+      private string getHtmlDiscussionNoteText(ref DiscussionNote note, int fontSizePx)
       {
          string css = mrHelper.App.Properties.Resources.DiscussionNoteCSS;
+         css += String.Format("body div {{ font-size: {0}px; }}", fontSizePx);
 
          string commonBegin = string.Format(@"
             <html>
@@ -523,13 +504,21 @@ namespace mrHelper.App.Controls
             {
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
-               Text = getHtmlDiscussionNoteText(ref note),
                Tag = note
             };
             htmlPanel.GotFocus += Control_GotFocus;
+            htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel as HtmlPanel);
+
+            setNoteHtmlText(htmlPanel);
 
             return htmlPanel;
          }
+      }
+
+      private void setNoteHtmlText(HtmlPanel htmlPanel)
+      {
+         DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
+         htmlPanel.Text = getHtmlDiscussionNoteText(ref note, htmlPanel.Font.Height);
       }
 
       private bool isServiceDiscussionNote(DiscussionNote note)
