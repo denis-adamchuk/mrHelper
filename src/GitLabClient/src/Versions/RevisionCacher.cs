@@ -28,7 +28,7 @@ namespace mrHelper.Client.Versions
          {
             if (_latestChanges?.Count > 0)
             {
-               Trace.TraceInformation(String.Format("[RevisionCacher] Unsubscribing from {0} Git Clients",
+               Trace.TraceInformation(String.Format("[RevisionCacher] Unsubscribing from {0} Git Repos",
                   _latestChanges.Count()));
 
                _latestChanges.Keys.ToList().ForEach(x => x.Updated -= onGitRepositoryUpdated);
@@ -52,7 +52,7 @@ namespace mrHelper.Client.Versions
                   }
                }
 
-               Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Clients",
+               Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Repos",
                   _latestChanges.Count()));
                _latestChanges.Keys.ToList().ForEach(x => x.Updated += onGitRepositoryUpdated);
                _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onGitRepositoryDisposed);

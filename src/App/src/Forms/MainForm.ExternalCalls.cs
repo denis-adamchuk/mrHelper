@@ -11,6 +11,7 @@ using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -56,7 +57,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Common.Interfaces.IGitRepository gitRepository = null;
+         IGitRepository gitRepository = null;
          if (_gitClientFactory.ParentFolder == snapshot.TempFolder)
          {
             GitClient client = _gitClientFactory.GetClient(snapshot.Host, snapshot.Project);

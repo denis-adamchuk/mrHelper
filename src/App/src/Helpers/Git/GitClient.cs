@@ -13,8 +13,6 @@ using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.App.Helpers
 {
-   // TODO Split GitClient and IGitRepository
-
    /// <summary>
    /// Provides access to git repository.
    /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
