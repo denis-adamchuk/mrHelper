@@ -53,7 +53,6 @@
     <Compile Include="src\MergeRequests\InstantProjectCheckerItf.cs" />
     <Compile Include="src\MergeRequests\ProjectWatcherItf.cs" />
     <Compile Include="src\Types\ProjectKey.cs" />
-    <Compile Include="src\Versions\RevisionCacher.cs" />
     <Compile Include="src\Versions\Impl\VersionOperator.cs" />
     <Compile Include="src\MergeRequests\MergeRequestProviderItf.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />
@@ -74,6 +73,7 @@
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsChecker.cs" />
     <Compile Include="src\MergeRequests\Impl\LocalProjectChecker.cs" />
     <Compile Include="src\MergeRequests\Impl\RemoteProjectChecker.cs" />
+    <Compile Include="src\Versions\VersionManager.cs" />
     <Compile Include="src\Workflow\Workflow.cs" />
     <Compile Include="src\Workflow\Impl\WorkflowDataOperator.cs" />
   </ItemGroup>

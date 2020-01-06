@@ -10,17 +10,18 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Types;
-using mrHelper.Client.Common;
+using mrHelper.Client.Versions;
+using mrHelper.Client.Workflow;
 using mrHelper.Client.MergeRequests;
 
-namespace mrHelper.Client.Versions
+namespace mrHelper.App.Helpers
 {
    /// <summary>
    /// Pre-loads file revisions into git repository cache
    /// </summary>
    public class RevisionCacher
    {
-      public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+      public RevisionCacher(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties settings, Func<ProjectKey, IGitRepository> getGitRepository,
          IMergeRequestProvider mergeRequestProvider)
       {
@@ -60,7 +61,7 @@ namespace mrHelper.Client.Versions
          };
 
          _synchronizeInvoke = synchronizeInvoke;
-         _operator = new VersionOperator(settings);
+         _versionManager = new VersionManager(settings);
          _mergeRequestProvider = mergeRequestProvider;
       }
 
@@ -87,14 +88,14 @@ namespace mrHelper.Client.Versions
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                   try
                   {
-                     List<Version> newVersions  = await _operator.LoadVersionsAsync(mrk);
+                     List<Version> newVersions  = await _versionManager.GetVersions(mrk);
                      newVersions = newVersions
                         .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
 
                      List<Version> newVersionsDetailed = new List<Version>();
                      foreach (Version version in newVersions)
                      {
-                        Version newVersionDetailed = await _operator.LoadVersionAsync(version, mrk);
+                        Version newVersionDetailed = await _versionManager.GetVersion(version, mrk);
                         Trace.TraceInformation(String.Format(
                            "[RevisionCacher] Found new version of MR with IId={0} (created at {1}). "
                          + "PrevLatestChange={2}, LatestChange={3}",
@@ -132,7 +133,7 @@ namespace mrHelper.Client.Versions
                            mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
                      }
                   }
-                  catch (OperatorException)
+                  catch (VersionManagerException)
                   {
                      // already handled
                   }
@@ -248,7 +249,7 @@ namespace mrHelper.Client.Versions
 
       private Dictionary<IGitRepository, DateTime> _latestChanges;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-      private readonly VersionOperator _operator;
+      private readonly VersionManager _versionManager;
       private readonly IMergeRequestProvider _mergeRequestProvider;
 
       private static int MaxDiffsInVersion = 200;
