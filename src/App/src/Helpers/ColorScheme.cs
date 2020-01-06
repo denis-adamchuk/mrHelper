@@ -2,8 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Web.Script.Serialization;
-using mrHelper.Client.Tools;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
@@ -34,7 +33,7 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
-         Dictionary<string, object> colors = CommonTools.JsonFileReader.
+         Dictionary<string, object> colors = JsonFileReader.
             LoadFromFile<Dictionary<string, object>>(filename);
          foreach (var record in colors)
          {

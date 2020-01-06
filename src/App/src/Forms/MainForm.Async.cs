@@ -1,25 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using mrHelper.App.Helpers;
-using mrHelper.CustomActions;
-using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
-using mrHelper.Core;
-using mrHelper.Core.Interprocess;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Workflow;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.Git;
 using GitLabSharp.Accessors;
-using mrHelper.Client.Updates;
+using mrHelper.App.Helpers;
+using mrHelper.App.Interprocess;
+using mrHelper.Common.Exceptions;
+using mrHelper.Client.Types;
+using mrHelper.Client.Discussions;
+using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.App.Forms
 {

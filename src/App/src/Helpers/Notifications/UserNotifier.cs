@@ -9,7 +9,6 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Tools;
 using static mrHelper.App.Helpers.TrayIcon;
 using static mrHelper.Client.Common.UserEvents;
 

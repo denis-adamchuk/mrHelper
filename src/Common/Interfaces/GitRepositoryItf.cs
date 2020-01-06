@@ -4,21 +4,46 @@ using System.Threading.Tasks;
 
 namespace mrHelper.Common.Interfaces
 {
+   public struct GitDiffArguments
+   {
+      public string sha1;
+      public string sha2;
+      public string filename1;
+      public string filename2;
+      public int context;
+   }
+
+   public struct GitRevisionArguments
+   {
+      public string sha;
+      public string filename;
+   }
+
+   public struct GitListOfRenamesArguments
+   {
+      public string sha1;
+      public string sha2;
+   }
+
    /// <summary>
    /// Set of operations on git repository available across the application
    /// </summary>
    public interface IGitRepository
    {
-      List<string> Diff(string leftcommit, string rightcommit, string filename1, string filename2, int context);
-      Task<List<string>> DiffAsync(string leftcommit, string rightcommit, string filename1, string filename2, int context);
+      List<string> Diff(GitDiffArguments argument);
+      Task<List<string>> DiffAsync(GitDiffArguments argument);
 
-      List<string> ShowFileByRevision(string filename, string sha);
-      Task<List<string>> ShowFileByRevisionAsync(string filename, string sha);
+      List<string> ShowFileByRevision(GitRevisionArguments arguments);
+      Task<List<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments);
 
-      List<string> GetListOfRenames(string leftcommit, string rightcommit);
-      Task<List<string>> GetListOfRenamesAsync(string leftcommit, string rightcommit);
+      List<string> GetListOfRenames(GitListOfRenamesArguments arguments);
+      Task<List<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments);
 
-      string Path { get; }
+      event Action<IGitRepository, DateTime> Updated;
+      event Action<IGitRepository> Disposed;
+
+      string HostName { get; }
+      string ProjectName { get; }
    }
 }
 

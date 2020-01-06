@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using mrHelper.App.Helpers;
+using mrHelper.Common.Constants;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -19,7 +13,7 @@ namespace mrHelper.App.Controls
 
          InitializeComponent();
          WinFormsHelpers.FillComboBox(comboBoxFonts,
-            Common.Constants.Constants.DiscussionsWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
+            Constants.DiscussionsWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
       }
 
       private void comboBoxFonts_SelectionChangeCommitted(object sender, EventArgs e)

@@ -33,15 +33,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Office.Interop.Outlook, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Constants\Constants.cs" />
+    <Compile Include="Exceptions\ExceptionHandlers.cs" />
     <Compile Include="Exceptions\FeedbackReporterException.cs" />
+    <Compile Include="Interfaces\HostPropertiesItf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Exceptions\CustomCommandLoaderException.cs" />
     <Compile Include="Exceptions\DiffToolIntegrationException.cs" />
@@ -49,8 +55,22 @@
     <Compile Include="Interfaces\CommandCallbackItf.cs" />
     <Compile Include="Interfaces\CommandItf.cs" />
     <Compile Include="Interfaces\GitRepositoryItf.cs" />
-    <Compile Include="Interfaces\GlobalGitConfigurationItf.cs" />
     <Compile Include="Interfaces\IntegratedDiffToolItf.cs" />
+    <Compile Include="Tools\AppFinder.cs" />
+    <Compile Include="Tools\CustomTraceListener.cs" />
+    <Compile Include="Tools\EMailSender.cs" />
+    <Compile Include="Tools\ExternalProcess.cs" />
+    <Compile Include="Tools\JsonFileReader.cs" />
+    <Compile Include="Tools\Native\NativeMethods.cs" />
+    <Compile Include="Tools\Native\ParentProcessUtilities.cs" />
+    <Compile Include="Tools\Native\Win32Tools.cs" />
+    <Compile Include="Tools\Persistence\PersistentState.cs" />
+    <Compile Include="Tools\Persistence\PersistentStateItf.cs" />
+    <Compile Include="Tools\Persistence\PersistentStorage.cs" />
+    <Compile Include="Tools\StringUtils.cs" />
+    <Compile Include="Tools\SparsedList\SparsedList.cs" />
+    <Compile Include="Tools\SparsedList\SparsedListIterator.cs" />
+    <Compile Include="Tools\SparsedList\SparsedListUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

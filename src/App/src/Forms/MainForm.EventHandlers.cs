@@ -7,11 +7,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.CommonTools.Persistence;
-using mrHelper.Client.TimeTracking;
-using mrHelper.Common.Exceptions;
 using mrHelper.App.Helpers;
+using mrHelper.Client.Types;
+using mrHelper.Client.TimeTracking;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
@@ -22,7 +23,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       async private void MrHelperForm_Load(object sender, EventArgs e)
       {
-         CommonTools.Win32Tools.EnableCopyDataMessageHandling(this.Handle);
+         Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
          cleanUpInstallers();
 
@@ -68,7 +69,7 @@ namespace mrHelper.App.Forms
                   ExceptionHandlers.Handle(ex, "Cannot serialize the state");
                }
 
-               Core.Interprocess.SnapshotSerializer.CleanUpSnapshots();
+               Interprocess.SnapshotSerializer.CleanUpSnapshots();
 
                Hide();
                e.Cancel = true;
@@ -81,7 +82,7 @@ namespace mrHelper.App.Forms
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
       {
-         CommonTools.Win32Tools.ForceWindowIntoForeground(this.Handle);
+         Win32Tools.ForceWindowIntoForeground(this.Handle);
       }
 
       async private void ButtonDifftool_Click(object sender, EventArgs e)
@@ -634,7 +635,7 @@ namespace mrHelper.App.Forms
             {
                Program.FeedbackReporter.SendEMail("Merge Request Helper Feedback Report",
                   "Please provide your feedback here", Program.ServiceManager.GetBugReportEmail(),
-                  Common.Constants.Constants.BugReportLogArchiveName);
+                  Constants.BugReportLogArchiveName);
             }
          }
          catch (FeedbackReporterException ex)
@@ -645,9 +646,9 @@ namespace mrHelper.App.Forms
 
       protected override void WndProc(ref Message rMessage)
       {
-         if (rMessage.Msg == CommonTools.NativeMethods.WM_COPYDATA)
+         if (rMessage.Msg == NativeMethods.WM_COPYDATA)
          {
-            string argumentString = CommonTools.Win32Tools.ConvertMessageToText(rMessage.LParam);
+            string argumentString = Win32Tools.ConvertMessageToText(rMessage.LParam);
 
             BeginInvoke(new Action(
                async () =>

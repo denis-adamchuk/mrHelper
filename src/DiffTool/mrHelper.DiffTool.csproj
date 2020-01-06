@@ -46,17 +46,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonTools\mrHelper.CommonTools.csproj">
-      <Project>{3170d188-51ab-4634-975c-9daa826570c9}</Project>
-      <Name>mrHelper.CommonTools</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Core\mrHelper.Core.csproj">
-      <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
-      <Name>mrHelper.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

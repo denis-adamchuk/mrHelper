@@ -53,6 +53,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -174,20 +175,29 @@
     <Compile Include="src\Forms\NewDiscussionForm.Designer.cs">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Helpers\DiffCallHandler.cs" />
-    <Compile Include="src\Helpers\DiscussionFilter.cs" />
-    <Compile Include="src\Helpers\DiscussionSort.cs" />
-    <Compile Include="src\Helpers\MergeRequestFilter.cs" />
+    <Compile Include="src\Helpers\Configuration\Configuration.cs" />
+    <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
+    <Compile Include="src\Helpers\Git\RevisionCacher.cs" />
+    <Compile Include="src\Helpers\Interprocess\DiffCallHandler.cs" />
+    <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
+    <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
+    <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
+    <Compile Include="src\Helpers\FeedbackReporter.cs" />
+    <Compile Include="src\Helpers\Git\GitClient.cs" />
+    <Compile Include="src\Helpers\Git\GitClientFactory.cs" />
+    <Compile Include="src\Helpers\Git\GitClientUpdater.cs" />
+    <Compile Include="src\Helpers\Interprocess\DiffArgumentParser.cs" />
+    <Compile Include="src\Helpers\Interprocess\Snapshot.cs" />
+    <Compile Include="src\Helpers\Interprocess\SnapshotSerializer.cs" />
+    <Compile Include="src\Helpers\GitLabSharp\MergeRequestFilter.cs" />
     <Compile Include="src\Helpers\Notifications\EventFilter.cs" />
-    <Compile Include="src\Helpers\RadioButtonGroup.cs" />
     <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\Helpers\Notifications\TrayIcon.cs" />
     <Compile Include="src\Helpers\Notifications\UserNotifier.cs" />
-    <Compile Include="src\Helpers\WinFormsHelpers.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
-    <Compile Include="src\Helpers\GitClientInteractiveUpdater.cs" />
+    <Compile Include="src\Helpers\Git\GitClientInteractiveUpdater.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
       <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
     </EmbeddedResource>
@@ -251,17 +261,9 @@
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Client\mrHelper.Client.csproj">
-      <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>
-      <Name>mrHelper.Client</Name>
-    </ProjectReference>
     <ProjectReference Include="..\CommonControls\mrHelper.CommonControls.csproj">
       <Project>{2c6bdbb7-c1e2-46b6-a850-47892837f0c3}</Project>
       <Name>mrHelper.CommonControls</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CommonTools\mrHelper.CommonTools.csproj">
-      <Project>{3170D188-51AB-4634-975C-9DAA826570C9}</Project>
-      <Name>mrHelper.CommonTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
@@ -271,9 +273,9 @@
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrHelper.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Client\mrHelper.Client.csproj">
+    <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
       <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>
-      <Name>mrHelper.Core</Name>
+      <Name>mrHelper.GitLabClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\CustomActions\mrHelper.CustomActions.csproj">
       <Project>{cb91ad53-06a4-45c2-b568-215bd24033bc}</Project>

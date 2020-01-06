@@ -10,13 +10,12 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
-using mrHelper.CommonControls;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Tools;
 using mrHelper.Client.Discussions;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
+using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Controls
 {

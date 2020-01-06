@@ -4,11 +4,14 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp;
-using mrHelper.Core.Interprocess;
-using mrHelper.Client.Tools;
+using mrHelper.App.Helpers;
+using mrHelper.App.Interprocess;
+using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
-using mrHelper.Client.Git;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -54,7 +57,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Common.Interfaces.IGitRepository gitRepository = null;
+         IGitRepository gitRepository = null;
          if (_gitClientFactory.ParentFolder == snapshot.TempFolder)
          {
             GitClient client = _gitClientFactory.GetClient(snapshot.Host, snapshot.Project);
@@ -156,7 +159,7 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", url));
 
-         string prefix = mrHelper.Common.Constants.Constants.CustomProtocolName + "://";
+         string prefix = Constants.CustomProtocolName + "://";
          url = url.StartsWith(prefix) ? url.Substring(prefix.Length) : url;
 
          UrlParser.ParsedMergeRequestUrl mergeRequestUrl;

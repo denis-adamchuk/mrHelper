@@ -54,10 +54,6 @@
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Core\mrHelper.Core.csproj">
-      <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
-      <Name>mrHelper.Core</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -35,8 +35,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\diff-context.css" />
@@ -57,16 +55,8 @@
     <Compile Include="src\Context\EnhancedContextMaker.cs" />
     <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="src\Context\DiffContextFormatter.cs" />
-    <Compile Include="src\Git\GitUtils.cs" />
-    <Compile Include="src\Git\GlobalGitConfiguration.cs" />
-    <Compile Include="src\Tools\SparsedList.cs" />
-    <Compile Include="src\Tools\SparsedListIterator.cs" />
-    <Compile Include="src\Tools\SparsedListUtils.cs" />
-    <Compile Include="src\Git\GitRenameDetector.cs" />
-    <Compile Include="src\Git\GitDiffAnalyzer.cs" />
-    <Compile Include="src\Interprocess\Snapshot.cs" />
-    <Compile Include="src\Interprocess\SnapshotSerializer.cs" />
-    <Compile Include="src\Interprocess\DiffArgumentParser.cs" />
+    <Compile Include="src\Matching\GitRenameDetector.cs" />
+    <Compile Include="src\Context\GitDiffAnalyzer.cs" />
     <Compile Include="src\Matching\FileNameMatcher.cs" />
     <Compile Include="src\Matching\MatchInfo.cs" />
     <Compile Include="src\Matching\LineNumberMatcher.cs" />

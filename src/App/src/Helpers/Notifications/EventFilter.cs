@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Tools;
 using mrHelper.Client.Workflow;
 using static mrHelper.Client.Common.UserEvents;
 

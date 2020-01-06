@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.Win32;
 using System.Diagnostics;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 
@@ -13,18 +13,13 @@ namespace mrHelper.DiffTool
    {
       public const string GitDiffToolName = "mrhelperdiff";
 
-      public DiffToolIntegration(IGlobalGitConfiguration globalGitConfiguration)
-      {
-         _globalGitConfiguration = globalGitConfiguration;
-      }
-
       /// <summary>
       /// Throws GitOperationException if integration failed
       /// Throws DiffToolIntegrationException if diff tool is not installed
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
-         string toolpath = CommonTools.AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
+         string toolpath = AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
          if (!isInstalled(toolpath))
          {
             throw new DiffToolNotInstalledException("Diff tool not installed", null);
@@ -44,7 +39,8 @@ namespace mrHelper.DiffTool
 
             try
             {
-               _globalGitConfiguration.RemoveGlobalDiffTool(GitDiffToolName);
+               ExternalProcess.Start("git",
+                  "config --global --remove-section difftool." + GitDiffToolName);
             }
             catch (GitOperationException)
             {
@@ -80,7 +76,8 @@ namespace mrHelper.DiffTool
       /// </summary>
       private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
       {
-         _globalGitConfiguration.SetGlobalDiffTool(name, getGitCommand(diffTool, toolpath));
+         ExternalProcess.Start("git",
+            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath));
       }
 
       public bool isInstalled(string toolpath)
@@ -94,8 +91,6 @@ namespace mrHelper.DiffTool
          path = path.Replace(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
          return "\"\\\"" + path + "\\\"" + diffTool.GetToolCommandArguments() + "\"";
       }
-
-      private readonly IGlobalGitConfiguration _globalGitConfiguration;
    }
 }
 

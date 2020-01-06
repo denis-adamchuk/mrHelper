@@ -8,24 +8,17 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
-using GitLabSharp.Entities;
-using mrHelper.CustomActions;
-using mrHelper.Common.Interfaces;
-using mrHelper.Core;
-using mrHelper.Client;
-using mrHelper.App.Controls;
-using mrHelper.Client.Updates;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Git;
 using System.Drawing;
+using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.CommonControls;
 using static mrHelper.Client.Services.ServiceManager;
-using mrHelper.Client.Discussions;
 using static mrHelper.Client.Common.UserEvents;
+using mrHelper.Client.Types;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
+using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -399,15 +392,15 @@ namespace mrHelper.App.Forms
 
       private void initializeIconScheme()
       {
-         if (!System.IO.File.Exists(Common.Constants.Constants.IconSchemeFileName))
+         if (!System.IO.File.Exists(Constants.IconSchemeFileName))
          {
             return;
          }
 
          try
          {
-            _iconScheme = CommonTools.JsonFileReader.LoadFromFile<Dictionary<string, object>>(
-               Common.Constants.Constants.IconSchemeFileName).ToDictionary(
+            _iconScheme = JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+               Constants.IconSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
@@ -893,7 +886,7 @@ namespace mrHelper.App.Forms
          };
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
-            Common.Constants.Constants.AuthorLabelPrefix, mr.Author.Username);
+            Constants.AuthorLabelPrefix, mr.Author.Username);
 
          string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
          string jiraTask = getJiraTask(mr);
@@ -931,7 +924,7 @@ namespace mrHelper.App.Forms
          mergeRequest.Labels.Sort();
 
          var query = mergeRequest.Labels.GroupBy(
-            (label) => label.StartsWith(Common.Constants.Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1 ?
+            (label) => label.StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1 ?
                label.Substring(0, label.IndexOf('-')) : label,
             (label) => label,
             (baseLabel, labels) => new
@@ -1083,7 +1076,7 @@ namespace mrHelper.App.Forms
 
       private void updateCaption()
       {
-         Text = Common.Constants.Constants.MainWindowCaption
+         Text = Constants.MainWindowCaption
            + " (" + Application.ProductVersion + ")"
            + (!String.IsNullOrEmpty(_newVersionNumber) ? String.Format(
               "   New version {0} is available!", _newVersionNumber) : String.Empty);
@@ -1179,7 +1172,7 @@ namespace mrHelper.App.Forms
       {
          listViewProjects.Items.Clear();
 
-         ConfigurationHelper.GetEnabledProjectsForHost(getHostName(), Program.Settings)
+         Program.Settings.GetEnabledProjects(getHostName())
             .ToList()
             .ForEach(x => listViewProjects.Items.Add(x));
       }

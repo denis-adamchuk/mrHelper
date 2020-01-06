@@ -141,9 +141,9 @@ namespace mrHelper.Core.Matching
          string sourceCurrentName, string sourceOppositeName, string fixedOppositeName)
       {
          Trace.TraceInformation(String.Format(
-            "[FileNameMatcher] {0}. Git repository path: {1}. DiffRefs: {2}\n"
-          + "sourceCurrentName: {3}\nsourceOppositeName: {4}\nfixedOppositeName: {5}\nIsLeftSide: {6}",
-               action, _gitRepository.Path, refs.ToString(),
+            "[FileNameMatcher] {0}. Host: {1}. Project: {2}. DiffRefs: {3}\n"
+          + "sourceCurrentName: {4}\nsourceOppositeName: {5}\nfixedOppositeName: {6}\nIsLeftSide: {7}",
+               action, _gitRepository.HostName, _gitRepository.ProjectName, refs.ToString(),
                sourceCurrentName, sourceOppositeName, fixedOppositeName, isLeftSide));
       }
 
