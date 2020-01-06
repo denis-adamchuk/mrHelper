@@ -260,10 +260,6 @@
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Client\mrHelper.GitLabClient.csproj">
-      <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>
-      <Name>mrHelper.GitLabClient</Name>
-    </ProjectReference>
     <ProjectReference Include="..\CommonControls\mrHelper.CommonControls.csproj">
       <Project>{2c6bdbb7-c1e2-46b6-a850-47892837f0c3}</Project>
       <Name>mrHelper.CommonControls</Name>
@@ -276,7 +272,7 @@
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrHelper.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Client\mrHelper.GitLabClient.csproj">
+    <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
       <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>
       <Name>mrHelper.GitLabClient</Name>
     </ProjectReference>

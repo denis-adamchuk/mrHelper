@@ -7,8 +7,8 @@
     <ProjectGuid>{4FC6E6EA-32F4-486A-A6D5-A30D72651D15}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>mrHelper.Client</RootNamespace>
-    <AssemblyName>mrHelper.Client</AssemblyName>
+    <RootNamespace>mrHelper.GitLabClient</RootNamespace>
+    <AssemblyName>mrHelper.GitLabClient</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

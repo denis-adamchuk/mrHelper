@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29324.140
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.App", "src\App\mrHelper.App.csproj", "{4ABD84D9-3B43-4B0D-97E2-BBF6C1F6B7EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.GitLabClient", "src\Client\mrHelper.GitLabClient.csproj", "{4FC6E6EA-32F4-486A-A6D5-A30D72651D15}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.GitLabClient", "src\GitLabClient\mrHelper.GitLabClient.csproj", "{4FC6E6EA-32F4-486A-A6D5-A30D72651D15}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Core", "src\Core\mrHelper.Core.csproj", "{3789E25D-B132-4661-9BFC-99385E606572}"
 EndProject
