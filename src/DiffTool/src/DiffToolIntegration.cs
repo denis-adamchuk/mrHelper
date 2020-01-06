@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.Win32;
 using System.Diagnostics;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 
@@ -19,7 +19,7 @@ namespace mrHelper.DiffTool
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
-         string toolpath = Common.Tools.AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
+         string toolpath = AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
          if (!isInstalled(toolpath))
          {
             throw new DiffToolNotInstalledException("Diff tool not installed", null);
@@ -39,7 +39,7 @@ namespace mrHelper.DiffTool
 
             try
             {
-               Common.Tools.ExternalProcess.Start("git",
+               ExternalProcess.Start("git",
                   "config --global --remove-section difftool." + GitDiffToolName);
             }
             catch (GitOperationException)
@@ -76,7 +76,7 @@ namespace mrHelper.DiffTool
       /// </summary>
       private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
       {
-         Common.Tools.ExternalProcess.Start("git",
+         ExternalProcess.Start("git",
             "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath));
       }
 

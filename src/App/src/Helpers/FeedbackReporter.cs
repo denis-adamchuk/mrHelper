@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using Outlook = Microsoft.Office.Interop.Outlook;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Helpers
@@ -41,7 +41,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            sendEmailFromOutlook(logarchivepath, recipient, body, subject);
+            EMailSender.Send(logarchivepath, recipient, body, subject);
          }
          catch (Exception ex)
          {
@@ -65,27 +65,6 @@ namespace mrHelper.App.Helpers
          {
             _postCollectLogFiles?.Invoke();
          }
-      }
-
-      private static void sendEmailFromOutlook(string logarchivepath, string recipient, string body, string subject)
-      {
-         Outlook.Application app = new Outlook.Application();
-
-         Outlook.MailItem message = (Outlook.MailItem)app.CreateItem(Outlook.OlItemType.olMailItem);
-         message.BodyFormat = Outlook.OlBodyFormat.olFormatPlain;
-         message.Body = body;
-         message.Subject = subject;
-         message.Recipients.Add(recipient).Resolve();
-
-         if (logarchivepath != String.Empty)
-         {
-            string filename = Path.GetFileName(logarchivepath);
-            int position = message.Body.Length + 1;
-            int attachmentType = (int)Outlook.OlAttachmentType.olByValue;
-            Outlook.Attachment oAttach = message.Attachments.Add(logarchivepath, attachmentType, position, filename);
-         }
-
-         message.Display();
       }
 
       private readonly string _logPath;

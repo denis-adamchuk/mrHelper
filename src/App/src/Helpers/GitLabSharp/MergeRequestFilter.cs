@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Client.Updates;
-using mrHelper.CommonTools;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Helpers
 {
@@ -20,7 +17,7 @@ namespace mrHelper.App.Helpers
 
          foreach (string item in selected)
          {
-            if (item.StartsWith(Common.Constants.Constants.AuthorLabelPrefix))
+            if (item.StartsWith(Constants.AuthorLabelPrefix))
             {
                if (mergeRequest.Author.Username.StartsWith(item.Substring(1),
                      StringComparison.CurrentCultureIgnoreCase))
@@ -28,7 +25,7 @@ namespace mrHelper.App.Helpers
                   return false;
                }
             }
-            else if (item.StartsWith(Common.Constants.Constants.GitLabLabelPrefix))
+            else if (item.StartsWith(Constants.GitLabLabelPrefix))
             {
                if (mergeRequest.Labels.Any(x => x.StartsWith(item,
                      StringComparison.CurrentCultureIgnoreCase)))

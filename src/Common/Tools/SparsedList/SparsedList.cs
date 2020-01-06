@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace mrHelper.Common.Types
+namespace mrHelper.Common.Tools
 {
    public class SparsedList<T> : List<T> where T: class
    {

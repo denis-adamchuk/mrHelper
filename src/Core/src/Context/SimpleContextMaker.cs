@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using mrHelper.Core.Matching;
-using mrHelper.Core.Interprocess;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Core.Context
@@ -46,7 +45,12 @@ namespace mrHelper.Core.Context
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
-         List<string> contents = _gitRepository.ShowFileByRevision(filename, sha);
+         GitRevisionArguments arguments = new GitRevisionArguments
+         {
+            filename = filename,
+            sha = sha
+         };
+         List<string> contents = _gitRepository.ShowFileByRevision(arguments);
          if (linenumber > contents.Count)
          {
             throw new ArgumentException(

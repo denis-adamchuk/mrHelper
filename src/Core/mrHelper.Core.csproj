@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3170D188-51AB-4634-975C-9DAA826570C9}</ProjectGuid>
+    <ProjectGuid>{3789E25D-B132-4661-9BFC-99385E606572}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>mrHelper.CommonTools</RootNamespace>
-    <AssemblyName>mrHelper.CommonTools</AssemblyName>
+    <RootNamespace>mrHelper.Core</RootNamespace>
+    <AssemblyName>mrHelper.Core</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -33,18 +33,36 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.Outlook, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\diff-context.css" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="src\Context\ContextMakerItf.cs" />
+    <Compile Include="src\Context\ContextMakingHelpers.cs" />
+    <Compile Include="src\Context\CombinedContextMaker.cs" />
+    <Compile Include="src\Context\FullContextDiffProvider.cs" />
+    <Compile Include="src\Context\EnhancedContextMaker.cs" />
+    <Compile Include="src\Context\SimpleContextMaker.cs" />
+    <Compile Include="src\Context\DiffContextFormatter.cs" />
+    <Compile Include="src\Matching\GitRenameDetector.cs" />
+    <Compile Include="src\Context\GitDiffAnalyzer.cs" />
+    <Compile Include="src\Matching\FileNameMatcher.cs" />
+    <Compile Include="src\Matching\MatchInfo.cs" />
+    <Compile Include="src\Matching\LineNumberMatcher.cs" />
+    <Compile Include="src\Matching\DiffRefs.cs" />
+    <Compile Include="src\Matching\DiffPosition.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
@@ -53,7 +71,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="src\" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

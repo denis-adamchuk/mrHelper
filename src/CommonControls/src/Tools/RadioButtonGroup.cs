@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Diagnostics;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.CommonControls.Tools
 {
-   internal class RadioButtonGroup
+   public class RadioButtonGroup
    {
-      internal void AddRadioButton(RadioButton radioButton, int flag)
+      public void AddRadioButton(RadioButton radioButton, int flag)
       {
          _radioToFlags.Add(radioButton, flag);
       }
 
-      internal void UpdateCheckedState(int value)
+      public void UpdateCheckedState(int value)
       {
          foreach (KeyValuePair<RadioButton, int> radio in _radioToFlags)
          {
@@ -20,7 +20,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      internal T GetState<T>()
+      public T GetState<T>()
       {
          foreach (KeyValuePair<RadioButton, int> radio in _radioToFlags)
          {

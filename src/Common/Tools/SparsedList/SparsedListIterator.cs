@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace mrHelper.Common.Types
+namespace mrHelper.Common.Tools
 {
    public class BadPosition : Exception {}
 

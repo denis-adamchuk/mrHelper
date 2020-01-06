@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Web.Script.Serialization;
 
-namespace mrHelper.CommonTools.Persistence
+namespace mrHelper.Common.Tools
 {
    public class PersistentState : IPersistentStateGetter, IPersistentStateSetter
    {

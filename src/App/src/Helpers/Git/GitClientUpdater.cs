@@ -7,7 +7,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.MergeRequests;
 
-namespace mrHelper.App.Git
+namespace mrHelper.App.Helpers
 {
    /// <summary>
    /// Updates attached GitClient object

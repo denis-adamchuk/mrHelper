@@ -3,26 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
-using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Core;
-using mrHelper.Client.Git;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
+using mrHelper.Client.Types;
+using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
-using mrHelper.CommonTools.Persistence;
 using mrHelper.Client.MergeRequests;
-using mrHelper.Core.Git;
+using mrHelper.Common.Tools;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -166,11 +162,11 @@ namespace mrHelper.App.Forms
          }
 
          WinFormsHelpers.FillComboBox(comboBoxFonts,
-            Common.Constants.Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
+            Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          WinFormsHelpers.FillComboBox(comboBoxThemes,
-            Common.Constants.Constants.ThemeNames, Program.Settings.VisualThemeName);
+            Constants.ThemeNames, Program.Settings.VisualThemeName);
          applyTheme(Program.Settings.VisualThemeName);
 
          if (!Program.Settings.HasSelectedProjects())
@@ -183,7 +179,7 @@ namespace mrHelper.App.Forms
 
       private bool integrateInTools()
       {
-         string gitPath = CommonTools.AppFinder.GetInstallPath(new string[] { "Git version 2" });
+         string gitPath = AppFinder.GetInstallPath(new string[] { "Git version 2" });
          if (String.IsNullOrEmpty(gitPath))
          {
             MessageBox.Show(
@@ -199,7 +195,7 @@ namespace mrHelper.App.Forms
             System.Environment.GetEnvironmentVariable("PATH")));
 
          IIntegratedDiffTool diffTool = new BC3Tool();
-         DiffToolIntegration integration = new DiffToolIntegration(new GlobalGitConfiguration());
+         DiffToolIntegration integration = new DiffToolIntegration();
 
          try
          {
@@ -275,7 +271,8 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
          initializeIconScheme();
 
-         _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings);
+         _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings,
+            Program.Settings.AutoUpdatePeriodMs);
          _mergeRequestManager.MergeRequestEvent += e => processUpdate(e);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
@@ -283,7 +280,8 @@ namespace mrHelper.App.Forms
             .Where(x => x is SendNoteCommand)
             .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
          checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords,
+            Program.Settings.AutoUpdatePeriodMs);
 
          EventFilter eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestManager);
          _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestManager, _discussionManager, eventFilter);
@@ -374,16 +372,16 @@ namespace mrHelper.App.Forms
       private void setupDefaultProjectList()
       {
          // Check if file exists. If it does not, it is not an error.
-         if (!System.IO.File.Exists(mrHelper.Common.Constants.Constants.ProjectListFileName))
+         if (!System.IO.File.Exists(Constants.ProjectListFileName))
          {
             return;
          }
 
          try
          {
-            ConfigurationHelper.SetupProjects(CommonTools.JsonFileReader.
+            ConfigurationHelper.SetupProjects(JsonFileReader.
                LoadFromFile<List<ConfigurationHelper.HostInProjectsFile>>(
-                  mrHelper.Common.Constants.Constants.ProjectListFileName), Program.Settings);
+                  Constants.ProjectListFileName), Program.Settings);
          }
          catch (Exception ex) // whatever de-serialization exception
          {

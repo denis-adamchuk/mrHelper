@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
 

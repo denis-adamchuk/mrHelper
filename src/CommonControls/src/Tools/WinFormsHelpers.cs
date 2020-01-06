@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.CommonControls.Tools
 {
    public static class WinFormsHelpers
    {

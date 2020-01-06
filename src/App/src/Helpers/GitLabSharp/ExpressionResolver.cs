@@ -1,15 +1,11 @@
 ﻿using GitLabSharp.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using mrHelper.Client.Workflow;
 
-namespace mrHelper.Client.Tools
+namespace mrHelper.App.Helpers
 {
    public class ExpressionResolver
    {
-      public ExpressionResolver(Workflow.Workflow workflow)
+      public ExpressionResolver(Workflow workflow)
       {
          workflow.PostLoadCurrentUser += (user) => _currentUser = user;
       }

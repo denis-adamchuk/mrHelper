@@ -2,10 +2,11 @@ using System;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.MergeRequests;
 
-namespace mrHelper.App.Git
+namespace mrHelper.App.Helpers
 {
    public class CancelledByUserException : Exception {}
    public class RepeatOperationException : Exception {}
@@ -122,7 +123,7 @@ namespace mrHelper.App.Git
 
          try
          {
-            Common.Tools.ExternalProcess.Start("git", "config --global http.sslVerify false");
+            ExternalProcess.Start("git", "config --global http.sslVerify false");
          }
          catch (Exception ex)
          {

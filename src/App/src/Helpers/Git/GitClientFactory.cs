@@ -6,7 +6,7 @@ using System.Diagnostics;
 using mrHelper.Client.Types;
 using mrHelper.Client.MergeRequests;
 
-namespace mrHelper.App.Git
+namespace mrHelper.App.Helpers
 {
    ///<summary>
    /// Creates GitClient objects.

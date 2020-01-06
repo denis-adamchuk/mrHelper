@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web.Script.Serialization;
-using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Client.Services
 {
@@ -19,7 +16,7 @@ namespace mrHelper.Client.Services
          {
             try
             {
-               _services = CommonTools.JsonFileReader.LoadFromFile<List<Service>>(ServiceListFileName);
+               _services = JsonFileReader.LoadFromFile<List<Service>>(ServiceListFileName);
             }
             catch (Exception ex) // whatever de-serialization exception
             {

@@ -4,15 +4,14 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Accessors;
 using mrHelper.App.Forms;
+using mrHelper.App.Helpers;
+using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
-using mrHelper.Client.Git;
-using mrHelper.Client.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Core.Interprocess;
 using mrHelper.Core.Matching;
 
-namespace mrHelper.App
+namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {

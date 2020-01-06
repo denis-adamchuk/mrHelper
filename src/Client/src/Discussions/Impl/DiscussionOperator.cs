@@ -1,11 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using System.Diagnostics;
+using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 

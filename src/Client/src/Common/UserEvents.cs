@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
+﻿using GitLabSharp.Entities;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Common
 {

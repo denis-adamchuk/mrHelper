@@ -1,4 +1,4 @@
-﻿namespace mrHelper.Common.Types
+﻿namespace mrHelper.Common.Tools
 {
    public static class SparsedListUtils
    {

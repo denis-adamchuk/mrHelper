@@ -1,6 +1,6 @@
 using System;
 
-namespace mrHelper.CommonTools.Persistence
+namespace mrHelper.Common.Tools
 {
    public interface IPersistentStateGetter
    {

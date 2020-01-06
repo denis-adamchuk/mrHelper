@@ -28,7 +28,13 @@ namespace mrHelper.Core.Git
       /// </summary>
       public string IsRenamed(string leftcommit, string rightcommit, string filename, bool leftsidename, out bool moved)
       {
-         List<string> renames = _gitRepository.GetListOfRenames(leftcommit, rightcommit);
+         GitListOfRenamesArguments arguments = new GitListOfRenamesArguments
+         {
+            sha1 = leftcommit,
+            sha2 = rightcommit
+         };
+
+         List<string> renames = _gitRepository.GetListOfRenames(arguments);
          moved = false;
 
          foreach (string line in renames)

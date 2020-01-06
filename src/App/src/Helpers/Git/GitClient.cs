@@ -5,13 +5,13 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.MergeRequests;
-using static mrHelper.Common.Tools.ExternalProcess;
 
-namespace mrHelper.App.Git
+namespace mrHelper.App.Helpers
 {
    // TODO Split GitClient and IGitRepository
 
@@ -30,8 +30,11 @@ namespace mrHelper.App.Git
       // Object which keeps this git repository up-to-date
       public GitClientUpdater Updater { get; }
 
-      public event Action<GitClient, DateTime> Updated;
-      public event Action<GitClient> Disposed;
+      public event Action<IGitRepository, DateTime> Updated;
+      public event Action<IGitRepository> Disposed;
+
+      public string HostName { get { return ProjectKey.HostName; } }
+      public string ProjectName { get { return ProjectKey.ProjectName; } }
 
       private static readonly int cancellationExitCode = 130;
 
@@ -115,7 +118,7 @@ namespace mrHelper.App.Git
          return (int)changeCurrentDirectoryAndRun(() =>
          {
             string arguments = "difftool --dir-diff --tool=" + name + " " + leftCommit + " " + rightCommit;
-            return Common.Tools.ExternalProcess.Start("git", arguments, false).PID;
+            return ExternalProcess.Start("git", arguments, false).PID;
          }, Path);
       }
 
@@ -128,7 +131,7 @@ namespace mrHelper.App.Git
          cancelDescriptor(_descriptor);
       }
 
-      private bool cancelDescriptor(AsyncTaskDescriptor descriptor)
+      private bool cancelDescriptor(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
          if (descriptor == null)
          {
@@ -139,7 +142,7 @@ namespace mrHelper.App.Git
          descriptor.Cancelled = true;
          try
          {
-            Common.Tools.ExternalProcess.Cancel(descriptor.Process);
+            ExternalProcess.Cancel(descriptor.Process);
             return true;
          }
          catch (InvalidOperationException)
@@ -168,7 +171,7 @@ namespace mrHelper.App.Git
             string argString =
                "diff -U" + arguments.context.ToString() + " " + arguments.sha1 + " " + arguments.sha2
                + " -- " + arguments.filename1 + " " + arguments.filename2;
-            return Common.Tools.ExternalProcess.Start("git", argString).StdOut;
+            return ExternalProcess.Start("git", argString).StdOut;
          }, Path);
 
          _cachedDiffs[arguments] = result;
@@ -185,7 +188,7 @@ namespace mrHelper.App.Git
             return _cachedDiffs[arguments];
          }
 
-         Output gitOutput = await (Task<Output>)(changeCurrentDirectoryAndRun(() =>
+         ExternalProcess.Output gitOutput = await (Task<ExternalProcess.Output>)(changeCurrentDirectoryAndRun(() =>
          {
             string argString =
                "diff -U" + arguments.context.ToString() + " " + arguments.sha1 + " " + arguments.sha2
@@ -207,7 +210,7 @@ namespace mrHelper.App.Git
          List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string argString = "diff " + arguments.sha1 + " " + arguments.sha2 + " --numstat --diff-filter=R";
-            return Common.Tools.ExternalProcess.Start("git", argString).StdOut;
+            return ExternalProcess.Start("git", argString).StdOut;
          }, Path);
 
          _cachedListOfRenames[arguments] = result;
@@ -221,7 +224,7 @@ namespace mrHelper.App.Git
             return _cachedListOfRenames[arguments];
          }
 
-         Output gitOutput = await (Task<Output>)changeCurrentDirectoryAndRun(() =>
+         ExternalProcess.Output gitOutput = await (Task<ExternalProcess.Output>)changeCurrentDirectoryAndRun(() =>
          {
             string argString = "diff " + arguments.sha1 + " " + arguments.sha2 + " --numstat --diff-filter=R";
             return executeLiteGitCommandAsync(argString);
@@ -243,7 +246,7 @@ namespace mrHelper.App.Git
          List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
          {
             string argString = "show " + arguments.sha + ":" + arguments.filename;
-            return Common.Tools.ExternalProcess.Start("git", argString).StdOut;
+            return ExternalProcess.Start("git", argString).StdOut;
          }, Path);
 
          _cachedRevisions[arguments] = result;
@@ -259,7 +262,7 @@ namespace mrHelper.App.Git
             return _cachedRevisions[arguments];
          }
 
-         Output gitOutput = await (Task<Output>)changeCurrentDirectoryAndRun(() =>
+         ExternalProcess.Output gitOutput = await (Task<ExternalProcess.Output>)changeCurrentDirectoryAndRun(() =>
          {
             string argString = "show " + arguments.sha + ":" + arguments.filename;
             return executeLiteGitCommandAsync(argString);
@@ -288,7 +291,7 @@ namespace mrHelper.App.Git
          {
             try
             {
-               Output output = Common.Tools.ExternalProcess.Start("git", "rev-parse --is-inside-work-tree");
+               ExternalProcess.Output output = ExternalProcess.Start("git", "rev-parse --is-inside-work-tree");
                return output.StdErr.Count == 0;
             }
             catch (GitOperationException)
@@ -315,17 +318,17 @@ namespace mrHelper.App.Git
          }
       }
 
-      async private Task<Output> executeLiteGitCommandAsync(string arguments)
+      async private Task<ExternalProcess.Output> executeLiteGitCommandAsync(string arguments)
       {
          if (_isDisposed)
          {
-            throw new GitClientDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
+            throw new GitRepositoryDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
          }
 
-         AsyncTaskDescriptor descriptor = null;
+         ExternalProcess.AsyncTaskDescriptor descriptor = null;
          try
          {
-            descriptor = Common.Tools.ExternalProcess.StartAsync("git", arguments, null);
+            descriptor = ExternalProcess.StartAsync("git", arguments, null);
             _liteDescriptors.Add(descriptor);
             return await descriptor.TaskCompletionSource.Task;
          }
@@ -344,11 +347,11 @@ namespace mrHelper.App.Git
          }
       }
 
-      async private Task<Output> executeGitCommandAsync(string arguments, Action<string> onProgressChange)
+      async private Task<ExternalProcess.Output> executeGitCommandAsync(string arguments, Action<string> onProgressChange)
       {
          if (_isDisposed)
          {
-            throw new GitClientDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
+            throw new GitRepositoryDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
          }
 
          // If _descriptor is non-empty, it must be a non-exclusive operation, otherwise pickup should have caught it
@@ -364,11 +367,11 @@ namespace mrHelper.App.Git
 
          Trace.TraceInformation(String.Format("[GitClient] async operation -- begin -- {0}: {1}",
             ProjectKey.ProjectName, arguments));
-         _descriptor = Common.Tools.ExternalProcess.StartAsync("git", arguments, progress);
+         _descriptor = ExternalProcess.StartAsync("git", arguments, progress);
 
          try
          {
-            Output gitOutput = await _descriptor.TaskCompletionSource.Task;
+            ExternalProcess.Output gitOutput = await _descriptor.TaskCompletionSource.Task;
             Trace.TraceInformation(String.Format("[GitClient] async operation -- end --  {0}: {1}",
                ProjectKey.ProjectName, arguments));
             return gitOutput;
@@ -430,8 +433,9 @@ namespace mrHelper.App.Git
          new Dictionary<GitListOfRenamesArguments, List<string>>();
 
       private bool _isDisposed = false;
-      private AsyncTaskDescriptor _descriptor;
-      private readonly List<AsyncTaskDescriptor> _liteDescriptors = new List<AsyncTaskDescriptor>();
+      private ExternalProcess.AsyncTaskDescriptor _descriptor;
+      private readonly List<ExternalProcess.AsyncTaskDescriptor> _liteDescriptors =
+         new List<ExternalProcess.AsyncTaskDescriptor>();
 
       private Action<string> _onProgressChange;
    }

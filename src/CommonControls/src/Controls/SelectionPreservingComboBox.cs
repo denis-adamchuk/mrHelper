@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper.CommonControls
+namespace mrHelper.CommonControls.Controls
 {
    /// <summary>
    /// Unlike its parent class, SelectionPreservingComboBox preserves state of SelectedIndex, SelectedItem,

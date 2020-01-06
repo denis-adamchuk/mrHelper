@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using TheArtOfDev.HtmlRenderer.WinForms;
-using mrHelper.Common.Interfaces;
 using mrHelper.Core.Context;
-using mrHelper.Core.Interprocess;
 using mrHelper.Core.Matching;
-using mrHelper.CommonTools;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -26,7 +25,7 @@ namespace mrHelper.App.Forms
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
-         this.Text = mrHelper.Common.Constants.Constants.NewDiscussionCaption;
+         this.Text = Constants.NewDiscussionCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
 

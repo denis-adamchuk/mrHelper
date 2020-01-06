@@ -64,7 +64,16 @@ namespace mrHelper.Core.Git
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
-         List<string> diff = gitRepository.Diff(sha1, sha2, filename1, filename2, 0);
+         GitDiffArguments arguments = new GitDiffArguments
+         {
+            sha1 = sha1,
+            sha2 = sha2,
+            filename1 = filename1,
+            filename2 = filename2,
+            context = 0
+         };
+
+         List<string> diff = gitRepository.Diff(arguments);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);

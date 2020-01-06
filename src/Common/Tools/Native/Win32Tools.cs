@@ -135,16 +135,16 @@ namespace mrHelper.Common.Tools
 
       private static void restoreWindow(IntPtr window)
       {
-         int nCmdShow = CommonTools.NativeMethods.SW_SHOWNORMAL;
-         if (CommonTools.NativeMethods.IsIconic(window))
+         int nCmdShow = NativeMethods.SW_SHOWNORMAL;
+         if (NativeMethods.IsIconic(window))
          {
-            nCmdShow = CommonTools.NativeMethods.SW_RESTORE;
+            nCmdShow = NativeMethods.SW_RESTORE;
          }
-         else if (CommonTools.NativeMethods.IsZoomed(window))
+         else if (NativeMethods.IsZoomed(window))
          {
-            nCmdShow = CommonTools.NativeMethods.SW_SHOWMAXIMIZED;
+            nCmdShow = NativeMethods.SW_SHOWMAXIMIZED;
          }
-         CommonTools.NativeMethods.ShowWindowAsync(window, nCmdShow);
+         NativeMethods.ShowWindowAsync(window, nCmdShow);
       }
    }
 }

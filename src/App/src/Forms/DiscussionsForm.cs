@@ -1,23 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Controls;
-using mrHelper.Core.Context;
-using mrHelper.Client.Tools;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.Git;
+using mrHelper.Client.Types;
 
 namespace mrHelper.App.Forms
 {
@@ -37,7 +30,7 @@ namespace mrHelper.App.Forms
 
          if (gitClient != null)
          {
-            gitClient.Disposed += client => onGitClientDisposed(client);
+            gitClient.Disposed += repo => onGitRepositoryDisposed(repo);
          }
          _gitRepository = gitClient;
          _diffContextDepth = diffContextDepth;
@@ -188,9 +181,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onGitClientDisposed(GitClient client)
+      private void onGitRepositoryDisposed(IGitRepository repo)
       {
-         client.Disposed -= onGitClientDisposed;
+         repo.Disposed -= onGitRepositoryDisposed;
          if (IsHandleCreated)
          {
             BeginInvoke(new Action(async () => await onRefresh()));
@@ -494,8 +487,7 @@ namespace mrHelper.App.Forms
       {
          get
          {
-            return String.Format("Discussions for merge request \"{0}\" with code repository in \"{1}\"",
-               _mergeRequestTitle, _gitRepository?.Path ?? "no repository");
+            return String.Format("Discussions for merge request \"{0}\"", _mergeRequestTitle);
          }
       }
 

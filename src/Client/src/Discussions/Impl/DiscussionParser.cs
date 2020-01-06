@@ -1,16 +1,11 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Workflow;
-using mrHelper.Client.Discussions;
+using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.CommonTools;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Client.Discussions
 {

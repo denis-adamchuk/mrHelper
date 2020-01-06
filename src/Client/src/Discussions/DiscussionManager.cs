@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
+using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.Client.Tools;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Interfaces;
 

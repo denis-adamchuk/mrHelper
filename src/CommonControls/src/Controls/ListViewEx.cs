@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace mrHelper.CommonControls
+namespace mrHelper.CommonControls.Controls
 {
    public partial class ListViewEx : ListView
    {

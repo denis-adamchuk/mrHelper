@@ -1,4 +1,4 @@
-﻿using mrHelper.CommonControls;
+﻿using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -84,14 +84,14 @@ namespace mrHelper.App.Forms
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.buttonEditProjects = new System.Windows.Forms.Button();
-         this.comboBoxHost = new mrHelper.CommonControls.SelectionPreservingComboBox();
+         this.comboBoxHost = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
          this.listViewProjects = new System.Windows.Forms.ListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
-         this.listViewMergeRequests = new mrHelper.CommonControls.ListViewEx();
+         this.listViewMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -120,8 +120,8 @@ namespace mrHelper.App.Forms
          this.labelLeftCommitTimestamp = new System.Windows.Forms.Label();
          this.labelRightCommitTimestampLabel = new System.Windows.Forms.Label();
          this.labelLeftCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxRightCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
-         this.comboBoxLeftCommit = new mrHelper.CommonControls.SelectionPreservingComboBox();
+         this.comboBoxRightCommit = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
+         this.comboBoxLeftCommit = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
          this.panel2 = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.labelGitStatus = new System.Windows.Forms.Label();
@@ -1295,7 +1295,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxHost;
       private System.Windows.Forms.SplitContainer splitContainer1;
       private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
-      private mrHelper.CommonControls.ListViewEx listViewMergeRequests;
+      private mrHelper.CommonControls.Controls.ListViewEx listViewMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderTitle;

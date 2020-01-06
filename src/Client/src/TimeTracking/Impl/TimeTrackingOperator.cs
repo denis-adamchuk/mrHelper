@@ -3,9 +3,8 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp;
 using GitLabSharp.Accessors;
-using GitLabSharp.Entities;
+using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.Client.Tools;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.TimeTracking

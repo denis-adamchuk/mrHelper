@@ -38,6 +38,12 @@ namespace mrHelper.Common.Interfaces
 
       List<string> GetListOfRenames(GitListOfRenamesArguments arguments);
       Task<List<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments);
+
+      event Action<IGitRepository, DateTime> Updated;
+      event Action<IGitRepository> Disposed;
+
+      string HostName { get; }
+      string ProjectName { get; }
    }
 }
 

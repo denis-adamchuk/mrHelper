@@ -5,24 +5,24 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Client.Workflow;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Types;
+using mrHelper.Client.Common;
 using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Versions;
 
-namespace mrHelper.App.Git
+namespace mrHelper.Client.Versions
 {
    /// <summary>
    /// Pre-loads file revisions into git repository cache
    /// </summary>
-   internal class RevisionCacher
+   public class RevisionCacher
    {
-      public RevisionCacher(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
-         Func<ProjectKey, GitClient> getGitClient, IMergeRequestProvider mergeRequestProvider,
-         VersionManager versionManager)
+      public RevisionCacher(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+         IHostProperties settings, Func<ProjectKey, IGitRepository> getGitRepository,
+         IMergeRequestProvider mergeRequestProvider)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
@@ -31,42 +31,42 @@ namespace mrHelper.App.Git
                Trace.TraceInformation(String.Format("[RevisionCacher] Unsubscribing from {0} Git Clients",
                   _latestChanges.Count()));
 
-               _latestChanges.Keys.ToList().ForEach(x => x.Updated -= onGitClientUpdated);
-               _latestChanges.Keys.ToList().ForEach(x => x.Disposed -= onGitClientDisposed);
+               _latestChanges.Keys.ToList().ForEach(x => x.Updated -= onGitRepositoryUpdated);
+               _latestChanges.Keys.ToList().ForEach(x => x.Disposed -= onGitRepositoryDisposed);
                _latestChanges.Clear();
             }
 
             // TODO Current version supports updates of projects of the most recent loaded host
             if (_latestChanges == null
              || _latestChanges.Count == 0
-             || _latestChanges.Keys.First().ProjectKey.HostName != hostname)
+             || _latestChanges.Keys.First().HostName != hostname)
             {
-               _latestChanges = new Dictionary<GitClient, DateTime>();
+               _latestChanges = new Dictionary<IGitRepository, DateTime>();
                foreach (Project project in projects)
                {
                   ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                  GitClient client = getGitClient(key);
-                  if (client != null)
+                  IGitRepository repo = getGitRepository(key);
+                  if (repo != null)
                   {
-                     _latestChanges.Add(client, DateTime.MinValue);
+                     _latestChanges.Add(repo, DateTime.MinValue);
                   }
                }
 
                Trace.TraceInformation(String.Format("[RevisionCacher] Subscribing to {0} Git Clients",
                   _latestChanges.Count()));
-               _latestChanges.Keys.ToList().ForEach(x => x.Updated += onGitClientUpdated);
-               _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onGitClientDisposed);
+               _latestChanges.Keys.ToList().ForEach(x => x.Updated += onGitRepositoryUpdated);
+               _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onGitRepositoryDisposed);
             }
          };
 
          _synchronizeInvoke = synchronizeInvoke;
+         _operator = new VersionOperator(settings);
          _mergeRequestProvider = mergeRequestProvider;
-         _versionManager = versionManager;
       }
 
-      private void onGitClientUpdated(GitClient gitClient, DateTime latestChange)
+      private void onGitRepositoryUpdated(IGitRepository gitRepository, DateTime latestChange)
       {
-         if (_latestChanges == null || !_latestChanges.ContainsKey(gitClient))
+         if (_latestChanges == null || !_latestChanges.ContainsKey(gitRepository))
          {
             Debug.Assert(false);
             return;
@@ -75,22 +75,26 @@ namespace mrHelper.App.Git
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
             {
-               ProjectKey projectKey = gitClient.ProjectKey;
-               DateTime prevLatestChange = _latestChanges[gitClient];
+               ProjectKey projectKey = new ProjectKey
+               {
+                  HostName = gitRepository.HostName,
+                  ProjectName = gitRepository.ProjectName
+               };
+               DateTime prevLatestChange = _latestChanges[gitRepository];
 
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(projectKey))
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                   try
                   {
-                     List<Version> newVersions  = await _versionManager.GetVersions(mrk);
+                     List<Version> newVersions  = await _operator.LoadVersionsAsync(mrk);
                      newVersions = newVersions
                         .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
 
                      List<Version> newVersionsDetailed = new List<Version>();
                      foreach (Version version in newVersions)
                      {
-                        Version newVersionDetailed = await _versionManager.GetVersion(version, mrk);
+                        Version newVersionDetailed = await _operator.LoadVersionAsync(version, mrk);
                         Trace.TraceInformation(String.Format(
                            "[RevisionCacher] Found new version of MR with IId={0} (created at {1}). "
                          + "PrevLatestChange={2}, LatestChange={3}",
@@ -114,11 +118,11 @@ namespace mrHelper.App.Git
 
                         try
                         {
-                           await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
+                           await doCacheAsync(gitRepository, diffArgs, revisionArgs, renamesArgs);
                         }
-                        catch (GitClientDisposedException ex)
+                        catch (GitRepositoryDisposedException ex)
                         {
-                           ExceptionHandlers.Handle(ex, "GitClient disposed");
+                           ExceptionHandlers.Handle(ex, "GitRepository disposed");
                            break;
                         }
 
@@ -128,20 +132,20 @@ namespace mrHelper.App.Git
                            mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
                      }
                   }
-                  catch (VersionManagerException)
+                  catch (OperatorException)
                   {
                      // already handled
                   }
                }
-               _latestChanges[gitClient] = latestChange;
+               _latestChanges[gitRepository] = latestChange;
             }), null);
       }
 
-      private void onGitClientDisposed(GitClient client)
+      private void onGitRepositoryDisposed(IGitRepository repo)
       {
-         client.Disposed -= onGitClientDisposed;
-         client.Updated -= onGitClientUpdated;
-         _latestChanges.Remove(client);
+         repo.Disposed -= onGitRepositoryDisposed;
+         repo.Updated -= onGitRepositoryUpdated;
+         _latestChanges.Remove(repo);
       }
 
       private void gatherArguments(List<Version> versions,
@@ -175,7 +179,7 @@ namespace mrHelper.App.Git
 
                diffArgs.Add(new GitDiffArguments
                {
-                  context = mrHelper.Common.Constants.Constants.FullContextSize,
+                  context = Constants.FullContextSize,
                   filename1 = diff.Old_Path,
                   filename2 = diff.New_Path,
                   sha1 = version.Base_Commit_SHA,
@@ -242,10 +246,10 @@ namespace mrHelper.App.Git
          }
       }
 
-      private Dictionary<GitClient, DateTime> _latestChanges;
+      private Dictionary<IGitRepository, DateTime> _latestChanges;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
+      private readonly VersionOperator _operator;
       private readonly IMergeRequestProvider _mergeRequestProvider;
-      private readonly VersionManager _versionManager;
 
       private static int MaxDiffsInVersion = 200;
    }

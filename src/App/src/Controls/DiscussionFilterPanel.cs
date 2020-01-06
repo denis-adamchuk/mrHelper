@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitLabSharp.Entities;
-using System.Diagnostics;
 using mrHelper.App.Helpers;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {

@@ -1,14 +1,10 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.IO;
-using System.Threading;
-using mrHelper.CommonTools;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.Integration
 {
@@ -62,7 +58,7 @@ namespace mrHelper.Integration
          string defaultIconString = String.Format("\"{0}\", 0", binaryFilePath);
          string commandString = String.Format("\"{0}\" \"%1\"", binaryFilePath);
 
-         CustomProtocol protocol = new CustomProtocol(mrHelper.Common.Constants.Constants.CustomProtocolName,
+         CustomProtocol protocol = new CustomProtocol(Constants.CustomProtocolName,
             "Merge Request Helper for GitLab link protocol",
             new Dictionary<string, string>{ { "open", commandString } }, defaultIconString);
          protocol.RegisterInRegistry();

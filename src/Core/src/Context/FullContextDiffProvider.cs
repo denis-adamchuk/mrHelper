@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using mrHelper.Core.Tools;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using System.Diagnostics;
 
@@ -19,7 +17,7 @@ namespace mrHelper.Core.Context
    }
 
    /// <summary>
-   /// Provides two lists of the same size. First list contains lines from sha1 and null for missing lines. 
+   /// Provides two lists of the same size. First list contains lines from sha1 and null for missing lines.
    /// Seconds list contains lines from sha2 and null for missing lines.
    /// </summary>
    public class FullContextDiffProvider
@@ -40,8 +38,17 @@ namespace mrHelper.Core.Context
             Left = new SparsedList<string>(),
             Right = new SparsedList<string>()
          };
-         List<string> fullDiff = _gitRepository.Diff(leftSHA, rightSHA, leftFileName, rightFileName,
-            mrHelper.Common.Constants.Constants.FullContextSize);
+
+         GitDiffArguments arguments = new GitDiffArguments
+         {
+            sha1 = leftSHA,
+            sha2 = rightSHA,
+            filename1 = leftFileName,
+            filename2 = rightFileName,
+            context = Constants.FullContextSize
+         };
+
+         List<string> fullDiff = _gitRepository.Diff(arguments);
          if (fullDiff.Count == 0)
          {
             Trace.TraceWarning(String.Format(

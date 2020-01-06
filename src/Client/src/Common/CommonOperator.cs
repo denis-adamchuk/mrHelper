@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
-using System.Diagnostics;
 using Version = GitLabSharp.Entities.Version;
-using mrHelper.Client.Tools;
 
 namespace mrHelper.Client.Common
 {

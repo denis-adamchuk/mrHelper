@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
-using mrHelper.Client.Tools;
 using mrHelper.Client.Common;
 using Version = GitLabSharp.Entities.Version;
 

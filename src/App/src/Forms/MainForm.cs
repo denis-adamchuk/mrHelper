@@ -1,26 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.CustomActions;
-using mrHelper.Common.Interfaces;
-using mrHelper.Client.Git;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Updates;
+using mrHelper.Client.Types;
+using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
-using mrHelper.CommonTools.Persistence;
 using mrHelper.Client.TimeTracking;
-using mrHelper.Client.Services;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -107,7 +98,7 @@ namespace mrHelper.App.Forms
       private string _newVersionNumber;
       private readonly System.Windows.Forms.Timer _checkForUpdatesTimer = new System.Windows.Forms.Timer
       {
-         Interval = Common.Constants.Constants.CheckForUpdatesTimerInterval
+         Interval = Constants.CheckForUpdatesTimerInterval
       };
 
       private struct HostComboBoxItem

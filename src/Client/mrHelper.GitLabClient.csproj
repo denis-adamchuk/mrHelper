@@ -34,10 +34,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
@@ -55,7 +53,7 @@
     <Compile Include="src\MergeRequests\InstantProjectCheckerItf.cs" />
     <Compile Include="src\MergeRequests\ProjectWatcherItf.cs" />
     <Compile Include="src\Types\ProjectKey.cs" />
-    <Compile Include="src\Versions\VersionManager.cs" />
+    <Compile Include="src\Versions\RevisionCacher.cs" />
     <Compile Include="src\Versions\Impl\VersionOperator.cs" />
     <Compile Include="src\MergeRequests\MergeRequestProviderItf.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />
@@ -88,10 +86,6 @@
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Core\mrHelper.DiffAnalysis.csproj">
-      <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
-      <Name>mrHelper.DiffAnalysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,19 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
-using mrHelper.Core.Interprocess;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
-using mrHelper.Client.Tools;
-using mrHelper.Client.Git;
-using mrHelper.Common.Interfaces;
-using mrHelper.Core.Matching;
-using mrHelper.CommonTools;
 using mrHelper.Client.Services;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App
@@ -34,7 +29,7 @@ namespace mrHelper.App
                {
                   Program.FeedbackReporter.SendEMail("Merge Request Helper error report",
                      "Please provide some details about the problem here",
-                     Program.ServiceManager.GetBugReportEmail(), Common.Constants.Constants.BugReportLogArchiveName);
+                     Program.ServiceManager.GetBugReportEmail(), Constants.BugReportLogArchiveName);
                }
                catch (FeedbackReporterException ex2)
                {
@@ -47,7 +42,7 @@ namespace mrHelper.App
 
       private static readonly Regex url_re = new Regex( String.Format(
          @"^({0}:\/\/)?((http[s]?:\/\/)?[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
-            Common.Constants.Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       internal static UserDefinedSettings Settings = new UserDefinedSettings(true);
       internal static ServiceManager ServiceManager;
@@ -149,8 +144,7 @@ namespace mrHelper.App
                return;
             }
 
-            IntPtr mainWindow = context.GetWindowByCaption(
-               mrHelper.Common.Constants.Constants.MainWindowCaption, true);
+            IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
             if (mainWindow != IntPtr.Zero)
             {
                if (context.Arguments.Length > 1)
@@ -194,12 +188,11 @@ namespace mrHelper.App
             return;
          }
 
-         IntPtr concurrentDiscussionWindow = context.GetWindowByCaption(
-            mrHelper.Common.Constants.Constants.NewDiscussionCaption, false);
+         IntPtr concurrentDiscussionWindow = context.GetWindowByCaption(Constants.NewDiscussionCaption, false);
          if (concurrentDiscussionWindow != IntPtr.Zero)
          {
             Trace.TraceWarning("Found a concurrent Create New Discussion window");
-            CommonTools.Win32Tools.ForceWindowIntoForeground(concurrentDiscussionWindow);
+            Win32Tools.ForceWindowIntoForeground(concurrentDiscussionWindow);
             return;
          }
 
@@ -227,8 +220,7 @@ namespace mrHelper.App
          argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
 
          string message = String.Join("|", argumentsEx);
-         IntPtr mainWindow = context.GetWindowByCaption(
-            mrHelper.Common.Constants.Constants.MainWindowCaption, true);
+         IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
          if (mainWindow == IntPtr.Zero)
          {
             Debug.Assert(false);
@@ -306,7 +298,7 @@ namespace mrHelper.App
          string filenamePrefix = isMainInstance ? "mrhelper.main" : "mrhelper.second.instance";
          string filenameSuffix = isMainInstance ? String.Empty : ".id" + context.CurrentProcess.Id.ToString();
          string filename = String.Format("{0}.{1}{2}.log", filenamePrefix,
-            DateTime.Now.ToString(Common.Constants.Constants.TimeStampFilenameFormat), filenameSuffix);
+            DateTime.Now.ToString(Constants.TimeStampFilenameFormat), filenameSuffix);
 
          return Path.Combine(getFullLogPath(), filename);
       }
