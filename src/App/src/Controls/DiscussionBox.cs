@@ -503,7 +503,7 @@ namespace mrHelper.App.Controls
                Tag = note
             };
             htmlPanel.GotFocus += Control_GotFocus;
-            htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel as HtmlPanel);
+            htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel);
 
             setNoteHtmlText(htmlPanel);
 
