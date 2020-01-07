@@ -21,7 +21,7 @@ namespace mrHelper.Client.MergeRequests
          _settings = settings;
       }
 
-      internal Task<List<MergeRequest>> GetMergeRequestsAsync(string host, string project)
+      internal Task<IEnumerable<MergeRequest>> GetMergeRequestsAsync(string host, string project)
       {
          GitLabClient client = new GitLabClient(host, _settings.GetAccessToken(host));
          return CommonOperator.GetMergeRequestsAsync(client, project);

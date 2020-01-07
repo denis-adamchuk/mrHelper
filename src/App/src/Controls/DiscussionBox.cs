@@ -285,19 +285,19 @@ namespace mrHelper.App.Controls
 
       private void onCreate()
       {
-         Debug.Assert(Discussion.Notes.Count > 0);
+         Debug.Assert(Discussion.Notes.Count() > 0);
 
-         DiscussionNote firstNote = Discussion.Notes[0];
+         DiscussionNote firstNote = Discussion.Notes.First();
 
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
-         _textboxesNotes = createTextBoxes(Discussion.Notes);
+         _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
 
          Controls.Add(_labelAuthor);
          Controls.Add(_textboxFilename);
          Controls.Add(_panelContext);
-         foreach (var note in _textboxesNotes)
+         foreach (Control note in _textboxesNotes)
          {
             Controls.Add(note);
          }
@@ -413,7 +413,7 @@ namespace mrHelper.App.Controls
          return labelAuthor;
       }
 
-      private List<Control> createTextBoxes(List<DiscussionNote> notes)
+      private IEnumerable<Control> createTextBoxes(IEnumerable<DiscussionNote> notes)
       {
          bool discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
 
@@ -426,7 +426,7 @@ namespace mrHelper.App.Controls
                continue;
             }
 
-            Control textBox = createTextBox(note, discussionResolved, notes[0].Author);
+            Control textBox = createTextBox(note, discussionResolved, notes.First().Author);
             boxes.Add(textBox);
          }
          return boxes;
@@ -667,7 +667,7 @@ namespace mrHelper.App.Controls
 
       private void resizeBoxContent(int width)
       {
-         foreach (var textbox in _textboxesNotes)
+         foreach (Control textbox in _textboxesNotes)
          {
             textbox.Width = width * NotesWidth / 100;
             if (textbox is TextBoxNoWheel)
@@ -734,7 +734,7 @@ namespace mrHelper.App.Controls
          }
 
          // a list of Notes is to the right of the Context
-         foreach (var note in _textboxesNotes)
+         foreach (Control note in _textboxesNotes)
          {
             note.Location = nextNotePos;
             nextNotePos.Offset(0, note.Height + interControlVertMargin);
@@ -743,10 +743,9 @@ namespace mrHelper.App.Controls
          int lblAuthorHeight = _labelAuthor.Location.Y + _labelAuthor.PreferredSize.Height;
          int lblFNameHeight = (_textboxFilename == null ? 0 : _textboxFilename.Location.Y + _textboxFilename.Height);
          int ctxHeight = (_panelContext == null ? 0 : _panelContext.Location.Y + _panelContext.Height);
-         int notesHeight = _textboxesNotes[_textboxesNotes.Count - 1].Location.Y
-                         + _textboxesNotes[_textboxesNotes.Count - 1].Height;
+         int notesHeight = _textboxesNotes.Last().Location.Y + _textboxesNotes.Last().Height;
 
-         int boxContentWidth = nextNoteX + _textboxesNotes[0].Width;
+         int boxContentWidth = nextNoteX + _textboxesNotes.First().Width;
          int boxContentHeight = new[] { lblAuthorHeight, lblFNameHeight, ctxHeight, notesHeight }.Max();
          Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
       }
@@ -898,12 +897,12 @@ namespace mrHelper.App.Controls
          {
             for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
             {
-               if (_textboxesNotes.IndexOf(Controls[iControl]) != -1)
+               if (_textboxesNotes.Any(x => x == Controls[iControl]))
                {
                   Controls.Remove(Controls[iControl]);
                }
             }
-            _textboxesNotes.Clear();
+            _textboxesNotes = null;
          };
 
          _preContentChange(this);
@@ -926,7 +925,7 @@ namespace mrHelper.App.Controls
          // Get rid of old text boxes
          removeTextBoxes();
 
-         if (Discussion.Notes.Count == 0 || Discussion.Notes[0].System)
+         if (Discussion.Notes.Count() == 0 || Discussion.Notes.First().System)
          {
             // It happens when Discussion has System notes like 'a line changed ...'
             // along with a user note that has been just deleted
@@ -936,8 +935,8 @@ namespace mrHelper.App.Controls
          }
 
          // Create controls
-         _textboxesNotes = createTextBoxes(Discussion.Notes);
-         foreach (var note in _textboxesNotes)
+         _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
+         foreach (Control note in _textboxesNotes)
          {
             Controls.Add(note);
          }
@@ -986,7 +985,7 @@ namespace mrHelper.App.Controls
       private Control _labelAuthor;
       private Control _textboxFilename;
       private Control _panelContext;
-      private List<Control> _textboxesNotes;
+      private IEnumerable<Control> _textboxesNotes;
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;

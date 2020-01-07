@@ -402,9 +402,9 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+            Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToArray();
             Program.Settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-               .Select(i => i.SubItems[1].Text).ToList();
+               .Select(i => i.SubItems[1].Text).ToArray();
 
             updateHostsDropdownList();
             selectHost(PreferredSelection.Latest);
@@ -423,9 +423,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToList();
+         Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToArray();
          Program.Settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-            .Select(i => i.SubItems[1].Text).ToList();
+            .Select(i => i.SubItems[1].Text).ToArray();
 
          updateHostsDropdownList();
          if (removeCurrent)
@@ -967,7 +967,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Tuple<string, bool>[] projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
+         IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
          using (EditProjectsForm form = new EditProjectsForm(projects))

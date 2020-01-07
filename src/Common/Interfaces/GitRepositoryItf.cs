@@ -30,14 +30,14 @@ namespace mrHelper.Common.Interfaces
    /// </summary>
    public interface IGitRepository
    {
-      List<string> Diff(GitDiffArguments argument);
-      Task<List<string>> DiffAsync(GitDiffArguments argument);
+      IEnumerable<string> Diff(GitDiffArguments argument);
+      Task<IEnumerable<string>> DiffAsync(GitDiffArguments argument);
 
-      List<string> ShowFileByRevision(GitRevisionArguments arguments);
-      Task<List<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments);
+      IEnumerable<string> ShowFileByRevision(GitRevisionArguments arguments);
+      Task<IEnumerable<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments);
 
-      List<string> GetListOfRenames(GitListOfRenamesArguments arguments);
-      Task<List<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments);
+      IEnumerable<string> GetListOfRenames(GitListOfRenamesArguments arguments);
+      Task<IEnumerable<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments);
 
       event Action<IGitRepository, DateTime> Updated;
       event Action<IGitRepository> Disposed;

@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         List<Discussion> discussions = await loadDiscussionsAsync(mrk);
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(mrk);
          if (discussions == null)
          {
             return;
@@ -335,10 +335,10 @@ namespace mrHelper.App.Forms
          serializer.SerializeToDisk(snapshot, pid);
       }
 
-      async private Task<List<Discussion>> loadDiscussionsAsync(MergeRequestKey mrk)
+      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(MergeRequestKey mrk)
       {
          labelWorkflowStatus.Text = "Loading discussions...";
-         List<Discussion> discussions;
+         IEnumerable<Discussion> discussions;
          try
          {
             discussions = await _discussionManager.GetDiscussionsAsync(mrk);

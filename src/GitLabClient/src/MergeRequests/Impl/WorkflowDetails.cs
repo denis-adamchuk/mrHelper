@@ -10,7 +10,7 @@ namespace mrHelper.Client.MergeRequests
    {
       internal WorkflowDetails()
       {
-         _mergeRequests = new Dictionary<ProjectKey, List<MergeRequest>>();
+         _mergeRequests = new Dictionary<ProjectKey, MergeRequest[]>();
          _changes = new Dictionary<MergeRequestKey, DateTime>();
       }
 
@@ -18,7 +18,7 @@ namespace mrHelper.Client.MergeRequests
       {
          _mergeRequests = details._mergeRequests.ToDictionary(
             item => item.Key,
-            item => new List<MergeRequest>(item.Value));
+            item => item.Value.ToArray());
          _changes = new Dictionary<MergeRequestKey, DateTime>(details._changes);
       }
 
@@ -35,15 +35,16 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key)
       {
-         return _mergeRequests.ContainsKey(key) ? new List<MergeRequest>(_mergeRequests[key]) : new List<MergeRequest>();
+         return _mergeRequests.ContainsKey(key) ?
+            _mergeRequests[key].ToArray() : Array.Empty<MergeRequest>();
       }
 
       /// <summary>
       /// Sets a list of merge requests for the given project
       /// </summary>
-      internal void SetMergeRequests(ProjectKey key, List<MergeRequest> mergeRequests)
+      internal void SetMergeRequests(ProjectKey key, IEnumerable<MergeRequest> mergeRequests)
       {
-         _mergeRequests[key] = mergeRequests;
+         _mergeRequests[key] = mergeRequests.ToArray();
       }
 
       /// <summary>
@@ -69,7 +70,7 @@ namespace mrHelper.Client.MergeRequests
       {
          if (_mergeRequests.ContainsKey(mrk.ProjectKey))
          {
-            int index = _mergeRequests[mrk.ProjectKey].FindIndex(x => x.IId == mrk.IId);
+            int index = Array.FindIndex(_mergeRequests[mrk.ProjectKey], x => x.IId == mrk.IId);
             if (index != -1)
             {
                _mergeRequests[mrk.ProjectKey][index] = mergeRequest;
@@ -86,7 +87,7 @@ namespace mrHelper.Client.MergeRequests
       }
 
       // maps unique project id to list of merge requests
-      private readonly Dictionary<ProjectKey, List<MergeRequest>> _mergeRequests;
+      private readonly Dictionary<ProjectKey, MergeRequest[]> _mergeRequests;
 
       // maps Merge Request to a timestamp of its latest version
       private readonly Dictionary<MergeRequestKey, DateTime> _changes;

@@ -309,8 +309,10 @@ namespace mrHelper.App
 
          // erase old style log files
          File.Delete(Path.Combine(path, "mrHelper.main.log"));
-         Directory.GetFiles(path, "mrHelper.secondary.*.log").ToList().ForEach(
-            x => File.Delete(Path.Combine(path, x)));
+         Directory
+            .GetFiles(path, "mrHelper.secondary.*.log")
+            .ToList()
+            .ForEach(x => File.Delete(Path.Combine(path, x)));
 
          // erase all log files except N most recent ones
          string[] logfilemasks = { "mrHelper.main.*.log", "mrHelper.second.instance.*.log" };
@@ -319,8 +321,12 @@ namespace mrHelper.App
             string[] files = Directory.GetFiles(path, mask);
             Array.Sort(files);
 
-            files.Except(files.Reverse().Take(settings.LogFilesToKeep)).ToList().ForEach(
-               x => File.Delete(Path.Combine(path, x)));
+            files
+               .Except(files
+                     .Reverse()
+                     .Take(settings.LogFilesToKeep))
+               .ToList()
+               .ForEach(x => File.Delete(Path.Combine(path, x)));
          }
       }
    }

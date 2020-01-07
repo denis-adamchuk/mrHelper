@@ -16,7 +16,7 @@ namespace mrHelper.Client.Versions
          _operator = new VersionOperator(settings);
       }
 
-      public Task<List<Version>> GetVersions(MergeRequestKey mrk)
+      public Task<IEnumerable<Version>> GetVersions(MergeRequestKey mrk)
       {
          return _operator.LoadVersionsAsync(mrk);
       }

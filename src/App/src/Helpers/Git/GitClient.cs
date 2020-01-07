@@ -154,7 +154,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public List<string> Diff(GitDiffArguments arguments)
+      public IEnumerable<string> Diff(GitDiffArguments arguments)
       {
          arguments.filename1 = escapeSpaces(arguments.filename1);
          arguments.filename2 = escapeSpaces(arguments.filename2);
@@ -164,7 +164,7 @@ namespace mrHelper.App.Helpers
             return _cachedDiffs[arguments];
          }
 
-         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
+         IEnumerable<string> result = (IEnumerable<string>)changeCurrentDirectoryAndRun(() =>
          {
             string argString =
                "diff -U" + arguments.context.ToString() + " " + arguments.sha1 + " " + arguments.sha2
@@ -176,7 +176,7 @@ namespace mrHelper.App.Helpers
          return result;
       }
 
-      async public Task<List<string>> DiffAsync(GitDiffArguments arguments)
+      async public Task<IEnumerable<string>> DiffAsync(GitDiffArguments arguments)
       {
          arguments.filename1 = escapeSpaces(arguments.filename1);
          arguments.filename2 = escapeSpaces(arguments.filename2);
@@ -198,14 +198,14 @@ namespace mrHelper.App.Helpers
          return gitOutput.StdOut;
       }
 
-      public List<string> GetListOfRenames(GitListOfRenamesArguments arguments)
+      public IEnumerable<string> GetListOfRenames(GitListOfRenamesArguments arguments)
       {
          if (_cachedListOfRenames.ContainsKey(arguments))
          {
             return _cachedListOfRenames[arguments];
          }
 
-         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
+         IEnumerable<string> result = (IEnumerable<string>)changeCurrentDirectoryAndRun(() =>
          {
             string argString = "diff " + arguments.sha1 + " " + arguments.sha2 + " --numstat --diff-filter=R";
             return ExternalProcess.Start("git", argString).StdOut;
@@ -215,7 +215,7 @@ namespace mrHelper.App.Helpers
          return result;
       }
 
-      async public Task<List<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments)
+      async public Task<IEnumerable<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments)
       {
          if (_cachedListOfRenames.ContainsKey(arguments))
          {
@@ -232,7 +232,7 @@ namespace mrHelper.App.Helpers
          return gitOutput.StdOut;
       }
 
-      public List<string> ShowFileByRevision(GitRevisionArguments arguments)
+      public IEnumerable<string> ShowFileByRevision(GitRevisionArguments arguments)
       {
          arguments.filename = escapeSpaces(arguments.filename);
 
@@ -241,7 +241,7 @@ namespace mrHelper.App.Helpers
             return _cachedRevisions[arguments];
          }
 
-         List<string> result = (List<string>)changeCurrentDirectoryAndRun(() =>
+         IEnumerable<string> result = (IEnumerable<string>)changeCurrentDirectoryAndRun(() =>
          {
             string argString = "show " + arguments.sha + ":" + arguments.filename;
             return ExternalProcess.Start("git", argString).StdOut;
@@ -251,7 +251,7 @@ namespace mrHelper.App.Helpers
          return result;
       }
 
-      async public Task<List<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments)
+      async public Task<IEnumerable<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments)
       {
          arguments.filename = escapeSpaces(arguments.filename);
 
@@ -290,7 +290,7 @@ namespace mrHelper.App.Helpers
             try
             {
                ExternalProcess.Output output = ExternalProcess.Start("git", "rev-parse --is-inside-work-tree");
-               return output.StdErr.Count == 0;
+               return output.StdErr.Count() == 0;
             }
             catch (GitOperationException)
             {
@@ -421,14 +421,14 @@ namespace mrHelper.App.Helpers
          return unescaped.Contains(' ') ? '"' + unescaped + '"' : unescaped;
       }
 
-      private readonly Dictionary<GitDiffArguments, List<string>> _cachedDiffs =
-         new Dictionary<GitDiffArguments, List<string>>();
+      private readonly Dictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
+         new Dictionary<GitDiffArguments, IEnumerable<string>>();
 
-      private readonly Dictionary<GitRevisionArguments, List<string>> _cachedRevisions =
-         new Dictionary<GitRevisionArguments, List<string>>();
+      private readonly Dictionary<GitRevisionArguments, IEnumerable<string>> _cachedRevisions =
+         new Dictionary<GitRevisionArguments, IEnumerable<string>>();
 
-      private readonly Dictionary<GitListOfRenamesArguments, List<string>> _cachedListOfRenames =
-         new Dictionary<GitListOfRenamesArguments, List<string>>();
+      private readonly Dictionary<GitListOfRenamesArguments, IEnumerable<string>> _cachedListOfRenames =
+         new Dictionary<GitListOfRenamesArguments, IEnumerable<string>>();
 
       private bool _isDisposed = false;
       private ExternalProcess.AsyncTaskDescriptor _descriptor;

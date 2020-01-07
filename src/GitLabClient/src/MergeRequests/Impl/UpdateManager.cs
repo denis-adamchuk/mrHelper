@@ -17,14 +17,14 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class UpdateManager : IDisposable, IUpdateManager
    {
-      internal event Action<List<UserEvents.MergeRequestEvent>> OnUpdate;
+      internal event Action<IEnumerable<UserEvents.MergeRequestEvent>> OnUpdate;
 
       internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, IHostProperties settings,
-         string hostname, List<Project> projects, WorkflowDetailsCache cache, int autoUpdatePeriodMs)
+         string hostname, IEnumerable<Project> projects, WorkflowDetailsCache cache, int autoUpdatePeriodMs)
       {
          _operator = new UpdateOperator(settings);
          _hostname = hostname;
-         _projects = projects;
+         _projects = projects.ToArray();
          _cache = cache;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
@@ -87,7 +87,7 @@ namespace mrHelper.Client.MergeRequests
 
             await loadDataAndUpdateCacheAsync(mrk);
 
-            List<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
+            IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
                oldDetails, _cache.Details);
 
             int legalUpdates = updates.Count(x => x.Labels);
@@ -138,7 +138,7 @@ namespace mrHelper.Client.MergeRequests
 
          await loadDataAndUpdateCacheAsync(_hostname, _projects);
 
-         List<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
+         IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
             oldDetails, _cache.Details);
 
          Trace.TraceInformation(
@@ -152,11 +152,11 @@ namespace mrHelper.Client.MergeRequests
          OnUpdate?.Invoke(updates);
       }
 
-      async private Task loadDataAndUpdateCacheAsync(string hostname, List<Project> projects)
+      async private Task loadDataAndUpdateCacheAsync(string hostname, IEnumerable<Project> projects)
       {
          foreach (Project project in projects)
          {
-            List<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
+            IEnumerable<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
             if (mergeRequests == null)
             {
                continue;
@@ -196,7 +196,7 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      async private Task<List<MergeRequest>> loadMergeRequestsAsync(string hostname, string projectname)
+      async private Task<IEnumerable<MergeRequest>> loadMergeRequestsAsync(string hostname, string projectname)
       {
          try
          {
@@ -251,7 +251,7 @@ namespace mrHelper.Client.MergeRequests
       private readonly UpdateOperator _operator;
 
       private readonly string _hostname;
-      private readonly List<Project> _projects;
+      private readonly IEnumerable<Project> _projects;
    }
 }
 

@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
-      private List<ICommand> _customCommands;
+      private IEnumerable<ICommand> _customCommands;
       private ColorScheme _colorScheme;
       private Dictionary<string, string> _iconScheme;
 

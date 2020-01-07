@@ -21,7 +21,7 @@ namespace mrHelper.Client.Discussions
    public class DiscussionManager : IDisposable
    {
       public event Action<MergeRequestKey> PreLoadDiscussions;
-      public event Action<MergeRequestKey, List<Discussion>, DateTime, bool> PostLoadDiscussions;
+      public event Action<MergeRequestKey, IEnumerable<Discussion>, DateTime, bool> PostLoadDiscussions;
       public event Action FailedLoadDiscussions;
 
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
@@ -41,22 +41,22 @@ namespace mrHelper.Client.Discussions
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Scheduling update of discussions for {0} merge requests of {1} on Workflow event",
-               mergeRequests.Count, project.Path_With_Namespace));
+               mergeRequests.Count(), project.Path_With_Namespace));
 
-            IEnumerable<MergeRequestKey> keys = mergeRequests
+            IEnumerable<MergeRequestKey> mergeRequestKeys = mergeRequests
                .Select(x => new MergeRequestKey
                {
                   ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
                   IId = x.IId
                });
 
-            scheduleUpdate(keys, true);
+            scheduleUpdate(mergeRequestKeys.ToArray(), true);
 
-            MergeRequestKey[] toRemove = _cachedDiscussions.Keys.Where(
+            IEnumerable<MergeRequestKey> toRemove = _cachedDiscussions.Keys.Where(
                x => x.ProjectKey.HostName == hostname
                  && x.ProjectKey.ProjectName == project.Path_With_Namespace
-                 && !mergeRequests.Any(y => x.IId == y.IId)).ToArray();
-            cleanup(toRemove);
+                 && !mergeRequestKeys.Any(y => x.IId == y.IId));
+            cleanup(toRemove.ToArray());
          };
 
          mergeRequestManager.MergeRequestEvent +=
@@ -80,11 +80,11 @@ namespace mrHelper.Client.Discussions
                         e.FullMergeRequestKey.MergeRequest.IId));
                      _closed.Remove(mrk);
                   }
-                  scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+                  scheduleUpdate(new MergeRequestKey[] { mrk }, false);
                   break;
 
                case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
-                  cleanup(new List<MergeRequestKey>
+                  cleanup(new MergeRequestKey[]
                   {
                      new MergeRequestKey
                      {
@@ -118,7 +118,7 @@ namespace mrHelper.Client.Discussions
          _oneShotTimer?.Dispose();
       }
 
-      async public Task<List<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      async public Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
          if (_updating.Contains(mrk))
          {
@@ -175,7 +175,7 @@ namespace mrHelper.Client.Discussions
                "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
                mrk.IId));
 
-            scheduleUpdate(new List<MergeRequestKey> { mrk }, false);
+            scheduleUpdate(new MergeRequestKey[] { mrk }, false);
 
             if (Convert.ToInt32(_oneShotTimer.Interval) == firstChanceDelay)
             {
@@ -205,9 +205,7 @@ namespace mrHelper.Client.Discussions
             "[DiscussionManager] Scheduling update of discussions for {0} merge requests on a timer update",
             _cachedDiscussions.Count));
 
-         MergeRequestKey[] cachedKeys = new MergeRequestKey[_cachedDiscussions.Keys.Count];
-         _cachedDiscussions.Keys.CopyTo(cachedKeys, 0);
-         scheduleUpdate(cachedKeys, false);
+         scheduleUpdate(_cachedDiscussions.Keys.ToArray(), false);
       }
 
       private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, bool initialSnapshot)
@@ -262,14 +260,14 @@ namespace mrHelper.Client.Discussions
             PreLoadDiscussions?.Invoke(mrk);
 
             _updating.Add(mrk);
-            List<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
+            IEnumerable<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
 
             if (!_closed.Contains(mrk))
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
                 + " cached time stamp {4} (was {5} before update)",
-                  discussions.Count, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
+                  discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                   mergeRequestUpdatedAt.ToLocalTime().ToString(),
                   _cachedDiscussions.ContainsKey(mrk) ?
                      _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
@@ -277,7 +275,7 @@ namespace mrHelper.Client.Discussions
                _cachedDiscussions[mrk] = new CachedDiscussions
                {
                   TimeStamp = mergeRequestUpdatedAt,
-                  Discussions = discussions
+                  Discussions = discussions.ToArray()
                };
             }
             else
@@ -323,7 +321,7 @@ namespace mrHelper.Client.Discussions
       private struct CachedDiscussions
       {
          public DateTime TimeStamp;
-         public List<Discussion> Discussions;
+         public IEnumerable<Discussion> Discussions;
       }
 
       private readonly Dictionary<MergeRequestKey, CachedDiscussions> _cachedDiscussions =

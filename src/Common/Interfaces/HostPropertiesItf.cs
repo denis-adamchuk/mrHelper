@@ -10,7 +10,7 @@ namespace mrHelper.Common.Interfaces
    {
       string GetAccessToken(string host);
 
-      string[] GetEnabledProjects(string host);
+      IEnumerable<string> GetEnabledProjects(string host);
    }
 }
 

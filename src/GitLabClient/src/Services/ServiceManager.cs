@@ -16,7 +16,7 @@ namespace mrHelper.Client.Services
          {
             try
             {
-               _services = JsonFileReader.LoadFromFile<List<Service>>(ServiceListFileName);
+               _services = JsonFileReader.LoadFromFile<Service[]>(ServiceListFileName);
             }
             catch (Exception ex) // whatever de-serialization exception
             {
@@ -27,7 +27,7 @@ namespace mrHelper.Client.Services
 
       public string GetHelpUrl()
       {
-         int index = _services?.FindIndex(x => x.Name == "Help") ?? -1;
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "Help");
          if (index == -1)
          {
             Trace.TraceWarning(String.Format("[ServiceManager] Help entry is missing"));
@@ -40,7 +40,7 @@ namespace mrHelper.Client.Services
 
       public string GetBugReportEmail()
       {
-         int index = _services?.FindIndex(x => x.Name == "BugReport") ?? -1;
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "BugReport");
          if (index == -1)
          {
             Trace.TraceWarning(String.Format("[ServiceManager] BugReport entry is missing"));
@@ -53,7 +53,7 @@ namespace mrHelper.Client.Services
 
       public string GetJiraServiceUrl()
       {
-         int index = _services?.FindIndex(x => x.Name == "Jira") ?? -1;
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "Jira");
          if (index == -1)
          {
             Trace.TraceWarning(String.Format("[ServiceManager] Jira entry is missing"));
@@ -66,7 +66,7 @@ namespace mrHelper.Client.Services
 
       public string GetServiceMessageUsername()
       {
-         int index = _services?.FindIndex(x => x.Name == "ServiceMessages") ?? -1;
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "ServiceMessages");
          if (index == -1)
          {
             Trace.TraceWarning(String.Format("[ServiceManager] ServiceMessages entry is missing"));
@@ -85,7 +85,7 @@ namespace mrHelper.Client.Services
 
       public LatestVersionInformation? GetLatestVersionInfo()
       {
-         int index = _services?.FindIndex(x => x.Name == "CheckForUpdates") ?? -1;
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "CheckForUpdates");
          if (index == -1)
          {
             Trace.TraceWarning(String.Format("[ServiceManager] CheckForUpdates entry is missing"));
@@ -130,7 +130,7 @@ namespace mrHelper.Client.Services
       }
 #pragma warning restore 0649
 
-      private readonly List<Service> _services = new List<Service>();
+      private readonly Service[] _services = Array.Empty<Service>();
 
       private const string ServiceListFileName = "services.json";
    }

@@ -21,13 +21,13 @@ namespace mrHelper.Client.Versions
          _settings = settings;
       }
 
-      async internal Task<List<Version>> LoadVersionsAsync(MergeRequestKey mrk)
+      async internal Task<IEnumerable<Version>> LoadVersionsAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
             _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            return (List<Version>)(await client.RunAsync(async (gitlab) =>
+            return (IEnumerable<Version>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Versions.LoadAllTaskAsync()));
          }

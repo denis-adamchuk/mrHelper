@@ -15,18 +15,21 @@ namespace mrHelper.App.Helpers
              return null;
          }
 
-         return settings.LastUsedLabels .Split(',').Select(x => x.Trim(' ')).ToArray();
+         return settings.LastUsedLabels
+            .Split(',')
+            .Select(x => x.Trim(' '))
+            .ToArray();
       }
 
 #pragma warning disable 0649
       public struct HostInProjectsFile
       {
          public string Name;
-         public List<Project> Projects;
+         public IEnumerable<Project> Projects;
       }
 #pragma warning restore 0649
 
-      public static void SetupProjects(List<HostInProjectsFile> projects, UserDefinedSettings settings)
+      public static void SetupProjects(IEnumerable<HostInProjectsFile> projects, UserDefinedSettings settings)
       {
          if (projects == null)
          {
@@ -34,15 +37,16 @@ namespace mrHelper.App.Helpers
          }
 
          settings.SelectedProjects = projects
-            .Where(x => x.Name != String.Empty && (x.Projects?.Count ?? 0) > 0)
+            .Where(x => x.Name != String.Empty && (x.Projects?.Count() ?? 0) > 0)
             .ToDictionary(
                item => item.Name,
                item => String.Join(",", item.Projects.Select(x => x.Path_With_Namespace + ":" + bool.TrueString)));
       }
 
-      public static void SetProjectsForHost(string host, Tuple<string, bool>[] projects, UserDefinedSettings settings)
+      public static void SetProjectsForHost(string host, IEnumerable<Tuple<string, bool>> projects,
+         UserDefinedSettings settings)
       {
-         Dictionary<string, Tuple<string, bool>[]> allProjects = getAllProjects(settings);
+         Dictionary<string, IEnumerable<Tuple<string, bool>>> allProjects = getAllProjects(settings);
 
          allProjects[host] = projects;
 
@@ -51,7 +55,7 @@ namespace mrHelper.App.Helpers
             item => String.Join(",", item.Value.Select(x => x.Item1.ToString() + ":" + x.Item2.ToString())));
       }
 
-      public static Tuple<string, bool>[] GetProjectsForHost(string host, UserDefinedSettings settings)
+      public static IEnumerable<Tuple<string, bool>> GetProjectsForHost(string host, UserDefinedSettings settings)
       {
          if (String.IsNullOrEmpty(host) || !settings.SelectedProjects.ContainsKey(host))
          {
@@ -62,7 +66,7 @@ namespace mrHelper.App.Helpers
          return parseProjectString(projectString);
       }
 
-      private static Dictionary<string, Tuple<string, bool>[]> getAllProjects(UserDefinedSettings settings)
+      private static Dictionary<string, IEnumerable<Tuple<string, bool>>> getAllProjects(UserDefinedSettings settings)
       {
          return settings.SelectedProjects
             .ToDictionary(
@@ -70,18 +74,17 @@ namespace mrHelper.App.Helpers
                item => parseProjectString(item.Value));
       }
 
-      private static Tuple<string, bool>[] parseProjectString(string projectString)
+      private static IEnumerable<Tuple<string, bool>> parseProjectString(string projectString)
       {
          if (projectString == String.Empty)
          {
             return new Tuple<string, bool>[0];
          }
 
-         string[] projectsToFlags = projectString.Split(',');
-         return projectsToFlags
+         return projectString
+            .Split(',')
             .Where(x => x.Split(':').Length == 2)
-            .Select(x => parseProjectStringItem(x))
-            .ToArray();
+            .Select(x => parseProjectStringItem(x));
       }
 
       private static Tuple<string, bool> parseProjectStringItem(string item)

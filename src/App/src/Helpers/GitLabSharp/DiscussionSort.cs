@@ -27,7 +27,7 @@ namespace mrHelper.App.Helpers
 
       public DiscussionSortState SortState { get; set; }
 
-      public IEnumerable<T> Sort<T>(IEnumerable<T> discussions, Func<T, List<DiscussionNote>> fnGetNotes)
+      public IEnumerable<T> Sort<T>(IEnumerable<T> discussions, Func<T, IEnumerable<DiscussionNote>> fnGetNotes)
       {
          switch (SortState)
          {

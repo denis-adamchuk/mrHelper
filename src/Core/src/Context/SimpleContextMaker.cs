@@ -50,8 +50,8 @@ namespace mrHelper.Core.Context
             filename = filename,
             sha = sha
          };
-         List<string> contents = _gitRepository.ShowFileByRevision(arguments);
-         if (linenumber > contents.Count)
+         IEnumerable<string> contents = _gitRepository.ShowFileByRevision(arguments);
+         if (linenumber > contents.Count())
          {
             throw new ArgumentException(
                String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
@@ -63,7 +63,7 @@ namespace mrHelper.Core.Context
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
       // linenumber is one-based
-      private DiffContext createDiffContext(int linenumber, List<string> contents, bool isRightSideContext,
+      private DiffContext createDiffContext(int linenumber, IEnumerable<string> contents, bool isRightSideContext,
          ContextDepth depth)
       {
          DiffContext diffContext = new DiffContext

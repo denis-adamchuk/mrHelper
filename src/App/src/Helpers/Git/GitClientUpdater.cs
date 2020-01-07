@@ -72,7 +72,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onProjectWatcherUpdate(List<ProjectUpdate> updates)
+      private void onProjectWatcherUpdate(IEnumerable<ProjectUpdate> updates)
       {
          if (_synchronizeInvoke == null)
          {
@@ -80,11 +80,12 @@ namespace mrHelper.App.Helpers
             return;
          }
 
-         _synchronizeInvoke.BeginInvoke(new Action<List<ProjectUpdate>>(
-            async (updatesInternal) => await onProjectWatcherUpdateAsync(updatesInternal) ), new object[] { updates });
+         _synchronizeInvoke.BeginInvoke(new Action<IEnumerable<ProjectUpdate>>(
+            async (updatesInternal) =>
+               await onProjectWatcherUpdateAsync(updatesInternal) ), new object[] { updates });
       }
 
-      async private Task onProjectWatcherUpdateAsync(List<ProjectUpdate> updates)
+      async private Task onProjectWatcherUpdateAsync(IEnumerable<ProjectUpdate> updates)
       {
          Debug.Assert(_subscribed);
 

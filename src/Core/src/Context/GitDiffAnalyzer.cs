@@ -37,7 +37,7 @@ namespace mrHelper.Core.Git
 
       public bool IsLineAddedOrModified(int linenumber)
       {
-         foreach (var section in _sections)
+         foreach (GitDiffSection section in _sections)
          {
             if (linenumber >= section.RightSectionStart && linenumber < section.RightSectionEnd)
             {
@@ -49,7 +49,7 @@ namespace mrHelper.Core.Git
 
       public bool IsLineDeleted(int linenumber)
       {
-         foreach (var section in _sections)
+         foreach (GitDiffSection section in _sections)
          {
             if (linenumber >= section.LeftSectionStart && linenumber < section.LeftSectionEnd)
             {
@@ -59,7 +59,7 @@ namespace mrHelper.Core.Git
          return false;
       }
 
-      static private List<GitDiffSection> getDiffSections(IGitRepository gitRepository,
+      static private IEnumerable<GitDiffSection> getDiffSections(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
@@ -73,7 +73,7 @@ namespace mrHelper.Core.Git
             context = 0
          };
 
-         List<string> diff = gitRepository.Diff(arguments);
+         IEnumerable<string> diff = gitRepository.Diff(arguments);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);
@@ -102,7 +102,7 @@ namespace mrHelper.Core.Git
          return sections;
       }
 
-      private readonly List<GitDiffSection> _sections;
+      private readonly IEnumerable<GitDiffSection> _sections;
    }
 }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using mrHelper.Core.Git;
@@ -54,8 +55,8 @@ namespace mrHelper.Core.Context
             filename = filename,
             sha = sha
          };
-         List<string> contents = _gitRepository.ShowFileByRevision(arguments);
-         if (linenumber > contents.Count)
+         string[] contents = _gitRepository.ShowFileByRevision(arguments).ToArray();
+         if (linenumber > contents.Count())
          {
             throw new ArgumentException(
                String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
@@ -67,7 +68,7 @@ namespace mrHelper.Core.Context
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
       // linenumber is one-based
-      private DiffContext createDiffContext(int linenumber, bool isRightSideContext, List<string> contents,
+      private DiffContext createDiffContext(int linenumber, bool isRightSideContext, string[] contents,
          GitDiffAnalyzer analyzer, ContextDepth depth)
       {
          DiffContext diffContext = new DiffContext
@@ -78,7 +79,7 @@ namespace mrHelper.Core.Context
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
          for (int iContextLine = 0; iContextLine < depth.Size + 1; ++iContextLine)
          {
-            if (startLineNumber + iContextLine == contents.Count + 1)
+            if (startLineNumber + iContextLine == contents.Count() + 1)
             {
                // we have just reached the end
                break;
@@ -94,9 +95,9 @@ namespace mrHelper.Core.Context
 
       // linenumber is one-based
       private DiffContext.Line getLineContext(int linenumber, bool isRightSideContext,
-         GitDiffAnalyzer analyzer, List<string> contents)
+         GitDiffAnalyzer analyzer, string[] contents)
       {
-         Debug.Assert(linenumber > 0 && linenumber <= contents.Count);
+         Debug.Assert(linenumber > 0 && linenumber <= contents.Count());
 
          DiffContext.Line line = new DiffContext.Line
          {

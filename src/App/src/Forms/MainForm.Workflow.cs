@@ -158,7 +158,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading projects from {0}", hostname));
       }
 
-      private void onHostProjectsLoaded(string hostname, List<Project> projects)
+      private void onHostProjectsLoaded(string hostname, IEnumerable<Project> projects)
       {
          buttonReloadList.Enabled = true;
 
@@ -173,7 +173,7 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = "Projects loaded";
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count));
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count()));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,16 +199,16 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load merge requests"));
       }
 
-      private void onProjectMergeRequestsLoaded(Project project, List<MergeRequest> mergeRequests)
+      private void onProjectMergeRequestsLoaded(Project project, IEnumerable<MergeRequest> mergeRequests)
       {
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
-           project.Path_With_Namespace, mergeRequests.Count));
+           project.Path_With_Namespace, mergeRequests.Count()));
       }
 
-      private void onAllMergeRequestsLoaded(string hostname, List<Project> projects)
+      private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
       {
          updateVisibleMergeRequests();
 
@@ -309,9 +309,10 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load commits"));
       }
 
-      private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest, List<Commit> commits)
+      private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
+         IEnumerable<Commit> commits)
       {
-         if (commits.Count > 0)
+         if (commits.Count() > 0)
          {
             enableComboBox(comboBoxLeftCommit);
             enableComboBox(comboBoxRightCommit);
@@ -329,9 +330,9 @@ namespace mrHelper.App.Forms
             disableComboBox(comboBoxRightCommit, String.Empty);
          }
 
-         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count);
+         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count());
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count));
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count()));
 
          scheduleSilentUpdate(new MergeRequestKey
          {

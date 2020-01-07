@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
@@ -27,10 +28,10 @@ namespace mrHelper.Client.Discussions
 
       internal event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
-      private void processDiscussions(MergeRequestKey mrk, List<Discussion> discussions,
+      private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          DateTime updatedAt, bool initialSnapshot)
       {
-         if (discussions.Count == 0)
+         if (discussions.Count() == 0)
          {
             return;
          }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
@@ -48,8 +49,8 @@ namespace mrHelper.Core.Context
             context = Constants.FullContextSize
          };
 
-         List<string> fullDiff = _gitRepository.Diff(arguments);
-         if (fullDiff.Count == 0)
+         IEnumerable<string> fullDiff = _gitRepository.Diff(arguments);
+         if (fullDiff.Count() == 0)
          {
             Trace.TraceWarning(String.Format(
                "[FullContextDiffProvider] Context size is zero. LeftSHA: {0}, Right SHA: {1}, Left file: {2}, Right file: {3}",

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
@@ -13,11 +14,11 @@ namespace mrHelper.Client.Common
    /// </summary>
    internal static class CommonOperator
    {
-      async internal static Task<List<MergeRequest>> GetMergeRequestsAsync(GitLabClient client, string projectName)
+      async internal static Task<IEnumerable<MergeRequest>> GetMergeRequestsAsync(GitLabClient client, string projectName)
       {
          try
          {
-           return (List<MergeRequest>)(await client.RunAsync(async (gitlab) =>
+           return (IEnumerable<MergeRequest>)(await client.RunAsync(async (gitlab) =>
               await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
                  new MergeRequestsFilter { WIP = MergeRequestsFilter.WorkInProgressFilter.All })));
          }
@@ -36,10 +37,10 @@ namespace mrHelper.Client.Common
       {
          try
          {
-            List<Version> versions = (List<Version>)(await client.RunAsync(async (gitlab) =>
+            IEnumerable<Version> versions = (IEnumerable<Version>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(projectName).MergeRequests.Get(iid).
                   Versions.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 })));
-            return versions.Count > 0 ? versions[0] : new Version();
+            return versions.Count() > 0 ? versions.First() : new Version();
          }
          catch (Exception ex)
          {
@@ -56,11 +57,11 @@ namespace mrHelper.Client.Common
       {
          try
          {
-            List<Note> notes = (List<Note>)(await client.RunAsync(async (gitlab) =>
+            IEnumerable<Note> notes = (IEnumerable<Note>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(projectName).MergeRequests.Get(iid).
                   Notes.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 },
                                       new SortFilter { Ascending = false, OrderBy = "updated_at" })));
-            return notes.Count > 0 ? notes[0] : new Note();
+            return notes.Count() > 0 ? notes.First() : new Note();
          }
          catch (Exception ex)
          {

@@ -51,23 +51,22 @@ namespace mrHelper.App.Helpers
 
       public bool DoesMatchFilter(Discussion discussion)
       {
-         if (discussion.Notes.Count == 0 || discussion.Notes[0].System)
+         if (discussion.Notes.Count() == 0 || discussion.Notes.First().System)
          {
             return false;
          }
 
-         if (Filter.ByCurrentUserOnly && discussion.Notes[0].Author.Id != CurrentUser.Id)
+         if (Filter.ByCurrentUserOnly && discussion.Notes.First().Author.Id != CurrentUser.Id)
          {
             return false;
          }
 
-         if (!Filter.ServiceMessages && isServiceDiscussioNote(discussion.Notes[0]))
+         if (!Filter.ServiceMessages && isServiceDiscussioNote(discussion.Notes.First()))
          {
             return false;
          }
 
-         bool isLastNoteFromMergeRequestAuthor =
-            discussion.Notes[discussion.Notes.Count - 1].Author.Id == MergeRequestAuthor.Id;
+         bool isLastNoteFromMergeRequestAuthor = discussion.Notes.Last().Author.Id == MergeRequestAuthor.Id;
          bool matchByAnswers =
                 (Filter.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
              || (Filter.ByAnswers.HasFlag(FilterByAnswers.Unanswered) && !isLastNoteFromMergeRequestAuthor);

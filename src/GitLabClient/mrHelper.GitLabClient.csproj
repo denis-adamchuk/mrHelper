@@ -42,7 +42,7 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\Common\CommonOperator.cs" />
+    <Compile Include="src\Common\Impl\CommonOperator.cs" />
     <Compile Include="src\Common\Impl\GitLabExceptionHandlers.cs" />
     <Compile Include="src\Common\UserEvents.cs" />
     <Compile Include="src\Discussions\DiscussionCreator.cs" />

@@ -36,7 +36,7 @@ namespace mrHelper.Client.MergeRequests
 
                Trace.TraceInformation(String.Format(
                   "[MergeRequestManager] Set hostname for updates to {0}, will trace updates in {1} projects",
-                  hostname, projects.Count));
+                  hostname, projects.Count()));
             }
          };
 
@@ -86,7 +86,7 @@ namespace mrHelper.Client.MergeRequests
          _updateManager.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
       }
 
-      private void onUpdate(List<UserEvents.MergeRequestEvent> updates)
+      private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
          _projectWatcher.ProcessUpdates(updates, _cache.Details);
 

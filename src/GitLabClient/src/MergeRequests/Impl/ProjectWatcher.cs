@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using mrHelper.Client.Types;
@@ -11,16 +12,16 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class ProjectWatcher : IProjectWatcher
    {
-      public event Action<List<ProjectUpdate>> OnProjectUpdate;
+      public event Action<IEnumerable<ProjectUpdate>> OnProjectUpdate;
 
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(List<UserEvents.MergeRequestEvent> updates, IWorkflowDetails details)
+      internal void ProcessUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates, IWorkflowDetails details)
       {
-         List<ProjectUpdate> projectUpdates = getProjectUpdates(updates, details);
+         IEnumerable<ProjectUpdate> projectUpdates = getProjectUpdates(updates, details);
 
-         if (projectUpdates.Count > 0)
+         if (projectUpdates.Count() > 0)
          {
             foreach (ProjectUpdate projectUpdate in projectUpdates)
             {
@@ -36,7 +37,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private List<ProjectUpdate> getProjectUpdates(List<UserEvents.MergeRequestEvent> updates,
+      private IEnumerable<ProjectUpdate> getProjectUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates,
          IWorkflowDetails details)
       {
          List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();

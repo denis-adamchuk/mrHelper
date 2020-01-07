@@ -21,7 +21,7 @@ namespace mrHelper.CustomActions
       /// Loads custom actions from XML file
       /// Throws CustomCommandLoaderException
       /// </summary>
-      public List<ICommand> LoadCommands(string filename)
+      public IEnumerable<ICommand> LoadCommands(string filename)
       {
          try
          {
@@ -37,7 +37,7 @@ namespace mrHelper.CustomActions
          }
       }
 
-      private List<ICommand> doLoad(string filename)
+      private IEnumerable<ICommand> doLoad(string filename)
       {
          if (!System.IO.File.Exists(filename))
          {

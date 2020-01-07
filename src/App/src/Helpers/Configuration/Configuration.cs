@@ -15,10 +15,10 @@ namespace mrHelper.App.Helpers
    public class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
    {
       private static readonly string KnownHostsKeyName = "KnownHosts";
-      private static readonly List<string> KnownHostsDefaultValue = new List<string>();
+      private static readonly string[] KnownHostsDefaultValue = Array.Empty<string>();
 
       private static readonly string KnownAccessTokensKeyName = "KnownAccessTokens";
-      private static readonly List<string> KnownAccessTokensDefaultValue = new List<string>();
+      private static readonly string[] KnownAccessTokensDefaultValue = Array.Empty<string>();
 
       private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
@@ -138,15 +138,15 @@ namespace mrHelper.App.Helpers
       }
 
       // TODO Sync KnownHosts and KnownAccessTokens
-      public List<string> KnownHosts
+      public string[] KnownHosts
       {
-         get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue); }
+         get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue).ToArray(); }
          set { setValues(KnownHostsKeyName, value); }
       }
 
-      public List<string> KnownAccessTokens
+      public string[] KnownAccessTokens
       {
-         get { return getValues(KnownAccessTokensKeyName, KnownAccessTokensDefaultValue); }
+         get { return getValues(KnownAccessTokensKeyName, KnownAccessTokensDefaultValue).ToArray(); }
          set { setValues(KnownAccessTokensKeyName, value); }
       }
 
@@ -421,7 +421,7 @@ namespace mrHelper.App.Helpers
 
       public string GetAccessToken(string host)
       {
-         for (int iKnownHost = 0; iKnownHost < KnownHosts.Count; ++iKnownHost)
+         for (int iKnownHost = 0; iKnownHost < KnownHosts.Count(); ++iKnownHost)
          {
             if (host == KnownHosts[iKnownHost])
             {
@@ -431,20 +431,19 @@ namespace mrHelper.App.Helpers
          return String.Empty;
       }
 
-      public string[] GetEnabledProjects(string host)
+      public IEnumerable<string> GetEnabledProjects(string host)
       {
          if (String.IsNullOrEmpty(host))
          {
             return new string[0];
          }
 
-         Tuple<string, bool>[] projects = ConfigurationHelper.GetProjectsForHost(host, this);
+         IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, this);
          Debug.Assert(projects != null);
 
          return projects
             .Where(x => x.Item2)
-            .Select(x => x.Item1)
-            .ToArray();
+            .Select(x => x.Item1);
       }
 
       private string getValue(string key, string defaultValue)
@@ -483,7 +482,7 @@ namespace mrHelper.App.Helpers
          Trace.TraceInformation(String.Format("[Configuration] Added a new property {0} with value {1}", key, value));
       }
 
-      private List<string> getValues(string key, List<string> defaultValues)
+      private IEnumerable<string> getValues(string key, string[] defaultValues)
       {
          if (_config.AppSettings.Settings[key] != null)
          {
@@ -503,7 +502,7 @@ namespace mrHelper.App.Helpers
          return defaultValues;
       }
 
-      private void setValues(string key, List<string> values)
+      private void setValues(string key, string[] values)
       {
          string valuesString = string.Join(";", values);
          setValue(key, valuesString);

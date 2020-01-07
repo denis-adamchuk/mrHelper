@@ -88,9 +88,9 @@ namespace mrHelper.App.Helpers
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                   try
                   {
-                     List<Version> newVersions  = await _versionManager.GetVersions(mrk);
-                     newVersions = newVersions
-                        .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange).ToList();
+                     IEnumerable<Version> allVersions  = await _versionManager.GetVersions(mrk);
+                     IEnumerable<Version> newVersions = allVersions
+                        .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange);
 
                      List<Version> newVersionsDetailed = new List<Version>();
                      foreach (Version version in newVersions)
@@ -149,7 +149,7 @@ namespace mrHelper.App.Helpers
          _latestChanges.Remove(repo);
       }
 
-      private void gatherArguments(List<Version> versions,
+      private void gatherArguments(IEnumerable<Version> versions,
          out HashSet<GitDiffArguments> diffArgs,
          out HashSet<GitRevisionArguments> revisionArgs,
          out HashSet<GitListOfRenamesArguments> renamesArgs)
@@ -160,11 +160,11 @@ namespace mrHelper.App.Helpers
 
          foreach (Version version in versions)
          {
-            if (version.Diffs.Count > MaxDiffsInVersion)
+            if (version.Diffs.Count() > MaxDiffsInVersion)
             {
                Trace.TraceWarning(String.Format(
                   "[RevisionCacher] Number of diffs in version {0} is {1}. It exceeds {2} and will be truncated",
-                  version.Id, version.Diffs.Count, MaxDiffsInVersion));
+                  version.Id, version.Diffs.Count(), MaxDiffsInVersion));
             }
 
             foreach (Diff diff in version.Diffs.Take(MaxDiffsInVersion))
@@ -224,14 +224,14 @@ namespace mrHelper.App.Helpers
          await doCacheSingleSetAsync(renamesArgs, x => gitRepository.GetListOfRenamesAsync(x));
       }
 
-      async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<List<string>>> func)
+      async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<IEnumerable<string>>> func)
       {
          int maxGitInParallel = 5;
 
          int remaining = args.Count;
          while (remaining > 0)
          {
-            IEnumerable<Task<List<string>>> tasks = args
+            IEnumerable<Task<IEnumerable<string>>> tasks = args
                .Skip(args.Count - remaining)
                .Take(maxGitInParallel)
                .Select(x => func(x));

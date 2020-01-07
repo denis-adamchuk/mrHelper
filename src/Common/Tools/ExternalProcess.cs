@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -17,8 +18,8 @@ namespace mrHelper.Common.Tools
 
       public struct Output
       {
-         public List<string> StdOut;
-         public List<string> StdErr;
+         public IEnumerable<string> StdOut;
+         public IEnumerable<string> StdErr;
          public int PID;
       }
 
@@ -188,19 +189,19 @@ namespace mrHelper.Common.Tools
          return d;
       }
 
-      static private void checkGitExitCode(string arguments, int exitcode, List<string> errors)
+      static private void checkGitExitCode(string arguments, int exitcode, IEnumerable<string> errors)
       {
          if (exitcode != 0)
          {
             throw new GitOperationException(arguments, exitcode, errors);
          }
-         else if (errors.Count > 0 && errors[0].StartsWith("fatal:"))
+         else if (errors.Count() > 0 && errors.First().StartsWith("fatal:"))
          {
             string reasons =
                "Possible reasons:\n"
                + "-Git repository is not up-to-date\n"
                + "-Given commit is no longer in the repository (force push?)";
-            string message = String.Format("git returned \"{0}\". {1}", errors[0], reasons);
+            string message = String.Format("git returned \"{0}\". {1}", errors.First(), reasons);
             throw new GitObjectException(message, exitcode);
          }
       }

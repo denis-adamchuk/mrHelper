@@ -631,16 +631,16 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addCommitsToComboBoxes(List<Commit> commits, string baseSha, string targetBranch)
+      private void addCommitsToComboBoxes(IEnumerable<Commit> commits, string baseSha, string targetBranch)
       {
-         CommitComboBoxItem latestCommitItem = new CommitComboBoxItem(commits[0])
+         CommitComboBoxItem latestCommitItem = new CommitComboBoxItem(commits.First())
          {
             IsLatest = true
          };
          comboBoxLeftCommit.Items.Add(latestCommitItem);
-         for (int i = 1; i < commits.Count; i++)
+         foreach (Commit commit in commits.Skip(1))
          {
-            CommitComboBoxItem item = new CommitComboBoxItem(commits[i]);
+            CommitComboBoxItem item = new CommitComboBoxItem(commit);
             if (comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
             {
                continue;
@@ -740,14 +740,14 @@ namespace mrHelper.App.Forms
       {
          // If Last Selected Host is in the list, select it as initial host.
          // Otherwise, select the first host from the list.
-         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count; ++iKnownHost)
+         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
          {
             if (Program.Settings.KnownHosts[iKnownHost] == _initialHostName)
             {
                return _initialHostName;
             }
          }
-         return Program.Settings.KnownHosts.Count > 0 ? Program.Settings.KnownHosts[0] : String.Empty;
+         return Program.Settings.KnownHosts.Count() > 0 ? Program.Settings.KnownHosts[0] : String.Empty;
       }
 
       private bool isTrackingTime()
@@ -795,13 +795,13 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(string hostname, string projectname, List<MergeRequest> mergeRequests)
+      private void cleanupReviewedCommits(string hostname, string projectname, IEnumerable<MergeRequest> mergeRequests)
       {
-         MergeRequestKey[] toRemove = _reviewedCommits.Keys.Where(
+         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(
             (x) => x.ProjectKey.HostName == hostname
                 && x.ProjectKey.ProjectName == projectname
-                && !mergeRequests.Any((y) => x.IId == y.IId)).ToArray();
-         foreach (MergeRequestKey key in toRemove)
+                && !mergeRequests.Any(y => x.IId == y.IId));
+         foreach (MergeRequestKey key in toRemove.ToArray())
          {
             _reviewedCommits.Remove(key);
          }
@@ -921,9 +921,10 @@ namespace mrHelper.App.Forms
 
       private static string formatLabels(MergeRequest mergeRequest)
       {
-         mergeRequest.Labels.Sort();
+         List<string> sortedLabels = new List<string>(mergeRequest.Labels);
+         sortedLabels.Sort();
 
-         var query = mergeRequest.Labels.GroupBy(
+         var query = sortedLabels.GroupBy(
             (label) => label.StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1 ?
                label.Substring(0, label.IndexOf('-')) : label,
             (label) => label,
@@ -1213,7 +1214,8 @@ namespace mrHelper.App.Forms
       {
          Func<Control, int, int> getControlX = (control, index) =>
              control.Width * index +
-                (groupBoxActions.Width - _customCommands.Count * control.Width) * (index + 1) / (_customCommands.Count + 1);
+                (groupBoxActions.Width - _customCommands.Count() * control.Width) *
+                (index + 1) / (_customCommands.Count() + 1);
 
          for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
          {

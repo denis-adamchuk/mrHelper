@@ -105,7 +105,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] Loading configuration");
 
-         Debug.Assert(Program.Settings.KnownHosts.Count == Program.Settings.KnownAccessTokens.Count);
+         Debug.Assert(Program.Settings.KnownHosts.Count() == Program.Settings.KnownAccessTokens.Count());
          // Remove all items except header
          for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
          {
@@ -113,7 +113,7 @@ namespace mrHelper.App.Forms
          }
 
          List<string> newKnownHosts = new List<string>();
-         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count; ++iKnownHost)
+         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
             string host = getHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
@@ -121,7 +121,7 @@ namespace mrHelper.App.Forms
             addKnownHost(host, accessToken);
             newKnownHosts.Add(host);
          }
-         Program.Settings.KnownHosts = newKnownHosts;
+         Program.Settings.KnownHosts = newKnownHosts.ToArray();
 
          if (Program.Settings.ColorSchemeFileName == String.Empty)
          {
@@ -380,7 +380,7 @@ namespace mrHelper.App.Forms
          try
          {
             ConfigurationHelper.SetupProjects(JsonFileReader.
-               LoadFromFile<List<ConfigurationHelper.HostInProjectsFile>>(
+               LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
                   Constants.ProjectListFileName), Program.Settings);
          }
          catch (Exception ex) // whatever de-serialization exception

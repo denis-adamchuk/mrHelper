@@ -55,7 +55,7 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      internal Task<List<MergeRequest>> GetMergeRequestsAsync(string projectName)
+      internal Task<IEnumerable<MergeRequest>> GetMergeRequestsAsync(string projectName)
       {
          return CommonOperator.GetMergeRequestsAsync(_client, projectName);
       }
@@ -65,11 +65,11 @@ namespace mrHelper.Client.Workflow
          return CommonOperator.GetMergeRequestAsync(_client, projectName, iid);
       }
 
-      async internal Task<List<Commit>> GetCommitsAsync(string projectName, int iid)
+      async internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid)
       {
          try
          {
-            return (List<Commit>)(await _client.RunAsync(async (gl) =>
+            return (IEnumerable<Commit>)(await _client.RunAsync(async (gl) =>
                await gl.Projects.Get(projectName).MergeRequests.Get(iid).Commits.LoadAllTaskAsync()));
          }
          catch (Exception ex)

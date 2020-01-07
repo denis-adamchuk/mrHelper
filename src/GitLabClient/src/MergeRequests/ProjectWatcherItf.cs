@@ -17,7 +17,7 @@ namespace mrHelper.Client.MergeRequests
 
    public interface IProjectWatcher
    {
-      event Action<List<ProjectUpdate>> OnProjectUpdate;
+      event Action<IEnumerable<ProjectUpdate>> OnProjectUpdate;
    }
 }
 

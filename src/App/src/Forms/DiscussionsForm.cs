@@ -21,7 +21,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(MergeRequestKey mrk, string mrTitle, User mergeRequestAuthor,
-         GitClient gitClient, int diffContextDepth, ColorScheme colorScheme, List<Discussion> discussions,
+         GitClient gitClient, int diffContextDepth, ColorScheme colorScheme, IEnumerable<Discussion> discussions,
          DiscussionManager manager, User currentUser, Func<MergeRequestKey, Task<IGitRepository>> updateGitRepository)
       {
          _mergeRequestKey = mrk;
@@ -217,7 +217,7 @@ namespace mrHelper.App.Forms
          return DisplayRectangle.Location;
       }
 
-      async private Task<List<Discussion>> loadDiscussionsAsync()
+      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync()
       {
          Trace.TraceInformation(String.Format(
             "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
@@ -228,7 +228,7 @@ namespace mrHelper.App.Forms
 
          this.Text = DefaultCaption + "   (Loading discussions)";
 
-         List<Discussion> discussions = null;
+         IEnumerable<Discussion> discussions;
          try
          {
             discussions = await _manager.GetDiscussionsAsync(_mergeRequestKey);
@@ -236,6 +236,7 @@ namespace mrHelper.App.Forms
          catch (DiscussionManagerException)
          {
             MessageBox.Show("Cannot load discussions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return null;
          }
          finally
          {
@@ -245,14 +246,14 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      private bool renderDiscussions(List<Discussion> discussions, bool needReposition)
+      private bool renderDiscussions(IEnumerable<Discussion> discussions, bool needReposition)
       {
          updateLayout(discussions, needReposition, true);
          Focus(); // Set focus to the Form
          return discussions != null && Controls.Cast<Control>().Any((x) => x is DiscussionBox);
       }
 
-      private void updateLayout(List<Discussion> discussions, bool needReposition, bool suspendLayout)
+      private void updateLayout(IEnumerable<Discussion> discussions, bool needReposition, bool suspendLayout)
       {
          this.Text = DefaultCaption + "   (Rendering)";
 
@@ -320,7 +321,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createDiscussionBoxes(List<Discussion> discussions)
+      private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
          foreach (var discussion in discussions)
          {

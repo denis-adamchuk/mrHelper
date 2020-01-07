@@ -68,12 +68,12 @@ namespace mrHelper.Core.Context
 
       private string getTableBody(DiffContext ctx)
       {
-         bool highlightSelected = ctx.Lines.Count > 1;
+         bool highlightSelected = ctx.Lines.Count() > 1;
          string body = string.Empty;
 
-         for (int iLine = 0; iLine < ctx.Lines.Count; ++iLine)
+         for (int iLine = 0; iLine < ctx.Lines.Count(); ++iLine)
          {
-            var line = ctx.Lines[iLine];
+            DiffContext.Line line = ctx.Lines[iLine];
 
             body
               += "<tr" + (iLine == ctx.SelectedIndex && highlightSelected ? " class=\"selected\"" : "") + ">"

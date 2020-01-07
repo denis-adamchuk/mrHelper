@@ -13,7 +13,7 @@ namespace mrHelper.Common.Exceptions
          Cancelled = false;
       }
 
-      public GitOperationException(string command, int exitcode, List<string> errorOutput)
+      public GitOperationException(string command, int exitcode, IEnumerable<string> errorOutput)
          : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
       {
          Details = String.Join("\n", errorOutput);

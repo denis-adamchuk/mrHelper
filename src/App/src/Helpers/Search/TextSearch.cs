@@ -25,11 +25,11 @@ namespace mrHelper.App.Helpers
       internal TextSearch(Control container, SearchQuery query, Func<Control, bool> isSearchableControl)
       {
          Query = query;
-         _allControls = getControls(container);
+         _allControls = getControls(container).ToArray();
          _isSearchableControl = isSearchableControl;
       }
 
-      private static Control[] getControls(Control container)
+      private static IEnumerable<Control> getControls(Control container)
       {
          List<Control> controlList = new List<Control>();
          foreach (Control control in container.Controls)
@@ -37,7 +37,7 @@ namespace mrHelper.App.Helpers
             controlList.AddRange(getControls(control));
             controlList.Add(control);
          }
-         return controlList.ToArray();
+         return controlList;
       }
 
       internal SearchQuery Query { get; private set; }

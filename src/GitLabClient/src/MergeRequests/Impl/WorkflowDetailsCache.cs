@@ -13,17 +13,17 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Cache passed merge requests
       /// </summary>
-      internal void UpdateMergeRequests(string hostname, string projectname, List<MergeRequest> mergeRequests)
+      internal void UpdateMergeRequests(string hostname, string projectname, IEnumerable<MergeRequest> mergeRequests)
       {
          ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = projectname };
          IEnumerable<MergeRequest> previouslyCachedMergeRequests = _internalDetails.GetMergeRequests(key);
          _internalDetails.SetMergeRequests(key, mergeRequests);
 
-         if (mergeRequests.Count != previouslyCachedMergeRequests.Count())
+         if (mergeRequests.Count() != previouslyCachedMergeRequests.Count())
          {
             Trace.TraceInformation(String.Format(
                "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
-               projectname, hostname, mergeRequests.Count, previouslyCachedMergeRequests.Count()));
+               projectname, hostname, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
          }
 
          cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
@@ -63,7 +63,8 @@ namespace mrHelper.Client.MergeRequests
 
       internal IWorkflowDetails Details { get { return _internalDetails; } }
 
-      private void cleanupOldRecords(ProjectKey key, IEnumerable<MergeRequest> oldRecords, List<MergeRequest> newRecords)
+      private void cleanupOldRecords(ProjectKey key,
+         IEnumerable<MergeRequest> oldRecords, IEnumerable<MergeRequest> newRecords)
       {
          foreach (MergeRequest mergeRequest in oldRecords)
          {

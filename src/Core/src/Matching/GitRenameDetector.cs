@@ -34,7 +34,7 @@ namespace mrHelper.Core.Git
             sha2 = rightcommit
          };
 
-         List<string> renames = _gitRepository.GetListOfRenames(arguments);
+         IEnumerable<string> renames = _gitRepository.GetListOfRenames(arguments);
          moved = false;
 
          foreach (string line in renames)

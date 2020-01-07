@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -62,17 +63,17 @@ namespace mrHelper.Client.TimeTracking
             @"^(?'operation'added|subtracted)\s(?>(?'hours'\d*)h\s)?(?>(?'minutes'\d*)m\s)?(?>(?'seconds'\d*)s\s)?of time spent.*",
                RegexOptions.Compiled);
 
-      private void processDiscussions(MergeRequestKey mrk, List<Discussion> discussions)
+         private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          TimeSpan span = TimeSpan.Zero;
          foreach (Discussion discussion in discussions)
          {
-            if (!discussion.Individual_Note || discussion.Notes.Count < 1)
+            if (!discussion.Individual_Note || discussion.Notes.Count() < 1)
             {
                continue;
             }
 
-            DiscussionNote note = discussion.Notes[0];
+            DiscussionNote note = discussion.Notes.First();
             if (note.System && note.Author.Id == _currentUser.Id)
             {
                Match m = spentTimeRe.Match(note.Body);

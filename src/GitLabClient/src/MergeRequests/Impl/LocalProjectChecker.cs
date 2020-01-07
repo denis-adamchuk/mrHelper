@@ -33,7 +33,7 @@ namespace mrHelper.Client.MergeRequests
 
             DateTime dateTime = DateTime.MinValue;
 
-            List<MergeRequest> mergeRequests = Details.GetMergeRequests(projectId);
+            IEnumerable<MergeRequest> mergeRequests = Details.GetMergeRequests(projectId);
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
                DateTime latestChange = Details.GetLatestChangeTimestamp(mergeRequest.Id);

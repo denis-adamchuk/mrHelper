@@ -35,8 +35,8 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Process a timer event
       /// </summary>
-      internal List<UserEvents.MergeRequestEvent> CheckForUpdates(string hostname, List<Project> enabledProjects,
-         IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
+      internal IEnumerable<UserEvents.MergeRequestEvent> CheckForUpdates(string hostname,
+         IEnumerable<Project> enabledProjects, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequestWithProject> diff = getMergeRequestDiff(
             hostname, enabledProjects, oldDetails, newDetails);
@@ -47,7 +47,7 @@ namespace mrHelper.Client.MergeRequests
       /// Calculate difference between two WorkflowDetails objects
       /// </summary>
       private TwoListDifference<MergeRequestWithProject> getMergeRequestDiff(string hostname,
-         List<Project> enabledProjects, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
+         IEnumerable<Project> enabledProjects, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          TwoListDifference<MergeRequestWithProject> diff = new TwoListDifference<MergeRequestWithProject>
          {
@@ -59,14 +59,14 @@ namespace mrHelper.Client.MergeRequests
          foreach (Project project in enabledProjects)
          {
             ProjectKey key = new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace };
-            List<MergeRequest> previouslyCachedMergeRequests = oldDetails.GetMergeRequests(key).ToList();
-            List<MergeRequest> newCachedMergeRequests = newDetails.GetMergeRequests(key).ToList();
+            MergeRequest[] previouslyCachedMergeRequests = oldDetails.GetMergeRequests(key).ToArray();
+            MergeRequest[] newCachedMergeRequests = newDetails.GetMergeRequests(key).ToArray();
 
-            previouslyCachedMergeRequests.Sort((x, y) => x.Id.CompareTo(y.Id));
-            newCachedMergeRequests.Sort((x, y) => x.Id.CompareTo(y.Id));
+            Array.Sort(previouslyCachedMergeRequests, (x, y) => x.Id.CompareTo(y.Id));
+            Array.Sort(newCachedMergeRequests, (x, y) => x.Id.CompareTo(y.Id));
 
             int iPrevMR = 0, iNewMR = 0;
-            while (iPrevMR < previouslyCachedMergeRequests.Count && iNewMR < newCachedMergeRequests.Count)
+            while (iPrevMR < previouslyCachedMergeRequests.Count() && iNewMR < newCachedMergeRequests.Count())
             {
                if (previouslyCachedMergeRequests[iPrevMR].Id < newCachedMergeRequests[iNewMR].Id)
                {
@@ -88,13 +88,13 @@ namespace mrHelper.Client.MergeRequests
                }
             }
 
-            while (iPrevMR < previouslyCachedMergeRequests.Count)
+            while (iPrevMR < previouslyCachedMergeRequests.Count())
             {
                diff.FirstOnly.Add(new MergeRequestWithProject(previouslyCachedMergeRequests[iPrevMR], project));
                ++iPrevMR;
             }
 
-            while (iNewMR < newCachedMergeRequests.Count)
+            while (iNewMR < newCachedMergeRequests.Count())
             {
                diff.SecondOnly.Add(new MergeRequestWithProject(newCachedMergeRequests[iNewMR], project));
                ++iNewMR;
@@ -107,7 +107,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert a difference between two states into a list of merge request updates splitted in new/updated/closed
       /// </summary>
-      private List<UserEvents.MergeRequestEvent> getMergeRequestUpdates(string hostname,
+      private IEnumerable<UserEvents.MergeRequestEvent> getMergeRequestUpdates(string hostname,
          TwoListDifference<MergeRequestWithProject> diff, IWorkflowDetails oldDetails, IWorkflowDetails newDetails)
       {
          List<UserEvents.MergeRequestEvent> updates = new List<UserEvents.MergeRequestEvent>();

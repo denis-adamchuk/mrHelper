@@ -58,12 +58,12 @@ namespace mrHelper.Client.Workflow
 
          PreLoadAllMergeRequests?.Invoke();
 
-         List<Project> projects = loadHostProjects(hostname);
+         IEnumerable<Project> projects = loadHostProjects(hostname);
          foreach (Project project in projects)
          {
             try
             {
-               List<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
+               IEnumerable<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
                if (mergeRequests == null)
                {
                   return false; // cancelled
@@ -113,22 +113,22 @@ namespace mrHelper.Client.Workflow
       public event Action FailedLoadCurrentUser;
 
       public event Action<string> PreLoadHostProjects;
-      public event Action<string, List<Project>> PostLoadHostProjects;
+      public event Action<string, IEnumerable<Project>> PostLoadHostProjects;
 
       public event Action PreLoadAllMergeRequests;
 
       public event Action<Project> PreLoadProjectMergeRequests;
-      public event Action<string, Project, List<MergeRequest>> PostLoadProjectMergeRequests;
+      public event Action<string, Project, IEnumerable<MergeRequest>> PostLoadProjectMergeRequests;
       public event Action FailedLoadProjectMergeRequests;
 
-      public event Action<string, List<Project>> PostLoadAllMergeRequests;
+      public event Action<string, IEnumerable<Project>> PostLoadAllMergeRequests;
 
       public event Action<int> PreLoadSingleMergeRequest;
       public event Action<string, string, MergeRequest> PostLoadSingleMergeRequest;
       public event Action FailedLoadSingleMergeRequest;
 
       public event Action PreLoadCommits;
-      public event Action<string, string, MergeRequest, List<Commit>> PostLoadCommits;
+      public event Action<string, string, MergeRequest, IEnumerable<Commit>> PostLoadCommits;
       public event Action FailedLoadCommits;
 
       public event Action PreLoadLatestVersion;
@@ -152,8 +152,8 @@ namespace mrHelper.Client.Workflow
 
          _operator = new WorkflowDataOperator(hostname, token);
 
-         List<Project> enabledProjects = getEnabledProjects(hostname);
-         bool hasEnabledProjects = enabledProjects.Count != 0;
+         IEnumerable<Project> enabledProjects = getEnabledProjects(hostname);
+         bool hasEnabledProjects = enabledProjects.Count() != 0;
          if (!hasEnabledProjects)
          {
             throw new NoProjectsException(hostname);
@@ -189,25 +189,24 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      private List<Project> loadHostProjects(string hostName)
+      private IEnumerable<Project> loadHostProjects(string hostName)
       {
          PreLoadHostProjects?.Invoke(hostName);
 
-         List<Project> enabledProjects = getEnabledProjects(hostName);
-         bool hasEnabledProjects = enabledProjects.Count != 0;
-         Debug.Assert(hasEnabledProjects); // guaranteed by checkParameters()
+         IEnumerable<Project> enabledProjects = getEnabledProjects(hostName);
+         Debug.Assert(enabledProjects.Count() != 0); // guaranteed by checkParameters()
 
          PostLoadHostProjects?.Invoke(hostName, enabledProjects);
          return enabledProjects;
       }
 
-      async private Task<List<MergeRequest>> loadProjectMergeRequestsAsync(string hostname, Project project)
+      async private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(string hostname, Project project)
       {
          PreLoadProjectMergeRequests?.Invoke(project);
 
          string projectName = project.Path_With_Namespace;
 
-         List<MergeRequest> mergeRequests;
+         IEnumerable<MergeRequest> mergeRequests;
          try
          {
             mergeRequests = await _operator.GetMergeRequestsAsync(projectName);
@@ -250,7 +249,7 @@ namespace mrHelper.Client.Workflow
       async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
       {
          PreLoadCommits?.Invoke();
-         List<Commit> commits;
+         IEnumerable<Commit> commits;
          try
          {
             commits = await _operator.GetCommitsAsync(projectName, mergeRequest.IId);
@@ -312,11 +311,10 @@ namespace mrHelper.Client.Workflow
          throw new WorkflowException(message);
       }
 
-      private List<Project> getEnabledProjects(string hostname)
+      private IEnumerable<Project> getEnabledProjects(string hostname)
       {
          return _settings.GetEnabledProjects(hostname)
-            .Select(x => new Project{ Path_With_Namespace = x })
-            .ToList();
+            .Select(x => new Project{ Path_With_Namespace = x });
       }
 
       private readonly IHostProperties _settings;

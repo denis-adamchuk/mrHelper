@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace mrHelper.App.Forms
 {
    public partial class EditProjectsForm : CustomFontForm
    {
-      public EditProjectsForm(Tuple<string, bool>[] projects)
+      public EditProjectsForm(IEnumerable<Tuple<string, bool>> projects)
       {
          Debug.Assert(projects != null);
 
@@ -19,19 +20,18 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
-      public Tuple<string, bool>[] Projects
+      public IEnumerable<Tuple<string, bool>> Projects
       {
          get
          {
             return listViewProjects.Items
                .Cast<ListViewItem>()
                .Select(x => x.Tag)
-               .Cast<Tuple<string, bool>>()
-               .ToArray();
+               .Cast<Tuple<string, bool>>();
          }
       }
 
-      private void updateProjectsListView(Tuple<string, bool>[] projects)
+      private void updateProjectsListView(IEnumerable<Tuple<string, bool>> projects)
       {
          listViewProjects.Items.Clear();
          projects.ToList().ForEach(x => addListViewItem(x));

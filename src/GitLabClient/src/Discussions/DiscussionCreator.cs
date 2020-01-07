@@ -118,7 +118,7 @@ namespace mrHelper.Client.Discussions
 
          int deletedCount = 0;
 
-         List<Discussion> discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey);
+         IEnumerable<Discussion> discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey);
          if (discussions == null)
          {
             Trace.TraceWarning(String.Format("No discussions found"));
