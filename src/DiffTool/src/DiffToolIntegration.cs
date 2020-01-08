@@ -40,7 +40,7 @@ namespace mrHelper.DiffTool
             try
             {
                ExternalProcess.Start("git",
-                  "config --global --remove-section difftool." + GitDiffToolName);
+                  "config --global --remove-section difftool." + GitDiffToolName, true, String.Empty);
             }
             catch (GitOperationException)
             {
@@ -77,7 +77,7 @@ namespace mrHelper.DiffTool
       private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
       {
          ExternalProcess.Start("git",
-            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath));
+            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath), true, String.Empty);
       }
 
       public bool isInstalled(string toolpath)

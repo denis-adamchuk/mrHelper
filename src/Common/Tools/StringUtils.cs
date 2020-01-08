@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace mrHelper.Common.Tools
 {
@@ -13,6 +14,11 @@ namespace mrHelper.Common.Tools
       {
          return String.Compare(value, String.Format(format, args),
             StringComparison.CurrentCultureIgnoreCase) == 0;
+      }
+
+      public static string EscapeSpaces(string unescaped)
+      {
+         return unescaped.Contains(' ') ? '"' + unescaped + '"' : unescaped;
       }
    }
 }

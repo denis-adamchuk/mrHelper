@@ -22,7 +22,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       internal DiscussionsForm(MergeRequestKey mrk, string mrTitle, User mergeRequestAuthor,
          GitClient gitClient, int diffContextDepth, ColorScheme colorScheme, IEnumerable<Discussion> discussions,
-         DiscussionManager manager, User currentUser, Func<MergeRequestKey, Task<IGitRepository>> updateGitRepository)
+         DiscussionManager manager, User currentUser, Func<MergeRequestKey, Task<GitClient>> updateGitClient)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mrTitle;
@@ -30,7 +30,7 @@ namespace mrHelper.App.Forms
 
          if (gitClient != null)
          {
-            gitClient.Disposed += repo => onGitRepositoryDisposed(repo);
+            gitClient.Disposed += client => onGitClientDisposed(client);
          }
          _gitRepository = gitClient;
          _diffContextDepth = diffContextDepth;
@@ -38,7 +38,7 @@ namespace mrHelper.App.Forms
          _colorScheme = colorScheme;
 
          _manager = manager;
-         _updateGitRepository = updateGitRepository;
+         _updateGitClient = updateGitClient;
 
          _currentUser = currentUser;
          if (_currentUser.Id == 0)
@@ -181,9 +181,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onGitRepositoryDisposed(IGitRepository repo)
+      private void onGitClientDisposed(GitClient client)
       {
-         repo.Disposed -= onGitRepositoryDisposed;
+         client.Disposed -= onGitClientDisposed;
          if (IsHandleCreated)
          {
             BeginInvoke(new Action(async () => await onRefresh()));
@@ -224,7 +224,7 @@ namespace mrHelper.App.Forms
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
          this.Text = DefaultCaption + "   (Checking for new commits)";
-         _gitRepository = await _updateGitRepository(_mergeRequestKey);
+         _gitRepository = await _updateGitClient(_mergeRequestKey);
 
          this.Text = DefaultCaption + "   (Loading discussions)";
 
@@ -506,13 +506,13 @@ namespace mrHelper.App.Forms
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
-      private IGitRepository _gitRepository;
+      private GitClient _gitRepository;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 
       private User _currentUser;
       private readonly DiscussionManager _manager;
-      private readonly Func<MergeRequestKey, Task<IGitRepository>> _updateGitRepository;
+      private readonly Func<MergeRequestKey, Task<GitClient>> _updateGitClient;
 
       private readonly DiscussionFilterPanel FilterPanel;
       private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences

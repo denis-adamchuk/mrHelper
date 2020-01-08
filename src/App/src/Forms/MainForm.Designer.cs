@@ -22,7 +22,6 @@ namespace mrHelper.App.Forms
          _discussionManager?.Dispose();
          _checkForUpdatesTimer?.Dispose();
          _mergeRequestManager?.Dispose();
-         _gitClientFactory?.Dispose();
          _timeTrackingTimer?.Dispose();
          base.Dispose(disposing);
       }

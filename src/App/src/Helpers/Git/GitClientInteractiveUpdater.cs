@@ -123,7 +123,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            ExternalProcess.Start("git", "config --global http.sslVerify false");
+            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty);
          }
          catch (Exception ex)
          {

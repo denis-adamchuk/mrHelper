@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using mrHelper.Common.Exceptions;
+using System.ComponentModel;
 
 namespace mrHelper.Common.Tools
 {
@@ -27,11 +28,8 @@ namespace mrHelper.Common.Tools
       /// Launch a process with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static public Output Start(string name, string arguments, bool wait = true)
+      static public Output Start(string name, string arguments, bool wait, string path)
       {
-         List<string> output = new List<string>();
-         List<string> errors = new List<string>();
-
          using (Process process = new Process
          {
             StartInfo = new ProcessStartInfo
@@ -42,12 +40,30 @@ namespace mrHelper.Common.Tools
                RedirectStandardInput = true,
                RedirectStandardOutput = true,
                RedirectStandardError = true,
-               CreateNoWindow = true
+               CreateNoWindow = true,
+               WorkingDirectory = path
             }
          })
          {
-            process.OutputDataReceived += (sender, args) => { if (args.Data != null) output.Add(args.Data); };
-            process.ErrorDataReceived += (sender, args) => { if (args.Data != null) errors.Add(args.Data); };
+            List<string> output = new List<string>();
+            process.OutputDataReceived +=
+               (sender, args) =>
+            {
+               if (args.Data != null)
+               {
+                  output.Add(args.Data);
+               }
+            };
+
+            List<string> errors = new List<string>();
+            process.ErrorDataReceived +=
+               (sender, args) =>
+            {
+               if (args.Data != null)
+               {
+                  errors.Add(args.Data);
+               }
+            };
 
             process.Start();
 
@@ -61,14 +77,14 @@ namespace mrHelper.Common.Tools
             }
             else
             {
-               System.Threading.Thread.Sleep(500); // ms
+               process.WaitForExit(500); // ms
                if (process.HasExited)
                {
                   exitcode = process.ExitCode;
                }
             }
 
-            checkGitExitCode(arguments, exitcode, errors);
+            checkExitCode(arguments, exitcode, errors);
             return new Output { StdOut = output, StdErr = errors, PID = process.HasExited ? -1 : process.Id };
          }
       }
@@ -76,12 +92,10 @@ namespace mrHelper.Common.Tools
       /// <summary>
       /// Create a task to start a process asynchronously
       /// </summary>
-      static public AsyncTaskDescriptor StartAsync(string name, string arguments, IProgress<string> progress)
+      static public AsyncTaskDescriptor StartAsync(string name, string arguments, IProgress<string> progress,
+         ISynchronizeInvoke synchronizeInvoke, string path)
       {
-         List<string> output = new List<string>();
-         List<string> errors = new List<string>();
-
-         var process = new Process
+         Process process = new Process
          {
             StartInfo = new ProcessStartInfo
             {
@@ -91,9 +105,11 @@ namespace mrHelper.Common.Tools
                RedirectStandardInput = true,
                RedirectStandardOutput = true,
                RedirectStandardError = true,
-               CreateNoWindow = true
+               CreateNoWindow = true,
+               WorkingDirectory = path
             },
-            EnableRaisingEvents = true
+            EnableRaisingEvents = true,
+            SynchronizingObject = synchronizeInvoke
          };
 
          string getStatus(string fullCommand, string details)
@@ -104,7 +120,8 @@ namespace mrHelper.Common.Tools
                name, cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
-         process.OutputDataReceived +=
+         List<string> output = new List<string>();
+         DataReceivedEventHandler onOutputDataReceived =
             (sender, args) =>
          {
             if (args.Data != null)
@@ -113,8 +130,10 @@ namespace mrHelper.Common.Tools
                progress?.Report(getStatus(arguments, output[output.Count - 1]));
             }
          };
+         process.OutputDataReceived += onOutputDataReceived;
 
-         process.ErrorDataReceived +=
+         List<string> errors = new List<string>();
+         DataReceivedEventHandler onErrorDataReceived =
             (sender, args) =>
          {
             if (args.Data != null)
@@ -123,56 +142,38 @@ namespace mrHelper.Common.Tools
                progress?.Report(getStatus(arguments, errors[errors.Count - 1]));
             }
          };
+         process.ErrorDataReceived += onErrorDataReceived;
 
          TaskCompletionSource<Output> tcs = new TaskCompletionSource<Output>();
-
          process.Exited +=
             (sender, args) =>
          {
+            Debug.Assert(process.HasExited);
+
+            process.OutputDataReceived -= onOutputDataReceived;
+            process.ErrorDataReceived -= onErrorDataReceived;
             process.EnableRaisingEvents = false;
             if (!tcs.Task.IsCompleted)
             {
+               process.CancelOutputRead();
+               process.CancelErrorRead();
+
                try
                {
-                  checkGitExitCode(arguments, process.ExitCode, errors);
+                  checkExitCode(arguments, process.ExitCode, errors);
                }
-               catch (Exception ex)
+               catch (GitOperationException ex)
                {
-                  tcs.SetException(ex);
-                  try
-                  {
-                     process.CancelOutputRead();
-                     process.CancelErrorRead();
-                  }
-                  catch (InvalidOperationException)
-                  {
-                     Debug.Assert(false);
-                  }
+                  synchronizeInvoke.BeginInvoke(new Action(() => tcs.SetException(ex)), null);
                   return;
                }
 
-               try
-               {
-                  Debug.Assert(process.ExitCode == 0);
-                  process.WaitForExit();
-                  try
-                  {
-                     process.CancelOutputRead();
-                     process.CancelErrorRead();
-                  }
-                  catch (InvalidOperationException)
-                  {
-                     Debug.Assert(false);
-                  }
-               }
-               catch (InvalidOperationException)
-               {
-                  Debug.Assert(false);
-               }
-
-               tcs.SetResult(new Output { StdOut = output, StdErr = errors, PID = -1 });
-               process.Dispose();
+               Trace.TraceInformation("Exited process with Id = {0}", process.Id);
+               synchronizeInvoke.BeginInvoke(new Action(
+                  () => tcs.SetResult(new Output { StdOut = output, StdErr = errors, PID = -1 })), null);
+               Trace.TraceInformation("Posted result process with Id = {0}", process.Id);
             }
+            Trace.TraceInformation("Exiting from Exited handler Id = {0}", process.Id);
          };
 
          progress?.Report(getStatus(arguments, "in progress..."));
@@ -189,7 +190,7 @@ namespace mrHelper.Common.Tools
          return d;
       }
 
-      static private void checkGitExitCode(string arguments, int exitcode, IEnumerable<string> errors)
+      static private void checkExitCode(string arguments, int exitcode, IEnumerable<string> errors)
       {
          if (exitcode != 0)
          {
@@ -197,6 +198,7 @@ namespace mrHelper.Common.Tools
          }
          else if (errors.Count() > 0 && errors.First().StartsWith("fatal:"))
          {
+            // TODO This is specific to git and not to any External Process
             string reasons =
                "Possible reasons:\n"
                + "-Git repository is not up-to-date\n"
@@ -211,7 +213,10 @@ namespace mrHelper.Common.Tools
       /// </summary>
       public static void Cancel(Process process)
       {
-         if (NativeMethods.AttachConsole((uint)process.Id))
+         int id = process.Id;
+         Trace.TraceInformation("Cancelling process with Id {0}", id);
+
+         if (NativeMethods.AttachConsole((uint)id))
          {
             NativeMethods.SetConsoleCtrlHandler(null, true);
             try
@@ -220,7 +225,6 @@ namespace mrHelper.Common.Tools
                {
                   return;
                }
-               process.WaitForExit(2000);
             }
             finally
             {

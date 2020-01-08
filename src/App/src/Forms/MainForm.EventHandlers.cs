@@ -75,6 +75,10 @@ namespace mrHelper.App.Forms
                e.Cancel = true;
                await _workflow.CancelAsync();
                _workflow = null;
+               if (_gitClientFactory != null)
+               {
+                  await _gitClientFactory.DisposeAsync();
+               }
                Close();
             }
          }
@@ -584,10 +588,17 @@ namespace mrHelper.App.Forms
          await showDiscussionsFormAsync();
       }
 
-      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          Debug.Assert(getMergeRequestKey().HasValue);
-         getGitClient(getMergeRequestKey().Value.ProjectKey, false)?.CancelAsyncOperation();
+
+         GitClient client = await getGitClient(getMergeRequestKey().Value.ProjectKey, false);
+         if (client == null)
+         {
+            return;
+         }
+
+         await client.Updater.CancelUpdateAsync();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

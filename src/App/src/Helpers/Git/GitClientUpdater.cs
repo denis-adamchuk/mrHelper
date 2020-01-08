@@ -18,9 +18,10 @@ namespace mrHelper.App.Helpers
       /// Bind to the specific GitClient object
       /// </summary>
       internal GitClientUpdater(IProjectWatcher projectWatcher, Func<Action<string>, DateTime, Task> onUpdate,
-         Func<ProjectKey, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke)
+         Func<ProjectKey, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke, Func<Task> onCancelUpdate)
       {
          _onUpdate = onUpdate;
+         _onCancelUpdate = onCancelUpdate;
          _isMyProject = isMyProject;
          _projectWatcher = projectWatcher;
          _synchronizeInvoke = synchronizeInvoke;
@@ -33,6 +34,11 @@ namespace mrHelper.App.Helpers
             Trace.TraceInformation(String.Format("[GitClientUpdater] Dispose and unsubscribe from Project Watcher"));
             _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
          }
+      }
+
+      public Task CancelUpdateAsync()
+      {
+         return _onCancelUpdate();
       }
 
       async public Task ManualUpdateAsync(IInstantProjectChecker instantChecker, Action<string> onProgressChange)
@@ -167,6 +173,7 @@ namespace mrHelper.App.Helpers
       }
 
       private readonly Func<Action<string>, DateTime, Task> _onUpdate;
+      private readonly Func<Task> _onCancelUpdate;
       private readonly Func<ProjectKey, bool> _isMyProject;
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;

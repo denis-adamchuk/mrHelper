@@ -30,9 +30,9 @@ namespace mrHelper.Common.Exceptions
       public GitObjectException(string message, int exitcode) : base(message, exitcode) { }
    }
 
-   public class GitRepositoryDisposedException : Exception
+   public class GitClientDisposedException : Exception
    {
-      public GitRepositoryDisposedException(string message) : base(message) { }
+      public GitClientDisposedException(string message) : base(message) { }
    }
 }
 

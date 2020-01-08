@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using mrHelper.Client.Types;
 using mrHelper.Client.MergeRequests;
+using System.Threading.Tasks;
 
 namespace mrHelper.App.Helpers
 {
@@ -12,7 +14,7 @@ namespace mrHelper.App.Helpers
    /// Creates GitClient objects.
    /// This factory is helpful because GitClient objects may have internal state that is expensive to fill up.
    ///<summary>
-   public class GitClientFactory : IDisposable
+   public class GitClientFactory
    {
       public string ParentFolder { get; }
 
@@ -60,19 +62,12 @@ namespace mrHelper.App.Helpers
          return client;
       }
 
-      public void Dispose()
+      async public Task DisposeAsync()
       {
          Trace.TraceInformation(String.Format("[GitClientFactory] Disposing GitClientFactory for parentFolder {0}",
             ParentFolder));
-         disposeClients();
-      }
 
-      private void disposeClients()
-      {
-         foreach (KeyValuePair<ProjectKey, GitClient> client in _clients)
-         {
-            client.Value.Dispose();
-         }
+         await Task.WhenAll(_clients.Values.Select(x => x.DisposeAsync()).ToArray());
          _clients.Clear();
       }
 
