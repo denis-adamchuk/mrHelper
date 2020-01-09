@@ -80,8 +80,7 @@ namespace mrHelper.App.Helpers
       {
          Trace.TraceInformation(String.Format("[GitClient] Disposing GitClient at path {0}", Path));
          _isDisposed = true;
-         await cancelUpdateOperationAsync();
-         await cancelRepositoryOperationsAsync();
+         await Task.WhenAll(new List<Task>{ cancelUpdateOperationAsync(), cancelRepositoryOperationsAsync() });
          Updater.Dispose();
          Disposed?.Invoke(this);
       }
@@ -144,7 +143,7 @@ namespace mrHelper.App.Helpers
          {
             return ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, path).StdErr.Count() == 0;
          }
-         catch (GitOperationException)
+         catch (ExternalProcessException)
          {
             return false;
          }
@@ -171,45 +170,42 @@ namespace mrHelper.App.Helpers
             return cache[arguments];
          }
 
-         ExternalProcess.Output gitOutput = await executeLiteGitCommandAsync(arguments.ToString(), Path);
-         cache[arguments] = gitOutput.StdOut;
-         return gitOutput.StdOut;
+         cache[arguments] = await executeLiteGitCommandAsync(arguments.ToString(), Path);
+         return cache[arguments];
       }
 
-      async private Task<ExternalProcess.Output> executeLiteGitCommandAsync(string arguments, string path)
+      async private Task<IEnumerable<string>> executeLiteGitCommandAsync(string arguments, string path)
       {
          if (_isDisposed)
          {
             throw new GitClientDisposedException(String.Format("GitClient {0} disposed", ProjectKey.ProjectName));
          }
 
-         ExternalProcess.AsyncTaskDescriptor descriptor =
-            ExternalProcess.StartAsync("git", arguments, null, _synchronizeInvoke, path);
+         List<string> stdOut = new List<string>();
+         List<string> stdErr = new List<string>();
+         ExternalProcess.AsyncTaskDescriptor descriptor = ExternalProcess.StartAsync(
+            "git", arguments, null, _synchronizeInvoke, path, stdOut, stdErr);
+
+         _repositoryOperationDescriptor.Add(descriptor);
+
          try
          {
-            _repositoryOperationDescriptor.Add(descriptor);
-            return await descriptor.TaskCompletionSource.Task;
+            await descriptor.Task;
+            checkForSpecificError(arguments, stdErr);
+            return stdOut;
          }
-         catch (GitOperationException ex)
+         catch (ExternalProcessException ex)
          {
-            handleGitOperationException(ex, arguments);
-            throw;
+            throw convertToGitOperationException(ex, arguments);
          }
          finally
          {
-            Trace.TraceInformation("Waiting for exit of process with Id = {0}", descriptor.Process.Id);
-            while (!descriptor.Process.WaitForExit(500))
-            {
-               await Task.Delay(50);
-            }
-            descriptor.Process.WaitForExit();
-            Trace.TraceInformation("Finished waiting :or exit of process with Id = {0}", descriptor.Process.Id);
             descriptor.Process.Dispose();
             _repositoryOperationDescriptor.Remove(descriptor);
          }
       }
 
-      async private Task<ExternalProcess.Output> executeGitCommandAsync(
+      async private Task<IEnumerable<string>> executeGitCommandAsync(
          string arguments, Action<string> onProgressChange, string path)
       {
          if (_isDisposed)
@@ -228,22 +224,25 @@ namespace mrHelper.App.Helpers
          };
 
          traceOperationStatus(arguments, "start");
-         _updateOperationDescriptor = ExternalProcess.StartAsync("git", arguments, progress, _synchronizeInvoke, path);
+
+         List<string> stdOut = new List<string>();
+         List<string> stdErr = new List<string>();
+         _updateOperationDescriptor = ExternalProcess.StartAsync(
+            "git", arguments, progress, _synchronizeInvoke, path, stdOut, stdErr);
 
          try
          {
-            ExternalProcess.Output gitOutput = await _updateOperationDescriptor.TaskCompletionSource.Task;
+            await _updateOperationDescriptor.Task;
             traceOperationStatus(arguments, "end");
-            return gitOutput;
+            checkForSpecificError(arguments, stdErr);
+            return stdOut;
          }
-         catch (GitOperationException ex)
+         catch (ExternalProcessException ex)
          {
-            handleGitOperationException(ex, arguments);
-            throw;
+            throw convertToGitOperationException(ex, arguments);
          }
          finally
          {
-            _updateOperationDescriptor.Process.WaitForExit();
             _updateOperationDescriptor.Process.Dispose();
             _updateOperationDescriptor = null;
          }
@@ -259,23 +258,40 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            await _updateOperationDescriptor.TaskCompletionSource.Task;
+            await _updateOperationDescriptor.Task;
+            traceOperationStatus("pick-up", "end");
          }
-         catch (GitOperationException ex)
+         catch (ExternalProcessException ex)
          {
-            handleGitOperationException(ex, "pick-up");
-            throw;
+            throw convertToGitOperationException(ex, "pick-up");
          }
-
-         traceOperationStatus("pick-up", "end");
       }
 
-      private void handleGitOperationException(GitOperationException ex, string operation)
+      static private void checkForSpecificError(string arguments, IEnumerable<string> errors)
       {
+         if (errors.Count() > 0 && errors.First().StartsWith("fatal:"))
+         {
+            // TODO This is specific to git and not to any External Process
+            string reasons =
+               "Possible reasons:\n"
+               + "-Git repository is not up-to-date\n"
+               + "-Given commit is no longer in the repository (force push?)";
+            string message = String.Format("git returned \"{0}\". {1}", errors.First(), reasons);
+            throw new GitObjectException(message, 0);
+         }
+      }
+
+      private GitOperationException convertToGitOperationException(ExternalProcessException ex, string operation)
+      {
+         Debug.Assert(ex.ExitCode != 0);
+
          string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
          traceOperationStatus(operation, status);
          ExceptionHandlers.Handle(ex, "Git operation failed");
-         ex.Cancelled = ex.ExitCode == cancellationExitCode;
+
+         GitOperationException gitEx = new GitOperationException(ex.Command, ex.ExitCode, ex.Errors);
+         gitEx.Cancelled = ex.ExitCode == cancellationExitCode;
+         return gitEx;
       }
 
       private void traceOperationStatus(string operation, string status)

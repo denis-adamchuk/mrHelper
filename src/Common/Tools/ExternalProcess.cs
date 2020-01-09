@@ -3,8 +3,8 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using mrHelper.Common.Exceptions;
 using System.ComponentModel;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Tools
 {
@@ -12,7 +12,7 @@ namespace mrHelper.Common.Tools
    {
       public class AsyncTaskDescriptor
       {
-         public TaskCompletionSource<Output> TaskCompletionSource;
+         public Task<object[]> Task;
          public Process Process;
          public bool Cancelled;
       }
@@ -84,7 +84,10 @@ namespace mrHelper.Common.Tools
                }
             }
 
-            checkExitCode(arguments, exitcode, errors);
+            if (exitcode != 0)
+            {
+               throw new ExternalProcessException(arguments, exitcode, errors);
+            }
             return new Output { StdOut = output, StdErr = errors, PID = process.HasExited ? -1 : process.Id };
          }
       }
@@ -93,7 +96,7 @@ namespace mrHelper.Common.Tools
       /// Create a task to start a process asynchronously
       /// </summary>
       static public AsyncTaskDescriptor StartAsync(string name, string arguments, IProgress<string> progress,
-         ISynchronizeInvoke synchronizeInvoke, string path)
+         ISynchronizeInvoke synchronizeInvoke, string path, List<string> standardOutput, List<string> standardError)
       {
          Process process = new Process
          {
@@ -120,92 +123,88 @@ namespace mrHelper.Common.Tools
                name, cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
-         List<string> output = new List<string>();
-         DataReceivedEventHandler onOutputDataReceived =
-            (sender, args) =>
+         Func<List<string>, Action<DataReceivedEventHandler>, Action<DataReceivedEventHandler>,
+            TaskCompletionSource<object>> addStdHandler =
+            (std, addHandler, removeHandler) =>
          {
-            if (args.Data != null)
+            if (std == null)
             {
-               output.Add(args.Data);
-               progress?.Report(getStatus(arguments, output[output.Count - 1]));
+               return null;
             }
-         };
-         process.OutputDataReceived += onOutputDataReceived;
 
-         List<string> errors = new List<string>();
-         DataReceivedEventHandler onErrorDataReceived =
-            (sender, args) =>
-         {
-            if (args.Data != null)
+            TaskCompletionSource<object> tcsStd = new TaskCompletionSource<object>();
+            DataReceivedEventHandler onDataReceived = null;
+            onDataReceived = new DataReceivedEventHandler(
+               (sender, args) =>
             {
-               errors.Add(args.Data);
-               progress?.Report(getStatus(arguments, errors[errors.Count - 1]));
-            }
-         };
-         process.ErrorDataReceived += onErrorDataReceived;
+               if (args.Data != null)
+               {
+                  std.Add(args.Data);
+                  progress?.Report(getStatus(arguments, args.Data));
+               }
+               else
+               {
+                  removeHandler(onDataReceived);
+                  tcsStd.SetResult(null);
+               }
+            });
 
-         TaskCompletionSource<Output> tcs = new TaskCompletionSource<Output>();
-         process.Exited +=
+            addHandler(onDataReceived);
+            return tcsStd;
+         };
+
+         TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+         List<Task<object>> tasks = new List<Task<object>>{ tcs.Task };
+
+         EventHandler onExited = null;
+         onExited = new EventHandler(
             (sender, args) =>
          {
-            Debug.Assert(process.HasExited);
-
-            process.OutputDataReceived -= onOutputDataReceived;
-            process.ErrorDataReceived -= onErrorDataReceived;
             process.EnableRaisingEvents = false;
-            if (!tcs.Task.IsCompleted)
+            process.Exited -= onExited;
+            if (process.ExitCode != 0)
             {
-               process.CancelOutputRead();
-               process.CancelErrorRead();
-
-               try
-               {
-                  checkExitCode(arguments, process.ExitCode, errors);
-               }
-               catch (GitOperationException ex)
-               {
-                  synchronizeInvoke.BeginInvoke(new Action(() => tcs.SetException(ex)), null);
-                  return;
-               }
-
-               Trace.TraceInformation("Exited process with Id = {0}", process.Id);
-               synchronizeInvoke.BeginInvoke(new Action(
-                  () => tcs.SetResult(new Output { StdOut = output, StdErr = errors, PID = -1 })), null);
-               Trace.TraceInformation("Posted result process with Id = {0}", process.Id);
+               tcs.SetException(new ExternalProcessException(arguments, process.ExitCode, standardError));
             }
-            Trace.TraceInformation("Exiting from Exited handler Id = {0}", process.Id);
-         };
+            else
+            {
+               tcs.SetResult(null);
+            }
+         });
+         process.Exited += onExited;
+
+         TaskCompletionSource<object> tcsStdOut = addStdHandler(standardOutput,
+            x => process.OutputDataReceived += x, x => process.OutputDataReceived -= x);
+         if (tcsStdOut != null)
+         {
+            tasks.Add(tcsStdOut.Task);
+         }
+
+         TaskCompletionSource<object> tcsStdErr = addStdHandler(standardError,
+            x => process.ErrorDataReceived += x, x => process.ErrorDataReceived -= x);
+         if (tcsStdErr != null)
+         {
+            tasks.Add(tcsStdErr.Task);
+         }
 
          progress?.Report(getStatus(arguments, "in progress..."));
          process.Start();
 
-         process.BeginOutputReadLine();
-         process.BeginErrorReadLine();
-
-         AsyncTaskDescriptor d = new AsyncTaskDescriptor
+         if (standardOutput != null)
          {
-            TaskCompletionSource = tcs,
+            process.BeginOutputReadLine();
+         }
+
+         if (standardError != null)
+         {
+            process.BeginErrorReadLine();
+         }
+
+         return new AsyncTaskDescriptor
+         {
+            Task = Task.WhenAll(tasks),
             Process = process
          };
-         return d;
-      }
-
-      static private void checkExitCode(string arguments, int exitcode, IEnumerable<string> errors)
-      {
-         if (exitcode != 0)
-         {
-            throw new GitOperationException(arguments, exitcode, errors);
-         }
-         else if (errors.Count() > 0 && errors.First().StartsWith("fatal:"))
-         {
-            // TODO This is specific to git and not to any External Process
-            string reasons =
-               "Possible reasons:\n"
-               + "-Git repository is not up-to-date\n"
-               + "-Given commit is no longer in the repository (force push?)";
-            string message = String.Format("git returned \"{0}\". {1}", errors.First(), reasons);
-            throw new GitObjectException(message, exitcode);
-         }
       }
 
       /// <summary>
@@ -213,10 +212,7 @@ namespace mrHelper.Common.Tools
       /// </summary>
       public static void Cancel(Process process)
       {
-         int id = process.Id;
-         Trace.TraceInformation("Cancelling process with Id {0}", id);
-
-         if (NativeMethods.AttachConsole((uint)id))
+         if (NativeMethods.AttachConsole((uint)process.Id))
          {
             NativeMethods.SetConsoleCtrlHandler(null, true);
             try

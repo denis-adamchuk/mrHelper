@@ -24,11 +24,16 @@ namespace mrHelper.Common.Exceptions
             Trace.TraceError("[{0}] {1}: {2}\nDetails:\n{3}",
                   ex4.GetType().ToString(), meaning, ex4.Message, ex4.Details);
          }
-         else if (exception is FeedbackReporterException ex5)
+         else if (exception is ExternalProcessException ex5)
          {
-            Trace.TraceError("[{0}] {1}", ex5.GetType().ToString(), meaning);
-            Trace.TraceError("{0}", ex5.Message);
-            Trace.TraceError("Inner Exception: {0}", (ex5.InnerException != null ? ex5.InnerException.Message : "N/A"));
+            Trace.TraceError("[{0}] {1}: {2}\nDetails:\n{3}",
+                  ex5.GetType().ToString(), meaning, ex5.Message, String.Join("\n", ex5.Errors));
+         }
+         else if (exception is FeedbackReporterException ex6)
+         {
+            Trace.TraceError("[{0}] {1}", ex6.GetType().ToString(), meaning);
+            Trace.TraceError("{0}", ex6.Message);
+            Trace.TraceError("Inner Exception: {0}", (ex6.InnerException != null ? ex6.InnerException.Message : "N/A"));
          }
          else if (exception != null)
          {

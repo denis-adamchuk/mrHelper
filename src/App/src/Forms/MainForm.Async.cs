@@ -223,7 +223,7 @@ namespace mrHelper.App.Forms
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
             pid = ExternalProcess.Start("git", arguments, false, client.Path).PID;
          }
-         catch (GitOperationException ex)
+         catch (ExternalProcessException ex)
          {
             string message = "Could not launch diff tool";
             ExceptionHandlers.Handle(ex, message);

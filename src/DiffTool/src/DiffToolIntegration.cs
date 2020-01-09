@@ -42,7 +42,7 @@ namespace mrHelper.DiffTool
                ExternalProcess.Start("git",
                   "config --global --remove-section difftool." + GitDiffToolName, true, String.Empty);
             }
-            catch (GitOperationException)
+            catch (ExternalProcessException)
             {
                Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName));
             }
