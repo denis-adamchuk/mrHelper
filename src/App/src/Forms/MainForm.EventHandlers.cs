@@ -1021,6 +1021,11 @@ namespace mrHelper.App.Forms
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
       }
+
+      private void groupBoxTimeTracking_SizeChanged(object sender, EventArgs e)
+      {
+         labelTimeTrackingMergeRequestName.Width = groupBoxTimeTracking.Width;
+      }
    }
 }
 
