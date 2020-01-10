@@ -57,7 +57,7 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  Debug.Assert(ex is GitOperationException);
+                  Debug.Assert(ex is GitOperationException || ex is ExternalProcessException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return;
@@ -196,7 +196,7 @@ namespace mrHelper.App.Forms
                }
                else if (!(ex is RepeatOperationException))
                {
-                  Debug.Assert(ex is GitOperationException);
+                  Debug.Assert(ex is GitOperationException || ex is ExternalProcessException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                }
@@ -221,7 +221,7 @@ namespace mrHelper.App.Forms
          {
             string arguments = "difftool --dir-diff --tool=" +
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
-            pid = ExternalProcess.Start("git", arguments, false, client.Path).PID;
+            pid = ExternalProcess.Start("git", arguments, false, client.Path, null, null);
          }
          catch (ExternalProcessException ex)
          {

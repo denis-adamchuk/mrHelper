@@ -17,18 +17,12 @@ namespace mrHelper.Common.Tools
          public bool Cancelled;
       }
 
-      public struct Output
-      {
-         public IEnumerable<string> StdOut;
-         public IEnumerable<string> StdErr;
-         public int PID;
-      }
-
       /// <summary>
       /// Launch a process with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static public Output Start(string name, string arguments, bool wait, string path)
+      static public int Start(string name, string arguments, bool wait, string path,
+         List<string> standardOutput, List<string> standardError)
       {
          using (Process process = new Process
          {
@@ -45,23 +39,21 @@ namespace mrHelper.Common.Tools
             }
          })
          {
-            List<string> output = new List<string>();
             process.OutputDataReceived +=
                (sender, args) =>
             {
                if (args.Data != null)
                {
-                  output.Add(args.Data);
+                  standardOutput?.Add(args.Data);
                }
             };
 
-            List<string> errors = new List<string>();
             process.ErrorDataReceived +=
                (sender, args) =>
             {
                if (args.Data != null)
                {
-                  errors.Add(args.Data);
+                  standardError?.Add(args.Data);
                }
             };
 
@@ -82,13 +74,19 @@ namespace mrHelper.Common.Tools
                {
                   exitcode = process.ExitCode;
                }
+               else
+               {
+                  process.CancelOutputRead();
+                  process.CancelErrorRead();
+               }
             }
 
             if (exitcode != 0)
             {
-               throw new ExternalProcessException(arguments, exitcode, errors);
+               throw new ExternalProcessException(arguments, exitcode,
+                  standardError?.ToArray() ?? Array.Empty<string>());
             }
-            return new Output { StdOut = output, StdErr = errors, PID = process.HasExited ? -1 : process.Id };
+            return process.HasExited ? -1 : process.Id;
          }
       }
 
@@ -123,15 +121,9 @@ namespace mrHelper.Common.Tools
                name, cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
-         Func<List<string>, Action<DataReceivedEventHandler>, Action<DataReceivedEventHandler>,
-            TaskCompletionSource<object>> addStdHandler =
+         Func<List<string>, Action<DataReceivedEventHandler>, Action, TaskCompletionSource<object>> addStdHandler =
             (std, addHandler, removeHandler) =>
          {
-            if (std == null)
-            {
-               return null;
-            }
-
             TaskCompletionSource<object> tcsStd = new TaskCompletionSource<object>();
             DataReceivedEventHandler onDataReceived = null;
             onDataReceived = new DataReceivedEventHandler(
@@ -139,12 +131,12 @@ namespace mrHelper.Common.Tools
             {
                if (args.Data != null)
                {
-                  std.Add(args.Data);
+                  std?.Add(args.Data);
                   progress?.Report(getStatus(arguments, args.Data));
                }
                else
                {
-                  removeHandler(onDataReceived);
+                  removeHandler();
                   tcsStd.SetResult(null);
                }
             });
@@ -173,32 +165,17 @@ namespace mrHelper.Common.Tools
          });
          process.Exited += onExited;
 
-         TaskCompletionSource<object> tcsStdOut = addStdHandler(standardOutput,
-            x => process.OutputDataReceived += x, x => process.OutputDataReceived -= x);
-         if (tcsStdOut != null)
-         {
-            tasks.Add(tcsStdOut.Task);
-         }
+         tasks.Add(addStdHandler(standardOutput,
+            x => process.OutputDataReceived += x, () => process.CancelOutputRead()).Task);
 
-         TaskCompletionSource<object> tcsStdErr = addStdHandler(standardError,
-            x => process.ErrorDataReceived += x, x => process.ErrorDataReceived -= x);
-         if (tcsStdErr != null)
-         {
-            tasks.Add(tcsStdErr.Task);
-         }
+         tasks.Add(addStdHandler(standardError,
+            x => process.ErrorDataReceived += x, () => process.CancelErrorRead()).Task);
 
          progress?.Report(getStatus(arguments, "in progress..."));
          process.Start();
 
-         if (standardOutput != null)
-         {
-            process.BeginOutputReadLine();
-         }
-
-         if (standardError != null)
-         {
-            process.BeginErrorReadLine();
-         }
+         process.BeginOutputReadLine();
+         process.BeginErrorReadLine();
 
          return new AsyncTaskDescriptor
          {

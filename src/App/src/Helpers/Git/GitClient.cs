@@ -139,9 +139,12 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
+         List<string> stdOut = new List<string>();
+         List<string> stdErr = new List<string>();
          try
          {
-            return ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, path).StdErr.Count() == 0;
+            ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, path, stdOut, stdErr);
+            return stdErr.Count() == 0;
          }
          catch (ExternalProcessException)
          {
@@ -157,9 +160,11 @@ namespace mrHelper.App.Helpers
             return cache[arguments];
          }
 
-         ExternalProcess.Output gitOutput = ExternalProcess.Start("git", arguments.ToString(), true, Path);
-         cache[arguments] = gitOutput.StdOut;
-         return gitOutput.StdOut;
+         List<string> stdOut = new List<string>();
+         List<string> stdErr = new List<string>();
+         ExternalProcess.Start("git", arguments.ToString(), true, Path, stdOut, stdErr);
+         cache[arguments] = stdOut;
+         return stdOut;
       }
 
       async public Task<IEnumerable<string>> executeCachedAsyncOperation<T>(
@@ -191,12 +196,13 @@ namespace mrHelper.App.Helpers
          try
          {
             await descriptor.Task;
-            checkForSpecificError(arguments, stdErr);
+            throwOnFatalError(arguments, stdErr);
             return stdOut;
          }
          catch (ExternalProcessException ex)
          {
-            throw convertToGitOperationException(ex, arguments);
+            traceOperationStatusOnException(arguments, ex);
+            throw new GitOperationException(ex.Command, ex.ExitCode, ex.Errors, isCancelled(ex));
          }
          finally
          {
@@ -234,12 +240,13 @@ namespace mrHelper.App.Helpers
          {
             await _updateOperationDescriptor.Task;
             traceOperationStatus(arguments, "end");
-            checkForSpecificError(arguments, stdErr);
+            throwOnFatalError(arguments, stdErr);
             return stdOut;
          }
          catch (ExternalProcessException ex)
          {
-            throw convertToGitOperationException(ex, arguments);
+            traceOperationStatusOnException(arguments, ex);
+            throw new GitOperationException(ex.Command, ex.ExitCode, ex.Errors, isCancelled(ex));
          }
          finally
          {
@@ -263,15 +270,15 @@ namespace mrHelper.App.Helpers
          }
          catch (ExternalProcessException ex)
          {
-            throw convertToGitOperationException(ex, "pick-up");
+            traceOperationStatusOnException("pick-up", ex);
+            throw new GitOperationException(ex.Command, ex.ExitCode, ex.Errors, isCancelled(ex));
          }
       }
 
-      static private void checkForSpecificError(string arguments, IEnumerable<string> errors)
+      static private void throwOnFatalError(string arguments, IEnumerable<string> errors)
       {
          if (errors.Count() > 0 && errors.First().StartsWith("fatal:"))
          {
-            // TODO This is specific to git and not to any External Process
             string reasons =
                "Possible reasons:\n"
                + "-Git repository is not up-to-date\n"
@@ -281,17 +288,18 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private GitOperationException convertToGitOperationException(ExternalProcessException ex, string operation)
+      private bool isCancelled(ExternalProcessException ex)
       {
-         Debug.Assert(ex.ExitCode != 0);
+         return ex.ExitCode == cancellationExitCode;
+      }
 
+      private void traceOperationStatusOnException(string operation, ExternalProcessException ex)
+      {
          string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
          traceOperationStatus(operation, status);
-         ExceptionHandlers.Handle(ex, "Git operation failed");
 
-         GitOperationException gitEx = new GitOperationException(ex.Command, ex.ExitCode, ex.Errors);
-         gitEx.Cancelled = ex.ExitCode == cancellationExitCode;
-         return gitEx;
+         string meaning = ex.ExitCode == cancellationExitCode ? "cancelled" : "failed";
+         ExceptionHandlers.Handle(ex, String.Format("Git operation {0}", meaning));
       }
 
       private void traceOperationStatus(string operation, string status)
