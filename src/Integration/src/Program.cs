@@ -16,7 +16,8 @@ namespace mrHelper.Integration
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          Trace.Listeners.Add(new CustomTraceListener(Path.Combine(getFullLogPath(), logfilename),
-            String.Format("Merge Request Helper Integration Tool {0} started", Application.ProductVersion)));
+            String.Format("Merge Request Helper Integration Tool {0} started. PID {1}",
+               Application.ProductVersion, Process.GetCurrentProcess().Id)));
 
          if (args.Length < 1)
          {

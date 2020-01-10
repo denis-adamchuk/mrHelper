@@ -159,7 +159,7 @@ namespace mrHelper.DiffTool
                XmlNode value = currentDescription.Attributes.GetNamedItem("Value");
                if (value.Value == IntegrationKey)
                {
-                  // seems to be already patched but let's update it 
+                  // seems to be already patched but let's update it
                   XmlNode currentCmdLine = child.SelectSingleNode("CmdLine");
                   XmlNode currentShortCut = child.SelectSingleNode("ShortCut");
                   if (currentCmdLine == null || currentShortCut == null)

@@ -22,7 +22,6 @@ namespace mrHelper.App.Forms
          _discussionManager?.Dispose();
          _checkForUpdatesTimer?.Dispose();
          _mergeRequestManager?.Dispose();
-         _gitClientFactory?.Dispose();
          _timeTrackingTimer?.Dispose();
          base.Dispose(disposing);
       }
@@ -980,10 +979,11 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.TabIndex = 6;
          this.groupBoxTimeTracking.TabStop = false;
          this.groupBoxTimeTracking.Text = "Time tracking";
+         this.groupBoxTimeTracking.SizeChanged += new System.EventHandler(this.groupBoxTimeTracking_SizeChanged);
          // 
          // labelTimeTrackingMergeRequestName
          // 
-         this.labelTimeTrackingMergeRequestName.AutoSize = true;
+         this.labelTimeTrackingMergeRequestName.AutoEllipsis = true;
          this.labelTimeTrackingMergeRequestName.Location = new System.Drawing.Point(6, 54);
          this.labelTimeTrackingMergeRequestName.Name = "labelTimeTrackingMergeRequestName";
          this.labelTimeTrackingMergeRequestName.Size = new System.Drawing.Size(259, 13);

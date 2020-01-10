@@ -40,9 +40,9 @@ namespace mrHelper.DiffTool
             try
             {
                ExternalProcess.Start("git",
-                  "config --global --remove-section difftool." + GitDiffToolName);
+                  "config --global --remove-section difftool." + GitDiffToolName, true, String.Empty, null, null);
             }
-            catch (GitOperationException)
+            catch (ExternalProcessException)
             {
                Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName));
             }
@@ -77,7 +77,8 @@ namespace mrHelper.DiffTool
       private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
       {
          ExternalProcess.Start("git",
-            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath));
+            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath), true, String.Empty,
+            null, null);
       }
 
       public bool isInstalled(string toolpath)

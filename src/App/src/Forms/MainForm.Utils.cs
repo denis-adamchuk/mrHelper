@@ -674,11 +674,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private GitClientFactory getGitClientFactory(string localFolder)
+      async private Task<GitClientFactory> getGitClientFactory(string localFolder)
       {
          if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
          {
-            _gitClientFactory?.Dispose();
+            if (_gitClientFactory != null)
+            {
+               await _gitClientFactory.DisposeAsync();
+            }
 
             try
             {
@@ -709,9 +712,9 @@ namespace mrHelper.App.Forms
       /// Make some checks and create a Client
       /// </summary>
       /// <returns>null if could not create a GitClient</returns>
-      private GitClient getGitClient(ProjectKey key, bool showMessageBoxOnError)
+      async private Task<GitClient> getGitClient(ProjectKey key, bool showMessageBoxOnError)
       {
-         GitClientFactory factory = getGitClientFactory(Program.Settings.LocalGitFolder);
+         GitClientFactory factory = await getGitClientFactory(Program.Settings.LocalGitFolder);
          if (factory == null)
          {
             return null;

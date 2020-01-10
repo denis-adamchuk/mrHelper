@@ -123,9 +123,9 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            ExternalProcess.Start("git", "config --global http.sslVerify false");
+            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty, null, null);
          }
-         catch (Exception ex)
+         catch (ExternalProcessException ex)
          {
             ExceptionHandlers.Handle(ex, "Cannot change global http.verifySSL setting");
             throw;

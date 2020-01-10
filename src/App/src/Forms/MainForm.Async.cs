@@ -7,6 +7,7 @@ using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
@@ -25,7 +26,7 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = getMergeRequestKey().Value;
          MergeRequest mergeRequest = getMergeRequest().Value;
 
-         GitClient client = getGitClient(mrk.ProjectKey, true);
+         GitClient client = await getGitClient(mrk.ProjectKey, true);
          if (client != null)
          {
             enableControlsOnGitAsyncOperation(false);
@@ -56,7 +57,7 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  Debug.Assert(ex is GitOperationException);
+                  Debug.Assert(ex is GitOperationException || ex is ExternalProcessException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return;
@@ -100,7 +101,7 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     GitClient gitClient = getGitClient(key.ProjectKey, true);
+                     GitClient gitClient = await getGitClient(key.ProjectKey, true);
                      if (gitClient != null && !gitClient.DoesRequireClone())
                      {
                         // Using remote checker because there are might be discussions reported
@@ -173,7 +174,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
 
-         GitClient client = getGitClient(mrk.ProjectKey, true);
+         GitClient client = await getGitClient(mrk.ProjectKey, true);
          if (client != null)
          {
             enableControlsOnGitAsyncOperation(false);
@@ -195,7 +196,7 @@ namespace mrHelper.App.Forms
                }
                else if (!(ex is RepeatOperationException))
                {
-                  Debug.Assert(ex is GitOperationException);
+                  Debug.Assert(ex is GitOperationException || ex is ExternalProcessException);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                }
@@ -218,9 +219,11 @@ namespace mrHelper.App.Forms
          int pid;
          try
          {
-            pid = client.DiffTool(mrHelper.DiffTool.DiffToolIntegration.GitDiffToolName, leftSHA, rightSHA);
+            string arguments = "difftool --dir-diff --tool=" +
+               DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
+            pid = ExternalProcess.Start("git", arguments, false, client.Path, null, null);
          }
-         catch (GitOperationException ex)
+         catch (ExternalProcessException ex)
          {
             string message = "Could not launch diff tool";
             ExceptionHandlers.Handle(ex, message);
@@ -373,7 +376,7 @@ namespace mrHelper.App.Forms
 
          _silentUpdateInProgress.Add(pk);
 
-         GitClient client = getGitClient(pk, false);
+         GitClient client = await getGitClient(pk, false);
          if (client == null || client.DoesRequireClone())
          {
             Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",

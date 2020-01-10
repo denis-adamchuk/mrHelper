@@ -46,6 +46,7 @@
     </Compile>
     <Compile Include="Constants\Constants.cs" />
     <Compile Include="Exceptions\ExceptionHandlers.cs" />
+    <Compile Include="Exceptions\ExternalProcessException.cs" />
     <Compile Include="Exceptions\FeedbackReporterException.cs" />
     <Compile Include="Interfaces\HostPropertiesItf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -60,6 +60,8 @@ namespace mrHelper.App.Forms
          {
             if (_workflow != null)
             {
+               Trace.TraceInformation(String.Format("[MainForm] User decided to close the app, finalizing work"));
+
                try
                {
                   _persistentStorage.Serialize();
@@ -75,6 +77,13 @@ namespace mrHelper.App.Forms
                e.Cancel = true;
                await _workflow.CancelAsync();
                _workflow = null;
+               if (_gitClientFactory != null)
+               {
+                  await _gitClientFactory.DisposeAsync();
+               }
+
+               Trace.TraceInformation(String.Format("[MainForm] Work finalized. Exiting."));
+
                Close();
             }
          }
@@ -162,6 +171,8 @@ namespace mrHelper.App.Forms
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
          {
             string newFolder = localGitFolderBrowser.SelectedPath;
+            Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
+
             if (getGitClientFactory(newFolder) != null)
             {
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
@@ -584,10 +595,19 @@ namespace mrHelper.App.Forms
          await showDiscussionsFormAsync();
       }
 
-      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
+         Trace.TraceInformation("[MainForm] User decided to abort git update");
+
          Debug.Assert(getMergeRequestKey().HasValue);
-         getGitClient(getMergeRequestKey().Value.ProjectKey, false)?.CancelAsyncOperation();
+
+         GitClient client = await getGitClient(getMergeRequestKey().Value.ProjectKey, false);
+         if (client == null)
+         {
+            return;
+         }
+
+         await client.Updater.CancelUpdateAsync();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1000,6 +1020,11 @@ namespace mrHelper.App.Forms
          repositionCustomCommands(); // update position of custom actions
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
+      }
+
+      private void groupBoxTimeTracking_SizeChanged(object sender, EventArgs e)
+      {
+         labelTimeTrackingMergeRequestName.Width = groupBoxTimeTracking.Width;
       }
    }
 }
