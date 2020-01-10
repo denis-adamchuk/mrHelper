@@ -60,7 +60,8 @@ namespace mrHelper.App
 
             string currentLogFileName = getLogFileName(context);
             CustomTraceListener listener = new CustomTraceListener(currentLogFileName,
-               String.Format("Merge Request Helper {0} started", Application.ProductVersion));
+               String.Format("Merge Request Helper {0} started. PID {1}",
+                  Application.ProductVersion, Process.GetCurrentProcess().Id));
             Trace.Listeners.Add(listener);
 
             Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));

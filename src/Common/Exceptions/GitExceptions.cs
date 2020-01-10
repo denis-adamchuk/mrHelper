@@ -14,7 +14,7 @@ namespace mrHelper.Common.Exceptions
       }
 
       public GitOperationException(string command, int exitcode, IEnumerable<string> errorOutput, bool cancelled)
-         : base(String.Format("command \"{0}\" exited with code {1}", command, exitcode.ToString()))
+         : base(String.Format("command \"{0}\" exited with code {1}. ", command, exitcode.ToString()))
       {
          Details = String.Join("\n", errorOutput);
          ExitCode = exitcode;

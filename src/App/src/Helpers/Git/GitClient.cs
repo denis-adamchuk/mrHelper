@@ -35,6 +35,7 @@ namespace mrHelper.App.Helpers
       public string ProjectName { get { return ProjectKey.ProjectName; } }
 
       private static readonly int cancellationExitCode = 130;
+      private static readonly int altCancellationExitCode = -1073741510;
 
       /// <summary>
       /// Construct GitClient with a path that either does not exist or it is empty or points to a valid git repository
@@ -152,8 +153,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public IEnumerable<string> executeCachedOperation<T>(
-         T arguments, Dictionary<T, IEnumerable<string>> cache)
+      public IEnumerable<string> executeCachedOperation<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
          if (cache.ContainsKey(arguments))
          {
@@ -290,15 +290,15 @@ namespace mrHelper.App.Helpers
 
       private bool isCancelled(ExternalProcessException ex)
       {
-         return ex.ExitCode == cancellationExitCode;
+         return ex.ExitCode == cancellationExitCode || ex.ExitCode == altCancellationExitCode;
       }
 
       private void traceOperationStatusOnException(string operation, ExternalProcessException ex)
       {
-         string status = ex.ExitCode == cancellationExitCode ? "cancel" : "error";
+         string status = isCancelled(ex) ? "cancel" : "error";
          traceOperationStatus(operation, status);
 
-         string meaning = ex.ExitCode == cancellationExitCode ? "cancelled" : "failed";
+         string meaning = isCancelled(ex) ? "cancelled" : "failed";
          ExceptionHandlers.Handle(ex, String.Format("Git operation {0}", meaning));
       }
 
@@ -319,6 +319,9 @@ namespace mrHelper.App.Helpers
 
       async private Task cancelRepositoryOperationsAsync()
       {
+         Trace.TraceInformation(String.Format("[GitClient] Number of operations to cancel: {0}",
+            _repositoryOperationDescriptor.Count));
+
          _repositoryOperationDescriptor.ForEach(x => cancelOperation(x));
          while (_repositoryOperationDescriptor.Count > 0)
          {

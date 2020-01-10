@@ -60,6 +60,8 @@ namespace mrHelper.App.Forms
          {
             if (_workflow != null)
             {
+               Trace.TraceInformation(String.Format("[MainForm] User decided to close the app, finalizing work"));
+
                try
                {
                   _persistentStorage.Serialize();
@@ -79,6 +81,9 @@ namespace mrHelper.App.Forms
                {
                   await _gitClientFactory.DisposeAsync();
                }
+
+               Trace.TraceInformation(String.Format("[MainForm] Work finalized. Exiting."));
+
                Close();
             }
          }
@@ -166,6 +171,8 @@ namespace mrHelper.App.Forms
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
          {
             string newFolder = localGitFolderBrowser.SelectedPath;
+            Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
+
             if (getGitClientFactory(newFolder) != null)
             {
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
@@ -590,6 +597,8 @@ namespace mrHelper.App.Forms
 
       async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
+         Trace.TraceInformation("[MainForm] User decided to abort git update");
+
          Debug.Assert(getMergeRequestKey().HasValue);
 
          GitClient client = await getGitClient(getMergeRequestKey().Value.ProjectKey, false);

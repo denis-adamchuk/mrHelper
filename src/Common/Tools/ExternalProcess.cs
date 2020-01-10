@@ -189,22 +189,28 @@ namespace mrHelper.Common.Tools
       /// </summary>
       public static void Cancel(Process process)
       {
-         if (NativeMethods.AttachConsole((uint)process.Id))
+         bool attachedToConsole = NativeMethods.AttachConsole((uint)process.Id);
+         Trace.TraceInformation(String.Format("AttachConsole() finished with {0}", attachedToConsole));
+         if (!attachedToConsole)
+         {
+            return;
+         }
+
+         try
          {
             NativeMethods.SetConsoleCtrlHandler(null, true);
-            try
-            {
-               if (!NativeMethods.GenerateConsoleCtrlEvent(NativeMethods.CTRL_C_EVENT, 0))
-               {
-                  return;
-               }
-            }
-            finally
-            {
-               NativeMethods.FreeConsole();
-               NativeMethods.SetConsoleCtrlHandler(null, false);
-            }
+
+            bool sendCtrlC = NativeMethods.GenerateConsoleCtrlEvent(NativeMethods.CTRL_C_EVENT, 0);
+            Trace.TraceInformation(String.Format("GenerateConsoleCtrlEvent() returned {0}", sendCtrlC));
+         }
+         finally
+         {
+            bool consoleFreed = NativeMethods.FreeConsole();
+            Trace.TraceInformation(String.Format("FreeConsole() finished with {0}", consoleFreed));
+
+            NativeMethods.SetConsoleCtrlHandler(null, false);
          }
       }
    }
 }
+

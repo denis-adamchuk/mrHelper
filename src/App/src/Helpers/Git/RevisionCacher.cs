@@ -125,14 +125,16 @@ namespace mrHelper.App.Helpers
                         {
                            await doCacheAsync(gitClient, diffArgs, revisionArgs, renamesArgs);
                         }
-                        catch (GitClientDisposedException ex)
+                        catch (GitClientDisposedException)
                         {
-                           ExceptionHandlers.Handle(ex, "GitClient disposed");
+                           Trace.TraceInformation(String.Format(
+                              "[RevisionCacher] Git Client for project {0} was disposed during caching",
+                              mrk.ProjectKey.ProjectName));
                            break;
                         }
 
                         Trace.TraceInformation(String.Format(
-                           "[RevisionCacher] Processing merge request with IId={0}."
+                           "[RevisionCacher] Processing merge request with IId={0}. "
                          + "Cached git results: {1} git diff, {2} git show, {3} git rename",
                            mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
                      }
@@ -230,16 +232,14 @@ namespace mrHelper.App.Helpers
 
       async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<IEnumerable<string>>> func)
       {
-         int maxGitInParallel = 5;
-
          int remaining = args.Count;
          while (remaining > 0)
          {
             IEnumerable<Task<IEnumerable<string>>> tasks = args
                .Skip(args.Count - remaining)
-               .Take(maxGitInParallel)
+               .Take(MaxGitInParallel)
                .Select(x => func(x));
-            remaining -= maxGitInParallel;
+            remaining -= MaxGitInParallel;
             try
             {
                await Task.WhenAll(tasks);
@@ -257,6 +257,7 @@ namespace mrHelper.App.Helpers
       private readonly IMergeRequestProvider _mergeRequestProvider;
 
       private static int MaxDiffsInVersion = 200;
+      private static int MaxGitInParallel  = 5;
    }
 }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
 
 namespace mrHelper.Common.Exceptions
@@ -21,13 +22,17 @@ namespace mrHelper.Common.Exceptions
          }
          else if (exception is GitOperationException ex4)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nDetails:\n{3}",
-                  ex4.GetType().ToString(), meaning, ex4.Message, ex4.Details);
+            Trace.TraceError("[{0}] {1}: {2}{3}",
+               ex4.GetType().ToString(), meaning, ex4.Message,
+               !String.IsNullOrEmpty(ex4.Details) ?
+                  String.Format(" Details:\n{0}", String.Join("\n", ex4.Details)) : String.Empty);
          }
          else if (exception is ExternalProcessException ex5)
          {
-            Trace.TraceError("[{0}] {1}: {2}\nDetails:\n{3}",
-                  ex5.GetType().ToString(), meaning, ex5.Message, String.Join("\n", ex5.Errors));
+            Trace.TraceError("[{0}] {1}: {2}{3}",
+               ex5.GetType().ToString(), meaning, ex5.Message,
+               (ex5.Errors?.Count() ?? 0) > 0 ?
+                  String.Format(" Details:\n{0}", String.Join("\n", ex5.Errors)) : String.Empty);
          }
          else if (exception is FeedbackReporterException ex6)
          {
