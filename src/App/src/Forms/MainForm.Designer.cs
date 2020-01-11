@@ -114,18 +114,18 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
-         this.groupBox3 = new System.Windows.Forms.GroupBox();
+         this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
          this.labelRightCommitTimestamp = new System.Windows.Forms.Label();
          this.labelLeftCommitTimestamp = new System.Windows.Forms.Label();
          this.labelRightCommitTimestampLabel = new System.Windows.Forms.Label();
          this.labelLeftCommitTimestampLabel = new System.Windows.Forms.Label();
          this.comboBoxRightCommit = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
          this.comboBoxLeftCommit = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
-         this.panel2 = new System.Windows.Forms.Panel();
+         this.panelStatusBar = new System.Windows.Forms.Panel();
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
-         this.panel3 = new System.Windows.Forms.Panel();
+         this.panelBottomMenu = new System.Windows.Forms.Panel();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
@@ -151,9 +151,9 @@ namespace mrHelper.App.Forms
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
-         this.groupBox3.SuspendLayout();
-         this.panel2.SuspendLayout();
-         this.panel3.SuspendLayout();
+         this.groupBoxSelectCommits.SuspendLayout();
+         this.panelStatusBar.SuspendLayout();
+         this.panelBottomMenu.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxKnownHosts
@@ -742,8 +742,8 @@ namespace mrHelper.App.Forms
          // splitContainer1.Panel2
          // 
          this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-         this.splitContainer1.Panel2.Controls.Add(this.panel2);
-         this.splitContainer1.Panel2.Controls.Add(this.panel3);
+         this.splitContainer1.Panel2.Controls.Add(this.panelStatusBar);
+         this.splitContainer1.Panel2.Controls.Add(this.panelBottomMenu);
          this.splitContainer1.Panel2MinSize = 710;
          this.splitContainer1.Size = new System.Drawing.Size(1270, 858);
          this.splitContainer1.SplitterDistance = 352;
@@ -891,7 +891,7 @@ namespace mrHelper.App.Forms
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxTimeTracking);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxActions);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxReview);
-         this.splitContainer2.Panel2.Controls.Add(this.groupBox3);
+         this.splitContainer2.Panel2.Controls.Add(this.groupBoxSelectCommits);
          this.splitContainer2.Panel2MinSize = 250;
          this.splitContainer2.Size = new System.Drawing.Size(910, 768);
          this.splitContainer2.SplitterDistance = 280;
@@ -1058,21 +1058,21 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.TabStop = false;
          this.groupBoxReview.Text = "Review";
          // 
-         // groupBox3
+         // groupBoxSelectCommits
          // 
-         this.groupBox3.Controls.Add(this.labelRightCommitTimestamp);
-         this.groupBox3.Controls.Add(this.labelLeftCommitTimestamp);
-         this.groupBox3.Controls.Add(this.labelRightCommitTimestampLabel);
-         this.groupBox3.Controls.Add(this.labelLeftCommitTimestampLabel);
-         this.groupBox3.Controls.Add(this.comboBoxRightCommit);
-         this.groupBox3.Controls.Add(this.comboBoxLeftCommit);
-         this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBox3.Location = new System.Drawing.Point(0, 0);
-         this.groupBox3.Name = "groupBox3";
-         this.groupBox3.Size = new System.Drawing.Size(910, 118);
-         this.groupBox3.TabIndex = 4;
-         this.groupBox3.TabStop = false;
-         this.groupBox3.Text = "Select commits";
+         this.groupBoxSelectCommits.Controls.Add(this.labelRightCommitTimestamp);
+         this.groupBoxSelectCommits.Controls.Add(this.labelLeftCommitTimestamp);
+         this.groupBoxSelectCommits.Controls.Add(this.labelRightCommitTimestampLabel);
+         this.groupBoxSelectCommits.Controls.Add(this.labelLeftCommitTimestampLabel);
+         this.groupBoxSelectCommits.Controls.Add(this.comboBoxRightCommit);
+         this.groupBoxSelectCommits.Controls.Add(this.comboBoxLeftCommit);
+         this.groupBoxSelectCommits.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxSelectCommits.Location = new System.Drawing.Point(0, 0);
+         this.groupBoxSelectCommits.Name = "groupBoxSelectCommits";
+         this.groupBoxSelectCommits.Size = new System.Drawing.Size(910, 118);
+         this.groupBoxSelectCommits.TabIndex = 4;
+         this.groupBoxSelectCommits.TabStop = false;
+         this.groupBoxSelectCommits.Text = "Select commits";
          // 
          // labelRightCommitTimestamp
          // 
@@ -1140,18 +1140,18 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          // 
-         // panel2
+         // panelStatusBar
          // 
-         this.panel2.BackColor = System.Drawing.Color.WhiteSmoke;
-         this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.panel2.Controls.Add(this.linkLabelAbortGit);
-         this.panel2.Controls.Add(this.labelGitStatus);
-         this.panel2.Controls.Add(this.labelWorkflowStatus);
-         this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.panel2.Location = new System.Drawing.Point(0, 768);
-         this.panel2.Name = "panel2";
-         this.panel2.Size = new System.Drawing.Size(910, 56);
-         this.panel2.TabIndex = 4;
+         this.panelStatusBar.BackColor = System.Drawing.Color.WhiteSmoke;
+         this.panelStatusBar.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panelStatusBar.Controls.Add(this.linkLabelAbortGit);
+         this.panelStatusBar.Controls.Add(this.labelGitStatus);
+         this.panelStatusBar.Controls.Add(this.labelWorkflowStatus);
+         this.panelStatusBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.panelStatusBar.Location = new System.Drawing.Point(0, 768);
+         this.panelStatusBar.Name = "panelStatusBar";
+         this.panelStatusBar.Size = new System.Drawing.Size(910, 56);
+         this.panelStatusBar.TabIndex = 4;
          // 
          // linkLabelAbortGit
          // 
@@ -1186,18 +1186,18 @@ namespace mrHelper.App.Forms
          this.labelWorkflowStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore magna aliqua";
          // 
-         // panel3
+         // panelBottomMenu
          // 
-         this.panel3.BackColor = System.Drawing.Color.WhiteSmoke;
-         this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.panel3.Controls.Add(this.linkLabelHelp);
-         this.panel3.Controls.Add(this.linkLabelSendFeedback);
-         this.panel3.Controls.Add(this.linkLabelNewVersion);
-         this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.panel3.Location = new System.Drawing.Point(0, 824);
-         this.panel3.Name = "panel3";
-         this.panel3.Size = new System.Drawing.Size(910, 34);
-         this.panel3.TabIndex = 6;
+         this.panelBottomMenu.BackColor = System.Drawing.Color.WhiteSmoke;
+         this.panelBottomMenu.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panelBottomMenu.Controls.Add(this.linkLabelHelp);
+         this.panelBottomMenu.Controls.Add(this.linkLabelSendFeedback);
+         this.panelBottomMenu.Controls.Add(this.linkLabelNewVersion);
+         this.panelBottomMenu.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.panelBottomMenu.Location = new System.Drawing.Point(0, 824);
+         this.panelBottomMenu.Name = "panelBottomMenu";
+         this.panelBottomMenu.Size = new System.Drawing.Size(910, 34);
+         this.panelBottomMenu.TabIndex = 6;
          // 
          // panel4
          // 
@@ -1255,12 +1255,12 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxTimeTracking.PerformLayout();
          this.groupBoxReview.ResumeLayout(false);
-         this.groupBox3.ResumeLayout(false);
-         this.groupBox3.PerformLayout();
-         this.panel2.ResumeLayout(false);
-         this.panel2.PerformLayout();
-         this.panel3.ResumeLayout(false);
-         this.panel3.PerformLayout();
+         this.groupBoxSelectCommits.ResumeLayout(false);
+         this.groupBoxSelectCommits.PerformLayout();
+         this.panelStatusBar.ResumeLayout(false);
+         this.panelStatusBar.PerformLayout();
+         this.panelBottomMenu.ResumeLayout(false);
+         this.panelBottomMenu.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -1303,14 +1303,14 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ColumnHeader columnHeaderJira;
       private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.CheckBox checkBoxLabels;
-      private System.Windows.Forms.Panel panel2;
+      private System.Windows.Forms.Panel panelStatusBar;
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
       private System.Windows.Forms.Label labelGitStatus;
       private System.Windows.Forms.Label labelWorkflowStatus;
       private SelectionPreservingComboBox comboBoxHost;
       private System.Windows.Forms.Button buttonReloadList;
       private System.Windows.Forms.LinkLabel linkLabelNewVersion;
-      private System.Windows.Forms.Panel panel3;
+      private System.Windows.Forms.Panel panelBottomMenu;
       private System.Windows.Forms.LinkLabel linkLabelHelp;
       private System.Windows.Forms.LinkLabel linkLabelSendFeedback;
       private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
@@ -1337,7 +1337,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonTimeTrackingStart;
       private System.Windows.Forms.Panel panel1;
       private System.Windows.Forms.GroupBox groupBoxActions;
-      private System.Windows.Forms.GroupBox groupBox3;
+      private System.Windows.Forms.GroupBox groupBoxSelectCommits;
       private System.Windows.Forms.Button buttonDiffTool;
       private SelectionPreservingComboBox comboBoxRightCommit;
       private SelectionPreservingComboBox comboBoxLeftCommit;

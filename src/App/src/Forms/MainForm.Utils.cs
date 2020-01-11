@@ -1210,7 +1210,15 @@ namespace mrHelper.App.Forms
          }
          splitContainer1.Panel2MinSize = panel2MinSize;
 
-         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50, 500);
+         splitContainer2.Panel2MinSize =
+              groupBoxReview.Height
+            + groupBoxActions.Height
+            + groupBoxTimeTracking.Height
+            + groupBoxSelectCommits.Height;
+
+         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50,
+                                     splitContainer2.Panel1MinSize + splitContainer2.Panel2MinSize
+                                   + tabControl.ItemSize.Height + panelStatusBar.Height + panelBottomMenu.Height + 50);
       }
 
       private void repositionCustomCommands()
