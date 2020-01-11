@@ -96,13 +96,13 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async internal Task ModifyNoteBodyAsync(MergeRequestKey mrk, string discussionId, int noteId, string body)
+      async internal Task<DiscussionNote> ModifyNoteBodyAsync(MergeRequestKey mrk, string discussionId, int noteId, string body)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
             _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            await client.RunAsync(async (gitlab) =>
+            return (DiscussionNote)await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                      new ModifyDiscussionNoteParameters

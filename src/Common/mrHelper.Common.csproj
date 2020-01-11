@@ -62,9 +62,6 @@
     <Compile Include="Tools\EMailSender.cs" />
     <Compile Include="Tools\ExternalProcess.cs" />
     <Compile Include="Tools\JsonFileReader.cs" />
-    <Compile Include="Tools\Native\NativeMethods.cs" />
-    <Compile Include="Tools\Native\ParentProcessUtilities.cs" />
-    <Compile Include="Tools\Native\Win32Tools.cs" />
     <Compile Include="Tools\Persistence\PersistentState.cs" />
     <Compile Include="Tools\Persistence\PersistentStateItf.cs" />
     <Compile Include="Tools\Persistence\PersistentStorage.cs" />
@@ -73,6 +70,11 @@
     <Compile Include="Tools\SparsedList\SparsedListIterator.cs" />
     <Compile Include="Tools\SparsedList\SparsedListUtils.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\CommonNative\mrHelper.CommonNative.csproj">
+      <Project>{31433881-1f90-4513-9970-8b27cd635328}</Project>
+      <Name>mrHelper.CommonNative</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

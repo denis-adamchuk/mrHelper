@@ -44,11 +44,11 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task ModifyNoteBodyAsync(int noteId, string body)
+      async public Task<DiscussionNote> ModifyNoteBodyAsync(int noteId, string body)
       {
          try
          {
-            await _operator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
+            return await _operator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
          }
          catch (OperatorException)
          {

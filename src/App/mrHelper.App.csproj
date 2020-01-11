@@ -265,6 +265,10 @@
       <Project>{2c6bdbb7-c1e2-46b6-a850-47892837f0c3}</Project>
       <Name>mrHelper.CommonControls</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CommonNative\mrHelper.CommonNative.csproj">
+      <Project>{31433881-1f90-4513-9970-8b27cd635328}</Project>
+      <Name>mrHelper.CommonNative</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>

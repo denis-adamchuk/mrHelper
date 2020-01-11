@@ -1,5 +1,7 @@
+using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using mrHelper.CommonNative;
 
 namespace mrHelper.CommonControls.Controls
 {
@@ -19,37 +21,83 @@ namespace mrHelper.CommonControls.Controls
       {
          base.OnFontChanged(e);
 
-         _cachedFontHeight = 0;
+         _cachedBorderHeight = 0;
+         _cachedSingleLineWithoutBorderHeight = 0;
       }
 
-      public int CachedHandle
+      protected override void OnBorderStyleChanged(EventArgs e)
+      {
+         base.OnBorderStyleChanged(e);
+
+         _cachedHandle = IntPtr.Zero;
+         _cachedBorderHeight = 0;
+      }
+
+      public new int PreferredHeight
       {
          get
          {
-            if (_cachedHandle == 0)
+            int numberOfLines = NativeMethods.SendMessage(CachedHandle, NativeMethods.EM_GETLINECOUNT,
+               IntPtr.Zero, IntPtr.Zero).ToInt32();
+            return calcPreferredHeight(numberOfLines);
+         }
+      }
+
+      // TODO This is risky, because Handle may change when some TextBox property changes (e.g. BorderStyle).
+      // It works in DiscussionBox but in general case should be revisited.
+      private IntPtr CachedHandle
+      {
+         get
+         {
+            if (_cachedHandle == IntPtr.Zero)
             {
-               _cachedHandle = Handle.ToInt32();
+               _cachedHandle = Handle;
             }
-            Debug.Assert(_cachedHandle == Handle.ToInt32());
+            Debug.Assert(_cachedHandle == Handle);
             return _cachedHandle;
          }
       }
 
-      public new int FontHeight
+      private int calcPreferredHeight(int numberOfLines)
+      {
+         return SingleLineWithoutBorderHeight * numberOfLines + BorderHeight;
+      }
+
+      private int BorderHeight
       {
          get
          {
-            if (_cachedFontHeight == 0)
+            if (_cachedBorderHeight == 0)
             {
-               _cachedFontHeight = Font.Height;
+               int singleLineWithBorderHeight = base.PreferredHeight;
+
+               int borderHeight = singleLineWithBorderHeight - SingleLineWithoutBorderHeight;
+               Debug.Assert(borderHeight >= 0);
+
+               _cachedBorderHeight = borderHeight;
             }
-            Debug.Assert(_cachedFontHeight == Font.Height);
-            return _cachedFontHeight;
+            return _cachedBorderHeight;
          }
       }
 
-      private int _cachedHandle;
-      private int _cachedFontHeight;
+      private int SingleLineWithoutBorderHeight
+      {
+         get
+         {
+            if (_cachedSingleLineWithoutBorderHeight == 0)
+            {
+               // textBox.FontHeight is too small, need to measure real letters
+               _cachedSingleLineWithoutBorderHeight = TextRenderer.MeasureText(Alphabet, Font).Height;
+            }
+            return _cachedSingleLineWithoutBorderHeight;
+         }
+      }
+
+      private IntPtr _cachedHandle;
+      private int _cachedBorderHeight;
+      private int _cachedSingleLineWithoutBorderHeight;
+      private static readonly string Alphabet =
+         "ABCDEFGHIJKLMONPQRSTUVWXYZabcdefghijklmonpqrstuvwxyz1234567890!@#$%^&*()";
    }
 }
 

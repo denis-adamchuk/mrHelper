@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace mrHelper.Common.Tools
+namespace mrHelper.CommonNative
 {
    public static class Win32Tools
    {

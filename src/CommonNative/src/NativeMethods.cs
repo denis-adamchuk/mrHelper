@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace mrHelper.Common.Tools
+namespace mrHelper.CommonNative
 {
    public static class NativeMethods
    {
@@ -65,6 +65,8 @@ namespace mrHelper.Common.Tools
       public const int SW_SHOWNOACTIVATE = 4;
       public const int SW_RESTORE = 9;
       public const int SW_SHOWDEFAULT = 10;
+
+      public const int EM_GETLINECOUNT = 0xba;
 
       /// <summary>
       /// Handle used to send the message to all windows
@@ -211,18 +213,18 @@ namespace mrHelper.Common.Tools
       public static extern bool ChangeWindowMessageFilterEx(IntPtr hWnd, uint msg,
         ChangeWindowMessageFilterExAction action, ref CHANGEFILTERSTRUCT changeInfo);
 
-      internal const int CTRL_C_EVENT = 0;
+      public const int CTRL_C_EVENT = 0;
       [DllImport("kernel32.dll")]
-      internal static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProcessGroupId);
+      public static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProcessGroupId);
       [DllImport("kernel32.dll", SetLastError = true)]
-      internal static extern bool AttachConsole(uint dwProcessId);
+      public static extern bool AttachConsole(uint dwProcessId);
       [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-      internal static extern bool FreeConsole();
+      public static extern bool FreeConsole();
       [DllImport("kernel32.dll")]
-      internal static extern bool SetConsoleCtrlHandler(ConsoleCtrlDelegate HandlerRoutine, bool Add);
+      public static extern bool SetConsoleCtrlHandler(ConsoleCtrlDelegate HandlerRoutine, bool Add);
 
       // Delegate type to be used as the Handler Routine for SCCH
-      internal delegate Boolean ConsoleCtrlDelegate(uint CtrlType);
+      public delegate Boolean ConsoleCtrlDelegate(uint CtrlType);
    }
 }
 

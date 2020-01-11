@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.ComponentModel;
 using mrHelper.Common.Exceptions;
+using mrHelper.CommonNative;
 
 namespace mrHelper.Common.Tools
 {

@@ -10,6 +10,7 @@ using mrHelper.Client.Services;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
+using mrHelper.CommonNative;
 
 namespace mrHelper.App
 {

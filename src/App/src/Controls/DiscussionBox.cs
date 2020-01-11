@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
@@ -21,10 +20,6 @@ namespace mrHelper.App.Controls
 {
    internal class DiscussionBox : Panel
    {
-      private const int EM_GETLINECOUNT = 0xba;
-      [DllImport("user32", EntryPoint = "SendMessageA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-      private static extern int SendMessage(int hwnd, int wMsg, int wParam, int lParam);
-
       internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
          int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
          Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged,
@@ -156,7 +151,7 @@ namespace mrHelper.App.Controls
 
       private void updateTextboxHeight(Control textBox)
       {
-         int newHeight = getTextBoxPreferredHeight(textBox as TextBoxNoWheel);
+         int newHeight = (textBox as TextBoxNoWheel).PreferredHeight;
          if (newHeight != textBox.Height)
          {
             textBox.Height = newHeight;
@@ -437,7 +432,7 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private string getNoteText(ref DiscussionNote note, ref User firstNoteAuthor)
+      private string getNoteText(DiscussionNote note, User firstNoteAuthor)
       {
          bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
          Debug.Assert(!appendNoteAuthor || !canBeModified(note));
@@ -480,10 +475,11 @@ namespace mrHelper.App.Controls
             TextBox textBox = new TextBoxNoWheel()
             {
                ReadOnly = true,
-               Text = getNoteText(ref note, ref firstNoteAuthor),
+               Text = getNoteText(note, firstNoteAuthor),
                Multiline = true,
                BackColor = getNoteColor(note),
-               Tag = note
+               Tag = note,
+               AutoSize = false,
             };
             textBox.GotFocus += Control_GotFocus;
             textBox.LostFocus += TextBox_LostFocus;
@@ -623,12 +619,6 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-      private static int getTextBoxPreferredHeight(TextBoxNoWheel textBox)
-      {
-         var numberOfLines = SendMessage(textBox.CachedHandle, EM_GETLINECOUNT, 0, 0);
-         return textBox.FontHeight * (numberOfLines + 1);
-      }
-
       private string getNoteTooltipText(DiscussionNote note)
       {
          string result = string.Empty;
@@ -669,13 +659,14 @@ namespace mrHelper.App.Controls
       {
          foreach (Control textbox in _textboxesNotes)
          {
-            textbox.Width = width * NotesWidth / 100;
             if (textbox is TextBoxNoWheel)
             {
-               textbox.Height = getTextBoxPreferredHeight(textbox as TextBoxNoWheel);
+               textbox.Width = width * NotesWidth / 100;
+               textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
             }
             else if (textbox is HtmlPanel textboxHtml)
             {
+               textbox.Width = textboxHtml.AutoScrollMinSize.Width + 2;
                textbox.Height = textboxHtml.AutoScrollMinSize.Height + 2;
             }
          }
@@ -687,7 +678,7 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
-            _textboxFilename.Height = getTextBoxPreferredHeight(_textboxFilename as TextBoxNoWheel);
+            _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
          }
 
          int remainingPercents = 100
@@ -791,7 +782,9 @@ namespace mrHelper.App.Controls
          stopEdit(textBox);
 
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
-         textBox.Text = note.Body.Replace("\n", "\r\n");
+
+         Debug.Assert(Discussion.Notes.Count() > 0);
+         textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
       }
 
       async private Task onSubmitNewBodyAsync(TextBox textBox)
@@ -816,7 +809,7 @@ namespace mrHelper.App.Controls
 
          try
          {
-            await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
+            note = await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
          }
          catch (DiscussionEditorException)
          {
@@ -828,6 +821,7 @@ namespace mrHelper.App.Controls
 
          if (!textBox.IsDisposed)
          {
+            textBox.Tag = note;
             _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
          }
       }

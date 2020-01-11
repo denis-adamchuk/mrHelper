@@ -1,0 +1,4 @@
+D:\mrHelper\bin\Debug\mrHelper.CommonNative.dll
+D:\mrHelper\bin\Debug\mrHelper.CommonNative.pdb
+D:\mrHelper\src\CommonNative\obj\Debug\mrHelper.CommonNative.dll
+D:\mrHelper\src\CommonNative\obj\Debug\mrHelper.CommonNative.pdb

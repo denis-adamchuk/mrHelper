@@ -1,8 +1,8 @@
-﻿using mrHelper.Common.Tools;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using mrHelper.CommonNative;
 
 namespace mrHelper.App
 {

@@ -3,9 +3,9 @@ using System.Drawing;
 using System.Windows.Forms;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
+using mrHelper.CommonNative;
 
 namespace mrHelper.App.Forms
 {
