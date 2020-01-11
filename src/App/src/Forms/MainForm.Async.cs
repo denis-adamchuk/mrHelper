@@ -84,7 +84,7 @@ namespace mrHelper.App.Forms
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(mrk);
-         if (discussions == null)
+         if (discussions == null || _exiting)
          {
             return;
          }
@@ -229,6 +229,11 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle(ex, message);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             labelWorkflowStatus.Text = message;
+            return;
+         }
+
+         if (_exiting)
+         {
             return;
          }
 

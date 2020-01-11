@@ -58,8 +58,12 @@ namespace mrHelper.App.Forms
          }
          else
          {
+            _exiting = true;
+
             if (_workflow != null)
             {
+               Hide();
+
                Trace.TraceInformation(String.Format("[MainForm] User decided to close the app, finalizing work"));
 
                try
@@ -73,7 +77,6 @@ namespace mrHelper.App.Forms
 
                Interprocess.SnapshotSerializer.CleanUpSnapshots();
 
-               Hide();
                e.Cancel = true;
                await _workflow.CancelAsync();
                _workflow = null;
