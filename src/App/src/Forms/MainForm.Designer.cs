@@ -605,7 +605,7 @@ namespace mrHelper.App.Forms
          // labelVisualTheme
          // 
          this.labelVisualTheme.AutoSize = true;
-         this.labelVisualTheme.Location = new System.Drawing.Point(7, 71);
+         this.labelVisualTheme.Location = new System.Drawing.Point(7, 44);
          this.labelVisualTheme.Name = "labelVisualTheme";
          this.labelVisualTheme.Size = new System.Drawing.Size(40, 13);
          this.labelVisualTheme.TabIndex = 9;
@@ -624,7 +624,7 @@ namespace mrHelper.App.Forms
          // labelColorScheme
          // 
          this.labelColorScheme.AutoSize = true;
-         this.labelColorScheme.Location = new System.Drawing.Point(7, 44);
+         this.labelColorScheme.Location = new System.Drawing.Point(7, 71);
          this.labelColorScheme.Name = "labelColorScheme";
          this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
          this.labelColorScheme.TabIndex = 8;
