@@ -113,7 +113,7 @@ namespace mrHelper.App.Helpers
                      if (newVersionsDetailed.Count > 0)
                      {
                         Trace.TraceInformation(String.Format(
-                           "[RevisionCacher] Processing merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
+                           "[RevisionCacher] Start processing of merge request: Host={0}, Project={1}, IId={2}. Versions: {3}",
                            mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
 
                         gatherArguments(newVersionsDetailed,
@@ -134,7 +134,7 @@ namespace mrHelper.App.Helpers
                         }
 
                         Trace.TraceInformation(String.Format(
-                           "[RevisionCacher] Processing merge request with IId={0}. "
+                           "[RevisionCacher] Finished processing of merge request with IId={0}. "
                          + "Cached git results: {1} git diff, {2} git show, {3} git rename",
                            mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
                      }
@@ -143,8 +143,18 @@ namespace mrHelper.App.Helpers
                   {
                      // already handled
                   }
+
+                  if (!_latestChanges.ContainsKey(gitClient))
+                  {
+                     // GitClient was removed from collection while we were caching current MR
+                     break;
+                  }
                }
-               _latestChanges[gitClient] = latestChange;
+
+               if (_latestChanges.ContainsKey(gitClient))
+               {
+                  _latestChanges[gitClient] = latestChange;
+               }
             }), null);
       }
 
@@ -248,6 +258,8 @@ namespace mrHelper.App.Helpers
             {
                // already handled
             }
+
+            await Task.Delay(InterBatchDelay);
          }
       }
 
@@ -258,6 +270,8 @@ namespace mrHelper.App.Helpers
 
       private static int MaxDiffsInVersion = 200;
       private static int MaxGitInParallel  = 5;
+
+      private static int InterBatchDelay   = 1000; // ms
    }
 }
 
