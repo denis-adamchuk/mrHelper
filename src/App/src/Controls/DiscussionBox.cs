@@ -28,6 +28,7 @@ namespace mrHelper.App.Controls
          Parent = parent;
 
          Discussion = discussion;
+
          _editor = editor;
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
@@ -501,9 +502,6 @@ namespace mrHelper.App.Controls
             htmlPanel.GotFocus += Control_GotFocus;
             htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel);
 
-            setNoteHtmlText(htmlPanel);
-            htmlPanel.Width = htmlPanel.DisplayRectangle.Width;
-
             return htmlPanel;
          }
       }
@@ -511,7 +509,16 @@ namespace mrHelper.App.Controls
       private void setNoteHtmlText(HtmlPanel htmlPanel)
       {
          DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
-         htmlPanel.Text = getHtmlDiscussionNoteText(ref note, Font.Height);
+
+         // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
+         htmlPanel.Width = 0;
+         htmlPanel.Height = 0;
+
+         htmlPanel.Text = getHtmlDiscussionNoteText(ref note, htmlPanel.Font.Height);
+
+         // Use computed size as the control size. Height must be set BEFORE Width.
+         htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2;
+         htmlPanel.Width = htmlPanel.AutoScrollMinSize.Width + 2;
       }
 
       private bool isServiceDiscussionNote(DiscussionNote note)
@@ -658,32 +665,29 @@ namespace mrHelper.App.Controls
 
       private void resizeBoxContent(int width)
       {
-         foreach (Control textbox in _textboxesNotes)
+         if (_textboxesNotes != null)
          {
-            if (textbox is TextBoxNoWheel)
+            foreach (Control textbox in _textboxesNotes)
             {
-               textbox.Width = width * NotesWidth / 100;
-
-               // EM_GETLINECOUNT works incorrectly if called once
-               textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
-               textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
-            }
-            else if (textbox is HtmlPanel textboxHtml)
-            {
-               textbox.Height = textboxHtml.AutoScrollMinSize.Height + 2;
+               if (textbox is TextBoxNoWheel)
+               {
+                  textbox.Width = width * NotesWidth / 100;
+                  textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
+               }
             }
          }
 
          int realLabelAuthorPercents = Convert.ToInt32(
             LabelAuthorWidth * ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier));
 
-         _labelAuthor.Width = width * realLabelAuthorPercents / 100;
+         if (_labelAuthor != null)
+         {
+            _labelAuthor.Width = width * realLabelAuthorPercents / 100;
+         }
+
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
-
-               // EM_GETLINECOUNT works incorrectly if called once
-            _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
             _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
          }
 
@@ -709,18 +713,21 @@ namespace mrHelper.App.Controls
 
          // the LabelAuthor is placed at the left side
          Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
-         _labelAuthor.Location = labelPos;
+         if (_labelAuthor != null)
+         {
+            _labelAuthor.Location = labelPos;
+         }
 
          // the Context is an optional control to the right of the Label
-         Point ctxPos = new Point(_labelAuthor.Location.X + _labelAuthor.Width + interControlHorzMargin,
-            interControlVertMargin);
+         int ctxX = (_labelAuthor != null ? _labelAuthor.Location.X + _labelAuthor.Width : 0) + interControlHorzMargin;
+         Point ctxPos = new Point(ctxX, interControlVertMargin);
          if (_panelContext != null)
          {
             _panelContext.Location = ctxPos;
          }
 
          // prepare initial position for controls that places to the right of the Context
-         int nextNoteX = ctxPos.X + (_panelContext == null ? 0 : _panelContext.Width + interControlHorzMargin);
+         int nextNoteX = ctxPos.X + (_panelContext != null ? _panelContext.Width + interControlHorzMargin : 0);
          Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
 
          // the LabelFilename is placed to the right of the Context and vertically aligned with Notes
@@ -731,18 +738,21 @@ namespace mrHelper.App.Controls
          }
 
          // a list of Notes is to the right of the Context
-         foreach (Control note in _textboxesNotes)
+         if (_textboxesNotes != null)
          {
-            note.Location = nextNotePos;
-            nextNotePos.Offset(0, note.Height + interControlVertMargin);
+            foreach (Control note in _textboxesNotes)
+            {
+               note.Location = nextNotePos;
+               nextNotePos.Offset(0, note.Height + interControlVertMargin);
+            }
          }
 
-         int lblAuthorHeight = _labelAuthor.Location.Y + _labelAuthor.PreferredSize.Height;
-         int lblFNameHeight = (_textboxFilename == null ? 0 : _textboxFilename.Location.Y + _textboxFilename.Height);
-         int ctxHeight = (_panelContext == null ? 0 : _panelContext.Location.Y + _panelContext.Height);
-         int notesHeight = _textboxesNotes.Last().Location.Y + _textboxesNotes.Last().Height;
+         int lblAuthorHeight = _labelAuthor != null ? _labelAuthor.Location.Y + _labelAuthor.PreferredSize.Height : 0;
+         int lblFNameHeight = _textboxFilename != null ? _textboxFilename.Location.Y + _textboxFilename.Height : 0;
+         int ctxHeight = _panelContext != null ? _panelContext.Location.Y + _panelContext.Height : 0;
+         int notesHeight = _textboxesNotes != null ? _textboxesNotes.Last().Location.Y + _textboxesNotes.Last().Height : 0;
 
-         int boxContentWidth = nextNoteX + _textboxesNotes.First().Width;
+         int boxContentWidth = nextNoteX + (_textboxesNotes != null ? _textboxesNotes.First().Width : 0);
          int boxContentHeight = new[] { lblAuthorHeight, lblFNameHeight, ctxHeight, notesHeight }.Max();
          Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
       }
