@@ -502,6 +502,7 @@ namespace mrHelper.App.Controls
             htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel);
 
             setNoteHtmlText(htmlPanel);
+            htmlPanel.Width = htmlPanel.DisplayRectangle.Width;
 
             return htmlPanel;
          }
@@ -510,7 +511,7 @@ namespace mrHelper.App.Controls
       private void setNoteHtmlText(HtmlPanel htmlPanel)
       {
          DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
-         htmlPanel.Text = getHtmlDiscussionNoteText(ref note, htmlPanel.Font.Height);
+         htmlPanel.Text = getHtmlDiscussionNoteText(ref note, Font.Height);
       }
 
       private bool isServiceDiscussionNote(DiscussionNote note)
@@ -662,11 +663,13 @@ namespace mrHelper.App.Controls
             if (textbox is TextBoxNoWheel)
             {
                textbox.Width = width * NotesWidth / 100;
+
+               // EM_GETLINECOUNT works incorrectly if called once
+               textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
                textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
             }
             else if (textbox is HtmlPanel textboxHtml)
             {
-               textbox.Width = textboxHtml.AutoScrollMinSize.Width + 2;
                textbox.Height = textboxHtml.AutoScrollMinSize.Height + 2;
             }
          }
@@ -678,6 +681,9 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
+
+               // EM_GETLINECOUNT works incorrectly if called once
+            _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
             _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
          }
 
