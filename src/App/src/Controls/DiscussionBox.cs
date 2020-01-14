@@ -642,6 +642,12 @@ namespace mrHelper.App.Controls
       {
          Color defaultColor = Color.White;
 
+         if (isServiceDiscussionNote(note))
+         {
+            return _colorScheme.GetColorOrDefault("Discussions_ServiceMessages",
+               _colorScheme.GetColorOrDefault("Discussions_Comments", defaultColor));
+         }
+
          if (note.Resolvable)
          {
             if (note.Author.Id == _mergeRequestAuthor.Id)
