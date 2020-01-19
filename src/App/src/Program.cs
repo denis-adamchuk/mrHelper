@@ -123,6 +123,17 @@ namespace mrHelper.App
                return;
             }
 
+            // Windows 10 Creators Update version is 10.0.15063.0
+            Version minimumVersion = new Version(10, 0, 15063, 0);
+            if (!checkOSVersion(minimumVersion))
+            {
+               MessageBox.Show(
+                  "Your Windows version is earlier than Windows 10 Creators Update version. "
+                + "Application will start but some features may not work as expected. "
+                + "It is recommended to upgrade the operating system.",
+                  "Old Windows version detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
             Application.Run(new MainForm());
          }
          catch (Exception ex) // whatever unhandled exception
@@ -330,6 +341,11 @@ namespace mrHelper.App
                .ToList()
                .ForEach(x => File.Delete(Path.Combine(path, x)));
          }
+      }
+
+      private static bool checkOSVersion(Version minimumVersion)
+      {
+         return Environment.OSVersion.Version.CompareTo(minimumVersion) >= 0;
       }
    }
 }
