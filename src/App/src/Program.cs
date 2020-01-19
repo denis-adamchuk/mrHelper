@@ -125,7 +125,8 @@ namespace mrHelper.App
 
             // Windows 10 Creators Update version is 10.0.15063.0
             Version minimumVersion = new Version(10, 0, 15063, 0);
-            if (!checkOSVersion(minimumVersion))
+            Version currentVersion = Environment.OSVersion.Version;
+            if (currentVersion.CompareTo(minimumVersion) < 0)
             {
                MessageBox.Show(
                   "Your Windows version is earlier than Windows 10 Creators Update version. "
@@ -133,6 +134,7 @@ namespace mrHelper.App
                 + "It is recommended to upgrade the operating system.",
                   "Old Windows version detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+            Trace.TraceInformation(String.Format("OS Version is {0}", currentVersion.ToString()));
 
             Application.Run(new MainForm());
          }
@@ -341,11 +343,6 @@ namespace mrHelper.App
                .ToList()
                .ForEach(x => File.Delete(Path.Combine(path, x)));
          }
-      }
-
-      private static bool checkOSVersion(Version minimumVersion)
-      {
-         return Environment.OSVersion.Version.CompareTo(minimumVersion) >= 0;
       }
    }
 }
