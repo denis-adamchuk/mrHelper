@@ -903,14 +903,12 @@ namespace mrHelper.App.Forms
          // 
          // groupBox2
          // 
-         this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBox2.Controls.Add(this.linkLabelConnectedTo);
          this.groupBox2.Controls.Add(this.richTextBoxMergeRequestDescription);
+         this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox2.Location = new System.Drawing.Point(0, 0);
          this.groupBox2.Name = "groupBox2";
-         this.groupBox2.Size = new System.Drawing.Size(910, 277);
+         this.groupBox2.Size = new System.Drawing.Size(910, 280);
          this.groupBox2.TabIndex = 1;
          this.groupBox2.TabStop = false;
          this.groupBox2.Text = "Merge Request";
@@ -919,9 +917,10 @@ namespace mrHelper.App.Forms
          // 
          this.linkLabelConnectedTo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.linkLabelConnectedTo.AutoSize = true;
-         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 260);
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 257);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
-         this.linkLabelConnectedTo.Size = new System.Drawing.Size(259, 13);
+         this.linkLabelConnectedTo.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
+         this.linkLabelConnectedTo.Size = new System.Drawing.Size(259, 15);
          this.linkLabelConnectedTo.TabIndex = 4;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
@@ -1127,9 +1126,6 @@ namespace mrHelper.App.Forms
          // 
          // comboBoxLeftCommit
          // 
-         this.comboBoxLeftCommit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
          this.comboBoxLeftCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
          this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxLeftCommit.FormattingEnabled = true;
