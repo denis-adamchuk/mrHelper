@@ -19,7 +19,7 @@ namespace mrHelper.App.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -88,7 +88,6 @@ namespace mrHelper.App.Properties {
         ///
         ///body div { 
         ///   font-family: Microsoft Sans Serif, Sans Serif;
-        ///   font-size: 8.25pt;
         ///   padding: 1px;
         ///   border: 1px solid white;
         ///}
@@ -110,7 +109,7 @@ namespace mrHelper.App.Properties {
         ///
         ///table tbody td {
         ///   background-color: #FBFBF5;
-        ///    [rest of string was truncated]&quot;;.
+        ///   border: solid 1px #DDEE [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string DiscussionNoteCSS {
             get {
@@ -136,7 +135,6 @@ namespace mrHelper.App.Properties {
         ///
         ///body div { 
         ///   font-family: Microsoft Sans Serif, Sans Serif;
-        ///   font-size: 8.25pt;
         ///   padding: 1px;
         ///   border: 1px solid white;
         ///}
@@ -158,7 +156,7 @@ namespace mrHelper.App.Properties {
         ///
         ///table tbody td {
         ///   background-color: #FBFBF5;
-        ///    [rest of string was truncated]&quot;;.
+        ///   border: solid 1px #DDEE [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string MergeRequestDescriptionCSS {
             get {
@@ -167,8 +165,7 @@ namespace mrHelper.App.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to @import url(&apos;ny2020-theme.css&apos;);
-        ///body {
+        ///   Looks up a localized string similar to body {
         ///  background-image: url(&apos;balls.png&apos;);
         ///  background-repeat: repeat-x;
         ///  background-attachment: fixed;
