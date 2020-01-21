@@ -20,4 +20,4 @@ It is a desktop tool that manages **git** and **GitLab** to support merge reques
 This application uses [GitLabSharp](https://github.com/denis-adamchuk/GitLabSharp) library to work with GitLab API.
 
 ## Requirements
-Visual Studio 2017 with .NET Framework 4.7.2
+Visual Studio 2019 with .NET Framework 4.7.2
