@@ -259,9 +259,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="mrHelper.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\submodules\GitLabSharp\GitLabSharp.csproj">
       <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
       <Name>GitLabSharp</Name>
