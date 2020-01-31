@@ -528,36 +528,25 @@ namespace mrHelper.App.Forms
 
       private void updateTotalTime(MergeRequestKey? mrk)
       {
-         Action updateTotalTimeLabelPosition = () =>
-         {
-            labelTimeTrackingTrackedTime.Location =
-               new Point(labelTimeTrackingTrackedLabel.Location.X + labelTimeTrackingTrackedLabel.Width,
-                         labelTimeTrackingTrackedTime.Location.Y);
-         };
-
          if (isTrackingTime())
          {
-            labelTimeTrackingTrackedLabel.Text = "Tracked Time:";
+            labelTimeTrackingTrackedLabel.Text =
+               String.Format("Tracked Time: {0}", _timeTracker.Elapsed.ToString(@"hh\:mm\:ss"));
             buttonEditTime.Enabled = false;
-            updateTotalTimeLabelPosition();
             return;
          }
 
          if (!mrk.HasValue)
          {
-            labelTimeTrackingTrackedTime.Text = String.Empty;
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             buttonEditTime.Enabled = false;
          }
          else
          {
             TimeSpan? span = getTotalTime(mrk.Value);
-            labelTimeTrackingTrackedTime.Text = convertTotalTimeToText(span);
-            labelTimeTrackingTrackedLabel.Text = "Total Time:";
+            labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}", convertTotalTimeToText(span));
             buttonEditTime.Enabled = span.HasValue;
          }
-
-         updateTotalTimeLabelPosition();
 
          // Update total time column in the table
          listViewMergeRequests.Invalidate();
@@ -1183,19 +1172,14 @@ namespace mrHelper.App.Forms
 
       private void updateMinimumSizes()
       {
-         Func<Control, int, Size> calcMinSizeOfHorzBox = (box, minGap) =>
-            new Size
-            {
-               Width = box.Controls.Cast<Control>().Sum(x => x.Width) + box.Controls.Count * minGap,
-               Height = box.Height
-            };
+         Func<IEnumerable<Control>, int, int> calcMinWidthOfControlGroup = (controls, minGap) =>
+            controls.Cast<Control>().Sum(x => x.Width) + controls.Count() * minGap;
 
-         int groupBoxTimeTrackingMinWidth =
-            buttonTimeTrackingStart.Width + buttonTimeTrackingCancel.Width + buttonEditTime.Width + 100 +
-            labelTimeTrackingTrackedLabel.Width + labelTimeTrackingTrackedTime.Width;
+         int groupBoxTimeTrackingMinWidth = calcMinWidthOfControlGroup(
+            new Control[] { buttonTimeTrackingStart, buttonTimeTrackingCancel, buttonEditTime }, 35);
 
-         int groupBoxActionsMinWidth = calcMinSizeOfHorzBox(groupBoxActions, 10).Width;
-         int groupBoxReviewMinWidth = calcMinSizeOfHorzBox(groupBoxReview, 10).Width;
+         int groupBoxActionsMinWidth = calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), 10);
+         int groupBoxReviewMinWidth = calcMinWidthOfControlGroup(groupBoxReview.Controls.Cast<Control>(), 10);
 
          int picturesMinWidth = (pictureBox1.BackgroundImage != null ? pictureBox1.Width : 0)
                               + (pictureBox2.BackgroundImage != null ? pictureBox2.Width : 0);
@@ -1216,9 +1200,9 @@ namespace mrHelper.App.Forms
             + groupBoxTimeTracking.Height
             + groupBoxSelectCommits.Height;
 
-         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 50,
+         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 100,
                                      splitContainer2.Panel1MinSize + splitContainer2.Panel2MinSize
-                                   + tabControl.ItemSize.Height + panelStatusBar.Height + panelBottomMenu.Height + 50);
+                                   + tabControl.ItemSize.Height + panelStatusBar.Height + panelBottomMenu.Height + 100);
       }
 
       private void repositionCustomCommands()

@@ -133,14 +133,10 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
-         if (!TimeSpan.TryParse(labelTimeTrackingTrackedTime.Text, out TimeSpan oldSpan))
-         {
-            oldSpan = TimeSpan.Zero; // e.g. "Not Started"
-         }
-
          // Store data before opening a modal dialog
          Debug.Assert(getMergeRequestKey().HasValue);
          MergeRequestKey mrk = getMergeRequestKey().Value;
+         TimeSpan oldSpan = getTotalTime(mrk) ?? TimeSpan.Zero;
 
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
@@ -380,14 +376,14 @@ namespace mrHelper.App.Forms
       {
          checkComboboxCommitsOrder(true /* I'm left one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
-         setCommitComboboxLabels(sender as ComboBox, labelLeftCommitTimestamp);
+         setCommitComboboxLabels(sender as ComboBox, labelLeftCommitTimestampLabel);
       }
 
       private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
          checkComboboxCommitsOrder(false /* because I'm the right one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
-         setCommitComboboxLabels(sender as ComboBox, labelRightCommitTimestamp);
+         setCommitComboboxLabels(sender as ComboBox, labelRightCommitTimestampLabel);
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -724,22 +720,24 @@ namespace mrHelper.App.Forms
 
       private static void setCommitComboboxLabels(ComboBox comboBox, Label labelTimestamp)
       {
-         labelTimestamp.Text = "N/A";
+         labelTimestamp.Text = "Created at: ";
 
          if (comboBox.SelectedItem == null)
          {
+            labelTimestamp.Text += "N/A";
             return;
          }
 
          CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
          if (item.IsBase)
          {
+            labelTimestamp.Text += "N/A";
             return;
          }
 
          if (item.TimeStamp != null)
          {
-            labelTimestamp.Text = String.Format("{0}", item.TimeStamp.Value.ToLocalTime().ToString());
+            labelTimestamp.Text += String.Format("{0}", item.TimeStamp.Value.ToLocalTime().ToString());
          }
       }
 
@@ -776,9 +774,9 @@ namespace mrHelper.App.Forms
 
       private void onTimer(object sender, EventArgs e)
       {
-         if (_timeTracker != null)
+         if (isTrackingTime())
          {
-            labelTimeTrackingTrackedTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
+            updateTotalTime(null);
          }
       }
 
@@ -809,7 +807,6 @@ namespace mrHelper.App.Forms
 
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(null);
-         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
 
          updateTrayIcon();
       }
@@ -1024,11 +1021,6 @@ namespace mrHelper.App.Forms
          repositionCustomCommands(); // update position of custom actions
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
-      }
-
-      private void groupBoxTimeTracking_SizeChanged(object sender, EventArgs e)
-      {
-         labelTimeTrackingMergeRequestName.Width = groupBoxTimeTracking.Width;
       }
    }
 }

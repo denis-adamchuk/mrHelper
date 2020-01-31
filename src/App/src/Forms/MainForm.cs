@@ -19,7 +19,6 @@ namespace mrHelper.App.Forms
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
-      private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
 
       private const string DefaultColorSchemeName = "Default";
