@@ -12,6 +12,7 @@ using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using System.Diagnostics;
 
 namespace mrHelper.App.Forms
 {
@@ -38,6 +39,9 @@ namespace mrHelper.App.Forms
             .Build();
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
+         this.linkLabelConnectedTo.Text = String.Empty;
+
+         Trace.TraceInformation("Current DPI is {0}", this.DeviceDpi);
       }
 
       public string GetCurrentHostName()
@@ -155,6 +159,6 @@ namespace mrHelper.App.Forms
       }
 
       private User? _currentUser;
-    }
+   }
 }
 

@@ -273,6 +273,7 @@ namespace mrHelper.App.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxLabels.Enabled = false;
          this.textBoxLabels.Location = new System.Drawing.Point(60, 17);
+         this.textBoxLabels.MinimumSize = new System.Drawing.Size(100, 4);
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(168, 20);
          this.textBoxLabels.TabIndex = 1;
@@ -286,6 +287,7 @@ namespace mrHelper.App.Forms
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonEditTime.Enabled = false;
          this.buttonEditTime.Location = new System.Drawing.Point(824, 19);
+         this.buttonEditTime.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
          this.buttonEditTime.TabIndex = 13;
@@ -299,6 +301,7 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiffTool.Enabled = false;
          this.buttonDiffTool.Location = new System.Drawing.Point(824, 19);
+         this.buttonDiffTool.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(96, 32);
          this.buttonDiffTool.TabIndex = 7;
@@ -311,6 +314,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonAddComment.Enabled = false;
          this.buttonAddComment.Location = new System.Drawing.Point(6, 19);
+         this.buttonAddComment.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
          this.buttonAddComment.TabIndex = 8;
@@ -323,7 +327,8 @@ namespace mrHelper.App.Forms
          // 
          this.buttonDiscussions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiscussions.Enabled = false;
-         this.buttonDiscussions.Location = new System.Drawing.Point(720, 19);
+         this.buttonDiscussions.Location = new System.Drawing.Point(722, 19);
+         this.buttonDiscussions.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 10;
@@ -336,6 +341,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonNewDiscussion.Enabled = false;
          this.buttonNewDiscussion.Location = new System.Drawing.Point(108, 19);
+         this.buttonNewDiscussion.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
          this.buttonNewDiscussion.TabIndex = 9;
@@ -429,7 +435,7 @@ namespace mrHelper.App.Forms
          this.tabControl.SelectedIndex = 0;
          this.tabControl.Size = new System.Drawing.Size(1284, 890);
          this.tabControl.TabIndex = 0;
-         // 
+         this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
          // tabPageSettings
          // 
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
@@ -732,12 +738,10 @@ namespace mrHelper.App.Forms
          // splitContainer1.Panel1
          // 
          this.splitContainer1.Panel1.Controls.Add(this.groupBoxSelectMergeRequest);
-         this.splitContainer1.Panel1MinSize = 320;
          // 
          // splitContainer1.Panel2
          // 
          this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-         this.splitContainer1.Panel2MinSize = 710;
          this.splitContainer1.Size = new System.Drawing.Size(1270, 858);
          this.splitContainer1.SplitterDistance = 336;
          this.splitContainer1.SplitterWidth = 8;
@@ -765,6 +769,7 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonReloadList.Enabled = false;
          this.buttonReloadList.Location = new System.Drawing.Point(234, 9);
+         this.buttonReloadList.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
          this.buttonReloadList.TabIndex = 2;
@@ -858,6 +863,7 @@ namespace mrHelper.App.Forms
          this.checkBoxLabels.AutoSize = true;
          this.checkBoxLabels.Enabled = false;
          this.checkBoxLabels.Location = new System.Drawing.Point(6, 19);
+         this.checkBoxLabels.MinimumSize = new System.Drawing.Size(48, 0);
          this.checkBoxLabels.Name = "checkBoxLabels";
          this.checkBoxLabels.Size = new System.Drawing.Size(48, 17);
          this.checkBoxLabels.TabIndex = 0;
@@ -875,7 +881,6 @@ namespace mrHelper.App.Forms
          // splitContainer2.Panel1
          // 
          this.splitContainer2.Panel1.Controls.Add(this.groupBoxSelectedMR);
-         this.splitContainer2.Panel1MinSize = 250;
          // 
          // splitContainer2.Panel2
          // 
@@ -886,7 +891,6 @@ namespace mrHelper.App.Forms
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxTimeTracking);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxReview);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxSelectCommits);
-         this.splitContainer2.Panel2MinSize = 250;
          this.splitContainer2.Size = new System.Drawing.Size(926, 858);
          this.splitContainer2.SplitterDistance = 267;
          this.splitContainer2.SplitterWidth = 8;
@@ -918,7 +922,6 @@ namespace mrHelper.App.Forms
          this.linkLabelConnectedTo.TabIndex = 4;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
-         this.linkLabelConnectedTo.Visible = false;
          this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
          // 
          // richTextBoxMergeRequestDescription
@@ -931,6 +934,7 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.BaseStylesheet = null;
          this.richTextBoxMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
+         this.richTextBoxMergeRequestDescription.MinimumSize = new System.Drawing.Size(2, 100);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(920, 227);
          this.richTextBoxMergeRequestDescription.TabIndex = 2;
@@ -943,6 +947,7 @@ namespace mrHelper.App.Forms
          this.panelFreeSpace.Controls.Add(this.pictureBox1);
          this.panelFreeSpace.Dock = System.Windows.Forms.DockStyle.Fill;
          this.panelFreeSpace.Location = new System.Drawing.Point(0, 334);
+         this.panelFreeSpace.MinimumSize = new System.Drawing.Size(0, 10);
          this.panelFreeSpace.Name = "panelFreeSpace";
          this.panelFreeSpace.Size = new System.Drawing.Size(926, 163);
          this.panelFreeSpace.TabIndex = 9;
@@ -951,6 +956,7 @@ namespace mrHelper.App.Forms
          // 
          this.pictureBox2.Dock = System.Windows.Forms.DockStyle.Right;
          this.pictureBox2.Location = new System.Drawing.Point(676, 0);
+         this.pictureBox2.MinimumSize = new System.Drawing.Size(250, 100);
          this.pictureBox2.Name = "pictureBox2";
          this.pictureBox2.Size = new System.Drawing.Size(250, 163);
          this.pictureBox2.TabIndex = 10;
@@ -962,6 +968,7 @@ namespace mrHelper.App.Forms
          this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Left;
          this.pictureBox1.Location = new System.Drawing.Point(0, 0);
          this.pictureBox1.Name = "pictureBox1";
+         this.pictureBox1.MinimumSize = new System.Drawing.Size(250, 100);
          this.pictureBox1.Size = new System.Drawing.Size(250, 163);
          this.pictureBox1.TabIndex = 9;
          this.pictureBox1.TabStop = false;
@@ -1082,6 +1089,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonTimeTrackingCancel.Enabled = false;
          this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
+         this.buttonTimeTrackingCancel.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonTimeTrackingCancel.Name = "buttonTimeTrackingCancel";
          this.buttonTimeTrackingCancel.Size = new System.Drawing.Size(96, 32);
          this.buttonTimeTrackingCancel.TabIndex = 12;
@@ -1093,6 +1101,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonTimeTrackingStart.Enabled = false;
          this.buttonTimeTrackingStart.Location = new System.Drawing.Point(6, 19);
+         this.buttonTimeTrackingStart.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonTimeTrackingStart.Name = "buttonTimeTrackingStart";
          this.buttonTimeTrackingStart.Size = new System.Drawing.Size(96, 32);
          this.buttonTimeTrackingStart.TabIndex = 11;
@@ -1199,7 +1208,6 @@ namespace mrHelper.App.Forms
          this.ClientSize = new System.Drawing.Size(1284, 890);
          this.Controls.Add(this.tabControl);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
-         this.MinimumSize = new System.Drawing.Size(1100, 550);
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);

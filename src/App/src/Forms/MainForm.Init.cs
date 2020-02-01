@@ -54,6 +54,7 @@ namespace mrHelper.App.Forms
                Name = "customAction" + id,
                Location = new System.Drawing.Point { X = 0, Y = 19 },
                Size = new System.Drawing.Size{ Width = 96, Height = 32},
+               MinimumSize = new System.Drawing.Size { Width = 96, Height = 0 },
                Text = name,
                UseVisualStyleBackColor = true,
                Enabled = false,

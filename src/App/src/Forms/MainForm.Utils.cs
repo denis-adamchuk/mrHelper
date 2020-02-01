@@ -570,7 +570,7 @@ namespace mrHelper.App.Forms
 
       private void enableMergeRequestActions(bool enabled)
       {
-         linkLabelConnectedTo.Visible = enabled;
+         linkLabelConnectedTo.Enabled = enabled;
          buttonAddComment.Enabled = enabled;
          buttonNewDiscussion.Enabled = enabled;
       }
@@ -1153,7 +1153,7 @@ namespace mrHelper.App.Forms
 
          Program.Settings.VisualThemeName = theme;
 
-         updateMinimumSizes(); // update splitter restrictions
+         resetMinimumSizes();
       }
 
       private void onHostSelected()
@@ -1170,58 +1170,206 @@ namespace mrHelper.App.Forms
             .ForEach(x => listViewProjects.Items.Add(x));
       }
 
-      private void updateMinimumSizes()
+      private int hdistance(Control leftControl, Control rightControl, bool preventOverlap = false)
+      {
+         int res = 0;
+         if (leftControl != null && rightControl != null)
+         {
+            res = rightControl.Location.X - (leftControl.Location.X + leftControl.Size.Width);
+         }
+         else if (leftControl == null && rightControl != null)
+         {
+            res = rightControl.Location.X;
+         }
+         else if (leftControl != null && rightControl == null)
+         {
+            res = leftControl.Parent.Size.Width - (leftControl.Location.X + leftControl.Size.Width);
+         }
+         Debug.Assert(preventOverlap || res >= 0);
+         return res < 0 && preventOverlap ? 10 : res;
+      }
+
+      private int vdistance(Control topControl, Control bottomControl, bool preventOverlap = false)
+      {
+         int res = 0;
+         if (topControl != null && bottomControl != null)
+         {
+            res = bottomControl.Location.Y - (topControl.Location.Y + topControl.Size.Height);
+         }
+         else if (topControl == null && bottomControl != null)
+         {
+            res = bottomControl.Location.Y;
+         }
+         else if (topControl != null && bottomControl == null)
+         {
+            res = topControl.Parent.Size.Height - (topControl.Location.Y + topControl.Size.Height);
+         }
+         Debug.Assert(preventOverlap || res >= 0);
+         return res < 0 && preventOverlap ? 10 : res;
+      }
+
+      private void resetMinimumSizes()
+      {
+         splitContainer1.Panel1MinSize = 25;
+         splitContainer1.Panel2MinSize = 25;
+         splitContainer2.Panel1MinSize = 25;
+         splitContainer2.Panel2MinSize = 25;
+         this.MinimumSize = new System.Drawing.Size(0, 0);
+         _invalidMinSizes = true;
+      }
+
+      private bool _invalidMinSizes = false;
+
+      private int getLeftPaneMinWidth()
+      {
+         return
+            hdistance(null, groupBoxSelectMergeRequest)
+          + hdistance(null, checkBoxLabels)
+          + checkBoxLabels.MinimumSize.Width
+          + hdistance(checkBoxLabels, textBoxLabels)
+          + textBoxLabels.MinimumSize.Width
+          + hdistance(textBoxLabels, buttonReloadList, true)
+          + buttonReloadList.MinimumSize.Width
+          + hdistance(buttonReloadList, null)
+          + hdistance(groupBoxSelectMergeRequest, null);
+      }
+
+      private int getRightPaneMinWidth()
       {
          Func<IEnumerable<Control>, int, int> calcMinWidthOfControlGroup = (controls, minGap) =>
-            controls.Cast<Control>().Sum(x => x.Width) + controls.Count() * minGap;
+            controls.Cast<Control>().Sum(x => x.MinimumSize.Width) + (controls.Count() - 1) * minGap;
+
+         int buttonMinDistance = hdistance(buttonAddComment, buttonNewDiscussion);
+
+         int groupBoxReviewMinWidth =
+            calcMinWidthOfControlGroup(groupBoxReview.Controls.Cast<Control>(), buttonMinDistance)
+            + hdistance(null, groupBoxReview)
+            + hdistance(null, buttonAddComment)
+            + hdistance(buttonDiffTool, null)
+            + hdistance(groupBoxReview, null);
 
          int groupBoxTimeTrackingMinWidth = calcMinWidthOfControlGroup(
-            new Control[] { buttonTimeTrackingStart, buttonTimeTrackingCancel, buttonEditTime }, 35);
+            new Control[] { buttonTimeTrackingStart, buttonTimeTrackingCancel, buttonEditTime }, buttonMinDistance)
+            + hdistance(null, groupBoxTimeTracking)
+            + hdistance(null, buttonTimeTrackingStart)
+            + hdistance(buttonEditTime, null)
+            + hdistance(groupBoxTimeTracking, null);
 
-         int groupBoxActionsMinWidth = calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), 10);
-         int groupBoxReviewMinWidth = calcMinWidthOfControlGroup(groupBoxReview.Controls.Cast<Control>(), 10);
+         bool hasActions = groupBoxActions.Controls.Count > 0;
+         int groupBoxActionsMinWidth =
+            calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), buttonMinDistance)
+            + hdistance(null, groupBoxActions)
+            + hdistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add Comment"
+            + hdistance(hasActions ? buttonDiffTool : null, null)   // Last button is aligned with "Diff Tool"
+            + hdistance(groupBoxActions, null);
 
-         int picturesMinWidth = (pictureBox1.BackgroundImage != null ? pictureBox1.Width : 0)
-                              + (pictureBox2.BackgroundImage != null ? pictureBox2.Width : 0);
+         bool hasPicture1 = pictureBox1.BackgroundImage != null;
+         bool hasPicture2 = pictureBox2.BackgroundImage != null;
 
-         int picturesMinHeight = (pictureBox1.BackgroundImage != null ? pictureBox1.Height : 0)
-                               + (pictureBox2.BackgroundImage != null ? pictureBox2.Height : 0);
+         int panelFreeSpaceMinWidth =
+            hdistance(null, panelFreeSpace)
+          + (hasPicture1 ? hdistance(null, pictureBox1) + pictureBox1.MinimumSize.Width : panelFreeSpace.MinimumSize.Width)
+          + (hasPicture2 ? pictureBox2.MinimumSize.Width + hdistance(pictureBox2, null) : panelFreeSpace.MinimumSize.Width)
+          + hdistance(panelFreeSpace, null);
 
-         splitContainer1.Panel1MinSize =
-            checkBoxLabels.Width + 100 /* some space for text box */ + buttonReloadList.Width + 20;
+         return Enumerable.Max(new int[]
+            { groupBoxReviewMinWidth, groupBoxTimeTrackingMinWidth, groupBoxActionsMinWidth, panelFreeSpaceMinWidth });
+      }
 
-         int panel2MinSize =
-            Math.Max(groupBoxTimeTrackingMinWidth,
-               Math.Max(picturesMinWidth, Math.Max(groupBoxActionsMinWidth, groupBoxReviewMinWidth)));
+      private int getTopRightPaneMinHeight()
+      {
+         return
+            + vdistance(null, groupBoxSelectedMR)
+            + vdistance(null, richTextBoxMergeRequestDescription)
+            + richTextBoxMergeRequestDescription.MinimumSize.Height
+            + vdistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo, true)
+            + linkLabelConnectedTo.Height
+            + vdistance(linkLabelConnectedTo, null)
+            + vdistance(groupBoxSelectedMR, null);
+      }
 
-         if (panel2MinSize > splitContainer1.Panel2.Width)
-         {
-            splitContainer1.SplitterDistance = splitContainer1.Width - panel2MinSize - splitContainer1.SplitterWidth;
-         }
-         splitContainer1.Panel2MinSize = panel2MinSize;
+      private int getBottomRightPaneMinHeight()
+      {
+         bool hasPicture1 = pictureBox1.BackgroundImage != null;
+         bool hasPicture2 = pictureBox2.BackgroundImage != null;
 
-         splitContainer2.Panel1MinSize =
-            groupBoxSelectedMR.Height - richTextBoxMergeRequestDescription.Height + 100 /* some space for text box */;
+         int panelFreeSpaceMinHeight =
+            Math.Max(
+               (hasPicture1 ?
+                  vdistance(null, pictureBox1)
+                + pictureBox1.MinimumSize.Height
+                + vdistance(pictureBox1, null, true) : panelFreeSpace.MinimumSize.Height),
+               (hasPicture2 ?
+                  vdistance(null, pictureBox2)
+                + pictureBox2.MinimumSize.Height
+                + vdistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
 
-         splitContainer2.Panel2MinSize =
-              groupBoxReview.Height
-            + groupBoxActions.Height
-            + groupBoxTimeTracking.Height
+         return
+              vdistance(null, groupBoxSelectCommits)
             + groupBoxSelectCommits.Height
-            + picturesMinHeight
+            + vdistance(groupBoxSelectCommits, groupBoxReview)
+            + groupBoxReview.Height
+            + vdistance(groupBoxReview, groupBoxTimeTracking)
+            + groupBoxTimeTracking.Height
+            + vdistance(groupBoxTimeTracking, groupBoxActions)
+            + groupBoxActions.Height
+            + vdistance(groupBoxActions, panelFreeSpace)
+            + panelFreeSpaceMinHeight
+            + vdistance(panelFreeSpace, panelStatusBar, true)
             + panelStatusBar.Height
-            + panelBottomMenu.Height;
+            + vdistance(panelStatusBar, panelBottomMenu)
+            + panelBottomMenu.Height
+            + vdistance(panelBottomMenu, null);
+      }
 
-         int contentWidth = splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize;
-         int nonClientAreaWidth = splitContainer1.SplitterWidth +
-            (this.Size.Width - this.ClientSize.Width) + 20 /* some magic space */;
+      private void updateMinimumSizes()
+      {
+         if (!_invalidMinSizes)
+         {
+            return;
+         }
 
-         int contentHeight = splitContainer2.Panel1MinSize + splitContainer2.Panel2MinSize;
-         int tabHeight = tabControl.ItemSize.Height;
-         int nonClientAreaHeight = splitContainer2.SplitterWidth +
-            (this.Size.Height - this.ClientSize.Height) + 20 /* some magic space */;
+         int leftPaneMinWidth = getLeftPaneMinWidth();
+         int rightPaneMinWidth = getRightPaneMinWidth();
+         int topRightPaneMinHeight = getTopRightPaneMinHeight();
+         int bottomRightPaneMinHeight = getBottomRightPaneMinHeight();
 
-         this.MinimumSize = new Size(contentWidth + nonClientAreaWidth, contentHeight + tabHeight + nonClientAreaHeight);
+         int clientAreaMinWidth =
+            hdistance(null, tabPageMR)
+          + hdistance(null, splitContainer1)
+          + leftPaneMinWidth
+          + splitContainer1.SplitterWidth
+          + rightPaneMinWidth
+          + hdistance(splitContainer1, null)
+          + hdistance(tabPageMR, null);
+         int nonClientAreaWidth = this.Size.Width - this.ClientSize.Width;
+
+         int clientAreaMinHeight =
+            vdistance(null, tabPageMR)
+          + vdistance(null, splitContainer1)
+          + vdistance(null, splitContainer2)
+          + topRightPaneMinHeight
+          + splitContainer2.SplitterWidth
+          + bottomRightPaneMinHeight
+          + vdistance(splitContainer2, null)
+          + vdistance(splitContainer1, null)
+          + vdistance(tabPageMR, null);
+         int nonClientAreaHeight = this.Size.Height - this.ClientSize.Height;
+
+         // First, apply new size to the Form because this action resizes it the Format is too small for split containers
+         this.MinimumSize = new Size(clientAreaMinWidth + nonClientAreaWidth, clientAreaMinHeight + nonClientAreaHeight);
+
+         // Then, apply new sizes to split containers
+         this.splitContainer1.Panel1MinSize = leftPaneMinWidth;
+         this.splitContainer1.Panel2MinSize = rightPaneMinWidth;
+         this.splitContainer2.Panel1MinSize = topRightPaneMinHeight;
+         this.splitContainer2.Panel2MinSize = bottomRightPaneMinHeight;
+
+         // Set default position for splitter
+         this.splitContainer1.SplitterDistance = this.splitContainer1.Width - this.splitContainer1.Panel2MinSize;
+         this.splitContainer2.SplitterDistance = this.splitContainer2.Height - this.splitContainer2.Panel2MinSize;
+
+         _invalidMinSizes = false;
       }
 
       private void repositionCustomCommands()

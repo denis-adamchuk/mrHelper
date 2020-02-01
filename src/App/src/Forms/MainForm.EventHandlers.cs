@@ -1014,9 +1014,44 @@ namespace mrHelper.App.Forms
          repositionCustomCommands(); // update position of custom actions
       }
 
+      private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (tabControl.SelectedTab == tabPageMR)
+         {
+            updateMinimumSizes();
+         }
+      }
+
       protected override void OnFontChanged(EventArgs e)
       {
          base.OnFontChanged(e);
+
+         //--
+         // a kludge for HtmlRenderer which obtains invalid Location in very rare and unpredictable cases
+         int descriptionX = richTextBoxMergeRequestDescription.Location.X;
+         int descriptionY = richTextBoxMergeRequestDescription.Location.Y;
+         if (descriptionX < 0 || descriptionY < 0)
+         {
+            if (descriptionX < 0)
+            {
+               descriptionX = 3; // Location from Designer
+            }
+            if (descriptionY < 0)
+            {
+               descriptionY = 16; // Location from Designer
+            }
+
+            richTextBoxMergeRequestDescription.Anchor = AnchorStyles.None;
+
+            richTextBoxMergeRequestDescription.Size = new Size(
+               groupBoxSelectedMR.Width - descriptionX * 2,
+               linkLabelConnectedTo.Location.Y - descriptionY);
+
+            richTextBoxMergeRequestDescription.Location = new Point(descriptionX, descriptionY);
+
+            richTextBoxMergeRequestDescription.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+         }
+         //--
 
          repositionCustomCommands(); // update position of custom actions
          updateVisibleMergeRequests(); // update row height of List View
