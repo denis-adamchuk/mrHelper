@@ -1184,6 +1184,12 @@ namespace mrHelper.App.Forms
          int picturesMinWidth = (pictureBox1.BackgroundImage != null ? pictureBox1.Width : 0)
                               + (pictureBox2.BackgroundImage != null ? pictureBox2.Width : 0);
 
+         int picturesMinHeight = (pictureBox1.BackgroundImage != null ? pictureBox1.Height : 0)
+                               + (pictureBox2.BackgroundImage != null ? pictureBox2.Height : 0);
+
+         splitContainer1.Panel1MinSize =
+            checkBoxLabels.Width + 100 /* some space for text box */ + buttonReloadList.Width + 20;
+
          int panel2MinSize =
             Math.Max(groupBoxTimeTrackingMinWidth,
                Math.Max(picturesMinWidth, Math.Max(groupBoxActionsMinWidth, groupBoxReviewMinWidth)));
@@ -1194,15 +1200,28 @@ namespace mrHelper.App.Forms
          }
          splitContainer1.Panel2MinSize = panel2MinSize;
 
+         splitContainer2.Panel1MinSize =
+            groupBoxSelectedMR.Height - richTextBoxMergeRequestDescription.Height + 100 /* some space for text box */;
+
          splitContainer2.Panel2MinSize =
               groupBoxReview.Height
             + groupBoxActions.Height
             + groupBoxTimeTracking.Height
-            + groupBoxSelectCommits.Height;
+            + groupBoxSelectCommits.Height
+            + picturesMinHeight
+            + panelStatusBar.Height
+            + panelBottomMenu.Height;
 
-         this.MinimumSize = new Size(splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize + 100,
-                                     splitContainer2.Panel1MinSize + splitContainer2.Panel2MinSize
-                                   + tabControl.ItemSize.Height + panelStatusBar.Height + panelBottomMenu.Height + 100);
+         int contentWidth = splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize;
+         int nonClientAreaWidth = splitContainer1.SplitterWidth +
+            (this.Size.Width - this.ClientSize.Width) + 20 /* some magic space */;
+
+         int contentHeight = splitContainer2.Panel1MinSize + splitContainer2.Panel2MinSize;
+         int tabHeight = tabControl.ItemSize.Height;
+         int nonClientAreaHeight = splitContainer2.SplitterWidth +
+            (this.Size.Height - this.ClientSize.Height) + 20 /* some magic space */;
+
+         this.MinimumSize = new Size(contentWidth + nonClientAreaWidth, contentHeight + tabHeight + nonClientAreaHeight);
       }
 
       private void repositionCustomCommands()

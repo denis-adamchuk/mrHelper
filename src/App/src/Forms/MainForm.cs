@@ -155,6 +155,6 @@ namespace mrHelper.App.Forms
       }
 
       private User? _currentUser;
-   }
+    }
 }
 
