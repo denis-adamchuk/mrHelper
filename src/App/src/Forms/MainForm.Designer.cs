@@ -436,6 +436,7 @@ namespace mrHelper.App.Forms
          this.tabControl.Size = new System.Drawing.Size(1284, 890);
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
+         // 
          // tabPageSettings
          // 
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
@@ -967,8 +968,8 @@ namespace mrHelper.App.Forms
          // 
          this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Left;
          this.pictureBox1.Location = new System.Drawing.Point(0, 0);
-         this.pictureBox1.Name = "pictureBox1";
          this.pictureBox1.MinimumSize = new System.Drawing.Size(250, 100);
+         this.pictureBox1.Name = "pictureBox1";
          this.pictureBox1.Size = new System.Drawing.Size(250, 163);
          this.pictureBox1.TabIndex = 9;
          this.pictureBox1.TabStop = false;

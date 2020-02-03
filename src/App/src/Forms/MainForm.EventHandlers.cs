@@ -1057,6 +1057,22 @@ namespace mrHelper.App.Forms
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
       }
+
+      protected override void OnDpiChanged(DpiChangedEventArgs e)
+      {
+         base.OnDpiChanged(e);
+
+         string font = comboBoxFonts.SelectedItem.ToString();
+         Program.Settings.MainWindowFontSizeName = font;
+         applyFont(font);
+
+         resetMinimumSizes();
+
+         if (tabControl.SelectedTab == tabPageMR)
+         {
+            updateMinimumSizes();
+         }
+      }
    }
 }
 
