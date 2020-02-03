@@ -36,7 +36,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>gitlab.ico</ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -62,85 +63,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
-      <Link>SharedAssemblyInfo.cs</Link>
-    </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionActionsPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionActionsPanel.Designer.cs">
-      <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFilterPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFilterPanel.Designer.cs">
-      <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFontSelectionPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFontSelectionPanel.Designer.cs">
-      <DependentUpon>DiscussionFontSelectionPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionSearchPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionSearchPanel.Designer.cs">
-      <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionSortPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionSortPanel.Designer.cs">
-      <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Forms\AddProjectForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\AddProjectForm.Designer.cs">
-      <DependentUpon>AddProjectForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Forms\EditProjectsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\EditProjectsForm.Designer.cs">
-      <DependentUpon>EditProjectsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Forms\CustomFontForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\TimeSpanEditForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\TimeSpanEditForm.Designer.cs">
-      <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Forms\NewDiscussionItemForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\NewDiscussionItemForm.Designer.cs">
-      <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Forms\AddKnownHostForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\AddKnownHostForm.Designer.cs">
-      <DependentUpon>AddKnownHostForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="src\Forms\DiscussionsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\DiscussionsForm.Designer.cs">
-      <DependentUpon>DiscussionsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.cs">
       <SubType>Form</SubType>
@@ -148,97 +74,9 @@
     <Compile Include="src\Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\MainForm.Async.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.EventHandlers.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Init.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Utils.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Workflow.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.ExternalCalls.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\NewDiscussionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\NewDiscussionForm.Designer.cs">
-      <DependentUpon>NewDiscussionForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Helpers\Configuration\Configuration.cs" />
-    <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
-    <Compile Include="src\Helpers\Git\RevisionCacher.cs" />
-    <Compile Include="src\Helpers\Interprocess\DiffCallHandler.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
-    <Compile Include="src\Helpers\FeedbackReporter.cs" />
-    <Compile Include="src\Helpers\Git\GitClient.cs" />
-    <Compile Include="src\Helpers\Git\GitClientFactory.cs" />
-    <Compile Include="src\Helpers\Git\GitClientUpdater.cs" />
-    <Compile Include="src\Helpers\Interprocess\DiffArgumentParser.cs" />
-    <Compile Include="src\Helpers\Interprocess\Snapshot.cs" />
-    <Compile Include="src\Helpers\Interprocess\SnapshotSerializer.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\MergeRequestFilter.cs" />
-    <Compile Include="src\Helpers\Notifications\EventFilter.cs" />
-    <Compile Include="src\Helpers\Search\TextSearch.cs" />
-    <Compile Include="src\Helpers\Notifications\TrayIcon.cs" />
-    <Compile Include="src\Helpers\Notifications\UserNotifier.cs" />
-    <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
-    <Compile Include="src\Helpers\ColorScheme.cs" />
-    <Compile Include="src\Helpers\Git\GitClientInteractiveUpdater.cs" />
-    <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
-      <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionFilterPanel.resx">
-      <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionFontSelectionPanel.resx">
-      <DependentUpon>DiscussionFontSelectionPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionSearchPanel.resx">
-      <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionSortPanel.resx">
-      <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\AddProjectForm.resx">
-      <DependentUpon>AddProjectForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\EditProjectsForm.resx">
-      <DependentUpon>EditProjectsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
-      <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\NewDiscussionItemForm.resx">
-      <DependentUpon>NewDiscussionItemForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\AddKnownHostForm.resx">
-      <DependentUpon>AddKnownHostForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\DiscussionsForm.resx">
-      <DependentUpon>DiscussionsForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\NewDiscussionForm.resx">
-      <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -247,7 +85,6 @@
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="app.manifest" />
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -259,40 +96,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\submodules\GitLabSharp\GitLabSharp.csproj">
-      <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
-      <Name>GitLabSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CommonControls\mrHelper.CommonControls.csproj">
-      <Project>{2c6bdbb7-c1e2-46b6-a850-47892837f0c3}</Project>
-      <Name>mrHelper.CommonControls</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CommonNative\mrHelper.CommonNative.csproj">
-      <Project>{31433881-1f90-4513-9970-8b27cd635328}</Project>
-      <Name>mrHelper.CommonNative</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
-      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
-      <Name>mrHelper.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Core\mrHelper.Core.csproj">
-      <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
-      <Name>mrHelper.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
-      <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>
-      <Name>mrHelper.GitLabClient</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CustomActions\mrHelper.CustomActions.csproj">
-      <Project>{cb91ad53-06a4-45c2-b568-215bd24033bc}</Project>
-      <Name>mrHelper.CustomActions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DiffTool\mrHelper.DiffTool.csproj">
-      <Project>{b3a4a6eb-e9df-47b1-bdf4-089df6ed0da5}</Project>
-      <Name>mrHelper.DiffTool</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Resources\ny2020\balls.png" />
     <Content Include="Resources\ny2020\happy_ny2002.png" />
     <Content Include="Resources\ny2020\ny2020-theme.css" />
@@ -301,7 +104,6 @@
     <Content Include="Resources\ny2020\snowflake-bg.png" />
     <Content Include="Resources\ny2020\tree.gif" />
     <None Include="Resources\gitlab.ico" />
-    <Content Include="gitlab.ico" />
     <Content Include="Resources\merge-request-description.css" />
     <Content Include="Resources\discussion-note.css" />
   </ItemGroup>
