@@ -935,7 +935,6 @@ namespace mrHelper.App.Forms
          this.richTextBoxMergeRequestDescription.BaseStylesheet = null;
          this.richTextBoxMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
-         this.richTextBoxMergeRequestDescription.MinimumSize = new System.Drawing.Size(2, 100);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
          this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(920, 227);
          this.richTextBoxMergeRequestDescription.TabIndex = 2;

@@ -1281,7 +1281,7 @@ namespace mrHelper.App.Forms
          return
             + vdistance(null, groupBoxSelectedMR)
             + vdistance(null, richTextBoxMergeRequestDescription)
-            + richTextBoxMergeRequestDescription.MinimumSize.Height
+            + 100 /* cannot use richTextBoxMergeRequestDescription.MinimumSize.Height, see 9b65d7413c */
             + vdistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo, true)
             + linkLabelConnectedTo.Height
             + vdistance(linkLabelConnectedTo, null)
