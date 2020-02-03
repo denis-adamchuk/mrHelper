@@ -1053,7 +1053,6 @@ namespace mrHelper.App.Forms
          }
          //--
 
-         repositionCustomCommands(); // update position of custom actions
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
       }
