@@ -30,81 +30,14 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void InitializeComponent()
       {
-         this.components = new System.ComponentModel.Container();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-         this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-         this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
-         this.panel4 = new System.Windows.Forms.Panel();
-         this.panel1 = new System.Windows.Forms.Panel();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-         this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
+         this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.textBox1 = new System.Windows.Forms.TextBox();
-         this.comboBoxFonts = new System.Windows.Forms.ComboBox();
-         this.contextMenuStrip.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
          this.splitContainer1.Panel1.SuspendLayout();
-         this.splitContainer1.Panel2.SuspendLayout();
          this.splitContainer1.SuspendLayout();
-         this.groupBoxSelectedMR.SuspendLayout();
+         this.groupBox1.SuspendLayout();
          this.SuspendLayout();
-         // 
-         // toolTip
-         // 
-         this.toolTip.AutoPopDelay = 5000;
-         this.toolTip.InitialDelay = 500;
-         this.toolTip.ReshowDelay = 100;
-         // 
-         // contextMenuStrip
-         // 
-         this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.restoreToolStripMenuItem,
-            this.exitToolStripMenuItem});
-         this.contextMenuStrip.Name = "contextMenuStrip1";
-         this.contextMenuStrip.Size = new System.Drawing.Size(114, 48);
-         // 
-         // restoreToolStripMenuItem
-         // 
-         this.restoreToolStripMenuItem.Name = "restoreToolStripMenuItem";
-         this.restoreToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
-         this.restoreToolStripMenuItem.Text = "Restore";
-         // 
-         // exitToolStripMenuItem
-         // 
-         this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-         this.exitToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
-         this.exitToolStripMenuItem.Text = "Exit";
-         // 
-         // notifyIcon
-         // 
-         this.notifyIcon.BalloonTipText = "I will now live in your tray";
-         this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
-         this.notifyIcon.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
-         this.notifyIcon.Text = "Merge Request Helper";
-         this.notifyIcon.Visible = true;
-         // 
-         // localGitFolderBrowser
-         // 
-         this.localGitFolderBrowser.Description = "Select a folder where git repository will be stored locally";
-         this.localGitFolderBrowser.RootFolder = System.Environment.SpecialFolder.MyComputer;
-         // 
-         // panel4
-         // 
-         this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
-         this.panel4.Location = new System.Drawing.Point(0, 159);
-         this.panel4.Name = "panel4";
-         this.panel4.Size = new System.Drawing.Size(910, 79);
-         this.panel4.TabIndex = 14;
-         // 
-         // panel1
-         // 
-         this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-         this.panel1.Location = new System.Drawing.Point(0, 80);
-         this.panel1.Name = "panel1";
-         this.panel1.Size = new System.Drawing.Size(910, 79);
-         this.panel1.TabIndex = 5;
          // 
          // splitContainer1
          // 
@@ -115,82 +48,56 @@ namespace mrHelper.App.Forms
          // 
          // splitContainer1.Panel1
          // 
-         this.splitContainer1.Panel1.Controls.Add(this.groupBoxSelectedMR);
-         // 
-         // splitContainer1.Panel2
-         // 
-         this.splitContainer1.Panel2.Controls.Add(this.comboBoxFonts);
-         this.splitContainer1.Size = new System.Drawing.Size(797, 417);
-         this.splitContainer1.SplitterDistance = 620;
+         this.splitContainer1.Panel1.Controls.Add(this.groupBox1);
+         this.splitContainer1.Size = new System.Drawing.Size(567, 69);
+         this.splitContainer1.SplitterDistance = 440;
          this.splitContainer1.SplitterWidth = 8;
          this.splitContainer1.TabIndex = 5;
          this.splitContainer1.TabStop = false;
          // 
-         // groupBoxSelectedMR
+         // groupBox1
          // 
-         this.groupBoxSelectedMR.Anchor = System.Windows.Forms.AnchorStyles.Right;
-         this.groupBoxSelectedMR.Controls.Add(this.textBox1);
-         this.groupBoxSelectedMR.Location = new System.Drawing.Point(0, 0);
-         this.groupBoxSelectedMR.Name = "groupBoxSelectedMR";
-         this.groupBoxSelectedMR.Size = new System.Drawing.Size(620, 417);
-         this.groupBoxSelectedMR.TabIndex = 13;
-         this.groupBoxSelectedMR.TabStop = false;
-         this.groupBoxSelectedMR.Text = "Merge Request";
+         this.groupBox1.Controls.Add(this.textBox1);
+         this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBox1.Location = new System.Drawing.Point(0, 0);
+         this.groupBox1.Name = "groupBox1";
+         this.groupBox1.Size = new System.Drawing.Size(440, 69);
+         this.groupBox1.TabIndex = 13;
+         this.groupBox1.TabStop = false;
+         this.groupBox1.Text = "Dock = Fill";
          // 
          // textBox1
          // 
          this.textBox1.Anchor = System.Windows.Forms.AnchorStyles.Right;
          this.textBox1.BackColor = System.Drawing.SystemColors.Window;
-         this.textBox1.Location = new System.Drawing.Point(3, 16);
-         this.textBox1.MinimumSize = new System.Drawing.Size(4, 4);
-         this.textBox1.Multiline = true;
+         this.textBox1.Location = new System.Drawing.Point(2, 20);
          this.textBox1.Name = "textBox1";
-         this.textBox1.Size = new System.Drawing.Size(614, 395);
+         this.textBox1.Size = new System.Drawing.Size(436, 20);
          this.textBox1.TabIndex = 0;
-         // 
-         // comboBoxFonts
-         // 
-         this.comboBoxFonts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxFonts.FormattingEnabled = true;
-         this.comboBoxFonts.Location = new System.Drawing.Point(41, 36);
-         this.comboBoxFonts.Name = "comboBoxFonts";
-         this.comboBoxFonts.Size = new System.Drawing.Size(96, 21);
-         this.comboBoxFonts.TabIndex = 13;
-         this.comboBoxFonts.SelectedIndexChanged += new System.EventHandler(this.comboBoxFonts_SelectedIndexChanged);
+         this.textBox1.Text = "Original Properties: Location.X = 3, Size.Width = 436, Anchor = Right";
          // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(797, 417);
+         this.ClientSize = new System.Drawing.Size(567, 69);
          this.Controls.Add(this.splitContainer1);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.Name = "MainForm";
-         this.Text = "Merge Request Helper";
-         this.contextMenuStrip.ResumeLayout(false);
+         this.Text = "Test Application";
          this.splitContainer1.Panel1.ResumeLayout(false);
-         this.splitContainer1.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
          this.splitContainer1.ResumeLayout(false);
-         this.groupBoxSelectedMR.ResumeLayout(false);
-         this.groupBoxSelectedMR.PerformLayout();
+         this.groupBox1.ResumeLayout(false);
+         this.groupBox1.PerformLayout();
          this.ResumeLayout(false);
 
       }
 
       #endregion
-      private System.Windows.Forms.ToolTip toolTip;
-      private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
-      private System.Windows.Forms.ToolStripMenuItem restoreToolStripMenuItem;
-      private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-      private System.Windows.Forms.NotifyIcon notifyIcon;
-      private System.Windows.Forms.FolderBrowserDialog localGitFolderBrowser;
-      private System.Windows.Forms.Panel panel1;
-      private System.Windows.Forms.Panel panel4;
       private SplitContainer splitContainer1;
-      private GroupBox groupBoxSelectedMR;
+      private GroupBox groupBox1;
       private TextBox textBox1;
-      private ComboBox comboBoxFonts;
    }
 }
 
