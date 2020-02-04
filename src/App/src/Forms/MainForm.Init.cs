@@ -54,6 +54,7 @@ namespace mrHelper.App.Forms
                Name = "customAction" + id,
                Location = new System.Drawing.Point { X = 0, Y = 19 },
                Size = new System.Drawing.Size{ Width = 96, Height = 32},
+               MinimumSize = new System.Drawing.Size { Width = 96, Height = 0 },
                Text = name,
                UseVisualStyleBackColor = true,
                Enabled = false,
@@ -226,7 +227,6 @@ namespace mrHelper.App.Forms
          Program.Settings.PropertyChanged += onSettingsPropertyChanged;
          loadConfiguration();
 
-         labelTimeTrackingTrackedTime.Text = labelSpentTimeDefaultText;
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
          labelGitStatus.Text = String.Empty;
@@ -276,10 +276,17 @@ namespace mrHelper.App.Forms
          _mergeRequestManager.MergeRequestEvent += e => processUpdate(e);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
-         IEnumerable<string> keywords = _customCommands ?
+         IEnumerable<string> keywords = _customCommands?
             .Where(x => x is SendNoteCommand)
             .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
-         checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
+         if (keywords == null)
+         {
+            checkBoxShowKeywords.Enabled = false;
+         }
+         else
+         {
+            checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
+         }
          _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords,
             Program.Settings.AutoUpdatePeriodMs);
 

@@ -114,6 +114,12 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void DiscussionsForm_Load(object sender, EventArgs e)
+      {
+         // without this, controls inside UserControls compute wrong auto size in High DPI mode
+         this.Scale(new SizeF(1.0f, 1.0f));
+      }
+
       private void applyTheme(string theme)
       {
          if (theme == "New Year 2020")

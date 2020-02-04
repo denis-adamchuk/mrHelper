@@ -12,6 +12,7 @@ using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using System.Diagnostics;
 
 namespace mrHelper.App.Forms
 {
@@ -19,7 +20,6 @@ namespace mrHelper.App.Forms
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
-      private static readonly string labelSpentTimeDefaultText = "00:00:00";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
 
       private const string DefaultColorSchemeName = "Default";
@@ -39,6 +39,9 @@ namespace mrHelper.App.Forms
             .Build();
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
+         this.linkLabelConnectedTo.Text = String.Empty;
+
+         Trace.TraceInformation("Current DPI is {0}", this.DeviceDpi);
       }
 
       public string GetCurrentHostName()
