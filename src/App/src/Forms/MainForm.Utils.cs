@@ -1170,7 +1170,7 @@ namespace mrHelper.App.Forms
             .ForEach(x => listViewProjects.Items.Add(x));
       }
 
-      private int hdistance(Control leftControl, Control rightControl, bool preventOverlap = false)
+      private int calcHorzDistance(Control leftControl, Control rightControl, bool preventOverlap = false)
       {
          int res = 0;
          if (leftControl != null && rightControl != null)
@@ -1185,11 +1185,29 @@ namespace mrHelper.App.Forms
          {
             res = leftControl.Parent.Size.Width - (leftControl.Location.X + leftControl.Size.Width);
          }
-         Debug.Assert(preventOverlap || res >= 0);
+
+         if (!preventOverlap && res < 0)
+         {
+            Trace.TraceWarning(
+               "calcHorzDistance() returns negative value ({0}). " +
+               "leftControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
+               "rightControl: {6} (Location: {{{7}, {8}}}, Size: {{{9}, {10}}}), " +
+               "PreventOverlap: {11}",
+               res,
+               leftControl?.Name ?? "null",
+               leftControl?.Location.X.ToString() ?? "N/A", leftControl?.Location.Y.ToString() ?? "N/A",
+               leftControl?.Size.Width.ToString() ?? "N/A", leftControl?.Size.Height.ToString() ?? "N/A",
+               rightControl?.Name ?? "null",
+               rightControl?.Location.X.ToString() ?? "N/A", rightControl?.Location.Y.ToString() ?? "N/A",
+               rightControl?.Size.Width.ToString() ?? "N/A", rightControl?.Size.Height.ToString() ?? "N/A",
+               preventOverlap);
+            Debug.Assert(false);
+         }
+
          return res < 0 && preventOverlap ? 10 : res;
       }
 
-      private int vdistance(Control topControl, Control bottomControl, bool preventOverlap = false)
+      private int calcVertDistance(Control topControl, Control bottomControl, bool preventOverlap = false)
       {
          int res = 0;
          if (topControl != null && bottomControl != null)
@@ -1204,7 +1222,25 @@ namespace mrHelper.App.Forms
          {
             res = topControl.Parent.Size.Height - (topControl.Location.Y + topControl.Size.Height);
          }
-         Debug.Assert(preventOverlap || res >= 0);
+
+         if (!preventOverlap && res < 0)
+         {
+            Trace.TraceWarning(
+               "calcVertDistance() returns negative value ({0}). " +
+               "topControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
+               "bottomControl: {6} (Location: {{{7}, {8}}}, Size: {{{9}, {10}}}), " +
+               "PreventOverlap: {11}",
+               res,
+               topControl?.Name ?? "null",
+               topControl?.Location.X.ToString() ?? "N/A", topControl?.Location.Y.ToString() ?? "N/A",
+               topControl?.Size.Width.ToString() ?? "N/A", topControl?.Size.Height.ToString() ?? "N/A",
+               bottomControl?.Name ?? "null",
+               bottomControl?.Location.X.ToString() ?? "N/A", bottomControl?.Location.Y.ToString() ?? "N/A",
+               bottomControl?.Size.Width.ToString() ?? "N/A", bottomControl?.Size.Height.ToString() ?? "N/A",
+               preventOverlap);
+            Debug.Assert(false);
+         }
+
          return res < 0 && preventOverlap ? 10 : res;
       }
 
@@ -1223,15 +1259,15 @@ namespace mrHelper.App.Forms
       private int getLeftPaneMinWidth()
       {
          return
-            hdistance(null, groupBoxSelectMergeRequest)
-          + hdistance(null, checkBoxLabels)
+            calcHorzDistance(null, groupBoxSelectMergeRequest)
+          + calcHorzDistance(null, checkBoxLabels)
           + checkBoxLabels.MinimumSize.Width
-          + hdistance(checkBoxLabels, textBoxLabels)
+          + calcHorzDistance(checkBoxLabels, textBoxLabels)
           + textBoxLabels.MinimumSize.Width
-          + hdistance(textBoxLabels, buttonReloadList, true)
+          + calcHorzDistance(textBoxLabels, buttonReloadList, true)
           + buttonReloadList.MinimumSize.Width
-          + hdistance(buttonReloadList, null)
-          + hdistance(groupBoxSelectMergeRequest, null);
+          + calcHorzDistance(buttonReloadList, null)
+          + calcHorzDistance(groupBoxSelectMergeRequest, null);
       }
 
       private int getRightPaneMinWidth()
@@ -1239,38 +1275,38 @@ namespace mrHelper.App.Forms
          Func<IEnumerable<Control>, int, int> calcMinWidthOfControlGroup = (controls, minGap) =>
             controls.Cast<Control>().Sum(x => x.MinimumSize.Width) + (controls.Count() - 1) * minGap;
 
-         int buttonMinDistance = hdistance(buttonAddComment, buttonNewDiscussion);
+         int buttonMinDistance = calcHorzDistance(buttonAddComment, buttonNewDiscussion);
 
          int groupBoxReviewMinWidth =
             calcMinWidthOfControlGroup(groupBoxReview.Controls.Cast<Control>(), buttonMinDistance)
-            + hdistance(null, groupBoxReview)
-            + hdistance(null, buttonAddComment)
-            + hdistance(buttonDiffTool, null)
-            + hdistance(groupBoxReview, null);
+            + calcHorzDistance(null, groupBoxReview)
+            + calcHorzDistance(null, buttonAddComment)
+            + calcHorzDistance(buttonDiffTool, null)
+            + calcHorzDistance(groupBoxReview, null);
 
          int groupBoxTimeTrackingMinWidth = calcMinWidthOfControlGroup(
             new Control[] { buttonTimeTrackingStart, buttonTimeTrackingCancel, buttonEditTime }, buttonMinDistance)
-            + hdistance(null, groupBoxTimeTracking)
-            + hdistance(null, buttonTimeTrackingStart)
-            + hdistance(buttonEditTime, null)
-            + hdistance(groupBoxTimeTracking, null);
+            + calcHorzDistance(null, groupBoxTimeTracking)
+            + calcHorzDistance(null, buttonTimeTrackingStart)
+            + calcHorzDistance(buttonEditTime, null)
+            + calcHorzDistance(groupBoxTimeTracking, null);
 
          bool hasActions = groupBoxActions.Controls.Count > 0;
          int groupBoxActionsMinWidth =
             calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), buttonMinDistance)
-            + hdistance(null, groupBoxActions)
-            + hdistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add Comment"
-            + hdistance(hasActions ? buttonDiffTool : null, null)   // Last button is aligned with "Diff Tool"
-            + hdistance(groupBoxActions, null);
+            + calcHorzDistance(null, groupBoxActions)
+            + calcHorzDistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add Comment"
+            + calcHorzDistance(hasActions ? buttonDiffTool : null, null)   // Last button is aligned with "Diff Tool"
+            + calcHorzDistance(groupBoxActions, null);
 
          bool hasPicture1 = pictureBox1.BackgroundImage != null;
          bool hasPicture2 = pictureBox2.BackgroundImage != null;
 
          int panelFreeSpaceMinWidth =
-            hdistance(null, panelFreeSpace)
-          + (hasPicture1 ? hdistance(null, pictureBox1) + pictureBox1.MinimumSize.Width : panelFreeSpace.MinimumSize.Width)
-          + (hasPicture2 ? pictureBox2.MinimumSize.Width + hdistance(pictureBox2, null) : panelFreeSpace.MinimumSize.Width)
-          + hdistance(panelFreeSpace, null);
+            calcHorzDistance(null, panelFreeSpace)
+          + (hasPicture1 ? calcHorzDistance(null, pictureBox1) + pictureBox1.MinimumSize.Width : panelFreeSpace.MinimumSize.Width)
+          + (hasPicture2 ? pictureBox2.MinimumSize.Width + calcHorzDistance(pictureBox2, null) : panelFreeSpace.MinimumSize.Width)
+          + calcHorzDistance(panelFreeSpace, null);
 
          return Enumerable.Max(new int[]
             { groupBoxReviewMinWidth, groupBoxTimeTrackingMinWidth, groupBoxActionsMinWidth, panelFreeSpaceMinWidth });
@@ -1279,13 +1315,13 @@ namespace mrHelper.App.Forms
       private int getTopRightPaneMinHeight()
       {
          return
-            + vdistance(null, groupBoxSelectedMR)
-            + vdistance(null, richTextBoxMergeRequestDescription)
+            + calcVertDistance(null, groupBoxSelectedMR)
+            + calcVertDistance(null, richTextBoxMergeRequestDescription)
             + 100 /* cannot use richTextBoxMergeRequestDescription.MinimumSize.Height, see 9b65d7413c */
-            + vdistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo, true)
+            + calcVertDistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo, true)
             + linkLabelConnectedTo.Height
-            + vdistance(linkLabelConnectedTo, null)
-            + vdistance(groupBoxSelectedMR, null);
+            + calcVertDistance(linkLabelConnectedTo, null)
+            + calcVertDistance(groupBoxSelectedMR, null);
       }
 
       private int getBottomRightPaneMinHeight()
@@ -1296,30 +1332,30 @@ namespace mrHelper.App.Forms
          int panelFreeSpaceMinHeight =
             Math.Max(
                (hasPicture1 ?
-                  vdistance(null, pictureBox1)
+                  calcVertDistance(null, pictureBox1)
                 + pictureBox1.MinimumSize.Height
-                + vdistance(pictureBox1, null, true) : panelFreeSpace.MinimumSize.Height),
+                + calcVertDistance(pictureBox1, null, true) : panelFreeSpace.MinimumSize.Height),
                (hasPicture2 ?
-                  vdistance(null, pictureBox2)
+                  calcVertDistance(null, pictureBox2)
                 + pictureBox2.MinimumSize.Height
-                + vdistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
+                + calcVertDistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
 
          return
-              vdistance(null, groupBoxSelectCommits)
+              calcVertDistance(null, groupBoxSelectCommits)
             + groupBoxSelectCommits.Height
-            + vdistance(groupBoxSelectCommits, groupBoxReview)
+            + calcVertDistance(groupBoxSelectCommits, groupBoxReview)
             + groupBoxReview.Height
-            + vdistance(groupBoxReview, groupBoxTimeTracking)
+            + calcVertDistance(groupBoxReview, groupBoxTimeTracking)
             + groupBoxTimeTracking.Height
-            + vdistance(groupBoxTimeTracking, groupBoxActions)
+            + calcVertDistance(groupBoxTimeTracking, groupBoxActions)
             + groupBoxActions.Height
-            + vdistance(groupBoxActions, panelFreeSpace)
+            + calcVertDistance(groupBoxActions, panelFreeSpace)
             + panelFreeSpaceMinHeight
-            + vdistance(panelFreeSpace, panelStatusBar, true)
+            + calcVertDistance(panelFreeSpace, panelStatusBar, true)
             + panelStatusBar.Height
-            + vdistance(panelStatusBar, panelBottomMenu)
+            + calcVertDistance(panelStatusBar, panelBottomMenu)
             + panelBottomMenu.Height
-            + vdistance(panelBottomMenu, null);
+            + calcVertDistance(panelBottomMenu, null);
       }
 
       private void updateMinimumSizes()
@@ -1335,25 +1371,25 @@ namespace mrHelper.App.Forms
          int bottomRightPaneMinHeight = getBottomRightPaneMinHeight();
 
          int clientAreaMinWidth =
-            hdistance(null, tabPageMR)
-          + hdistance(null, splitContainer1)
+            calcHorzDistance(null, tabPageMR)
+          + calcHorzDistance(null, splitContainer1)
           + leftPaneMinWidth
           + splitContainer1.SplitterWidth
           + rightPaneMinWidth
-          + hdistance(splitContainer1, null)
-          + hdistance(tabPageMR, null);
+          + calcHorzDistance(splitContainer1, null)
+          + calcHorzDistance(tabPageMR, null);
          int nonClientAreaWidth = this.Size.Width - this.ClientSize.Width;
 
          int clientAreaMinHeight =
-            vdistance(null, tabPageMR)
-          + vdistance(null, splitContainer1)
-          + vdistance(null, splitContainer2)
+            calcVertDistance(null, tabPageMR)
+          + calcVertDistance(null, splitContainer1)
+          + calcVertDistance(null, splitContainer2)
           + topRightPaneMinHeight
           + splitContainer2.SplitterWidth
           + bottomRightPaneMinHeight
-          + vdistance(splitContainer2, null)
-          + vdistance(splitContainer1, null)
-          + vdistance(tabPageMR, null);
+          + calcVertDistance(splitContainer2, null)
+          + calcVertDistance(splitContainer1, null)
+          + calcVertDistance(tabPageMR, null);
          int nonClientAreaHeight = this.Size.Height - this.ClientSize.Height;
 
          // First, apply new size to the Form because this action resizes it the Format is too small for split containers

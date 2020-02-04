@@ -1027,8 +1027,18 @@ namespace mrHelper.App.Forms
          base.OnFontChanged(e);
 
          // see 9b65d7413c
-         Debug.Assert(richTextBoxMergeRequestDescription.Location.X >= 0
-                   && richTextBoxMergeRequestDescription.Location.Y >= 0);
+         if (richTextBoxMergeRequestDescription.Location.X < 0
+          || richTextBoxMergeRequestDescription.Location.Y < 0)
+         {
+            Trace.TraceWarning("Detected negative Location of Html Panel. Location: {{{0}, {1}}}, Size: {{{2}, {3}}}. GroupBox Size: {{{4}, {5}}}",
+               richTextBoxMergeRequestDescription.Location.X,
+               richTextBoxMergeRequestDescription.Location.Y,
+               richTextBoxMergeRequestDescription.Size.Width,
+               richTextBoxMergeRequestDescription.Size.Height,
+               groupBoxSelectedMR.Size.Width,
+               groupBoxSelectedMR.Size.Height);
+            Debug.Assert(false);
+         }
 
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
@@ -1037,6 +1047,8 @@ namespace mrHelper.App.Forms
       protected override void OnDpiChanged(DpiChangedEventArgs e)
       {
          base.OnDpiChanged(e);
+
+         Trace.TraceInformation("DPI changed to {0}", this.DeviceDpi);
 
          string font = comboBoxFonts.SelectedItem.ToString();
          Program.Settings.MainWindowFontSizeName = font;
