@@ -31,14 +31,15 @@ namespace mrHelper.Common.Interfaces
       }
    }
 
-   public struct GitListOfRenamesArguments
+   public struct GitNumStatArguments
    {
       public string sha1;
       public string sha2;
+      public string filter;
 
       public override string ToString()
       {
-         return "diff " + sha1 + " " + sha2 + " --numstat --diff-filter=R";
+         return String.Format("diff {0} {1} --numstat --diff-filter={2}", sha1, sha2, filter);
       }
    }
 
@@ -53,8 +54,8 @@ namespace mrHelper.Common.Interfaces
       IEnumerable<string> ShowFileByRevision(GitRevisionArguments arguments);
       Task<IEnumerable<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments);
 
-      IEnumerable<string> GetListOfRenames(GitListOfRenamesArguments arguments);
-      Task<IEnumerable<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments);
+      IEnumerable<string> GetDiffStatistics(GitNumStatArguments arguments);
+      Task<IEnumerable<string>> GetDiffStatisticsAsync(GitNumStatArguments arguments);
 
       string HostName { get; }
       string ProjectName { get; }

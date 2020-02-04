@@ -105,16 +105,6 @@ namespace mrHelper.App.Helpers
          return executeCachedAsyncOperation(arguments, _cachedDiffs);
       }
 
-      public IEnumerable<string> GetListOfRenames(GitListOfRenamesArguments arguments)
-      {
-         return executeCachedOperation(arguments, _cachedListOfRenames);
-      }
-
-      public Task<IEnumerable<string>> GetListOfRenamesAsync(GitListOfRenamesArguments arguments)
-      {
-         return executeCachedAsyncOperation(arguments, _cachedListOfRenames);
-      }
-
       public IEnumerable<string> ShowFileByRevision(GitRevisionArguments arguments)
       {
          return executeCachedOperation(arguments, _cachedRevisions);
@@ -123,6 +113,16 @@ namespace mrHelper.App.Helpers
       public Task<IEnumerable<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments)
       {
          return executeCachedAsyncOperation(arguments, _cachedRevisions);
+      }
+
+      public IEnumerable<string> GetDiffStatistics(GitNumStatArguments arguments)
+      {
+         return executeCachedOperation(arguments, _cachedDiffStat);
+      }
+
+      public Task<IEnumerable<string>> GetDiffStatisticsAsync(GitNumStatArguments arguments)
+      {
+         return executeCachedAsyncOperation(arguments, _cachedDiffStat);
       }
 
       /// <summary>
@@ -354,8 +354,8 @@ namespace mrHelper.App.Helpers
       private readonly Dictionary<GitRevisionArguments, IEnumerable<string>> _cachedRevisions =
          new Dictionary<GitRevisionArguments, IEnumerable<string>>();
 
-      private readonly Dictionary<GitListOfRenamesArguments, IEnumerable<string>> _cachedListOfRenames =
-         new Dictionary<GitListOfRenamesArguments, IEnumerable<string>>();
+      private readonly Dictionary<GitNumStatArguments, IEnumerable<string>> _cachedDiffStat =
+         new Dictionary<GitNumStatArguments, IEnumerable<string>>();
 
       private bool _isDisposed = false;
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;

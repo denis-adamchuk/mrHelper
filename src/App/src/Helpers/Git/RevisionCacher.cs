@@ -119,7 +119,7 @@ namespace mrHelper.App.Helpers
                         gatherArguments(newVersionsDetailed,
                            out HashSet<GitDiffArguments> diffArgs,
                            out HashSet<GitRevisionArguments> revisionArgs,
-                           out HashSet<GitListOfRenamesArguments> renamesArgs);
+                           out HashSet<GitNumStatArguments> renamesArgs);
 
                         try
                         {
@@ -168,11 +168,11 @@ namespace mrHelper.App.Helpers
       private void gatherArguments(IEnumerable<Version> versions,
          out HashSet<GitDiffArguments> diffArgs,
          out HashSet<GitRevisionArguments> revisionArgs,
-         out HashSet<GitListOfRenamesArguments> renamesArgs)
+         out HashSet<GitNumStatArguments> renamesArgs)
       {
          diffArgs = new HashSet<GitDiffArguments>();
          revisionArgs = new HashSet<GitRevisionArguments>();
-         renamesArgs = new HashSet<GitListOfRenamesArguments>();
+         renamesArgs = new HashSet<GitNumStatArguments>();
 
          foreach (Version version in versions)
          {
@@ -221,10 +221,11 @@ namespace mrHelper.App.Helpers
                   });
                }
 
-               renamesArgs.Add(new GitListOfRenamesArguments
+               renamesArgs.Add(new GitNumStatArguments
                {
                   sha1 = version.Base_Commit_SHA,
-                  sha2 = version.Head_Commit_SHA
+                  sha2 = version.Head_Commit_SHA,
+                  filter = "R"
                });
             }
          }
@@ -233,11 +234,11 @@ namespace mrHelper.App.Helpers
       async private static Task doCacheAsync(GitClient gitClient,
          HashSet<GitDiffArguments> diffArgs,
          HashSet<GitRevisionArguments> revisionArgs,
-         HashSet<GitListOfRenamesArguments> renamesArgs)
+         HashSet<GitNumStatArguments> renamesArgs)
       {
          await doCacheSingleSetAsync(diffArgs, x => gitClient.DiffAsync(x));
          await doCacheSingleSetAsync(revisionArgs, x => gitClient.ShowFileByRevisionAsync(x));
-         await doCacheSingleSetAsync(renamesArgs, x => gitClient.GetListOfRenamesAsync(x));
+         await doCacheSingleSetAsync(renamesArgs, x => gitClient.GetDiffStatisticsAsync(x));
       }
 
       async private static Task doCacheSingleSetAsync<T>(HashSet<T> args, Func<T, Task<IEnumerable<string>>> func)
