@@ -10,19 +10,18 @@ namespace mrHelper.Common.Tools
 {
    public static class ExternalProcess
    {
-      public class AsyncTaskDescriptor
+      public class Result
       {
-         public Task<object[]> Task;
-         public Process Process;
-         public bool Cancelled;
-      }
+         public int ExitCode;
+         public IEnumerable<string> StdOut;
+         public IEnumerable<string> StdErr;
+      };
 
       /// <summary>
       /// Launch a process with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static public int Start(string name, string arguments, bool wait, string path,
-         List<string> standardOutput, List<string> standardError)
+      static public Result Start(string name, string arguments, bool wait, string path)
       {
          using (Process process = new Process
          {
@@ -39,21 +38,23 @@ namespace mrHelper.Common.Tools
             }
          })
          {
+            List<string> standardOutput = new List<string>();
             process.OutputDataReceived +=
                (sender, args) =>
             {
                if (args.Data != null)
                {
-                  standardOutput?.Add(args.Data);
+                  standardOutput.Add(args.Data);
                }
             };
 
+            List<string> standardError = new List<string>();
             process.ErrorDataReceived +=
                (sender, args) =>
             {
                if (args.Data != null)
                {
-                  standardError?.Add(args.Data);
+                  standardError.Add(args.Data);
                }
             };
 
@@ -86,15 +87,31 @@ namespace mrHelper.Common.Tools
                throw new ExternalProcessException(arguments, exitcode,
                   standardError?.ToArray() ?? Array.Empty<string>());
             }
-            return process.HasExited ? -1 : process.Id;
+
+            return new Result
+            {
+               ExitCode = process.HasExited ? -1 : process.Id,
+               StdOut = standardOutput,
+               StdErr = standardError
+            };
          }
+      }
+
+      public class AsyncTaskDescriptor
+      {
+         public Action<string> OnProgressChange;
+         public Task<object[]> Task;
+         public Process Process;
+         public bool Cancelled;
+         public IEnumerable<string> StdOut;
+         public IEnumerable<string> StdErr;
       }
 
       /// <summary>
       /// Create a task to start a process asynchronously
       /// </summary>
-      static public AsyncTaskDescriptor StartAsync(string name, string arguments, IProgress<string> progress,
-         ISynchronizeInvoke synchronizeInvoke, string path, List<string> standardOutput, List<string> standardError)
+      static public AsyncTaskDescriptor StartAsync(string name, string arguments, string path,
+         Action<string> onProgressChange, ISynchronizeInvoke synchronizeInvoke)
       {
          Process process = new Process
          {
@@ -121,6 +138,8 @@ namespace mrHelper.Common.Tools
                name, cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
+         Progress<string> progress = new Progress<string>();
+
          Func<List<string>, Action<DataReceivedEventHandler>, Action, TaskCompletionSource<object>> addStdHandler =
             (std, addHandler, removeHandler) =>
          {
@@ -132,7 +151,7 @@ namespace mrHelper.Common.Tools
                if (args.Data != null)
                {
                   std?.Add(args.Data);
-                  progress?.Report(getStatus(arguments, args.Data));
+                  (progress as IProgress<string>).Report(getStatus(arguments, args.Data));
                }
                else
                {
@@ -148,6 +167,14 @@ namespace mrHelper.Common.Tools
          TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
          List<Task<object>> tasks = new List<Task<object>>{ tcs.Task };
 
+         List<string> standardOutput = new List<string>();
+         tasks.Add(addStdHandler(standardOutput,
+            x => process.OutputDataReceived += x, () => process.CancelOutputRead()).Task);
+
+         List<string> standardError = new List<string>();
+         tasks.Add(addStdHandler(standardError,
+            x => process.ErrorDataReceived += x, () => process.CancelErrorRead()).Task);
+
          EventHandler onExited = null;
          onExited = new EventHandler(
             (sender, args) =>
@@ -156,7 +183,7 @@ namespace mrHelper.Common.Tools
             process.Exited -= onExited;
             if (process.ExitCode != 0)
             {
-               tcs.SetException(new ExternalProcessException(arguments, process.ExitCode, standardError));
+               tcs.SetException(new ExternalProcessException(arguments, process.ExitCode, standardError.ToArray()));
             }
             else
             {
@@ -165,23 +192,27 @@ namespace mrHelper.Common.Tools
          });
          process.Exited += onExited;
 
-         tasks.Add(addStdHandler(standardOutput,
-            x => process.OutputDataReceived += x, () => process.CancelOutputRead()).Task);
+         AsyncTaskDescriptor descriptor = new AsyncTaskDescriptor
+         {
+            Task = Task.WhenAll(tasks),
+            Process = process,
+            StdOut = standardOutput,
+            StdErr = standardError,
+            OnProgressChange = onProgressChange
+         };
 
-         tasks.Add(addStdHandler(standardError,
-            x => process.ErrorDataReceived += x, () => process.CancelErrorRead()).Task);
+         progress.ProgressChanged += (sender, status) =>
+         {
+            descriptor?.OnProgressChange?.Invoke(status);
+         };
 
-         progress?.Report(getStatus(arguments, "in progress..."));
+         (progress as IProgress<string>).Report(getStatus(arguments, "in progress..."));
          process.Start();
 
          process.BeginOutputReadLine();
          process.BeginErrorReadLine();
 
-         return new AsyncTaskDescriptor
-         {
-            Task = Task.WhenAll(tasks),
-            Process = process
-         };
+         return descriptor;
       }
 
       /// <summary>

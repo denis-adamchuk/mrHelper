@@ -51,9 +51,6 @@
     <Compile Include="src\Discussions\DiscussionManager.cs" />
     <Compile Include="src\Discussions\Impl\DiscussionOperator.cs" />
     <Compile Include="src\Discussions\Impl\DiscussionParser.cs" />
-    <Compile Include="src\MergeRequests\InstantProjectCheckerItf.cs" />
-    <Compile Include="src\MergeRequests\ProjectWatcherItf.cs" />
-    <Compile Include="src\Types\ProjectKey.cs" />
     <Compile Include="src\Versions\Impl\VersionOperator.cs" />
     <Compile Include="src\MergeRequests\MergeRequestProviderItf.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />

@@ -4,33 +4,34 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.MergeRequests;
+using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Helpers
 {
-   public class CancelledByUserException : Exception {}
-   public class RepeatOperationException : Exception {}
+   internal class CancelledByUserException : Exception {}
+   internal class RepeatOperationException : Exception {}
 
    /// <summary>
-   /// Prepares GitClient to use. It is essentially a wrapper over GitClientUpdater.
+   /// Prepares LocalGitRepository to use.
    /// </summary>
-   internal class GitClientInteractiveUpdater
+   internal class GitInteractiveUpdater
    {
       internal event Action<string> InitializationStatusChange;
 
-      internal GitClientInteractiveUpdater()
+      internal GitInteractiveUpdater()
       {
       }
 
       /// <summary>
-      /// Update passed GitClient object.
+      /// Update passed LocalGitRepository object.
       /// Throw GitOperationException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(GitClient client, IInstantProjectChecker instantChecker,
+      async internal Task UpdateAsync(ILocalGitRepository repo, IInstantProjectChecker instantChecker,
          Action<string> onProgressChange)
       {
-         if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
+         if (repo.DoesRequireClone() && !isCloneAllowed(repo.Path))
          {
             InitializationStatusChange?.Invoke("Clone rejected");
             throw new CancelledByUserException();
@@ -38,7 +39,7 @@ namespace mrHelper.App.Helpers
 
          InitializationStatusChange?.Invoke("Updating git repository...");
 
-         await runAsync(async () => await client.Updater.ManualUpdateAsync(instantChecker, onProgressChange));
+         await runAsync(async () => await repo.Updater.ForceUpdate(instantChecker, onProgressChange));
          InitializationStatusChange?.Invoke("Git repository updated");
       }
 
@@ -77,7 +78,7 @@ namespace mrHelper.App.Helpers
          {
             Debug.Assert(!(ex is InvalidOperationException));
 
-            // Exception handling does not mean that we can return valid GitClient
+            // Exception handling does not mean that we can return valid LocalGitRepository
             bool cancelledByUser = isCancelledByUser(ex);
 
             string result = cancelledByUser ? "cancelled by user" : "failed";
@@ -123,7 +124,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty, null, null);
+            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty);
          }
          catch (ExternalProcessException ex)
          {

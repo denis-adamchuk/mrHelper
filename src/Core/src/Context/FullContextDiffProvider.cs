@@ -49,7 +49,7 @@ namespace mrHelper.Core.Context
             context = Constants.FullContextSize
          };
 
-         IEnumerable<string> fullDiff = _gitRepository.Diff(arguments);
+         IEnumerable<string> fullDiff = _gitRepository.Data.Get(arguments);
          if (fullDiff.Count() == 0)
          {
             Trace.TraceWarning(String.Format(

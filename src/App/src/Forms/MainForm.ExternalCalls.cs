@@ -60,8 +60,7 @@ namespace mrHelper.App.Forms
          IGitRepository gitRepository = null;
          if (_gitClientFactory.ParentFolder == snapshot.TempFolder)
          {
-            GitClient client = _gitClientFactory.GetClient(snapshot.Host, snapshot.Project);
-            gitRepository = client;
+            gitRepository = _gitClientFactory.GetRepository(snapshot.Host, snapshot.Project);
          }
 
          try

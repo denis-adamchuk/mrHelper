@@ -55,7 +55,7 @@ namespace mrHelper.Core.Context
             filename = filename,
             sha = sha
          };
-         string[] contents = _gitRepository.ShowFileByRevision(arguments).ToArray();
+         string[] contents = _gitRepository.Data.Get(arguments).ToArray();
          if (linenumber > contents.Count())
          {
             throw new ArgumentException(

@@ -43,22 +43,18 @@ namespace mrHelper.Common.Interfaces
       }
    }
 
-   /// <summary>
-   /// Set of operations on git repository available across the application
-   /// </summary>
+   public interface IGitRepositoryData
+   {
+      IEnumerable<string> Get(GitDiffArguments argument);
+      IEnumerable<string> Get(GitRevisionArguments arguments);
+      IEnumerable<string> Get(GitNumStatArguments arguments);
+   }
+
    public interface IGitRepository
    {
-      IEnumerable<string> Diff(GitDiffArguments argument);
-      Task<IEnumerable<string>> DiffAsync(GitDiffArguments argument);
+      IGitRepositoryData Data { get; }
 
-      IEnumerable<string> ShowFileByRevision(GitRevisionArguments arguments);
-      Task<IEnumerable<string>> ShowFileByRevisionAsync(GitRevisionArguments arguments);
-
-      IEnumerable<string> GetDiffStatistics(GitNumStatArguments arguments);
-      Task<IEnumerable<string>> GetDiffStatisticsAsync(GitNumStatArguments arguments);
-
-      string HostName { get; }
-      string ProjectName { get; }
+      ProjectKey ProjectKey { get; }
    }
 }
 

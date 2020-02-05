@@ -5,6 +5,7 @@ using GitLabSharp.Entities;
 using System.Diagnostics;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Types;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {

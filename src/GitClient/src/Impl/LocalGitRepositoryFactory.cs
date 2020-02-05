@@ -4,17 +4,15 @@ using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using mrHelper.Client.Types;
-using mrHelper.Client.MergeRequests;
 using System.Threading.Tasks;
+using mrHelper.Common.Interfaces;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.GitClient
 {
    ///<summary>
-   /// Creates GitClient objects.
-   /// This factory is helpful because GitClient objects may have internal state that is expensive to fill up.
+   /// Creates LocalGitRepository objects.
    ///<summary>
-   public class GitClientFactory
+   public class LocalGitRepositoryFactory : ILocalGitRepositoryFactory
    {
       public string ParentFolder { get; }
 
@@ -22,7 +20,8 @@ namespace mrHelper.App.Helpers
       /// Create a factory
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
-      public GitClientFactory(string parentFolder, IProjectWatcher projectWatcher, ISynchronizeInvoke synchronizeInvoke)
+      public LocalGitRepositoryFactory(string parentFolder, IProjectWatcher projectWatcher,
+         ISynchronizeInvoke synchronizeInvoke)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -33,15 +32,15 @@ namespace mrHelper.App.Helpers
          _projectWatcher = projectWatcher;
          _synchronizeInvoke = synchronizeInvoke;
 
-         Trace.TraceInformation(String.Format("[GitClientFactory] Created GitClientFactory for parentFolder {0}",
-            parentFolder));
+         Trace.TraceInformation(String.Format(
+            "[LocalGitRepositoryFactory] Created LocalGitRepositoryFactory for parentFolder {0}", parentFolder));
       }
 
       /// <summary>
-      /// Create a GitClient object or return it if already cached.
+      /// Create a LocalGitRepository object or return it if already cached.
       /// Throws if
       /// </summary>
-      public GitClient GetClient(string hostName, string projectName)
+      public ILocalGitRepository GetRepository(string hostName, string projectName)
       {
          string[] splitted = projectName.Split('/');
          if (splitted.Length < 2)
@@ -52,26 +51,24 @@ namespace mrHelper.App.Helpers
          string path = Path.Combine(ParentFolder, splitted[1]);
 
          ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
-         if (_clients.ContainsKey(key))
+         if (!_repos.ContainsKey(key))
          {
-            return _clients[key];
+            _repos[key] = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke);
          }
-
-         GitClient client = new GitClient(key, path, _projectWatcher, _synchronizeInvoke);
-         _clients[key] = client;
-         return client;
+         return _repos[key];
       }
 
       async public Task DisposeAsync()
       {
-         Trace.TraceInformation(String.Format("[GitClientFactory] Disposing GitClientFactory for parentFolder {0}",
-            ParentFolder));
+         Trace.TraceInformation(String.Format(
+            "[LocalGitRepositoryFactory] Disposing LocalGitRepositoryFactory for parentFolder {0}", ParentFolder));
 
-         await Task.WhenAll(_clients.Values.Select(x => x.DisposeAsync()).ToArray());
-         _clients.Clear();
+         await Task.WhenAll(_repos.Values.Select(x => x.DisposeAsync()).ToArray());
+         _repos.Clear();
       }
 
-      private readonly Dictionary<ProjectKey, GitClient> _clients = new Dictionary<ProjectKey, GitClient>();
+      private readonly Dictionary<ProjectKey, LocalGitRepository> _repos =
+         new Dictionary<ProjectKey, LocalGitRepository>();
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
    }

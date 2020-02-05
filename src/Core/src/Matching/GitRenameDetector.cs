@@ -35,7 +35,7 @@ namespace mrHelper.Core.Git
             filter = "R"
          };
 
-         IEnumerable<string> renames = _gitRepository.GetDiffStatistics(arguments);
+         IEnumerable<string> renames = _gitRepository.Data.Get(arguments);
          moved = false;
 
          foreach (string line in renames)

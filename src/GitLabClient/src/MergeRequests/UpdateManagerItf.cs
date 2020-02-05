@@ -1,4 +1,5 @@
 ﻿using mrHelper.Client.Types;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {

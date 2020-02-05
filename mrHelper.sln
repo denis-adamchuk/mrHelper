@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CommonControls", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CommonNative", "src\CommonNative\mrHelper.CommonNative.csproj", "{31433881-1F90-4513-9970-8B27CD635328}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.GitClient", "src\GitClient\mrHelper.GitClient.csproj", "{D75B7B19-B06B-42E9-9363-437F5640A045}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,6 +98,12 @@ Global
 		{31433881-1F90-4513-9970-8B27CD635328}.Install|Any CPU.Build.0 = Release|Any CPU
 		{31433881-1F90-4513-9970-8B27CD635328}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31433881-1F90-4513-9970-8B27CD635328}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D75B7B19-B06B-42E9-9363-437F5640A045}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D75B7B19-B06B-42E9-9363-437F5640A045}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D75B7B19-B06B-42E9-9363-437F5640A045}.Install|Any CPU.ActiveCfg = Release|Any CPU
+		{D75B7B19-B06B-42E9-9363-437F5640A045}.Install|Any CPU.Build.0 = Release|Any CPU
+		{D75B7B19-B06B-42E9-9363-437F5640A045}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D75B7B19-B06B-42E9-9363-437F5640A045}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

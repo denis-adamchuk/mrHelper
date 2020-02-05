@@ -54,6 +54,7 @@ namespace mrHelper.Client.MergeRequests
       public void Dispose()
       {
          _updateManager?.Dispose();
+         _updateManager = null;
       }
 
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
@@ -83,7 +84,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public void CheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
-         _updateManager.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
+         _updateManager?.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
       }
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)

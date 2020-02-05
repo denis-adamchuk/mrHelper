@@ -14,6 +14,8 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonNative;
+using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -173,7 +175,7 @@ namespace mrHelper.App.Forms
             string newFolder = localGitFolderBrowser.SelectedPath;
             Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
 
-            if (getGitClientFactory(newFolder) != null)
+            if (getLocalGitRepositoryFactory(newFolder) != null)
             {
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
                Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
@@ -601,13 +603,13 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(getMergeRequestKey().HasValue);
 
-         GitClient client = await getGitClient(getMergeRequestKey().Value.ProjectKey, false);
-         if (client == null)
+         ILocalGitRepository repo = await getRepository(getMergeRequestKey().Value.ProjectKey, false);
+         if (repo == null)
          {
             return;
          }
 
-         await client.Updater.CancelUpdateAsync();
+         await repo.Updater.CancelUpdate();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

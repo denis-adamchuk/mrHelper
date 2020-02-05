@@ -19,6 +19,8 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Controls;
+using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -663,7 +665,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<GitClientFactory> getGitClientFactory(string localFolder)
+      async private Task<ILocalGitRepositoryFactory> getLocalGitRepositoryFactory(string localFolder)
       {
          if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
          {
@@ -674,12 +676,12 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new GitClientFactory(localFolder,
+               _gitClientFactory = new LocalGitRepositoryFactory(localFolder,
                   _mergeRequestManager.GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClientFactory"));
+               ExceptionHandlers.Handle(ex, String.Format("Cannot create LocalGitRepositoryFactory"));
 
                try
                {
@@ -698,34 +700,30 @@ namespace mrHelper.App.Forms
       }
 
       /// <summary>
-      /// Make some checks and create a Client
+      /// Make some checks and create a repository
       /// </summary>
-      /// <returns>null if could not create a GitClient</returns>
-      async private Task<GitClient> getGitClient(ProjectKey key, bool showMessageBoxOnError)
+      /// <returns>null if could not create a repository</returns>
+      async private Task<ILocalGitRepository> getRepository(ProjectKey key, bool showMessageBoxOnError)
       {
-         GitClientFactory factory = await getGitClientFactory(Program.Settings.LocalGitFolder);
+         ILocalGitRepositoryFactory factory = await getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
          if (factory == null)
          {
             return null;
          }
 
-         GitClient client;
          try
          {
-            client = factory.GetClient(key.HostName, key.ProjectName);
+            return factory.GetRepository(key.HostName, key.ProjectName);
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClient"));
+            ExceptionHandlers.Handle(ex, String.Format("Cannot create LocalGitRepository"));
             if (showMessageBoxOnError)
             {
                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return null;
          }
-
-         Debug.Assert(client != null);
-         return client;
       }
 
       private string getInitialHostName()

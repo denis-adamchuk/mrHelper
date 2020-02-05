@@ -12,7 +12,6 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
@@ -253,7 +252,7 @@ namespace mrHelper.App.Forms
          _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
          _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
 
-         _gitClientUpdater = new GitClientInteractiveUpdater();
+         _gitClientUpdater = new GitInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange +=
             (status) =>
          {
@@ -296,8 +295,8 @@ namespace mrHelper.App.Forms
          // Revision Cacher subscribes to Workflow notifications
          if (Program.Settings.CacheRevisionsInBackground)
          {
-            _revisionCacher = new RevisionCacher(_workflow, this, Program.Settings,
-               projectKey => getGitClient(projectKey, false), _mergeRequestManager);
+            _revisionCacher = new GitDataUpdater(_workflow, this, Program.Settings,
+               projectKey => getRepository(projectKey, false), _mergeRequestManager);
          }
 
          // Time Tracking Manager requires Workflow and Discussion Manager

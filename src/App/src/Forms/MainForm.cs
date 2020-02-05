@@ -13,6 +13,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using System.Diagnostics;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -78,10 +79,10 @@ namespace mrHelper.App.Forms
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
-      private GitClientFactory _gitClientFactory;
-      private GitClientInteractiveUpdater _gitClientUpdater;
+      private LocalGitRepositoryFactory _gitClientFactory;
+      private GitInteractiveUpdater _gitClientUpdater;
+      private GitDataUpdater _revisionCacher;
       private PersistentStorage _persistentStorage;
-      private RevisionCacher _revisionCacher;
       private UserNotifier _userNotifier;
 
       private string _initialHostName = String.Empty;

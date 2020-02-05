@@ -1,4 +1,4 @@
-using System;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Types
 {

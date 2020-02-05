@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {

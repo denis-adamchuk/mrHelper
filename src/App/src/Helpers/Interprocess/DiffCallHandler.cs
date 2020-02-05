@@ -10,6 +10,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Interprocess
 {
@@ -32,11 +33,11 @@ namespace mrHelper.App.Interprocess
 
          // This happens when a git parent folder was changed when a diff tool was being launched
          Trace.TraceWarning(String.Format(
-            "[DiffCallHandler] Creating temporary GitClient for TempFolder \"{0}\", Host {1}, Project {2}",
+            "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
-         GitClientFactory factory = new GitClientFactory(_snapshot.TempFolder, null, null);
-         GitClient tempRepository = factory.GetClient(_snapshot.Host, _snapshot.Project);
+         ILocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(_snapshot.TempFolder, null, null);
+         ILocalGitRepository tempRepository = factory.GetRepository(_snapshot.Host, _snapshot.Project);
          Debug.Assert(!tempRepository.DoesRequireClone());
          await doHandleAsync(tempRepository);
       }

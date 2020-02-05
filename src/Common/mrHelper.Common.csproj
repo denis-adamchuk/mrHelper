@@ -49,7 +49,10 @@
     <Compile Include="Exceptions\ExceptionHandlers.cs" />
     <Compile Include="Exceptions\ExternalProcessException.cs" />
     <Compile Include="Exceptions\FeedbackReporterException.cs" />
+    <Compile Include="Interfaces\ExternalProcessManagerItf.cs" />
     <Compile Include="Interfaces\HostPropertiesItf.cs" />
+    <Compile Include="Interfaces\InstantProjectCheckerItf.cs" />
+    <Compile Include="Interfaces\ProjectWatcherItf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Exceptions\CustomCommandLoaderException.cs" />
     <Compile Include="Exceptions\DiffToolIntegrationException.cs" />
@@ -62,6 +65,7 @@
     <Compile Include="Tools\CustomTraceListener.cs" />
     <Compile Include="Tools\EMailSender.cs" />
     <Compile Include="Tools\ExternalProcess.cs" />
+    <Compile Include="Tools\ExternalProcessManager.cs" />
     <Compile Include="Tools\JsonFileReader.cs" />
     <Compile Include="Tools\Persistence\PersistentState.cs" />
     <Compile Include="Tools\Persistence\PersistentStateItf.cs" />

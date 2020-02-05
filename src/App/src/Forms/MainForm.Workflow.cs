@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {

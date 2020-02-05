@@ -73,7 +73,7 @@ namespace mrHelper.Core.Git
             context = 0
          };
 
-         IEnumerable<string> diff = gitRepository.Diff(arguments);
+         IEnumerable<string> diff = gitRepository.Data.Get(arguments);
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);
