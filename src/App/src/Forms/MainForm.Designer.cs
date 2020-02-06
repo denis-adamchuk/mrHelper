@@ -362,6 +362,7 @@ namespace mrHelper.App.Forms
          this.linkLabelHelp.Text = "Help";
          this.toolTip.SetToolTip(this.linkLabelHelp, "Open a web page with documentation");
          this.linkLabelHelp.Visible = false;
+         this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
          // 
          // linkLabelSendFeedback
          // 
@@ -375,6 +376,7 @@ namespace mrHelper.App.Forms
          this.linkLabelSendFeedback.Text = "Feedback";
          this.toolTip.SetToolTip(this.linkLabelSendFeedback, "Report a bug or suggestion to developer. Logs are attached automatically.");
          this.linkLabelSendFeedback.Visible = false;
+         this.linkLabelSendFeedback.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSendFeedback_LinkClicked);
          // 
          // linkLabelNewVersion
          // 
@@ -388,6 +390,7 @@ namespace mrHelper.App.Forms
          this.linkLabelNewVersion.Text = "New version is available! Click here to install it.";
          this.toolTip.SetToolTip(this.linkLabelNewVersion, "New version is already downloaded. Click to install it.");
          this.linkLabelNewVersion.Visible = false;
+         this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
          // 
          // contextMenuStrip
          // 
@@ -997,6 +1000,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
          this.linkLabelAbortGit.Visible = false;
+         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
          // 
          // labelGitStatus
          // 
