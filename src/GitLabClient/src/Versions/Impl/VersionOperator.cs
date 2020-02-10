@@ -65,8 +65,14 @@ namespace mrHelper.Client.Versions
          }
       }
 
+      internal Task<Version> GetLatestVersionAsync(MergeRequestKey mrk)
+      {
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
+         return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
+      }
+
       private readonly IHostProperties _settings;
    }
 }
-
 

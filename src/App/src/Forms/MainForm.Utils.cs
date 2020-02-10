@@ -570,6 +570,18 @@ namespace mrHelper.App.Forms
             (span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss"));
       }
 
+      private string getSize(FullMergeRequestKey? fmk)
+      {
+         if (!fmk.HasValue)
+         {
+            return String.Empty;
+         }
+
+         GitStatisticManager.DiffStatistic? diffStatistic =
+            _gitStatManager.GetStatistic(fmk.Value, out string errMsg);
+         return diffStatistic?.ToString() ?? errMsg;
+      }
+
       private void enableMergeRequestActions(bool enabled)
       {
          linkLabelConnectedTo.Enabled = enabled;
@@ -842,17 +854,8 @@ namespace mrHelper.App.Forms
       private void addListViewMergeRequestItem(MergeRequestKey mrk)
       {
          ListViewGroup group = listViewMergeRequests.Groups[mrk.ProjectKey.ProjectName];
-         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
-            {
-               String.Empty, // Column IId (stub)
-               String.Empty, // Column Author (stub)
-               String.Empty, // Column Title (stub)
-               String.Empty, // Column Labels (stub)
-               String.Empty, // Column Jira (stub)
-               String.Empty, // Column Total Time (stub)
-               String.Empty, // Column Source Branch (stub)
-               String.Empty, // Column Target Branch (stub)
-            }, group));
+         string[] items = Enumerable.Repeat(String.Empty, listViewMergeRequests.Columns.Count).ToArray();
+         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(items, group));
          Debug.Assert(item.SubItems.Count == listViewMergeRequests.Columns.Count);
          setListViewItemTag(item, mrk);
       }
@@ -869,11 +872,12 @@ namespace mrHelper.App.Forms
 
          MergeRequest mr = mergeRequest.Value;
 
-         item.Tag = new FullMergeRequestKey
+         FullMergeRequestKey fmk = new FullMergeRequestKey
          {
             ProjectKey = mrk.ProjectKey,
             MergeRequest = mr
          };
+         item.Tag = fmk;
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Constants.AuthorLabelPrefix, mr.Author.Username);
@@ -885,14 +889,29 @@ namespace mrHelper.App.Forms
 
          Func<MergeRequestKey, string> getTotalTimeText = (key) => convertTotalTimeToText(getTotalTime(key));
 
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                  () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,                () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl);
-         item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty);
-         item.SubItems[6].Tag = new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty);
-         item.SubItems[7].Tag = new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty);
+         Action<string, ListViewSubItemInfo> setSubItemTag = (columnTag, subItemInfo) =>
+         {
+            ColumnHeader columnHeader = listViewMergeRequests.Columns
+               .Cast<ColumnHeader>()
+               .SingleOrDefault(x => x.Tag.ToString() == columnTag);
+            if (columnHeader == null)
+            {
+               Debug.Assert(false);
+               return;
+            }
+
+            item.SubItems[columnHeader.Index].Tag = subItemInfo;
+         };
+
+         setSubItemTag("IId",          new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url));
+         setSubItemTag("Author",       new ListViewSubItemInfo(() => author,                  () => String.Empty));
+         setSubItemTag("Title",        new ListViewSubItemInfo(() => mr.Title,                () => String.Empty));
+         setSubItemTag("Labels",       new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty));
+         setSubItemTag("Size",         new ListViewSubItemInfo(() => getSize(fmk),            () => String.Empty));
+         setSubItemTag("Jira",         new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl));
+         setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty));
+         setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty));
+         setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)

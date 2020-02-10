@@ -95,6 +95,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -791,6 +792,7 @@ namespace mrHelper.App.Forms
             this.columnHeaderAuthor,
             this.columnHeaderTitle,
             this.columnHeaderLabels,
+            this.columnHeaderSize,
             this.columnHeaderJira,
             this.columnHeaderTotalTime,
             this.columnHeaderSourceBranch,
@@ -837,6 +839,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderLabels.Tag = "Labels";
          this.columnHeaderLabels.Text = "Labels";
          this.columnHeaderLabels.Width = 180;
+         // 
+         // columnHeaderSize
+         // 
+         this.columnHeaderSize.Tag = "Size";
+         this.columnHeaderSize.Text = "Size";
+         this.columnHeaderSize.Width = 100;
          // 
          // columnHeaderJira
          // 
@@ -1345,6 +1353,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Panel panelFreeSpace;
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.PictureBox pictureBox1;
-   }
+        private System.Windows.Forms.ColumnHeader columnHeaderSize;
+    }
 }
 

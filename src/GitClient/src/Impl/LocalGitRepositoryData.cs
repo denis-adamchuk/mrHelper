@@ -16,6 +16,11 @@ namespace mrHelper.GitClient
          _path = path;
       }
 
+      public IEnumerable<string> Get(GitShortStatArguments arguments)
+      {
+         return doGet(arguments, _cachedShortStat);
+      }
+
       public IEnumerable<string> Get(GitDiffArguments arguments)
       {
          return doGet(arguments, _cachedDiffs);
@@ -29,6 +34,11 @@ namespace mrHelper.GitClient
       public IEnumerable<string> Get(GitNumStatArguments arguments)
       {
          return doGet(arguments, _cachedDiffStat);
+      }
+
+      async public Task Update(IEnumerable<GitShortStatArguments> arguments)
+      {
+         await doUpdate(arguments, _cachedShortStat);
       }
 
       async public Task Update(IEnumerable<GitDiffArguments> arguments)
@@ -53,11 +63,11 @@ namespace mrHelper.GitClient
 
       private IEnumerable<string> doGet<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
-         if (!cache.ContainsKey(arguments))
+         if (!cache.ContainsKey(arguments) && ((dynamic)arguments).IsValid())
          {
             cache[arguments] = ExternalProcess.Start("git", arguments.ToString(), true, _path).StdOut;
          }
-         return cache[arguments];
+         return cache.ContainsKey(arguments) ? cache[arguments] : null;
       }
 
       async private Task doUpdate<T>(IEnumerable<T> arguments, Dictionary<T, IEnumerable<string>> cache)
@@ -65,7 +75,7 @@ namespace mrHelper.GitClient
          await doBatchUpdate(arguments,
                async (x) =>
             {
-               if (_disabled || cache.ContainsKey(x))
+               if (_disabled || cache.ContainsKey(x) || !((dynamic)x).IsValid())
                {
                   return;
                }
@@ -106,6 +116,9 @@ namespace mrHelper.GitClient
       private string _path;
       private bool _disabled;
       private IExternalProcessManager _operationManager;
+
+      private readonly Dictionary<GitShortStatArguments, IEnumerable<string>> _cachedShortStat =
+         new Dictionary<GitShortStatArguments, IEnumerable<string>>();
 
       private readonly Dictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
          new Dictionary<GitDiffArguments, IEnumerable<string>>();

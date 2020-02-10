@@ -34,7 +34,7 @@ namespace mrHelper.App.Helpers
                if (_latestChanges?.Count > 0)
                {
                   Trace.TraceInformation(String.Format(
-                     "[LocalGitRepositoryDataUpdater] Unsubscribing from {0} Git Repos", _latestChanges.Count()));
+                     "[GitDataUpdater] Unsubscribing from {0} Git Repos", _latestChanges.Count()));
 
                   _latestChanges.Keys.ToList().ForEach(x => x.Updated -= onLocalGitRepositoryUpdated);
                   _latestChanges.Keys.ToList().ForEach(x => x.Disposed -= onLocalGitRepositoryDisposed);
@@ -54,10 +54,13 @@ namespace mrHelper.App.Helpers
                      if (repo != null)
                      {
                         _latestChanges.Add(repo, DateTime.MinValue);
+
+                        // TODO It might require to make ForceUpdate() here if GitDataUpdater wants to
+                        // guaranteely not miss any repository updates
                      }
                   }
 
-                  Trace.TraceInformation(String.Format("[LocalGitRepositoryDataUpdater] Subscribing to {0} Git Repos",
+                  Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to {0} Git Repos",
                      _latestChanges.Count()));
                   _latestChanges.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
                   _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
@@ -97,7 +100,7 @@ namespace mrHelper.App.Helpers
                      {
                         Version newVersionDetailed = await _versionManager.GetVersion(version, mrk);
                         Trace.TraceInformation(String.Format(
-                           "[LocalGitRepositoryDataUpdater] Found new version of MR with IId={0} (created at {1}). "
+                           "[GitDataUpdater] Found new version of MR with IId={0} (created at {1}). "
                          + "PrevLatestChange={2}, LatestChange={3}",
                            mrk.IId,
                            newVersionDetailed.Created_At.ToLocalTime().ToString(),
@@ -109,7 +112,7 @@ namespace mrHelper.App.Helpers
                      if (newVersionsDetailed.Count > 0)
                      {
                         Trace.TraceInformation(String.Format(
-                           "[LocalGitRepositoryDataUpdater] Start processing of merge request: "
+                           "[GitDataUpdater] Start processing of merge request: "
                          + "Host={0}, Project={1}, IId={2}. Versions: {3}",
                            mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
 
@@ -121,7 +124,7 @@ namespace mrHelper.App.Helpers
                         await doCacheAsync(repo, diffArgs, revisionArgs, renamesArgs);
 
                         Trace.TraceInformation(String.Format(
-                           "[LocalGitRepositoryDataUpdater] Finished processing of merge request with IId={0}. "
+                           "[GitDataUpdater] Finished processing of merge request with IId={0}. "
                          + "Cached git results: {1} git diff, {2} git show, {3} git rename",
                            mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
                      }
@@ -166,7 +169,7 @@ namespace mrHelper.App.Helpers
             if (version.Diffs.Count() > MaxDiffsInVersion)
             {
                Trace.TraceWarning(String.Format(
-                  "[LocalGitRepositoryDataUpdater] Number of diffs in version {0} is {1}. "
+                  "[GitDataUpdater] Number of diffs in version {0} is {1}. "
                 + "It exceeds {2} and will be truncated", version.Id, version.Diffs.Count(), MaxDiffsInVersion));
             }
 

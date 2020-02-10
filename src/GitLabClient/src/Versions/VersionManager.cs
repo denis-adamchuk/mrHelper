@@ -26,6 +26,11 @@ namespace mrHelper.Client.Versions
          return _operator.LoadVersionAsync(version, mrk);
       }
 
+      public Task<Version> GetLatestVersion(MergeRequestKey mrk)
+      {
+         return _operator.GetLatestVersionAsync(mrk);
+      }
+
       private readonly VersionOperator _operator;
    }
 }

@@ -81,7 +81,8 @@ namespace mrHelper.App.Forms
       private DiscussionManager _discussionManager;
       private LocalGitRepositoryFactory _gitClientFactory;
       private GitInteractiveUpdater _gitClientUpdater;
-      private GitDataUpdater _revisionCacher;
+      private GitDataUpdater _gitDataUpdater;
+      private GitStatisticManager _gitStatManager;
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
 

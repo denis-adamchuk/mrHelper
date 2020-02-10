@@ -295,9 +295,13 @@ namespace mrHelper.App.Forms
          // Revision Cacher subscribes to Workflow notifications
          if (Program.Settings.CacheRevisionsInBackground)
          {
-            _revisionCacher = new GitDataUpdater(_workflow, this, Program.Settings,
+            _gitDataUpdater = new GitDataUpdater(_workflow, this, Program.Settings,
                projectKey => getRepository(projectKey, false), _mergeRequestManager);
          }
+
+         _gitStatManager = new GitStatisticManager(_workflow, this, Program.Settings,
+            projectKey => getRepository(projectKey, false), _mergeRequestManager);
+         _gitStatManager.Update += () => listViewMergeRequests.Invalidate();
 
          // Time Tracking Manager requires Workflow and Discussion Manager
          createTimeTrackingManager();
