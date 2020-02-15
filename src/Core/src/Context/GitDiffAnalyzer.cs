@@ -66,11 +66,18 @@ namespace mrHelper.Core.Git
 
          GitDiffArguments arguments = new GitDiffArguments
          {
-            sha1 = sha1,
-            sha2 = sha2,
-            filename1 = filename1,
-            filename2 = filename2,
-            context = 0
+            Mode = GitDiffArguments.DiffMode.Context,
+            CommonArgs = new GitDiffArguments.CommonArguments
+            {
+               Sha1 = sha1,
+               Sha2 = sha2,
+               Filename1 = filename1,
+               Filename2 = filename2,
+            },
+            SpecialArgs = new GitDiffArguments.DiffContextArguments
+            {
+               Context = 0
+            }
          };
 
          IEnumerable<string> diff = gitRepository.Data.Get(arguments);

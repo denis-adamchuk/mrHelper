@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.GitClient;
@@ -118,15 +117,14 @@ namespace mrHelper.App.Helpers
 
                         gatherArguments(newVersionsDetailed,
                            out HashSet<GitDiffArguments> diffArgs,
-                           out HashSet<GitRevisionArguments> revisionArgs,
-                           out HashSet<GitNumStatArguments> renamesArgs);
+                           out HashSet<GitShowRevisionArguments> revisionArgs);
 
-                        await doCacheAsync(repo, diffArgs, revisionArgs, renamesArgs);
+                        await doCacheAsync(repo, diffArgs, revisionArgs);
 
                         Trace.TraceInformation(String.Format(
                            "[GitDataUpdater] Finished processing of merge request with IId={0}. "
-                         + "Cached git results: {1} git diff, {2} git show, {3} git rename",
-                           mrk.IId, diffArgs.Count, revisionArgs.Count, renamesArgs.Count));
+                         + "Cached git results: {1} git diff, {2} git show",
+                           mrk.IId, diffArgs.Count, revisionArgs.Count));
                      }
                   }
                   catch (VersionManagerException)
@@ -156,13 +154,10 @@ namespace mrHelper.App.Helpers
       }
 
       private void gatherArguments(IEnumerable<Version> versions,
-         out HashSet<GitDiffArguments> diffArgs,
-         out HashSet<GitRevisionArguments> revisionArgs,
-         out HashSet<GitNumStatArguments> renamesArgs)
+         out HashSet<GitDiffArguments> diffArgs, out HashSet<GitShowRevisionArguments> revisionArgs)
       {
          diffArgs = new HashSet<GitDiffArguments>();
-         revisionArgs = new HashSet<GitRevisionArguments>();
-         renamesArgs = new HashSet<GitNumStatArguments>();
+         revisionArgs = new HashSet<GitShowRevisionArguments>();
 
          foreach (Version version in versions)
          {
@@ -177,58 +172,73 @@ namespace mrHelper.App.Helpers
             {
                diffArgs.Add(new GitDiffArguments
                {
-                  context = 0,
-                  filename1 = diff.Old_Path,
-                  filename2 = diff.New_Path,
-                  sha1 = version.Base_Commit_SHA,
-                  sha2 = version.Head_Commit_SHA
+                  Mode = GitDiffArguments.DiffMode.Context,
+                  CommonArgs = new GitDiffArguments.CommonArguments
+                  {
+                     Sha1 = version.Base_Commit_SHA,
+                     Sha2 = version.Head_Commit_SHA,
+                     Filename1 = diff.Old_Path,
+                     Filename2 = diff.New_Path,
+                  },
+                  SpecialArgs = new GitDiffArguments.DiffContextArguments
+                  {
+                     Context = 0
+                  }
                });
 
                diffArgs.Add(new GitDiffArguments
                {
-                  context = Constants.FullContextSize,
-                  filename1 = diff.Old_Path,
-                  filename2 = diff.New_Path,
-                  sha1 = version.Base_Commit_SHA,
-                  sha2 = version.Head_Commit_SHA
+                  Mode = GitDiffArguments.DiffMode.Context,
+                  CommonArgs = new GitDiffArguments.CommonArguments
+                  {
+                     Sha1 = version.Base_Commit_SHA,
+                     Sha2 = version.Head_Commit_SHA,
+                     Filename1 = diff.Old_Path,
+                     Filename2 = diff.New_Path,
+                  },
+                  SpecialArgs = new GitDiffArguments.DiffContextArguments
+                  {
+                     Context = Constants.FullContextSize
+                  }
+               });
+
+               diffArgs.Add(new GitDiffArguments
+               {
+                  Mode = GitDiffArguments.DiffMode.NumStat,
+                  CommonArgs = new GitDiffArguments.CommonArguments
+                  {
+                     Sha1 = version.Base_Commit_SHA,
+                     Sha2 = version.Head_Commit_SHA,
+                     Filter = "R"
+                  }
                });
 
                if (!diff.New_File)
                {
-                  revisionArgs.Add(new GitRevisionArguments
+                  revisionArgs.Add(new GitShowRevisionArguments
                   {
-                     filename = diff.Old_Path,
-                     sha = version.Base_Commit_SHA
+                     Filename = diff.Old_Path,
+                     Sha = version.Base_Commit_SHA
                   });
                }
 
                if (!diff.Deleted_File)
                {
-                  revisionArgs.Add(new GitRevisionArguments
+                  revisionArgs.Add(new GitShowRevisionArguments
                   {
-                     filename = diff.New_Path,
-                     sha = version.Head_Commit_SHA
+                     Filename = diff.New_Path,
+                     Sha = version.Head_Commit_SHA
                   });
                }
-
-               renamesArgs.Add(new GitNumStatArguments
-               {
-                  sha1 = version.Base_Commit_SHA,
-                  sha2 = version.Head_Commit_SHA,
-                  filter = "R"
-               });
             }
          }
       }
 
       async private static Task doCacheAsync(ILocalGitRepository repo,
-         HashSet<GitDiffArguments> diffArgs,
-         HashSet<GitRevisionArguments> revisionArgs,
-         HashSet<GitNumStatArguments> renamesArgs)
+         HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
       {
          await repo.Data.Update(diffArgs);
          await repo.Data.Update(revisionArgs);
-         await repo.Data.Update(renamesArgs);
       }
 
       private Dictionary<ILocalGitRepository, DateTime> _latestChanges;

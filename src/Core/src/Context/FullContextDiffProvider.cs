@@ -42,11 +42,18 @@ namespace mrHelper.Core.Context
 
          GitDiffArguments arguments = new GitDiffArguments
          {
-            sha1 = leftSHA,
-            sha2 = rightSHA,
-            filename1 = leftFileName,
-            filename2 = rightFileName,
-            context = Constants.FullContextSize
+            Mode = GitDiffArguments.DiffMode.Context,
+            CommonArgs = new GitDiffArguments.CommonArguments
+            {
+               Sha1 = leftSHA,
+               Sha2 = rightSHA,
+               Filename1 = leftFileName,
+               Filename2 = rightFileName,
+            },
+            SpecialArgs = new GitDiffArguments.DiffContextArguments
+            {
+               Context = Constants.FullContextSize
+            }
          };
 
          IEnumerable<string> fullDiff = _gitRepository.Data.Get(arguments);

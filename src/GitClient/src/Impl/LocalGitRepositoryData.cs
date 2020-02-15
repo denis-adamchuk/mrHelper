@@ -16,29 +16,14 @@ namespace mrHelper.GitClient
          _path = path;
       }
 
-      public IEnumerable<string> Get(GitShortStatArguments arguments)
-      {
-         return doGet(arguments, _cachedShortStat);
-      }
-
       public IEnumerable<string> Get(GitDiffArguments arguments)
       {
          return doGet(arguments, _cachedDiffs);
       }
 
-      public IEnumerable<string> Get(GitRevisionArguments arguments)
+      public IEnumerable<string> Get(GitShowRevisionArguments arguments)
       {
          return doGet(arguments, _cachedRevisions);
-      }
-
-      public IEnumerable<string> Get(GitNumStatArguments arguments)
-      {
-         return doGet(arguments, _cachedDiffStat);
-      }
-
-      async public Task Update(IEnumerable<GitShortStatArguments> arguments)
-      {
-         await doUpdate(arguments, _cachedShortStat);
       }
 
       async public Task Update(IEnumerable<GitDiffArguments> arguments)
@@ -46,14 +31,9 @@ namespace mrHelper.GitClient
          await doUpdate(arguments, _cachedDiffs);
       }
 
-      async public Task Update(IEnumerable<GitRevisionArguments> arguments)
+      async public Task Update(IEnumerable<GitShowRevisionArguments> arguments)
       {
          await doUpdate(arguments, _cachedRevisions);
-      }
-
-      async public Task Update(IEnumerable<GitNumStatArguments> arguments)
-      {
-         await doUpdate(arguments, _cachedDiffStat);
       }
 
       internal void DisableUpdates()
@@ -117,17 +97,11 @@ namespace mrHelper.GitClient
       private bool _disabled;
       private IExternalProcessManager _operationManager;
 
-      private readonly Dictionary<GitShortStatArguments, IEnumerable<string>> _cachedShortStat =
-         new Dictionary<GitShortStatArguments, IEnumerable<string>>();
-
       private readonly Dictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
          new Dictionary<GitDiffArguments, IEnumerable<string>>();
 
-      private readonly Dictionary<GitRevisionArguments, IEnumerable<string>> _cachedRevisions =
-         new Dictionary<GitRevisionArguments, IEnumerable<string>>();
-
-      private readonly Dictionary<GitNumStatArguments, IEnumerable<string>> _cachedDiffStat =
-         new Dictionary<GitNumStatArguments, IEnumerable<string>>();
+      private readonly Dictionary<GitShowRevisionArguments, IEnumerable<string>> _cachedRevisions =
+         new Dictionary<GitShowRevisionArguments, IEnumerable<string>>();
    }
 }
 

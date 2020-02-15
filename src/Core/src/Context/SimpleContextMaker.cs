@@ -45,10 +45,10 @@ namespace mrHelper.Core.Context
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
-         GitRevisionArguments arguments = new GitRevisionArguments
+         GitShowRevisionArguments arguments = new GitShowRevisionArguments
          {
-            filename = filename,
-            sha = sha
+            Filename = filename,
+            Sha = sha
          };
          IEnumerable<string> contents = _gitRepository.Data.Get(arguments);
          if (linenumber > contents.Count())

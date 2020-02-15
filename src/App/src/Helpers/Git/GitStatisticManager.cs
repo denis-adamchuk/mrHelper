@@ -159,13 +159,17 @@ namespace mrHelper.App.Helpers
                   resetCachedStatistic(repo, key);
                   Update?.Invoke();
 
-                  GitShortStatArguments gitShortStatArguments = new GitShortStatArguments
+                  GitDiffArguments args = new GitDiffArguments
                   {
-                     sha1 = version.Base_Commit_SHA,
-                     sha2 = version.Head_Commit_SHA
+                     Mode = GitDiffArguments.DiffMode.ShortStat,
+                     CommonArgs = new GitDiffArguments.CommonArguments
+                     {
+                        Sha1 = version.Base_Commit_SHA,
+                        Sha2 = version.Head_Commit_SHA
+                     }
                   };
 
-                  await repo.Data.Update(new GitShortStatArguments[] { gitShortStatArguments });
+                  await repo.Data.Update(new GitDiffArguments[] { args });
 
                   if (!_gitStatistic.ContainsKey(repo))
                   {
@@ -173,7 +177,7 @@ namespace mrHelper.App.Helpers
                      break;
                   }
 
-                  DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, gitShortStatArguments);
+                  DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, args);
                   updateCachedStatistic(repo, key, latestChange, diffStat);
                   Update?.Invoke();
                }
@@ -208,18 +212,18 @@ namespace mrHelper.App.Helpers
                RegexOptions.Compiled);
 
       private DiffStatistic? parseGitDiffStatistic(ILocalGitRepository repo, DiffStatisticKey key,
-         GitShortStatArguments gitShortStatArguments)
+         GitDiffArguments args)
       {
          Action<string> traceError = (text) =>
          {
             Trace.TraceError(String.Format(
                "Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
              + "This makes impossible to show git statistic for MR with IID {4}", text, repo.Path,
-               String.Format("{0}/{1}", gitShortStatArguments.sha1, gitShortStatArguments.sha2),
+               String.Format("{0}/{1}", args.CommonArgs.Sha1, args.CommonArgs.Sha2),
                String.Format("{0}:{1}", repo.ProjectKey.HostName, repo.ProjectKey.ProjectName), key));
          };
 
-         IEnumerable<string> statText = repo.Data.Get(gitShortStatArguments);
+         IEnumerable<string> statText = repo.Data.Get(args);
          if (statText == null || !statText.Any())
          {
             traceError(statText == null ? "\"null\"" : "(empty)");

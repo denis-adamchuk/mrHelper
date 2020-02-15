@@ -50,6 +50,7 @@
     <Compile Include="Exceptions\ExternalProcessException.cs" />
     <Compile Include="Exceptions\FeedbackReporterException.cs" />
     <Compile Include="Interfaces\ExternalProcessManagerItf.cs" />
+    <Compile Include="Interfaces\GitCommandArguments.cs" />
     <Compile Include="Interfaces\HostPropertiesItf.cs" />
     <Compile Include="Interfaces\InstantProjectCheckerItf.cs" />
     <Compile Include="Interfaces\ProjectWatcherItf.cs" />
