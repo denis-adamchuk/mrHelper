@@ -31,8 +31,9 @@ namespace mrHelper.App.Helpers
             synchronizeInvoke.BeginInvoke(new Action(
                async () =>
             {
-               if (_gitStatistic?.Count > 0)
+               if (_gitStatistic.Count > 0 && _gitStatistic.First().Key.ProjectKey.HostName != hostname)
                {
+                  // TODO Current version supports updates of projects of the most recent loaded host
                   Trace.TraceInformation(String.Format(
                      "[GitStatisticManager] Unsubscribing from {0} Git Repos", _gitStatistic.Count()));
 
@@ -41,37 +42,29 @@ namespace mrHelper.App.Helpers
                   _gitStatistic.Clear();
                }
 
-               // TODO Current version supports updates of projects of the most recent loaded host
-               if (_gitStatistic == null
-                || _gitStatistic.Count == 0
-                || _gitStatistic.Keys.First().ProjectKey.HostName != hostname)
+               foreach (Project project in projects)
                {
-                  _gitStatistic = new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
-                  foreach (Project project in projects)
+                  ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+                  ILocalGitRepository repo = await getLocalGitRepository(key);
+                  if (repo != null && !_gitStatistic.ContainsKey(repo))
                   {
-                     ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                     ILocalGitRepository repo = await getLocalGitRepository(key);
-                     if (repo != null)
+                     _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
                      {
-                        _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
+                        State = new RepositoryState
                         {
-                           State = new RepositoryState
-                           {
-                              LatestChange = DateTime.MinValue,
-                              IsCloned = !repo.DoesRequireClone()
-                           },
-                           Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
-                        });
+                           LatestChange = DateTime.MinValue,
+                           IsCloned = !repo.DoesRequireClone()
+                        },
+                        Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
+                     });
 
-                        // TODO It might require to make ForceUpdate() here if GitStatisticManager wants to
-                        // guaranteely not miss any repository updates
-                     }
+                     onLocalGitRepositoryUpdated(repo, DateTime.MinValue);
+
+                     Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to {0} Git Repos",
+                        _gitStatistic.Count()));
+                     _gitStatistic.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
+                     _gitStatistic.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
                   }
-
-                  Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to {0} Git Repos",
-                     _gitStatistic.Count()));
-                  _gitStatistic.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
-                  _gitStatistic.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
                }
 
                Update?.Invoke();
@@ -93,7 +86,6 @@ namespace mrHelper.App.Helpers
             _gitStatistic.SingleOrDefault(x => x.Key.ProjectKey.Equals(fmk.ProjectKey));
          if (repository2Statistic.Key == null)
          {
-            Debug.Assert(false);
             errorMessage = "N/A";
             return null;
          }
@@ -134,6 +126,20 @@ namespace mrHelper.App.Helpers
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
             {
+               ILocalGitRepositoryData data = repo.Data;
+               if (data == null)
+               {
+                  Trace.TraceWarning(String.Format(
+                     "[GitStatisticManager] Update failed. LocalGitRepositoryData is not ready (Host={0}, Project={1})",
+                     repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+                  return;
+               }
+
+               if (!_updating.Add(repo))
+               {
+                  return;
+               }
+
                DateTime prevLatestChange = _gitStatistic[repo].State.LatestChange;
 
                Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
@@ -152,7 +158,8 @@ namespace mrHelper.App.Helpers
                      continue;
                   }
 
-                  if (version.Created_At <= prevLatestChange || version.Created_At > latestChange)
+                  if (latestChange != DateTime.MinValue
+                     && (version.Created_At <= prevLatestChange || version.Created_At > latestChange))
                   {
                      continue;
                   }
@@ -183,6 +190,12 @@ namespace mrHelper.App.Helpers
                      }
                   };
 
+                  if (!_gitStatistic.ContainsKey(repo))
+                  {
+                     // LocalGitRepository was removed from collection while we were caching current MR
+                     break;
+                  }
+
                   await repo.Data.Update(new GitDiffArguments[] { args });
 
                   if (!_gitStatistic.ContainsKey(repo))
@@ -195,6 +208,8 @@ namespace mrHelper.App.Helpers
                   updateCachedStatistic(repo, key, latestChange, diffStat);
                   Update?.Invoke();
                }
+
+               _updating.Remove(repo);
             }), null);
       }
 
@@ -297,6 +312,7 @@ namespace mrHelper.App.Helpers
          internal Dictionary<DiffStatisticKey, DiffStatistic?> Statistic;
       }
 
+      private HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
       private Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
          new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;

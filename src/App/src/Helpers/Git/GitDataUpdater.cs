@@ -30,8 +30,9 @@ namespace mrHelper.App.Helpers
             synchronizeInvoke.BeginInvoke(new Action(
                async () =>
             {
-               if (_latestChanges?.Count > 0)
+               if (_latestChanges.Count > 0 && _latestChanges.First().Key.ProjectKey.HostName != hostname)
                {
+                  // TODO Current version supports updates of projects of the most recent loaded host
                   Trace.TraceInformation(String.Format(
                      "[GitDataUpdater] Unsubscribing from {0} Git Repos", _latestChanges.Count()));
 
@@ -40,29 +41,21 @@ namespace mrHelper.App.Helpers
                   _latestChanges.Clear();
                }
 
-               // TODO Current version supports updates of projects of the most recent loaded host
-               if (_latestChanges == null
-                || _latestChanges.Count == 0
-                || _latestChanges.Keys.First().ProjectKey.HostName != hostname)
+               foreach (Project project in projects)
                {
-                  _latestChanges = new Dictionary<ILocalGitRepository, DateTime>();
-                  foreach (Project project in projects)
+                  ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+                  ILocalGitRepository repo = await getLocalGitRepository(key);
+                  if (repo != null && !_latestChanges.ContainsKey(repo))
                   {
-                     ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                     ILocalGitRepository repo = await getLocalGitRepository(key);
-                     if (repo != null)
-                     {
-                        _latestChanges.Add(repo, DateTime.MinValue);
+                     _latestChanges.Add(repo, DateTime.MinValue);
 
-                        // TODO It might require to make ForceUpdate() here if GitDataUpdater wants to
-                        // guaranteely not miss any repository updates
-                     }
+                     onLocalGitRepositoryUpdated(repo, DateTime.MinValue);
+
+                     Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to {0} Git Repos",
+                        _latestChanges.Count()));
+                     _latestChanges.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
+                     _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
                   }
-
-                  Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to {0} Git Repos",
-                     _latestChanges.Count()));
-                  _latestChanges.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
-                  _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
                }
             }), null);
          };
@@ -83,6 +76,20 @@ namespace mrHelper.App.Helpers
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
             {
+               ILocalGitRepositoryData data = repo.Data;
+               if (data == null)
+               {
+                  Trace.TraceWarning(String.Format(
+                     "[GitDataUpdater] Update failed. LocalGitRepositoryData is not ready (Host={0}, Project={1})",
+                     repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+                  return;
+               }
+
+               if (!_updating.Add(repo))
+               {
+                  return;
+               }
+
                DateTime prevLatestChange = _latestChanges[repo];
 
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(repo.ProjectKey))
@@ -106,6 +113,12 @@ namespace mrHelper.App.Helpers
                            prevLatestChange.ToLocalTime().ToString(),
                            latestChange.ToLocalTime().ToString()));
                         newVersionsDetailed.Add(newVersionDetailed);
+                     }
+
+                     if (!_latestChanges.ContainsKey(repo))
+                     {
+                        // LocalGitRepository was removed from collection while we were caching current MR
+                        break;
                      }
 
                      if (newVersionsDetailed.Count > 0)
@@ -143,6 +156,8 @@ namespace mrHelper.App.Helpers
                {
                   _latestChanges[repo] = latestChange;
                }
+
+               _updating.Remove(repo);
             }), null);
       }
 
@@ -241,7 +256,9 @@ namespace mrHelper.App.Helpers
          await repo.Data.Update(revisionArgs);
       }
 
-      private Dictionary<ILocalGitRepository, DateTime> _latestChanges;
+      private HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
+      private Dictionary<ILocalGitRepository, DateTime> _latestChanges =
+         new Dictionary<ILocalGitRepository, DateTime>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionManager _versionManager;
       private readonly IMergeRequestProvider _mergeRequestProvider;

@@ -18,13 +18,13 @@ namespace mrHelper.GitClient
    internal class LocalGitRepository : ILocalGitRepository
    {
       // @{ IGitRepository
-      IGitRepositoryData IGitRepository.Data => _data;
+      IGitRepositoryData IGitRepository.Data => DoesRequireClone() ? null : _data;
 
       public ProjectKey ProjectKey { get; }
       // @{ IGitRepository
 
       // @{ ILocalGitRepository
-      public ILocalGitRepositoryData Data => _data;
+      public ILocalGitRepositoryData Data => DoesRequireClone() ? null : _data;
 
       public string Path { get; }
 
@@ -35,8 +35,11 @@ namespace mrHelper.GitClient
 
       public bool DoesRequireClone()
       {
-         Debug.Assert(canClone(Path) || isValidRepository(Path));
-         return !isValidRepository(Path);
+         if (!_cached_canClone.HasValue) { canClone(); }
+         if (!_cached_isValidRepository.HasValue) { isValidRepository(); }
+
+         Debug.Assert(_cached_canClone.Value || _cached_isValidRepository.Value);
+         return !_cached_isValidRepository.Value;
       }
       // @} ILocalGitRepository
 
@@ -50,17 +53,17 @@ namespace mrHelper.GitClient
       internal LocalGitRepository(ProjectKey projectKey, string path, IProjectWatcher projectWatcher,
          ISynchronizeInvoke synchronizeInvoke)
       {
-         if (!canClone(path) && !isValidRepository(path))
+         Path = path;
+         if (!canClone() && !isValidRepository())
          {
             throw new ArgumentException("Path \"" + path + "\" already exists but it is not a valid git repository");
          }
 
          ProjectKey = projectKey;
-         Path = path;
          _updater = new LocalGitRepositoryUpdater(projectWatcher,
             async (reportProgress, latestChange) =>
          {
-            string arguments = canClone(Path) ?
+            string arguments = canClone() ?
                "clone --progress " +
                ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " +
                StringUtils.EscapeSpaces(Path) : "fetch --progress";
@@ -68,7 +71,7 @@ namespace mrHelper.GitClient
             if (_updateOperationDescriptor == null)
             {
                _updateOperationDescriptor = _operationManager.CreateDescriptor(
-                  "git", arguments, canClone(Path) ? String.Empty : Path, reportProgress);
+                  "git", arguments, canClone() ? String.Empty : Path, reportProgress);
 
                await _operationManager.Wait(_updateOperationDescriptor);
                _updateOperationDescriptor = null;
@@ -107,24 +110,29 @@ namespace mrHelper.GitClient
       /// <summary>
       /// Check if Clone can be called for this LocalGitRepository
       /// </summary>
-      static private bool canClone(string path)
+      private bool canClone()
       {
-         return !Directory.Exists(path) || !Directory.EnumerateFileSystemEntries(path).Any();
+         _cached_canClone = !Directory.Exists(Path) || !Directory.EnumerateFileSystemEntries(Path).Any();
+         return _cached_canClone.Value;
       }
 
-      static private bool isValidRepository(string path)
+      private bool isValidRepository()
       {
          try
          {
-            return Directory.Exists(path)
-                && ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, path).StdErr.Count() == 0;
+            _cached_isValidRepository = Directory.Exists(Path)
+                && ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, Path).StdErr.Count() == 0;
          }
          catch (ExternalProcessException)
          {
-            return false;
+            _cached_isValidRepository = false;
          }
+
+         return _cached_isValidRepository.Value;
       }
 
+      private bool? _cached_isValidRepository;
+      private bool? _cached_canClone;
       private LocalGitRepositoryData _data;
       private LocalGitRepositoryUpdater _updater;
       private IExternalProcessManager _operationManager;
