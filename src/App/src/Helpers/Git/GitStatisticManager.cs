@@ -136,6 +136,8 @@ namespace mrHelper.App.Helpers
             {
                DateTime prevLatestChange = _gitStatistic[repo].State.LatestChange;
 
+               Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
+
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(repo.ProjectKey))
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = repo.ProjectKey, IId = mergeRequest.IId };
@@ -150,12 +152,24 @@ namespace mrHelper.App.Helpers
                      continue;
                   }
 
-                  if (version.Created_At <= prevLatestChange || version.Created_At >= latestChange)
+                  if (version.Created_At <= prevLatestChange || version.Created_At > latestChange)
                   {
                      continue;
                   }
 
-                  DiffStatisticKey key = mergeRequest.IId;
+                  versionsToUpdate.Add(mrk, version);
+               }
+
+               foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
+               {
+                  DiffStatisticKey key = keyValuePair.Key.IId;
+                  resetCachedStatistic(repo, key);
+                  Update?.Invoke();
+               }
+
+               foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
+               {
+                  DiffStatisticKey key = keyValuePair.Key.IId;
                   resetCachedStatistic(repo, key);
                   Update?.Invoke();
 
@@ -164,8 +178,8 @@ namespace mrHelper.App.Helpers
                      Mode = GitDiffArguments.DiffMode.ShortStat,
                      CommonArgs = new GitDiffArguments.CommonArguments
                      {
-                        Sha1 = version.Base_Commit_SHA,
-                        Sha2 = version.Head_Commit_SHA
+                        Sha1 = keyValuePair.Value.Base_Commit_SHA,
+                        Sha2 = keyValuePair.Value.Head_Commit_SHA
                      }
                   };
 
