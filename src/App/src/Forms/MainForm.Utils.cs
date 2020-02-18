@@ -12,7 +12,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using static mrHelper.Client.Services.ServiceManager;
+using static mrHelper.App.Helpers.ServiceManager;
 using static mrHelper.Client.Common.UserEvents;
 using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
@@ -373,7 +373,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex) // whatever de-serialization exception
             {
-               ExceptionHandlers.Handle(ex, "Cannot create a color scheme");
+               ExceptionHandlers.Handle("Cannot create a color scheme", ex);
             }
             return false;
          };
@@ -408,7 +408,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex) // whatever de-deserialization exception
          {
-            ExceptionHandlers.Handle(ex, "Cannot load icon scheme");
+            ExceptionHandlers.Handle("Cannot load icon scheme", ex);
          }
       }
 
@@ -689,11 +689,11 @@ namespace mrHelper.App.Forms
             try
             {
                _gitClientFactory = new LocalGitRepositoryFactory(localFolder,
-                  _mergeRequestManager.GetProjectWatcher(), this);
+                  _mergeRequestCache.GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot create LocalGitRepositoryFactory"));
+               ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
 
                try
                {
@@ -702,7 +702,7 @@ namespace mrHelper.App.Forms
                catch (Exception ex2)
                {
                   string message = String.Format("Cannot create folder \"{0}\"", localFolder);
-                  ExceptionHandlers.Handle(ex2, message);
+                  ExceptionHandlers.Handle(message, ex2);
                   MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return null;
                }
@@ -729,7 +729,7 @@ namespace mrHelper.App.Forms
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, String.Format("Cannot create LocalGitRepository"));
+            ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepository"), ex);
             if (showMessageBoxOnError)
             {
                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -814,7 +814,7 @@ namespace mrHelper.App.Forms
          IEnumerable<ProjectKey> projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          foreach (ProjectKey projectKey in projectKeys)
          {
-            foreach (MergeRequest mergeRequest in _mergeRequestManager.GetMergeRequests(projectKey))
+            foreach (MergeRequest mergeRequest in _mergeRequestCache.GetMergeRequests(projectKey))
             {
                MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
@@ -838,7 +838,7 @@ namespace mrHelper.App.Forms
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
-            if (!_mergeRequestManager.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
+            if (!_mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
                || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
             {
                listViewMergeRequests.Items.RemoveAt(index);
@@ -862,7 +862,7 @@ namespace mrHelper.App.Forms
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         MergeRequest? mergeRequest = _mergeRequestManager.GetMergeRequest(mrk);
+         MergeRequest? mergeRequest = _mergeRequestCache.GetMergeRequest(mrk);
          if (!mergeRequest.HasValue)
          {
             Trace.TraceError(String.Format("[MainForm] setListViewItemTag() cannot find MR with IId {0}", mrk.IId));
@@ -978,8 +978,9 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex) // see Process.Start exception list
          {
-            ExceptionHandlers.Handle(ex, "Cannot open URL");
-            MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string errorMessage = "Cannot open URL";
+            ExceptionHandlers.Handle(errorMessage, ex);
+            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -1054,7 +1055,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex)
             {
-               ExceptionHandlers.Handle(ex, "Cannot download a new version");
+               ExceptionHandlers.Handle("Cannot download a new version", ex);
                return;
             }
 
@@ -1079,7 +1080,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot delete installer \"{0}\"", f));
+               ExceptionHandlers.Handle(String.Format("Cannot delete installer \"{0}\"", f), ex);
             }
          }
       }
@@ -1109,7 +1110,7 @@ namespace mrHelper.App.Forms
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot create an icon from file \"{0}\"", filename));
+               ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
             }
          };
 

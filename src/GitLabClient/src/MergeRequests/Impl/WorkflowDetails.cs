@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -12,7 +13,7 @@ namespace mrHelper.Client.MergeRequests
       internal WorkflowDetails()
       {
          _mergeRequests = new Dictionary<ProjectKey, MergeRequest[]>();
-         _changes = new Dictionary<MergeRequestKey, DateTime>();
+         _changes = new Dictionary<MergeRequestKey, Version>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
@@ -20,7 +21,7 @@ namespace mrHelper.Client.MergeRequests
          _mergeRequests = details._mergeRequests.ToDictionary(
             item => item.Key,
             item => item.Value.ToArray());
-         _changes = new Dictionary<MergeRequestKey, DateTime>(details._changes);
+         _changes = new Dictionary<MergeRequestKey, Version>(details._changes);
       }
 
       /// <summary>
@@ -51,17 +52,17 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request
       /// </summary>
-      public DateTime GetLatestChangeTimestamp(MergeRequestKey mrk)
+      public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _changes.ContainsKey(mrk) ? _changes[mrk] : DateTime.MinValue;
+         return _changes.ContainsKey(mrk) ? _changes[mrk] : new Version();
       }
 
       /// <summary>
       /// Update a timestamp of the most recent version of a specified merge request
       /// </summary>
-      internal void SetLatestChangeTimestamp(MergeRequestKey mrk, DateTime timestamp)
+      internal void SetLatestVersion(MergeRequestKey mrk, Version version)
       {
-         _changes[mrk] = timestamp;
+         _changes[mrk] = version;
       }
 
       /// <summary>
@@ -82,7 +83,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Remove records from Changes collection
       /// </summary>
-      internal void CleanupTimestamps(MergeRequestKey mrk)
+      internal void CleanupVersions(MergeRequestKey mrk)
       {
          _changes.Remove(mrk);
       }
@@ -91,7 +92,7 @@ namespace mrHelper.Client.MergeRequests
       private readonly Dictionary<ProjectKey, MergeRequest[]> _mergeRequests;
 
       // maps Merge Request to a timestamp of its latest version
-      private readonly Dictionary<MergeRequestKey, DateTime> _changes;
+      private readonly Dictionary<MergeRequestKey, Version> _changes;
    }
 }
 

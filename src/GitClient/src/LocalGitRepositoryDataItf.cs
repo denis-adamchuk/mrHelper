@@ -5,10 +5,18 @@ using System.Threading.Tasks;
 
 namespace mrHelper.GitClient
 {
+   public class LoadFromDiskFailedException : GitDataException
+   {
+      public LoadFromDiskFailedException(Exception ex)
+         : base(String.Empty, ex)
+      {
+      }
+   }
+
    public interface ILocalGitRepositoryData : IGitRepositoryData
    {
-      Task Update(IEnumerable<GitDiffArguments> arguments);
-      Task Update(IEnumerable<GitShowRevisionArguments> arguments);
+      Task LoadFromDisk(GitDiffArguments arguments);
+      Task LoadFromDisk(GitShowRevisionArguments arguments);
    }
 }
 

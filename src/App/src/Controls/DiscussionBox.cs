@@ -348,11 +348,11 @@ namespace mrHelper.App.Controls
          }
          catch (Exception ex)
          {
-            if (ex is ArgumentException || ex is GitOperationException || ex is GitObjectException)
+            if (ex is ArgumentException || ex is ContextMakingException)
             {
-               ExceptionHandlers.Handle(ex, "Cannot render HTML context");
-               string errorMessage = System.Net.WebUtility.HtmlEncode(ex.Message).Replace("\n", "<br>");
-               return String.Format("<html><body>{0}</body></html>", errorMessage);
+               string errorMessage = "Cannot render HTML context.";
+               ExceptionHandlers.Handle(errorMessage, ex);
+               return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
             }
             throw;
          }

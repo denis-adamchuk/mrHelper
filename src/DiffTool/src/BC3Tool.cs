@@ -33,7 +33,6 @@ namespace mrHelper.DiffTool
       /// <summary>
       /// Adds a command to launch MRHelper to Beyond Compare 3 preferences file
       /// Throws DiffToolIntegrationException
-      /// Throws exceptions related to XML parsing
       /// </summaryArgument>
       public void PatchToolConfig(string launchCommand)
       {
@@ -98,6 +97,9 @@ namespace mrHelper.DiffTool
          document.Save(configFilePath);
       }
 
+      /// <summary>
+      /// Throws DiffToolIntegrationException
+      /// </summaryArgument>
       private static XmlNode getAllApplicationRecords(XmlDocument document)
       {
          XmlNode root = document.SelectSingleNode("BCPreferences");
@@ -105,13 +107,15 @@ namespace mrHelper.DiffTool
          {
             if (document.DocumentElement != null)
             {
-               throw new DiffToolIntegrationException(String.Format("Wrong root element. Must be \"BCPreferences\" node."));
+               throw new DiffToolIntegrationException(String.Format(
+                  "Wrong root element. Must be \"BCPreferences\" node."), null);
             }
 
             root = document.CreateElement("BCPreferences");
             if (root == null)
             {
-               throw new DiffToolIntegrationException(String.Format("Cannot create \"BCPreferences\" node"));
+               throw new DiffToolIntegrationException(String.Format(
+                  "Cannot create \"BCPreferences\" node"), null);
             }
             document.AppendChild(root);
          }
@@ -122,7 +126,8 @@ namespace mrHelper.DiffTool
             tbcPrefs = document.CreateElement("TBcPrefs");
             if (tbcPrefs == null)
             {
-               throw new DiffToolIntegrationException(String.Format("Cannot create \"TBcPrefs\" node"));
+               throw new DiffToolIntegrationException(String.Format(
+                  "Cannot create \"TBcPrefs\" node"), null);
             }
             root.AppendChild(tbcPrefs);
          }
@@ -133,7 +138,8 @@ namespace mrHelper.DiffTool
             openWiths = document.CreateElement("OpenWiths");
             if (openWiths == null)
             {
-               throw new DiffToolIntegrationException(String.Format("Cannot create \"OpenWiths\" node"));
+               throw new DiffToolIntegrationException(String.Format(
+                  "Cannot create \"OpenWiths\" node"), null);
             }
             tbcPrefs.AppendChild(openWiths);
          }

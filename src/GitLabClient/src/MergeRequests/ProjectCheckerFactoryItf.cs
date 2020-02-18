@@ -1,9 +1,10 @@
 ﻿using mrHelper.Client.Types;
+using mrHelper.Client.Versions;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {
-   public interface IUpdateManager
+   public interface IProjectCheckerFactory
    {
       /// <summary>
       /// Checks local cache to detect if there are project changes caused by new versions of a merge request

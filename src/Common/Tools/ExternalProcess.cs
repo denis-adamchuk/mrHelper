@@ -58,34 +58,40 @@ namespace mrHelper.Common.Tools
                }
             };
 
-            process.Start();
-
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
             int exitcode = 0;
-            if (wait)
+            try
             {
-               process.WaitForExit();
-            }
-            else
-            {
-               process.WaitForExit(500); // ms
-               if (process.HasExited)
+               process.Start();
+
+               process.BeginOutputReadLine();
+               process.BeginErrorReadLine();
+
+               if (wait)
                {
-                  exitcode = process.ExitCode;
+                  process.WaitForExit();
                }
                else
                {
-                  process.CancelOutputRead();
-                  process.CancelErrorRead();
+                  process.WaitForExit(500); // ms
+                  if (process.HasExited)
+                  {
+                     exitcode = process.ExitCode;
+                  }
+                  else
+                  {
+                     process.CancelOutputRead();
+                     process.CancelErrorRead();
+                  }
                }
+            }
+            catch (Win32Exception ex)
+            {
+               throw new ExternalProcessSystemException(ex);
             }
 
             if (exitcode != 0)
             {
-               throw new ExternalProcessException(arguments, exitcode,
-                  standardError?.ToArray() ?? Array.Empty<string>());
+               throw new ExternalProcessFailureException(name, arguments, exitcode, standardError.ToArray());
             }
 
             return new Result
@@ -183,7 +189,8 @@ namespace mrHelper.Common.Tools
             process.Exited -= onExited;
             if (process.ExitCode != 0)
             {
-               tcs.SetException(new ExternalProcessException(arguments, process.ExitCode, standardError.ToArray()));
+               tcs.SetException(new ExternalProcessFailureException(name, arguments, process.ExitCode,
+                  standardError)); // don't copy standardError because it might be not ready yet
             }
             else
             {
@@ -207,10 +214,18 @@ namespace mrHelper.Common.Tools
          };
 
          (progress as IProgress<string>).Report(getStatus(arguments, "in progress..."));
-         process.Start();
 
-         process.BeginOutputReadLine();
-         process.BeginErrorReadLine();
+         try
+         {
+            process.Start();
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+         }
+         catch (Win32Exception ex)
+         {
+            throw new ExternalProcessSystemException(ex);
+         }
 
          return descriptor;
       }

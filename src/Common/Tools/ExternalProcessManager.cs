@@ -1,11 +1,11 @@
-using mrHelper.Common.Exceptions;
-using mrHelper.Common.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Common.Tools
 {
@@ -24,6 +24,7 @@ namespace mrHelper.Common.Tools
          _synchronizeInvoke = synchronizeInvoke;
       }
 
+      /// Throws ExternalProcessSystemException
       public ExternalProcess.AsyncTaskDescriptor CreateDescriptor(
          string name, string arguments, string path, Action<string> onProgressChange)
       {
@@ -31,7 +32,7 @@ namespace mrHelper.Common.Tools
       }
 
       /// <summary>
-      /// Throws ExternalProcessException and CancellAllInProgressException
+      /// Throws ExternalProcessFailureException and CancellAllInProgressException
       /// </summary>
       async public Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
@@ -53,7 +54,7 @@ namespace mrHelper.Common.Tools
       }
 
       /// <summary>
-      /// Throws ExternalProcessException
+      /// Throws ExternalProcessFailureException and CancellAllInProgressException
       /// </summary>
       async public Task Join(ExternalProcess.AsyncTaskDescriptor descriptor, Action<string> onProgressChange)
       {

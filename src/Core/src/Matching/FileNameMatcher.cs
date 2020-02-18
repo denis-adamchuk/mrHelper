@@ -20,7 +20,7 @@ namespace mrHelper.Core.Matching
       }
 
       /// <summary>
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws MatchingException.
       /// </summary>
       public bool Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
       {
@@ -42,6 +42,9 @@ namespace mrHelper.Core.Matching
          return oppositeName != null;
       }
 
+      /// <summary>
+      /// Throws MatchingException.
+      /// </summary>
       private string getOppositeName(DiffRefs refs, bool isLeftSide, string sourceCurrentName, string sourceOppositeName)
       {
          Debug.Assert(sourceCurrentName != String.Empty);

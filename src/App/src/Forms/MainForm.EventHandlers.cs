@@ -75,7 +75,7 @@ namespace mrHelper.App.Forms
                }
                catch (PersistenceStateSerializationException ex)
                {
-                  ExceptionHandlers.Handle(ex, "Cannot serialize the state");
+                  ExceptionHandlers.Handle("Cannot serialize the state", ex);
                }
 
                Interprocess.SnapshotSerializer.CleanUpSnapshots();
@@ -633,7 +633,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "[CheckForUpdates] Cannot launch installer");
+            ExceptionHandlers.Handle("[CheckForUpdates] Cannot launch installer", ex);
          }
 
          _exiting = true;
@@ -662,7 +662,7 @@ namespace mrHelper.App.Forms
          }
          catch (FeedbackReporterException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot send feedback");
+            ExceptionHandlers.Handle("Cannot send feedback", ex);
          }
       }
 

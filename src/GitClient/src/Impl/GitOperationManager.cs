@@ -22,7 +22,14 @@ namespace mrHelper.GitClient
          string name, string arguments, string path, Action<string> onProgressChange)
       {
          traceOperationStatus(arguments, "start");
-         return _externalProcessManager.CreateDescriptor(name, arguments, path, onProgressChange);
+         try
+         {
+            return _externalProcessManager.CreateDescriptor(name, arguments, path, onProgressChange);
+         }
+         catch (ExternalProcessSystemException ex)
+         {
+            throw new SystemException(ex);
+         }
       }
 
       async public Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor)
@@ -33,10 +40,9 @@ namespace mrHelper.GitClient
             checkStandardError(descriptor.StdErr);
             traceOperationStatus(descriptor.Process.StartInfo.Arguments, "end");
          }
-         catch (ExternalProcessException ex)
+         catch (ExternalProcessFailureException ex)
          {
-            traceOperationStatusOnException("wait", ex);
-            throw new GitOperationException(ex.Command, ex.ExitCode, ex.Errors, isCancelled(ex));
+            handleException("wait", ex);
          }
          catch (CancellAllInProgressException)
          {
@@ -52,10 +58,9 @@ namespace mrHelper.GitClient
             await _externalProcessManager.Join(descriptor, onProgressChange);
             traceOperationStatus("join", "end");
          }
-         catch (ExternalProcessException ex)
+         catch (ExternalProcessFailureException ex)
          {
-            traceOperationStatusOnException("join", ex);
-            throw new GitOperationException(ex.Command, ex.ExitCode, ex.Errors, isCancelled(ex));
+            handleException("join", ex);
          }
       }
 
@@ -78,36 +83,29 @@ namespace mrHelper.GitClient
                + "-Git repository is not up-to-date\n"
                + "-Given commit is no longer in the repository (force push?)";
             string message = String.Format("git returned \"{0}\". {1}", stdErr.First(), reasons);
-            throw new GitObjectException(message, 0);
+            throw new BadObjectException(message);
          }
       }
 
-      private void traceOperationStatusOnException(string operation, ExternalProcessException ex)
+      private void handleException(string operation, ExternalProcessFailureException ex)
       {
-         string status = isCancelled(ex) ? "cancel" : "error";
-         traceOperationStatus(operation, status, false);
+         bool cancelled = ex.ExitCode == cancellationExitCode || ex.ExitCode == altCancellationExitCode;
 
-         string meaning = isCancelled(ex) ? "cancelled" : "failed";
-         ExceptionHandlers.Handle(ex, String.Format("Git operation {0}", meaning));
+         string status = cancelled ? "cancel" : "error";
+         traceOperationStatus(operation, status);
+
+         if (cancelled)
+         {
+            throw new OperationCancelledException();
+         }
+         throw new GitCallFailedException(ex);
       }
 
-      private void traceOperationStatus(string operation, string status, bool debugOnly = true)
+      private void traceOperationStatus(string operation, string status)
       {
          string message = String.Format("[ExternalProcessManager] async operation -- {0} -- {1} for {2}",
             status, operation, _path);
-         if (debugOnly)
-         {
-            Debug.WriteLine(message);
-         }
-         else
-         {
-            Trace.TraceInformation(message);
-         }
-      }
-
-      private bool isCancelled(ExternalProcessException ex)
-      {
-         return ex.ExitCode == cancellationExitCode || ex.ExitCode == altCancellationExitCode;
+         Debug.WriteLine(message);
       }
 
       private static readonly int cancellationExitCode = 130;

@@ -1,19 +1,20 @@
+using GitLabSharp.Entities;
+using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Types;
+using mrHelper.Client.Versions;
+using mrHelper.Client.Workflow;
+using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using GitLabSharp.Entities;
-using mrHelper.Client.Types;
-using mrHelper.Common.Interfaces;
-using mrHelper.Client.Workflow;
-using System.ComponentModel;
-using mrHelper.GitClient;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Versions;
-using Version = GitLabSharp.Entities.Version;
 using DiffStatisticKey = System.Int32; // Merge Request IId
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.App.Helpers
 {
@@ -23,13 +24,13 @@ namespace mrHelper.App.Helpers
    internal class GitStatisticManager
    {
       internal GitStatisticManager(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
-         IHostProperties settings, Func<ProjectKey, Task<ILocalGitRepository>> getLocalGitRepository,
-         IMergeRequestProvider mergeRequestProvider)
+         ILocalGitRepositoryFactoryAccessor factoryAccessor,
+         ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
             synchronizeInvoke.BeginInvoke(new Action(
-               async () =>
+               () =>
             {
                if (_gitStatistic.Count > 0 && _gitStatistic.First().Key.ProjectKey.HostName != hostname)
                {
@@ -45,7 +46,7 @@ namespace mrHelper.App.Helpers
                foreach (Project project in projects)
                {
                   ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                  ILocalGitRepository repo = await getLocalGitRepository(key);
+                  ILocalGitRepository repo = factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
                   if (repo != null && !_gitStatistic.ContainsKey(repo))
                   {
                      _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
@@ -58,12 +59,10 @@ namespace mrHelper.App.Helpers
                         Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
                      });
 
-                     onLocalGitRepositoryUpdated(repo, DateTime.MinValue);
-
-                     Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to {0} Git Repos",
-                        _gitStatistic.Count()));
-                     _gitStatistic.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
-                     _gitStatistic.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
+                     Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
+                        repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+                     repo.Updated += onLocalGitRepositoryUpdated;
+                     repo.Disposed += onLocalGitRepositoryDisposed;
                   }
                }
 
@@ -72,8 +71,8 @@ namespace mrHelper.App.Helpers
          };
 
          _synchronizeInvoke = synchronizeInvoke;
-         _versionManager = new VersionManager(settings);
          _mergeRequestProvider = mergeRequestProvider;
+         _projectCheckerFactory = projectCheckerFactory;
       }
 
       /// <summary>
@@ -100,12 +99,14 @@ namespace mrHelper.App.Helpers
             repository2Statistic.Value.Statistic.SingleOrDefault(x => x.Key == fmk.MergeRequest.IId);
          if (stat.Key == default(DiffStatisticKey))
          {
-            errorMessage = "Updating git...";
+            // This is to be shown while "silent update" is in progress.
+            // If update fails, it is still shown, can be considered a bug... so TODO.
+            errorMessage = "Checking...";
             return null;
          }
          else if (!stat.Value.HasValue)
          {
-            errorMessage = "Loading...";
+            errorMessage = _updating.Contains(repository2Statistic.Key) ? "Loading..." : "Error";
             return null;
          }
 
@@ -115,7 +116,7 @@ namespace mrHelper.App.Helpers
 
       internal event Action Update;
 
-      private void onLocalGitRepositoryUpdated(ILocalGitRepository repo, DateTime latestChange)
+      private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
       {
          if (!_gitStatistic.ContainsKey(repo))
          {
@@ -142,24 +143,20 @@ namespace mrHelper.App.Helpers
 
                DateTime prevLatestChange = _gitStatistic[repo].State.LatestChange;
 
+               // Use local project checker for the whole Project because it is always not less
+               // than the latest version of any merge request that we have locally.
+               // This allows to guarentee that each MR is processed once and not on each git repository update.
+               DateTime latestChange = await _projectCheckerFactory.GetLocalProjectChecker(repo.ProjectKey).
+                  GetLatestChangeTimestamp();
+
                Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(repo.ProjectKey))
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = repo.ProjectKey, IId = mergeRequest.IId };
-                  Version version;
-                  try
-                  {
-                     version = await _versionManager.GetLatestVersion(mrk);
-                  }
-                  catch (VersionManagerException)
-                  {
-                     // already handled
-                     continue;
-                  }
+                  Version version = _mergeRequestProvider.GetLatestVersion(mrk);
 
-                  if (latestChange != DateTime.MinValue
-                     && (version.Created_At <= prevLatestChange || version.Created_At > latestChange))
+                  if (version.Created_At <= prevLatestChange || version.Created_At > latestChange)
                   {
                      continue;
                   }
@@ -169,6 +166,12 @@ namespace mrHelper.App.Helpers
 
                foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
                {
+                  if (!_gitStatistic.ContainsKey(repo))
+                  {
+                     // LocalGitRepository was removed from collection while we were caching current MR
+                     break;
+                  }
+
                   DiffStatisticKey key = keyValuePair.Key.IId;
                   resetCachedStatistic(repo, key);
                   Update?.Invoke();
@@ -176,9 +179,20 @@ namespace mrHelper.App.Helpers
 
                foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
                {
+                  if (!_gitStatistic.ContainsKey(repo))
+                  {
+                     // LocalGitRepository was removed from collection while we were caching current MR
+                     break;
+                  }
+
                   DiffStatisticKey key = keyValuePair.Key.IId;
-                  resetCachedStatistic(repo, key);
-                  Update?.Invoke();
+                  if (String.IsNullOrEmpty(keyValuePair.Value.Base_Commit_SHA)
+                   || String.IsNullOrEmpty(keyValuePair.Value.Head_Commit_SHA))
+                  {
+                     updateCachedStatistic(repo, key, latestChange, null);
+                     Update?.Invoke();
+                     continue;
+                  }
 
                   GitDiffArguments args = new GitDiffArguments
                   {
@@ -190,13 +204,16 @@ namespace mrHelper.App.Helpers
                      }
                   };
 
-                  if (!_gitStatistic.ContainsKey(repo))
+                  try
                   {
-                     // LocalGitRepository was removed from collection while we were caching current MR
-                     break;
+                     await repo.Data?.LoadFromDisk(args);
                   }
-
-                  await repo.Data.Update(new GitDiffArguments[] { args });
+                  catch (LoadFromDiskFailedException ex)
+                  {
+                     ExceptionHandlers.Handle(String.Format(
+                        "Cannot update git statistic for MR with IID {0}", key), ex);
+                     continue;
+                  }
 
                   if (!_gitStatistic.ContainsKey(repo))
                   {
@@ -210,6 +227,7 @@ namespace mrHelper.App.Helpers
                }
 
                _updating.Remove(repo);
+               Update?.Invoke();
             }), null);
       }
 
@@ -248,11 +266,21 @@ namespace mrHelper.App.Helpers
             Trace.TraceError(String.Format(
                "Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
              + "This makes impossible to show git statistic for MR with IID {4}", text, repo.Path,
-               String.Format("{0}/{1}", args.CommonArgs.Sha1, args.CommonArgs.Sha2),
+               String.Format("{0}/{1}", args.CommonArgs.Sha1?.ToString() ?? "N/A",
+                                        args.CommonArgs.Sha2?.ToString() ?? "N/A"),
                String.Format("{0}:{1}", repo.ProjectKey.HostName, repo.ProjectKey.ProjectName), key));
          };
 
-         IEnumerable<string> statText = repo.Data.Get(args);
+         IEnumerable<string> statText = null;
+         try
+         {
+            statText = repo.Data?.Get(args);
+         }
+         catch (GitNotAvailableDataException ex)
+         {
+            ExceptionHandlers.Handle("Cannot obtain git statistic", ex);
+         }
+
          if (statText == null || !statText.Any())
          {
             traceError(statText == null ? "\"null\"" : "(empty)");
@@ -316,8 +344,8 @@ namespace mrHelper.App.Helpers
       private Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
          new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-      private readonly VersionManager _versionManager;
-      private readonly IMergeRequestProvider _mergeRequestProvider;
+      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly IProjectCheckerFactory _projectCheckerFactory;
    }
 }
 

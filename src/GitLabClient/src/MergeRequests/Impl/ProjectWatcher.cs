@@ -68,8 +68,8 @@ namespace mrHelper.Client.MergeRequests
                IId = update.FullMergeRequestKey.MergeRequest.IId
             };
 
-            updateTimestamp = details.GetLatestChangeTimestamp(mrk) > updateTimestamp ?
-               details.GetLatestChangeTimestamp(mrk) : updateTimestamp;
+            updateTimestamp = details.GetLatestVersion(mrk).Created_At > updateTimestamp ?
+               details.GetLatestVersion(mrk).Created_At : updateTimestamp;
 
             projectUpdates.Add(new ProjectUpdate { ProjectKey = mrk.ProjectKey, Timestamp = updateTimestamp });
          }

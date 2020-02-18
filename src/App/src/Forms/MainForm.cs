@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -10,14 +11,13 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
-using System.Diagnostics;
 using mrHelper.GitClient;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm : CustomFontForm, ICommandCallback
+   internal partial class MainForm : CustomFontForm, ICommandCallback, ILocalGitRepositoryFactoryAccessor
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -63,6 +63,11 @@ namespace mrHelper.App.Forms
       public int GetCurrentMergeRequestIId()
       {
          return getMergeRequestKey()?.IId ?? 0;
+      }
+
+      public ILocalGitRepositoryFactory GetFactory()
+      {
+         return _gitClientFactory;
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
@@ -142,7 +147,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private MergeRequestManager _mergeRequestManager;
+      private MergeRequestCache _mergeRequestCache;
 
       private struct ListViewSubItemInfo
       {

@@ -16,7 +16,7 @@ namespace mrHelper.GitClient
       /// <summary>
       /// Bind to the specific LocalGitRepository object
       /// </summary>
-      internal LocalGitRepositoryUpdater(IProjectWatcher projectWatcher, Func<Action<string>, DateTime, Task> onUpdate,
+      internal LocalGitRepositoryUpdater(IProjectWatcher projectWatcher, Func<Action<string>, Task> onUpdate,
          Func<ProjectKey, bool> isMyProject, ISynchronizeInvoke synchronizeInvoke, Func<Task> onCancelUpdate)
       {
          _onUpdate = onUpdate;
@@ -56,7 +56,7 @@ namespace mrHelper.GitClient
          _updating = true;
          try
          {
-            DateTime newLatestChange = await instantChecker.GetLatestChangeTimestampAsync();
+            DateTime newLatestChange = await instantChecker.GetLatestChangeTimestamp();
             Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository Latest Change: {0}",
                newLatestChange.ToLocalTime().ToString()));
 
@@ -125,10 +125,9 @@ namespace mrHelper.GitClient
          {
             await checkTimestampAndUpdate(updateTimestamp, null);
          }
-         catch (GitOperationException ex)
+         catch (RepositoryUpdateException ex)
          {
-            // just swallow it
-            Debug.WriteLine(ex.Message);
+            ExceptionHandlers.Handle("Repository update failed (triggered by PW)", ex);
          }
          finally
          {
@@ -140,7 +139,8 @@ namespace mrHelper.GitClient
       {
          if (newLatestChange > _latestChange)
          {
-            await doUpdate(onProgressChange, newLatestChange);
+            // don't send out newLatestChange! it can be misleading because it depends on IInstantProjectChecker implementation.
+            await doUpdate(onProgressChange);
 
             _latestChange = newLatestChange;
 
@@ -158,20 +158,29 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task doUpdate(Action<string> onProgressChange, DateTime latestChange)
+      async private Task doUpdate(Action<string> onProgressChange)
       {
          try
          {
-            await _onUpdate(onProgressChange, latestChange);
+            await _onUpdate(onProgressChange);
          }
-         catch (GitOperationException ex)
+         catch (GitException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot update git repository");
-            throw;
+            if (ex is OperationCancelledException)
+            {
+               throw new UpdateCancelledException();
+            }
+            else if (ex is GitCallFailedException gfex
+                  && gfex.InnerException is ExternalProcessFailureException pfex
+                  && String.Join("\n", pfex.Errors).Contains("SSL certificate problem"))
+            {
+               throw new SecurityException(ex);
+            }
+            throw new RepositoryUpdateException("Cannot update git repository", ex);
          }
       }
 
-      private readonly Func<Action<string>, DateTime, Task> _onUpdate;
+      private readonly Func<Action<string>, Task> _onUpdate;
       private readonly Func<Task> _onCancelUpdate;
       private readonly Func<ProjectKey, bool> _isMyProject;
       private readonly IProjectWatcher _projectWatcher;

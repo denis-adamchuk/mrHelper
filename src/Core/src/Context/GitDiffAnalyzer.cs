@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Core.Context;
 
 namespace mrHelper.Core.Git
 {
@@ -27,7 +30,7 @@ namespace mrHelper.Core.Git
 
       /// <summary>
       /// Note: filename1 or filename2 can be 'null'
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws ContextMakingException.
       /// </summary>
       public GitDiffAnalyzer(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
@@ -59,6 +62,9 @@ namespace mrHelper.Core.Git
          return false;
       }
 
+      /// <summary>
+      /// Throws ContextMakingException.
+      /// </summary>
       static private IEnumerable<GitDiffSection> getDiffSections(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
@@ -80,7 +86,21 @@ namespace mrHelper.Core.Git
             }
          };
 
-         IEnumerable<string> diff = gitRepository.Data.Get(arguments);
+         IEnumerable<string> diff = null;
+         try
+         {
+            diff = gitRepository.Data?.Get(arguments);
+         }
+         catch (GitNotAvailableDataException ex)
+         {
+            throw new ContextMakingException("Cannot obtain git diff", ex);
+         }
+
+         if (diff == null)
+         {
+            throw new ContextMakingException("Cannot obtain git diff", null);
+         }
+
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);

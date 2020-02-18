@@ -88,7 +88,8 @@ namespace mrHelper.Common.Interfaces
                return String.Format("diff --numstat {0}", CommonArgs.ToString());
          }
 
-         throw new NotImplementedException();
+         Debug.Assert(false);
+         return String.Empty;
       }
 
       public bool IsValid()

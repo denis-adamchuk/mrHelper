@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms
          }
          catch (System.IO.IOException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot de-serialize snapshot");
+            ExceptionHandlers.Handle("Cannot de-serialize snapshot", ex);
             MessageBox.Show(
                "Make sure that diff tool was launched from Merge Request Helper which is still running",
                "Cannot create a discussion",
@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot parse diff tool arguments");
+            ExceptionHandlers.Handle("Cannot parse diff tool arguments", ex);
             MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
                MessageBoxButtons.OK, MessageBoxIcon.Error,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
@@ -69,7 +69,7 @@ namespace mrHelper.App.Forms
          }
          catch (DiscussionCreatorException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot create a discussion from diff tool");
+            ExceptionHandlers.Handle("Cannot create a discussion from diff tool", ex);
             MessageBox.Show(
                "Something went wrong at GitLab. See Merge Request Helper log files for details",
                "Cannot create a discussion",
@@ -93,7 +93,7 @@ namespace mrHelper.App.Forms
             error ? "Error" : "Warning", MessageBoxButtons.OK,
             error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
             MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-         ExceptionHandlers.Handle(ex, String.Format("Cannot open URL {0}", url));
+         ExceptionHandlers.Handle(String.Format("Cannot open URL {0}", url), ex);
       }
 
       async private Task<bool> restartWorkflowByUrl(string url, string hostname)
@@ -201,7 +201,7 @@ namespace mrHelper.App.Forms
             ProjectName = mergeRequestUrl.Project
          };
 
-         if (_mergeRequestManager.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
+         if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
          {
             unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
          }

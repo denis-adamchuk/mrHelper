@@ -36,30 +36,36 @@ namespace mrHelper.App.Forms
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestManager.GetUpdateManager().GetRemoteProjectChecker(mrk), updateGitStatusText);
+                  _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
-               if (ex is RepeatOperationException)
+               if (ex is InteractiveUpdateSSLFixedException)
                {
+                  // SSL check is disabled, let's try to update in the background
+                  scheduleSilentUpdate(mrk.ProjectKey);
                   return;
                }
-               else if (ex is CancelledByUserException)
+               else if (ex is InteractiveUpdateCancelledException)
                {
                   if (MessageBox.Show("Without up-to-date git repository, some context code snippets might be missing. "
                      + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
                         DialogResult.No)
                   {
+                     Trace.TraceInformation(
+                        "[MainForm] User rejected to show discussions without up-to-date git repository");
                      return;
                   }
                   else
                   {
+                     Trace.TraceInformation(
+                        "[MainForm] User agreed to show discussions without up-to-date git repository");
                      repo = null;
                   }
                }
                else
                {
-                  Debug.Assert(ex is GitOperationException || ex is ExternalProcessException);
+                  Debug.Assert(ex is InteractiveUpdateFailed);
                   MessageBox.Show("Cannot initialize git repository",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return;
@@ -76,6 +82,7 @@ namespace mrHelper.App.Forms
                + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
                   DialogResult.No)
             {
+               Trace.TraceInformation("[MainForm] User rejected to show discussions without git repository");
                return;
             }
             else
@@ -109,7 +116,7 @@ namespace mrHelper.App.Forms
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
                         await updatingRepo.Updater.ForceUpdate(
-                           _mergeRequestManager.GetUpdateManager().GetRemoteProjectChecker(key), null);
+                           _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(key), null);
                         return updatingRepo;
                      }
                      else
@@ -119,9 +126,9 @@ namespace mrHelper.App.Forms
                            "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                      }
                   }
-                  catch (GitOperationException ex)
+                  catch (RepositoryUpdateException ex)
                   {
-                     ExceptionHandlers.Handle(ex, "Cannot update git repository on refreshing discussions");
+                     ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
                   }
                   return null;
                });
@@ -136,8 +143,9 @@ namespace mrHelper.App.Forms
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot show Discussions form");
-            MessageBox.Show("Cannot show Discussions form", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string errorMessage = "Cannot show Discussions form";
+            ExceptionHandlers.Handle(errorMessage, ex);
+            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             labelWorkflowStatus.Text = "Cannot show Discussions";
             return;
          }
@@ -186,21 +194,30 @@ namespace mrHelper.App.Forms
                // user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version
                await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestManager.GetUpdateManager().GetLocalProjectChecker(mrk), updateGitStatusText);
+                  _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
-               if (ex is CancelledByUserException)
+               if (ex is InteractiveUpdateCancelledException)
                {
                   // User declined to create a repository
                   MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
                      MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
-               else if (!(ex is RepeatOperationException))
+               else if (ex is InteractiveUpdateFailed)
                {
-                  Debug.Assert(ex is GitOperationException || ex is ExternalProcessException);
-                  MessageBox.Show("Cannot initialize git repository",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  string errorMessage = "Cannot initialize git repository";
+                  ExceptionHandlers.Handle(errorMessage, ex);
+                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               }
+               else if (ex is InteractiveUpdateSSLFixedException)
+               {
+                  // SSL check is disabled, let's try to update in the background
+                  scheduleSilentUpdate(mrk.ProjectKey);
+               }
+               else
+               {
+                  Debug.Assert(false);
                }
                return;
             }
@@ -225,13 +242,17 @@ namespace mrHelper.App.Forms
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
             pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;
          }
-         catch (ExternalProcessException ex)
+         catch (Exception ex)
          {
-            string message = "Could not launch diff tool";
-            ExceptionHandlers.Handle(ex, message);
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelWorkflowStatus.Text = message;
-            return;
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               string message = "Could not launch diff tool";
+               ExceptionHandlers.Handle(message, ex);
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               labelWorkflowStatus.Text = message;
+               return;
+            }
+            throw;
          }
 
          if (_exiting)
@@ -398,14 +419,14 @@ namespace mrHelper.App.Forms
          // Use Local Project Checker here because Remote Project Checker looks overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
          IInstantProjectChecker instantChecker =
-            _mergeRequestManager.GetUpdateManager().GetLocalProjectChecker((dynamic)key);
+            _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker((dynamic)key);
          try
          {
             await repo.Updater.ForceUpdate(instantChecker, null);
          }
-         catch (GitOperationException)
+         catch (RepositoryUpdateException ex)
          {
-            Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} cancelled", pk.ProjectName));
+            ExceptionHandlers.Handle(String.Format("[MainForm] Silent update of {0} cancelled", pk.ProjectName), ex);
             _silentUpdateInProgress.Remove(pk);
             return;
          }

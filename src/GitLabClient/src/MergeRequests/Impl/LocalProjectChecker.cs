@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using mrHelper.Client.Types;
+using mrHelper.Client.Versions;
 using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -20,9 +22,9 @@ namespace mrHelper.Client.MergeRequests
       /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      async public Task<DateTime> GetLatestChangeTimestampAsync()
+      public Task<DateTime> GetLatestChangeTimestamp()
       {
-         return await Task.FromResult(_details.GetLatestChangeTimestamp(_mergeRequestKey));
+         return Task.FromResult(_details.GetLatestVersion(_mergeRequestKey).Created_At);
 
          /*
             Commented out: advanced algorithm of detecting the most latest timestamp

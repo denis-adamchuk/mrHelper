@@ -13,6 +13,7 @@ using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Helpers
 {
@@ -22,13 +23,13 @@ namespace mrHelper.App.Helpers
    internal class GitDataUpdater
    {
       internal GitDataUpdater(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
-         IHostProperties settings, Func<ProjectKey, Task<ILocalGitRepository>> getLocalGitRepository,
-         IMergeRequestProvider mergeRequestProvider)
+         IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
+         ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
             synchronizeInvoke.BeginInvoke(new Action(
-               async () =>
+               () =>
             {
                if (_latestChanges.Count > 0 && _latestChanges.First().Key.ProjectKey.HostName != hostname)
                {
@@ -44,28 +45,27 @@ namespace mrHelper.App.Helpers
                foreach (Project project in projects)
                {
                   ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                  ILocalGitRepository repo = await getLocalGitRepository(key);
+                  ILocalGitRepository repo = factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
                   if (repo != null && !_latestChanges.ContainsKey(repo))
                   {
                      _latestChanges.Add(repo, DateTime.MinValue);
 
-                     onLocalGitRepositoryUpdated(repo, DateTime.MinValue);
-
-                     Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to {0} Git Repos",
-                        _latestChanges.Count()));
-                     _latestChanges.Keys.ToList().ForEach(x => x.Updated += onLocalGitRepositoryUpdated);
-                     _latestChanges.Keys.ToList().ForEach(x => x.Disposed += onLocalGitRepositoryDisposed);
+                     Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
+                        repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+                     repo.Updated += onLocalGitRepositoryUpdated;
+                     repo.Disposed += onLocalGitRepositoryDisposed;
                   }
                }
             }), null);
          };
 
          _synchronizeInvoke = synchronizeInvoke;
-         _versionManager = new VersionManager(settings);
+         _versionManager = new VersionManager(hostProperties);
          _mergeRequestProvider = mergeRequestProvider;
+         _projectCheckerFactory = projectCheckerFactory;
       }
 
-      private void onLocalGitRepositoryUpdated(ILocalGitRepository repo, DateTime latestChange)
+      private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
       {
          if (_latestChanges == null || !_latestChanges.ContainsKey(repo))
          {
@@ -91,6 +91,12 @@ namespace mrHelper.App.Helpers
                }
 
                DateTime prevLatestChange = _latestChanges[repo];
+
+               // Use local project checker for the whole Project to filter out MR versions that exist at GitLab but
+               // not processed by local-side so far. We don't need to update git data for them until they come.
+               // When they arrive, git repository will be updated and this callback called again.
+               DateTime latestChange = await _projectCheckerFactory.GetLocalProjectChecker(repo.ProjectKey).
+                  GetLatestChangeTimestamp();
 
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(repo.ProjectKey))
                {
@@ -252,16 +258,57 @@ namespace mrHelper.App.Helpers
       async private static Task doCacheAsync(ILocalGitRepository repo,
          HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
       {
-         await repo.Data.Update(diffArgs);
-         await repo.Data.Update(revisionArgs);
+         await doBatchUpdateAsync(diffArgs, x => repo.Data?.LoadFromDisk(x));
+         await doBatchUpdateAsync(revisionArgs, x => repo.Data?.LoadFromDisk(x));
       }
+
+      async private static Task doBatchUpdateAsync<T>(IEnumerable<T> args, Func<T, Task> func)
+      {
+         int remaining = args.Count();
+         while (remaining > 0 )
+         {
+            Task[] tasks = args
+               .Skip(args.Count() - remaining)
+               .Take(MaxGitInParallel)
+               .Select(x => func(x))
+               .ToArray();
+            remaining -= tasks.Length;
+
+            Task aggregateTask = Task.WhenAll(tasks);
+            try
+            {
+               await aggregateTask;
+            }
+            catch (Exception)
+            {
+               if (aggregateTask.IsFaulted)
+               {
+                  foreach (Exception ex in aggregateTask.Exception.Flatten().InnerExceptions)
+                  {
+                     ExceptionHandlers.Handle("Cannot load data from disk", ex);
+                  }
+                  continue;
+               }
+               else
+               {
+                  Debug.Assert(false);
+               }
+            }
+
+            await Task.Delay(InterBatchDelay);
+         }
+      }
+
+      private static int MaxGitInParallel  = 5;
+      private static int InterBatchDelay   = 1000; // ms
 
       private HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
       private Dictionary<ILocalGitRepository, DateTime> _latestChanges =
          new Dictionary<ILocalGitRepository, DateTime>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionManager _versionManager;
-      private readonly IMergeRequestProvider _mergeRequestProvider;
+      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly IProjectCheckerFactory _projectCheckerFactory;
 
       private static int MaxDiffsInVersion = 200;
    }

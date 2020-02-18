@@ -35,22 +35,22 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateLatestVersion(MergeRequestKey mrk, Version latestVersion)
       {
-         DateTime previouslyCachedTimestamp = _internalDetails.GetLatestChangeTimestamp(mrk);
-         _internalDetails.SetLatestChangeTimestamp(mrk, latestVersion.Created_At);
+         Version previouslyCachedVersion = _internalDetails.GetLatestVersion(mrk);
+         _internalDetails.SetLatestVersion(mrk, latestVersion);
 
-         if (previouslyCachedTimestamp > latestVersion.Created_At)
+         if (previouslyCachedVersion.Created_At > latestVersion.Created_At)
          {
             Debug.Assert(false);
             Trace.TraceWarning("[WorkflowDetailsCache] Latest version is older than a previous one");
          }
 
-         if (latestVersion.Created_At != previouslyCachedTimestamp)
+         if (latestVersion.Created_At != previouslyCachedVersion.Created_At)
          {
             Trace.TraceInformation(String.Format(
                "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
                mrk.IId,
                latestVersion.Created_At.ToLocalTime().ToString(),
-               previouslyCachedTimestamp.ToLocalTime().ToString()));
+               previouslyCachedVersion.Created_At.ToLocalTime().ToString()));
          }
       }
 
@@ -71,7 +71,7 @@ namespace mrHelper.Client.MergeRequests
          {
             if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
             {
-               _internalDetails.CleanupTimestamps(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
+               _internalDetails.CleanupVersions(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
             }
          }
       }

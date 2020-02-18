@@ -13,7 +13,6 @@ namespace mrHelper.GitClient
 {
    /// <summary>
    /// Provides access to git repository.
-   /// All methods throw GitOperationException if corresponding git command exited with a not-zero code.
    /// </summary>
    internal class LocalGitRepository : ILocalGitRepository
    {
@@ -30,7 +29,7 @@ namespace mrHelper.GitClient
 
       public ILocalGitRepositoryUpdater Updater => _updater;
 
-      public event Action<ILocalGitRepository, DateTime> Updated;
+      public event Action<ILocalGitRepository> Updated;
       public event Action<ILocalGitRepository> Disposed;
 
       public bool DoesRequireClone()
@@ -61,21 +60,34 @@ namespace mrHelper.GitClient
 
          ProjectKey = projectKey;
          _updater = new LocalGitRepositoryUpdater(projectWatcher,
-            async (reportProgress, latestChange) =>
+            async (reportProgress) =>
          {
-            string arguments = canClone() ?
-               "clone --progress " +
-               ProjectKey.HostName + "/" + ProjectKey.ProjectName + " " +
-               StringUtils.EscapeSpaces(Path) : "fetch --progress";
+            bool clone = canClone();
+            string arguments = clone
+               ? String.Format("clone --progress {0}/{1} {2}",
+                  ProjectKey.HostName, ProjectKey.ProjectName, StringUtils.EscapeSpaces(Path))
+               : "fetch --progress";
 
             if (_updateOperationDescriptor == null)
             {
                _updateOperationDescriptor = _operationManager.CreateDescriptor(
-                  "git", arguments, canClone() ? String.Empty : Path, reportProgress);
+                  "git", arguments, clone ? String.Empty : Path, reportProgress);
 
-               await _operationManager.Wait(_updateOperationDescriptor);
-               _updateOperationDescriptor = null;
-               Updated?.Invoke(this, latestChange);
+               try
+               {
+                  await _operationManager.Wait(_updateOperationDescriptor);
+               }
+               finally
+               {
+                  _updateOperationDescriptor = null;
+               }
+
+               if (clone)
+               {
+                  resetCachedState();
+               }
+
+               Updated?.Invoke(this);
             }
             else
             {
@@ -86,16 +98,23 @@ namespace mrHelper.GitClient
          synchronizeInvoke,
             async () =>
          {
-            await _operationManager.Cancel(_updateOperationDescriptor);
-            _updateOperationDescriptor = null;
+            try
+            {
+               await _operationManager.Cancel(_updateOperationDescriptor);
+            }
+            finally
+            {
+               _updateOperationDescriptor = null;
+            }
          });
 
          _operationManager = new GitOperationManager(synchronizeInvoke, path);
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2}",
-            path, ProjectKey.HostName, ProjectKey.ProjectName));
+            "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2} "
+          + "can clone at this path = {3}, isValidRepository = {4}",
+            path, ProjectKey.HostName, ProjectKey.ProjectName, canClone(), isValidRepository()));
       }
 
       async internal Task DisposeAsync()
@@ -123,12 +142,25 @@ namespace mrHelper.GitClient
             _cached_isValidRepository = Directory.Exists(Path)
                 && ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, Path).StdErr.Count() == 0;
          }
-         catch (ExternalProcessException)
+         catch (Exception ex)
          {
-            _cached_isValidRepository = false;
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               _cached_isValidRepository = false;
+            }
+            else
+            {
+               throw;
+            }
          }
 
          return _cached_isValidRepository.Value;
+      }
+
+      private void resetCachedState()
+      {
+         _cached_canClone = null;
+         _cached_isValidRepository = null;
       }
 
       private bool? _cached_isValidRepository;

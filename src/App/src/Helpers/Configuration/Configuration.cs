@@ -132,7 +132,7 @@ namespace mrHelper.App.Helpers
          }
          catch (System.Configuration.ConfigurationErrorsException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot save configuration to disk");
+            ExceptionHandlers.Handle("Cannot save configuration to disk", ex);
          }
          ConfigurationManager.RefreshSection("appSettings");
       }

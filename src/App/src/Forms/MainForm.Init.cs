@@ -36,7 +36,7 @@ namespace mrHelper.App.Forms
          {
             // If file doesn't exist the loader throws, leaving the app in an undesirable state.
             // Do not try to load custom actions if they don't exist.
-            ExceptionHandlers.Handle(ex, "Cannot load custom actions");
+            ExceptionHandlers.Handle("Cannot load custom actions", ex);
          }
 
          if (_customCommands == null)
@@ -71,8 +71,9 @@ namespace mrHelper.App.Forms
                }
                catch (Exception ex) // Whatever happened in Run()
                {
-                  ExceptionHandlers.Handle(ex, "Custom action failed");
-                  MessageBox.Show("Custom action failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  string errorMessage = "Custom action failed";
+                  ExceptionHandlers.Handle(errorMessage, ex);
+                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   labelWorkflowStatus.Text = "Command " + name + " failed";
                   return;
                }
@@ -88,7 +89,7 @@ namespace mrHelper.App.Forms
                bool reload = command.GetReload();
                if (reload && mergeRequestKey.HasValue)
                {
-                  _mergeRequestManager.CheckForUpdates(mergeRequestKey.Value,
+                  _mergeRequestCache.CheckForUpdates(mergeRequestKey.Value,
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
                      Program.Settings.OneShotUpdateSecondChanceDelayMs);
                   _discussionManager.CheckForUpdates(mergeRequestKey.Value,
@@ -213,7 +214,7 @@ namespace mrHelper.App.Forms
             {
                MessageBox.Show("Beyond Compare 3 integration failed. Application cannot start. See logs for details",
                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               ExceptionHandlers.Handle(ex, String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()));
+               ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
             }
             return false;
          }
@@ -270,9 +271,9 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
          initializeIconScheme();
 
-         _mergeRequestManager = new MergeRequestManager(_workflow, this, Program.Settings,
+         _mergeRequestCache = new MergeRequestCache(_workflow, this, Program.Settings,
             Program.Settings.AutoUpdatePeriodMs);
-         _mergeRequestManager.MergeRequestEvent += e => processUpdate(e);
+         _mergeRequestCache.MergeRequestEvent += e => processUpdate(e);
 
          // Discussions Manager subscribers to Workflow and UpdateManager notifications
          IEnumerable<string> keywords = _customCommands?
@@ -286,21 +287,22 @@ namespace mrHelper.App.Forms
          {
             checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
          }
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestManager, this, keywords,
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestCache, this, keywords,
             Program.Settings.AutoUpdatePeriodMs);
 
-         EventFilter eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestManager);
-         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestManager, _discussionManager, eventFilter);
+         EventFilter eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestCache);
+         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
+            eventFilter);
 
          // Revision Cacher subscribes to Workflow notifications
          if (Program.Settings.CacheRevisionsInBackground)
          {
-            _gitDataUpdater = new GitDataUpdater(_workflow, this, Program.Settings,
-               projectKey => getRepository(projectKey, false), _mergeRequestManager);
+            _gitDataUpdater = new GitDataUpdater(_workflow, this, Program.Settings, this,
+               _mergeRequestCache, _mergeRequestCache);
          }
 
-         _gitStatManager = new GitStatisticManager(_workflow, this, Program.Settings,
-            projectKey => getRepository(projectKey, false), _mergeRequestManager);
+         _gitStatManager = new GitStatisticManager(_workflow, this, this,
+            _mergeRequestCache, _mergeRequestCache);
          _gitStatManager.Update += () => listViewMergeRequests.Invalidate();
 
          // Time Tracking Manager requires Workflow and Discussion Manager
@@ -312,7 +314,7 @@ namespace mrHelper.App.Forms
          }
          catch (PersistenceStateDeserializationException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot deserialize the state");
+            ExceptionHandlers.Handle("Cannot deserialize the state", ex);
          }
 
          updateHostsDropdownList();
@@ -395,8 +397,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex) // whatever de-serialization exception
          {
-            ExceptionHandlers.Handle(ex, "Cannot load projects from file");
-            return;
+            ExceptionHandlers.Handle("Cannot load projects from file", ex);
          }
       }
    }

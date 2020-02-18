@@ -164,8 +164,8 @@ namespace mrHelper.Client.MergeRequests
                ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
                IId = mergeRequest.IId
             };
-            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestChangeTimestamp(mergeRequestKey);
-            DateTime newCachedChangeTimestamp = newDetails.GetLatestChangeTimestamp(mergeRequestKey);
+            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestVersion(mergeRequestKey).Created_At;
+            DateTime newCachedChangeTimestamp = newDetails.GetLatestVersion(mergeRequestKey).Created_At;
 
             bool labelsUpdated = !Enumerable.SequenceEqual(mrPair.Item1.MergeRequest.Labels,
                                                            mrPair.Item2.MergeRequest.Labels);

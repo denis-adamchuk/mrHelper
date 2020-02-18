@@ -21,7 +21,7 @@ namespace mrHelper.App.Forms
          }
          _discussionManager?.Dispose();
          _checkForUpdatesTimer?.Dispose();
-         _mergeRequestManager?.Dispose();
+         _mergeRequestCache?.Dispose();
          _timeTrackingTimer?.Dispose();
          base.Dispose(disposing);
       }

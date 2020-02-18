@@ -13,7 +13,8 @@ namespace mrHelper.App.Helpers
 {
    internal class EventFilter
    {
-      internal EventFilter(UserDefinedSettings settings, Workflow workflow, IMergeRequestProvider mergeRequestProvider)
+      internal EventFilter(UserDefinedSettings settings, Workflow workflow,
+         ICachedMergeRequestProvider mergeRequestProvider)
       {
          _settings = settings;
          _mergeRequestProvider = mergeRequestProvider;
@@ -101,7 +102,7 @@ namespace mrHelper.App.Helpers
 
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
-      private readonly IMergeRequestProvider _mergeRequestProvider;
+      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
    }
 }
 

@@ -3,6 +3,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,12 +27,12 @@ namespace mrHelper.GitClient
          return doGet(arguments, _cachedRevisions);
       }
 
-      async public Task Update(IEnumerable<GitDiffArguments> arguments)
+      async public Task LoadFromDisk(GitDiffArguments arguments)
       {
          await doUpdate(arguments, _cachedDiffs);
       }
 
-      async public Task Update(IEnumerable<GitShowRevisionArguments> arguments)
+      async public Task LoadFromDisk(GitShowRevisionArguments arguments)
       {
          await doUpdate(arguments, _cachedRevisions);
       }
@@ -45,53 +46,49 @@ namespace mrHelper.GitClient
       {
          if (!cache.ContainsKey(arguments) && ((dynamic)arguments).IsValid())
          {
-            cache[arguments] = ExternalProcess.Start("git", arguments.ToString(), true, _path).StdOut;
+            try
+            {
+               cache[arguments] = ExternalProcess.Start("git", arguments.ToString(), true, _path).StdOut;
+            }
+            catch (Exception ex)
+            {
+               if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+               {
+                  throw new GitNotAvailableDataException(ex);
+               }
+               throw;
+            }
          }
          return cache.ContainsKey(arguments) ? cache[arguments] : null;
       }
 
-      async private Task doUpdate<T>(IEnumerable<T> arguments, Dictionary<T, IEnumerable<string>> cache)
+      async private Task doUpdate<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
-         await doBatchUpdate(arguments,
-               async (x) =>
-            {
-               if (_disabled || cache.ContainsKey(x) || !((dynamic)x).IsValid())
-               {
-                  return;
-               }
-
-               ExternalProcess.AsyncTaskDescriptor d = _operationManager.CreateDescriptor(
-                  "git", x.ToString(), _path, null);
-               await _operationManager.Wait(d);
-               cache[x] = d.StdOut;
-            });
-      }
-
-      async private Task doBatchUpdate<T>(IEnumerable<T> args, Func<T, Task> func)
-      {
-         int remaining = args.Count();
-         while (remaining > 0 && !_disabled)
+         if (_disabled || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
          {
-            IEnumerable<Task> tasks = args
-               .Skip(args.Count() - remaining)
-               .Take(MaxGitInParallel)
-               .Select(x => func(x));
-            remaining -= MaxGitInParallel;
-            try
-            {
-               await Task.WhenAll(tasks);
-            }
-            catch (GitOperationException)
-            {
-               // already handled
-            }
+            return;
+         }
 
-            await Task.Delay(InterBatchDelay);
+         try
+         {
+            ExternalProcess.AsyncTaskDescriptor d = _operationManager.CreateDescriptor(
+               "git", arguments.ToString(), _path, null);
+            await _operationManager.Wait(d);
+            cache[arguments] = d.StdOut;
+         }
+         catch (Exception ex)
+         {
+            if (ex is OperationCancelledException)
+            {
+               return;
+            }
+            if (ex is SystemException || ex is GitCallFailedException)
+            {
+               throw new LoadFromDiskFailedException(ex);
+            }
+            throw;
          }
       }
-
-      private static int MaxGitInParallel  = 5;
-      private static int InterBatchDelay   = 1000; // ms
 
       private string _path;
       private bool _disabled;
