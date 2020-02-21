@@ -310,7 +310,8 @@ namespace mrHelper.App.Controls
          {
             BorderStyle = BorderStyle.FixedSingle,
             TabStop = false,
-            Tag = firstNote
+            Tag = firstNote,
+            Parent = this
          };
          htmlPanel.GotFocus += Control_GotFocus;
          htmlPanel.FontChanged += (sender, e) => setDiffContextText(sender as HtmlPanel);
@@ -497,10 +498,13 @@ namespace mrHelper.App.Controls
             {
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
-               Tag = note
+               Tag = note,
+               Parent = this
             };
             htmlPanel.GotFocus += Control_GotFocus;
             htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel);
+
+            setNoteHtmlText(htmlPanel);
 
             return htmlPanel;
          }
