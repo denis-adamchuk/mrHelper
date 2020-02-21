@@ -14,6 +14,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitClient;
 using mrHelper.CustomActions;
+using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
@@ -65,9 +66,9 @@ namespace mrHelper.App.Forms
          return getMergeRequestKey()?.IId ?? 0;
       }
 
-      public ILocalGitRepositoryFactory GetFactory()
+      public Task<ILocalGitRepositoryFactory> GetFactory()
       {
-         return _gitClientFactory;
+         return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer

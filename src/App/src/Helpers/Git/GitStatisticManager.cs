@@ -30,7 +30,7 @@ namespace mrHelper.App.Helpers
          workflow.PostLoadHostProjects += (hostname, projects) =>
          {
             synchronizeInvoke.BeginInvoke(new Action(
-               () =>
+               async () =>
             {
                if (_gitStatistic.Count > 0 && _gitStatistic.First().Key.ProjectKey.HostName != hostname)
                {
@@ -46,7 +46,7 @@ namespace mrHelper.App.Helpers
                foreach (Project project in projects)
                {
                   ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                  ILocalGitRepository repo = factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+                  ILocalGitRepository repo = (await factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
                   if (repo != null && !_gitStatistic.ContainsKey(repo))
                   {
                      _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
