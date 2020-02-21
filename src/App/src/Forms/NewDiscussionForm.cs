@@ -6,14 +6,13 @@ using mrHelper.Core.Matching;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
+using mrHelper.Common.Exceptions;
+using System.Diagnostics;
 
 namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionForm : CustomFontForm
    {
-      /// <summary>
-      /// Throws GitOperationException in case of problems with git.
-      /// </summary>
       internal NewDiscussionForm(string leftSideFileName, string rightSideFileName,
          DiffPosition position, IGitRepository gitRepository)
       {
@@ -69,21 +68,36 @@ namespace mrHelper.App.Forms
 
       /// <summary>
       /// Throws ArgumentException.
-      /// Throws GitOperationException and GitObjectException in case of problems with git.
       /// </summary>
       private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
          DiffPosition position, IGitRepository gitRepository)
       {
-         ContextDepth depth = new ContextDepth(0, 3);
-         IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
-         DiffContext context = textContextMaker.GetContext(position, depth);
-
-         DiffContextFormatter formatter = new DiffContextFormatter();
-         htmlPanel.Text = formatter.FormatAsHTML(context, htmlPanel.Font.Height, 2);
+         htmlPanel.Text = getContextHtmlText(position, gitRepository);
          htmlPanel.Height = htmlPanel.DisplayRectangle.Height + 2;
 
          textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
+      }
+
+      private string getContextHtmlText(DiffPosition position, IGitRepository gitRepository)
+      {
+         DiffContext? context;
+         try
+         {
+            ContextDepth depth = new ContextDepth(0, 3);
+            IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
+            context = textContextMaker.GetContext(position, depth);
+         }
+         catch (ContextMakingException ex)
+         {
+            string errorMessage = "Cannot render HTML context.";
+            ExceptionHandlers.Handle(errorMessage, ex);
+            return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
+         }
+
+         Debug.Assert(context.HasValue);
+         DiffContextFormatter formatter = new DiffContextFormatter();
+         return formatter.FormatAsHTML(context.Value, htmlPanel.Font.Height, 2);
       }
    }
 }

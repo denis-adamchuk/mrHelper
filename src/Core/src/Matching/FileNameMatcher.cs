@@ -20,7 +20,7 @@ namespace mrHelper.Core.Matching
       }
 
       /// <summary>
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws MatchingException.
       /// </summary>
       public bool Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
       {
@@ -42,6 +42,9 @@ namespace mrHelper.Core.Matching
          return oppositeName != null;
       }
 
+      /// <summary>
+      /// Throws MatchingException.
+      /// </summary>
       private string getOppositeName(DiffRefs refs, bool isLeftSide, string sourceCurrentName, string sourceOppositeName)
       {
          Debug.Assert(sourceCurrentName != String.Empty);
@@ -143,7 +146,7 @@ namespace mrHelper.Core.Matching
          Trace.TraceInformation(String.Format(
             "[FileNameMatcher] {0}. Host: {1}. Project: {2}. DiffRefs: {3}\n"
           + "sourceCurrentName: {4}\nsourceOppositeName: {5}\nfixedOppositeName: {6}\nIsLeftSide: {7}",
-               action, _gitRepository.HostName, _gitRepository.ProjectName, refs.ToString(),
+               action, _gitRepository.ProjectKey.HostName, _gitRepository.ProjectKey.ProjectName, refs.ToString(),
                sourceCurrentName, sourceOppositeName, fixedOppositeName, isLeftSide));
       }
 

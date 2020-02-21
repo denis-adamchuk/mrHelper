@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
-using mrHelper.Client.Types;
 
-namespace mrHelper.Client.MergeRequests
+namespace mrHelper.Common.Interfaces
 {
+   public struct ProjectKey
+   {
+      public string HostName;
+      public string ProjectName;
+   }
+
    public struct ProjectUpdate
    {
       public ProjectKey ProjectKey;

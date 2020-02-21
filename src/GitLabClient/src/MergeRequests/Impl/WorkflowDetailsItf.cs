@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
+using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -20,7 +22,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request
       /// </summary>
-      DateTime GetLatestChangeTimestamp(MergeRequestKey mrk);
+      Version GetLatestVersion(MergeRequestKey mrk);
    }
 }
 

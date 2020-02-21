@@ -9,20 +9,21 @@ using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
+using mrHelper.Client.Versions;
 
 namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Manages updates
    /// </summary>
-   internal class UpdateManager : IDisposable, IUpdateManager
+   internal class UpdateManager : IDisposable
    {
       internal event Action<IEnumerable<UserEvents.MergeRequestEvent>> OnUpdate;
 
-      internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, IHostProperties settings,
+      internal UpdateManager(ISynchronizeInvoke synchronizeInvoke, UpdateOperator updateOperator,
          string hostname, IEnumerable<Project> projects, WorkflowDetailsCache cache, int autoUpdatePeriodMs)
       {
-         _operator = new UpdateOperator(settings);
+         _operator = updateOperator;
          _hostname = hostname;
          _projects = projects.ToArray();
          _cache = cache;
@@ -39,27 +40,6 @@ namespace mrHelper.Client.MergeRequests
          _timer.Dispose();
          _oneShotTimer?.Stop();
          _oneShotTimer?.Dispose();
-      }
-
-      public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
-      {
-         return new LocalProjectChecker(mrk, _cache.Details.Clone());
-      }
-
-      public IInstantProjectChecker GetLocalProjectChecker(ProjectKey pk)
-      {
-         MergeRequestKey mrk = _cache.Details.GetMergeRequests(pk).
-            Select(x => new MergeRequestKey
-            {
-               ProjectKey = pk,
-               IId = x.IId
-            }).OrderByDescending(x => _cache.Details.GetLatestChangeTimestamp(x)).FirstOrDefault();
-         return GetLocalProjectChecker(mrk);
-      }
-
-      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
-      {
-         return new RemoteProjectChecker(mrk, _operator);
       }
 
       public void RequestOneShotUpdate(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
@@ -165,10 +145,10 @@ namespace mrHelper.Client.MergeRequests
             Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
             foreach (MergeRequest mergeRequest in mergeRequests)
             {
-               ProjectKey pk = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+               ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
                MergeRequestKey mrk = new MergeRequestKey
                {
-                  ProjectKey = pk,
+                  ProjectKey = projectKey,
                   IId = mergeRequest.IId
                };
 

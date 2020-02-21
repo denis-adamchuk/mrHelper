@@ -5,6 +5,7 @@ using System.Diagnostics;
 using mrHelper.Core.Git;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Core.Context
 {
@@ -24,8 +25,7 @@ namespace mrHelper.Core.Context
       }
 
       /// <summary>
-      /// Throws ArgumentException.
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws ArgumentException, ContextMakingException.
       /// </summary>
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {
@@ -50,12 +50,28 @@ namespace mrHelper.Core.Context
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
-         GitRevisionArguments arguments = new GitRevisionArguments
+         GitShowRevisionArguments arguments = new GitShowRevisionArguments
          {
-            filename = filename,
-            sha = sha
+            Filename = filename,
+            Sha = sha
          };
-         string[] contents = _gitRepository.ShowFileByRevision(arguments).ToArray();
+
+         IEnumerable<string> gitResult = null;
+         try
+         {
+            gitResult = _gitRepository.Data?.Get(arguments);
+         }
+         catch (GitNotAvailableDataException ex)
+         {
+            throw new ContextMakingException("Cannot obtain git revision", ex);
+         }
+
+         if (gitResult == null)
+         {
+            throw new ContextMakingException("Cannot obtain git revision", null);
+         }
+
+         string[] contents = gitResult.ToArray();
          if (linenumber > contents.Count())
          {
             throw new ArgumentException(

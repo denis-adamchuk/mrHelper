@@ -6,7 +6,6 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
-using mrHelper.Client.Services;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -34,7 +33,7 @@ namespace mrHelper.App
                }
                catch (FeedbackReporterException ex2)
                {
-                  ExceptionHandlers.Handle(ex2, "Cannot send a bug report");
+                  ExceptionHandlers.Handle("Cannot send a bug report", ex2);
                }
             }
          }
@@ -108,7 +107,7 @@ namespace mrHelper.App
                }
                catch (Exception ex)
                {
-                  ExceptionHandlers.Handle(ex, "Failed to clean-up log files");
+                  ExceptionHandlers.Handle("Failed to clean-up log files", ex);
                }
             });
 
@@ -208,7 +207,7 @@ namespace mrHelper.App
          }
          catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot find parent git process");
+            ExceptionHandlers.Handle("Cannot find parent git process", ex);
          }
 
          if (gitPID == -1)

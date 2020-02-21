@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace mrHelper.Client.MergeRequests
+namespace mrHelper.Common.Interfaces
 {
    public interface IInstantProjectChecker
    {
-      Task<DateTime> GetLatestChangeTimestampAsync();
+      Task<DateTime> GetLatestChangeTimestamp();
    }
 }
 

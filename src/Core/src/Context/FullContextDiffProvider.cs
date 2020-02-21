@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
-using System.Diagnostics;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Core.Context
 {
@@ -29,7 +30,7 @@ namespace mrHelper.Core.Context
       }
 
       /// <summary>
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws ContextMakingException.
       /// </summary>
       public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
@@ -42,14 +43,36 @@ namespace mrHelper.Core.Context
 
          GitDiffArguments arguments = new GitDiffArguments
          {
-            sha1 = leftSHA,
-            sha2 = rightSHA,
-            filename1 = leftFileName,
-            filename2 = rightFileName,
-            context = Constants.FullContextSize
+            Mode = GitDiffArguments.DiffMode.Context,
+            CommonArgs = new GitDiffArguments.CommonArguments
+            {
+               Sha1 = leftSHA,
+               Sha2 = rightSHA,
+               Filename1 = leftFileName,
+               Filename2 = rightFileName,
+            },
+            SpecialArgs = new GitDiffArguments.DiffContextArguments
+            {
+               Context = Constants.FullContextSize
+            }
          };
 
-         IEnumerable<string> fullDiff = _gitRepository.Diff(arguments);
+
+         IEnumerable<string> fullDiff = null;
+         try
+         {
+            fullDiff = _gitRepository.Data?.Get(arguments);
+         }
+         catch (GitNotAvailableDataException ex)
+         {
+            throw new ContextMakingException("Cannot obtain git diff", ex);
+         }
+
+         if (fullDiff == null)
+         {
+            throw new ContextMakingException("Cannot obtain git diff", null);
+         }
+
          if (fullDiff.Count() == 0)
          {
             Trace.TraceWarning(String.Format(

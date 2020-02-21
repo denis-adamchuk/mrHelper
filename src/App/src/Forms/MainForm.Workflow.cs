@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -84,7 +85,7 @@ namespace mrHelper.App.Forms
          catch (WorkflowException ex)
          {
             disableAllUIControls(true);
-            ExceptionHandlers.Handle(ex, "Cannot switch host");
+            ExceptionHandlers.Handle("Cannot switch host", ex);
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
@@ -100,7 +101,7 @@ namespace mrHelper.App.Forms
          }
          catch (WorkflowException ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot switch merge request");
+            ExceptionHandlers.Handle("Cannot switch merge request", ex);
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 

@@ -23,8 +23,7 @@ namespace mrHelper.Core.Context
       }
 
       /// <summary>
-      /// Throws ArgumentException.
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws ArgumentException, ContextMakingException.
       /// </summary>
       public DiffContext GetContext(DiffPosition position, ContextDepth depth)
       {

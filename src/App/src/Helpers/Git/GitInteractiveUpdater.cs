@@ -4,41 +4,46 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.MergeRequests;
+using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Helpers
 {
-   public class CancelledByUserException : Exception {}
-   public class RepeatOperationException : Exception {}
+   internal class InteractiveUpdateFailed : ExceptionEx
+   {
+      internal InteractiveUpdateFailed(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
+
+   internal class InteractiveUpdateCancelledException : Exception {}
+   internal class InteractiveUpdateSSLFixedException : Exception {}
 
    /// <summary>
-   /// Prepares GitClient to use. It is essentially a wrapper over GitClientUpdater.
+   /// Prepares LocalGitRepository to use.
    /// </summary>
-   internal class GitClientInteractiveUpdater
+   internal class GitInteractiveUpdater
    {
       internal event Action<string> InitializationStatusChange;
 
-      internal GitClientInteractiveUpdater()
-      {
-      }
-
       /// <summary>
-      /// Update passed GitClient object.
-      /// Throw GitOperationException on unrecoverable errors.
+      /// Update passed LocalGitRepository object.
+      /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(GitClient client, IInstantProjectChecker instantChecker,
+      async internal Task UpdateAsync(ILocalGitRepository repo, IInstantProjectChecker instantChecker,
          Action<string> onProgressChange)
       {
-         if (client.DoesRequireClone() && !isCloneAllowed(client.Path))
+         if (repo.DoesRequireClone() && !isCloneAllowed(repo.Path))
          {
             InitializationStatusChange?.Invoke("Clone rejected");
-            throw new CancelledByUserException();
+            throw new InteractiveUpdateCancelledException();
          }
 
          InitializationStatusChange?.Invoke("Updating git repository...");
 
-         await runAsync(async () => await client.Updater.ManualUpdateAsync(instantChecker, onProgressChange));
+         await runAsync(async () => await repo.Updater.ForceUpdate(instantChecker, onProgressChange));
          InitializationStatusChange?.Invoke("Git repository updated");
       }
 
@@ -64,7 +69,7 @@ namespace mrHelper.App.Helpers
 
       /// <summary>
       /// Run a git command asynchronously.
-      /// Throw GitOperationException on unrecoverable errors.
+      /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async private Task runAsync(Command command)
@@ -73,74 +78,58 @@ namespace mrHelper.App.Helpers
          {
             await command();
          }
-         catch (Exception ex)
+         catch (RepositoryUpdateException ex)
          {
-            Debug.Assert(!(ex is InvalidOperationException));
-
-            // Exception handling does not mean that we can return valid GitClient
-            bool cancelledByUser = isCancelledByUser(ex);
-
-            string result = cancelledByUser ? "cancelled by user" : "failed";
-            InitializationStatusChange?.Invoke(String.Format("Git repository update {0}", result));
-
-            if (cancelledByUser)
+            if (ex is UpdateCancelledException)
             {
-               throw new CancelledByUserException();
+               InitializationStatusChange?.Invoke("Git repository update cancelled by user");
+               throw new InteractiveUpdateCancelledException();
             }
 
-            if (isSSLCertificateProblem(ex as GitOperationException))
+            if (ex is SecurityException)
             {
                InitializationStatusChange?.Invoke("Cannot clone due to SSL verification error");
                if (handleSSLCertificateProblem())
                {
-                  throw new RepeatOperationException();
+                  throw new InteractiveUpdateSSLFixedException();
                }
-               throw new CancelledByUserException();
+               throw new InteractiveUpdateCancelledException();
             }
 
-            throw;
+            InitializationStatusChange?.Invoke("Git repository update failed");
+            throw new InteractiveUpdateFailed("Cannot update repository", ex);
          }
-      }
-
-      /// <summary>
-      /// Check exit code.
-      /// git returns exit code 128 if user cancels operation.
-      /// </summary>
-      private bool isCancelledByUser(Exception ex)
-      {
-         return ex is GitOperationException && (ex as GitOperationException).Cancelled;
       }
 
       ///<summary>
       /// Handle exceptions caused by SSL certificate problem
+      /// Throw InteractiveUpdaterException on unrecoverable errors.
       ///</summary>
       private bool handleSSLCertificateProblem()
       {
          if (!isGlobalSSLFixAllowed())
          {
+            Trace.TraceInformation("[GitInteractiveUpdater] User rejected to disable SSl certificate verification");
             return false;
          }
+         Trace.TraceInformation("[GitInteractiveUpdater] User agreed to disable SSl certificate verification");
 
          try
          {
-            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty, null, null);
+            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty);
          }
-         catch (ExternalProcessException ex)
+         catch (Exception ex)
          {
-            ExceptionHandlers.Handle(ex, "Cannot change global http.verifySSL setting");
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               throw new InteractiveUpdateFailed("Cannot change global http.verifySSL setting", ex);
+            }
             throw;
          }
 
          InitializationStatusChange?.Invoke("SSL certificate verification disabled. Please repeat git operation.");
+         Trace.TraceInformation("[GitInteractiveUpdater] SSL certificate verification disabled");
          return true;
-      }
-
-      /// <summary>
-      /// Check exception Details to figure out if it was caused by SSL certificate problem.
-      /// </summary>
-      private bool isSSLCertificateProblem(GitOperationException ex)
-      {
-         return ex != null && ex.Details.Contains("SSL certificate problem");
       }
 
       /// <summary>

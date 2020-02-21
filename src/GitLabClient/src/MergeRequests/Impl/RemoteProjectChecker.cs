@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -20,7 +21,7 @@ namespace mrHelper.Client.MergeRequests
       /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      async public Task<DateTime> GetLatestChangeTimestampAsync()
+      async public Task<DateTime> GetLatestChangeTimestamp()
       {
          try
          {

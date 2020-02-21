@@ -50,6 +50,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\Context\ContextMakerItf.cs" />
+    <Compile Include="src\Context\ContextMakingException.cs" />
     <Compile Include="src\Context\ContextMakingHelpers.cs" />
     <Compile Include="src\Context\CombinedContextMaker.cs" />
     <Compile Include="src\Context\FullContextDiffProvider.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="src\Matching\DiffRefs.cs" />
     <Compile Include="src\Matching\DiffPosition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Matching\MatchingException.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">

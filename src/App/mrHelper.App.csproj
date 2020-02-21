@@ -180,27 +180,27 @@
     </Compile>
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
-    <Compile Include="src\Helpers\Git\RevisionCacher.cs" />
-    <Compile Include="src\Helpers\Interprocess\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
-    <Compile Include="src\Helpers\FeedbackReporter.cs" />
-    <Compile Include="src\Helpers\Git\GitClient.cs" />
-    <Compile Include="src\Helpers\Git\GitClientFactory.cs" />
-    <Compile Include="src\Helpers\Git\GitClientUpdater.cs" />
+    <Compile Include="src\Helpers\GitLabSharp\MergeRequestFilter.cs" />
+    <Compile Include="src\Helpers\Git\FactoryAccessorItf.cs" />
+    <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
+    <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />
+    <Compile Include="src\Helpers\Git\GitStatisticManager.cs" />
+    <Compile Include="src\Helpers\Interprocess\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\Interprocess\DiffArgumentParser.cs" />
     <Compile Include="src\Helpers\Interprocess\Snapshot.cs" />
     <Compile Include="src\Helpers\Interprocess\SnapshotSerializer.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\MergeRequestFilter.cs" />
     <Compile Include="src\Helpers\Notifications\EventFilter.cs" />
     <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\Helpers\Notifications\TrayIcon.cs" />
     <Compile Include="src\Helpers\Notifications\UserNotifier.cs" />
+    <Compile Include="src\Helpers\ColorScheme.cs" />
+    <Compile Include="src\Helpers\FeedbackReporter.cs" />
+    <Compile Include="src\Helpers\ServiceManager.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
-    <Compile Include="src\Helpers\ColorScheme.cs" />
-    <Compile Include="src\Helpers\Git\GitClientInteractiveUpdater.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
       <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
     </EmbeddedResource>
@@ -278,6 +278,10 @@
     <ProjectReference Include="..\Core\mrHelper.Core.csproj">
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrHelper.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GitClient\mrHelper.GitClient.csproj">
+      <Project>{D75B7B19-B06B-42E9-9363-437F5640A045}</Project>
+      <Name>mrHelper.GitClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
       <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>

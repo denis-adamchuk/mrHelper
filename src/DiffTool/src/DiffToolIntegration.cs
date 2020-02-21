@@ -14,15 +14,15 @@ namespace mrHelper.DiffTool
       public const string GitDiffToolName = "mrhelperdiff";
 
       /// <summary>
-      /// Throws GitOperationException if integration failed
-      /// Throws DiffToolIntegrationException if diff tool is not installed
+      /// Throws DiffToolNotInstalledException if diff tool is not installed
+      /// Throws DiffToolIntegrationException if integration failed
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
          string toolpath = AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
          if (!isInstalled(toolpath))
          {
-            throw new DiffToolNotInstalledException("Diff tool not installed", null);
+            throw new DiffToolNotInstalledException("Diff tool not installed");
          }
 
          Trace.TraceInformation(String.Format("Diff Tool installed at: {0}", toolpath));
@@ -40,11 +40,14 @@ namespace mrHelper.DiffTool
             try
             {
                ExternalProcess.Start("git",
-                  "config --global --remove-section difftool." + GitDiffToolName, true, String.Empty, null, null);
+                  "config --global --remove-section difftool." + GitDiffToolName, true, String.Empty);
             }
-            catch (ExternalProcessException)
+            catch (Exception ex)
             {
-               Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName));
+               if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+               {
+                  Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName));
+               }
             }
 
             throw;
@@ -71,14 +74,12 @@ namespace mrHelper.DiffTool
       }
 
       /// <summary>
-      /// Throws GitOperationException if integration failed
-      /// Throws DiffToolIntegrationException if diff tool is not installed
+      /// Throws ExternalProcessFailureException/ExternalProcessSystemException if registration failed
       /// </summary>
       private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
       {
          ExternalProcess.Start("git",
-            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath), true, String.Empty,
-            null, null);
+            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath), true, String.Empty);
       }
 
       public bool isInstalled(string toolpath)

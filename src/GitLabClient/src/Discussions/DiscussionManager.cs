@@ -27,7 +27,7 @@ namespace mrHelper.Client.Discussions
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
       public DiscussionManager(IHostProperties settings, Workflow.Workflow workflow,
-         MergeRequestManager mergeRequestManager, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords,
+         MergeRequestCache mergeRequestCache, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords,
          int autoUpdatePeriodMs)
       {
          _settings = settings;
@@ -59,7 +59,7 @@ namespace mrHelper.Client.Discussions
             cleanup(toRemove.ToArray());
          };
 
-         mergeRequestManager.MergeRequestEvent +=
+         mergeRequestCache.MergeRequestEvent +=
             (e) =>
          {
             switch (e.EventType)

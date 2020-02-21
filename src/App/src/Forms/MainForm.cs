@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -10,13 +11,14 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
-using System.Diagnostics;
+using mrHelper.GitClient;
+using mrHelper.CustomActions;
+using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm : CustomFontForm, ICommandCallback
+   internal partial class MainForm : CustomFontForm, ICommandCallback, ILocalGitRepositoryFactoryAccessor
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -64,6 +66,11 @@ namespace mrHelper.App.Forms
          return getMergeRequestKey()?.IId ?? 0;
       }
 
+      public Task<ILocalGitRepositoryFactory> GetFactory()
+      {
+         return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
+      }
+
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
       {
          Interval = timeTrackingTimerInterval
@@ -78,10 +85,11 @@ namespace mrHelper.App.Forms
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
-      private GitClientFactory _gitClientFactory;
-      private GitClientInteractiveUpdater _gitClientUpdater;
+      private LocalGitRepositoryFactory _gitClientFactory;
+      private GitInteractiveUpdater _gitClientUpdater;
+      private GitDataUpdater _gitDataUpdater;
+      private GitStatisticManager _gitStatManager;
       private PersistentStorage _persistentStorage;
-      private RevisionCacher _revisionCacher;
       private UserNotifier _userNotifier;
 
       private string _initialHostName = String.Empty;
@@ -140,7 +148,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private MergeRequestManager _mergeRequestManager;
+      private MergeRequestCache _mergeRequestCache;
 
       private struct ListViewSubItemInfo
       {

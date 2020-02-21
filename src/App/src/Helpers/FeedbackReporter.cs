@@ -6,6 +6,14 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Helpers
 {
+   public class FeedbackReporterException : ExceptionEx
+   {
+      public FeedbackReporterException(string message, Exception ex)
+         : base(message, ex)
+      {
+      }
+   }
+
    public class LogCollectException : FeedbackReporterException
    {
       internal LogCollectException(Exception ex) : base("Failed to collect logs", ex) { }

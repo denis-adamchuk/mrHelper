@@ -45,6 +45,8 @@
     <Compile Include="src\BC3Tool.cs" />
     <Compile Include="src\DiffToolIntegration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\DiffToolIntegrationException.cs" />
+    <Compile Include="src\IntegratedDiffToolItf.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">

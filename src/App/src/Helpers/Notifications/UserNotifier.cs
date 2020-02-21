@@ -17,14 +17,14 @@ namespace mrHelper.App.Helpers
    internal class UserNotifier
    {
       internal UserNotifier(TrayIcon trayIcon, UserDefinedSettings settings,
-         MergeRequestManager mergeRequestManager, DiscussionManager discussionManager, EventFilter eventFilter)
+         MergeRequestCache mergeRequestCache, DiscussionManager discussionManager, EventFilter eventFilter)
       {
          _settings = settings;
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
-         mergeRequestManager.MergeRequestEvent += (e) => notifyOnEvent(e);
+         mergeRequestCache.MergeRequestEvent += (e) => notifyOnEvent(e);
          discussionManager.DiscussionEvent += (e) => notifyOnEvent(e);
-         _mergeRequestProvider = mergeRequestManager;
+         _mergeRequestProvider = mergeRequestCache;
       }
 
       private TrayIcon.BalloonText getBalloonText(UserEvents.MergeRequestEvent e)
@@ -122,6 +122,6 @@ namespace mrHelper.App.Helpers
       private readonly UserDefinedSettings _settings;
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
-      private readonly IMergeRequestProvider _mergeRequestProvider;
+      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
    }
 }

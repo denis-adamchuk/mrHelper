@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Core.Context;
 
 namespace mrHelper.Core.Git
 {
@@ -27,7 +30,7 @@ namespace mrHelper.Core.Git
 
       /// <summary>
       /// Note: filename1 or filename2 can be 'null'
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws ContextMakingException.
       /// </summary>
       public GitDiffAnalyzer(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
@@ -59,6 +62,9 @@ namespace mrHelper.Core.Git
          return false;
       }
 
+      /// <summary>
+      /// Throws ContextMakingException.
+      /// </summary>
       static private IEnumerable<GitDiffSection> getDiffSections(IGitRepository gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
@@ -66,14 +72,35 @@ namespace mrHelper.Core.Git
 
          GitDiffArguments arguments = new GitDiffArguments
          {
-            sha1 = sha1,
-            sha2 = sha2,
-            filename1 = filename1,
-            filename2 = filename2,
-            context = 0
+            Mode = GitDiffArguments.DiffMode.Context,
+            CommonArgs = new GitDiffArguments.CommonArguments
+            {
+               Sha1 = sha1,
+               Sha2 = sha2,
+               Filename1 = filename1,
+               Filename2 = filename2,
+            },
+            SpecialArgs = new GitDiffArguments.DiffContextArguments
+            {
+               Context = 0
+            }
          };
 
-         IEnumerable<string> diff = gitRepository.Diff(arguments);
+         IEnumerable<string> diff = null;
+         try
+         {
+            diff = gitRepository.Data?.Get(arguments);
+         }
+         catch (GitNotAvailableDataException ex)
+         {
+            throw new ContextMakingException("Cannot obtain git diff", ex);
+         }
+
+         if (diff == null)
+         {
+            throw new ContextMakingException("Cannot obtain git diff", null);
+         }
+
          foreach (string line in diff)
          {
             Match m = diffSectionRe.Match(line);

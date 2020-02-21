@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.Core.Git
 {
@@ -24,18 +26,36 @@ namespace mrHelper.Core.Git
 
       /// <summary>
       /// Returns a name of file at the opposite side.
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws MatchingException.
       /// </summary>
       public string IsRenamed(string leftcommit, string rightcommit, string filename, bool leftsidename, out bool moved)
       {
-         GitNumStatArguments arguments = new GitNumStatArguments
+         GitDiffArguments arguments = new GitDiffArguments
          {
-            sha1 = leftcommit,
-            sha2 = rightcommit,
-            filter = "R"
+            Mode = GitDiffArguments.DiffMode.NumStat,
+            CommonArgs = new GitDiffArguments.CommonArguments
+            {
+               Sha1 = leftcommit,
+               Sha2 = rightcommit,
+               Filter = "R"
+            }
          };
 
-         IEnumerable<string> renames = _gitRepository.GetDiffStatistics(arguments);
+         IEnumerable<string> renames = null;
+         try
+         {
+            renames = _gitRepository.Data?.Get(arguments);
+         }
+         catch (GitNotAvailableDataException ex)
+         {
+            throw new MatchingException("Cannot obtain list of renamed files", ex);
+         }
+
+         if (renames == null)
+         {
+            throw new MatchingException("Cannot obtain list of renamed files", null);
+         }
+
          moved = false;
 
          foreach (string line in renames)

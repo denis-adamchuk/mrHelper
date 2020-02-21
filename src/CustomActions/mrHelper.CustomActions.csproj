@@ -42,7 +42,10 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\CommandCallbackItf.cs" />
+    <Compile Include="src\CommandItf.cs" />
     <Compile Include="src\CustomCommandLoader.cs" />
+    <Compile Include="src\CustomCommandLoaderException.cs" />
     <Compile Include="src\SendNoteCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

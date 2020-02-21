@@ -63,7 +63,7 @@ namespace mrHelper.Client.TimeTracking
             @"^(?'operation'added|subtracted)\s(?>(?'hours'\d*)h\s)?(?>(?'minutes'\d*)m\s)?(?>(?'seconds'\d*)s\s)?of time spent.*",
                RegexOptions.Compiled);
 
-         private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
+      private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          TimeSpan span = TimeSpan.Zero;
          foreach (Discussion discussion in discussions)

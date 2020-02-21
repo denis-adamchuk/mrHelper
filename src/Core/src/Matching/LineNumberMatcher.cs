@@ -21,7 +21,7 @@ namespace mrHelper.Core.Matching
       /// <summary>
       /// Return DiffPosition if match succeeded and throw if match failed
       /// Throws ArgumentException in case of bad arguments.
-      /// Throws GitOperationException in case of problems with git.
+      /// Throws MatchingException.
       /// </summary>
       public void Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
       {
@@ -45,6 +45,10 @@ namespace mrHelper.Core.Matching
          {
             throw new ArgumentException(
                String.Format("Bad match info: {0}", matchInfo.ToString()));
+         }
+         catch (ContextMakingException ex)
+         {
+            throw new MatchingException("Cannot match lines", ex);
          }
 
          string currentLineAsString = currentLine.ToString();

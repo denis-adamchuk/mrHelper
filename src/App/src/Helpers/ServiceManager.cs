@@ -5,7 +5,7 @@ using System.Web.Script.Serialization;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Tools;
 
-namespace mrHelper.Client.Services
+namespace mrHelper.App.Helpers
 {
    public class ServiceManager
    {
@@ -20,7 +20,7 @@ namespace mrHelper.Client.Services
             }
             catch (Exception ex) // whatever de-serialization exception
             {
-               ExceptionHandlers.Handle(ex, "Cannot load services from file");
+               ExceptionHandlers.Handle("Cannot load services from file", ex);
             }
          }
       }
@@ -117,7 +117,7 @@ namespace mrHelper.Client.Services
          }
          catch (Exception ex) // whatever de-serialization exception
          {
-            ExceptionHandlers.Handle(ex, "Cannot deserialize JSON ");
+            ExceptionHandlers.Handle("Cannot deserialize JSON ", ex);
          }
          return null;
       }

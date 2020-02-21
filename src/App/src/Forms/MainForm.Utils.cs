@@ -12,13 +12,15 @@ using System.Windows.Forms;
 using System.Drawing;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using static mrHelper.Client.Services.ServiceManager;
+using static mrHelper.App.Helpers.ServiceManager;
 using static mrHelper.Client.Common.UserEvents;
 using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Controls;
+using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -371,7 +373,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex) // whatever de-serialization exception
             {
-               ExceptionHandlers.Handle(ex, "Cannot create a color scheme");
+               ExceptionHandlers.Handle("Cannot create a color scheme", ex);
             }
             return false;
          };
@@ -406,7 +408,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex) // whatever de-deserialization exception
          {
-            ExceptionHandlers.Handle(ex, "Cannot load icon scheme");
+            ExceptionHandlers.Handle("Cannot load icon scheme", ex);
          }
       }
 
@@ -568,6 +570,18 @@ namespace mrHelper.App.Forms
             (span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss"));
       }
 
+      private string getSize(FullMergeRequestKey? fmk)
+      {
+         if (!fmk.HasValue)
+         {
+            return String.Empty;
+         }
+
+         GitStatisticManager.DiffStatistic? diffStatistic =
+            _gitStatManager.GetStatistic(fmk.Value, out string errMsg);
+         return diffStatistic?.ToString() ?? errMsg;
+      }
+
       private void enableMergeRequestActions(bool enabled)
       {
          linkLabelConnectedTo.Enabled = enabled;
@@ -663,7 +677,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<GitClientFactory> getGitClientFactory(string localFolder)
+      async private Task<ILocalGitRepositoryFactory> getLocalGitRepositoryFactory(string localFolder)
       {
          if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
          {
@@ -674,12 +688,12 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new GitClientFactory(localFolder,
-                  _mergeRequestManager.GetProjectWatcher(), this);
+               _gitClientFactory = new LocalGitRepositoryFactory(localFolder,
+                  _mergeRequestCache.GetProjectWatcher(), this);
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClientFactory"));
+               ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
 
                try
                {
@@ -688,7 +702,7 @@ namespace mrHelper.App.Forms
                catch (Exception ex2)
                {
                   string message = String.Format("Cannot create folder \"{0}\"", localFolder);
-                  ExceptionHandlers.Handle(ex2, message);
+                  ExceptionHandlers.Handle(message, ex2);
                   MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                   return null;
                }
@@ -698,34 +712,30 @@ namespace mrHelper.App.Forms
       }
 
       /// <summary>
-      /// Make some checks and create a Client
+      /// Make some checks and create a repository
       /// </summary>
-      /// <returns>null if could not create a GitClient</returns>
-      async private Task<GitClient> getGitClient(ProjectKey key, bool showMessageBoxOnError)
+      /// <returns>null if could not create a repository</returns>
+      async private Task<ILocalGitRepository> getRepository(ProjectKey key, bool showMessageBoxOnError)
       {
-         GitClientFactory factory = await getGitClientFactory(Program.Settings.LocalGitFolder);
+         ILocalGitRepositoryFactory factory = await getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
          if (factory == null)
          {
             return null;
          }
 
-         GitClient client;
          try
          {
-            client = factory.GetClient(key.HostName, key.ProjectName);
+            return factory.GetRepository(key.HostName, key.ProjectName);
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle(ex, String.Format("Cannot create GitClient"));
+            ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepository"), ex);
             if (showMessageBoxOnError)
             {
                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return null;
          }
-
-         Debug.Assert(client != null);
-         return client;
       }
 
       private string getInitialHostName()
@@ -804,7 +814,7 @@ namespace mrHelper.App.Forms
          IEnumerable<ProjectKey> projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          foreach (ProjectKey projectKey in projectKeys)
          {
-            foreach (MergeRequest mergeRequest in _mergeRequestManager.GetMergeRequests(projectKey))
+            foreach (MergeRequest mergeRequest in _mergeRequestCache.GetMergeRequests(projectKey))
             {
                MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
@@ -828,7 +838,7 @@ namespace mrHelper.App.Forms
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
-            if (!_mergeRequestManager.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
+            if (!_mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
                || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
             {
                listViewMergeRequests.Items.RemoveAt(index);
@@ -844,24 +854,15 @@ namespace mrHelper.App.Forms
       private void addListViewMergeRequestItem(MergeRequestKey mrk)
       {
          ListViewGroup group = listViewMergeRequests.Groups[mrk.ProjectKey.ProjectName];
-         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(new string[]
-            {
-               String.Empty, // Column IId (stub)
-               String.Empty, // Column Author (stub)
-               String.Empty, // Column Title (stub)
-               String.Empty, // Column Labels (stub)
-               String.Empty, // Column Jira (stub)
-               String.Empty, // Column Total Time (stub)
-               String.Empty, // Column Source Branch (stub)
-               String.Empty, // Column Target Branch (stub)
-            }, group));
+         string[] items = Enumerable.Repeat(String.Empty, listViewMergeRequests.Columns.Count).ToArray();
+         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(items, group));
          Debug.Assert(item.SubItems.Count == listViewMergeRequests.Columns.Count);
          setListViewItemTag(item, mrk);
       }
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         MergeRequest? mergeRequest = _mergeRequestManager.GetMergeRequest(mrk);
+         MergeRequest? mergeRequest = _mergeRequestCache.GetMergeRequest(mrk);
          if (!mergeRequest.HasValue)
          {
             Trace.TraceError(String.Format("[MainForm] setListViewItemTag() cannot find MR with IId {0}", mrk.IId));
@@ -871,11 +872,12 @@ namespace mrHelper.App.Forms
 
          MergeRequest mr = mergeRequest.Value;
 
-         item.Tag = new FullMergeRequestKey
+         FullMergeRequestKey fmk = new FullMergeRequestKey
          {
             ProjectKey = mrk.ProjectKey,
             MergeRequest = mr
          };
+         item.Tag = fmk;
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Constants.AuthorLabelPrefix, mr.Author.Username);
@@ -887,14 +889,29 @@ namespace mrHelper.App.Forms
 
          Func<MergeRequestKey, string> getTotalTimeText = (key) => convertTotalTimeToText(getTotalTime(key));
 
-         item.SubItems[0].Tag = new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url);
-         item.SubItems[1].Tag = new ListViewSubItemInfo(() => author,                  () => String.Empty);
-         item.SubItems[2].Tag = new ListViewSubItemInfo(() => mr.Title,                () => String.Empty);
-         item.SubItems[3].Tag = new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty);
-         item.SubItems[4].Tag = new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl);
-         item.SubItems[5].Tag = new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty);
-         item.SubItems[6].Tag = new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty);
-         item.SubItems[7].Tag = new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty);
+         Action<string, ListViewSubItemInfo> setSubItemTag = (columnTag, subItemInfo) =>
+         {
+            ColumnHeader columnHeader = listViewMergeRequests.Columns
+               .Cast<ColumnHeader>()
+               .SingleOrDefault(x => x.Tag.ToString() == columnTag);
+            if (columnHeader == null)
+            {
+               Debug.Assert(false);
+               return;
+            }
+
+            item.SubItems[columnHeader.Index].Tag = subItemInfo;
+         };
+
+         setSubItemTag("IId",          new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url));
+         setSubItemTag("Author",       new ListViewSubItemInfo(() => author,                  () => String.Empty));
+         setSubItemTag("Title",        new ListViewSubItemInfo(() => mr.Title,                () => String.Empty));
+         setSubItemTag("Labels",       new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty));
+         setSubItemTag("Size",         new ListViewSubItemInfo(() => getSize(fmk),            () => String.Empty));
+         setSubItemTag("Jira",         new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl));
+         setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty));
+         setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty));
+         setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -961,8 +978,9 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex) // see Process.Start exception list
          {
-            ExceptionHandlers.Handle(ex, "Cannot open URL");
-            MessageBox.Show("Cannot open URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string errorMessage = "Cannot open URL";
+            ExceptionHandlers.Handle(errorMessage, ex);
+            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
@@ -1037,7 +1055,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex)
             {
-               ExceptionHandlers.Handle(ex, "Cannot download a new version");
+               ExceptionHandlers.Handle("Cannot download a new version", ex);
                return;
             }
 
@@ -1062,7 +1080,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot delete installer \"{0}\"", f));
+               ExceptionHandlers.Handle(String.Format("Cannot delete installer \"{0}\"", f), ex);
             }
          }
       }
@@ -1092,7 +1110,7 @@ namespace mrHelper.App.Forms
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(ex, String.Format("Cannot create an icon from file \"{0}\"", filename));
+               ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
             }
          };
 
