@@ -433,21 +433,19 @@ namespace mrHelper.App.Forms
 
       private void disableComboBox(ComboBox comboBox, string text)
       {
-         SelectionPreservingComboBox spComboBox = (SelectionPreservingComboBox)comboBox;
-         spComboBox.DroppedDown = false;
-         spComboBox.SelectedIndex = -1;
-         spComboBox.Items.Clear();
-         spComboBox.Enabled = false;
+         comboBox.DroppedDown = false;
+         comboBox.SelectedIndex = -1;
+         comboBox.Items.Clear();
+         comboBox.Enabled = false;
 
-         spComboBox.DropDownStyle = ComboBoxStyle.DropDown;
-         spComboBox.Text = text;
+         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
+         comboBox.Text = text;
       }
 
       private void enableComboBox(ComboBox comboBox)
       {
-         SelectionPreservingComboBox spComboBox = (SelectionPreservingComboBox)comboBox;
-         spComboBox.Enabled = true;
-         spComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+         comboBox.Enabled = true;
+         comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
       private void enableControlsOnGitAsyncOperation(bool enabled)

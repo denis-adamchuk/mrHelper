@@ -83,7 +83,7 @@ namespace mrHelper.App.Forms
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.buttonEditProjects = new System.Windows.Forms.Button();
-         this.comboBoxHost = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
+         this.comboBoxHost = new System.Windows.Forms.ComboBox();
          this.listViewProjects = new System.Windows.Forms.ListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageMR = new System.Windows.Forms.TabPage();
@@ -122,9 +122,9 @@ namespace mrHelper.App.Forms
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
          this.labelRightCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxRightCommit = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
+         this.comboBoxRightCommit = new System.Windows.Forms.ComboBox();
          this.labelLeftCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxLeftCommit = new mrHelper.CommonControls.Controls.SelectionPreservingComboBox();
+         this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
@@ -1298,7 +1298,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ColumnHeader columnHeaderJira;
       private System.Windows.Forms.TextBox textBoxLabels;
       private System.Windows.Forms.CheckBox checkBoxLabels;
-      private SelectionPreservingComboBox comboBoxHost;
+      private System.Windows.Forms.ComboBox comboBoxHost;
       private System.Windows.Forms.Button buttonReloadList;
       private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
       private System.Windows.Forms.GroupBox groupBoxNotifications;
@@ -1325,8 +1325,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBoxSelectCommits;
       private System.Windows.Forms.Button buttonDiffTool;
-      private SelectionPreservingComboBox comboBoxRightCommit;
-      private SelectionPreservingComboBox comboBoxLeftCommit;
+      private System.Windows.Forms.ComboBox comboBoxRightCommit;
+      private System.Windows.Forms.ComboBox comboBoxLeftCommit;
       private System.Windows.Forms.CheckBox checkBoxShowServiceNotifications;
       private System.Windows.Forms.ComboBox comboBoxThemes;
       private System.Windows.Forms.ComboBox comboBoxFonts;

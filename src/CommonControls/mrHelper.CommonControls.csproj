@@ -55,12 +55,6 @@
     <Compile Include="src\Controls\ListViewEx.Designer.cs">
       <DependentUpon>ListViewEx.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\SelectionPreservingComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="src\Controls\SelectionPreservingComboBox.Designer.cs">
-      <DependentUpon>SelectionPreservingComboBox.cs</DependentUpon>
-    </Compile>
     <Compile Include="src\Controls\TextBoxNoWheel.cs">
       <SubType>Component</SubType>
     </Compile>

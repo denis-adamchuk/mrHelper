@@ -31,17 +31,6 @@ namespace mrHelper.App.Helpers
             synchronizeInvoke.BeginInvoke(new Action(
                async () =>
             {
-               if (_latestChanges.Count > 0 && _latestChanges.First().Key.ProjectKey.HostName != hostname)
-               {
-                  // TODO Current version supports updates of projects of the most recent loaded host
-                  Trace.TraceInformation(String.Format(
-                     "[GitDataUpdater] Unsubscribing from {0} Git Repos", _latestChanges.Count()));
-
-                  _latestChanges.Keys.ToList().ForEach(x => x.Updated -= onLocalGitRepositoryUpdated);
-                  _latestChanges.Keys.ToList().ForEach(x => x.Disposed -= onLocalGitRepositoryDisposed);
-                  _latestChanges.Clear();
-               }
-
                foreach (Project project in projects)
                {
                   ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
