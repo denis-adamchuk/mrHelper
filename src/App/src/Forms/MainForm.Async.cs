@@ -339,7 +339,7 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
                {
-                  await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body });
+                  await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body }, false);
                }
                catch (DiscussionCreatorException)
                {

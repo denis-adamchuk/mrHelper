@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
+using mrHelper.Client.Common;
 
 namespace mrHelper.Client.Versions
 {
@@ -18,12 +19,26 @@ namespace mrHelper.Client.Versions
 
       public Task<IEnumerable<Version>> GetVersions(MergeRequestKey mrk)
       {
-         return _operator.LoadVersionsAsync(mrk);
+         try
+         {
+            return _operator.LoadVersionsAsync(mrk);
+         }
+         catch (OperatorException)
+         {
+            throw new VersionManagerException();
+         }
       }
 
       public Task<Version> GetVersion(Version version, MergeRequestKey mrk)
       {
-         return _operator.LoadVersionAsync(version, mrk);
+         try
+         {
+            return _operator.LoadVersionAsync(version, mrk);
+         }
+         catch (OperatorException)
+         {
+            throw new VersionManagerException();
+         }
       }
 
       private readonly VersionOperator _operator;

@@ -4,12 +4,10 @@ namespace mrHelper.Client.Common
 {
    internal class OperatorException : Exception
    {
-      internal OperatorException(Exception ex)
+      internal OperatorException(Exception innerException)
+         : base(String.Empty, innerException)
       {
-         InternalException = ex;
       }
-
-      internal Exception InternalException;
    }
 }
 

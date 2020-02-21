@@ -291,7 +291,7 @@ namespace mrHelper.Client.Workflow
       private void handleOperatorException(OperatorException ex, string cancelMessage, string errorMessage,
          Action failureCallback)
       {
-         bool cancelled = ex.InternalException is GitLabClientCancelled;
+         bool cancelled = ex.InnerException is GitLabClientCancelled;
          if (cancelled)
          {
             Trace.TraceInformation(String.Format("[Workflow] {0}", cancelMessage));
@@ -301,7 +301,7 @@ namespace mrHelper.Client.Workflow
          failureCallback?.Invoke();
 
          string details = String.Empty;
-         if (ex.InternalException is GitLabSharp.Accessors.GitLabRequestException internalEx)
+         if (ex.InnerException is GitLabSharp.Accessors.GitLabRequestException internalEx)
          {
             details = internalEx.WebException.Message;
          }

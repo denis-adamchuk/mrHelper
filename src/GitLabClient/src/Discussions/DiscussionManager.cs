@@ -59,6 +59,8 @@ namespace mrHelper.Client.Discussions
             cleanup(toRemove.ToArray());
          };
 
+         workflow.PostLoadCurrentUser += user => _currentUser = user;
+
          mergeRequestCache.MergeRequestEvent +=
             (e) =>
          {
@@ -147,7 +149,7 @@ namespace mrHelper.Client.Discussions
 
       public DiscussionCreator GetDiscussionCreator(MergeRequestKey mrk)
       {
-         return new DiscussionCreator(mrk, _operator);
+         return new DiscussionCreator(mrk, _operator, _currentUser);
       }
 
       public DiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
@@ -317,6 +319,7 @@ namespace mrHelper.Client.Discussions
 
       private readonly IHostProperties _settings;
       private readonly DiscussionOperator _operator;
+      private User _currentUser;
 
       private struct CachedDiscussions
       {

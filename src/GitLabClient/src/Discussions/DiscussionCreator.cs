@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -25,10 +26,11 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionCreator
    {
-      internal DiscussionCreator(MergeRequestKey mrk, DiscussionOperator discussionOperator)
+      internal DiscussionCreator(MergeRequestKey mrk, DiscussionOperator discussionOperator, User currentUser)
       {
          _discussionOperator = discussionOperator;
          _mergeRequestKey = mrk;
+         _currentUser = currentUser;
       }
 
       async public Task CreateNoteAsync(CreateNewNoteParameters parameters)
@@ -43,7 +45,7 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task CreateDiscussionAsync(NewDiscussionParameters parameters)
+      async public Task CreateDiscussionAsync(NewDiscussionParameters parameters, bool revertOnError)
       {
          try
          {
@@ -51,28 +53,33 @@ namespace mrHelper.Client.Discussions
          }
          catch (OperatorException ex)
          {
-            bool handled = await handleGitlabError(parameters, ex);
+            bool handled = await handleGitlabError(parameters, ex, revertOnError);
             throw new DiscussionCreatorException(handled, ex);
          }
       }
 
-      async private Task<bool> handleGitlabError(NewDiscussionParameters parameters, OperatorException ex)
+      async private Task<bool> handleGitlabError(NewDiscussionParameters parameters, OperatorException ex,
+         bool revertOnError)
       {
-         if (ex.InternalException is GitLabRequestException rex)
+         if (ex.InnerException is GitLabRequestException rex)
          {
             var webException = rex.WebException;
             var response = ((System.Net.HttpWebResponse)webException.Response);
 
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
-               // Something went wrong at the GitLab site, let's report a discussion without Position
+               // Something went wrong at the GitLab, let's report a discussion without Position
                return await createMergeRequestWithoutPosition(parameters);
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
             {
-               // Something went wrong at the GitLab site, let's report a discussion without Position
-               await cleanupBadNotes(parameters);
-               return await createMergeRequestWithoutPosition(parameters);
+               // Something went wrong at the GitLab
+               if (revertOnError)
+               {
+                  await deleteMostRecentNote(parameters);
+                  return await createMergeRequestWithoutPosition(parameters);
+               }
+               return true;
             }
          }
 
@@ -108,15 +115,11 @@ namespace mrHelper.Client.Discussions
             + " (line " + (position.NewLine?.ToString() ?? "N/A") + ")";
       }
 
-      // Instead of searching for a latest discussion note with some heuristically prepared parameters,
-      // let's clean up all similar notes, including a recently added one
-      async private Task cleanupBadNotes(NewDiscussionParameters parameters)
+      async private Task deleteMostRecentNote(NewDiscussionParameters parameters)
       {
          Debug.Assert(parameters.Position.HasValue);
 
          Trace.TraceInformation("Looking up for a note with bad position...");
-
-         int deletedCount = 0;
 
          IEnumerable<Discussion> discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey);
          if (discussions == null)
@@ -125,11 +128,13 @@ namespace mrHelper.Client.Discussions
             return;
          }
 
-         foreach (Discussion discussion in discussions)
+         int? deletedNoteId = new Nullable<int>();
+         foreach (Discussion discussion in discussions.Reverse())
          {
-            foreach (DiscussionNote note in discussion.Notes)
+            if (discussion.Notes.Count() == 1)
             {
-               if (arePositionsEqual(note.Position, parameters.Position.Value))
+               DiscussionNote note = discussion.Notes.First();
+               if (note.Type == "DiffNote" && note.Author.Equals(_currentUser) && note.Body == parameters.Body)
                {
                   Trace.TraceInformation(
                      "Deleting discussion note." +
@@ -137,32 +142,21 @@ namespace mrHelper.Client.Discussions
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
                   await _discussionOperator.DeleteNoteAsync(_mergeRequestKey, note.Id);
-                  ++deletedCount;
+                  deletedNoteId = note.Id;
+                  break;
                }
             }
          }
 
-         Trace.TraceInformation(String.Format("Deleted {0} notes", deletedCount));
-      }
-
-      /// <summary>
-      /// Compares GitLabSharp.Position object which is received from GitLab
-      /// to GitLabSharp.PositionParameters whichi is sent to GitLab for equality
-      /// </summary>
-      /// <returns>true if objects point to the same position</returns>
-      private bool arePositionsEqual(Position pos, PositionParameters posParams)
-      {
-         return pos.Base_SHA == posParams.BaseSHA
-             && pos.Head_SHA == posParams.HeadSHA
-             && pos.Start_SHA == posParams.StartSHA
-             && pos.Old_Line == posParams.OldLine
-             && pos.Old_Path == posParams.OldPath
-             && pos.New_Line == posParams.NewLine
-             && pos.New_Path == posParams.NewPath;
+         string message = deletedNoteId.HasValue
+            ? String.Format("Deleted note with Id {0}", deletedNoteId.Value)
+            : "Could not find a note to delete";
+         Trace.TraceInformation(message);
       }
 
       private readonly DiscussionOperator _discussionOperator;
-      private MergeRequestKey _mergeRequestKey;
+      private readonly MergeRequestKey _mergeRequestKey;
+      private readonly User _currentUser;
    }
 }
 

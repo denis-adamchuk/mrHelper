@@ -175,7 +175,7 @@ namespace mrHelper.App.Interprocess
 
          try
          {
-            await creator.CreateDiscussionAsync(parameters);
+            await creator.CreateDiscussionAsync(parameters, true);
          }
          catch (DiscussionCreatorException ex)
          {
