@@ -127,6 +127,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -563,6 +564,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
          this.groupBoxOther.Controls.Add(this.labelFontSize);
          this.groupBoxOther.Controls.Add(this.comboBoxFonts);
          this.groupBoxOther.Controls.Add(this.comboBoxThemes);
@@ -574,7 +576,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 151);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 177);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -1170,8 +1172,8 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit.Name = "comboBoxRightCommit";
          this.comboBoxRightCommit.Size = new System.Drawing.Size(920, 21);
          this.comboBoxRightCommit.TabIndex = 6;
-         this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
+         this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
          // 
          // labelLeftCommitTimestampLabel
          // 
@@ -1194,8 +1196,8 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
          this.comboBoxLeftCommit.Size = new System.Drawing.Size(920, 21);
          this.comboBoxLeftCommit.TabIndex = 5;
-         this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
+         this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          // 
          // panel4
          // 
@@ -1212,6 +1214,17 @@ namespace mrHelper.App.Forms
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
+         // 
+         // checkBoxDisableSplitterRestrictions
+         // 
+         this.checkBoxDisableSplitterRestrictions.AutoSize = true;
+         this.checkBoxDisableSplitterRestrictions.Location = new System.Drawing.Point(6, 151);
+         this.checkBoxDisableSplitterRestrictions.Name = "checkBoxDisableSplitterRestrictions";
+         this.checkBoxDisableSplitterRestrictions.Size = new System.Drawing.Size(147, 17);
+         this.checkBoxDisableSplitterRestrictions.TabIndex = 12;
+         this.checkBoxDisableSplitterRestrictions.Text = "Disable splitter restrictions";
+         this.checkBoxDisableSplitterRestrictions.UseVisualStyleBackColor = true;
+         this.checkBoxDisableSplitterRestrictions.CheckedChanged += new System.EventHandler(this.CheckBoxDisableSplitterRestrictions_CheckedChanged);
          // 
          // MainForm
          // 
@@ -1354,6 +1367,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.ColumnHeader columnHeaderSize;
-    }
+      private System.Windows.Forms.CheckBox checkBoxDisableSplitterRestrictions;
+   }
 }
 

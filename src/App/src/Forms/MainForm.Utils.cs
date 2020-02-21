@@ -1262,11 +1262,14 @@ namespace mrHelper.App.Forms
 
       private void resetMinimumSizes()
       {
-         splitContainer1.Panel1MinSize = 25;
-         splitContainer1.Panel2MinSize = 25;
-         splitContainer2.Panel1MinSize = 25;
-         splitContainer2.Panel2MinSize = 25;
+         int defaultSplitContainerPanelMinSize = 25;
+         splitContainer1.Panel1MinSize = defaultSplitContainerPanelMinSize;
+         splitContainer1.Panel2MinSize = defaultSplitContainerPanelMinSize;
+         splitContainer2.Panel1MinSize = defaultSplitContainerPanelMinSize;
+         splitContainer2.Panel2MinSize = defaultSplitContainerPanelMinSize;
+
          this.MinimumSize = new System.Drawing.Size(0, 0);
+
          _invalidMinSizes = true;
       }
 
@@ -1378,6 +1381,13 @@ namespace mrHelper.App.Forms
       {
          if (!_invalidMinSizes)
          {
+            return;
+         }
+
+         if (Program.Settings.DisableSplitterRestrictions)
+         {
+            resetMinimumSizes();
+            _invalidMinSizes = false;
             return;
          }
 

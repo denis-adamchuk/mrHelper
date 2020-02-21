@@ -453,6 +453,12 @@ namespace mrHelper.App.Forms
          Program.Settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
+      private void CheckBoxDisableSplitterRestrictions_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.DisableSplitterRestrictions = (sender as CheckBox).Checked;
+         resetMinimumSizes();
+      }
+
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
       {
          bool state = (sender as CheckBox).Checked;

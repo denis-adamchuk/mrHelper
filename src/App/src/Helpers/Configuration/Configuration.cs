@@ -38,6 +38,9 @@ namespace mrHelper.App.Helpers
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static readonly bool   MinimizeOnCloseDefaultValue = false;
 
+      private static readonly string DisableSplitterRestrictionsKeyName = "DisableSplitterRestrictions";
+      private static readonly bool   DisableSplitterRestrictionsDefaultValue = false;
+
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
@@ -193,6 +196,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : MinimizeOnCloseDefaultValue;
          }
          set { setValue(MinimizeOnCloseKeyName, boolToString(value)); }
+      }
+
+      public bool DisableSplitterRestrictions
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               DisableSplitterRestrictionsKeyName, boolToString(DisableSplitterRestrictionsDefaultValue)),
+                  out bool result) ? result : DisableSplitterRestrictionsDefaultValue;
+         }
+         set { setValue(DisableSplitterRestrictionsKeyName, boolToString(value)); }
       }
 
       public string DiffContextDepth
