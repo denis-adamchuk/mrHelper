@@ -87,6 +87,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ListViewMergeRequestsColumnWidthsDefaultValue = String.Empty;
       private static readonly int    ListViewMergeRequestsSingleColumnWidthDefaultValue = 100;
 
+      private static readonly string ListViewMergeRequestsDisplayIndicesKeyName = "LVMR_DisplayIndices";
+      private static readonly string ListViewMergeRequestsDisplayIndicesDefaultValue = String.Empty;
+
       private static readonly string MainWindowSplitterDistanceKeyName      = "MWSplitterDistance";
       private static readonly int    MainWindowSplitterDistanceDefaultValue = 0;
 
@@ -346,6 +349,27 @@ namespace mrHelper.App.Helpers
          set
          {
             setValue(ListViewMergeRequestsColumnWidthsKeyName,
+               dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
+         }
+      }
+
+      public Dictionary<string, int> ListViewMergeRequestsDisplayIndices
+      {
+         get
+         {
+            return stringToDictionary(getValue(
+               ListViewMergeRequestsDisplayIndicesKeyName, ListViewMergeRequestsDisplayIndicesDefaultValue))
+               .ToDictionary(
+                  item => item.Key,
+                  item => int.TryParse(item.Value, out int result) ? result : -1)
+               .Where(x => x.Value != -1)
+               .ToDictionary(
+                  item => item.Key,
+                  item => item.Value);
+         }
+         set
+         {
+            setValue(ListViewMergeRequestsDisplayIndicesKeyName,
                dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
          }
       }

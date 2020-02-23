@@ -72,6 +72,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
          this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.labelFontSize = new System.Windows.Forms.Label();
          this.comboBoxFonts = new System.Windows.Forms.ComboBox();
          this.comboBoxThemes = new System.Windows.Forms.ComboBox();
@@ -127,7 +128,6 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -581,6 +581,17 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
          // 
+         // checkBoxDisableSplitterRestrictions
+         // 
+         this.checkBoxDisableSplitterRestrictions.AutoSize = true;
+         this.checkBoxDisableSplitterRestrictions.Location = new System.Drawing.Point(6, 151);
+         this.checkBoxDisableSplitterRestrictions.Name = "checkBoxDisableSplitterRestrictions";
+         this.checkBoxDisableSplitterRestrictions.Size = new System.Drawing.Size(147, 17);
+         this.checkBoxDisableSplitterRestrictions.TabIndex = 12;
+         this.checkBoxDisableSplitterRestrictions.Text = "Disable splitter restrictions";
+         this.checkBoxDisableSplitterRestrictions.UseVisualStyleBackColor = true;
+         this.checkBoxDisableSplitterRestrictions.CheckedChanged += new System.EventHandler(this.CheckBoxDisableSplitterRestrictions_CheckedChanged);
+         // 
          // labelFontSize
          // 
          this.labelFontSize.AutoSize = true;
@@ -786,6 +797,7 @@ namespace mrHelper.App.Forms
          // 
          // listViewMergeRequests
          // 
+         this.listViewMergeRequests.AllowColumnReorder = true;
          this.listViewMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -811,6 +823,7 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.TabIndex = 3;
          this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
+         this.listViewMergeRequests.ColumnReordered += new System.Windows.Forms.ColumnReorderedEventHandler(this.listViewMergeRequests_ColumnReordered);
          this.listViewMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
          this.listViewMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
          this.listViewMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
@@ -1214,17 +1227,6 @@ namespace mrHelper.App.Forms
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
-         // 
-         // checkBoxDisableSplitterRestrictions
-         // 
-         this.checkBoxDisableSplitterRestrictions.AutoSize = true;
-         this.checkBoxDisableSplitterRestrictions.Location = new System.Drawing.Point(6, 151);
-         this.checkBoxDisableSplitterRestrictions.Name = "checkBoxDisableSplitterRestrictions";
-         this.checkBoxDisableSplitterRestrictions.Size = new System.Drawing.Size(147, 17);
-         this.checkBoxDisableSplitterRestrictions.TabIndex = 12;
-         this.checkBoxDisableSplitterRestrictions.Text = "Disable splitter restrictions";
-         this.checkBoxDisableSplitterRestrictions.UseVisualStyleBackColor = true;
-         this.checkBoxDisableSplitterRestrictions.CheckedChanged += new System.EventHandler(this.CheckBoxDisableSplitterRestrictions_CheckedChanged);
          // 
          // MainForm
          // 

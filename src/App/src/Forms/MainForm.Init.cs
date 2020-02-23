@@ -163,6 +163,18 @@ namespace mrHelper.App.Forms
             }
          }
 
+         try
+         {
+            WinFormsHelpers.ReorderListViewColumns(listViewMergeRequests,
+               Program.Settings.ListViewMergeRequestsDisplayIndices);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
+            Program.Settings.ListViewMergeRequestsDisplayIndices =
+               WinFormsHelpers.GetListViewDisplayIndices(listViewMergeRequests);
+         }
+
          WinFormsHelpers.FillComboBox(comboBoxFonts,
             Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
          applyFont(Program.Settings.MainWindowFontSizeName);

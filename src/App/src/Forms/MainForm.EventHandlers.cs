@@ -16,6 +16,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.CommonNative;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -232,20 +233,17 @@ namespace mrHelper.App.Forms
       Graphics GetGraphics(DrawItemEventArgs e) => e.Graphics;
       Graphics GetGraphics(DrawListViewSubItemEventArgs e) => e.Graphics;
 
-      Rectangle GetBounds(DrawItemEventArgs e) => e.Bounds;
-      Rectangle GetBounds(DrawListViewSubItemEventArgs e) => e.Bounds;
-
-      private void fillRectangle<T>(T e, Color backColor, bool isSelected)
+      private void fillRectangle<T>(T e, Rectangle bounds, Color backColor, bool isSelected)
       {
          if (isSelected)
          {
-            GetGraphics((dynamic)e).FillRectangle(SystemBrushes.Highlight, GetBounds((dynamic)e));
+            GetGraphics((dynamic)e).FillRectangle(SystemBrushes.Highlight, bounds);
          }
          else
          {
             using (Brush brush = new SolidBrush(backColor))
             {
-               GetGraphics((dynamic)e).FillRectangle(brush, GetBounds((dynamic)e));
+               GetGraphics((dynamic)e).FillRectangle(brush, bounds);
             }
          }
       }
@@ -257,10 +255,16 @@ namespace mrHelper.App.Forms
             return; // is being removed
          }
 
+         Rectangle bounds = e.Bounds;
+         if (e.ColumnIndex == 0 && listViewMergeRequests.Columns[0].DisplayIndex != 0)
+         {
+            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(listViewMergeRequests, e.Item);
+         }
+
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
 
          bool isSelected = e.Item.Selected;
-         fillRectangle(e, getMergeRequestColor(fmk.MergeRequest, Color.Transparent), isSelected);
+         fillRectangle(e, bounds, getMergeRequestColor(fmk.MergeRequest, Color.Transparent), isSelected);
 
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
@@ -279,7 +283,7 @@ namespace mrHelper.App.Forms
             using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
             {
                Brush brush = Brushes.Blue;
-               e.Graphics.DrawString(text, font, brush, e.Bounds, format);
+               e.Graphics.DrawString(text, font, brush, bounds, format);
             }
          }
          else
@@ -288,12 +292,12 @@ namespace mrHelper.App.Forms
             {
                using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest, SystemColors.Window)))
                {
-                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, e.Bounds, format);
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
             else
             {
-               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, e.Bounds, format);
+               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
             }
          }
       }
@@ -364,7 +368,7 @@ namespace mrHelper.App.Forms
          else
          {
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            fillRectangle(e, getCommitComboBoxItemColor(item), isSelected);
+            fillRectangle(e, e.Bounds, getCommitComboBoxItemColor(item), isSelected);
 
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -504,6 +508,13 @@ namespace mrHelper.App.Forms
             columnWidths[(string)column.Tag] = column.Width;
          }
          Program.Settings.ListViewMergeRequestsColumnWidths = columnWidths;
+      }
+
+      private void listViewMergeRequests_ColumnReordered(object sender, ColumnReorderedEventArgs e)
+      {
+         Program.Settings.ListViewMergeRequestsDisplayIndices =
+            WinFormsHelpers.GetListViewDisplayIndicesOnColumnReordered(listViewMergeRequests,
+               e.OldDisplayIndex, e.NewDisplayIndex);
       }
 
       private bool isUserMovingSplitter(SplitContainer splitter)
