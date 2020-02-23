@@ -60,6 +60,7 @@
          this.listViewProjects.View = System.Windows.Forms.View.Details;
          this.listViewProjects.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listViewProjects_DrawSubItem);
          this.listViewProjects.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewProjects_ItemSelectionChanged);
+         this.listViewProjects.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listViewProjects_KeyDown);
          // 
          // columnHeaderName
          // 
@@ -149,6 +150,7 @@
          // 
          // EditProjectsForm
          // 
+         this.AcceptButton = this.buttonOK;
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;

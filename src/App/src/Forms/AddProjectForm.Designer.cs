@@ -30,28 +30,11 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void InitializeComponent()
       {
-         this.label1 = new System.Windows.Forms.Label();
-         this.textBoxProjectName = new System.Windows.Forms.TextBox();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
+         this.textBoxProjectName = new System.Windows.Forms.TextBox();
+         this.label1 = new System.Windows.Forms.Label();
          this.SuspendLayout();
-         // 
-         // label1
-         // 
-         this.label1.AutoSize = true;
-         this.label1.Location = new System.Drawing.Point(12, 9);
-         this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(71, 13);
-         this.label1.TabIndex = 0;
-         this.label1.Text = "Project Name";
-         // 
-         // textBoxProjectName
-         // 
-         this.textBoxProjectName.Location = new System.Drawing.Point(12, 27);
-         this.textBoxProjectName.Name = "textBoxProjectName";
-         this.textBoxProjectName.Size = new System.Drawing.Size(227, 20);
-         this.textBoxProjectName.TabIndex = 0;
-         this.textBoxProjectName.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
          // buttonCancel
          // 
@@ -73,8 +56,26 @@ namespace mrHelper.App.Forms
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
+         // textBoxProjectName
+         // 
+         this.textBoxProjectName.Location = new System.Drawing.Point(12, 27);
+         this.textBoxProjectName.Name = "textBoxProjectName";
+         this.textBoxProjectName.Size = new System.Drawing.Size(227, 20);
+         this.textBoxProjectName.TabIndex = 0;
+         this.textBoxProjectName.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
+         // 
+         // label1
+         // 
+         this.label1.AutoSize = true;
+         this.label1.Location = new System.Drawing.Point(12, 9);
+         this.label1.Name = "label1";
+         this.label1.Size = new System.Drawing.Size(71, 13);
+         this.label1.TabIndex = 0;
+         this.label1.Text = "Project Name";
+         // 
          // AddProjectForm
          // 
+         this.AcceptButton = this.buttonOK;
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;

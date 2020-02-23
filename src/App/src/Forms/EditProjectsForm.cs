@@ -180,6 +180,17 @@ namespace mrHelper.App.Forms
          listViewProjects.Items.RemoveAt(index);
          listViewProjects.Items.Insert(up ? index - 1 : index + 1, selectedItem);
       }
+
+      private void listViewProjects_KeyDown(object sender, KeyEventArgs e)
+      {
+         if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
+         {
+            e.Handled = false;
+
+            buttonOK.PerformClick();
+         }
+
+      }
    }
 }
 

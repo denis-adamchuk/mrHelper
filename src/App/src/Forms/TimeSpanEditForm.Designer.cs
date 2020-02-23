@@ -28,7 +28,6 @@
       /// </summary>
       private void InitializeComponent()
       {
-         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditTimeForm));
          this.labelH = new System.Windows.Forms.Label();
          this.labelM = new System.Windows.Forms.Label();
          this.labelS = new System.Windows.Forms.Label();
@@ -100,7 +99,7 @@
          this.numericUpDownH.Name = "numericUpDownH";
          this.numericUpDownH.Size = new System.Drawing.Size(42, 20);
          this.numericUpDownH.TabIndex = 6;
-         this.numericUpDownH.KeyDown += new System.Windows.Forms.KeyEventHandler(NumericUpDown_KeyDown);
+         this.numericUpDownH.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NumericUpDown_KeyDown);
          // 
          // numericUpDownM
          // 
@@ -113,7 +112,7 @@
          this.numericUpDownM.Name = "numericUpDownM";
          this.numericUpDownM.Size = new System.Drawing.Size(42, 20);
          this.numericUpDownM.TabIndex = 7;
-         this.numericUpDownM.KeyDown += new System.Windows.Forms.KeyEventHandler(NumericUpDown_KeyDown);
+         this.numericUpDownM.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NumericUpDown_KeyDown);
          // 
          // numericUpDownS
          // 
@@ -126,10 +125,11 @@
          this.numericUpDownS.Name = "numericUpDownS";
          this.numericUpDownS.Size = new System.Drawing.Size(42, 20);
          this.numericUpDownS.TabIndex = 8;
-         this.numericUpDownS.KeyDown += new System.Windows.Forms.KeyEventHandler(NumericUpDown_KeyDown);
+         this.numericUpDownS.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NumericUpDown_KeyDown);
          // 
          // EditTimeForm
          // 
+         this.AcceptButton = this.buttonOK;
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
