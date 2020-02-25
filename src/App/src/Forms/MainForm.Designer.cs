@@ -15,6 +15,11 @@ namespace mrHelper.App.Forms
       /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
       protected override void Dispose(bool disposing)
       {
+         if (_exiting)
+         {
+            return;
+         }
+
          if (disposing && (components != null))
          {
             components.Dispose();
@@ -1237,8 +1242,8 @@ namespace mrHelper.App.Forms
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
-         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MrHelperForm_FormClosing);
-         this.Load += new System.EventHandler(this.MrHelperForm_Load);
+         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+         this.Load += new System.EventHandler(this.MainForm_Load);
          this.groupBoxKnownHosts.ResumeLayout(false);
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);

@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// All exceptions thrown within this method are fatal errors, just pass them to upper level handler
       /// </summary>
-      async private void MrHelperForm_Load(object sender, EventArgs e)
+      async private void MainForm_Load(object sender, EventArgs e)
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
@@ -44,7 +44,7 @@ namespace mrHelper.App.Forms
 
          if (!integrateInTools())
          {
-            Close();
+            doClose();
             return;
          }
 
@@ -63,46 +63,55 @@ namespace mrHelper.App.Forms
          await onApplicationStarted();
       }
 
-      async private void MrHelperForm_FormClosing(object sender, FormClosingEventArgs e)
+      async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
       {
-         if (checkBoxMinimizeOnClose.Checked && !_exiting)
+         Trace.TraceInformation(String.Format("[MainForm] Requested to close the Main Form. Reason: {0}",
+            e.CloseReason.ToString()));
+
+         if (checkBoxMinimizeOnClose.Checked && !_exiting && e.CloseReason == CloseReason.UserClosing)
          {
             onHideToTray(e);
+            return;
          }
-         else
+
+         Hide();
+
+         Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag to prevent form dispose"));
+         _exiting = true;
+
+         Trace.TraceInformation(String.Format("[MainForm] Finalizing work"));
+
+         try
          {
-            _exiting = true;
-
-            if (_workflow != null)
-            {
-               Hide();
-
-               Trace.TraceInformation(String.Format("[MainForm] User decided to close the app, finalizing work"));
-
-               try
-               {
-                  _persistentStorage.Serialize();
-               }
-               catch (PersistenceStateSerializationException ex)
-               {
-                  ExceptionHandlers.Handle("Cannot serialize the state", ex);
-               }
-
-               Interprocess.SnapshotSerializer.CleanUpSnapshots();
-
-               e.Cancel = true;
-               await _workflow.CancelAsync();
-               _workflow = null;
-               if (_gitClientFactory != null)
-               {
-                  await _gitClientFactory.DisposeAsync();
-               }
-
-               Trace.TraceInformation(String.Format("[MainForm] Work finalized. Exiting."));
-
-               Close();
-            }
+            _persistentStorage?.Serialize();
          }
+         catch (PersistenceStateSerializationException ex)
+         {
+            ExceptionHandlers.Handle("Cannot serialize the state", ex);
+         }
+         Trace.TraceInformation(String.Format("[MainForm] State serialized"));
+
+         Interprocess.SnapshotSerializer.CleanUpSnapshots();
+         Trace.TraceInformation(String.Format("[MainForm] Snapshots cleaned up"));
+
+         if (_workflow != null)
+         {
+            await _workflow.CancelAsync();
+         }
+         Trace.TraceInformation(String.Format("[MainForm] Workflow operations cancelled"));
+
+         if (_gitClientFactory != null)
+         {
+            await _gitClientFactory.DisposeAsync();
+         }
+         Trace.TraceInformation(String.Format("[MainForm] Git client factory disposed"));
+
+         Trace.TraceInformation(String.Format("[MainForm] Reset _exiting flag to allow form dispose"));
+         _exiting = false;
+         Dispose();
+         Trace.TraceInformation(String.Format("[MainForm] Form disposed"));
+
+         Trace.TraceInformation(String.Format("[MainForm] Work finalized. Exiting."));
       }
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
@@ -173,8 +182,8 @@ namespace mrHelper.App.Forms
 
       private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         _exiting = true;
-         this.Close();
+         Trace.TraceInformation("[MainForm] User selected Exit in tray menu");
+         doClose();
       }
 
       async private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
@@ -668,6 +677,12 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle("[CheckForUpdates] Cannot launch installer", ex);
          }
 
+         doClose();
+      }
+
+      private void doClose()
+      {
+         Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag"));
          _exiting = true;
          Close();
       }
