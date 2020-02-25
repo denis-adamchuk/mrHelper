@@ -463,7 +463,7 @@ namespace mrHelper.App.Helpers
          {
             if (host == KnownHosts[iKnownHost])
             {
-               return KnownAccessTokens[iKnownHost];
+               return KnownAccessTokens.Length > iKnownHost ? KnownAccessTokens[iKnownHost] : String.Empty;
             }
          }
          return String.Empty;

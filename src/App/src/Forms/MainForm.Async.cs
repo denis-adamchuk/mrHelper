@@ -228,8 +228,8 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
-               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository. Check git folder in Settings",
+               "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
          }
 

@@ -32,7 +32,16 @@ namespace mrHelper.App.Forms
          cleanUpInstallers();
 
          addCustomActions();
-         loadSettings();
+
+         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
+         loadConfiguration();
+
+         updateCaption();
+         updateTabControlSelection();
+         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
+         labelWorkflowStatus.Text = String.Empty;
+         labelGitStatus.Text = String.Empty;
+
          if (!integrateInTools())
          {
             Close();
@@ -196,6 +205,8 @@ namespace mrHelper.App.Forms
                   await switchHostAsync(getHostName());
                }
             }
+
+            updateTabControlSelection();
          }
       }
 
@@ -424,6 +435,7 @@ namespace mrHelper.App.Forms
                .Select(i => i.SubItems[1].Text).ToArray();
 
             updateHostsDropdownList();
+            updateTabControlSelection();
             selectHost(PreferredSelection.Latest);
             await switchHostToSelected();
          }
@@ -445,8 +457,11 @@ namespace mrHelper.App.Forms
             .Select(i => i.SubItems[1].Text).ToArray();
 
          updateHostsDropdownList();
+         updateTabControlSelection();
          if (removeCurrent)
          {
+            updateProjectsListView();
+
             selectHost(PreferredSelection.Latest);
             await switchHostToSelected();
          }

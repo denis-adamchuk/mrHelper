@@ -682,6 +682,7 @@ namespace mrHelper.App.Forms
             if (_gitClientFactory != null)
             {
                await _gitClientFactory.DisposeAsync();
+               _gitClientFactory = null;
             }
 
             try
@@ -692,18 +693,6 @@ namespace mrHelper.App.Forms
             catch (ArgumentException ex)
             {
                ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
-
-               try
-               {
-                  Directory.CreateDirectory(localFolder);
-               }
-               catch (Exception ex2)
-               {
-                  string message = String.Format("Cannot create folder \"{0}\"", localFolder);
-                  ExceptionHandlers.Handle(message, ex2);
-                  MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return null;
-               }
             }
          }
          return _gitClientFactory;
@@ -1445,6 +1434,21 @@ namespace mrHelper.App.Forms
          {
             Control c = groupBoxActions.Controls[id];
             c.Location = new Point { X = getControlX(c, id), Y = c.Location.Y };
+         }
+      }
+
+      private void updateTabControlSelection()
+      {
+         bool configured = listViewKnownHosts.Items.Count > 0
+                        && textBoxLocalGitFolder.Text.Length > 0
+                        && Directory.Exists(textBoxLocalGitFolder.Text);
+         if (configured)
+         {
+            tabControl.SelectedTab = tabPageMR;
+         }
+         else
+         {
+            tabControl.SelectedTab = tabPageSettings;
          }
       }
    }

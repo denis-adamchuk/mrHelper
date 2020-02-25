@@ -118,7 +118,9 @@ namespace mrHelper.App.Forms
          {
             // Upgrade from old versions which did not have prefix
             string host = getHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
-            string accessToken = Program.Settings.KnownAccessTokens[iKnownHost];
+            string accessToken = Program.Settings.KnownAccessTokens.Length > iKnownHost
+               ? Program.Settings.KnownAccessTokens[iKnownHost]
+               : String.Empty;
             addKnownHost(host, accessToken);
             newKnownHosts.Add(host);
          }
@@ -233,28 +235,6 @@ namespace mrHelper.App.Forms
          }
 
          return true;
-      }
-
-      private void loadSettings()
-      {
-         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
-         loadConfiguration();
-
-         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
-         labelWorkflowStatus.Text = String.Empty;
-         labelGitStatus.Text = String.Empty;
-         updateCaption();
-
-         bool configured = listViewKnownHosts.Items.Count > 0
-                        && textBoxLocalGitFolder.Text.Length > 0;
-         if (configured)
-         {
-            tabControl.SelectedTab = tabPageMR;
-         }
-         else
-         {
-            tabControl.SelectedTab = tabPageSettings;
-         }
       }
 
       async private Task onApplicationStarted()
