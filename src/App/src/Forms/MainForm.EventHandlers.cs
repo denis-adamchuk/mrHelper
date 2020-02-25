@@ -679,7 +679,10 @@ namespace mrHelper.App.Forms
          }
          catch (FeedbackReporterException ex)
          {
-            ExceptionHandlers.Handle("Cannot send feedback", ex);
+            string message = "Cannot send feedback";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(ex.InnerException?.Message ?? "Unknown error", message,
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
       }
 
