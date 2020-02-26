@@ -242,6 +242,85 @@ namespace mrHelper.App.Forms
          return true;
       }
 
+      async private Task initializeWork()
+      {
+         cleanUpInstallers();
+         checkForApplicationUpdates();
+
+         restoreState();
+         prepareFormToStart();
+
+         _gitClientUpdater = new GitInteractiveUpdater();
+         createWorkflowAndDependencies();
+
+         subscribeToWorkflowAndDependencies();
+         _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
+
+         initializeColorScheme();
+         initializeIconScheme();
+
+         await connectOnStartup();
+      }
+
+      async private Task finalizeWork()
+      {
+         _exiting = true; // to prevent execution of Dispose() which is called while we are in 'await'
+
+         Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
+
+         _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+         unsubscribeFromWorkflowAndDependencies();
+
+         await disposeLocalGitRepositoryFactory();
+         await _workflow.CancelAsync();
+
+         saveState();
+         Interprocess.SnapshotSerializer.CleanUpSnapshots();
+
+         _exiting = false; // now we can Dispose()
+         Dispose();
+
+         Trace.TraceInformation(String.Format("[MainForm] Form disposed. Work finalized. Exiting."));
+      }
+
+      private void restoreState()
+      {
+         _persistentStorage = new PersistentStorage();
+         _persistentStorage.OnSerialize += onPersistentStorageSerialize;
+         _persistentStorage.OnDeserialize += onPersistentStorageDeserialize;
+         try
+         {
+            _persistentStorage.Deserialize();
+         }
+         catch (PersistenceStateDeserializationException ex)
+         {
+            ExceptionHandlers.Handle("Cannot deserialize the state", ex);
+         }
+      }
+
+      private void saveState()
+      {
+         try
+         {
+            _persistentStorage?.Serialize();
+         }
+         catch (PersistenceStateSerializationException ex)
+         {
+            ExceptionHandlers.Handle("Cannot serialize the state", ex);
+         }
+      }
+
+      private void prepareFormToStart()
+      {
+         loadConfiguration();
+         addCustomActions();
+         updateCaption();
+         updateTabControlSelection();
+         updateHostsDropdownList();
+         fillColorSchemesList();
+         prepareControlsToStart();
+      }
+
       private void prepareControlsToStart()
       {
          WindowState = FormWindowState.Maximized;
@@ -305,33 +384,17 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void restoreState()
+      private void createWorkflowAndDependencies()
       {
-         _persistentStorage = new PersistentStorage();
-         _persistentStorage.OnSerialize += onPersistentStorageSerialize;
-         _persistentStorage.OnDeserialize += onPersistentStorageDeserialize;
-         try
-         {
-            _persistentStorage.Deserialize();
-         }
-         catch (PersistenceStateDeserializationException ex)
-         {
-            ExceptionHandlers.Handle("Cannot deserialize the state", ex);
-         }
-      }
-
-      private void createMainObjects()
-      {
-         _gitClientUpdater = new GitInteractiveUpdater();
-
          _workflow = new Workflow(Program.Settings);
          _expressionResolver = new ExpressionResolver(_workflow);
          _mergeRequestCache = new MergeRequestCache(_workflow, this, Program.Settings,
             Program.Settings.AutoUpdatePeriodMs);
          _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestCache, this, _keywords,
             Program.Settings.AutoUpdatePeriodMs);
+         _eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestCache);
          _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
-            new EventFilter(Program.Settings, _workflow, _mergeRequestCache));
+            _eventFilter);
          _gitDataUpdater = Program.Settings.CacheRevisionsInBackground
             ? new GitDataUpdater(_workflow, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache)
             : null;
@@ -339,25 +402,35 @@ namespace mrHelper.App.Forms
          _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
       }
 
-      private void subscribeToMainObjects()
+      private void disposeWorkflowDependencies()
+      {
+         _timeTrackingManager.Dispose();
+         _gitDataUpdater?.Dispose();
+         _gitStatManager.Dispose();
+         _userNotifier.Dispose();
+         _eventFilter.Dispose();
+         _discussionManager.Dispose();
+         _mergeRequestCache.Dispose();
+         _expressionResolver.Dispose();
+      }
+
+      private void subscribeToWorkflowAndDependencies()
       {
          subscribeToWorkflow();
 
-         _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
          _mergeRequestCache.MergeRequestEvent += processUpdate;
-         _gitStatManager.Update += listViewMergeRequests.Invalidate;
+         _gitStatManager.Update += onGitStatisticManagerUpdate;
 
          _timeTrackingManager.PreLoadTotalTime += onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime += onPostLoadTrackedTime;
       }
 
-      private void unsubscribeFromMainObjects()
+      private void unsubscribeFromWorkflowAndDependencies()
       {
          unsubscribeFromWorkflow();
 
-         _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
          _mergeRequestCache.MergeRequestEvent -= processUpdate;
-         _gitStatManager.Update -= listViewMergeRequests.Invalidate;
+         _gitStatManager.Update -= onGitStatisticManagerUpdate;
 
          _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
@@ -367,6 +440,11 @@ namespace mrHelper.App.Forms
       {
          labelWorkflowStatus.Text = status;
          labelWorkflowStatus.Update();
+      }
+
+      private void onGitStatisticManagerUpdate()
+      {
+         listViewMergeRequests.Invalidate();
       }
 
       private void onPreLoadTrackedTime(MergeRequestKey mrk)

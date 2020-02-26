@@ -21,47 +21,31 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Traces git diff statistic change for all merge requests within one or more repositories
    /// </summary>
-   internal class GitStatisticManager
+   internal class GitStatisticManager : IDisposable
    {
       internal GitStatisticManager(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
-         workflow.PostLoadHostProjects += (hostname, projects) =>
-         {
-            synchronizeInvoke.BeginInvoke(new Action(
-               async () =>
-            {
-               foreach (Project project in projects)
-               {
-                  ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                  ILocalGitRepository repo = (await factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
-                  if (repo != null && !_gitStatistic.ContainsKey(repo))
-                  {
-                     _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
-                     {
-                        State = new RepositoryState
-                        {
-                           LatestChange = DateTime.MinValue,
-                           IsCloned = !repo.DoesRequireClone()
-                        },
-                        Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
-                     });
+         _workflow = workflow;
+         _workflow.PostLoadHostProjects += onPostLoadHostProjects;
 
-                     Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
-                        repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-                     repo.Updated += onLocalGitRepositoryUpdated;
-                     repo.Disposed += onLocalGitRepositoryDisposed;
-                  }
-               }
-
-               Update?.Invoke();
-            }), null);
-         };
-
+         _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
          _mergeRequestProvider = mergeRequestProvider;
          _projectCheckerFactory = projectCheckerFactory;
+      }
+
+      public void Dispose()
+      {
+         _workflow.PostLoadHostProjects -= onPostLoadHostProjects;
+
+         foreach (KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> keyValuePair in _gitStatistic)
+         {
+            keyValuePair.Key.Updated -= onLocalGitRepositoryUpdated;
+            keyValuePair.Key.Disposed -= onLocalGitRepositoryDisposed;
+         }
+         _gitStatistic.Clear();
       }
 
       /// <summary>
@@ -298,6 +282,39 @@ namespace mrHelper.App.Helpers
          Update?.Invoke();
       }
 
+      private void onPostLoadHostProjects(string hostname, IEnumerable<Project> projects)
+      {
+         _synchronizeInvoke.BeginInvoke(new Action(
+            async () =>
+         {
+            foreach (Project project in projects)
+            {
+               ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+               ILocalGitRepository repo =
+                  (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
+               if (repo != null && !_gitStatistic.ContainsKey(repo))
+               {
+                  _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
+                  {
+                     State = new RepositoryState
+                     {
+                        LatestChange = DateTime.MinValue,
+                        IsCloned = !repo.DoesRequireClone()
+                     },
+                     Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
+                  });
+
+                  Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
+                     repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+                  repo.Updated += onLocalGitRepositoryUpdated;
+                  repo.Disposed += onLocalGitRepositoryDisposed;
+               }
+            }
+
+            Update?.Invoke();
+         }), null);
+      }
+
       internal struct RepositoryState
       {
          internal bool IsCloned;
@@ -335,6 +352,8 @@ namespace mrHelper.App.Helpers
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly IProjectCheckerFactory _projectCheckerFactory;
+      private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
+      private readonly Workflow _workflow;
    }
 }
 

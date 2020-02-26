@@ -33,78 +33,15 @@ namespace mrHelper.Client.Discussions
          _settings = settings;
          _operator = new DiscussionOperator(settings);
 
-         DiscussionParser parser = new DiscussionParser(workflow, this, keywords);
-         parser.DiscussionEvent += e => DiscussionEvent?.Invoke(e);
+         _parser = new DiscussionParser(workflow, this, keywords);
+         _parser.DiscussionEvent += onDiscussionParserEvent;
 
-         workflow.PostLoadProjectMergeRequests +=
-            (hostname, project, mergeRequests) =>
-         {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Scheduling update of discussions for {0} merge requests of {1} on Workflow event",
-               mergeRequests.Count(), project.Path_With_Namespace));
+         _mergeRequestCache = mergeRequestCache;
+         _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
 
-            IEnumerable<MergeRequestKey> mergeRequestKeys = mergeRequests
-               .Select(x => new MergeRequestKey
-               {
-                  ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-                  IId = x.IId
-               });
-
-            scheduleUpdate(mergeRequestKeys.ToArray(), true);
-
-            IEnumerable<MergeRequestKey> toRemove = _cachedDiscussions.Keys.Where(
-               x => x.ProjectKey.HostName == hostname
-                 && x.ProjectKey.ProjectName == project.Path_With_Namespace
-                 && !mergeRequestKeys.Any(y => x.IId == y.IId));
-            cleanup(toRemove.ToArray());
-         };
-
-         workflow.PostLoadCurrentUser += user => _currentUser = user;
-
-         mergeRequestCache.MergeRequestEvent +=
-            (e) =>
-         {
-            switch (e.EventType)
-            {
-               case UserEvents.MergeRequestEvent.Type.NewMergeRequest:
-                  Trace.TraceInformation(String.Format(
-                     "[DiscussionManager] Scheduling update of discussions for a new merge request with IId {0}",
-                     e.FullMergeRequestKey.MergeRequest.IId));
-                  MergeRequestKey mrk = new MergeRequestKey
-                  {
-                     ProjectKey = e.FullMergeRequestKey.ProjectKey,
-                     IId = e.FullMergeRequestKey.MergeRequest.IId
-                  };
-                  if (_closed.Contains(mrk))
-                  {
-                     Trace.TraceInformation(String.Format(
-                        "[DiscussionManager] Merge Request with IId {0} was reopened",
-                        e.FullMergeRequestKey.MergeRequest.IId));
-                     _closed.Remove(mrk);
-                  }
-                  scheduleUpdate(new MergeRequestKey[] { mrk }, false);
-                  break;
-
-               case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
-                  cleanup(new MergeRequestKey[]
-                  {
-                     new MergeRequestKey
-                     {
-                        ProjectKey = e.FullMergeRequestKey.ProjectKey,
-                        IId = e.FullMergeRequestKey.MergeRequest.IId
-                     }
-                  });
-                  break;
-
-               case UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest:
-                  // do nothing
-                  break;
-
-               default:
-                  Debug.Assert(false);
-                  break;
-            }
-         };
+         _workflow = workflow;
+         _workflow.PostLoadProjectMergeRequests += onPostLoadProjectMergeRequests;
+         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -114,8 +51,17 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
+         _workflow.PostLoadProjectMergeRequests -= onPostLoadProjectMergeRequests;
+         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+
+         _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+
+         _parser.DiscussionEvent -= onDiscussionParserEvent;
+         _parser.Dispose();
+
          _timer.Stop();
          _timer.Dispose();
+
          _oneShotTimer?.Stop();
          _oneShotTimer?.Dispose();
       }
@@ -313,6 +259,87 @@ namespace mrHelper.Client.Discussions
             _closed.Add(mrk);
          }
       }
+
+      private void onDiscussionParserEvent(UserEvents.DiscussionEvent e)
+      {
+         DiscussionEvent?.Invoke(e);
+      }
+
+      private void onMergeRequestEvent(Common.UserEvents.MergeRequestEvent e)
+      {
+         switch (e.EventType)
+         {
+            case UserEvents.MergeRequestEvent.Type.NewMergeRequest:
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Scheduling update of discussions for a new merge request with IId {0}",
+                  e.FullMergeRequestKey.MergeRequest.IId));
+               MergeRequestKey mrk = new MergeRequestKey
+               {
+                  ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                  IId = e.FullMergeRequestKey.MergeRequest.IId
+               };
+               if (_closed.Contains(mrk))
+               {
+                  Trace.TraceInformation(String.Format(
+                     "[DiscussionManager] Merge Request with IId {0} was reopened",
+                     e.FullMergeRequestKey.MergeRequest.IId));
+                  _closed.Remove(mrk);
+               }
+               scheduleUpdate(new MergeRequestKey[] { mrk }, false);
+               break;
+
+            case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
+               cleanup(new MergeRequestKey[]
+               {
+                  new MergeRequestKey
+                  {
+                     ProjectKey = e.FullMergeRequestKey.ProjectKey,
+                     IId = e.FullMergeRequestKey.MergeRequest.IId
+                  }
+               });
+               break;
+
+            case UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest:
+               // do nothing
+               break;
+
+            default:
+               Debug.Assert(false);
+               break;
+         }
+      }
+
+      private void onPostLoadProjectMergeRequests(string hostname, Project project,
+         IEnumerable<MergeRequest> mergeRequests)
+      {
+         Trace.TraceInformation(String.Format(
+            "[DiscussionManager] Scheduling update of discussions for {0} merge requests of {1} on Workflow event",
+            mergeRequests.Count(), project.Path_With_Namespace));
+
+         IEnumerable<MergeRequestKey> mergeRequestKeys = mergeRequests
+            .Select(x => new MergeRequestKey
+            {
+               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
+               IId = x.IId
+            });
+
+         scheduleUpdate(mergeRequestKeys.ToArray(), true);
+
+         IEnumerable<MergeRequestKey> toRemove = _cachedDiscussions.Keys.Where(
+            x => x.ProjectKey.HostName == hostname
+              && x.ProjectKey.ProjectName == project.Path_With_Namespace
+              && !mergeRequestKeys.Any(y => x.IId == y.IId));
+         cleanup(toRemove.ToArray());
+      }
+
+      private void onPostLoadCurrentUser(User user)
+      {
+         _currentUser = user;
+      }
+
+      private DiscussionParser _parser;
+      private readonly MergeRequestCache _mergeRequestCache;
+      private readonly Workflow.Workflow _workflow;
 
       private readonly System.Timers.Timer _timer;
       private System.Timers.Timer _oneShotTimer;

@@ -15,15 +15,29 @@ namespace mrHelper.Client.TimeTracking
    /// Manages time tracking for merge requests
    /// TODO Clean up merged/closed merge requests
    /// </summary>
-   public class TimeTrackingManager
+   public class TimeTrackingManager : IDisposable
    {
-      public TimeTrackingManager(IHostProperties settings, Workflow.Workflow workflow, DiscussionManager discussionManager)
+      public TimeTrackingManager(IHostProperties settings, Workflow.Workflow workflow,
+         DiscussionManager discussionManager)
       {
          _operator = new TimeTrackingOperator(settings);
-         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
-         discussionManager.PreLoadDiscussions += (mrk) => PreLoadTotalTime?.Invoke(mrk);
-         discussionManager.PostLoadDiscussions += (mrk, discussions, _, __) => processDiscussions(mrk, discussions);
-         discussionManager.FailedLoadDiscussions += () => FailedLoadTotalTime?.Invoke();
+
+         _workflow = workflow;
+         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+
+         _discussionManager = discussionManager;
+         _discussionManager.PreLoadDiscussions += onPreLoadDiscussions;
+         _discussionManager.PostLoadDiscussions += onPostLoadDiscussions;
+         _discussionManager.FailedLoadDiscussions += onFailedLoadDiscussions;
+      }
+
+      public void Dispose()
+      {
+         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+
+         _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
+         _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
+         _discussionManager.FailedLoadDiscussions -= onFailedLoadDiscussions;
       }
 
       public event Action<MergeRequestKey> PreLoadTotalTime;
@@ -101,10 +115,33 @@ namespace mrHelper.Client.TimeTracking
          PostLoadTotalTime?.Invoke(mrk);
       }
 
+      private void onPreLoadDiscussions(MergeRequestKey mrk)
+      {
+         PreLoadTotalTime?.Invoke(mrk);
+      }
+
+      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+         DateTime dateTime, bool b)
+      {
+         processDiscussions(mrk, discussions);
+      }
+
+      private void onFailedLoadDiscussions()
+      {
+         FailedLoadTotalTime?.Invoke();
+      }
+
+      private void onPostLoadCurrentUser(User user)
+      {
+         _currentUser = user;
+      }
+
       private readonly TimeTrackingOperator _operator;
       private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
          new Dictionary<MergeRequestKey, TimeSpan>();
       private User _currentUser;
+      private readonly DiscussionManager _discussionManager;
+      private readonly Workflow.Workflow _workflow;
    }
 }
 

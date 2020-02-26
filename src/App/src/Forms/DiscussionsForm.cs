@@ -31,7 +31,7 @@ namespace mrHelper.App.Forms
 
          if (repo != null)
          {
-            repo.Disposed += disposedRepo => onLocalGitRepositoryDisposed(disposedRepo);
+            repo.Disposed += onLocalGitRepositoryDisposed;
          }
          _gitRepository = repo;
          _diffContextDepth = diffContextDepth;

@@ -91,6 +91,7 @@ namespace mrHelper.App.Forms
       private GitStatisticManager _gitStatManager;
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
+      private EventFilter _eventFilter;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =

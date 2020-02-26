@@ -11,14 +11,21 @@ using static mrHelper.Client.Common.UserEvents;
 
 namespace mrHelper.App.Helpers
 {
-   internal class EventFilter
+   internal class EventFilter : IDisposable
    {
       internal EventFilter(UserDefinedSettings settings, Workflow workflow,
          ICachedMergeRequestProvider mergeRequestProvider)
       {
          _settings = settings;
          _mergeRequestProvider = mergeRequestProvider;
-         workflow.PostLoadCurrentUser += user => _currentUser = user;
+
+         _workflow = workflow;
+         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+      }
+
+      public void Dispose()
+      {
+         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -100,9 +107,15 @@ namespace mrHelper.App.Helpers
          }
       }
 
+      private void onPostLoadCurrentUser(User user)
+      {
+         _currentUser = user;
+      }
+
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly Workflow _workflow;
    }
 }
 

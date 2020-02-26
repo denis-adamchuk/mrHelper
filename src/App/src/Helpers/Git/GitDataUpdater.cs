@@ -20,38 +20,32 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Pre-loads file revisions into git repository cache
    /// </summary>
-   internal class GitDataUpdater
+   internal class GitDataUpdater : IDisposable
    {
       internal GitDataUpdater(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
-         workflow.PostLoadHostProjects += (hostname, projects) =>
-         {
-            synchronizeInvoke.BeginInvoke(new Action(
-               async () =>
-            {
-               foreach (Project project in projects)
-               {
-                  ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-                  ILocalGitRepository repo = (await factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
-                  if (repo != null && !_latestChanges.ContainsKey(repo))
-                  {
-                     _latestChanges.Add(repo, DateTime.MinValue);
+         _workflow = workflow;
+         _workflow.PostLoadHostProjects += onPostLoadHostProjects;
 
-                     Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
-                        repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-                     repo.Updated += onLocalGitRepositoryUpdated;
-                     repo.Disposed += onLocalGitRepositoryDisposed;
-                  }
-               }
-            }), null);
-         };
-
+         _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
          _versionManager = new VersionManager(hostProperties);
          _mergeRequestProvider = mergeRequestProvider;
          _projectCheckerFactory = projectCheckerFactory;
+      }
+
+      public void Dispose()
+      {
+         _workflow.PostLoadHostProjects -= onPostLoadHostProjects;
+
+         foreach (KeyValuePair<ILocalGitRepository, DateTime> keyValuePair in _latestChanges)
+         {
+            keyValuePair.Key.Updated -= onLocalGitRepositoryUpdated;
+            keyValuePair.Key.Disposed -= onLocalGitRepositoryDisposed;
+         }
+         _latestChanges.Clear();
       }
 
       private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
@@ -288,6 +282,29 @@ namespace mrHelper.App.Helpers
          }
       }
 
+      private void onPostLoadHostProjects(string hostname, IEnumerable<Project> projects)
+      {
+         _synchronizeInvoke.BeginInvoke(new Action(
+            async () =>
+         {
+            foreach (Project project in projects)
+            {
+               ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+               ILocalGitRepository repo =
+                  (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
+               if (repo != null && !_latestChanges.ContainsKey(repo))
+               {
+                  _latestChanges.Add(repo, DateTime.MinValue);
+
+                  Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
+                     repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+                  repo.Updated += onLocalGitRepositoryUpdated;
+                  repo.Disposed += onLocalGitRepositoryDisposed;
+               }
+            }
+         }), null);
+      }
+
       private static int MaxGitInParallel  = 5;
       private static int InterBatchDelay   = 1000; // ms
 
@@ -298,6 +315,8 @@ namespace mrHelper.App.Helpers
       private readonly VersionManager _versionManager;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly IProjectCheckerFactory _projectCheckerFactory;
+      private readonly Workflow _workflow;
+      private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
 
       private static int MaxDiffsInVersion = 200;
    }

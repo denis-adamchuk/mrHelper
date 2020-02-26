@@ -35,25 +35,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         cleanUpInstallers();
-
-         restoreState();
-         loadConfiguration();
-         addCustomActions();
-         updateCaption();
-         updateTabControlSelection();
-         updateHostsDropdownList();
-         prepareControlsToStart();
-         checkForApplicationUpdates();
-
-         createMainObjects();
-         subscribeToMainObjects();
-
-         fillColorSchemesList();
-         initializeColorScheme();
-         initializeIconScheme();
-
-         await connectOnStartup();
+         await initializeWork();
       }
 
       async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -71,54 +53,6 @@ namespace mrHelper.App.Forms
 
          await finalizeWork();
       }
-
-      async private Task finalizeWork()
-      {
-         Trace.TraceInformation(String.Format("[MainForm] Finalizing work"));
-
-         Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag to prevent form dispose"));
-         _exiting = true;
-
-         unsubscribeFromMainObjects();
-
-         saveState();
-         Trace.TraceInformation(String.Format("[MainForm] State serialized"));
-
-         Interprocess.SnapshotSerializer.CleanUpSnapshots();
-         Trace.TraceInformation(String.Format("[MainForm] Snapshots cleaned up"));
-
-         if (_workflow != null)
-         {
-            await _workflow.CancelAsync();
-         }
-         Trace.TraceInformation(String.Format("[MainForm] Workflow operations cancelled"));
-
-         if (_gitClientFactory != null)
-         {
-            await _gitClientFactory.DisposeAsync();
-         }
-         Trace.TraceInformation(String.Format("[MainForm] Git client factory disposed"));
-
-         Trace.TraceInformation(String.Format("[MainForm] Reset _exiting flag to allow form dispose"));
-         _exiting = false;
-         Dispose();
-         Trace.TraceInformation(String.Format("[MainForm] Form disposed"));
-
-         Trace.TraceInformation(String.Format("[MainForm] Work finalized. Exiting."));
-      }
-
-      private void saveState()
-      {
-         try
-         {
-            _persistentStorage?.Serialize();
-         }
-         catch (PersistenceStateSerializationException ex)
-         {
-            ExceptionHandlers.Handle("Cannot serialize the state", ex);
-         }
-      }
-
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
       {
@@ -1088,7 +1022,9 @@ namespace mrHelper.App.Forms
          if (richTextBoxMergeRequestDescription.Location.X < 0
           || richTextBoxMergeRequestDescription.Location.Y < 0)
          {
-            Trace.TraceWarning("Detected negative Location of Html Panel. Location: {{{0}, {1}}}, Size: {{{2}, {3}}}. GroupBox Size: {{{4}, {5}}}",
+            Trace.TraceWarning(
+                  "Detected negative Location of Html Panel. "
+                + "Location: {{{0}, {1}}}, Size: {{{2}, {3}}}. GroupBox Size: {{{4}, {5}}}",
                richTextBoxMergeRequestDescription.Location.X,
                richTextBoxMergeRequestDescription.Location.Y,
                richTextBoxMergeRequestDescription.Size.Width,

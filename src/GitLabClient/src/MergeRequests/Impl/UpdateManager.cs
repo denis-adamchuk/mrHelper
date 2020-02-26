@@ -38,6 +38,7 @@ namespace mrHelper.Client.MergeRequests
       {
          _timer.Stop();
          _timer.Dispose();
+
          _oneShotTimer?.Stop();
          _oneShotTimer?.Dispose();
       }
