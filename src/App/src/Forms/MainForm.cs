@@ -102,6 +102,7 @@ namespace mrHelper.App.Forms
       private TimeTracker _timeTracker;
 
       private IEnumerable<ICommand> _customCommands;
+      private IEnumerable<string> _keywords;
       private ColorScheme _colorScheme;
       private Dictionary<string, string> _iconScheme;
 

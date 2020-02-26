@@ -14,39 +14,56 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      private void createWorkflow()
+      private void subscribeToWorkflow()
       {
-         _workflow = new Workflow(Program.Settings);
+         _workflow.PreLoadCurrentUser += onLoadCurrentUser;
+         _workflow.PostLoadCurrentUser += onCurrentUserLoaded;
+         _workflow.FailedLoadCurrentUser += onFailedLoadCurrentUser;
 
-         _workflow.PreLoadCurrentUser += (hostname) => onLoadCurrentUser(hostname);
-         _workflow.PostLoadCurrentUser += (user) => onCurrentUserLoaded(user);
-         _workflow.FailedLoadCurrentUser += () => onFailedLoadCurrentUser();
+         _workflow.PreLoadHostProjects += onLoadHostProjects;
+         _workflow.PostLoadHostProjects += onHostProjectsLoaded;
 
-         _workflow.PreLoadHostProjects += (hostname) => onLoadHostProjects(hostname);
-         _workflow.PostLoadHostProjects += (hostname, projects) => onHostProjectsLoaded(hostname, projects);
+         _workflow.PreLoadAllMergeRequests += onLoadAllMergeRequests;
 
-         _workflow.PreLoadAllMergeRequests += () => onLoadAllMergeRequests();
+         _workflow.PreLoadProjectMergeRequests += onLoadProjectMergeRequests;
+         _workflow.PostLoadProjectMergeRequests += onProjectMergeRequestsLoaded;
+         _workflow.FailedLoadProjectMergeRequests += onFailedLoadProjectMergeRequests;
 
-         _workflow.PreLoadProjectMergeRequests += (project) => onLoadProjectMergeRequests(project);
-         _workflow.PostLoadProjectMergeRequests +=
-            (hostname, project, mergeRequests) =>
-         {
-            onProjectMergeRequestsLoaded(project, mergeRequests);
-            cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
-         };
-         _workflow.FailedLoadProjectMergeRequests += () => onFailedLoadProjectMergeRequests();
+         _workflow.PostLoadAllMergeRequests += onAllMergeRequestsLoaded;
 
-         _workflow.PostLoadAllMergeRequests += (hostname, projects) => onAllMergeRequestsLoaded(hostname, projects);
+         _workflow.PreLoadSingleMergeRequest += onLoadSingleMergeRequest;
+         _workflow.PostLoadSingleMergeRequest += onSingleMergeRequestLoaded;
+         _workflow.FailedLoadSingleMergeRequest += onFailedLoadSingleMergeRequest;
 
-         _workflow.PreLoadSingleMergeRequest += (id) => onLoadSingleMergeRequest(id);
-         _workflow.PostLoadSingleMergeRequest += (hostname, projectname, mergeRequest) =>
-            onSingleMergeRequestLoaded(hostname, projectname, mergeRequest);
-         _workflow.FailedLoadSingleMergeRequest += () => onFailedLoadSingleMergeRequest();
+         _workflow.PreLoadCommits += onLoadCommits;
+         _workflow.PostLoadCommits += onCommitsLoaded;
+         _workflow.FailedLoadCommits +=  onFailedLoadCommits;
+      }
 
-         _workflow.PreLoadCommits += () => onLoadCommits();
-         _workflow.PostLoadCommits += (hostname, projectname, mergeRequest, commits) =>
-            onCommitsLoaded(hostname, projectname, mergeRequest, commits);
-         _workflow.FailedLoadCommits += () => onFailedLoadCommits();
+      private void unsubscribeFromWorkflow()
+      {
+         _workflow.PreLoadCurrentUser -= onLoadCurrentUser;
+         _workflow.PostLoadCurrentUser -= onCurrentUserLoaded;
+         _workflow.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
+
+         _workflow.PreLoadHostProjects -= onLoadHostProjects;
+         _workflow.PostLoadHostProjects -= onHostProjectsLoaded;
+
+         _workflow.PreLoadAllMergeRequests -= onLoadAllMergeRequests;
+
+         _workflow.PreLoadProjectMergeRequests -= onLoadProjectMergeRequests;
+         _workflow.PostLoadProjectMergeRequests -= onProjectMergeRequestsLoaded;
+         _workflow.FailedLoadProjectMergeRequests -= onFailedLoadProjectMergeRequests;
+
+         _workflow.PostLoadAllMergeRequests -= onAllMergeRequestsLoaded;
+
+         _workflow.PreLoadSingleMergeRequest -= onLoadSingleMergeRequest;
+         _workflow.PostLoadSingleMergeRequest -= onSingleMergeRequestLoaded;
+         _workflow.FailedLoadSingleMergeRequest -= onFailedLoadSingleMergeRequest;
+
+         _workflow.PreLoadCommits -= onLoadCommits;
+         _workflow.PostLoadCommits -= onCommitsLoaded;
+         _workflow.FailedLoadCommits -=  onFailedLoadCommits;
       }
 
       async private Task switchHostToSelected()
@@ -198,6 +215,13 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Failed to load merge requests";
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load merge requests"));
+      }
+
+      private void onProjectMergeRequestsLoaded(string hostname, Project project,
+         IEnumerable<MergeRequest> mergeRequests)
+      {
+         onProjectMergeRequestsLoaded(project, mergeRequests);
+         cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
       }
 
       private void onProjectMergeRequestsLoaded(Project project, IEnumerable<MergeRequest> mergeRequests)

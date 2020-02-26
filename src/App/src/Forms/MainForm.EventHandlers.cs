@@ -29,38 +29,31 @@ namespace mrHelper.App.Forms
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
-         cleanUpInstallers();
-
-         addCustomActions();
-
-         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
-         loadConfiguration();
-
-         updateCaption();
-         updateTabControlSelection();
-         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
-         labelWorkflowStatus.Text = String.Empty;
-         labelGitStatus.Text = String.Empty;
-
          if (!integrateInTools())
          {
             doClose();
             return;
          }
 
-         this.WindowState = FormWindowState.Maximized;
+         cleanUpInstallers();
 
-         if (Program.Settings.MainWindowSplitterDistance != 0)
-         {
-            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
-         }
+         restoreState();
+         loadConfiguration();
+         addCustomActions();
+         updateCaption();
+         updateTabControlSelection();
+         updateHostsDropdownList();
+         prepareControlsToStart();
+         checkForApplicationUpdates();
 
-         if (Program.Settings.RightPaneSplitterDistance != 0)
-         {
-            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
-         }
+         createMainObjects();
+         subscribeToMainObjects();
 
-         await onApplicationStarted();
+         fillColorSchemesList();
+         initializeColorScheme();
+         initializeIconScheme();
+
+         await connectOnStartup();
       }
 
       async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -76,19 +69,19 @@ namespace mrHelper.App.Forms
 
          Hide();
 
+         await finalizeWork();
+      }
+
+      async private Task finalizeWork()
+      {
+         Trace.TraceInformation(String.Format("[MainForm] Finalizing work"));
+
          Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag to prevent form dispose"));
          _exiting = true;
 
-         Trace.TraceInformation(String.Format("[MainForm] Finalizing work"));
+         unsubscribeFromMainObjects();
 
-         try
-         {
-            _persistentStorage?.Serialize();
-         }
-         catch (PersistenceStateSerializationException ex)
-         {
-            ExceptionHandlers.Handle("Cannot serialize the state", ex);
-         }
+         saveState();
          Trace.TraceInformation(String.Format("[MainForm] State serialized"));
 
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
@@ -113,6 +106,19 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm] Work finalized. Exiting."));
       }
+
+      private void saveState()
+      {
+         try
+         {
+            _persistentStorage?.Serialize();
+         }
+         catch (PersistenceStateSerializationException ex)
+         {
+            ExceptionHandlers.Handle("Cannot serialize the state", ex);
+         }
+      }
+
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
       {

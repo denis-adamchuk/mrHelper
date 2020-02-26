@@ -39,6 +39,10 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle("Cannot load custom actions", ex);
          }
 
+         _keywords = _customCommands?
+            .Where(x => x is SendNoteCommand)
+            .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
+
          if (_customCommands == null)
          {
             return;
@@ -52,7 +56,7 @@ namespace mrHelper.App.Forms
             {
                Name = "customAction" + id,
                Location = new System.Drawing.Point { X = 0, Y = 19 },
-               Size = new System.Drawing.Size{ Width = 96, Height = 32},
+               Size = new System.Drawing.Size { Width = 96, Height = 32 },
                MinimumSize = new System.Drawing.Size { Width = 96, Height = 0 },
                Text = name,
                UseVisualStyleBackColor = true,
@@ -105,6 +109,7 @@ namespace mrHelper.App.Forms
       private void loadConfiguration()
       {
          Trace.TraceInformation("[MainForm] Loading configuration");
+         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
 
          Debug.Assert(Program.Settings.KnownHosts.Count() == Program.Settings.KnownAccessTokens.Count());
          // Remove all items except header
@@ -237,81 +242,48 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      async private Task onApplicationStarted()
+      private void prepareControlsToStart()
       {
-         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
-         _checkForUpdatesTimer.Tick += new System.EventHandler(onTimerCheckForUpdates);
+         WindowState = FormWindowState.Maximized;
 
-         _persistentStorage = new PersistentStorage();
-         _persistentStorage.OnSerialize += (writer) => onPersistentStorageSerialize(writer);
-         _persistentStorage.OnDeserialize += (reader) => onPersistentStorageDeserialize(reader);
+         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
+         labelWorkflowStatus.Text = String.Empty;
+         labelGitStatus.Text = String.Empty;
 
-         _gitClientUpdater = new GitInteractiveUpdater();
-         _gitClientUpdater.InitializationStatusChange +=
-            (status) =>
-         {
-            labelWorkflowStatus.Text = status;
-            labelWorkflowStatus.Update();
-         };
-
-         createWorkflow();
-
-         // Expression resolver requires Workflow
-         _expressionResolver = new ExpressionResolver(_workflow);
-
-         // Color Scheme requires Expression Resolver
-         fillColorSchemesList();
-         initializeColorScheme();
-         initializeIconScheme();
-
-         _mergeRequestCache = new MergeRequestCache(_workflow, this, Program.Settings,
-            Program.Settings.AutoUpdatePeriodMs);
-         _mergeRequestCache.MergeRequestEvent += e => processUpdate(e);
-
-         // Discussions Manager subscribers to Workflow and UpdateManager notifications
-         IEnumerable<string> keywords = _customCommands?
-            .Where(x => x is SendNoteCommand)
-            .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
-         if (keywords == null)
+         if (_keywords == null)
          {
             checkBoxShowKeywords.Enabled = false;
          }
          else
          {
-            checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", keywords);
+            checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", _keywords);
          }
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestCache, this, keywords,
-            Program.Settings.AutoUpdatePeriodMs);
 
-         EventFilter eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestCache);
-         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
-            eventFilter);
-
-         // Revision Cacher subscribes to Workflow notifications
-         if (Program.Settings.CacheRevisionsInBackground)
+         if (Program.ServiceManager.GetHelpUrl() != String.Empty)
          {
-            _gitDataUpdater = new GitDataUpdater(_workflow, this, Program.Settings, this,
-               _mergeRequestCache, _mergeRequestCache);
+            linkLabelHelp.Visible = true;
          }
 
-         _gitStatManager = new GitStatisticManager(_workflow, this, this,
-            _mergeRequestCache, _mergeRequestCache);
-         _gitStatManager.Update += () => listViewMergeRequests.Invalidate();
-
-         // Time Tracking Manager requires Workflow and Discussion Manager
-         createTimeTrackingManager();
-
-         try
+         if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
          {
-            _persistentStorage.Deserialize();
+            linkLabelSendFeedback.Visible = true;
          }
-         catch (PersistenceStateDeserializationException ex)
+
+         if (Program.Settings.MainWindowSplitterDistance != 0)
          {
-            ExceptionHandlers.Handle("Cannot deserialize the state", ex);
+            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
          }
 
-         updateHostsDropdownList();
+         if (Program.Settings.RightPaneSplitterDistance != 0)
+         {
+            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
+         }
 
+         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+      }
+
+      async private Task connectOnStartup()
+      {
          try
          {
             string[] arguments = Environment.GetCommandLineArgs();
@@ -331,47 +303,93 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+      }
 
-         checkForApplicationUpdates();
-         _checkForUpdatesTimer.Start();
-
-         if (Program.ServiceManager.GetHelpUrl() != String.Empty)
+      private void restoreState()
+      {
+         _persistentStorage = new PersistentStorage();
+         _persistentStorage.OnSerialize += onPersistentStorageSerialize;
+         _persistentStorage.OnDeserialize += onPersistentStorageDeserialize;
+         try
          {
-            linkLabelHelp.Visible = true;
+            _persistentStorage.Deserialize();
          }
-
-         if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
+         catch (PersistenceStateDeserializationException ex)
          {
-            linkLabelSendFeedback.Visible = true;
+            ExceptionHandlers.Handle("Cannot deserialize the state", ex);
          }
       }
 
-      private void createTimeTrackingManager()
+      private void createMainObjects()
       {
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
-         _timeTrackingManager.PreLoadTotalTime +=
-            (mrk) =>
-         {
-            MergeRequestKey? currentMergeRequest = getMergeRequestKey();
-            if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
-            {
-               // change control enabled state
-               updateTotalTime(mrk);
-            }
-         };
-         _timeTrackingManager.PostLoadTotalTime +=
-            (mrk) =>
-         {
-            MergeRequestKey? currentMergeRequest = getMergeRequestKey();
-            if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
-            {
-               // change control enabled state and update text
-               updateTotalTime(mrk);
-            }
+         _gitClientUpdater = new GitInteractiveUpdater();
 
-            // Update total time column in the table
-            listViewMergeRequests.Invalidate();
-         };
+         _workflow = new Workflow(Program.Settings);
+         _expressionResolver = new ExpressionResolver(_workflow);
+         _mergeRequestCache = new MergeRequestCache(_workflow, this, Program.Settings,
+            Program.Settings.AutoUpdatePeriodMs);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestCache, this, _keywords,
+            Program.Settings.AutoUpdatePeriodMs);
+         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
+            new EventFilter(Program.Settings, _workflow, _mergeRequestCache));
+         _gitDataUpdater = Program.Settings.CacheRevisionsInBackground
+            ? new GitDataUpdater(_workflow, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache)
+            : null;
+         _gitStatManager = new GitStatisticManager(_workflow, this, this, _mergeRequestCache, _mergeRequestCache);
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
+      }
+
+      private void subscribeToMainObjects()
+      {
+         subscribeToWorkflow();
+
+         _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
+         _mergeRequestCache.MergeRequestEvent += processUpdate;
+         _gitStatManager.Update += listViewMergeRequests.Invalidate;
+
+         _timeTrackingManager.PreLoadTotalTime += onPreLoadTrackedTime;
+         _timeTrackingManager.PostLoadTotalTime += onPostLoadTrackedTime;
+      }
+
+      private void unsubscribeFromMainObjects()
+      {
+         unsubscribeFromWorkflow();
+
+         _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+         _mergeRequestCache.MergeRequestEvent -= processUpdate;
+         _gitStatManager.Update -= listViewMergeRequests.Invalidate;
+
+         _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
+         _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
+      }
+
+      private void onGitInitStatusChange(string status)
+      {
+         labelWorkflowStatus.Text = status;
+         labelWorkflowStatus.Update();
+      }
+
+      private void onPreLoadTrackedTime(MergeRequestKey mrk)
+      {
+         MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+         if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
+         {
+            // change control enabled state
+            updateTotalTime(mrk);
+         }
+      }
+
+      private void onPostLoadTrackedTime(MergeRequestKey mrk)
+      {
+         MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+         if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
+         {
+            // change control enabled state and update text
+            updateTotalTime(mrk);
+         }
+
+         // Update total time column in the table
+         listViewMergeRequests.Invalidate();
       }
 
       private void setupDefaultProjectList()
