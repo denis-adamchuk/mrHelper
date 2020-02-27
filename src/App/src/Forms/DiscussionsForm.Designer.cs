@@ -57,6 +57,7 @@
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DiscussionsForm_FormClosing);
          this.Load += new System.EventHandler(this.DiscussionsForm_Load);
          this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
          this.Layout += new System.Windows.Forms.LayoutEventHandler(this.DiscussionsForm_Layout);

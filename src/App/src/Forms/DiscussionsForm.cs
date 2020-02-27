@@ -29,11 +29,11 @@ namespace mrHelper.App.Forms
          _mergeRequestTitle = mrTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
-         if (repo != null)
-         {
-            repo.Disposed += onLocalGitRepositoryDisposed;
-         }
          _gitRepository = repo;
+         if (_gitRepository != null)
+         {
+            _gitRepository.Disposed += onLocalGitRepositoryDisposed;
+         }
          _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
@@ -133,6 +133,14 @@ namespace mrHelper.App.Forms
          else
          {
             pictureBox1.Visible = false;
+         }
+      }
+
+      private void DiscussionsForm_FormClosing(object sender, FormClosingEventArgs e)
+      {
+         if (_gitRepository != null)
+         {
+            _gitRepository.Disposed -= onLocalGitRepositoryDisposed;
          }
       }
 
@@ -513,7 +521,7 @@ namespace mrHelper.App.Forms
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
-      private IGitRepository _gitRepository;
+      private ILocalGitRepository _gitRepository;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 

@@ -51,6 +51,14 @@ namespace mrHelper.App.Forms
 
          Hide();
 
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            if (Application.OpenForms[iForm] != this)
+            {
+               Application.OpenForms[iForm].Close();
+            }
+         }
+
          await finalizeWork();
       }
 
