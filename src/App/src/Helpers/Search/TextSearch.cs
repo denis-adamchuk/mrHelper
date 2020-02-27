@@ -96,7 +96,8 @@ namespace mrHelper.App.Helpers
          {
             Control control = _allControls[iControl];
             int startPosition = forward ? 0 : control.Text.Length;
-            if (_isSearchableControl(control) && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
+            if (_isSearchableControl(control)
+               && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
             {
                return new TextSearchResult { Control = control, InsideControlPosition = insideControlPosition };
             }
@@ -106,7 +107,8 @@ namespace mrHelper.App.Helpers
          {
             Control control = _allControls[iControl];
             int startPosition = forward ? 0 : control.Text.Length;
-            if (_isSearchableControl(control) && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
+            if (_isSearchableControl(control)
+               && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
             {
                return new TextSearchResult { Control = control, InsideControlPosition = insideControlPosition };
             }
@@ -115,7 +117,8 @@ namespace mrHelper.App.Helpers
          return null;
       }
 
-      private bool doesMatchText(Control control, SearchQuery query, bool forward, int startPosition, out int insideControlPosition)
+      private bool doesMatchText(Control control, SearchQuery query, bool forward, int startPosition,
+         out int insideControlPosition)
       {
          insideControlPosition = -1;
          if (startPosition < 0 || startPosition > control.Text.Length)

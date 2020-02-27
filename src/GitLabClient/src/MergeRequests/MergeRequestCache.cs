@@ -19,51 +19,33 @@ namespace mrHelper.Client.MergeRequests
       public MergeRequestCache(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties settings, int autoUpdatePeriodMs)
       {
+         _synchronizeInvoke = synchronizeInvoke;
+         _autoUpdatePeriodMs = autoUpdatePeriodMs;
+
          _updateOperator = new UpdateOperator(settings);
 
-         workflow.PostLoadHostProjects += (hostname, projects) =>
-         {
-            // TODO Current version supports updates of projects of the most recent loaded host only
-            if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
-            {
-               _hostname = hostname;
-               if (_updateManager != null)
-               {
-                  _updateManager.OnUpdate -= onUpdate;
-                  _updateManager.Dispose();
-               }
-
-               _cache = new WorkflowDetailsCache();
-               _updateManager = new UpdateManager(synchronizeInvoke, _updateOperator, _hostname, projects, _cache,
-                  autoUpdatePeriodMs);
-               _updateManager.OnUpdate += onUpdate;
-
-               Trace.TraceInformation(String.Format(
-                  "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
-                  hostname, projects.Count()));
-            }
-         };
-
-         workflow.PostLoadProjectMergeRequests += (hostname, project, mergeRequests) =>
-            _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
-
-         workflow.PostLoadLatestVersion += (hostname, projectname, mergeRequest, version) =>
-            _cache.UpdateLatestVersion(new MergeRequestKey
-            {
-               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
-               IId = mergeRequest.IId
-            }, version);
+         _workflow = workflow;
+         _workflow.PostLoadHostProjects += onPostLoadHostProjects;
+         _workflow.PostLoadProjectMergeRequests += onPostLoadProjectMergeRequests;
+         _workflow.PostLoadLatestVersion += onPostLoadLatestVersion;
       }
 
       public void Dispose()
       {
-         _updateManager?.Dispose();
-         _updateManager = null;
+         _workflow.PostLoadHostProjects -= onPostLoadHostProjects;
+         _workflow.PostLoadProjectMergeRequests -= onPostLoadProjectMergeRequests;
+         _workflow.PostLoadLatestVersion -= onPostLoadLatestVersion;
+
+         if (_updateManager != null)
+         {
+            _updateManager.OnUpdate -= onUpdate;
+            _updateManager.Dispose();
+         }
       }
 
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
-         return _cache.Details.GetMergeRequests(projectKey);
+         return _cache?.Details.GetMergeRequests(projectKey);
       }
 
       public MergeRequest? GetMergeRequest(MergeRequestKey mrk)
@@ -75,7 +57,7 @@ namespace mrHelper.Client.MergeRequests
 
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
-         return new LocalProjectChecker(mrk, _cache.Details.Clone());
+         return _cache != null ? new LocalProjectChecker(mrk, _cache.Details.Clone()) : null;
       }
 
       public IInstantProjectChecker GetLocalProjectChecker(ProjectKey projectKey)
@@ -90,7 +72,7 @@ namespace mrHelper.Client.MergeRequests
 
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _cache.Details.GetLatestVersion(mrk);
+         return _cache?.Details.GetLatestVersion(mrk) ?? default(Version);
       }
 
       public IProjectCheckerFactory GetProjectCheckerFactory()
@@ -105,6 +87,11 @@ namespace mrHelper.Client.MergeRequests
 
       private MergeRequestKey getLatestMergeRequest(ProjectKey projectKey)
       {
+         if (_cache == null)
+         {
+            return default(MergeRequestKey);
+         }
+
          return _cache.Details.GetMergeRequests(projectKey).
             Select(x => new MergeRequestKey
             {
@@ -118,7 +105,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public void CheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
-         _updateManager?.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
+         _updateManager.RequestOneShotUpdate(mrk, firstChanceDelay, secondChanceDelay);
       }
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
@@ -131,11 +118,53 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
+      private void onPostLoadHostProjects(string hostname, IEnumerable<Project> projects)
+      {
+         // TODO Current version supports updates of projects of the most recent loaded host only
+         if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
+         {
+            _hostname = hostname;
+            if (_updateManager != null)
+            {
+               _updateManager.OnUpdate -= onUpdate;
+               _updateManager.Dispose();
+            }
+
+            _cache = new WorkflowDetailsCache();
+            _updateManager = new UpdateManager(_synchronizeInvoke, _updateOperator, _hostname, projects, _cache,
+               _autoUpdatePeriodMs);
+            _updateManager.OnUpdate += onUpdate;
+
+            Trace.TraceInformation(String.Format(
+               "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
+               hostname, projects.Count()));
+         }
+      }
+
+      private void onPostLoadProjectMergeRequests(string hostname, Project project,
+         IEnumerable<MergeRequest> mergeRequests)
+      {
+         _cache?.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
+      }
+
+      private void onPostLoadLatestVersion(string hostname, string projectname,
+         MergeRequest mergeRequest, Version version)
+      {
+         _cache?.UpdateLatestVersion(new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+            IId = mergeRequest.IId
+         }, version);
+      }
+
       private string _hostname;
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
       private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private UpdateManager _updateManager;
-      private UpdateOperator _updateOperator;
+      private readonly UpdateOperator _updateOperator;
+      private readonly Workflow.Workflow _workflow;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
+      private readonly int _autoUpdatePeriodMs;
    }
 }
 

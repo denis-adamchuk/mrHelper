@@ -14,7 +14,7 @@ using static mrHelper.Client.Common.UserEvents;
 
 namespace mrHelper.App.Helpers
 {
-   internal class UserNotifier
+   internal class UserNotifier : IDisposable
    {
       internal UserNotifier(TrayIcon trayIcon, UserDefinedSettings settings,
          MergeRequestCache mergeRequestCache, DiscussionManager discussionManager, EventFilter eventFilter)
@@ -22,9 +22,19 @@ namespace mrHelper.App.Helpers
          _settings = settings;
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
-         mergeRequestCache.MergeRequestEvent += (e) => notifyOnEvent(e);
-         discussionManager.DiscussionEvent += (e) => notifyOnEvent(e);
+
+         _mergeRequestCache = mergeRequestCache;
+         _mergeRequestCache.MergeRequestEvent += notifyOnEvent;
          _mergeRequestProvider = mergeRequestCache;
+
+         _discussionManager = discussionManager;
+         _discussionManager.DiscussionEvent += notifyOnEvent;
+      }
+
+      public void Dispose()
+      {
+         _mergeRequestCache.MergeRequestEvent -= notifyOnEvent;
+         _discussionManager.DiscussionEvent -= notifyOnEvent;
       }
 
       private TrayIcon.BalloonText getBalloonText(UserEvents.MergeRequestEvent e)
@@ -123,5 +133,7 @@ namespace mrHelper.App.Helpers
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly MergeRequestCache _mergeRequestCache;
+      private readonly DiscussionManager _discussionManager;
    }
 }

@@ -14,16 +14,25 @@ namespace mrHelper.Client.Discussions
    /// Parses discussion threads and notifies about some events found in them
    /// TODO Clean up merged/closed merge requests
    /// </summary>
-   internal class DiscussionParser
+   internal class DiscussionParser : IDisposable
    {
       internal DiscussionParser(Workflow.Workflow workflow, DiscussionManager discussionManager,
          IEnumerable<string> keywords)
       {
          _keywords = keywords;
-         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
-         discussionManager.PostLoadDiscussions +=
-            (mrk, discussions, updatedAt, initialSnapshot) =>
-               processDiscussions(mrk, discussions, updatedAt, initialSnapshot);
+
+         _workflow = workflow;
+         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+
+         _discussionManager = discussionManager;
+         _discussionManager.PostLoadDiscussions += processDiscussions;
+      }
+
+      public void Dispose()
+      {
+         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+
+         _discussionManager.PostLoadDiscussions -= processDiscussions;
       }
 
       internal event Action<UserEvents.DiscussionEvent> DiscussionEvent;
@@ -126,10 +135,18 @@ namespace mrHelper.Client.Discussions
          return false;
       }
 
+      private void onPostLoadCurrentUser(User user)
+      {
+         _currentUser = user;
+      }
+
       private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =
          new Dictionary<MergeRequestKey, DateTime>();
       private User _currentUser;
       private readonly IEnumerable<string> _keywords;
+
+      private readonly DiscussionManager _discussionManager;
+      private readonly Workflow.Workflow _workflow;
    }
 }
 

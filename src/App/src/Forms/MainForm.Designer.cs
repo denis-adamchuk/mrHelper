@@ -24,10 +24,15 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
-         _discussionManager?.Dispose();
+
+         disposeWorkflowDependencies();
+
+         _checkForUpdatesTimer?.Stop();
          _checkForUpdatesTimer?.Dispose();
-         _mergeRequestCache?.Dispose();
+
+         _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
+
          base.Dispose(disposing);
       }
 

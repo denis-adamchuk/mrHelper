@@ -679,11 +679,7 @@ namespace mrHelper.App.Forms
       {
          if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
          {
-            if (_gitClientFactory != null)
-            {
-               await _gitClientFactory.DisposeAsync();
-               _gitClientFactory = null;
-            }
+            await disposeLocalGitRepositoryFactory();
 
             try
             {
@@ -696,6 +692,15 @@ namespace mrHelper.App.Forms
             }
          }
          return _gitClientFactory;
+      }
+
+      async private Task disposeLocalGitRepositoryFactory()
+      {
+         if (_gitClientFactory != null)
+         {
+            await _gitClientFactory.DisposeAsync();
+            _gitClientFactory = null;
+         }
       }
 
       /// <summary>
@@ -1004,6 +1009,12 @@ namespace mrHelper.App.Forms
 
       private void checkForApplicationUpdates()
       {
+         if (!_checkForUpdatesTimer.Enabled)
+         {
+            _checkForUpdatesTimer.Tick += new System.EventHandler(onTimerCheckForUpdates);
+            _checkForUpdatesTimer.Start();
+         }
+
          LatestVersionInformation? info = Program.ServiceManager.GetLatestVersionInfo();
          if (!info.HasValue
            || String.IsNullOrEmpty(info.Value.VersionNumber)
