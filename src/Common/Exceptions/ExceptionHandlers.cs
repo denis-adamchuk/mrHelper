@@ -8,8 +8,8 @@ namespace mrHelper.Common.Exceptions
    {
       static public void Handle(string meaning, Exception exception)
       {
-         Trace.TraceError("[{0}] {1}: {2}",
-            exception.GetType().ToString(), meaning, String.IsNullOrEmpty(exception.Message) ? "N/A" : exception.Message);
+         Trace.TraceError("[{0}] {1}: {2}", exception?.GetType().ToString() ?? String.Empty, meaning,
+            String.IsNullOrEmpty(exception?.Message) ? "N/A" : exception?.Message);
       }
    }
 }

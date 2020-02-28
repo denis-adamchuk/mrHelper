@@ -3,6 +3,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Collections.Generic;
 using GitLabSharp;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
@@ -89,8 +90,9 @@ namespace mrHelper.App.Forms
 
       private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
       {
-         MessageBox.Show(String.Format("{0}Cannot open merge request from URL. Reason: {1}", msg, ex?.Message ?? "N/A"),
-            error ? "Error" : "Warning", MessageBoxButtons.OK,
+         string message = String.Format("{0}Cannot open merge request from URL. {1}",
+            msg, ex != null ? String.Format("Reason: {0}", ex.Message) : String.Empty);
+         MessageBox.Show(message, error ? "Error" : "Warning", MessageBoxButtons.OK,
             error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
             MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
          ExceptionHandlers.Handle(String.Format("Cannot open URL {0}", url), ex);
@@ -123,15 +125,16 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void unhideFilteredMergeRequestAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      private bool unhideFilteredMergeRequest(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
       {
          Trace.TraceInformation("[MainForm] Notify user that MR is hidden");
 
-         if (MessageBox.Show("Merge Request is hidden by filters, do you want to reset them?", "Warning",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+         if (MessageBox.Show("Merge Request is hidden by filters and cannot be opened. Do you want to reset filters?",
+               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
          {
-            Trace.TraceInformation("[MainForm] User decided to not reset filters");
-            return;
+            Trace.TraceInformation("[MainForm] User decided not to reset filters");
+            return false;
          }
 
          _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
@@ -142,20 +145,60 @@ namespace mrHelper.App.Forms
          };
 
          checkBoxLabels.Checked = false;
+         return true;
+      }
 
-         if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+      private bool addMissingProject(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      {
+         Trace.TraceInformation("[MainForm] Notify that selected project is not in the list");
+
+         if (MessageBox.Show("Selected project is not in the list of projects. Do you want to add it?", "Warning",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
          {
-            Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+            Trace.TraceInformation("[MainForm] User decided not to add project");
+            return false;
          }
+
+         Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
+            mergeRequestUrl.Host, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
+         Debug.Assert(!projects.ContainsKey(mergeRequestUrl.Project));
+         projects.Add(mergeRequestUrl.Project, true);
+
+         ConfigurationHelper.SetProjectsForHost(mergeRequestUrl.Host,
+            Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
+         updateProjectsListView();
+
+         return true;
+      }
+
+      private bool enableDisabledProject(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      {
+         Trace.TraceInformation("[MainForm] Notify that selected project is disabled");
+
+         if (MessageBox.Show("Selected project is not enabled. Do you want to enable it?", "Warning",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
+         {
+            Trace.TraceInformation("[MainForm] User decided not to enable project");
+            return false;
+         }
+
+         Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
+            mergeRequestUrl.Host, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
+         Debug.Assert(projects.ContainsKey(mergeRequestUrl.Project));
+         Debug.Assert(projects[mergeRequestUrl.Project] == false);
+         projects[mergeRequestUrl.Project] = true;
+
+         ConfigurationHelper.SetProjectsForHost(mergeRequestUrl.Host,
+            Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
+         updateProjectsListView();
+
+         return true;
       }
 
       async private Task connectToUrlAsync(string url)
       {
-         if (url == String.Empty)
-         {
-            return;
-         }
-
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", url));
 
          string prefix = Constants.CustomProtocolName + "://";
@@ -171,7 +214,7 @@ namespace mrHelper.App.Forms
          {
             Debug.Assert(ex is UriFormatException);
             reportErrorOnConnect(url, String.Empty, ex, true);
-            return;
+            return; // URL parsing failed
          }
 
          HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
@@ -179,37 +222,65 @@ namespace mrHelper.App.Forms
          if (proposedSelectedItem.Host == String.Empty)
          {
             reportErrorOnConnect(url, String.Format(
-               "Cannot connect to host {0} because it is not in the list of known hosts", mergeRequestUrl.Host),
+               "Cannot connect to host {0} because it is not in the list of known hosts. ", mergeRequestUrl.Host),
                null, true);
-            return;
+            return; // unknown host
          }
 
-         // We need to restart the workflow here because we possible have an outdated list of merge requests in the cache
+         IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
+            mergeRequestUrl.Host, Program.Settings);
+         if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
+         {
+            if (!addMissingProject(mergeRequestUrl, url))
+            {
+               return; // user decided to not add a missing project
+            }
+         }
+         else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
+         {
+            if (!enableDisabledProject(mergeRequestUrl, url))
+            {
+               return; // user decided to not enable a disabled project
+            }
+         }
+
+         // We need to restart the workflow here because we possibly have an outdated list of merge requests in the cache
          if (!await restartWorkflowByUrl(url, mergeRequestUrl.Host))
          {
-            return;
+            return; // could not restart workflow
          }
 
-         if (selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+         if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
          {
-            return;
-         }
+            // We could not select MR, but let's check if it is cached or not.
 
-         ProjectKey projectKey = new ProjectKey
-         {
-            HostName = mergeRequestUrl.Host,
-            ProjectName = mergeRequestUrl.Project
-         };
+            ProjectKey projectKey = new ProjectKey
+            {
+               HostName = mergeRequestUrl.Host,
+               ProjectName = mergeRequestUrl.Project
+            };
 
-         if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
-         {
-            unhideFilteredMergeRequestAsync(mergeRequestUrl, url);
-         }
-         else
-         {
-            reportErrorOnConnect(url, "Current version supports Open merge requests only", null, false);
+            if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
+            {
+               // If it is cached, it is probably hidden by filters and user might want to un-hide it.
+               if (!unhideFilteredMergeRequest(mergeRequestUrl, url))
+               {
+                  return; // user decided to not un-hide merge request
+               }
+
+               if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+               {
+                  Debug.Assert(false);
+                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+                  reportErrorOnConnect(url, "Something went wrong. ", null, false);
+               }
+            }
+            else
+            {
+               // But if this MR is not cached, it is most likely is not in Open state and cannot be shown.
+               reportErrorOnConnect(url, "Current version supports Open merge requests only. ", null, false);
+            }
          }
       }
    }
 }
-
