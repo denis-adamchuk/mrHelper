@@ -86,7 +86,7 @@ namespace mrHelper.Core.Git
             }
          };
 
-         IEnumerable<string> diff = null;
+         IEnumerable<string> diff;
          try
          {
             diff = gitRepository.Data?.Get(arguments);

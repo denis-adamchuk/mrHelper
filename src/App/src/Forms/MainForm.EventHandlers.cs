@@ -116,7 +116,17 @@ namespace mrHelper.App.Forms
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
                if (diff != TimeSpan.Zero)
                {
-                  await _timeTrackingManager.AddSpanAsync(add, diff, mrk);
+                  try
+                  {
+                     await _timeTrackingManager.AddSpanAsync(add, diff, mrk);
+                  }
+                  catch (TimeTrackingManagerException ex)
+                  {
+                     string message = "Cannot edit total tracked time";
+                     ExceptionHandlers.Handle(message, ex);
+                     MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     return;
+                  }
 
                   updateTotalTime(mrk);
                   labelWorkflowStatus.Text = "Total spent time updated";
@@ -159,7 +169,7 @@ namespace mrHelper.App.Forms
                {
                   // Emulating a host switch here to trigger RevisionCacher to work at the new location
                   Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
-                  await switchHostAsync(getHostName());
+                  await switchHostToSelected();
                }
             }
 
@@ -387,10 +397,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToArray();
-            Program.Settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-               .Select(i => i.SubItems[1].Text).ToArray();
-
+            updateKnownHostAndTokensInSettings();
             updateHostsDropdownList();
             updateTabControlSelection();
             selectHost(PreferredSelection.Latest);
@@ -404,15 +411,19 @@ namespace mrHelper.App.Forms
                listViewKnownHosts.SelectedItems.Count > 0 && getHostName() != String.Empty
             && getHostName() == listViewKnownHosts.SelectedItems[0].Text;
 
+         string removedHostName = listViewKnownHosts.SelectedItems.Count > 0
+            ? listViewKnownHosts.SelectedItems[0].Text
+            : String.Empty;
+
          if (!removeKnownHost())
          {
             return;
          }
 
-         Program.Settings.KnownHosts = listViewKnownHosts.Items.Cast<ListViewItem>().Select(i => i.Text).ToArray();
-         Program.Settings.KnownAccessTokens = listViewKnownHosts.Items.Cast<ListViewItem>()
-            .Select(i => i.SubItems[1].Text).ToArray();
+         Debug.Assert(!String.IsNullOrEmpty(removedHostName));
 
+         _currentUser.Remove(removedHostName);
+         updateKnownHostAndTokensInSettings();
          updateHostsDropdownList();
          updateTabControlSelection();
          if (removeCurrent)
@@ -422,6 +433,20 @@ namespace mrHelper.App.Forms
             selectHost(PreferredSelection.Latest);
             await switchHostToSelected();
          }
+      }
+
+      private void updateKnownHostAndTokensInSettings()
+      {
+         Program.Settings.KnownHosts = listViewKnownHosts
+            .Items
+            .Cast<ListViewItem>()
+            .Select(i => i.Text)
+            .ToArray();
+         Program.Settings.KnownAccessTokens = listViewKnownHosts
+            .Items
+            .Cast<ListViewItem>()
+            .Select(i => i.SubItems[1].Text)
+            .ToArray();
       }
 
       private void CheckBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
@@ -560,11 +585,7 @@ namespace mrHelper.App.Forms
       private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
-
-         if (_workflow != null)
-         {
-            updateVisibleMergeRequests();
-         }
+         updateVisibleMergeRequests();
       }
 
       async private void ButtonReloadList_Click(object sender, EventArgs e)
@@ -838,9 +859,10 @@ namespace mrHelper.App.Forms
                {
                   await timeTracker.StopAsync();
                }
-               catch (TimeTrackerException)
+               catch (TimeTrackerException ex)
                {
                   status = "Error occurred. Tracked time is not sent!";
+                  ExceptionHandlers.Handle(status, ex);
                   MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                }
                labelWorkflowStatus.Text = status;

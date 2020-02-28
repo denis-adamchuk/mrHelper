@@ -22,12 +22,12 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitDataUpdater : IDisposable
    {
-      internal GitDataUpdater(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+      internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
-         _workflow = workflow;
-         _workflow.PostLoadHostProjects += onPostLoadHostProjects;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
 
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
@@ -38,7 +38,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflow.PostLoadHostProjects -= onPostLoadHostProjects;
+         _workflowEventNotifier.Connected -= onConnected;
 
          foreach (KeyValuePair<ILocalGitRepository, DateTime> keyValuePair in _latestChanges)
          {
@@ -84,13 +84,14 @@ namespace mrHelper.App.Helpers
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(repo.ProjectKey))
                {
                   MergeRequestKey mrk = new MergeRequestKey { ProjectKey = repo.ProjectKey, IId = mergeRequest.IId };
+
+                  List<Version> newVersionsDetailed = new List<Version>();
                   try
                   {
                      IEnumerable<Version> allVersions  = await _versionManager.GetVersions(mrk);
                      IEnumerable<Version> newVersions = allVersions
                         .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange);
 
-                     List<Version> newVersionsDetailed = new List<Version>();
                      foreach (Version version in newVersions)
                      {
                         Version newVersionDetailed = await _versionManager.GetVersion(version, mrk);
@@ -103,35 +104,36 @@ namespace mrHelper.App.Helpers
                            latestChange.ToLocalTime().ToString()));
                         newVersionsDetailed.Add(newVersionDetailed);
                      }
-
-                     if (!_latestChanges.ContainsKey(repo))
-                     {
-                        // LocalGitRepository was removed from collection while we were caching current MR
-                        break;
-                     }
-
-                     if (newVersionsDetailed.Count > 0)
-                     {
-                        Trace.TraceInformation(String.Format(
-                           "[GitDataUpdater] Start processing of merge request: "
-                         + "Host={0}, Project={1}, IId={2}. Versions: {3}",
-                           mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
-
-                        gatherArguments(newVersionsDetailed,
-                           out HashSet<GitDiffArguments> diffArgs,
-                           out HashSet<GitShowRevisionArguments> revisionArgs);
-
-                        await doCacheAsync(repo, diffArgs, revisionArgs);
-
-                        Trace.TraceInformation(String.Format(
-                           "[GitDataUpdater] Finished processing of merge request with IId={0}. "
-                         + "Cached git results: {1} git diff, {2} git show",
-                           mrk.IId, diffArgs.Count, revisionArgs.Count));
-                     }
                   }
-                  catch (VersionManagerException)
+                  catch (VersionManagerException ex)
                   {
-                     // already handled
+                     ExceptionHandlers.Handle("Cannot load versions", ex);
+                     continue;
+                  }
+
+                  if (!_latestChanges.ContainsKey(repo))
+                  {
+                     // LocalGitRepository was removed from collection while we were loading versions
+                     break;
+                  }
+
+                  if (newVersionsDetailed.Count > 0)
+                  {
+                     Trace.TraceInformation(String.Format(
+                        "[GitDataUpdater] Start processing of merge request: "
+                      + "Host={0}, Project={1}, IId={2}. Versions: {3}",
+                        mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
+
+                     gatherArguments(newVersionsDetailed,
+                        out HashSet<GitDiffArguments> diffArgs,
+                        out HashSet<GitShowRevisionArguments> revisionArgs);
+
+                     await doCacheAsync(repo, diffArgs, revisionArgs);
+
+                     Trace.TraceInformation(String.Format(
+                        "[GitDataUpdater] Finished processing of merge request with IId={0}. "
+                      + "Cached git results: {1} git diff, {2} git show",
+                        mrk.IId, diffArgs.Count, revisionArgs.Count));
                   }
 
                   if (!_latestChanges.ContainsKey(repo))
@@ -282,7 +284,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onPostLoadHostProjects(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
@@ -305,20 +307,20 @@ namespace mrHelper.App.Helpers
          }), null);
       }
 
-      private static int MaxGitInParallel  = 5;
-      private static int InterBatchDelay   = 1000; // ms
+      private static readonly int MaxGitInParallel  = 5;
+      private static readonly int InterBatchDelay   = 1000; // ms
 
-      private HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
-      private Dictionary<ILocalGitRepository, DateTime> _latestChanges =
+      private readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
+      private readonly Dictionary<ILocalGitRepository, DateTime> _latestChanges =
          new Dictionary<ILocalGitRepository, DateTime>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly VersionManager _versionManager;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly IProjectCheckerFactory _projectCheckerFactory;
-      private readonly Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
 
-      private static int MaxDiffsInVersion = 200;
+      private static readonly int MaxDiffsInVersion = 200;
    }
 }
 

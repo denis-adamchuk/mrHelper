@@ -7,6 +7,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Common.Tools;
+using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.Discussions
 {
@@ -16,13 +17,13 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    internal class DiscussionParser : IDisposable
    {
-      internal DiscussionParser(Workflow.Workflow workflow, DiscussionManager discussionManager,
+      internal DiscussionParser(IWorkflowEventNotifier workflowEventNotifier, DiscussionManager discussionManager,
          IEnumerable<string> keywords)
       {
          _keywords = keywords;
 
-         _workflow = workflow;
-         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
 
          _discussionManager = discussionManager;
          _discussionManager.PostLoadDiscussions += processDiscussions;
@@ -30,7 +31,7 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
-         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+         _workflowEventNotifier.Connected -= onConnected;
 
          _discussionManager.PostLoadDiscussions -= processDiscussions;
       }
@@ -135,7 +136,7 @@ namespace mrHelper.Client.Discussions
          return false;
       }
 
-      private void onPostLoadCurrentUser(User user)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
       }
@@ -146,7 +147,7 @@ namespace mrHelper.Client.Discussions
       private readonly IEnumerable<string> _keywords;
 
       private readonly DiscussionManager _discussionManager;
-      private readonly Workflow.Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }
 

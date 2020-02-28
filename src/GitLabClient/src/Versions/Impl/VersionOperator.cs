@@ -36,7 +36,6 @@ namespace mrHelper.Client.Versions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               GitLabExceptionHandlers.Handle(ex, "Cannot load version list from GitLab");
                throw new OperatorException(ex);
             }
             throw;
@@ -58,7 +57,6 @@ namespace mrHelper.Client.Versions
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               GitLabExceptionHandlers.Handle(ex, "Cannot load a version from GitLab");
                throw new OperatorException(ex);
             }
             throw;

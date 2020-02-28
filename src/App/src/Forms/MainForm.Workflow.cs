@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Exceptions;
@@ -12,67 +14,65 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
+   internal class UnknownHostException : Exception
+   {
+      internal UnknownHostException(string hostname): base(
+         String.Format("Cannot find access token for host {0}", hostname)) {}
+   }
+
+   internal class NoProjectsException : Exception
+   {
+      internal NoProjectsException(string hostname): base(
+         String.Format("Project list for hostname {0} is empty", hostname)) {}
+   }
+
    internal partial class MainForm
    {
       private void subscribeToWorkflow()
       {
-         _workflow.PreLoadCurrentUser += onLoadCurrentUser;
-         _workflow.PostLoadCurrentUser += onCurrentUserLoaded;
-         _workflow.FailedLoadCurrentUser += onFailedLoadCurrentUser;
+         _workflowManager.PreLoadCurrentUser += onLoadCurrentUser;
+         _workflowManager.PostLoadCurrentUser += onCurrentUserLoaded;
+         _workflowManager.FailedLoadCurrentUser += onFailedLoadCurrentUser;
 
-         _workflow.PreLoadHostProjects += onLoadHostProjects;
-         _workflow.PostLoadHostProjects += onHostProjectsLoaded;
+         _workflowManager.PreLoadProjectMergeRequests += onLoadProjectMergeRequests;
+         _workflowManager.PostLoadProjectMergeRequests += onProjectMergeRequestsLoaded;
+         _workflowManager.FailedLoadProjectMergeRequests += onFailedLoadProjectMergeRequests;
 
-         _workflow.PreLoadAllMergeRequests += onLoadAllMergeRequests;
+         _workflowManager.PreLoadSingleMergeRequest += onLoadSingleMergeRequest;
+         _workflowManager.PostLoadSingleMergeRequest += onSingleMergeRequestLoaded;
+         _workflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleMergeRequest;
 
-         _workflow.PreLoadProjectMergeRequests += onLoadProjectMergeRequests;
-         _workflow.PostLoadProjectMergeRequests += onProjectMergeRequestsLoaded;
-         _workflow.FailedLoadProjectMergeRequests += onFailedLoadProjectMergeRequests;
+         _workflowManager.PreLoadCommits += onLoadCommits;
+         _workflowManager.PostLoadCommits += onCommitsLoaded;
+         _workflowManager.FailedLoadCommits +=  onFailedLoadCommits;
 
-         _workflow.PostLoadAllMergeRequests += onAllMergeRequestsLoaded;
-
-         _workflow.PreLoadSingleMergeRequest += onLoadSingleMergeRequest;
-         _workflow.PostLoadSingleMergeRequest += onSingleMergeRequestLoaded;
-         _workflow.FailedLoadSingleMergeRequest += onFailedLoadSingleMergeRequest;
-
-         _workflow.PreLoadCommits += onLoadCommits;
-         _workflow.PostLoadCommits += onCommitsLoaded;
-         _workflow.FailedLoadCommits +=  onFailedLoadCommits;
+         _workflowManager.PostLoadLatestVersion += onLatestVersionLoaded;
       }
 
       private void unsubscribeFromWorkflow()
       {
-         _workflow.PreLoadCurrentUser -= onLoadCurrentUser;
-         _workflow.PostLoadCurrentUser -= onCurrentUserLoaded;
-         _workflow.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
+         _workflowManager.PreLoadCurrentUser -= onLoadCurrentUser;
+         _workflowManager.PostLoadCurrentUser -= onCurrentUserLoaded;
+         _workflowManager.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
 
-         _workflow.PreLoadHostProjects -= onLoadHostProjects;
-         _workflow.PostLoadHostProjects -= onHostProjectsLoaded;
+         _workflowManager.PreLoadProjectMergeRequests -= onLoadProjectMergeRequests;
+         _workflowManager.PostLoadProjectMergeRequests -= onProjectMergeRequestsLoaded;
+         _workflowManager.FailedLoadProjectMergeRequests -= onFailedLoadProjectMergeRequests;
 
-         _workflow.PreLoadAllMergeRequests -= onLoadAllMergeRequests;
+         _workflowManager.PreLoadSingleMergeRequest -= onLoadSingleMergeRequest;
+         _workflowManager.PostLoadSingleMergeRequest -= onSingleMergeRequestLoaded;
+         _workflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleMergeRequest;
 
-         _workflow.PreLoadProjectMergeRequests -= onLoadProjectMergeRequests;
-         _workflow.PostLoadProjectMergeRequests -= onProjectMergeRequestsLoaded;
-         _workflow.FailedLoadProjectMergeRequests -= onFailedLoadProjectMergeRequests;
+         _workflowManager.PreLoadCommits -= onLoadCommits;
+         _workflowManager.PostLoadCommits -= onCommitsLoaded;
+         _workflowManager.FailedLoadCommits -=  onFailedLoadCommits;
 
-         _workflow.PostLoadAllMergeRequests -= onAllMergeRequestsLoaded;
-
-         _workflow.PreLoadSingleMergeRequest -= onLoadSingleMergeRequest;
-         _workflow.PostLoadSingleMergeRequest -= onSingleMergeRequestLoaded;
-         _workflow.FailedLoadSingleMergeRequest -= onFailedLoadSingleMergeRequest;
-
-         _workflow.PreLoadCommits -= onLoadCommits;
-         _workflow.PostLoadCommits -= onCommitsLoaded;
-         _workflow.FailedLoadCommits -=  onFailedLoadCommits;
+         _workflowManager.PostLoadLatestVersion -= onLatestVersionLoaded;
       }
 
       async private Task switchHostToSelected()
       {
-         await switchHostAsync(getHostName());
-      }
-
-      async private Task switchHostAsync(string hostName)
-      {
+         string hostName = getHostName();
          if (hostName != String.Empty)
          {
             tabControl.SelectedTab = tabPageMR;
@@ -93,17 +93,26 @@ namespace mrHelper.App.Forms
 
          try
          {
-            if (await startWorkflowAsync(hostName, (message) =>
-               MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information)))
+            if (await startWorkflowAsync(hostName))
             {
                selectMergeRequest(projectname, iid, false);
             }
          }
-         catch (WorkflowException ex)
+         catch (Exception ex)
          {
-            disableAllUIControls(true);
-            ExceptionHandlers.Handle("Cannot switch host", ex);
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (ex is WorkflowException || ex is UnknownHostException || ex is NoProjectsException)
+            {
+               disableAllUIControls(true);
+               ExceptionHandlers.Handle("Cannot switch host", ex);
+               string message = ex.Message;
+               if (ex is WorkflowException wx)
+               {
+                  message = wx.UserMessage;
+               }
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return;
+            }
+            throw;
          }
       }
 
@@ -112,14 +121,36 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             mergeRequestIId.ToString()));
 
+         if (mergeRequestIId == 0)
+         {
+            onLoadSingleMergeRequest(0);
+            await _workflowManager.CancelAsync();
+            return false;
+         }
+
+         await _workflowManager.CancelAsync();
+
+         IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
+            projectKey.HostName, Program.Settings);
+
+         string projectname = projectKey.ProjectName;
+         if (projectname != String.Empty &&
+            (!enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
+         {
+            string message = String.Format("Project {0} is not in the list of enabled projects", projectname);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
+
          try
          {
-            return await _workflow.LoadMergeRequestAsync(projectKey.HostName, projectKey.ProjectName, mergeRequestIId);
+            return await _workflowManager.LoadMergeRequestAsync(
+               projectKey.HostName, projectKey.ProjectName, mergeRequestIId);
          }
          catch (WorkflowException ex)
          {
             ExceptionHandlers.Handle("Cannot switch merge request", ex);
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(ex.UserMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
          return false;
@@ -127,12 +158,99 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      async private Task<bool> startWorkflowAsync(string hostname, Action<string> onNonFatalError)
+      async private Task<bool> startWorkflowAsync(string hostname)
       {
          labelWorkflowStatus.Text = String.Empty;
 
-         return await _workflow.LoadCurrentUserAsync(hostname)
-             && await _workflow.LoadAllMergeRequestsAsync(hostname, onNonFatalError);
+         await _workflowManager.CancelAsync();
+         if (hostname == String.Empty)
+         {
+            return false;
+         }
+
+         if (Program.Settings.GetAccessToken(hostname) == String.Empty)
+         {
+            throw new UnknownHostException(hostname);
+         }
+
+         IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
+            hostname, Program.Settings);
+         if (enabledProjects.Count() == 0)
+         {
+            throw new NoProjectsException(hostname);
+         }
+
+         if (!_currentUser.ContainsKey(hostname))
+         {
+            if (!await _workflowManager.LoadCurrentUserAsync(hostname))
+            {
+               return false;
+            }
+         }
+         else
+         {
+            disableAllUIControls(true);
+         }
+
+         buttonReloadList.Enabled = true;
+         createListViewGroupsForProjects(listViewMergeRequests, hostname, enabledProjects);
+
+         Connected?.Invoke(hostname, _currentUser[hostname], enabledProjects);
+         return await loadAllMergeRequests(hostname, enabledProjects);
+      }
+
+      async private Task<bool> loadAllMergeRequests(string hostname, IEnumerable<Project> enabledProjects)
+      {
+         onLoadAllMergeRequests();
+
+         foreach (Project project in enabledProjects)
+         {
+            try
+            {
+               if (!await _workflowManager.LoadAllMergeRequestsAsync(hostname, project))
+               {
+                  return false;
+               }
+            }
+            catch (WorkflowException ex)
+            {
+               if (!handleWorkflowException(hostname, project, ex))
+               {
+                  throw;
+               }
+               ExceptionHandlers.Handle("Cannot load merge requests for project (handled)", ex);
+            }
+         }
+
+         onAllMergeRequestsLoaded(hostname, enabledProjects);
+         return true;
+      }
+
+      private bool handleWorkflowException(string hostname, Project project, WorkflowException ex)
+      {
+         if (ex.InnerException?.InnerException is GitLabRequestException rx)
+         {
+            if (rx.InnerException is System.Net.WebException wx)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+
+               if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+               {
+                  string message = String.Format(
+                     "You don't have access to project {0} at {1}. "
+                   + "Loading of this project will be disabled. You may turn it on at Settings tab.",
+                     project.Path_With_Namespace, hostname);
+                  MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                  Trace.TraceInformation("[MainForm.Workflow] User notified that project will be disabled");
+
+                  changeProjectEnabledState(hostname, project.Path_With_Namespace, false);
+
+                  return true;
+               }
+            }
+         }
+
+         return false;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,47 +269,15 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load a user"));
       }
 
-      private void onCurrentUserLoaded(User currentUser)
+      private void onCurrentUserLoaded(string hostname, User currentUser)
       {
-         _currentUser = currentUser;
+         _currentUser.Add(hostname, currentUser);
 
          labelWorkflowStatus.Text = "Loaded current user";
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Current user details: Id: {0}, Name: {1}, Username: {2}",
             currentUser.Id.ToString(), currentUser.Name, currentUser.Username));
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private void onLoadHostProjects(string hostname)
-      {
-         if (hostname != String.Empty)
-         {
-            labelWorkflowStatus.Text = String.Format("Connecting to host {0}...", hostname);
-         }
-
-         disableAllUIControls(true);
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading projects from {0}", hostname));
-      }
-
-      private void onHostProjectsLoaded(string hostname, IEnumerable<Project> projects)
-      {
-         buttonReloadList.Enabled = true;
-
-         listViewMergeRequests.Items.Clear();
-         listViewMergeRequests.Groups.Clear();
-         foreach (Project project in projects)
-         {
-            ListViewGroup group = listViewMergeRequests.Groups.Add(
-               project.Path_With_Namespace, project.Path_With_Namespace);
-            group.Tag = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-         }
-
-         labelWorkflowStatus.Text = "Projects loaded";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} projects", projects.Count()));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,17 +306,15 @@ namespace mrHelper.App.Forms
       private void onProjectMergeRequestsLoaded(string hostname, Project project,
          IEnumerable<MergeRequest> mergeRequests)
       {
-         onProjectMergeRequestsLoaded(project, mergeRequests);
-         cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
-      }
+         LoadedMergeRequests?.Invoke(hostname, project, mergeRequests);
 
-      private void onProjectMergeRequestsLoaded(Project project, IEnumerable<MergeRequest> mergeRequests)
-      {
          labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
            project.Path_With_Namespace, mergeRequests.Count()));
+
+         cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
       }
 
       private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
@@ -364,6 +448,12 @@ namespace mrHelper.App.Forms
             ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
             IId = mergeRequest.IId
          });
+      }
+
+      private void onLatestVersionLoaded(string hostname, string projectname,
+         MergeRequest mergeRequest, GitLabSharp.Entities.Version version)
+      {
+         LoadedMergeRequestVersion?.Invoke(hostname, projectname, mergeRequest, version);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -66,6 +66,13 @@ namespace mrHelper.App.Helpers
          return parseProjectString(projectString);
       }
 
+      public static IEnumerable<Project> GetEnabledProjects(string hostname, UserDefinedSettings settings)
+      {
+         return settings
+            .GetEnabledProjects(hostname)
+            .Select(x => new Project{ Path_With_Namespace = x });
+      }
+
       private static Dictionary<string, IEnumerable<Tuple<string, bool>>> getAllProjects(UserDefinedSettings settings)
       {
          return settings.SelectedProjects

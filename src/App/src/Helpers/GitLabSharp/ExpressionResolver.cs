@@ -1,22 +1,21 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Client.Workflow;
 using System;
+using System.Collections.Generic;
 
 namespace mrHelper.App.Helpers
 {
    public class ExpressionResolver : IDisposable
    {
-      public ExpressionResolver(Workflow workflow)
+      public ExpressionResolver(IWorkflowEventNotifier workflowEventNotifier)
       {
-         workflow.PostLoadCurrentUser += (user) => _currentUser = user;
-
-         _workflow = workflow;
-         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
       }
 
       public void Dispose()
       {
-         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+         _workflowEventNotifier.Connected -= onConnected;
       }
 
       public string Resolve(string expression)
@@ -24,13 +23,13 @@ namespace mrHelper.App.Helpers
          return expression.Replace("%CurrentUsername%", _currentUser.Username);
       }
 
-      private void onPostLoadCurrentUser(User user)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
       }
 
       private User _currentUser;
-      private readonly Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }
 

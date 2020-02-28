@@ -146,8 +146,8 @@ namespace mrHelper.Common.Tools
 
          Progress<string> progress = new Progress<string>();
 
-         Func<List<string>, Action<DataReceivedEventHandler>, Action, TaskCompletionSource<object>> addStdHandler =
-            (std, addHandler, removeHandler) =>
+         TaskCompletionSource<object> addStdHandler(
+            List<string> std, Action<DataReceivedEventHandler> addHandler, Action removeHandler)
          {
             TaskCompletionSource<object> tcsStd = new TaskCompletionSource<object>();
             DataReceivedEventHandler onDataReceived = null;
@@ -168,7 +168,7 @@ namespace mrHelper.Common.Tools
 
             addHandler(onDataReceived);
             return tcsStd;
-         };
+         }
 
          TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
          List<Task<object>> tasks = new List<Task<object>>{ tcs.Task };

@@ -7,6 +7,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
+using mrHelper.Client.Workflow;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 
@@ -16,7 +17,7 @@ namespace mrHelper.Client.MergeRequests
    {
       public event Action<Common.UserEvents.MergeRequestEvent> MergeRequestEvent;
 
-      public MergeRequestCache(Workflow.Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+      public MergeRequestCache(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties settings, int autoUpdatePeriodMs)
       {
          _synchronizeInvoke = synchronizeInvoke;
@@ -24,17 +25,17 @@ namespace mrHelper.Client.MergeRequests
 
          _updateOperator = new UpdateOperator(settings);
 
-         _workflow = workflow;
-         _workflow.PostLoadHostProjects += onPostLoadHostProjects;
-         _workflow.PostLoadProjectMergeRequests += onPostLoadProjectMergeRequests;
-         _workflow.PostLoadLatestVersion += onPostLoadLatestVersion;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
+         _workflowEventNotifier.LoadedMergeRequestVersion += onLoadedMergeRequestVersion;
       }
 
       public void Dispose()
       {
-         _workflow.PostLoadHostProjects -= onPostLoadHostProjects;
-         _workflow.PostLoadProjectMergeRequests -= onPostLoadProjectMergeRequests;
-         _workflow.PostLoadLatestVersion -= onPostLoadLatestVersion;
+         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
+         _workflowEventNotifier.LoadedMergeRequestVersion -= onLoadedMergeRequestVersion;
 
          if (_updateManager != null)
          {
@@ -118,7 +119,7 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      private void onPostLoadHostProjects(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          // TODO Current version supports updates of projects of the most recent loaded host only
          if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
@@ -141,13 +142,12 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      private void onPostLoadProjectMergeRequests(string hostname, Project project,
-         IEnumerable<MergeRequest> mergeRequests)
+      private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
       {
          _cache?.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
       }
 
-      private void onPostLoadLatestVersion(string hostname, string projectname,
+      private void onLoadedMergeRequestVersion(string hostname, string projectname,
          MergeRequest mergeRequest, Version version)
       {
          _cache?.UpdateLatestVersion(new MergeRequestKey
@@ -162,7 +162,7 @@ namespace mrHelper.Client.MergeRequests
       private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private UpdateManager _updateManager;
       private readonly UpdateOperator _updateOperator;
-      private readonly Workflow.Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly int _autoUpdatePeriodMs;
    }

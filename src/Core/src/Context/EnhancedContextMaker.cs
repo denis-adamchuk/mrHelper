@@ -56,7 +56,7 @@ namespace mrHelper.Core.Context
             Sha = sha
          };
 
-         IEnumerable<string> gitResult = null;
+         IEnumerable<string> gitResult;
          try
          {
             gitResult = _gitRepository.Data?.Get(arguments);

@@ -38,7 +38,6 @@ namespace mrHelper.Client.TimeTracking
             Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
-               GitLabExceptionHandlers.Handle(ex, "Cannot send tracked time to GitLab");
                throw new OperatorException(ex);
             }
             throw;

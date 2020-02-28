@@ -23,12 +23,12 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitStatisticManager : IDisposable
    {
-      internal GitStatisticManager(Workflow workflow, ISynchronizeInvoke synchronizeInvoke,
+      internal GitStatisticManager(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
-         _workflow = workflow;
-         _workflow.PostLoadHostProjects += onPostLoadHostProjects;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
 
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
@@ -38,7 +38,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflow.PostLoadHostProjects -= onPostLoadHostProjects;
+         _workflowEventNotifier.Connected -= onConnected;
 
          foreach (KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> keyValuePair in _gitStatistic)
          {
@@ -118,7 +118,7 @@ namespace mrHelper.App.Helpers
 
                // Use local project checker for the whole Project because it is always not less
                // than the latest version of any merge request that we have locally.
-               // This allows to guarentee that each MR is processed once and not on each git repository update.
+               // This allows to guarantee that each MR is processed once and not on each git repository update.
                DateTime latestChange = await _projectCheckerFactory.GetLocalProjectChecker(repo.ProjectKey).
                   GetLatestChangeTimestamp();
 
@@ -133,6 +133,12 @@ namespace mrHelper.App.Helpers
                   {
                      continue;
                   }
+
+                  Trace.TraceInformation(String.Format(
+                     "[GitStatisticManager] Git statistic will be updated for MR: "
+                   + "Host={0}, Project={1}, IId={2}. Latest version created at: {3}",
+                     mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
+                     version.Created_At.ToLocalTime().ToString()));
 
                   versionsToUpdate.Add(mrk, version);
                }
@@ -234,7 +240,7 @@ namespace mrHelper.App.Helpers
       private DiffStatistic? parseGitDiffStatistic(ILocalGitRepository repo, DiffStatisticKey key,
          GitDiffArguments args)
       {
-         Action<string> traceError = (text) =>
+         void traceError(string text)
          {
             Trace.TraceError(String.Format(
                "Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
@@ -242,7 +248,7 @@ namespace mrHelper.App.Helpers
                String.Format("{0}/{1}", args.CommonArgs.Sha1?.ToString() ?? "N/A",
                                         args.CommonArgs.Sha2?.ToString() ?? "N/A"),
                String.Format("{0}:{1}", repo.ProjectKey.HostName, repo.ProjectKey.ProjectName), key));
-         };
+         }
 
          IEnumerable<string> statText = null;
          try
@@ -260,7 +266,7 @@ namespace mrHelper.App.Helpers
             return null;
          }
 
-         Func<string, int> parseOrZero = (x) => int.TryParse(x, out int result) ? result : 0;
+         int parseOrZero(string x) => int.TryParse(x, out int result) ? result : 0;
 
          string firstLine = statText.First();
          Match m = gitDiffStatRe.Match(firstLine);
@@ -282,7 +288,7 @@ namespace mrHelper.App.Helpers
          Update?.Invoke();
       }
 
-      private void onPostLoadHostProjects(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
@@ -335,9 +341,9 @@ namespace mrHelper.App.Helpers
             return String.Format("+ {1} / - {2}\n{0} files", _filesChanged, _insertions, _deletions);
          }
 
-         private int _filesChanged;
-         private int _insertions;
-         private int _deletions;
+         private readonly int _filesChanged;
+         private readonly int _insertions;
+         private readonly int _deletions;
       }
 
       private struct LocalGitRepositoryStatistic
@@ -346,14 +352,14 @@ namespace mrHelper.App.Helpers
          internal Dictionary<DiffStatisticKey, DiffStatistic?> Statistic;
       }
 
-      private HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
-      private Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
+      private readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
+      private readonly Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
          new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly IProjectCheckerFactory _projectCheckerFactory;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
-      private readonly Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }
 

@@ -10,6 +10,7 @@ using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -66,7 +67,15 @@ namespace mrHelper.Client.MergeRequests
 
             IWorkflowDetails oldDetails = _cache.Details.Clone();
 
-            await loadDataAndUpdateCacheAsync(mrk);
+            try
+            {
+               await loadDataAndUpdateCacheAsync(mrk);
+            }
+            catch (UpdateException ex)
+            {
+               ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
+               return;
+            }
 
             IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
                oldDetails, _cache.Details);
@@ -117,7 +126,19 @@ namespace mrHelper.Client.MergeRequests
 
          IWorkflowDetails oldDetails = _cache.Details.Clone();
 
-         await loadDataAndUpdateCacheAsync(_hostname, _projects);
+         foreach (Project project in _projects)
+         {
+            try
+            {
+               await loadDataAndUpdateCacheAsync(_hostname, project);
+            }
+            catch (UpdateException ex)
+            {
+               ExceptionHandlers.Handle(String.Format(
+                  "Cannot update project {0}", project.Path_With_Namespace), ex);
+               continue;
+            }
+         }
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
             oldDetails, _cache.Details);
@@ -133,47 +154,42 @@ namespace mrHelper.Client.MergeRequests
          OnUpdate?.Invoke(updates);
       }
 
-      async private Task loadDataAndUpdateCacheAsync(string hostname, IEnumerable<Project> projects)
+      async private Task loadDataAndUpdateCacheAsync(string hostname, Project project)
       {
-         foreach (Project project in projects)
+         IEnumerable<MergeRequest> mergeRequests =
+            await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
+
+         Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
+         foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            IEnumerable<MergeRequest> mergeRequests = await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
-            if (mergeRequests == null)
+            ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+            MergeRequestKey mrk = new MergeRequestKey
             {
-               continue;
-            }
+               ProjectKey = projectKey,
+               IId = mergeRequest.IId
+            };
 
-            Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
-            foreach (MergeRequest mergeRequest in mergeRequests)
-            {
-               ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-               MergeRequestKey mrk = new MergeRequestKey
-               {
-                  ProjectKey = projectKey,
-                  IId = mergeRequest.IId
-               };
+            latestVersions[mrk] = await loadLatestVersionAsync(mrk);
+         }
 
-               Version? latestVersion = await loadLatestVersionAsync(mrk);
-               if (latestVersion != null)
-               {
-                  latestVersions[mrk] = latestVersion.Value;
-               }
-            }
-
-            _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
-            foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
-            {
-               _cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
-            }
+         _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
+         foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
+         {
+            _cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
          }
       }
 
       async private Task loadDataAndUpdateCacheAsync(MergeRequestKey mrk)
       {
-         MergeRequest? mergeRequest = await loadMergeRequestAsync(mrk);
-         if (mergeRequest.HasValue)
+         try
          {
-            _cache.UpdateMergeRequest(mrk, mergeRequest.Value);
+            _cache.UpdateMergeRequest(mrk, await _operator.GetMergeRequestAsync(mrk));
+         }
+         catch (OperatorException ex)
+         {
+            throw new UpdateException(String.Format(
+               "[UpdateManager] Cannot load merge request. MRK: HostName={0}, ProjectName={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId), ex);
          }
       }
 
@@ -183,45 +199,33 @@ namespace mrHelper.Client.MergeRequests
          {
             return await _operator.GetMergeRequestsAsync(hostname, projectname);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            string message = String.Format(
-               "[UpdateManager] Cannot load merge requests. HostName={0}, ProjectName={1}", hostname, projectname);
-            Trace.TraceError(message);
+            throw new UpdateException(String.Format(
+               "Cannot load merge requests. HostName={0}, ProjectName={1}", hostname, projectname), ex);
          }
-         return null;
       }
 
-      async private Task<Version?> loadLatestVersionAsync(MergeRequestKey mrk)
+      async private Task<Version> loadLatestVersionAsync(MergeRequestKey mrk)
       {
          try
          {
             return await _operator.GetLatestVersionAsync(mrk);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            string message = String.Format(
+            throw new UpdateException(String.Format(
                "[UpdateManager] Cannot load latest version. MRK: HostName={0}, ProjectName={1}, IId={2}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
-            Trace.TraceError(message);
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId), ex);
          }
-         return null;
       }
 
-      async private Task<MergeRequest?> loadMergeRequestAsync(MergeRequestKey mrk)
+      private class UpdateException : ExceptionEx
       {
-         try
+         internal UpdateException(string message, Exception innerException)
+            : base(message, innerException)
          {
-            return await _operator.GetMergeRequestAsync(mrk);
          }
-         catch (OperatorException)
-         {
-            string message = String.Format(
-               "[UpdateManager] Cannot load merge request. MRK: HostName={0}, ProjectName={1}, IId={2}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
-            Trace.TraceError(message);
-         }
-         return null;
       }
 
       private readonly System.Timers.Timer _timer;

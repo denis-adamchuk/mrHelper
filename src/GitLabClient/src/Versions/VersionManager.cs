@@ -5,10 +5,17 @@ using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Common;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Versions
 {
-   public class VersionManagerException : Exception {}
+   public class VersionManagerException : ExceptionEx
+   {
+      internal VersionManagerException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
 
    public class VersionManager
    {
@@ -23,9 +30,9 @@ namespace mrHelper.Client.Versions
          {
             return _operator.LoadVersionsAsync(mrk);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new VersionManagerException();
+            throw new VersionManagerException("Cannot load versions", ex);
          }
       }
 
@@ -35,9 +42,9 @@ namespace mrHelper.Client.Versions
          {
             return _operator.LoadVersionAsync(version, mrk);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new VersionManagerException();
+            throw new VersionManagerException("Cannot load version", ex);
          }
       }
 

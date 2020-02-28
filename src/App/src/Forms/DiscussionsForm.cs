@@ -12,6 +12,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.GitClient;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
@@ -248,9 +249,11 @@ namespace mrHelper.App.Forms
          {
             discussions = await _manager.GetDiscussionsAsync(_mergeRequestKey);
          }
-         catch (DiscussionManagerException)
+         catch (DiscussionManagerException ex)
          {
-            MessageBox.Show("Cannot load discussions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot load discussions from GitLab";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return null;
          }
          finally
