@@ -3,20 +3,27 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.TimeTracking
 {
-   public class TimeTrackerException : Exception {}
+   public class TimeTrackerException : ExceptionEx
+   {
+      internal TimeTrackerException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
 
    /// <summary>
    /// Implements a merge request time tracker with simple interface
    /// </summary>
    public class TimeTracker
    {
-      internal TimeTracker(MergeRequestKey mrk, Func<TimeSpan, MergeRequestKey, Task> onTrackerStopped)
+      internal TimeTracker(MergeRequestKey mrk, TimeTrackingManager timeTrackingManager)
       {
          _mergeRequestKey = mrk;
-         _onStopped = onTrackerStopped;
+         _timeTrackingManager = timeTrackingManager;
          _stopwatch = new Stopwatch();
       }
 
@@ -33,20 +40,20 @@ namespace mrHelper.Client.TimeTracking
       async public Task StopAsync()
       {
          _stopwatch.Stop();
+         TimeSpan span = _stopwatch.Elapsed;
+
          try
          {
-            TimeSpan span = _stopwatch.Elapsed;
-
-            Trace.TraceInformation(String.Format(
-               "[TimeTracker] Time tracking stopped. Sending {0} for MR IId {1} (project {2})",
-               span.ToString(@"hh\:mm\:ss"), _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName));
-
-            await _onStopped(span, _mergeRequestKey);
+            await _timeTrackingManager.AddSpanAsync(true, span, _mergeRequestKey);
          }
-         catch (OperatorException)
+         catch (TimeTrackingManagerException ex)
          {
-            throw new TimeTrackerException();
+            throw new TimeTrackerException("Cannot stop timer", ex);
          }
+
+         Trace.TraceInformation(String.Format(
+            "[TimeTracker] Time tracking stopped. Sending {0} for MR IId {1} (project {2})",
+            span.ToString(@"hh\:mm\:ss"), _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName));
       }
 
       public void Cancel()
@@ -62,7 +69,7 @@ namespace mrHelper.Client.TimeTracking
 
       private MergeRequestKey _mergeRequestKey;
       private readonly Stopwatch _stopwatch;
-      private readonly Func<TimeSpan, MergeRequestKey, Task> _onStopped;
+      private readonly TimeTrackingManager _timeTrackingManager;
    }
 }
 

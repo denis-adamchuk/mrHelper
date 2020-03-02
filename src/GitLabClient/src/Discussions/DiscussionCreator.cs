@@ -7,13 +7,14 @@ using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Discussions
 {
-   public class DiscussionCreatorException : Exception
+   public class DiscussionCreatorException : ExceptionEx
    {
-      public DiscussionCreatorException(bool handled, Exception ex)
-         : base("Discussion creation failed", ex)
+      public DiscussionCreatorException(bool handled, Exception innerException)
+         : base("Discussion creation failed", innerException)
       {
          Handled = handled;
       }
@@ -61,25 +62,27 @@ namespace mrHelper.Client.Discussions
       async private Task<bool> handleGitlabError(NewDiscussionParameters parameters, OperatorException ex,
          bool revertOnError)
       {
-         if (ex.InnerException is GitLabRequestException rex)
+         if (ex.InnerException is GitLabRequestException rx)
          {
-            var webException = rex.WebException;
-            var response = ((System.Net.HttpWebResponse)webException.Response);
+            if (rx.InnerException is System.Net.WebException wx)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
 
-            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-               // Something went wrong at the GitLab, let's report a discussion without Position
-               return await createMergeRequestWithoutPosition(parameters);
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-            {
-               // Something went wrong at the GitLab
-               if (revertOnError)
+               if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                {
-                  await deleteMostRecentNote(parameters);
+                  // Something went wrong at the GitLab, let's report a discussion without Position
                   return await createMergeRequestWithoutPosition(parameters);
                }
-               return true;
+               else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+               {
+                  // Something went wrong at the GitLab
+                  if (revertOnError)
+                  {
+                     await deleteMostRecentNote(parameters);
+                     return await createMergeRequestWithoutPosition(parameters);
+                  }
+                  return true;
+               }
             }
          }
 
@@ -99,9 +102,9 @@ namespace mrHelper.Client.Discussions
          {
             await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            Trace.TraceError("Cannot create a discussion (again)");
+            ExceptionHandlers.Handle("Cannot create a discussion (again)", ex);
             return false;
          }
          return true;
@@ -121,10 +124,14 @@ namespace mrHelper.Client.Discussions
 
          Trace.TraceInformation("Looking up for a note with bad position...");
 
-         IEnumerable<Discussion> discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey);
-         if (discussions == null)
+         IEnumerable<Discussion> discussions;
+         try
          {
-            Trace.TraceWarning(String.Format("No discussions found"));
+            discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey);
+         }
+         catch (OperatorException ex)
+         {
+            ExceptionHandlers.Handle("Cannot obtain discussions", ex);
             return;
          }
 
@@ -141,8 +148,16 @@ namespace mrHelper.Client.Discussions
                      " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
-                  await _discussionOperator.DeleteNoteAsync(_mergeRequestKey, note.Id);
-                  deletedNoteId = note.Id;
+                  try
+                  {
+                     await _discussionOperator.DeleteNoteAsync(_mergeRequestKey, note.Id);
+                     deletedNoteId = note.Id;
+                  }
+                  catch (OperatorException ex)
+                  {
+                     ExceptionHandlers.Handle("Cannot delete discussion note", ex);
+                  }
+
                   break;
                }
             }
@@ -150,7 +165,7 @@ namespace mrHelper.Client.Discussions
 
          string message = deletedNoteId.HasValue
             ? String.Format("Deleted note with Id {0}", deletedNoteId.Value)
-            : "Could not find a note to delete";
+            : "Could not find a note to delete (or could not delete it)";
          Trace.TraceInformation(message);
       }
 

@@ -778,9 +778,11 @@ namespace mrHelper.App.Controls
          {
             await _editor.ReplyAsync(body);
          }
-         catch (DiscussionEditorException)
+         catch (DiscussionEditorException ex)
          {
-            MessageBox.Show("Cannot create a reply to discussion");
+            string message = "Cannot create a reply to discussion";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -837,9 +839,11 @@ namespace mrHelper.App.Controls
          {
             note = await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
          }
-         catch (DiscussionEditorException)
+         catch (DiscussionEditorException ex)
          {
-            MessageBox.Show("Cannot update discussion text", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot update discussion text";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -860,9 +864,11 @@ namespace mrHelper.App.Controls
          {
             await _editor.DeleteNoteAsync(note.Id);
          }
-         catch (DiscussionEditorException)
+         catch (DiscussionEditorException ex)
          {
-            MessageBox.Show("Cannot delete a note", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot delete a note";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -877,10 +883,11 @@ namespace mrHelper.App.Controls
          {
             await _editor.ResolveNoteAsync(note.Id, !wasResolved);
          }
-         catch (DiscussionEditorException)
+         catch (DiscussionEditorException ex)
          {
-            MessageBox.Show("Cannot toggle 'Resolved' state of a note", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot toggle 'Resolved' state of a note";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -896,10 +903,11 @@ namespace mrHelper.App.Controls
          {
             discussion = await _editor.ResolveDiscussionAsync(!wasResolved);
          }
-         catch (DiscussionEditorException)
+         catch (DiscussionEditorException ex)
          {
-            MessageBox.Show("Cannot toggle 'Resolved' state of a discussion", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            string message = "Cannot toggle 'Resolved' state of a discussion";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -913,7 +921,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         Action removeTextBoxes = () =>
+         void removeTextBoxes()
          {
             for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
             {
@@ -923,7 +931,7 @@ namespace mrHelper.App.Controls
                }
             }
             _textboxesNotes = null;
-         };
+         }
 
          _preContentChange(this);
 
@@ -932,8 +940,10 @@ namespace mrHelper.App.Controls
          {
             Discussion = discussion ?? await _editor.GetDiscussion();
          }
-         catch (DiscussionEditorException)
+         catch (DiscussionEditorException ex)
          {
+            ExceptionHandlers.Handle("Not an error - last discussion item has bee deleted", ex);
+
             removeTextBoxes();
             // it is not an error here, we treat it as 'last discussion item has been deleted'
             // Seems it was the only note in the discussion, remove ourselves from parents controls

@@ -10,10 +10,18 @@ using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
+using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.Discussions
 {
-   public class DiscussionManagerException : Exception {}
+   public class DiscussionManagerException : ExceptionEx
+   {
+      internal DiscussionManagerException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
 
    /// <summary>
    /// Manages merge request discussions
@@ -26,22 +34,21 @@ namespace mrHelper.Client.Discussions
 
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
-      public DiscussionManager(IHostProperties settings, Workflow.Workflow workflow,
+      public DiscussionManager(IHostProperties settings, IWorkflowEventNotifier workflowEventNotifier,
          MergeRequestCache mergeRequestCache, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords,
          int autoUpdatePeriodMs)
       {
-         _settings = settings;
          _operator = new DiscussionOperator(settings);
 
-         _parser = new DiscussionParser(workflow, this, keywords);
+         _parser = new DiscussionParser(workflowEventNotifier, this, keywords);
          _parser.DiscussionEvent += onDiscussionParserEvent;
 
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
 
-         _workflow = workflow;
-         _workflow.PostLoadProjectMergeRequests += onPostLoadProjectMergeRequests;
-         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -51,8 +58,8 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
-         _workflow.PostLoadProjectMergeRequests -= onPostLoadProjectMergeRequests;
-         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
 
          _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
 
@@ -84,9 +91,11 @@ namespace mrHelper.Client.Discussions
          {
             await updateDiscussionsAsync(mrk, true, !_updating.Contains(mrk));
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionManagerException();
+            throw new DiscussionManagerException(String.Format(
+               "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
          }
 
          Debug.Assert(_cachedDiscussions.ContainsKey(mrk));
@@ -161,27 +170,28 @@ namespace mrHelper.Client.Discussions
          _timer.SynchronizingObject.BeginInvoke(new Action(
             async () =>
          {
-            try
+            foreach (MergeRequestKey mrk in keys)
             {
-               foreach (MergeRequestKey mrk in keys)
+               try
                {
                   await updateDiscussionsAsync(mrk, false, initialSnapshot);
                }
-            }
-            catch (OperatorException)
-            {
-               // already handled
+               catch (OperatorException ex)
+               {
+                  ExceptionHandlers.Handle(String.Format(
+                     "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
+                     mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
+                  continue;
+               }
             }
          }), null);
       }
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         DateTime mergeRequestUpdatedAt =
-            (await CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId)).Updated_At;
+         Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
 
+         DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
          if (_cachedDiscussions.ContainsKey(mrk) && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp)
          {
             if (additionalLogging)
@@ -203,38 +213,13 @@ namespace mrHelper.Client.Discussions
             return;
          }
 
+         IEnumerable<Discussion> discussions;
+
+         PreLoadDiscussions?.Invoke(mrk);
          try
          {
-            PreLoadDiscussions?.Invoke(mrk);
-
             _updating.Add(mrk);
-            IEnumerable<Discussion> discussions = await _operator.GetDiscussionsAsync(client, mrk);
-
-            if (!_closed.Contains(mrk))
-            {
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
-                + " cached time stamp {4} (was {5} before update)",
-                  discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
-                  mergeRequestUpdatedAt.ToLocalTime().ToString(),
-                  _cachedDiscussions.ContainsKey(mrk) ?
-                     _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
-
-               _cachedDiscussions[mrk] = new CachedDiscussions
-               {
-                  TimeStamp = mergeRequestUpdatedAt,
-                  Discussions = discussions.ToArray()
-               };
-            }
-            else
-            {
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Will not cache MR because it is closed: Host={0}, Project={1}, IId={2}",
-                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
-               _closed.Remove(mrk);
-            }
-
-            PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
+            discussions = await _operator.GetDiscussionsAsync(mrk);
          }
          catch (OperatorException)
          {
@@ -245,6 +230,32 @@ namespace mrHelper.Client.Discussions
          {
             _updating.Remove(mrk);
          }
+
+         if (!_closed.Contains(mrk))
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
+             + " cached time stamp {4} (was {5} before update)",
+               discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
+               mergeRequestUpdatedAt.ToLocalTime().ToString(),
+               _cachedDiscussions.ContainsKey(mrk) ?
+                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
+
+            _cachedDiscussions[mrk] = new CachedDiscussions
+            {
+               TimeStamp = mergeRequestUpdatedAt,
+               Discussions = discussions.ToArray()
+            };
+         }
+         else
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Will not cache MR because it is closed: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            _closed.Remove(mrk);
+         }
+
+         PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
       }
 
       private void cleanup(IEnumerable<MergeRequestKey> keys)
@@ -309,7 +320,7 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private void onPostLoadProjectMergeRequests(string hostname, Project project,
+      private void onLoadedMergeRequests(string hostname, Project project,
          IEnumerable<MergeRequest> mergeRequests)
       {
          Trace.TraceInformation(String.Format(
@@ -332,19 +343,18 @@ namespace mrHelper.Client.Discussions
          cleanup(toRemove.ToArray());
       }
 
-      private void onPostLoadCurrentUser(User user)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
       }
 
-      private DiscussionParser _parser;
+      private readonly DiscussionParser _parser;
       private readonly MergeRequestCache _mergeRequestCache;
-      private readonly Workflow.Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
 
       private readonly System.Timers.Timer _timer;
       private System.Timers.Timer _oneShotTimer;
 
-      private readonly IHostProperties _settings;
       private readonly DiscussionOperator _operator;
       private User _currentUser;
 

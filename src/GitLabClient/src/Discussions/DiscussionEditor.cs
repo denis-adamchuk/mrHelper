@@ -3,10 +3,17 @@ using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Discussions
 {
-   public class DiscussionEditorException : Exception {}
+   public class DiscussionEditorException : ExceptionEx
+   {
+      internal DiscussionEditorException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
 
    /// <summary>
    /// Implements logic of work with a single discussion
@@ -26,9 +33,9 @@ namespace mrHelper.Client.Discussions
          {
             return await _operator.GetDiscussionAsync(_mergeRequestKey, _discussionId);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionEditorException();
+            throw new DiscussionEditorException("Cannot obtain discussion", ex);
          }
       }
 
@@ -38,9 +45,9 @@ namespace mrHelper.Client.Discussions
          {
             await _operator.ReplyAsync(_mergeRequestKey, _discussionId, body);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionEditorException();
+            throw new DiscussionEditorException("Cannot send reply", ex);
          }
       }
 
@@ -50,9 +57,9 @@ namespace mrHelper.Client.Discussions
          {
             return await _operator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionEditorException();
+            throw new DiscussionEditorException("Cannot modify discussion body", ex);
          }
       }
 
@@ -62,9 +69,9 @@ namespace mrHelper.Client.Discussions
          {
             await _operator.DeleteNoteAsync(_mergeRequestKey, noteId);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionEditorException();
+            throw new DiscussionEditorException("Cannot delete discussion note", ex);
          }
       }
 
@@ -74,9 +81,9 @@ namespace mrHelper.Client.Discussions
          {
             await _operator.ResolveNoteAsync(_mergeRequestKey, _discussionId, noteId, resolved);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionEditorException();
+            throw new DiscussionEditorException("Cannot change discussion note resolve state", ex);
          }
       }
 
@@ -86,9 +93,9 @@ namespace mrHelper.Client.Discussions
          {
             return await _operator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolved);
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            throw new DiscussionEditorException();
+            throw new DiscussionEditorException("Cannot change discussion resolve state", ex);
          }
       }
 

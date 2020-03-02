@@ -26,12 +26,6 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      User? getCurrentUser()
-      {
-         Debug.Assert(_currentUser != null);
-         return _currentUser.Value;
-      }
-
       string getHostName()
       {
          return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
@@ -135,6 +129,19 @@ namespace mrHelper.App.Forms
          }
 
          onHostSelected();
+      }
+
+      private void createListViewGroupsForProjects(ListView listView,
+         string hostname, IEnumerable<Project> projects)
+      {
+         listView.Items.Clear();
+         listView.Groups.Clear();
+         foreach (Project project in projects)
+         {
+            ListViewGroup group = listView.Groups.Add(
+               project.Path_With_Namespace, project.Path_With_Namespace);
+            group.Tag = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+         }
       }
 
       private bool selectMergeRequest(string projectname, int iid, bool exact)
@@ -363,8 +370,7 @@ namespace mrHelper.App.Forms
 
       private void initializeColorScheme()
       {
-         Func<string, bool> createColorScheme =
-            (filename) =>
+         bool createColorScheme(string filename)
          {
             try
             {
@@ -376,7 +382,7 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle("Cannot create a color scheme", ex);
             }
             return false;
-         };
+         }
 
          if (comboBoxColorSchemes.SelectedIndex < 0 || comboBoxColorSchemes.Items.Count < 1)
          {
@@ -879,9 +885,9 @@ namespace mrHelper.App.Forms
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
-         Func<MergeRequestKey, string> getTotalTimeText = (key) => convertTotalTimeToText(getTotalTime(key));
+         string getTotalTimeText(MergeRequestKey key) => convertTotalTimeToText(getTotalTime(key));
 
-         Action<string, ListViewSubItemInfo> setSubItemTag = (columnTag, subItemInfo) =>
+         void setSubItemTag(string columnTag, ListViewSubItemInfo subItemInfo)
          {
             ColumnHeader columnHeader = listViewMergeRequests.Columns
                .Cast<ColumnHeader>()
@@ -893,7 +899,7 @@ namespace mrHelper.App.Forms
             }
 
             item.SubItems[columnHeader.Index].Tag = subItemInfo;
-         };
+         }
 
          setSubItemTag("IId",          new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url));
          setSubItemTag("Author",       new ListViewSubItemInfo(() => author,                  () => String.Empty));
@@ -1099,8 +1105,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Action<string> loadNotifyIconFromFile =
-            (filename) =>
+         void loadNotifyIconFromFile(string filename)
          {
             try
             {
@@ -1110,7 +1115,7 @@ namespace mrHelper.App.Forms
             {
                ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
             }
-         };
+         }
 
          if (isTrackingTime())
          {
@@ -1291,7 +1296,7 @@ namespace mrHelper.App.Forms
 
       private int getRightPaneMinWidth()
       {
-         Func<IEnumerable<Control>, int, int> calcMinWidthOfControlGroup = (controls, minGap) =>
+         int calcMinWidthOfControlGroup(IEnumerable<Control> controls, int minGap) =>
             controls.Cast<Control>().Sum(x => x.MinimumSize.Width) + (controls.Count() - 1) * minGap;
 
          int buttonMinDistance = calcHorzDistance(buttonAddComment, buttonNewDiscussion);
@@ -1436,7 +1441,7 @@ namespace mrHelper.App.Forms
 
       private void repositionCustomCommands()
       {
-         Func<Control, int, int> getControlX = (control, index) =>
+         int getControlX(Control control, int index) =>
              control.Width * index +
                 (groupBoxActions.Width - _customCommands.Count() * control.Width) *
                 (index + 1) / (_customCommands.Count() + 1);
@@ -1461,6 +1466,18 @@ namespace mrHelper.App.Forms
          {
             tabControl.SelectedTab = tabPageSettings;
          }
+      }
+
+      private void changeProjectEnabledState(string hostname, string projectname, bool state)
+      {
+         Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
+            hostname, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
+         Debug.Assert(projects.ContainsKey(projectname));
+         projects[projectname] = state;
+
+         ConfigurationHelper.SetProjectsForHost(hostname,
+            Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
+         updateProjectsListView();
       }
    }
 }

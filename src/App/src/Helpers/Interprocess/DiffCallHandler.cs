@@ -83,9 +83,11 @@ namespace mrHelper.App.Interprocess
                {
                   await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
                }
-               catch (DiscussionCreatorException)
+               catch (DiscussionCreatorException ex)
                {
-                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
+                  string message = "Cannot create a discussion at GitLab";
+                  ExceptionHandlers.Handle(message, ex);
+                  MessageBox.Show(String.Format("{0}. Check your connection and try again", message),
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                }

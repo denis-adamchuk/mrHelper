@@ -8,22 +8,33 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
+using mrHelper.Client.Common;
+using mrHelper.Client.Workflow;
 
 namespace mrHelper.Client.TimeTracking
 {
+   public class TimeTrackingManagerException : ExceptionEx
+   {
+      internal TimeTrackingManagerException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
+
    /// <summary>
    /// Manages time tracking for merge requests
    /// TODO Clean up merged/closed merge requests
    /// </summary>
    public class TimeTrackingManager : IDisposable
    {
-      public TimeTrackingManager(IHostProperties settings, Workflow.Workflow workflow,
+      public TimeTrackingManager(IHostProperties settings, IWorkflowEventNotifier workflowEventNotifier,
          DiscussionManager discussionManager)
       {
          _operator = new TimeTrackingOperator(settings);
 
-         _workflow = workflow;
-         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
 
          _discussionManager = discussionManager;
          _discussionManager.PreLoadDiscussions += onPreLoadDiscussions;
@@ -33,7 +44,7 @@ namespace mrHelper.Client.TimeTracking
 
       public void Dispose()
       {
-         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+         _workflowEventNotifier.Connected -= onConnected;
 
          _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
          _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
@@ -51,7 +62,15 @@ namespace mrHelper.Client.TimeTracking
 
       async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         await _operator.AddSpanAsync(add, span, mrk);
+         try
+         {
+            await _operator.AddSpanAsync(add, span, mrk);
+         }
+         catch (OperatorException ex)
+         {
+            throw new TimeTrackingManagerException("Cannot add a span", ex);
+         }
+
          if (!_times.ContainsKey(mrk))
          {
             Debug.Assert(add);
@@ -69,7 +88,7 @@ namespace mrHelper.Client.TimeTracking
 
       public TimeTracker GetTracker(MergeRequestKey mrk)
       {
-         return new TimeTracker(mrk, async (span, key) => { await AddSpanAsync(true, span, key); });
+         return new TimeTracker(mrk, this);
       }
 
       private static readonly Regex spentTimeRe =
@@ -131,7 +150,7 @@ namespace mrHelper.Client.TimeTracking
          FailedLoadTotalTime?.Invoke();
       }
 
-      private void onPostLoadCurrentUser(User user)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
       }
@@ -141,7 +160,7 @@ namespace mrHelper.Client.TimeTracking
          new Dictionary<MergeRequestKey, TimeSpan>();
       private User _currentUser;
       private readonly DiscussionManager _discussionManager;
-      private readonly Workflow.Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }
 

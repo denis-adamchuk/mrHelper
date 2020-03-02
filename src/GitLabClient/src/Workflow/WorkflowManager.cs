@@ -8,96 +8,85 @@ using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
+using GitLabSharp.Accessors;
 
 namespace mrHelper.Client.Workflow
 {
-   public class WorkflowException : Exception
+   public class WorkflowException : ExceptionEx
    {
-      internal WorkflowException(string message) : base(message) { }
-   }
+      internal WorkflowException(string message, Exception innerException)
+         : base(message, innerException) {}
 
-   public class UnknownHostException : WorkflowException
-   {
-      internal UnknownHostException(string hostname): base(
-         String.Format("Cannot find access token for host {0}", hostname)) {}
-   }
-
-   public class NoProjectsException : WorkflowException
-   {
-      internal NoProjectsException(string hostname): base(
-         String.Format("Project list for hostname {0} is empty", hostname)) {}
-   }
-
-   public class NotEnabledProjectException : WorkflowException
-   {
-      internal NotEnabledProjectException(string projectname): base(
-         String.Format("Project {0} is not in the list of enabled projects", projectname)) {}
+      public string UserMessage
+      {
+         get
+         {
+            if (InnerException is OperatorException ox)
+            {
+               if (ox.InnerException is GitLabRequestException rx)
+               {
+                  if (rx.InnerException is System.Net.WebException wx)
+                  {
+                     System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+                     if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                     {
+                        return wx.Message + " Check your access token!";
+                     }
+                     return wx.Message;
+                  }
+               }
+            }
+            return OriginalMessage;
+         }
+      }
    }
 
    /// <summary>
-   /// Client workflow related to Hosts/Projects/Merge Requests
+   /// Provides access to main GitLab workflow actions: load user, load merge requests etc
+   /// Supports chains of actions (loading a merge request also loads its versions and commits)
+   /// Each action toggles Pre-{Action}-Event and either Post-{Action}-Event or Failed-{Action}-Event
    /// </summary>
-   public class Workflow
+   public class WorkflowManager
    {
-      public Workflow(IHostProperties settings)
+      public WorkflowManager(IHostProperties settings)
       {
          _settings = settings;
       }
 
       async public Task<bool> LoadCurrentUserAsync(string hostname)
       {
-         return checkParameters(hostname) && await loadCurrentUserAsync(hostname);
+         _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
+
+         return await loadCurrentUserAsync(hostname);
       }
 
-      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Action<string> onNonFatalError)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Project project)
       {
-         if (!checkParameters(hostname))
+         _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
+
+         IEnumerable<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
+         if (mergeRequests == null)
          {
-            return false;
+            return false; // cancelled
          }
 
-         PreLoadAllMergeRequests?.Invoke();
-
-         IEnumerable<Project> projects = loadHostProjects(hostname);
-         foreach (Project project in projects)
+         foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            try
+            if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
             {
-               IEnumerable<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
-               if (mergeRequests == null)
-               {
-                  return false; // cancelled
-               }
-
-               foreach (MergeRequest mergeRequest in mergeRequests)
-               {
-                  if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
-                  {
-                     return false; // cancelled
-                  }
-               }
-            }
-            catch (WorkflowException ex)
-            {
-               onNonFatalError?.Invoke(ex.Message);
+               return false; // cancelled
             }
          }
 
-         PostLoadAllMergeRequests?.Invoke(hostname, projects);
          return true;
       }
 
       async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
       {
-         if (mergeRequestIId == 0)
-         {
-            PreLoadSingleMergeRequest?.Invoke(0);
-            _operator?.CancelAsync();
-            return false;
-         }
+         _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
-         return checkParameters(hostname, projectname)
-             && await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
+         return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
       }
 
       async public Task CancelAsync()
@@ -109,19 +98,12 @@ namespace mrHelper.Client.Workflow
       }
 
       public event Action<string> PreLoadCurrentUser;
-      public event Action<User> PostLoadCurrentUser;
+      public event Action<string, User> PostLoadCurrentUser;
       public event Action FailedLoadCurrentUser;
-
-      public event Action<string> PreLoadHostProjects;
-      public event Action<string, IEnumerable<Project>> PostLoadHostProjects;
-
-      public event Action PreLoadAllMergeRequests;
 
       public event Action<Project> PreLoadProjectMergeRequests;
       public event Action<string, Project, IEnumerable<MergeRequest>> PostLoadProjectMergeRequests;
       public event Action FailedLoadProjectMergeRequests;
-
-      public event Action<string, IEnumerable<Project>> PostLoadAllMergeRequests;
 
       public event Action<int> PreLoadSingleMergeRequest;
       public event Action<string, string, MergeRequest> PostLoadSingleMergeRequest;
@@ -134,39 +116,6 @@ namespace mrHelper.Client.Workflow
       public event Action PreLoadLatestVersion;
       public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
       public event Action FailedLoadLatestVersion;
-
-      private bool checkParameters(string hostname, string projectname = "")
-      {
-         _operator?.CancelAsync();
-
-         if (hostname == String.Empty)
-         {
-            return false;
-         }
-
-         string token = _settings.GetAccessToken(hostname);
-         if (token == String.Empty)
-         {
-            throw new UnknownHostException(hostname);
-         }
-
-         _operator = new WorkflowDataOperator(hostname, token);
-
-         IEnumerable<Project> enabledProjects = getEnabledProjects(hostname);
-         bool hasEnabledProjects = enabledProjects.Count() != 0;
-         if (!hasEnabledProjects)
-         {
-            throw new NoProjectsException(hostname);
-         }
-
-         if (projectname != String.Empty &&
-            (!enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
-         {
-            throw new NotEnabledProjectException(projectname);
-         }
-
-         return true;
-      }
 
       async private Task<bool> loadCurrentUserAsync(string hostName)
       {
@@ -185,19 +134,8 @@ namespace mrHelper.Client.Workflow
             return false;
          }
 
-         PostLoadCurrentUser?.Invoke(currentUser);
+         PostLoadCurrentUser?.Invoke(hostName, currentUser);
          return true;
-      }
-
-      private IEnumerable<Project> loadHostProjects(string hostName)
-      {
-         PreLoadHostProjects?.Invoke(hostName);
-
-         IEnumerable<Project> enabledProjects = getEnabledProjects(hostName);
-         Debug.Assert(enabledProjects.Count() != 0); // guaranteed by checkParameters()
-
-         PostLoadHostProjects?.Invoke(hostName, enabledProjects);
-         return enabledProjects;
       }
 
       async private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(string hostname, Project project)
@@ -294,27 +232,13 @@ namespace mrHelper.Client.Workflow
          bool cancelled = ex.InnerException is GitLabClientCancelled;
          if (cancelled)
          {
-            Trace.TraceInformation(String.Format("[Workflow] {0}", cancelMessage));
+            Trace.TraceInformation(String.Format("[WorkflowManager] {0}", cancelMessage));
             return;
          }
 
          failureCallback?.Invoke();
 
-         string details = String.Empty;
-         if (ex.InnerException is GitLabSharp.Accessors.GitLabRequestException internalEx)
-         {
-            details = internalEx.WebException.Message;
-         }
-
-         string message = String.Format("{0}. {1}", errorMessage, details);
-         Trace.TraceError(String.Format("[Workflow] {0}", message));
-         throw new WorkflowException(message);
-      }
-
-      private IEnumerable<Project> getEnabledProjects(string hostname)
-      {
-         return _settings.GetEnabledProjects(hostname)
-            .Select(x => new Project{ Path_With_Namespace = x });
+         throw new WorkflowException(errorMessage, ex);
       }
 
       private readonly IHostProperties _settings;

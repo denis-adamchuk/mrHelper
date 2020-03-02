@@ -90,11 +90,18 @@ namespace mrHelper.App.Forms
 
       private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
       {
-         string message = String.Format("{0}Cannot open merge request from URL. {1}",
-            msg, ex != null ? String.Format("Reason: {0}", ex.Message) : String.Empty);
+         string exceptionMessage = ex != null ? ex.Message : String.Empty;
+         if (ex is WorkflowException wfex)
+         {
+            exceptionMessage = wfex.UserMessage;
+         }
+
+         string message = String.Format("{0}Cannot open merge request from URL. {1}", msg, exceptionMessage);
+
          MessageBox.Show(message, error ? "Error" : "Warning", MessageBoxButtons.OK,
             error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
             MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+
          ExceptionHandlers.Handle(String.Format("Cannot open URL {0}", url), ex);
       }
 
@@ -105,13 +112,17 @@ namespace mrHelper.App.Forms
 
          try
          {
-            return await startWorkflowAsync(hostname, null);
+            return await startWorkflowAsync(hostname);
          }
          catch (Exception ex)
          {
-            if (ex is NoProjectsException)
+            if (ex is UnknownHostException)
             {
-               reportErrorOnConnect(url, "URL contains a project that is missing or disabled in settings. ", ex, true);
+               reportErrorOnConnect(url, String.Empty, ex, true);
+            }
+            else if (ex is NoProjectsException)
+            {
+               reportErrorOnConnect(url, String.Empty, ex, true);
             }
             else if (ex is WorkflowException)
             {
@@ -120,12 +131,13 @@ namespace mrHelper.App.Forms
             else
             {
                Debug.Assert(false);
+               ExceptionHandlers.Handle(String.Format("Unexpected error on attempt to open URL {0}", url), ex);
             }
          }
          return false;
       }
 
-      private bool unhideFilteredMergeRequest(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      private bool unhideFilteredMergeRequest(UrlParser.ParsedMergeRequestUrl mergeRequestUrl)
       {
          Trace.TraceInformation("[MainForm] Notify user that MR is hidden");
 
@@ -148,7 +160,7 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private bool addMissingProject(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      private bool addMissingProject(UrlParser.ParsedMergeRequestUrl mergeRequestUrl)
       {
          Trace.TraceInformation("[MainForm] Notify that selected project is not in the list");
 
@@ -172,7 +184,7 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private bool enableDisabledProject(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      private bool enableDisabledProject(UrlParser.ParsedMergeRequestUrl mergeRequestUrl)
       {
          Trace.TraceInformation("[MainForm] Notify that selected project is disabled");
 
@@ -184,15 +196,7 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
-            mergeRequestUrl.Host, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
-         Debug.Assert(projects.ContainsKey(mergeRequestUrl.Project));
-         Debug.Assert(projects[mergeRequestUrl.Project] == false);
-         projects[mergeRequestUrl.Project] = true;
-
-         ConfigurationHelper.SetProjectsForHost(mergeRequestUrl.Host,
-            Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
-         updateProjectsListView();
+         changeProjectEnabledState(mergeRequestUrl.Host, mergeRequestUrl.Project, true);
 
          return true;
       }
@@ -231,14 +235,14 @@ namespace mrHelper.App.Forms
             mergeRequestUrl.Host, Program.Settings);
          if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
          {
-            if (!addMissingProject(mergeRequestUrl, url))
+            if (!addMissingProject(mergeRequestUrl))
             {
                return; // user decided to not add a missing project
             }
          }
          else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
          {
-            if (!enableDisabledProject(mergeRequestUrl, url))
+            if (!enableDisabledProject(mergeRequestUrl))
             {
                return; // user decided to not enable a disabled project
             }
@@ -248,6 +252,19 @@ namespace mrHelper.App.Forms
          if (!await restartWorkflowByUrl(url, mergeRequestUrl.Host))
          {
             return; // could not restart workflow
+         }
+
+         projects = ConfigurationHelper.GetProjectsForHost(mergeRequestUrl.Host, Program.Settings);
+         if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
+         {
+            Debug.Assert(false);
+            Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, project disappeared", url));
+            reportErrorOnConnect(url, "Something went wrong. ", null, false);
+            return;
+         }
+         else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
+         {
+            return; // project has just been disabled in restartWorkflowByUrl()
          }
 
          if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
@@ -263,7 +280,7 @@ namespace mrHelper.App.Forms
             if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
             {
                // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-               if (!unhideFilteredMergeRequest(mergeRequestUrl, url))
+               if (!unhideFilteredMergeRequest(mergeRequestUrl))
                {
                   return; // user decided to not un-hide merge request
                }

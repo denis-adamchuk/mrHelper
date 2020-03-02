@@ -111,8 +111,8 @@ namespace mrHelper.GitClient
       private static readonly int cancellationExitCode = 130;
       private static readonly int altCancellationExitCode = -1073741510;
 
-      private string _path;
-      private IExternalProcessManager _externalProcessManager;
+      private readonly string _path;
+      private readonly IExternalProcessManager _externalProcessManager;
    }
 }
 

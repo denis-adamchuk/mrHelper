@@ -272,7 +272,7 @@ namespace mrHelper.App.Forms
          unsubscribeFromWorkflowAndDependencies();
 
          await disposeLocalGitRepositoryFactory();
-         await _workflow.CancelAsync();
+         await _workflowManager.CancelAsync();
 
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
@@ -386,20 +386,20 @@ namespace mrHelper.App.Forms
 
       private void createWorkflowAndDependencies()
       {
-         _workflow = new Workflow(Program.Settings);
-         _expressionResolver = new ExpressionResolver(_workflow);
-         _mergeRequestCache = new MergeRequestCache(_workflow, this, Program.Settings,
+         _workflowManager = new WorkflowManager(Program.Settings);
+         _expressionResolver = new ExpressionResolver(this);
+         _mergeRequestCache = new MergeRequestCache(this, this, Program.Settings,
             Program.Settings.AutoUpdatePeriodMs);
-         _discussionManager = new DiscussionManager(Program.Settings, _workflow, _mergeRequestCache, this, _keywords,
+         _discussionManager = new DiscussionManager(Program.Settings, this, _mergeRequestCache, this, _keywords,
             Program.Settings.AutoUpdatePeriodMs);
-         _eventFilter = new EventFilter(Program.Settings, _workflow, _mergeRequestCache);
+         _eventFilter = new EventFilter(Program.Settings, this, _mergeRequestCache);
          _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
             _eventFilter);
          _gitDataUpdater = Program.Settings.CacheRevisionsInBackground
-            ? new GitDataUpdater(_workflow, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache)
+            ? new GitDataUpdater(this, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache)
             : null;
-         _gitStatManager = new GitStatisticManager(_workflow, this, this, _mergeRequestCache, _mergeRequestCache);
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflow, _discussionManager);
+         _gitStatManager = new GitStatisticManager(this, this, this, _mergeRequestCache, _mergeRequestCache);
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, this, _discussionManager);
       }
 
       private void disposeWorkflowDependencies()

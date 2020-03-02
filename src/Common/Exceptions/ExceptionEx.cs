@@ -15,11 +15,18 @@ namespace mrHelper.Common.Exceptions
          get
          {
             string innerExceptionMessage = InnerException != null
-               ? String.Format("InnerException:\n[{0}] {1}",
+               ? String.Format("\n[{0}] {1}",
                   InnerException.GetType().ToString(), InnerException.Message)
                : String.Empty;
-
             return String.Format("{0} {1}", base.Message, innerExceptionMessage);
+         }
+      }
+
+      public string OriginalMessage
+      {
+         get
+         {
+            return base.Message;
          }
       }
    }

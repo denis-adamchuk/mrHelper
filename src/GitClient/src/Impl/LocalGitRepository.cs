@@ -165,9 +165,9 @@ namespace mrHelper.GitClient
 
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
-      private LocalGitRepositoryData _data;
-      private LocalGitRepositoryUpdater _updater;
-      private IExternalProcessManager _operationManager;
+      private readonly LocalGitRepositoryData _data;
+      private readonly LocalGitRepositoryUpdater _updater;
+      private readonly IExternalProcessManager _operationManager;
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
    }
 }

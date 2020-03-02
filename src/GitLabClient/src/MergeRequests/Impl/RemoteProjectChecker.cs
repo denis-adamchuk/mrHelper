@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -27,9 +28,9 @@ namespace mrHelper.Client.MergeRequests
          {
             return (await _operator.GetLatestVersionAsync(_mergeRequestKey)).Created_At;
          }
-         catch (OperatorException)
+         catch (OperatorException ex)
          {
-            // already handled
+            ExceptionHandlers.Handle("Cannot obtain latest version for RemoteProjectChecker", ex);
          }
          return DateTime.MinValue;
       }

@@ -90,9 +90,9 @@ namespace mrHelper.GitClient
          }
       }
 
-      private string _path;
+      private readonly string _path;
       private bool _disabled;
-      private IExternalProcessManager _operationManager;
+      private readonly IExternalProcessManager _operationManager;
 
       private readonly Dictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
          new Dictionary<GitDiffArguments, IEnumerable<string>>();

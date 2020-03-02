@@ -13,19 +13,19 @@ namespace mrHelper.App.Helpers
 {
    internal class EventFilter : IDisposable
    {
-      internal EventFilter(UserDefinedSettings settings, Workflow workflow,
+      internal EventFilter(UserDefinedSettings settings, IWorkflowEventNotifier workflowEventNotifier,
          ICachedMergeRequestProvider mergeRequestProvider)
       {
          _settings = settings;
          _mergeRequestProvider = mergeRequestProvider;
 
-         _workflow = workflow;
-         _workflow.PostLoadCurrentUser += onPostLoadCurrentUser;
+         _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connected += onConnected;
       }
 
       public void Dispose()
       {
-         _workflow.PostLoadCurrentUser -= onPostLoadCurrentUser;
+         _workflowEventNotifier.Connected -= onConnected;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -107,7 +107,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onPostLoadCurrentUser(User user)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
       }
@@ -115,7 +115,7 @@ namespace mrHelper.App.Helpers
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
-      private readonly Workflow _workflow;
+      private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }
 

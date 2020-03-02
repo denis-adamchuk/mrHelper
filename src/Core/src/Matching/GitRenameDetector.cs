@@ -41,7 +41,7 @@ namespace mrHelper.Core.Git
             }
          };
 
-         IEnumerable<string> renames = null;
+         IEnumerable<string> renames;
          try
          {
             renames = _gitRepository.Data?.Get(arguments);

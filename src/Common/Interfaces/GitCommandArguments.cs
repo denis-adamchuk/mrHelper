@@ -23,7 +23,7 @@ namespace mrHelper.Common.Interfaces
 
          public override string ToString()
          {
-            Func<string, string, string> mergeTwoStrings = (string1, string2) =>
+            string mergeTwoStrings(string string1, string string2)
             {
                if (!String.IsNullOrEmpty(string1) && !String.IsNullOrEmpty(string2))
                {
@@ -38,7 +38,7 @@ namespace mrHelper.Common.Interfaces
                   return StringUtils.EscapeSpaces(string2);
                }
                return String.Empty;
-            };
+            }
 
             string diffFilterArg = String.IsNullOrEmpty(Filter)
                ? String.Empty

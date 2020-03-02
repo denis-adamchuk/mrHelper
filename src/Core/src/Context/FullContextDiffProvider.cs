@@ -58,7 +58,7 @@ namespace mrHelper.Core.Context
          };
 
 
-         IEnumerable<string> fullDiff = null;
+         IEnumerable<string> fullDiff;
          try
          {
             fullDiff = _gitRepository.Data?.Get(arguments);

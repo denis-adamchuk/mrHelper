@@ -18,7 +18,11 @@ using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm : CustomFontForm, ICommandCallback, ILocalGitRepositoryFactoryAccessor
+   internal partial class MainForm :
+      CustomFontForm,
+      ICommandCallback,
+      ILocalGitRepositoryFactoryAccessor,
+      IWorkflowEventNotifier
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -71,6 +75,10 @@ namespace mrHelper.App.Forms
          return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
       }
 
+      public event Action<string, User, IEnumerable<Project>> Connected;
+      public event Action<string, Project, IEnumerable<MergeRequest>> LoadedMergeRequests;
+      public event Action<string, string, MergeRequest, GitLabSharp.Entities.Version> LoadedMergeRequestVersion;
+
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
       {
          Interval = timeTrackingTimerInterval
@@ -98,7 +106,7 @@ namespace mrHelper.App.Forms
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
-      private Workflow _workflow;
+      private WorkflowManager _workflowManager;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
@@ -168,7 +176,7 @@ namespace mrHelper.App.Forms
          private readonly Func<string> _getUrl;
       }
 
-      private User? _currentUser;
+      private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();
    }
 }
 

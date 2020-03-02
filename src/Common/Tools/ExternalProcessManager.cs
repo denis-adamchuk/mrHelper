@@ -97,7 +97,6 @@ namespace mrHelper.Common.Tools
             return;
          }
 
-         Process p = descriptor.Process;
          descriptor.Cancelled = true;
          try
          {
@@ -110,8 +109,8 @@ namespace mrHelper.Common.Tools
       }
 
       private bool _isCancellingAll;
-      private ISynchronizeInvoke _synchronizeInvoke;
-      private List<ExternalProcess.AsyncTaskDescriptor> _descriptors =
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
+      private readonly List<ExternalProcess.AsyncTaskDescriptor> _descriptors =
          new List<ExternalProcess.AsyncTaskDescriptor>();
    }
 }

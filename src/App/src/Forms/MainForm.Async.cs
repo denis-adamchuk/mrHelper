@@ -21,10 +21,12 @@ namespace mrHelper.App.Forms
    {
       async private Task showDiscussionsFormAsync()
       {
+         Debug.Assert(getHostName() != String.Empty);
+         Debug.Assert(_currentUser.ContainsKey(getHostName()));
          Debug.Assert(getMergeRequestKey().HasValue);
 
          // Store data before async/await
-         User currentUser = _currentUser.Value;
+         User currentUser = _currentUser[getHostName()];
          MergeRequestKey mrk = getMergeRequestKey().Value;
          MergeRequest mergeRequest = getMergeRequest().Value;
 
@@ -374,9 +376,10 @@ namespace mrHelper.App.Forms
          {
             discussions = await _discussionManager.GetDiscussionsAsync(mrk);
          }
-         catch (DiscussionManagerException)
+         catch (DiscussionManagerException ex)
          {
             string message = "Cannot load discussions from GitLab";
+            ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             labelWorkflowStatus.Text = message;
             return null;
