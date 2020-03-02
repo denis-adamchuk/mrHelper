@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.GitClient
 {
@@ -53,7 +54,17 @@ namespace mrHelper.GitClient
          ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
          if (!_repos.ContainsKey(key))
          {
-            _repos[key] = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke);
+            LocalGitRepository repo;
+            try
+            {
+               repo = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke);
+            }
+            catch (ArgumentException ex)
+            {
+               ExceptionHandlers.Handle("Cannot create LocalGitRepository", ex);
+               return null;
+            }
+            _repos[key] = repo;
          }
          return _repos[key];
       }

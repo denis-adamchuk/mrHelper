@@ -721,19 +721,14 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         try
+         ILocalGitRepository repo = factory.GetRepository(key.HostName, key.ProjectName);
+         if (repo == null && showMessageBoxOnError)
          {
-            return factory.GetRepository(key.HostName, key.ProjectName);
+            MessageBox.Show(String.Format(
+               "Cannot initialize git repository for project {0} in \"{1}\"",
+               Program.Settings.LocalGitFolder, key.ProjectName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepository"), ex);
-            if (showMessageBoxOnError)
-            {
-               MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return null;
-         }
+         return repo;
       }
 
       private string getInitialHostName()
