@@ -69,6 +69,17 @@ namespace mrHelper.GitClient
          return _repos[key];
       }
 
+      async public Task DisposeProjectAsync(string hostName, string projectName)
+      {
+         ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
+         if (!_repos.ContainsKey(key))
+         {
+            return;
+         }
+         await _repos[key].DisposeAsync();
+         _repos.Remove(key);
+      }
+
       async public Task DisposeAsync()
       {
          Trace.TraceInformation(String.Format(

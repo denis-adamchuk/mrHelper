@@ -59,7 +59,7 @@ namespace mrHelper.App.Forms
          }
 
          IGitRepository gitRepository = null;
-         if (_gitClientFactory.ParentFolder == snapshot.TempFolder)
+         if (_gitClientFactory != null && _gitClientFactory.ParentFolder == snapshot.TempFolder)
          {
             gitRepository = _gitClientFactory.GetRepository(snapshot.Host, snapshot.Project);
          }
@@ -248,54 +248,64 @@ namespace mrHelper.App.Forms
             }
          }
 
-         // We need to restart the workflow here because we possibly have an outdated list of merge requests in the cache
-         if (!await restartWorkflowByUrl(url, mergeRequestUrl.Host))
+         ProjectKey projectKey = new ProjectKey
          {
-            return; // could not restart workflow
-         }
+            HostName = mergeRequestUrl.Host,
+            ProjectName = mergeRequestUrl.Project
+         };
 
-         projects = ConfigurationHelper.GetProjectsForHost(mergeRequestUrl.Host, Program.Settings);
-         if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
+         if (!_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
          {
-            Debug.Assert(false);
-            Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, project disappeared", url));
-            reportErrorOnConnect(url, "Something went wrong. ", null, false);
-            return;
-         }
-         else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
-         {
-            return; // project has just been disabled in restartWorkflowByUrl()
+            // We need to restart the workflow here because we possibly have an outdated list
+            // of merge requests in the cache
+            if (!await restartWorkflowByUrl(url, mergeRequestUrl.Host))
+            {
+               return; // could not restart workflow
+            }
+
+            projects = ConfigurationHelper.GetProjectsForHost(mergeRequestUrl.Host, Program.Settings);
+            if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
+            {
+               // This may happen if project list changed while we were in 'await'
+               return;
+            }
+            else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
+            {
+               return; // project has just been disabled in restartWorkflowByUrl()
+            }
          }
 
          if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
          {
-            // We could not select MR, but let's check if it is cached or not.
-
-            ProjectKey projectKey = new ProjectKey
+            if (!listViewMergeRequests.Enabled)
             {
-               HostName = mergeRequestUrl.Host,
-               ProjectName = mergeRequestUrl.Project
-            };
-
-            if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
-            {
-               // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-               if (!unhideFilteredMergeRequest(mergeRequestUrl))
-               {
-                  return; // user decided to not un-hide merge request
-               }
-
-               if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
-               {
-                  Debug.Assert(false);
-                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
-                  reportErrorOnConnect(url, "Something went wrong. ", null, false);
-               }
+               // This may happen if Reload is in progress now
+               reportErrorOnConnect(url, "Merge Request list is being updated. ", null, false);
             }
             else
             {
-               // But if this MR is not cached, it is most likely is not in Open state and cannot be shown.
-               reportErrorOnConnect(url, "Current version supports Open merge requests only. ", null, false);
+               // We could not select MR, but let's check if it is cached or not.
+
+               if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
+               {
+                  // If it is cached, it is probably hidden by filters and user might want to un-hide it.
+                  if (!unhideFilteredMergeRequest(mergeRequestUrl))
+                  {
+                     return; // user decided to not un-hide merge request
+                  }
+
+                  if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+                  {
+                     Debug.Assert(false);
+                     Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+                     reportErrorOnConnect(url, "Something went wrong. ", null, false);
+                  }
+               }
+               else
+               {
+                  // But if this MR is not cached, it is most likely is not in Open state and cannot be shown.
+                  reportErrorOnConnect(url, "Current version supports Open merge requests only. ", null, false);
+               }
             }
          }
       }

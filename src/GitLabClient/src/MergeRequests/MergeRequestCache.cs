@@ -121,25 +121,22 @@ namespace mrHelper.Client.MergeRequests
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
-         // TODO Current version supports updates of projects of the most recent loaded host only
-         if (String.IsNullOrEmpty(_hostname) || _hostname != hostname)
+         _hostname = hostname;
+         _cache = new WorkflowDetailsCache();
+
+         if (_updateManager != null)
          {
-            _hostname = hostname;
-            if (_updateManager != null)
-            {
-               _updateManager.OnUpdate -= onUpdate;
-               _updateManager.Dispose();
-            }
-
-            _cache = new WorkflowDetailsCache();
-            _updateManager = new UpdateManager(_synchronizeInvoke, _updateOperator, _hostname, projects, _cache,
-               _autoUpdatePeriodMs);
-            _updateManager.OnUpdate += onUpdate;
-
-            Trace.TraceInformation(String.Format(
-               "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
-               hostname, projects.Count()));
+            _updateManager.OnUpdate -= onUpdate;
+            _updateManager.Dispose();
          }
+
+         _updateManager = new UpdateManager(_synchronizeInvoke, _updateOperator, _hostname, projects, _cache,
+            _autoUpdatePeriodMs);
+         _updateManager.OnUpdate += onUpdate;
+
+         Trace.TraceInformation(String.Format(
+            "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
+            hostname, projects.Count()));
       }
 
       private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)

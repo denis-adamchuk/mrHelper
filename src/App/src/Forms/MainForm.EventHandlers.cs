@@ -1022,6 +1022,15 @@ namespace mrHelper.App.Forms
 
             if (!Enumerable.SequenceEqual(projects, form.Projects))
             {
+               if (_gitClientFactory != null)
+               {
+                  List<Tuple<string, bool>> toRemove = projects
+                     .Where(x => x.Item2)
+                     .Where(x => !form.Projects.Any(y => y.Item1 == x.Item1 && y.Item2))
+                     .ToList();
+                  toRemove.ForEach(async x => await _gitClientFactory.DisposeProjectAsync(host, x.Item1));
+               }
+
                ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
                updateProjectsListView();
 

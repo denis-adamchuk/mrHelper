@@ -36,7 +36,7 @@ namespace mrHelper.App.Interprocess
             "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
-         ILocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(_snapshot.TempFolder, null, null);
+         LocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(_snapshot.TempFolder, null, null);
          ILocalGitRepository tempRepository = factory.GetRepository(_snapshot.Host, _snapshot.Project);
          if (tempRepository == null)
          {
@@ -45,6 +45,7 @@ namespace mrHelper.App.Interprocess
          }
          Debug.Assert(!tempRepository.DoesRequireClone());
          await doHandleAsync(tempRepository);
+         await factory.DisposeAsync();
       }
 
       async public Task doHandleAsync(IGitRepository gitRepository)

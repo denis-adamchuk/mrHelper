@@ -726,7 +726,7 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show(String.Format(
                "Cannot initialize git repository for project {0} in \"{1}\"",
-               Program.Settings.LocalGitFolder, key.ProjectName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               key.ProjectName, Program.Settings.LocalGitFolder), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return repo;
       }

@@ -98,6 +98,7 @@ namespace mrHelper.Client.Discussions
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
          }
 
+         Debug.Assert(!_closed.Contains(mrk));
          Debug.Assert(_cachedDiscussions.ContainsKey(mrk));
          return _cachedDiscussions[mrk].Discussions;
       }
@@ -170,6 +171,17 @@ namespace mrHelper.Client.Discussions
          _timer.SynchronizingObject.BeginInvoke(new Action(
             async () =>
          {
+            if (initialSnapshot && _reconnect)
+            {
+               Trace.TraceInformation("[DiscussionManager] _reconnect state is reset due to initial snapshot request");
+               _reconnect = false;
+            }
+            else if (_reconnect)
+            {
+               Trace.TraceInformation("[DiscussionManager] update is skipped due to _reconnect state");
+               return;
+            }
+
             foreach (MergeRequestKey mrk in keys)
             {
                try
@@ -183,7 +195,34 @@ namespace mrHelper.Client.Discussions
                      mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
                   continue;
                }
+
+               if (_reconnect)
+               {
+                  Trace.TraceInformation("[DiscussionManager] update loop is cancelled due to _reconnect state");
+                  break;
+               }
             }
+         }), null);
+      }
+
+      private void scheduleCleanup()
+      {
+         _timer.SynchronizingObject.BeginInvoke(new Action(
+            async () =>
+         {
+            if (_updating.Any())
+            {
+               Trace.TraceInformation("[DiscussionManager] Waiting for updates completion to clean up state");
+            }
+
+            while (_updating.Any())
+            {
+               await Task.Delay(50);
+            }
+
+            _cachedDiscussions.Clear();
+            _closed.Clear();
+            Trace.TraceInformation("[DiscussionManager] State cleaned up");
          }), null);
       }
 
@@ -258,19 +297,6 @@ namespace mrHelper.Client.Discussions
          PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
       }
 
-      private void cleanup(IEnumerable<MergeRequestKey> keys)
-      {
-         foreach (MergeRequestKey mrk in keys)
-         {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Clean up closed MR: Host={0}, Project={1}, IId={2}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
-            _cachedDiscussions.Remove(mrk);
-            _updating.Remove(mrk);
-            _closed.Add(mrk);
-         }
-      }
-
       private void onDiscussionParserEvent(UserEvents.DiscussionEvent e)
       {
          DiscussionEvent?.Invoke(e);
@@ -300,14 +326,20 @@ namespace mrHelper.Client.Discussions
                break;
 
             case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
-               cleanup(new MergeRequestKey[]
                {
-                  new MergeRequestKey
+                  MergeRequestKey closedMRK = new MergeRequestKey
                   {
                      ProjectKey = e.FullMergeRequestKey.ProjectKey,
                      IId = e.FullMergeRequestKey.MergeRequest.IId
-                  }
-               });
+                  };
+
+                  Trace.TraceInformation(String.Format(
+                     "[DiscussionManager] Clean up closed MR: Host={0}, Project={1}, IId={2}",
+                     closedMRK.ProjectKey.HostName, closedMRK.ProjectKey.ProjectName, closedMRK.IId.ToString()));
+                  _cachedDiscussions.Remove(closedMRK);
+                  _updating.Remove(closedMRK);
+                  _closed.Add(closedMRK);
+               }
                break;
 
             case UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest:
@@ -335,17 +367,15 @@ namespace mrHelper.Client.Discussions
             });
 
          scheduleUpdate(mergeRequestKeys.ToArray(), true);
-
-         IEnumerable<MergeRequestKey> toRemove = _cachedDiscussions.Keys.Where(
-            x => x.ProjectKey.HostName == hostname
-              && x.ProjectKey.ProjectName == project.Path_With_Namespace
-              && !mergeRequestKeys.Any(y => x.IId == y.IId));
-         cleanup(toRemove.ToArray());
       }
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
+         _reconnect = true;
+
+         Trace.TraceInformation("[DiscussionManager] Scheduling clean-up");
+         scheduleCleanup();
       }
 
       private readonly DiscussionParser _parser;
@@ -367,8 +397,20 @@ namespace mrHelper.Client.Discussions
       private readonly Dictionary<MergeRequestKey, CachedDiscussions> _cachedDiscussions =
          new Dictionary<MergeRequestKey, CachedDiscussions>();
 
+      /// <summary>
+      /// temporary _updating collection allows to avoid re-entrance in updateDiscussionsAsync()
+      /// </summary>
       private readonly HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
+
+      /// <summary>
+      /// temporary _closed collection serves to not cache what is not needed to cache
+      /// </summary>
       private readonly HashSet<MergeRequestKey> _closed = new HashSet<MergeRequestKey>();
+
+      /// <summary>
+      /// Shows that reconnect is in progress, and all updates are ignored within this period
+      /// </summary>
+      private bool _reconnect;
    }
 }
 
