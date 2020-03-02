@@ -312,8 +312,8 @@ namespace mrHelper.App.Forms
 
       private void prepareFormToStart()
       {
-         loadConfiguration();
          addCustomActions();
+         loadConfiguration();
          updateCaption();
          updateTabControlSelection();
          updateHostsDropdownList();
