@@ -146,6 +146,9 @@ namespace mrHelper.App.Forms
 
       private bool selectMergeRequest(string projectname, int iid, bool exact)
       {
+         // CAUTION: this method fires ListViewMergeRequests_ItemSelectionChanged event handler which is an async method.
+         // However, as the event is fired by .NET Framework internally, we cannot await it and execution does not stop.
+
          foreach (ListViewItem item in listViewMergeRequests.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
@@ -463,6 +466,7 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.Enabled = enabled;
          enableMergeRequestFilterControls(enabled);
          tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
+         _suppressExternalConnections = !enabled;
 
          if (enabled)
          {

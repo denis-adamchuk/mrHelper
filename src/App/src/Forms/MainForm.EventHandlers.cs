@@ -323,7 +323,6 @@ namespace mrHelper.App.Forms
          {
             Debug.Assert(getMergeRequestKey().HasValue);
             _lastMergeRequestsByHosts[key.ProjectKey.HostName] = getMergeRequestKey().Value;
-            return;
          }
       }
 

@@ -91,15 +91,14 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Changing host to {0}. Last selected project: {1}, IId: {2}",
             hostName, projectname != String.Empty ? projectname : "N/A", iid != 0 ? iid.ToString() : "N/A"));
 
+         _suppressExternalConnections = true;
          try
          {
-            if (await startWorkflowAsync(hostName))
-            {
-               selectMergeRequest(projectname, iid, false);
-            }
+            _suppressExternalConnections = await startWorkflowAsync(hostName);
          }
          catch (Exception ex)
          {
+            _suppressExternalConnections = false;
             if (ex is WorkflowException || ex is UnknownHostException || ex is NoProjectsException)
             {
                disableAllUIControls(true);
@@ -114,6 +113,7 @@ namespace mrHelper.App.Forms
             }
             throw;
          }
+         _suppressExternalConnections = _suppressExternalConnections && selectMergeRequest(projectname, iid, false);
       }
 
       async private Task<bool> switchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId)
@@ -142,6 +142,7 @@ namespace mrHelper.App.Forms
             return false;
          }
 
+         _suppressExternalConnections = true;
          try
          {
             return await _workflowManager.LoadMergeRequestAsync(
@@ -151,6 +152,10 @@ namespace mrHelper.App.Forms
          {
             ExceptionHandlers.Handle("Cannot switch merge request", ex);
             MessageBox.Show(ex.UserMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+         finally
+         {
+            _suppressExternalConnections = false;
          }
 
          return false;

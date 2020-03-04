@@ -79,13 +79,33 @@ namespace mrHelper.App.Forms
          }
       }
 
+      /// <summary>
+      /// This flag helps to avoid re-entrance when external connection attempt occurs in the middle of internal
+      /// connection procedure.
+      /// </summary>
+      private bool _suppressExternalConnections;
+
       async private Task onOpenCommand(string argumentsString)
       {
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         await connectToUrlAsync(url);
+         if (_suppressExternalConnections)
+         {
+            Trace.TraceInformation("[Mainform] Cannot connect to URL because the app is connecting");
+            return;
+         }
+
+         _suppressExternalConnections = true;
+         try
+         {
+            await connectToUrlAsync(url);
+         }
+         finally
+         {
+            _suppressExternalConnections = false;
+         }
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
@@ -223,7 +243,7 @@ namespace mrHelper.App.Forms
 
          HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
             x => x.Host == mergeRequestUrl.Host);
-         if (proposedSelectedItem.Host == String.Empty)
+         if (String.IsNullOrEmpty(proposedSelectedItem.Host))
          {
             reportErrorOnConnect(url, String.Format(
                "Cannot connect to host {0} because it is not in the list of known hosts. ", mergeRequestUrl.Host),
