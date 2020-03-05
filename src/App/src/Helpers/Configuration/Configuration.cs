@@ -41,6 +41,9 @@ namespace mrHelper.App.Helpers
       private static readonly string DisableSplitterRestrictionsKeyName = "DisableSplitterRestrictions";
       private static readonly bool   DisableSplitterRestrictionsDefaultValue = false;
 
+      private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
+      private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
+
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
@@ -210,6 +213,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : DisableSplitterRestrictionsDefaultValue;
          }
          set { setValue(DisableSplitterRestrictionsKeyName, boolToString(value)); }
+      }
+
+      public bool ShowWarningOnReloadList
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               ShowWarningOnReloadListKeyName, boolToString(ShowWarningOnReloadListDefaultValue)),
+                  out bool result) ? result : ShowWarningOnReloadListDefaultValue;
+         }
+         set { setValue(ShowWarningOnReloadListKeyName, boolToString(value)); }
       }
 
       public string DiffContextDepth

@@ -338,7 +338,8 @@ namespace mrHelper.App.Helpers
 
          public override string ToString()
          {
-            return String.Format("+ {1} / - {2}\n{0} files", _filesChanged, _insertions, _deletions);
+            string fileNumber = String.Format("{0} {1}", _filesChanged, _filesChanged > 1 ? "files" : "file");
+            return String.Format("+ {1} / - {2}\n{0}", fileNumber, _insertions, _deletions);
          }
 
          private readonly int _filesChanged;

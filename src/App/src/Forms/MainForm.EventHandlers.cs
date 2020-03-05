@@ -589,6 +589,25 @@ namespace mrHelper.App.Forms
 
       async private void ButtonReloadList_Click(object sender, EventArgs e)
       {
+         if (Program.Settings.ShowWarningOnReloadList)
+         {
+            int autoUpdateMs = Program.Settings.AutoUpdatePeriodMs;
+            double oneMinuteMs = 60000;
+            double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
+
+            string periodicity = autoUpdateMs > oneMinuteMs
+               ? (autoUpdateMs % oneMinuteMs == 0
+                  ? String.Format("{0} minutes", autoUpdateMinutes)
+                  : String.Format("{0:F1} minutes", autoUpdateMinutes))
+               : String.Format("{0} seconds", autoUpdateMs / 1000);
+
+            string message = String.Format(
+               "Merge Request list updates each {0} and you don't usually need to reload it manually", periodicity);
+            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            Program.Settings.ShowWarningOnReloadList = false;
+         }
+
          if (getHostName() != String.Empty)
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
