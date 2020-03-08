@@ -357,16 +357,41 @@ namespace mrHelper.App.Forms
 
       private void ComboBoxLeftCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         checkComboboxCommitsOrder(true /* I'm left one */);
+         ComboBox leftComboBox = sender == comboBoxLeftCommit ? comboBoxLeftCommit : comboBoxHistLeftCommit;
+         ComboBox rightComboBox = sender == comboBoxLeftCommit ? comboBoxRightCommit : comboBoxHistRightCommit;
+         checkComboboxCommitsOrder(leftComboBox, rightComboBox, true /* I'm left one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
-         setCommitComboboxLabels(sender as ComboBox, labelLeftCommitTimestampLabel);
+         setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
       }
 
       private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         checkComboboxCommitsOrder(false /* because I'm the right one */);
+         ComboBox leftComboBox = sender == comboBoxLeftCommit ? comboBoxLeftCommit : comboBoxHistLeftCommit;
+         ComboBox rightComboBox = sender == comboBoxLeftCommit ? comboBoxRightCommit : comboBoxHistRightCommit;
+         checkComboboxCommitsOrder(leftComboBox, rightComboBox, false /* because I'm the right one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
-         setCommitComboboxLabels(sender as ComboBox, labelRightCommitTimestampLabel);
+         setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
+      }
+
+      private Label getLabelForComboBox(ComboBox box)
+      {
+         if (box == comboBoxLeftCommit)
+         {
+            return labelLeftCommitTimestampLabel;
+         }
+         else if (box == comboBoxRightCommit)
+         {
+            return labelRightCommitTimestampLabel;
+         }
+         else if (box == comboBoxHistLeftCommit)
+         {
+            return labelLeftHistCommitTimestampLabel;
+         }
+         else if (box == comboBoxHistRightCommit)
+         {
+            return labelRightHistCommitTimestampLabel;
+         }
+         return null;
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -376,7 +401,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         openBrowser(linkLabelConnectedTo.Text);
+         openBrowser((sender as LinkLabel).Text);
       }
 
       async private void ButtonAddKnownHost_Click(object sender, EventArgs e)

@@ -46,6 +46,7 @@ namespace mrHelper.App.Forms
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
          this.linkLabelConnectedTo.Text = String.Empty;
+         this.linkLabelHistConnectedTo.Text = String.Empty;
 
          Trace.TraceInformation("Current DPI is {0}", this.DeviceDpi);
       }
@@ -109,6 +110,8 @@ namespace mrHelper.App.Forms
       private WorkflowManager _workflowManager;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
+
+      private WorkflowManager _histWorkflowManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;

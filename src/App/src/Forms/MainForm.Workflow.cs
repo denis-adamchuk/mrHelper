@@ -185,16 +185,13 @@ namespace mrHelper.App.Forms
             throw new NoProjectsException(hostname);
          }
 
+         disableAllUIControls(true);
          if (!_currentUser.ContainsKey(hostname))
          {
             if (!await _workflowManager.LoadCurrentUserAsync(hostname))
             {
                return false;
             }
-         }
-         else
-         {
-            disableAllUIControls(true);
          }
 
          buttonReloadList.Enabled = true;
@@ -262,23 +259,17 @@ namespace mrHelper.App.Forms
 
       private void onLoadCurrentUser(string hostname)
       {
-         disableAllUIControls(true);
-
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading user from host {0}", hostname));
       }
 
       private void onFailedLoadCurrentUser()
       {
-         labelWorkflowStatus.Text = "Failed to load current user";
-
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load a user"));
       }
 
       private void onCurrentUserLoaded(string hostname, User currentUser)
       {
          _currentUser.Add(hostname, currentUser);
-
-         labelWorkflowStatus.Text = "Loaded current user";
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Current user details: Id: {0}, Name: {1}, Username: {2}",
@@ -431,8 +422,10 @@ namespace mrHelper.App.Forms
             enableComboBox(comboBoxLeftCommit);
             enableComboBox(comboBoxRightCommit);
 
-            addCommitsToComboBoxes(commits, mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
-            selectNotReviewedCommits(out int left, out int right);
+            addCommitsToComboBoxes(comboBoxLeftCommit, comboBoxRightCommit, commits,
+               mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
+            selectNotReviewedCommits(comboBoxLeftCommit, comboBoxRightCommit,
+               out int left, out int right);
             comboBoxLeftCommit.SelectedIndex = left;
             comboBoxRightCommit.SelectedIndex = right;
 

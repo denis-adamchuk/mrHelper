@@ -58,6 +58,29 @@ namespace mrHelper.Client.Workflow
          return CommonOperator.GetMergeRequestsAsync(_client, projectName);
       }
 
+      async internal Task<IEnumerable<MergeRequest>> GetHistoricalMergeRequestsAsync(string search)
+      {
+         try
+         {
+           return (IEnumerable<MergeRequest>)(await _client.RunAsync(async (gitlab) =>
+              await gitlab.MergeRequests.LoadAllTaskAsync(
+                 new GlobalMergeRequestsFilter
+                 {
+                    WIP = MergeRequestsFilter.WorkInProgressFilter.All,
+                    State = MergeRequestsFilter.StateFilter.Merged,
+                    Search = search
+                 })));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
       {
          return CommonOperator.GetMergeRequestAsync(_client, projectName, iid);

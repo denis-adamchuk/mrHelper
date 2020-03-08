@@ -169,8 +169,8 @@ namespace mrHelper.App.Forms
          }
 
          // Keep data before async/await
-         string leftSHA = getGitTag(true /* left */);
-         string rightSHA = getGitTag(false /* right */);
+         string leftSHA = getGitTag(comboBoxLeftCommit, comboBoxRightCommit, true /* left */);
+         string rightSHA = getGitTag(comboBoxLeftCommit, comboBoxRightCommit, false /* right */);
 
          List<string> includedSHA = new List<string>();
          for (int index = comboBoxLeftCommit.SelectedIndex; index < comboBoxLeftCommit.Items.Count; ++index)

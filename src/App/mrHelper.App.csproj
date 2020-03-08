@@ -150,27 +150,24 @@
     </Compile>
     <Compile Include="src\Forms\MainForm.Async.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.EventHandlers.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.History.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\MainForm.Init.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.Utils.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.Workflow.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.ExternalCalls.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\NewDiscussionForm.cs">
       <SubType>Form</SubType>

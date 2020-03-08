@@ -249,8 +249,10 @@ namespace mrHelper.App.Forms
 
          _gitClientUpdater = new GitInteractiveUpdater();
          createWorkflowAndDependencies();
+         createHistWorkflow();
 
          subscribeToWorkflowAndDependencies();
+         subscribeToHistWorkflow();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
 
          initializeColorScheme();
@@ -267,6 +269,7 @@ namespace mrHelper.App.Forms
 
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
          unsubscribeFromWorkflowAndDependencies();
+         unsubscribeFromHistWorkflow();
 
          await disposeLocalGitRepositoryFactory();
          await _workflowManager.CancelAsync();
@@ -326,6 +329,9 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
          labelGitStatus.Text = String.Empty;
 
+         labelHistWorkflowStatus.Text = String.Empty;
+         labelHistGitStatus.Text = String.Empty;
+
          if (_keywords == null)
          {
             checkBoxShowKeywords.Enabled = false;
@@ -338,11 +344,13 @@ namespace mrHelper.App.Forms
          if (Program.ServiceManager.GetHelpUrl() != String.Empty)
          {
             linkLabelHelp.Visible = true;
+            linkLabelHistHelp.Visible = true;
          }
 
          if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
          {
             linkLabelSendFeedback.Visible = true;
+            linkLabelHistFeedback.Visible = true;
          }
 
          if (Program.Settings.MainWindowSplitterDistance != 0)
