@@ -56,6 +56,16 @@ namespace mrHelper.App.Helpers
       private static readonly string OneShotUpdateSecondChanceDelayMsKeyName        = "OneShotUpdateSecondChanceDelayMs";
       private static readonly int    OneShotUpdateSecondChanceDelayMsDefaultValue   = 15 * 1000; // 15 seconds
 
+      private static readonly string OneShotUpdateOnNewMergeRequestFirstChanceDelayMsKeyName        =
+         "OneShotUpdateOnNewMergeRequestFirstChanceDelayMs";
+      private static readonly int    OneShotUpdateOnNewMergeRequestFirstChanceDelayMsDefaultValue   =
+         30 * 1000; // 30 seconds
+
+      private static readonly string OneShotUpdateOnNewMergeRequestSecondChanceDelayMsKeyName        =
+         "OneShotUpdateOnNewMergeRequestSecondChanceDelayMs";
+      private static readonly int    OneShotUpdateOnNewMergeRequestSecondChanceDelayMsDefaultValue   =
+         60 * 1000; // 60 seconds
+
       private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
       private static readonly bool   CacheRevisionsDefaultValue   = true;
 
@@ -441,6 +451,30 @@ namespace mrHelper.App.Helpers
                   out int result) ? result : OneShotUpdateSecondChanceDelayMsDefaultValue;
          }
          set { setValue(OneShotUpdateSecondChanceDelayMsKeyName, value.ToString()); }
+      }
+
+      public int OneShotUpdateOnNewMergeRequestFirstChanceDelayMs
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               OneShotUpdateOnNewMergeRequestFirstChanceDelayMsKeyName,
+               OneShotUpdateOnNewMergeRequestFirstChanceDelayMsDefaultValue.ToString()),
+                  out int result) ? result : OneShotUpdateOnNewMergeRequestFirstChanceDelayMsDefaultValue;
+         }
+         set { setValue(OneShotUpdateOnNewMergeRequestFirstChanceDelayMsKeyName, value.ToString()); }
+      }
+
+      public int OneShotUpdateOnNewMergeRequestSecondChanceDelayMs
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               OneShotUpdateOnNewMergeRequestSecondChanceDelayMsKeyName,
+               OneShotUpdateOnNewMergeRequestSecondChanceDelayMsDefaultValue.ToString()),
+                  out int result) ? result : OneShotUpdateOnNewMergeRequestSecondChanceDelayMsDefaultValue;
+         }
+         set { setValue(OneShotUpdateOnNewMergeRequestSecondChanceDelayMsKeyName, value.ToString()); }
       }
 
       public bool CacheRevisionsInBackground

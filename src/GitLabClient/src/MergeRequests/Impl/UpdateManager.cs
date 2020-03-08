@@ -40,22 +40,30 @@ namespace mrHelper.Client.MergeRequests
          _timer.Stop();
          _timer.Dispose();
 
-         _oneShotTimer?.Stop();
-         _oneShotTimer?.Dispose();
+         foreach (System.Timers.Timer timer in _oneShotTimers)
+         {
+            timer.Stop();
+            timer.Dispose();
+         }
+         _oneShotTimers.Clear();
       }
 
       public void RequestOneShotUpdate(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
-         cancelOneShotTimer();
+         enqueueOneShotTimer(mrk, firstChanceDelay);
+         enqueueOneShotTimer(mrk, secondChanceDelay);
+      }
 
-         _oneShotTimer = new System.Timers.Timer
+      private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
+      {
+         System.Timers.Timer timer = new System.Timers.Timer
          {
-            Interval = firstChanceDelay,
+            Interval = interval,
             AutoReset = false,
             SynchronizingObject = _timer.SynchronizingObject
          };
 
-         _oneShotTimer.Elapsed +=
+         timer.Elapsed +=
             async (s, e) =>
          {
             if (String.IsNullOrEmpty(_hostname) || _projects == null)
@@ -89,25 +97,11 @@ namespace mrHelper.Client.MergeRequests
                   legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
 
             OnUpdate?.Invoke(updates);
-
-            if (Convert.ToInt32(_oneShotTimer.Interval) == firstChanceDelay)
-            {
-              _oneShotTimer.Interval = secondChanceDelay;
-              _oneShotTimer.Start();
-            }
          };
 
-         _oneShotTimer.Start();
-      }
+         timer.Start();
 
-      private void cancelOneShotTimer()
-      {
-         if (_oneShotTimer?.Enabled ?? false)
-         {
-            Trace.TraceInformation("[UpdateManager] One-Shot Timer cancelled");
-            _oneShotTimer.Stop();
-            _oneShotTimer.Dispose();
-         }
+         _oneShotTimers.Add(timer);
       }
 
       /// <summary>
@@ -121,8 +115,6 @@ namespace mrHelper.Client.MergeRequests
             Trace.TraceWarning("[UpdateManager] Auto-update is cancelled");
             return;
          }
-
-         cancelOneShotTimer();
 
          IWorkflowDetails oldDetails = _cache.Details.Clone();
 
@@ -229,7 +221,7 @@ namespace mrHelper.Client.MergeRequests
       }
 
       private readonly System.Timers.Timer _timer;
-      private System.Timers.Timer _oneShotTimer;
+      private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
       private readonly WorkflowDetailsCache _cache;
       private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();

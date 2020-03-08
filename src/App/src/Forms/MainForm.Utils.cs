@@ -985,6 +985,18 @@ namespace mrHelper.App.Forms
       {
          updateVisibleMergeRequests();
 
+         if (e.New)
+         {
+            MergeRequestKey mrk = new MergeRequestKey
+            {
+               ProjectKey = e.FullMergeRequestKey.ProjectKey,
+               IId = e.FullMergeRequestKey.MergeRequest.IId
+            };
+            enqueueCheckForUpdates(mrk,
+               Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
+               Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs);
+         }
+
          if (listViewMergeRequests.SelectedItems.Count == 0)
          {
             return;
@@ -1477,6 +1489,12 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetProjectsForHost(hostname,
             Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
          updateProjectsListView();
+      }
+
+      private void enqueueCheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
+      {
+         _mergeRequestCache.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
+         _discussionManager.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
       }
    }
 }

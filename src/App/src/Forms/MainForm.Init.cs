@@ -93,10 +93,7 @@ namespace mrHelper.App.Forms
                bool reload = command.GetReload();
                if (reload && mergeRequestKey.HasValue)
                {
-                  _mergeRequestCache.CheckForUpdates(mergeRequestKey.Value,
-                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                     Program.Settings.OneShotUpdateSecondChanceDelayMs);
-                  _discussionManager.CheckForUpdates(mergeRequestKey.Value,
+                  enqueueCheckForUpdates(mergeRequestKey.Value,
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
                      Program.Settings.OneShotUpdateSecondChanceDelayMs);
                }

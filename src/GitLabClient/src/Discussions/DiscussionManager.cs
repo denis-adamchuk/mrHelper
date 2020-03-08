@@ -69,8 +69,12 @@ namespace mrHelper.Client.Discussions
          _timer.Stop();
          _timer.Dispose();
 
-         _oneShotTimer?.Stop();
-         _oneShotTimer?.Dispose();
+         foreach (System.Timers.Timer timer in _oneShotTimers)
+         {
+            timer.Stop();
+            timer.Dispose();
+         }
+         _oneShotTimers.Clear();
       }
 
       async public Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
@@ -118,47 +122,34 @@ namespace mrHelper.Client.Discussions
       /// </summary>
       public void CheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
-         cancelOneShotTimer();
+         enqueueOneShotTimer(mrk, firstChanceDelay);
+         enqueueOneShotTimer(mrk, secondChanceDelay);
+      }
 
-         _oneShotTimer = new System.Timers.Timer
+      private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
+      {
+         System.Timers.Timer timer = new System.Timers.Timer
          {
-            Interval = firstChanceDelay,
+            Interval = interval,
             AutoReset = false,
             SynchronizingObject = _timer.SynchronizingObject
          };
 
-         _oneShotTimer.Elapsed += (s, e) =>
+         timer.Elapsed += (s, e) =>
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
                mrk.IId));
 
             scheduleUpdate(new MergeRequestKey[] { mrk }, false);
-
-            if (Convert.ToInt32(_oneShotTimer.Interval) == firstChanceDelay)
-            {
-               _oneShotTimer.Interval = secondChanceDelay;
-               _oneShotTimer.Start();
-            }
          };
+         timer.Start();
 
-         _oneShotTimer.Start();
-      }
-
-      private void cancelOneShotTimer()
-      {
-         if (_oneShotTimer?.Enabled ?? false)
-         {
-            Trace.TraceInformation("[UpdateManager] One-Shot Timer cancelled");
-            _oneShotTimer.Stop();
-            _oneShotTimer.Dispose();
-         }
+         _oneShotTimers.Add(timer);
       }
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         cancelOneShotTimer();
-
          Trace.TraceInformation(String.Format(
             "[DiscussionManager] Scheduling update of discussions for {0} merge requests on a timer update",
             _cachedDiscussions.Count));
@@ -383,7 +374,7 @@ namespace mrHelper.Client.Discussions
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
 
       private readonly System.Timers.Timer _timer;
-      private System.Timers.Timer _oneShotTimer;
+      private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
       private readonly DiscussionOperator _operator;
       private User _currentUser;
