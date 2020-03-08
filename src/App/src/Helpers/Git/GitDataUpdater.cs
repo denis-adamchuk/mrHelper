@@ -174,7 +174,7 @@ namespace mrHelper.App.Helpers
                 + "It exceeds {2} and will be truncated", version.Id, version.Diffs.Count(), MaxDiffsInVersion));
             }
 
-            foreach (Diff diff in version.Diffs.Take(MaxDiffsInVersion))
+            foreach (DiffStruct diff in version.Diffs.Take(MaxDiffsInVersion))
             {
                diffArgs.Add(new GitDiffArguments
                {
