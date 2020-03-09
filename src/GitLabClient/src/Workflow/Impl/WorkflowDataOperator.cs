@@ -58,7 +58,7 @@ namespace mrHelper.Client.Workflow
          return CommonOperator.GetMergeRequestsAsync(_client, projectName);
       }
 
-      async internal Task<IEnumerable<MergeRequest>> GetHistoricalMergeRequestsAsync(string search)
+      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(string search)
       {
          try
          {
@@ -67,7 +67,6 @@ namespace mrHelper.Client.Workflow
                  new GlobalMergeRequestsFilter
                  {
                     WIP = MergeRequestsFilter.WorkInProgressFilter.All,
-                    State = MergeRequestsFilter.StateFilter.Merged,
                     Search = search
                  })));
          }

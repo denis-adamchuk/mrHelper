@@ -66,7 +66,11 @@ namespace mrHelper.App.Forms
             };
             button.Click += async (x, y) =>
             {
-               MergeRequestKey? mergeRequestKey = getMergeRequestKey();
+               MergeRequestKey? mergeRequestKey = getMergeRequestKey(null);
+               if (!mergeRequestKey.HasValue)
+               {
+                  return;
+               }
 
                labelWorkflowStatus.Text = "Command " + name + " is in progress";
                try
@@ -91,7 +95,7 @@ namespace mrHelper.App.Forms
                }
 
                bool reload = command.GetReload();
-               if (reload && mergeRequestKey.HasValue)
+               if (reload)
                {
                   enqueueCheckForUpdates(mergeRequestKey.Value,
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
@@ -249,10 +253,10 @@ namespace mrHelper.App.Forms
 
          _gitClientUpdater = new GitInteractiveUpdater();
          createWorkflowAndDependencies();
-         createHistWorkflow();
+         createSearchWorkflow();
 
          subscribeToWorkflowAndDependencies();
-         subscribeToHistWorkflow();
+         subscribeToSearchWorkflow();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
 
          initializeColorScheme();
@@ -269,7 +273,7 @@ namespace mrHelper.App.Forms
 
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
          unsubscribeFromWorkflowAndDependencies();
-         unsubscribeFromHistWorkflow();
+         unsubscribeFromSearchWorkflow();
 
          await disposeLocalGitRepositoryFactory();
          await _workflowManager.CancelAsync();
@@ -329,9 +333,6 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
          labelGitStatus.Text = String.Empty;
 
-         labelHistWorkflowStatus.Text = String.Empty;
-         labelHistGitStatus.Text = String.Empty;
-
          if (_keywords == null)
          {
             checkBoxShowKeywords.Enabled = false;
@@ -344,13 +345,11 @@ namespace mrHelper.App.Forms
          if (Program.ServiceManager.GetHelpUrl() != String.Empty)
          {
             linkLabelHelp.Visible = true;
-            linkLabelHistHelp.Visible = true;
          }
 
          if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
          {
             linkLabelSendFeedback.Visible = true;
-            linkLabelHistFeedback.Visible = true;
          }
 
          if (Program.Settings.MainWindowSplitterDistance != 0)
@@ -454,7 +453,7 @@ namespace mrHelper.App.Forms
 
       private void onPreLoadTrackedTime(MergeRequestKey mrk)
       {
-         MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+         MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
          if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
          {
             // change control enabled state
@@ -464,7 +463,7 @@ namespace mrHelper.App.Forms
 
       private void onPostLoadTrackedTime(MergeRequestKey mrk)
       {
-         MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+         MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
          if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
          {
             // change control enabled state and update text

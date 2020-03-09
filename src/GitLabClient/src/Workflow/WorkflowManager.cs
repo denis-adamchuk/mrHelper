@@ -191,7 +191,7 @@ namespace mrHelper.Client.Workflow
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await _operator.GetHistoricalMergeRequestsAsync(search);
+            mergeRequests = await _operator.SearchMergeRequestsAsync(search);
          }
          catch (OperatorException ex)
          {

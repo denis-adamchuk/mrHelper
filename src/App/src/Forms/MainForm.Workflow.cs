@@ -113,7 +113,8 @@ namespace mrHelper.App.Forms
             }
             throw;
          }
-         _suppressExternalConnections = _suppressExternalConnections && selectMergeRequest(projectname, iid, false);
+         _suppressExternalConnections = _suppressExternalConnections
+            && selectMergeRequest(listViewMergeRequests, projectname, iid, false);
       }
 
       async private Task<bool> switchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId)
@@ -345,9 +346,9 @@ namespace mrHelper.App.Forms
          }
 
          enableMergeRequestActions(false);
-         enableCommitActions(false);
+         enableCommitActions(false, null, default(User));
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
          updateTotalTime(null);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
@@ -380,8 +381,8 @@ namespace mrHelper.App.Forms
             MergeRequest = mergeRequest
          };
          updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(mergeRequest);
-         updateTotalTime(getMergeRequestKey().Value);
+         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey);
+         updateTotalTime(new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId });
 
          labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
 
@@ -390,7 +391,7 @@ namespace mrHelper.App.Forms
 
       private void onLoadCommits()
       {
-         enableCommitActions(false);
+         enableCommitActions(false, null, default(User));
          if (listViewMergeRequests.SelectedItems.Count != 0)
          {
             disableComboBox(comboBoxLeftCommit, "Loading...");
@@ -417,19 +418,21 @@ namespace mrHelper.App.Forms
       private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
          IEnumerable<Commit> commits)
       {
-         if (commits.Count() > 0)
+         MergeRequestKey? mrk = getMergeRequestKey(listViewMergeRequests);
+
+         if (!mrk.HasValue || commits.Count() > 0)
          {
             enableComboBox(comboBoxLeftCommit);
             enableComboBox(comboBoxRightCommit);
 
             addCommitsToComboBoxes(comboBoxLeftCommit, comboBoxRightCommit, commits,
                mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
-            selectNotReviewedCommits(comboBoxLeftCommit, comboBoxRightCommit,
+            selectNotReviewedCommits(comboBoxLeftCommit, comboBoxRightCommit, mrk.Value,
                out int left, out int right);
             comboBoxLeftCommit.SelectedIndex = left;
             comboBoxRightCommit.SelectedIndex = right;
 
-            enableCommitActions(true);
+            enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
          {
@@ -459,13 +462,14 @@ namespace mrHelper.App.Forms
       private void disableAllUIControls(bool clearListView)
       {
          buttonReloadList.Enabled = false;
+         disableListView(listViewMergeRequests, clearListView);
+
          enableMergeRequestFilterControls(false);
          enableMergeRequestActions(false);
-         enableCommitActions(false);
+         enableCommitActions(false, null, default(User));
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
          updateTotalTime(null);
-         disableListView(listViewMergeRequests, clearListView);
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
       }

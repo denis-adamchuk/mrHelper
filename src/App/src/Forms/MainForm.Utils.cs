@@ -26,32 +26,37 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      string getHostName()
+      private string getHostName()
       {
          return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
       }
 
-      MergeRequest? getMergeRequest()
+      private bool isSearchMode()
       {
-         if (listViewMergeRequests.SelectedItems.Count > 0)
+         return tabControlMode.SelectedTab == tabPageSearch;
+      }
+
+      private MergeRequest? getMergeRequest(ListView proposedListView)
+      {
+         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
+         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         if (listView.SelectedItems.Count > 0)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
             return fmk.MergeRequest;
          }
          Debug.Assert(false);
          return null;
       }
 
-      MergeRequestKey? getMergeRequestKey()
+      private MergeRequestKey? getMergeRequestKey(ListView proposedListView)
       {
-         if (listViewMergeRequests.SelectedItems.Count > 0)
+         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
+         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         if (listView.SelectedItems.Count > 0)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
-            return new MergeRequestKey
-            {
-               ProjectKey = fmk.ProjectKey,
-               IId = fmk.MergeRequest.IId
-            };
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
+            return new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId };
          }
          return null;
       }
@@ -150,12 +155,12 @@ namespace mrHelper.App.Forms
          group.Tag = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
       }
 
-      private bool selectMergeRequest(string projectname, int iid, bool exact)
+      private bool selectMergeRequest(ListView listView, string projectname, int iid, bool exact)
       {
          // CAUTION: this method fires ListViewMergeRequests_ItemSelectionChanged event handler which is an async method.
          // However, as the event is fired by .NET Framework internally, we cannot await it and execution does not stop.
 
-         foreach (ListViewItem item in listViewMergeRequests.Items)
+         foreach (ListViewItem item in listView.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
             if (projectname == String.Empty ||
@@ -172,7 +177,7 @@ namespace mrHelper.App.Forms
          }
 
          // selected an item from the proper group
-         foreach (ListViewGroup group in listViewMergeRequests.Groups)
+         foreach (ListViewGroup group in listView.Groups)
          {
             if (projectname == group.Name && group.Items.Count > 0)
             {
@@ -182,7 +187,7 @@ namespace mrHelper.App.Forms
          }
 
          // select whatever
-         foreach (ListViewGroup group in listViewMergeRequests.Groups)
+         foreach (ListViewGroup group in listView.Groups)
          {
             if (group.Items.Count > 0)
             {
@@ -195,15 +200,13 @@ namespace mrHelper.App.Forms
       }
 
       private void selectNotReviewedCommits(ComboBox leftComboBox, ComboBox rightComboBox,
-         out int left, out int right)
+         MergeRequestKey mrk, out int left, out int right)
       {
          Debug.Assert(leftComboBox.Items.Count == rightComboBox.Items.Count);
 
          left = 0;
          right = 0;
 
-         Debug.Assert(getMergeRequestKey().HasValue);
-         MergeRequestKey mrk = getMergeRequestKey().Value;
          if (!_reviewedCommits.ContainsKey(mrk))
          {
             left = 0;
@@ -475,11 +478,7 @@ namespace mrHelper.App.Forms
          buttonDiscussions.Enabled = enabled;
          listViewMergeRequests.Enabled = enabled;
          enableMergeRequestFilterControls(enabled);
-
-         buttonHistDiffTool.Enabled = enabled;
-         buttonHistDiscussions.Enabled = enabled;
-         listViewHistMergeRequests.Enabled = enabled;
-         enableHistMergeRequestFilterControls(enabled);
+         enableMergeRequestSearchControls(enabled);
 
          _suppressExternalConnections = !enabled;
 
@@ -495,9 +494,9 @@ namespace mrHelper.App.Forms
          textBoxLabels.Enabled = enabled;
       }
 
-      private void enableHistMergeRequestFilterControls(bool enabled)
+      private void enableMergeRequestSearchControls(bool enabled)
       {
-         textBoxHistSearch.Enabled = enabled;
+         textBoxSearch.Enabled = enabled;
       }
 
       private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
@@ -505,13 +504,6 @@ namespace mrHelper.App.Forms
          richTextBoxMergeRequestDescription.Text = getMergeRequestDescriptionHtmlText(fmk);
          richTextBoxMergeRequestDescription.Update();
          linkLabelConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
-      }
-
-      private void updateHistMergeRequestDetails(FullMergeRequestKey? fmk)
-      {
-         htmlPanelHistMergeRequestDescription.Text = getMergeRequestDescriptionHtmlText(fmk);
-         htmlPanelHistMergeRequestDescription.Update();
-         linkLabelHistConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
       }
 
       private string getMergeRequestDescriptionHtmlText(FullMergeRequestKey? fmk)
@@ -544,22 +536,19 @@ namespace mrHelper.App.Forms
          return commonBegin + htmlbody + commonEnd;
       }
 
-      private void updateTimeTrackingMergeRequestDetails(MergeRequest? mergeRequest)
+      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey)
       {
          if (isTrackingTime())
          {
             return;
          }
 
-         labelTimeTrackingMergeRequestName.Visible = mergeRequest.HasValue;
-         buttonTimeTrackingStart.Enabled = mergeRequest.HasValue;
+         labelTimeTrackingMergeRequestName.Visible = enabled;
+         buttonTimeTrackingStart.Enabled = enabled;
 
-         if (mergeRequest.HasValue)
+         if (enabled)
          {
-            Debug.Assert(getMergeRequestKey().HasValue);
-
-            labelTimeTrackingMergeRequestName.Text =
-               mergeRequest.Value.Title + "   " + "[" + getMergeRequestKey()?.ProjectKey.ProjectName + "]";
+            labelTimeTrackingMergeRequestName.Text = title + "   " + "[" + projectKey.ProjectName + "]";
          }
       }
 
@@ -624,37 +613,26 @@ namespace mrHelper.App.Forms
          buttonNewDiscussion.Enabled = enabled;
       }
 
-      private void enableHistMergeRequestActions(bool enabled)
-      {
-         linkLabelHistConnectedTo.Enabled = enabled;
-      }
-
-      private void enableCommitActions(bool enabled)
+      private void enableCommitActions(bool enabled, IEnumerable<string> labels, User author)
       {
          buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
          buttonDiffTool.Enabled = enabled;
-         enableCustomActions(enabled);
+         enableCustomActions(enabled, labels, author);
       }
 
-      private void enableHistCommitActions(bool enabled)
-      {
-         buttonHistDiffTool.Enabled = enabled;
-         buttonHistDiscussions.Enabled = enabled;
-      }
-
-      private bool isCustomActionEnabled(MergeRequest mergeRequest, string dependency)
+      private bool isCustomActionEnabled(IEnumerable<string> labels, User author, string dependency)
       {
          if (String.IsNullOrEmpty(dependency))
          {
             return true;
          }
 
-         if (mergeRequest.Labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
+         if (labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
          {
             return true;
          }
 
-         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", mergeRequest.Author.Username))
+         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username))
          {
             return true;
          }
@@ -662,21 +640,20 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void enableCustomActions(bool enabled)
+      private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
       {
-         if (!enabled || !getMergeRequest().HasValue)
+         if (!enabled)
          {
             groupBoxActions.Controls.Cast<Control>().ToList().ForEach(x => x.Enabled = false);
             return;
          }
 
-         MergeRequest mergeRequest = getMergeRequest().Value;
          foreach (Control control in groupBoxActions.Controls)
          {
             string dependency = (string)control.Tag;
             string resolvedDependency =
                String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
-            control.Enabled = isCustomActionEnabled(mergeRequest, resolvedDependency);
+            control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
          }
       }
 
@@ -819,12 +796,12 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
-         if (!getMergeRequestKey().HasValue)
+         if (!getMergeRequestKey(null).HasValue)
          {
             return SystemColors.Window;
          }
 
-         MergeRequestKey mrk = getMergeRequestKey().Value;
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
          bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
          return wasReviewed || item.IsBase ? SystemColors.Window :
             _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);
@@ -957,6 +934,7 @@ namespace mrHelper.App.Forms
          setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty));
          setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty));
          setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty));
+         setSubItemTag("State",        new ListViewSubItemInfo(() => mr.State,                () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -1127,7 +1105,6 @@ namespace mrHelper.App.Forms
             BeginInvoke(new Action(() =>
             {
                linkLabelNewVersion.Visible = true;
-               linkLabelHistNewVersion.Visible = true;
                updateCaption();
             }));
          });
@@ -1231,10 +1208,6 @@ namespace mrHelper.App.Forms
 
          richTextBoxMergeRequestDescription.BaseStylesheet +=
             String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
-
-         listViewHistMergeRequests.BackgroundImage = listViewMergeRequests.BackgroundImage;
-         listViewHistMergeRequests.BackgroundImageTiled = listViewMergeRequests.BackgroundImageTiled;
-         htmlPanelHistMergeRequestDescription.BaseStylesheet = richTextBoxMergeRequestDescription.BaseStylesheet;
 
          Program.Settings.VisualThemeName = theme;
 

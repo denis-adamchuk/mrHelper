@@ -295,7 +295,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+         if (!selectMergeRequest(listViewMergeRequests, mergeRequestUrl.Project, mergeRequestUrl.IId, true))
          {
             if (!listViewMergeRequests.Enabled)
             {
@@ -314,7 +314,7 @@ namespace mrHelper.App.Forms
                      return; // user decided to not un-hide merge request
                   }
 
-                  if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+                  if (!selectMergeRequest(listViewMergeRequests, mergeRequestUrl.Project, mergeRequestUrl.IId, true))
                   {
                      Debug.Assert(false);
                      Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));

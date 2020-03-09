@@ -46,7 +46,6 @@ namespace mrHelper.App.Forms
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
          this.linkLabelConnectedTo.Text = String.Empty;
-         this.linkLabelHistConnectedTo.Text = String.Empty;
 
          Trace.TraceInformation("Current DPI is {0}", this.DeviceDpi);
       }
@@ -63,12 +62,12 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentProjectName()
       {
-         return getMergeRequestKey()?.ProjectKey.ProjectName ?? String.Empty;
+         return getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return getMergeRequestKey()?.IId ?? 0;
+         return getMergeRequestKey(null)?.IId ?? 0;
       }
 
       public Task<ILocalGitRepositoryFactory> GetFactory()
@@ -111,7 +110,7 @@ namespace mrHelper.App.Forms
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
-      private WorkflowManager _histWorkflowManager;
+      private WorkflowManager _searchWorkflowManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;

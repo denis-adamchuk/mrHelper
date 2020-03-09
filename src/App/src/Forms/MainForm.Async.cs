@@ -19,16 +19,13 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task showDiscussionsFormAsync()
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author)
       {
          Debug.Assert(getHostName() != String.Empty);
          Debug.Assert(_currentUser.ContainsKey(getHostName()));
-         Debug.Assert(getMergeRequestKey().HasValue);
 
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-         MergeRequest mergeRequest = getMergeRequest().Value;
 
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
@@ -106,7 +103,7 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, mergeRequest.Title, mergeRequest.Author, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, title, author, repo,
                int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager, currentUser,
                   async (key) =>
                {
@@ -160,7 +157,7 @@ namespace mrHelper.App.Forms
          form.Show();
       }
 
-      async private Task onLaunchDiffToolAsync()
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
          {
@@ -182,9 +179,6 @@ namespace mrHelper.App.Forms
                break;
             }
          }
-
-         Debug.Assert(getMergeRequestKey().HasValue);
-         MergeRequestKey mrk = getMergeRequestKey().Value;
 
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
@@ -279,14 +273,8 @@ namespace mrHelper.App.Forms
          comboBoxRightCommit.Refresh();
       }
 
-      async private Task onAddCommentAsync()
+      async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
       {
-         Debug.Assert(getMergeRequestKey().HasValue);
-
-         // Store data before opening a modal dialog
-         string title = getMergeRequest().Value.Title;
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
          {
@@ -316,14 +304,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task onNewDiscussionAsync()
+      async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
-         Debug.Assert(getMergeRequestKey().HasValue);
-
-         // Store data before opening a modal dialog
-         string title = getMergeRequest().Value.Title;
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-
          string caption = String.Format("Create a new discussion in merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
          {

@@ -69,17 +69,33 @@ namespace mrHelper.App.Forms
 
       async private void ButtonDifftool_Click(object sender, EventArgs e)
       {
-         await onLaunchDiffToolAsync();
+         Debug.Assert(getMergeRequestKey(null).HasValue);
+
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+         await onLaunchDiffToolAsync(mrk);
       }
 
       async private void ButtonAddComment_Click(object sender, EventArgs e)
       {
-         await onAddCommentAsync();
+         Debug.Assert(getMergeRequestKey(null).HasValue);
+         Debug.Assert(getMergeRequest(null).HasValue);
+
+         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+         await onAddCommentAsync(mrk, mergeRequest.Title);
       }
 
       async private void ButtonNewDiscussion_Click(object sender, EventArgs e)
       {
-         await onNewDiscussionAsync();
+         Debug.Assert(getMergeRequestKey(null).HasValue);
+         Debug.Assert(getMergeRequest(null).HasValue);
+
+         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+         await onNewDiscussionAsync(mrk, mergeRequest.Title);
       }
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
@@ -103,8 +119,8 @@ namespace mrHelper.App.Forms
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
       {
          // Store data before opening a modal dialog
-         Debug.Assert(getMergeRequestKey().HasValue);
-         MergeRequestKey mrk = getMergeRequestKey().Value;
+         Debug.Assert(getMergeRequestKey(null).HasValue);
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
          TimeSpan oldSpan = getTotalTime(mrk) ?? TimeSpan.Zero;
 
          using (EditTimeForm form = new EditTimeForm(oldSpan))
@@ -306,7 +322,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void ListViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+      async private void ListViewMergeRequests_ItemSelectionChanged(
+         object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
          listView.Refresh();
@@ -314,15 +331,35 @@ namespace mrHelper.App.Forms
          if (listView.SelectedItems.Count < 1)
          {
             // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
-            await switchMergeRequestByUserAsync(default(ProjectKey), 0);
+            if (listView == listViewFoundMergeRequests)
+            {
+               await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0);
+            }
+            else
+            {
+               await switchMergeRequestByUserAsync(default(ProjectKey), 0);
+            }
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId))
+         if (listView == listViewFoundMergeRequests)
          {
-            Debug.Assert(getMergeRequestKey().HasValue);
-            _lastMergeRequestsByHosts[key.ProjectKey.HostName] = getMergeRequestKey().Value;
+            await switchSearchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId);
+         }
+         else if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId))
+         {
+            Debug.Assert(getMergeRequestKey(listViewMergeRequests).HasValue);
+            _lastMergeRequestsByHosts[key.ProjectKey.HostName] =
+               getMergeRequestKey(listViewMergeRequests).Value;
+         }
+      }
+
+      async private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
+      {
+         if (e.KeyCode == Keys.Enter)
+         {
+            await searchMergeRequests(textBoxSearch.Text);
          }
       }
 
@@ -357,18 +394,14 @@ namespace mrHelper.App.Forms
 
       private void ComboBoxLeftCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         ComboBox leftComboBox = sender == comboBoxLeftCommit ? comboBoxLeftCommit : comboBoxHistLeftCommit;
-         ComboBox rightComboBox = sender == comboBoxLeftCommit ? comboBoxRightCommit : comboBoxHistRightCommit;
-         checkComboboxCommitsOrder(leftComboBox, rightComboBox, true /* I'm left one */);
+         checkComboboxCommitsOrder(comboBoxLeftCommit, comboBoxRightCommit, true /* I'm left one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
          setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
       }
 
       private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         ComboBox leftComboBox = sender == comboBoxLeftCommit ? comboBoxLeftCommit : comboBoxHistLeftCommit;
-         ComboBox rightComboBox = sender == comboBoxLeftCommit ? comboBoxRightCommit : comboBoxHistRightCommit;
-         checkComboboxCommitsOrder(leftComboBox, rightComboBox, false /* because I'm the right one */);
+         checkComboboxCommitsOrder(comboBoxLeftCommit, comboBoxRightCommit, false /* because I'm the right one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
          setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
       }
@@ -382,14 +415,6 @@ namespace mrHelper.App.Forms
          else if (box == comboBoxRightCommit)
          {
             return labelRightCommitTimestampLabel;
-         }
-         else if (box == comboBoxHistLeftCommit)
-         {
-            return labelLeftHistCommitTimestampLabel;
-         }
-         else if (box == comboBoxHistRightCommit)
-         {
-            return labelRightHistCommitTimestampLabel;
          }
          return null;
       }
@@ -647,16 +672,22 @@ namespace mrHelper.App.Forms
 
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
-         await showDiscussionsFormAsync();
+         Debug.Assert(getMergeRequestKey(null).HasValue);
+         Debug.Assert(getMergeRequest(null).HasValue);
+
+         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
       async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          Trace.TraceInformation("[MainForm] User decided to abort git update");
 
-         Debug.Assert(getMergeRequestKey().HasValue);
+         Debug.Assert(getMergeRequestKey(null).HasValue);
 
-         ILocalGitRepository repo = await getRepository(getMergeRequestKey().Value.ProjectKey, false);
+         ILocalGitRepository repo = await getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
          if (repo == null)
          {
             return;
@@ -865,8 +896,8 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Start();
 
          // Reset and start stopwatch
-         Debug.Assert(getMergeRequestKey().HasValue);
-         _timeTracker = _timeTrackingManager.GetTracker(getMergeRequestKey().Value);
+         Debug.Assert(getMergeRequestKey(null).HasValue);
+         _timeTracker = _timeTrackingManager.GetTracker(getMergeRequestKey(null).Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -928,12 +959,22 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
          // Show actual merge request details
-         bool isMergeRequestSelected = listViewMergeRequests.SelectedItems.Count > 0;
-         updateTimeTrackingMergeRequestDetails(
-            isMergeRequestSelected ? getMergeRequest().Value : new Nullable<MergeRequest>());
+         bool isMergeRequestSelected = getMergeRequest(null).HasValue && getMergeRequestKey(null).HasValue;
+         if (isMergeRequestSelected)
+         {
+            MergeRequest mergeRequest = getMergeRequest(null).Value;
+            MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(isMergeRequestSelected ? getMergeRequestKey().Value : new Nullable<MergeRequestKey>());
+            updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey);
+
+            // Take care of controls that 'time tracking' mode shares with normal mode
+            updateTotalTime(mrk);
+         }
+         else
+         {
+            updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
+            updateTotalTime(null);
+         }
 
          updateTrayIcon();
       }
