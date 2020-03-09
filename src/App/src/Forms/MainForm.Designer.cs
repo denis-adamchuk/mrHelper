@@ -65,12 +65,6 @@ namespace mrHelper.App.Forms
          this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
          this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
-         this.buttonHistDiscussions = new System.Windows.Forms.Button();
-         this.linkLabelHistHelp = new System.Windows.Forms.LinkLabel();
-         this.linkLabelHistFeedback = new System.Windows.Forms.LinkLabel();
-         this.linkLabelHistNewVersion = new System.Windows.Forms.LinkLabel();
-         this.textBoxHistSearch = new System.Windows.Forms.TextBox();
-         this.buttonHistDiffTool = new System.Windows.Forms.Button();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -142,31 +136,6 @@ namespace mrHelper.App.Forms
          this.comboBoxRightCommit = new System.Windows.Forms.ComboBox();
          this.labelLeftCommitTimestampLabel = new System.Windows.Forms.Label();
          this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
-         this.tabPageHistory = new System.Windows.Forms.TabPage();
-         this.splitContainer3 = new System.Windows.Forms.SplitContainer();
-         this.groupBoxHistSearchMR = new System.Windows.Forms.GroupBox();
-         this.listViewHistMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
-         this.columnHeaderHistIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.columnHeaderHistAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.columnHeaderHistTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.columnHeaderHistJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.columnHeaderHistSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.columnHeaderHistTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.splitContainer4 = new System.Windows.Forms.SplitContainer();
-         this.groupBoxHistSelectedMR = new System.Windows.Forms.GroupBox();
-         this.linkLabelHistConnectedTo = new System.Windows.Forms.LinkLabel();
-         this.htmlPanelHistMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
-         this.panel2 = new System.Windows.Forms.Panel();
-         this.linkLabelHistAbort = new System.Windows.Forms.LinkLabel();
-         this.labelHistGitStatus = new System.Windows.Forms.Label();
-         this.labelHistWorkflowStatus = new System.Windows.Forms.Label();
-         this.panel3 = new System.Windows.Forms.Panel();
-         this.groupBoxHistReview = new System.Windows.Forms.GroupBox();
-         this.groupBoxHistSelectCommits = new System.Windows.Forms.GroupBox();
-         this.labelRightHistCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxHistRightCommit = new System.Windows.Forms.ComboBox();
-         this.labelLeftHistCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxHistLeftCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
@@ -196,21 +165,6 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
          this.groupBoxSelectCommits.SuspendLayout();
-         this.tabPageHistory.SuspendLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
-         this.splitContainer3.Panel1.SuspendLayout();
-         this.splitContainer3.Panel2.SuspendLayout();
-         this.splitContainer3.SuspendLayout();
-         this.groupBoxHistSearchMR.SuspendLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).BeginInit();
-         this.splitContainer4.Panel1.SuspendLayout();
-         this.splitContainer4.Panel2.SuspendLayout();
-         this.splitContainer4.SuspendLayout();
-         this.groupBoxHistSelectedMR.SuspendLayout();
-         this.panel2.SuspendLayout();
-         this.panel3.SuspendLayout();
-         this.groupBoxHistReview.SuspendLayout();
-         this.groupBoxHistSelectCommits.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxKnownHosts
@@ -450,84 +404,6 @@ namespace mrHelper.App.Forms
          this.linkLabelNewVersion.Visible = false;
          this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
          // 
-         // buttonHistDiscussions
-         // 
-         this.buttonHistDiscussions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonHistDiscussions.Enabled = false;
-         this.buttonHistDiscussions.Location = new System.Drawing.Point(727, 19);
-         this.buttonHistDiscussions.MinimumSize = new System.Drawing.Size(96, 0);
-         this.buttonHistDiscussions.Name = "buttonHistDiscussions";
-         this.buttonHistDiscussions.Size = new System.Drawing.Size(96, 32);
-         this.buttonHistDiscussions.TabIndex = 10;
-         this.buttonHistDiscussions.Text = "Discussions";
-         this.toolTip.SetToolTip(this.buttonHistDiscussions, "Show full list of Discussions");
-         this.buttonHistDiscussions.UseVisualStyleBackColor = true;
-         // 
-         // linkLabelHistHelp
-         // 
-         this.linkLabelHistHelp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelHistHelp.AutoSize = true;
-         this.linkLabelHistHelp.Location = new System.Drawing.Point(809, 10);
-         this.linkLabelHistHelp.Name = "linkLabelHistHelp";
-         this.linkLabelHistHelp.Size = new System.Drawing.Size(29, 13);
-         this.linkLabelHistHelp.TabIndex = 14;
-         this.linkLabelHistHelp.TabStop = true;
-         this.linkLabelHistHelp.Text = "Help";
-         this.toolTip.SetToolTip(this.linkLabelHistHelp, "Open a web page with documentation");
-         this.linkLabelHistHelp.Visible = false;
-         this.linkLabelHistHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
-         // 
-         // linkLabelHistFeedback
-         // 
-         this.linkLabelHistFeedback.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelHistFeedback.AutoSize = true;
-         this.linkLabelHistFeedback.Location = new System.Drawing.Point(869, 10);
-         this.linkLabelHistFeedback.Name = "linkLabelHistFeedback";
-         this.linkLabelHistFeedback.Size = new System.Drawing.Size(55, 13);
-         this.linkLabelHistFeedback.TabIndex = 15;
-         this.linkLabelHistFeedback.TabStop = true;
-         this.linkLabelHistFeedback.Text = "Feedback";
-         this.toolTip.SetToolTip(this.linkLabelHistFeedback, "Report a bug or suggestion to developer. Logs are attached automatically.");
-         this.linkLabelHistFeedback.Visible = false;
-         this.linkLabelHistFeedback.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSendFeedback_LinkClicked);
-         // 
-         // linkLabelHistNewVersion
-         // 
-         this.linkLabelHistNewVersion.AutoSize = true;
-         this.linkLabelHistNewVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-         this.linkLabelHistNewVersion.Location = new System.Drawing.Point(2, 7);
-         this.linkLabelHistNewVersion.Name = "linkLabelHistNewVersion";
-         this.linkLabelHistNewVersion.Size = new System.Drawing.Size(299, 17);
-         this.linkLabelHistNewVersion.TabIndex = 16;
-         this.linkLabelHistNewVersion.TabStop = true;
-         this.linkLabelHistNewVersion.Text = "New version is available! Click here to install it.";
-         this.toolTip.SetToolTip(this.linkLabelHistNewVersion, "New version is already downloaded. Click to install it.");
-         this.linkLabelHistNewVersion.Visible = false;
-         this.linkLabelHistNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
-         // 
-         // textBoxHistSearch
-         // 
-         this.textBoxHistSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxHistSearch.Location = new System.Drawing.Point(3, 17);
-         this.textBoxHistSearch.MinimumSize = new System.Drawing.Size(100, 4);
-         this.textBoxHistSearch.Name = "textBoxHistSearch";
-         this.textBoxHistSearch.Size = new System.Drawing.Size(331, 20);
-         this.textBoxHistSearch.TabIndex = 1;
-         this.textBoxHistSearch.KeyDown += TextBoxHistSearch_KeyDown;
-         // 
-         // buttonHistDiffTool
-         // 
-         this.buttonHistDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonHistDiffTool.Enabled = false;
-         this.buttonHistDiffTool.Location = new System.Drawing.Point(829, 19);
-         this.buttonHistDiffTool.MinimumSize = new System.Drawing.Size(96, 0);
-         this.buttonHistDiffTool.Name = "buttonHistDiffTool";
-         this.buttonHistDiffTool.Size = new System.Drawing.Size(96, 32);
-         this.buttonHistDiffTool.TabIndex = 7;
-         this.buttonHistDiffTool.Text = "Diff tool";
-         this.buttonHistDiffTool.UseVisualStyleBackColor = true;
-         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -568,7 +444,6 @@ namespace mrHelper.App.Forms
          // 
          this.tabControl.Controls.Add(this.tabPageSettings);
          this.tabControl.Controls.Add(this.tabPageMR);
-         this.tabControl.Controls.Add(this.tabPageHistory);
          this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
          this.tabControl.Location = new System.Drawing.Point(0, 0);
          this.tabControl.Name = "tabControl";
@@ -1347,315 +1222,6 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
          // 
-         // tabPageHistory
-         // 
-         this.tabPageHistory.Controls.Add(this.splitContainer3);
-         this.tabPageHistory.Location = new System.Drawing.Point(4, 22);
-         this.tabPageHistory.Name = "tabPageHistory";
-         this.tabPageHistory.Size = new System.Drawing.Size(1276, 864);
-         this.tabPageHistory.TabIndex = 2;
-         this.tabPageHistory.Text = "History (experimental)";
-         this.tabPageHistory.UseVisualStyleBackColor = true;
-         // 
-         // splitContainer3
-         // 
-         this.splitContainer3.BackColor = System.Drawing.Color.Transparent;
-         this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer3.Location = new System.Drawing.Point(0, 0);
-         this.splitContainer3.Name = "splitContainer3";
-         // 
-         // splitContainer3.Panel1
-         // 
-         this.splitContainer3.Panel1.Controls.Add(this.groupBoxHistSearchMR);
-         // 
-         // splitContainer3.Panel2
-         // 
-         this.splitContainer3.Panel2.Controls.Add(this.splitContainer4);
-         this.splitContainer3.Size = new System.Drawing.Size(1276, 864);
-         this.splitContainer3.SplitterDistance = 337;
-         this.splitContainer3.SplitterWidth = 8;
-         this.splitContainer3.TabIndex = 5;
-         this.splitContainer3.TabStop = false;
-         // 
-         // groupBoxHistSearchMR
-         // 
-         this.groupBoxHistSearchMR.Controls.Add(this.textBoxHistSearch);
-         this.groupBoxHistSearchMR.Controls.Add(this.listViewHistMergeRequests);
-         this.groupBoxHistSearchMR.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxHistSearchMR.Location = new System.Drawing.Point(0, 0);
-         this.groupBoxHistSearchMR.Name = "groupBoxHistSearchMR";
-         this.groupBoxHistSearchMR.Size = new System.Drawing.Size(337, 864);
-         this.groupBoxHistSearchMR.TabIndex = 0;
-         this.groupBoxHistSearchMR.TabStop = false;
-         this.groupBoxHistSearchMR.Text = "Search Merge Request";
-         // 
-         // listViewHistMergeRequests
-         // 
-         this.listViewHistMergeRequests.AllowColumnReorder = true;
-         this.listViewHistMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.listViewHistMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderHistIId,
-            this.columnHeaderHistAuthor,
-            this.columnHeaderHistTitle,
-            this.columnHeaderHistJira,
-            this.columnHeaderHistSourceBranch,
-            this.columnHeaderHistTargetBranch});
-         this.listViewHistMergeRequests.FullRowSelect = true;
-         this.listViewHistMergeRequests.GridLines = true;
-         this.listViewHistMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-         this.listViewHistMergeRequests.HideSelection = false;
-         this.listViewHistMergeRequests.Location = new System.Drawing.Point(3, 46);
-         this.listViewHistMergeRequests.MultiSelect = false;
-         this.listViewHistMergeRequests.Name = "listViewHistMergeRequests";
-         this.listViewHistMergeRequests.OwnerDraw = true;
-         this.listViewHistMergeRequests.Size = new System.Drawing.Size(331, 815);
-         this.listViewHistMergeRequests.TabIndex = 3;
-         this.listViewHistMergeRequests.UseCompatibleStateImageBehavior = false;
-         this.listViewHistMergeRequests.View = System.Windows.Forms.View.Details;
-         this.listViewHistMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
-         this.listViewHistMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
-         this.listViewHistMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.ListViewHistMergeRequests_ItemSelectionChanged);
-         this.listViewHistMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseDown);
-         this.listViewHistMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseMove);
-         // 
-         // columnHeaderHistIId
-         // 
-         this.columnHeaderHistIId.Tag = "IId";
-         this.columnHeaderHistIId.Text = "IId";
-         this.columnHeaderHistIId.Width = 40;
-         // 
-         // columnHeaderHistAuthor
-         // 
-         this.columnHeaderHistAuthor.Tag = "Author";
-         this.columnHeaderHistAuthor.Text = "Author";
-         this.columnHeaderHistAuthor.Width = 110;
-         // 
-         // columnHeaderHistTitle
-         // 
-         this.columnHeaderHistTitle.Tag = "Title";
-         this.columnHeaderHistTitle.Text = "Title";
-         this.columnHeaderHistTitle.Width = 400;
-         // 
-         // columnHeaderHistJira
-         // 
-         this.columnHeaderHistJira.Tag = "Jira";
-         this.columnHeaderHistJira.Text = "Jira";
-         this.columnHeaderHistJira.Width = 80;
-         // 
-         // columnHeaderHistSourceBranch
-         // 
-         this.columnHeaderHistSourceBranch.Tag = "SourceBranch";
-         this.columnHeaderHistSourceBranch.Text = "Source Branch";
-         this.columnHeaderHistSourceBranch.Width = 100;
-         // 
-         // columnHeaderHistTargetBranch
-         // 
-         this.columnHeaderHistTargetBranch.Tag = "TargetBranch";
-         this.columnHeaderHistTargetBranch.Text = "Target Branch";
-         this.columnHeaderHistTargetBranch.Width = 100;
-         // 
-         // splitContainer4
-         // 
-         this.splitContainer4.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainer4.Location = new System.Drawing.Point(0, 0);
-         this.splitContainer4.Name = "splitContainer4";
-         this.splitContainer4.Orientation = System.Windows.Forms.Orientation.Horizontal;
-         // 
-         // splitContainer4.Panel1
-         // 
-         this.splitContainer4.Panel1.Controls.Add(this.groupBoxHistSelectedMR);
-         // 
-         // splitContainer4.Panel2
-         // 
-         this.splitContainer4.Panel2.Controls.Add(this.panel2);
-         this.splitContainer4.Panel2.Controls.Add(this.panel3);
-         this.splitContainer4.Panel2.Controls.Add(this.groupBoxHistReview);
-         this.splitContainer4.Panel2.Controls.Add(this.groupBoxHistSelectCommits);
-         this.splitContainer4.Size = new System.Drawing.Size(931, 864);
-         this.splitContainer4.SplitterDistance = 268;
-         this.splitContainer4.SplitterWidth = 8;
-         this.splitContainer4.TabIndex = 7;
-         this.splitContainer4.TabStop = false;
-         // 
-         // groupBoxHistSelectedMR
-         // 
-         this.groupBoxHistSelectedMR.Controls.Add(this.linkLabelHistConnectedTo);
-         this.groupBoxHistSelectedMR.Controls.Add(this.htmlPanelHistMergeRequestDescription);
-         this.groupBoxHistSelectedMR.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxHistSelectedMR.Location = new System.Drawing.Point(0, 0);
-         this.groupBoxHistSelectedMR.Name = "groupBoxHistSelectedMR";
-         this.groupBoxHistSelectedMR.Size = new System.Drawing.Size(931, 268);
-         this.groupBoxHistSelectedMR.TabIndex = 1;
-         this.groupBoxHistSelectedMR.TabStop = false;
-         this.groupBoxHistSelectedMR.Text = "Merge Request";
-         // 
-         // linkLabelHistConnectedTo
-         // 
-         this.linkLabelHistConnectedTo.AutoEllipsis = true;
-         this.linkLabelHistConnectedTo.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.linkLabelHistConnectedTo.Location = new System.Drawing.Point(3, 247);
-         this.linkLabelHistConnectedTo.Name = "linkLabelHistConnectedTo";
-         this.linkLabelHistConnectedTo.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
-         this.linkLabelHistConnectedTo.Size = new System.Drawing.Size(925, 18);
-         this.linkLabelHistConnectedTo.TabIndex = 4;
-         this.linkLabelHistConnectedTo.TabStop = true;
-         this.linkLabelHistConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
-         this.linkLabelHistConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelConnectedTo_LinkClicked);
-         // 
-         // htmlPanelHistMergeRequestDescription
-         // 
-         this.htmlPanelHistMergeRequestDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.htmlPanelHistMergeRequestDescription.AutoScroll = true;
-         this.htmlPanelHistMergeRequestDescription.BackColor = System.Drawing.SystemColors.Window;
-         this.htmlPanelHistMergeRequestDescription.BaseStylesheet = null;
-         this.htmlPanelHistMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.htmlPanelHistMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
-         this.htmlPanelHistMergeRequestDescription.Name = "htmlPanelHistMergeRequestDescription";
-         this.htmlPanelHistMergeRequestDescription.Size = new System.Drawing.Size(925, 228);
-         this.htmlPanelHistMergeRequestDescription.TabIndex = 2;
-         this.htmlPanelHistMergeRequestDescription.TabStop = false;
-         this.htmlPanelHistMergeRequestDescription.Text = null;
-         // 
-         // panel2
-         // 
-         this.panel2.BackColor = System.Drawing.Color.WhiteSmoke;
-         this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.panel2.Controls.Add(this.linkLabelHistAbort);
-         this.panel2.Controls.Add(this.labelHistGitStatus);
-         this.panel2.Controls.Add(this.labelHistWorkflowStatus);
-         this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.panel2.Location = new System.Drawing.Point(0, 502);
-         this.panel2.Name = "panel2";
-         this.panel2.Size = new System.Drawing.Size(931, 52);
-         this.panel2.TabIndex = 12;
-         // 
-         // linkLabelHistAbort
-         // 
-         this.linkLabelHistAbort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelHistAbort.Location = new System.Drawing.Point(892, 31);
-         this.linkLabelHistAbort.Name = "linkLabelHistAbort";
-         this.linkLabelHistAbort.Size = new System.Drawing.Size(32, 15);
-         this.linkLabelHistAbort.TabIndex = 15;
-         this.linkLabelHistAbort.TabStop = true;
-         this.linkLabelHistAbort.Text = "Abort";
-         this.linkLabelHistAbort.Visible = false;
-         // 
-         // labelHistGitStatus
-         // 
-         this.labelHistGitStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.labelHistGitStatus.AutoEllipsis = true;
-         this.labelHistGitStatus.Location = new System.Drawing.Point(0, 31);
-         this.labelHistGitStatus.Name = "labelHistGitStatus";
-         this.labelHistGitStatus.Size = new System.Drawing.Size(886, 16);
-         this.labelHistGitStatus.TabIndex = 1;
-         this.labelHistGitStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
-    "cididunt ut labore et dolore";
-         this.labelHistGitStatus.Visible = false;
-         // 
-         // labelHistWorkflowStatus
-         // 
-         this.labelHistWorkflowStatus.AutoEllipsis = true;
-         this.labelHistWorkflowStatus.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelHistWorkflowStatus.Location = new System.Drawing.Point(0, 0);
-         this.labelHistWorkflowStatus.Name = "labelHistWorkflowStatus";
-         this.labelHistWorkflowStatus.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
-         this.labelHistWorkflowStatus.Size = new System.Drawing.Size(929, 24);
-         this.labelHistWorkflowStatus.TabIndex = 0;
-         this.labelHistWorkflowStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
-    "cididunt ut labore et dolore magna aliqua";
-         // 
-         // panel3
-         // 
-         this.panel3.BackColor = System.Drawing.Color.WhiteSmoke;
-         this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.panel3.Controls.Add(this.linkLabelHistHelp);
-         this.panel3.Controls.Add(this.linkLabelHistFeedback);
-         this.panel3.Controls.Add(this.linkLabelHistNewVersion);
-         this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.panel3.Location = new System.Drawing.Point(0, 554);
-         this.panel3.Name = "panel3";
-         this.panel3.Size = new System.Drawing.Size(931, 34);
-         this.panel3.TabIndex = 13;
-         // 
-         // groupBoxHistReview
-         // 
-         this.groupBoxHistReview.Controls.Add(this.buttonHistDiffTool);
-         this.groupBoxHistReview.Controls.Add(this.buttonHistDiscussions);
-         this.groupBoxHistReview.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxHistReview.Location = new System.Drawing.Point(0, 107);
-         this.groupBoxHistReview.Name = "groupBoxHistReview";
-         this.groupBoxHistReview.Size = new System.Drawing.Size(931, 63);
-         this.groupBoxHistReview.TabIndex = 2;
-         this.groupBoxHistReview.TabStop = false;
-         this.groupBoxHistReview.Text = "Review";
-         // 
-         // groupBoxHistSelectCommits
-         // 
-         this.groupBoxHistSelectCommits.Controls.Add(this.labelRightHistCommitTimestampLabel);
-         this.groupBoxHistSelectCommits.Controls.Add(this.comboBoxHistRightCommit);
-         this.groupBoxHistSelectCommits.Controls.Add(this.labelLeftHistCommitTimestampLabel);
-         this.groupBoxHistSelectCommits.Controls.Add(this.comboBoxHistLeftCommit);
-         this.groupBoxHistSelectCommits.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxHistSelectCommits.Location = new System.Drawing.Point(0, 0);
-         this.groupBoxHistSelectCommits.Name = "groupBoxHistSelectCommits";
-         this.groupBoxHistSelectCommits.Size = new System.Drawing.Size(931, 107);
-         this.groupBoxHistSelectCommits.TabIndex = 4;
-         this.groupBoxHistSelectCommits.TabStop = false;
-         this.groupBoxHistSelectCommits.Text = "Select commits";
-         // 
-         // labelRightHistCommitTimestampLabel
-         // 
-         this.labelRightHistCommitTimestampLabel.AutoEllipsis = true;
-         this.labelRightHistCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelRightHistCommitTimestampLabel.Location = new System.Drawing.Point(3, 82);
-         this.labelRightHistCommitTimestampLabel.Name = "labelRightHistCommitTimestampLabel";
-         this.labelRightHistCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-         this.labelRightHistCommitTimestampLabel.Size = new System.Drawing.Size(925, 22);
-         this.labelRightHistCommitTimestampLabel.TabIndex = 8;
-         this.labelRightHistCommitTimestampLabel.Text = "Created at:";
-         // 
-         // comboBoxHistRightCommit
-         // 
-         this.comboBoxHistRightCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxHistRightCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxHistRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxHistRightCommit.FormattingEnabled = true;
-         this.comboBoxHistRightCommit.Location = new System.Drawing.Point(3, 61);
-         this.comboBoxHistRightCommit.Name = "comboBoxHistRightCommit";
-         this.comboBoxHistRightCommit.Size = new System.Drawing.Size(925, 21);
-         this.comboBoxHistRightCommit.TabIndex = 6;
-         this.comboBoxHistRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxHistRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
-         // 
-         // labelLeftHistCommitTimestampLabel
-         // 
-         this.labelLeftHistCommitTimestampLabel.AutoEllipsis = true;
-         this.labelLeftHistCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelLeftHistCommitTimestampLabel.Location = new System.Drawing.Point(3, 37);
-         this.labelLeftHistCommitTimestampLabel.Name = "labelLeftHistCommitTimestampLabel";
-         this.labelLeftHistCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 6);
-         this.labelLeftHistCommitTimestampLabel.Size = new System.Drawing.Size(925, 24);
-         this.labelLeftHistCommitTimestampLabel.TabIndex = 7;
-         this.labelLeftHistCommitTimestampLabel.Text = "Created at:";
-         // 
-         // comboBoxHistLeftCommit
-         // 
-         this.comboBoxHistLeftCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxHistLeftCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxHistLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxHistLeftCommit.FormattingEnabled = true;
-         this.comboBoxHistLeftCommit.Location = new System.Drawing.Point(3, 16);
-         this.comboBoxHistLeftCommit.Name = "comboBoxHistLeftCommit";
-         this.comboBoxHistLeftCommit.Size = new System.Drawing.Size(925, 21);
-         this.comboBoxHistLeftCommit.TabIndex = 5;
-         this.comboBoxHistLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxHistLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
-         // 
          // panel4
          // 
          this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
@@ -1715,23 +1281,6 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxSelectCommits.ResumeLayout(false);
-         this.tabPageHistory.ResumeLayout(false);
-         this.splitContainer3.Panel1.ResumeLayout(false);
-         this.splitContainer3.Panel2.ResumeLayout(false);
-         ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
-         this.splitContainer3.ResumeLayout(false);
-         this.groupBoxHistSearchMR.ResumeLayout(false);
-         this.groupBoxHistSearchMR.PerformLayout();
-         this.splitContainer4.Panel1.ResumeLayout(false);
-         this.splitContainer4.Panel2.ResumeLayout(false);
-         ((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).EndInit();
-         this.splitContainer4.ResumeLayout(false);
-         this.groupBoxHistSelectedMR.ResumeLayout(false);
-         this.panel2.ResumeLayout(false);
-         this.panel3.ResumeLayout(false);
-         this.panel3.PerformLayout();
-         this.groupBoxHistReview.ResumeLayout(false);
-         this.groupBoxHistSelectCommits.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -1836,37 +1385,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.ColumnHeader columnHeaderSize;
       private System.Windows.Forms.CheckBox checkBoxDisableSplitterRestrictions;
-        private System.Windows.Forms.TabPage tabPageHistory;
-        private System.Windows.Forms.SplitContainer splitContainer3;
-        private System.Windows.Forms.GroupBox groupBoxHistSearchMR;
-        private System.Windows.Forms.TextBox textBoxHistSearch;
-        private ListViewEx listViewHistMergeRequests;
-        private System.Windows.Forms.ColumnHeader columnHeaderHistIId;
-        private System.Windows.Forms.ColumnHeader columnHeaderHistAuthor;
-        private System.Windows.Forms.ColumnHeader columnHeaderHistTitle;
-        private System.Windows.Forms.ColumnHeader columnHeaderHistJira;
-        private System.Windows.Forms.ColumnHeader columnHeaderHistSourceBranch;
-        private System.Windows.Forms.ColumnHeader columnHeaderHistTargetBranch;
-        private System.Windows.Forms.SplitContainer splitContainer4;
-        private System.Windows.Forms.GroupBox groupBoxHistSelectedMR;
-        private System.Windows.Forms.LinkLabel linkLabelHistConnectedTo;
-        private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelHistMergeRequestDescription;
-        private System.Windows.Forms.GroupBox groupBoxHistReview;
-        private System.Windows.Forms.Button buttonHistDiffTool;
-        private System.Windows.Forms.Button buttonHistDiscussions;
-        private System.Windows.Forms.GroupBox groupBoxHistSelectCommits;
-        private System.Windows.Forms.Label labelRightHistCommitTimestampLabel;
-        private System.Windows.Forms.ComboBox comboBoxHistRightCommit;
-        private System.Windows.Forms.Label labelLeftHistCommitTimestampLabel;
-        private System.Windows.Forms.ComboBox comboBoxHistLeftCommit;
-      private System.Windows.Forms.Panel panel2;
-      private System.Windows.Forms.LinkLabel linkLabelHistAbort;
-      private System.Windows.Forms.Label labelHistGitStatus;
-      private System.Windows.Forms.Label labelHistWorkflowStatus;
-      private System.Windows.Forms.Panel panel3;
-      private System.Windows.Forms.LinkLabel linkLabelHistHelp;
-      private System.Windows.Forms.LinkLabel linkLabelHistFeedback;
-      private System.Windows.Forms.LinkLabel linkLabelHistNewVersion;
    }
 }
 
