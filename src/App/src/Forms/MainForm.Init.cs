@@ -13,6 +13,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -404,6 +405,7 @@ namespace mrHelper.App.Forms
             : null;
          _gitStatManager = new GitStatisticManager(this, this, this, _mergeRequestCache, _mergeRequestCache);
          _timeTrackingManager = new TimeTrackingManager(Program.Settings, this, _discussionManager);
+         _repositoryManager = new RepositoryManager(Program.Settings);
       }
 
       private void disposeWorkflowDependencies()

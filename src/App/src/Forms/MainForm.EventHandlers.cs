@@ -70,10 +70,12 @@ namespace mrHelper.App.Forms
       async private void ButtonDifftool_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
+         Debug.Assert(getMergeRequest(null).HasValue);
 
+         MergeRequest mergeRequest = getMergeRequest(null).Value;
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await onLaunchDiffToolAsync(mrk);
+         await onLaunchDiffToolAsync(mrk, mergeRequest.State == "opened");
       }
 
       async private void ButtonAddComment_Click(object sender, EventArgs e)
@@ -1135,6 +1137,11 @@ namespace mrHelper.App.Forms
          {
             updateMinimumSizes();
          }
+      }
+
+      private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         // TODO - Update right part of the form
       }
 
       protected override void OnFontChanged(EventArgs e)

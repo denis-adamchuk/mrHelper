@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -7,6 +8,7 @@ using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -14,7 +16,6 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitClient;
 using mrHelper.CustomActions;
-using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
@@ -100,6 +101,7 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
+      private RepositoryManager _repositoryManager;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =

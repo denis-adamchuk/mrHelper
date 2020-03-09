@@ -14,6 +14,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
 using mrHelper.GitClient;
 using mrHelper.Common.Interfaces;
+using System.Linq;
 
 namespace mrHelper.App.Forms
 {
@@ -157,7 +158,7 @@ namespace mrHelper.App.Forms
          form.Show();
       }
 
-      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, bool opened)
       {
          if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
          {
@@ -229,11 +230,22 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         if (!opened)
+         {
+            string baseSHA = ((CommitComboBoxItem)comboBoxRightCommit.Items[comboBoxRightCommit.Items.Count - 1]).SHA;
+            IEnumerable<string> commits = comboBoxLeftCommit.Items
+               .Cast<CommitComboBoxItem>()
+               .Select(x => x.SHA)
+               .ToArray();
+            await prepareGitRepository(mrk, repo, baseSHA, commits);
+         }
+
          labelWorkflowStatus.Text = "Launching diff tool...";
 
          int pid;
          try
          {
+            rightSHA = opened ? rightSHA : "refs/heads/" + rightSHA;
             string arguments = "difftool --dir-diff --tool=" +
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
             pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;

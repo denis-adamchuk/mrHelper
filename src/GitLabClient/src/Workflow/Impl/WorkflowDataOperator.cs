@@ -67,6 +67,7 @@ namespace mrHelper.Client.Workflow
                  new GlobalMergeRequestsFilter
                  {
                     WIP = MergeRequestsFilter.WorkInProgressFilter.All,
+                    State = MergeRequestsFilter.StateFilter.All,
                     Search = search
                  })));
          }

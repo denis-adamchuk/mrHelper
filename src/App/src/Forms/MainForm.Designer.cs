@@ -803,6 +803,7 @@ namespace mrHelper.App.Forms
          this.tabControlMode.SelectedIndex = 0;
          this.tabControlMode.Size = new System.Drawing.Size(336, 858);
          this.tabControlMode.TabIndex = 0;
+         this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          // 
          // tabPageLive
          // 
@@ -1381,7 +1382,9 @@ namespace mrHelper.App.Forms
          // 
          // columnHeaderFoundState
          // 
+         this.columnHeaderFoundState.Tag = "State";
          this.columnHeaderFoundState.Text = "State";
+         this.columnHeaderFoundState.Width = 80;
          // 
          // MainForm
          // 

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -8,8 +9,11 @@ using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Repository;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitClient;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -335,6 +339,52 @@ namespace mrHelper.App.Forms
 
          int maxLineCount = 2;
          setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
+      }
+
+      async private Task prepareGitRepository(MergeRequestKey mrk, ILocalGitRepository repo,
+         string baseSHA, IEnumerable<string> commits)
+      {
+         string prevSHA = baseSHA;
+
+         foreach (string SHA in commits.Reverse())
+         {
+            Comparison? comparison;
+            try
+            {
+               comparison = await _repositoryManager.CompareAsync(mrk.ProjectKey, prevSHA, SHA);
+            }
+            catch (RepositoryManagerException ex)
+            {
+               ExceptionHandlers.Handle("Cannot obtain comparison result", ex);
+               return;
+            }
+
+            Debug.Assert(comparison.HasValue);
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (DiffStruct diff in comparison.Value.Diffs)
+            {
+               stringBuilder.AppendLine(String.Format("--- a/{0}", diff.Old_Path));
+               stringBuilder.AppendLine(String.Format("+++ b/{0}", diff.New_Path));
+               stringBuilder.AppendLine(diff.Diff.Replace("\\n", "\n"));
+            }
+
+            string patchFilename = System.IO.Path.Combine(repo.Path, String.Format("{0}.patch", SHA));
+            if (System.IO.File.Exists(patchFilename))
+            {
+               System.IO.File.Delete(patchFilename);
+            }
+            System.IO.File.WriteAllText(patchFilename, stringBuilder.ToString());
+
+            ExternalProcess.Start("git", String.Format("checkout -b {0}", SHA), true, repo.Path);
+            ExternalProcess.Start("git", String.Format("reset --hard {0}", prevSHA), true, repo.Path);
+            ExternalProcess.Start("git", String.Format("apply {0}", patchFilename), true, repo.Path);
+            System.IO.File.Delete(patchFilename);
+            ExternalProcess.Start("git", "add .", true, repo.Path);
+            ExternalProcess.Start("git", String.Format("commit -m {0}", SHA), true, repo.Path);
+
+            prevSHA = SHA;
+         }
       }
    }
 }
