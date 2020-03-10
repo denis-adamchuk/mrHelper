@@ -7,13 +7,14 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.Repository;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
-using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -348,6 +349,12 @@ namespace mrHelper.App.Forms
 
          foreach (string SHA in commits.Reverse())
          {
+            if (repo.ContainsSHA(SHA) || repo.ContainsBranch(GitTools.FakeSHA(SHA)))
+            {
+               prevSHA = SHA;
+               continue;
+            }
+
             Comparison? comparison;
             try
             {
@@ -376,7 +383,7 @@ namespace mrHelper.App.Forms
             }
             System.IO.File.WriteAllText(patchFilename, stringBuilder.ToString());
 
-            ExternalProcess.Start("git", String.Format("checkout -b {0}", SHA), true, repo.Path);
+            ExternalProcess.Start("git", String.Format("checkout -b {0}", GitTools.FakeSHA(SHA)), true, repo.Path);
             ExternalProcess.Start("git", String.Format("reset --hard {0}", prevSHA), true, repo.Path);
             ExternalProcess.Start("git", String.Format("apply {0}", patchFilename), true, repo.Path);
             System.IO.File.Delete(patchFilename);

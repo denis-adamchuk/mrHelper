@@ -20,6 +20,24 @@ namespace mrHelper.GitClient
       IGitRepositoryData IGitRepository.Data => DoesRequireClone() ? null : _data;
 
       public ProjectKey ProjectKey { get; }
+
+      public bool ContainsSHA(string sha)
+      {
+         //if (!_cached_containsSha.ContainsKey(sha))
+         {
+            _cached_containsSha[sha] = containsEntity(sha);
+         }
+         return _cached_containsSha[sha];
+      }
+
+      public bool ContainsBranch(string branchName)
+      {
+         //if (!_cached_containsBranch.ContainsKey(branchName))
+         {
+            _cached_containsBranch[branchName] = containsEntity(branchName);
+         }
+         return _cached_containsBranch[branchName];
+      }
       // @{ IGitRepository
 
       // @{ ILocalGitRepository
@@ -157,14 +175,34 @@ namespace mrHelper.GitClient
          return _cached_isValidRepository.Value;
       }
 
+      private bool containsEntity(string entity)
+      {
+         try
+         {
+            return ExternalProcess.Start("git", String.Format("cat-file -t {0}", entity), true, Path).StdErr.Count() == 0;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return false;
+            }
+            throw;
+         }
+      }
+
       private void resetCachedState()
       {
          _cached_canClone = null;
          _cached_isValidRepository = null;
+         _cached_containsSha.Clear();
+         _cached_containsBranch.Clear();
       }
 
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
+      private Dictionary<string, bool> _cached_containsSha = new Dictionary<string, bool>();
+      private Dictionary<string, bool> _cached_containsBranch = new Dictionary<string, bool>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
       private readonly IExternalProcessManager _operationManager;

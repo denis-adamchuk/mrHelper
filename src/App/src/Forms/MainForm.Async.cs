@@ -230,22 +230,21 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!opened)
-         {
-            string baseSHA = ((CommitComboBoxItem)comboBoxRightCommit.Items[comboBoxRightCommit.Items.Count - 1]).SHA;
-            IEnumerable<string> commits = comboBoxLeftCommit.Items
-               .Cast<CommitComboBoxItem>()
-               .Select(x => x.SHA)
-               .ToArray();
-            await prepareGitRepository(mrk, repo, baseSHA, commits);
-         }
+         string baseSHA = ((CommitComboBoxItem)comboBoxRightCommit.Items[comboBoxRightCommit.Items.Count - 1]).SHA;
+         IEnumerable<string> commits = comboBoxLeftCommit.Items
+            .Cast<CommitComboBoxItem>()
+            .Select(x => x.SHA)
+            .ToArray();
+         await prepareGitRepository(mrk, repo, baseSHA, commits);
+
+         leftSHA = GitTools.AdjustSHA(leftSHA, repo);
+         rightSHA = GitTools.AdjustSHA(rightSHA, repo);
 
          labelWorkflowStatus.Text = "Launching diff tool...";
 
          int pid;
          try
          {
-            rightSHA = opened ? rightSHA : "refs/heads/" + rightSHA;
             string arguments = "difftool --dir-diff --tool=" +
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
             pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;
