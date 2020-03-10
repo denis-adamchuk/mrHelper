@@ -36,6 +36,18 @@ namespace mrHelper.Client.Repository
          }
       }
 
+      public Task<File> LoadFileAsync(ProjectKey projectKey, string filename, string sha)
+      {
+         try
+         {
+            return _operator.LoadFileAsync(projectKey, filename, sha);
+         }
+         catch (OperatorException ex)
+         {
+            throw new RepositoryManagerException("Cannot perform comparison", ex);
+         }
+      }
+
       private readonly RepositoryOperator _operator;
    }
 }

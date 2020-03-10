@@ -23,7 +23,7 @@ namespace mrHelper.GitClient
 
       public bool ContainsSHA(string sha)
       {
-         //if (!_cached_containsSha.ContainsKey(sha))
+         if (!_cached_containsSha.ContainsKey(sha))
          {
             _cached_containsSha[sha] = containsEntity(sha);
          }
@@ -32,7 +32,7 @@ namespace mrHelper.GitClient
 
       public bool ContainsBranch(string branchName)
       {
-         //if (!_cached_containsBranch.ContainsKey(branchName))
+         if (!_cached_containsBranch.ContainsKey(branchName))
          {
             _cached_containsBranch[branchName] = containsEntity(branchName);
          }
@@ -57,6 +57,48 @@ namespace mrHelper.GitClient
 
          Debug.Assert(_cached_canClone.Value || _cached_isValidRepository.Value);
          return !_cached_isValidRepository.Value;
+      }
+
+      public void CreateBranchForPatch(string branchPointSha, string branchName, string patch)
+      {
+         string patchFilename = String.Format("{0}.patch", branchName);
+         string patchFilepath = System.IO.Path.Combine(Path, patchFilename);
+         try
+         {
+            FileUtils.OverwriteFile(patchFilepath, patch);
+         }
+         catch (Exception ex)
+         {
+            throw new BranchCreationException(ex);
+         }
+
+         string escapedPatch = StringUtils.EscapeSpaces(patchFilepath);
+         try
+         {
+            ExternalProcess.Start("git", String.Format("checkout -b {0}", branchName), true, Path);
+            ExternalProcess.Start("git", String.Format("reset --hard {0}", branchPointSha), true, Path);
+            ExternalProcess.Start("git", String.Format("apply {0}", escapedPatch), true, Path);
+            ExternalProcess.Start("git", "add .", true, Path);
+            ExternalProcess.Start("git", String.Format("rm --cached {0}", patchFilename), true, Path);
+            ExternalProcess.Start("git", String.Format("commit -m {0}", branchName), true, Path);
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               throw new BranchCreationException(ex);
+            }
+            throw;
+         }
+         finally
+         {
+            System.IO.File.Delete(patchFilepath);
+         }
+
+         if (_cached_containsBranch.ContainsKey(branchName))
+         {
+            _cached_containsBranch[branchName] = true;
+         }
       }
       // @} ILocalGitRepository
 

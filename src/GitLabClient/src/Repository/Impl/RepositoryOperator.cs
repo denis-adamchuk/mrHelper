@@ -45,6 +45,27 @@ namespace mrHelper.Client.Repository
          }
       }
 
+      async internal Task<File> LoadFileAsync(ProjectKey projectKey, string filename, string sha)
+      {
+         GitLabClient client = new GitLabClient(projectKey.HostName,
+            _settings.GetAccessToken(projectKey.HostName));
+         try
+         {
+            return (File)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectKey.ProjectName).Repository.Files.
+                  Get(filename).LoadTaskAsync(sha)));
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       private readonly IHostProperties _settings;
    }
 }

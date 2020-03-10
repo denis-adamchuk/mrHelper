@@ -342,55 +342,148 @@ namespace mrHelper.App.Forms
          setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
       }
 
-      async private Task prepareGitRepository(MergeRequestKey mrk, ILocalGitRepository repo,
-         string baseSHA, IEnumerable<string> commits)
+      async private Task restoreChainOfCommits(ILocalGitRepository repo, string baseSHA, IEnumerable<string> commits)
       {
+         if (String.IsNullOrEmpty(baseSHA) || commits == null)
+         {
+            return;
+         }
+
+         enableControlsOnGitAsyncOperation(false);
+         linkLabelAbortGit.Visible = false;
+
+         Debug.Assert(repo.ContainsSHA(baseSHA));
          string prevSHA = baseSHA;
 
+         List<Tuple<Comparison, string, string>> comparisons = new List<Tuple<Comparison, string, string>>();
+         int iCommit = 1;
          foreach (string SHA in commits.Reverse())
          {
-            if (repo.ContainsSHA(SHA) || repo.ContainsBranch(GitTools.FakeSHA(SHA)))
-            {
-               prevSHA = SHA;
-               continue;
-            }
+            labelWorkflowStatus.Text = String.Format(
+               "Loading commit comparison results from GitLab: {0}/{1}", iCommit++, commits.Count());
 
-            Comparison? comparison;
-            try
+            if (!repo.ContainsSHA(SHA) && !repo.ContainsBranch(GitTools.FakeSHA(SHA)))
             {
-               comparison = await _repositoryManager.CompareAsync(mrk.ProjectKey, prevSHA, SHA);
+               try
+               {
+                  comparisons.Add(new Tuple<Comparison, string, string>(
+                     await _repositoryManager.CompareAsync(repo.ProjectKey, prevSHA, SHA), prevSHA, SHA));
+               }
+               catch (RepositoryManagerException ex)
+               {
+                  ExceptionHandlers.Handle("Cannot obtain comparison result", ex);
+                  labelWorkflowStatus.Text = "Failed to obtain comparison result";
+                  return;
+               }
             }
-            catch (RepositoryManagerException ex)
-            {
-               ExceptionHandlers.Handle("Cannot obtain comparison result", ex);
-               return;
-            }
-
-            Debug.Assert(comparison.HasValue);
-
-            StringBuilder stringBuilder = new StringBuilder();
-            foreach (DiffStruct diff in comparison.Value.Diffs)
-            {
-               stringBuilder.AppendLine(String.Format("--- a/{0}", diff.Old_Path));
-               stringBuilder.AppendLine(String.Format("+++ b/{0}", diff.New_Path));
-               stringBuilder.AppendLine(diff.Diff.Replace("\\n", "\n"));
-            }
-
-            string patchFilename = System.IO.Path.Combine(repo.Path, String.Format("{0}.patch", SHA));
-            if (System.IO.File.Exists(patchFilename))
-            {
-               System.IO.File.Delete(patchFilename);
-            }
-            System.IO.File.WriteAllText(patchFilename, stringBuilder.ToString());
-
-            ExternalProcess.Start("git", String.Format("checkout -b {0}", GitTools.FakeSHA(SHA)), true, repo.Path);
-            ExternalProcess.Start("git", String.Format("reset --hard {0}", prevSHA), true, repo.Path);
-            ExternalProcess.Start("git", String.Format("apply {0}", patchFilename), true, repo.Path);
-            System.IO.File.Delete(patchFilename);
-            ExternalProcess.Start("git", "add .", true, repo.Path);
-            ExternalProcess.Start("git", String.Format("commit -m {0}", SHA), true, repo.Path);
 
             prevSHA = SHA;
+         }
+
+         List<Tuple<string, string, string>> patches = new List<Tuple<string, string, string>>();
+         int iComparison = 1;
+         foreach (Tuple<Comparison, string, string> tuple in comparisons)
+         {
+            labelWorkflowStatus.Text = String.Format(
+               "Creating patches: {0}/{1}", iComparison++, comparisons.Count());
+
+            string patch = await createPatch(repo, tuple.Item1, tuple.Item2, tuple.Item3);
+            if (String.IsNullOrEmpty(patch))
+            {
+               labelWorkflowStatus.Text = "Failed to create a patch";
+               return;
+            }
+            patches.Add(new Tuple<string, string, string>(patch, tuple.Item2, tuple.Item3));
+         }
+
+         int iPatch = 1;
+         foreach (Tuple<string, string, string> patch in patches)
+         {
+            labelWorkflowStatus.Text = String.Format(
+               "Applying patches: {0}/{1}", iPatch++, patches.Count());
+
+            try
+            {
+               repo.CreateBranchForPatch(patch.Item2, GitTools.FakeSHA(patch.Item3), patch.Item1);
+            }
+            catch (BranchCreationException ex)
+            {
+               ExceptionHandlers.Handle("Cannot create a branch for patch", ex);
+               labelWorkflowStatus.Text = "Failed to apply a patch";
+               return;
+            }
+         }
+
+         enableControlsOnGitAsyncOperation(true);
+      }
+
+      async private Task<string> createPatch(ILocalGitRepository repo,
+         Comparison comparison, string prevSHA, string SHA)
+      {
+         StringBuilder stringBuilder = new StringBuilder();
+         foreach (DiffStruct diff in comparison.Diffs)
+         {
+            string gitDiff;
+            if (diff.Diff == String.Empty)
+            {
+               try
+               {
+                  gitDiff = await createDiffFromRawFiles(repo, diff.Old_Path, prevSHA, diff.New_Path, SHA);
+               }
+               catch (Exception ex)
+               {
+                  ExceptionHandlers.Handle("Cannot create diff from raw files", ex);
+                  return null;
+               }
+            }
+            else
+            {
+               gitDiff = diff.Diff.Replace("\\n", "\n");
+            }
+
+            stringBuilder.AppendLine(String.Format("--- a/{0}", diff.Old_Path));
+            stringBuilder.AppendLine(String.Format("+++ b/{0}", diff.New_Path));
+            stringBuilder.AppendLine(gitDiff);
+         }
+         return stringBuilder.ToString();
+      }
+
+      async private Task<string> createDiffFromRawFiles(ILocalGitRepository repo,
+         string oldFilename, string oldSha, string newFilename, string newSha)
+      {
+         GitLabSharp.Entities.File oldFile =
+            await _repositoryManager.LoadFileAsync(repo.ProjectKey, oldFilename, oldSha);
+         GitLabSharp.Entities.File newFile =
+            await _repositoryManager.LoadFileAsync(repo.ProjectKey, newFilename, newSha);
+
+         string oldTempFilename = System.IO.Path.Combine(repo.Path, "temp1___" + oldFile.File_Name);
+         string newTempFilename = System.IO.Path.Combine(repo.Path, "temp2___" + newFile.File_Name);
+
+         string diffArguments = String.Format("diff --no-index -- {0} {1}",
+            StringUtils.EscapeSpaces(oldTempFilename), StringUtils.EscapeSpaces(newTempFilename));
+
+         string oldFileContent = StringUtils.Base64Decode(oldFile.Content).Replace("\n", "\r\n");
+         string newFileContent = StringUtils.Base64Decode(newFile.Content).Replace("\n", "\r\n");
+
+         try
+         {
+            FileUtils.OverwriteFile(oldTempFilename, oldFileContent);
+            FileUtils.OverwriteFile(newTempFilename, newFileContent);
+
+            IEnumerable<string> gitDiffOutput = ExternalProcess.Start("git", diffArguments, true, repo.Path).StdOut;
+
+            return String.Join("\n", gitDiffOutput.Skip(4));
+         }
+         finally
+         {
+            if (System.IO.File.Exists(oldTempFilename))
+            {
+               System.IO.File.Delete(oldTempFilename);
+            }
+            if (System.IO.File.Exists(newTempFilename))
+            {
+               System.IO.File.Delete(newTempFilename);
+            }
          }
       }
    }

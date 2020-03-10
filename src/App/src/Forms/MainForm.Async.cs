@@ -75,6 +75,8 @@ namespace mrHelper.App.Forms
             {
                enableControlsOnGitAsyncOperation(true);
             }
+
+            await restoreChainOfCommits(repo, getBaseCommitSha(), getChainOfCommits());
          }
          else
          {
@@ -230,13 +232,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         string baseSHA = ((CommitComboBoxItem)comboBoxRightCommit.Items[comboBoxRightCommit.Items.Count - 1]).SHA;
-         IEnumerable<string> commits = comboBoxLeftCommit.Items
-            .Cast<CommitComboBoxItem>()
-            .Select(x => x.SHA)
-            .ToArray();
-         await prepareGitRepository(mrk, repo, baseSHA, commits);
-
+         await restoreChainOfCommits(repo, getBaseCommitSha(), getChainOfCommits());
          leftSHA = GitTools.AdjustSHA(leftSHA, repo);
          rightSHA = GitTools.AdjustSHA(rightSHA, repo);
 
