@@ -59,41 +59,9 @@ namespace mrHelper.GitClient
          return !_cached_isValidRepository.Value;
       }
 
-      public void CreateBranchForPatch(string branchPointSha, string branchName, string patch)
+      async public Task CreateBranchForPatch(string branchPointSha, string branchName, string patch)
       {
-         string patchFilename = String.Format("{0}.patch", branchName);
-         string patchFilepath = System.IO.Path.Combine(Path, patchFilename);
-         try
-         {
-            FileUtils.OverwriteFile(patchFilepath, patch);
-         }
-         catch (Exception ex)
-         {
-            throw new BranchCreationException(ex);
-         }
-
-         string escapedPatch = StringUtils.EscapeSpaces(patchFilepath);
-         try
-         {
-            ExternalProcess.Start("git", String.Format("checkout -b {0}", branchName), true, Path);
-            ExternalProcess.Start("git", String.Format("reset --hard {0}", branchPointSha), true, Path);
-            ExternalProcess.Start("git", String.Format("apply {0}", escapedPatch), true, Path);
-            ExternalProcess.Start("git", "add .", true, Path);
-            ExternalProcess.Start("git", String.Format("rm --cached {0}", patchFilename), true, Path);
-            ExternalProcess.Start("git", String.Format("commit -m {0}", branchName), true, Path);
-         }
-         catch (Exception ex)
-         {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               throw new BranchCreationException(ex);
-            }
-            throw;
-         }
-         finally
-         {
-            System.IO.File.Delete(patchFilepath);
-         }
+         await GitTools.CreateBranchForPatchAsync(branchPointSha, branchName, patch, Path);
 
          if (_cached_containsBranch.ContainsKey(branchName))
          {

@@ -233,8 +233,8 @@ namespace mrHelper.App.Forms
          }
 
          await restoreChainOfCommits(repo, getBaseCommitSha(), getChainOfCommits());
-         leftSHA = GitTools.AdjustSHA(leftSHA, repo);
-         rightSHA = GitTools.AdjustSHA(rightSHA, repo);
+         leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
+         rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
 
          labelWorkflowStatus.Text = "Launching diff tool...";
 

@@ -1,17 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
 {
-   public class BranchCreationException : ExceptionEx
-   {
-      internal BranchCreationException(Exception innerException)
-         : base(String.Empty, innerException)
-      {
-      }
-   }
-
    public interface ILocalGitRepository : IGitRepository
    {
       new ILocalGitRepositoryData Data { get; }
@@ -25,7 +18,7 @@ namespace mrHelper.GitClient
 
       bool DoesRequireClone();
 
-      void CreateBranchForPatch(string branchPointSha, string branchName, string patch);
+      Task CreateBranchForPatch(string branchPointSha, string branchName, string patch);
    }
 }
 

@@ -362,7 +362,7 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = String.Format(
                "Loading commit comparison results from GitLab: {0}/{1}", iCommit++, commits.Count());
 
-            if (!repo.ContainsSHA(SHA) && !repo.ContainsBranch(GitTools.FakeSHA(SHA)))
+            if (!repo.ContainsSHA(SHA) && !repo.ContainsBranch(Helpers.GitTools.FakeSHA(SHA)))
             {
                try
                {
@@ -404,7 +404,8 @@ namespace mrHelper.App.Forms
 
             try
             {
-               repo.CreateBranchForPatch(patch.Item2, GitTools.FakeSHA(patch.Item3), patch.Item1);
+               await repo.CreateBranchForPatch(patch.Item2,
+                  Helpers.GitTools.FakeSHA(patch.Item3), patch.Item1);
             }
             catch (BranchCreationException ex)
             {
