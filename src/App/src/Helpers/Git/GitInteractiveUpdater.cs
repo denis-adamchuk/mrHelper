@@ -116,15 +116,11 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty);
+            GitTools.DisableSSLVerification();
          }
-         catch (Exception ex)
+         catch (GitTools.SSLVerificationDisableException ex)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               throw new InteractiveUpdateFailed("Cannot change global http.verifySSL setting", ex);
-            }
-            throw;
+            throw new InteractiveUpdateFailed("Cannot change global http.verifySSL setting", ex);
          }
 
          InitializationStatusChange?.Invoke("SSL certificate verification disabled. Please repeat git operation.");

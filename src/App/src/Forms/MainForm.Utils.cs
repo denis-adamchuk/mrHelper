@@ -1043,7 +1043,7 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info.Value.VersionNumber));
 
-         if (String.IsNullOrEmpty(info.Value.InstallerFilePath) || !File.Exists(info.Value.InstallerFilePath))
+         if (String.IsNullOrEmpty(info.Value.InstallerFilePath) || !System.IO.File.Exists(info.Value.InstallerFilePath))
          {
             Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
                info.Value.InstallerFilePath));
@@ -1062,11 +1062,11 @@ namespace mrHelper.App.Forms
             string tempFolder = Environment.GetEnvironmentVariable("TEMP");
             string destFilePath = Path.Combine(tempFolder, filename);
 
-            Debug.Assert(!File.Exists(destFilePath));
+            Debug.Assert(!System.IO.File.Exists(destFilePath));
 
             try
             {
-               File.Copy(info.Value.InstallerFilePath, destFilePath);
+               System.IO.File.Copy(info.Value.InstallerFilePath, destFilePath);
             }
             catch (Exception ex)
             {
@@ -1495,6 +1495,22 @@ namespace mrHelper.App.Forms
       {
          _mergeRequestCache.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
          _discussionManager.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
+      }
+
+      private static void disableSSLVerification()
+      {
+         if (Program.Settings.DisableSSLVerification)
+         {
+            try
+            {
+               GitTools.DisableSSLVerification();
+               Program.Settings.DisableSSLVerification = false;
+            }
+            catch (GitTools.SSLVerificationDisableException ex)
+            {
+               ExceptionHandlers.Handle("Cannot disable SSL verification", ex);
+            }
+         }
       }
    }
 }
