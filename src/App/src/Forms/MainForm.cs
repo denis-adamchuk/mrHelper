@@ -102,6 +102,7 @@ namespace mrHelper.App.Forms
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
       private RepositoryManager _repositoryManager;
+      private CommitChainCreator _commitChainCreator;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =

@@ -435,10 +435,7 @@ namespace mrHelper.App.Forms
       private void disableListView(ListView listView, bool clear)
       {
          listView.Enabled = false;
-         foreach (ListViewItem item in listView.Items)
-         {
-            item.Selected = false;
-         }
+         deselectAllListViewItems(listView);
 
          if (clear)
          {
@@ -449,6 +446,14 @@ namespace mrHelper.App.Forms
       private void enableListView(ListView listView)
       {
          listView.Enabled = true;
+      }
+
+      private void deselectAllListViewItems(ListView listView)
+      {
+         foreach (ListViewItem item in listView.Items)
+         {
+            item.Selected = false;
+         }
       }
 
       private void disableComboBox(ComboBox comboBox, string text)

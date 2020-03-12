@@ -23,20 +23,12 @@ namespace mrHelper.GitClient
 
       public bool ContainsSHA(string sha)
       {
-         if (!_cached_containsSha.ContainsKey(sha))
-         {
-            _cached_containsSha[sha] = containsEntity(sha);
-         }
-         return _cached_containsSha[sha];
+         return containsEntity(sha);
       }
 
       public bool ContainsBranch(string branchName)
       {
-         if (!_cached_containsBranch.ContainsKey(branchName))
-         {
-            _cached_containsBranch[branchName] = containsEntity(branchName);
-         }
-         return _cached_containsBranch[branchName];
+         return containsEntity(branchName);
       }
       // @{ IGitRepository
 
@@ -59,15 +51,9 @@ namespace mrHelper.GitClient
          return !_cached_isValidRepository.Value;
       }
 
-      async public Task CreateBranchForPatch(string branchPointSha, string branchName, string patch)
-      {
-         await GitTools.CreateBranchForPatchAsync(branchPointSha, branchName, patch, Path);
+      public ILocalGitRepositoryState State => _state;
 
-         if (_cached_containsBranch.ContainsKey(branchName))
-         {
-            _cached_containsBranch[branchName] = true;
-         }
-      }
+      public ILocalGitRepositoryOperations Operations => _operations;
       // @} ILocalGitRepository
 
       // Host Name and Project Name
@@ -138,6 +124,8 @@ namespace mrHelper.GitClient
 
          _operationManager = new GitOperationManager(synchronizeInvoke, path);
          _data = new LocalGitRepositoryData(_operationManager, Path);
+         _state = new LocalGitRepositoryState(Path);
+         _operations = new LocalGitRepositoryOperations(Path, _operationManager);
 
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2} "
@@ -205,16 +193,14 @@ namespace mrHelper.GitClient
       {
          _cached_canClone = null;
          _cached_isValidRepository = null;
-         _cached_containsSha.Clear();
-         _cached_containsBranch.Clear();
       }
 
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
-      private Dictionary<string, bool> _cached_containsSha = new Dictionary<string, bool>();
-      private Dictionary<string, bool> _cached_containsBranch = new Dictionary<string, bool>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
+      private readonly ILocalGitRepositoryState _state;
+      private readonly ILocalGitRepositoryOperations _operations;
       private readonly IExternalProcessManager _operationManager;
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
    }

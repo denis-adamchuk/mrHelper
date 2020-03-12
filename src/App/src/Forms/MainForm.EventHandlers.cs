@@ -687,6 +687,8 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] User decided to abort git update");
 
+         await _commitChainCreator.CancelAsync();
+
          Debug.Assert(getMergeRequestKey(null).HasValue);
 
          ILocalGitRepository repo = await getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
@@ -1142,6 +1144,9 @@ namespace mrHelper.App.Forms
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
          // TODO - Update right part of the form
+
+         deselectAllListViewItems(listViewMergeRequests);
+         deselectAllListViewItems(listViewFoundMergeRequests);
       }
 
       protected override void OnFontChanged(EventArgs e)

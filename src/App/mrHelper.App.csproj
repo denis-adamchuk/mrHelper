@@ -187,6 +187,7 @@
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
     <Compile Include="src\Helpers\GitLabSharp\MergeRequestFilter.cs" />
+    <Compile Include="src\Helpers\Git\CommitChainCreator.cs" />
     <Compile Include="src\Helpers\Git\FactoryAccessorItf.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />

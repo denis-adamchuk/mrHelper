@@ -18,7 +18,9 @@ namespace mrHelper.GitClient
 
       bool DoesRequireClone();
 
-      Task CreateBranchForPatch(string branchPointSha, string branchName, string patch);
+      ILocalGitRepositoryState State { get; }
+
+      ILocalGitRepositoryOperations Operations { get; }
    }
 }
 
