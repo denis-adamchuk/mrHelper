@@ -330,17 +330,18 @@ namespace mrHelper.App.Forms
          ListView listView = (sender as ListView);
          listView.Refresh();
 
-         if (listView.SelectedItems.Count < 1)
+         // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
+         if (listView == listViewMergeRequests
+            && (tabControlMode.SelectedTab == tabPageSearch || listView.SelectedItems.Count < 1))
          {
-            // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
-            if (listView == listViewFoundMergeRequests)
-            {
-               await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0);
-            }
-            else
-            {
-               await switchMergeRequestByUserAsync(default(ProjectKey), 0);
-            }
+            await switchMergeRequestByUserAsync(default(ProjectKey), 0);
+            return;
+         }
+
+         if (listView == listViewFoundMergeRequests
+            && (tabControl.SelectedTab == tabPageLive || listView.SelectedItems.Count < 1))
+         {
+            await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0);
             return;
          }
 
@@ -1141,12 +1142,21 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
+      async private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
          // TODO - Update right part of the form
 
          deselectAllListViewItems(listViewMergeRequests);
          deselectAllListViewItems(listViewFoundMergeRequests);
+
+         bool isLiveMode = tabControlMode.SelectedTab == tabPageLive;
+         labelTimeTrackingTrackedLabel.Visible = isLiveMode;
+         buttonEditTime.Visible = isLiveMode;
+
+         if (isLiveMode)
+         {
+            await _searchWorkflowManager.CancelAsync();
+         }
       }
 
       protected override void OnFontChanged(EventArgs e)
