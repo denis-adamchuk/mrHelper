@@ -193,6 +193,10 @@ namespace mrHelper.App.Forms
          {
             enableListView(listViewFoundMergeRequests);
          }
+         else
+         {
+            labelWorkflowStatus.Text = "Nothing found";
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -345,7 +349,7 @@ namespace mrHelper.App.Forms
       async private Task restoreChainOfCommits(ILocalGitRepository repo, string baseSHA, IEnumerable<string> commits)
       {
          enableControlsOnGitAsyncOperation(false);
-         _commitChainCreator = new CommitChainCreator(_repositoryManager,
+         _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, repo, baseSHA, commits);
          try
          {

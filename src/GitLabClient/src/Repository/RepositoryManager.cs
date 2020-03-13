@@ -21,34 +21,55 @@ namespace mrHelper.Client.Repository
    {
       public RepositoryManager(IHostProperties settings)
       {
-         _operator = new RepositoryOperator(settings);
+         _settings = settings;
       }
 
-      public Task<Comparison> CompareAsync(ProjectKey projectKey, string from, string to)
+      async public Task<Comparison?> CompareAsync(ProjectKey projectKey, string from, string to)
       {
+         _operator = new RepositoryOperator(projectKey.HostName,
+            _settings.GetAccessToken(projectKey.HostName));
          try
          {
-            return _operator.CompareAsync(projectKey, from, to);
+            return await _operator.CompareAsync(projectKey.ProjectName, from, to);
          }
          catch (OperatorException ex)
          {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return null;
+            }
             throw new RepositoryManagerException("Cannot perform comparison", ex);
          }
       }
 
-      public Task<File> LoadFileAsync(ProjectKey projectKey, string filename, string sha)
+      async public Task<File?> LoadFileAsync(ProjectKey projectKey, string filename, string sha)
       {
+         _operator = new RepositoryOperator(projectKey.HostName,
+            _settings.GetAccessToken(projectKey.HostName));
          try
          {
-            return _operator.LoadFileAsync(projectKey, filename, sha);
+            return await _operator.LoadFileAsync(projectKey.ProjectName, filename, sha);
          }
          catch (OperatorException ex)
          {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return null;
+            }
             throw new RepositoryManagerException("Cannot perform comparison", ex);
          }
       }
 
-      private readonly RepositoryOperator _operator;
+      async public Task CancelAsync()
+      {
+         if (_operator != null)
+         {
+            await _operator.CancelAsync();
+         }
+      }
+
+      private readonly IHostProperties _settings;
+      private RepositoryOperator _operator;
    }
 }
 

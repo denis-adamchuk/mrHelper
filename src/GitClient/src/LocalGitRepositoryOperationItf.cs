@@ -6,18 +6,26 @@ namespace mrHelper.GitClient
 {
    public class LocalGitRepositoryOperationException : ExceptionEx
    {
-      internal LocalGitRepositoryOperationException(Action rollbackAction, Exception innerException)
+      internal LocalGitRepositoryOperationException(
+         Action rollbackAction1, Action rollbackAction2, Exception innerException)
          : base(String.Empty, innerException)
       {
-         _rollbackAction = rollbackAction;
+         _rollbackAction1 = rollbackAction1;
+         _rollbackAction2 = rollbackAction2;
       }
 
-      public void Rollback()
+      public void Rollback1()
       {
-         _rollbackAction?.Invoke();
+         _rollbackAction1?.Invoke();
       }
 
-      private Action _rollbackAction;
+      public void Rollback2()
+      {
+         _rollbackAction2?.Invoke();
+      }
+
+      private Action _rollbackAction1;
+      private Action _rollbackAction2;
    }
 
    public interface ILocalGitRepositoryOperation

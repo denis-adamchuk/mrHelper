@@ -15,19 +15,17 @@ namespace mrHelper.Client.Repository
    /// </summary>
    internal class RepositoryOperator
    {
-      internal RepositoryOperator(IHostProperties settings)
+      internal RepositoryOperator(string host, string token)
       {
-         _settings = settings;
+         _client = new GitLabClient(host, token);
       }
 
-      async internal Task<Comparison> CompareAsync(ProjectKey projectKey, string from, string to)
+      async internal Task<Comparison> CompareAsync(string projectname, string from, string to)
       {
-         GitLabClient client = new GitLabClient(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
          try
          {
-            return (Comparison)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectKey.ProjectName).Repository.CompareAsync(
+            return (Comparison)(await _client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectname).Repository.CompareAsync(
                   new CompareParameters
                   {
                      From = from,
@@ -36,8 +34,7 @@ namespace mrHelper.Client.Repository
          }
          catch (Exception ex)
          {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
                throw new OperatorException(ex);
             }
@@ -45,20 +42,17 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      async internal Task<File> LoadFileAsync(ProjectKey projectKey, string filename, string sha)
+      async internal Task<File> LoadFileAsync(string projectname, string filename, string sha)
       {
-         GitLabClient client = new GitLabClient(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
          try
          {
-            return (File)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectKey.ProjectName).Repository.Files.
+            return (File)(await _client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectname).Repository.Files.
                   Get(filename).LoadTaskAsync(sha)));
          }
          catch (Exception ex)
          {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
                throw new OperatorException(ex);
             }
@@ -66,7 +60,12 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      private readonly IHostProperties _settings;
+      async internal Task CancelAsync()
+      {
+         await _client.CancelAsync();
+      }
+
+      private readonly GitLabClient _client;
    }
 }
 

@@ -46,13 +46,13 @@ namespace mrHelper.GitClient
          }
          catch (Exception ex)
          {
-            throw new LocalGitRepositoryOperationException(null, ex);
+            throw new LocalGitRepositoryOperationException(null, null, ex);
          }
 
          _currentFailedStep = FailedStep.Checkout;
          string currentBranch = String.Empty, currentSha = String.Empty;
 
-         Action resetIndex = () => ExternalProcess.Start("git", "reset --mixed", true, _path);
+         Action resetIndex = () => ExternalProcess.Start("git", "reset --hard", true, _path);
          Action deleteBranch = () =>
          {
             if (branchName != currentBranch)
@@ -68,17 +68,17 @@ namespace mrHelper.GitClient
          }
          catch (Exception ex)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            if (ex is SystemException || ex is GitCallFailedException)
             {
                if (_currentFailedStep == FailedStep.Commit)
                {
-                  throw new LocalGitRepositoryOperationException(() => { resetIndex(); deleteBranch(); }, ex);
+                  throw new LocalGitRepositoryOperationException(() => resetIndex(), () => deleteBranch(), ex);
                }
-               else if (_currentFailedStep == FailedStep.Apply)
+               else if (_currentFailedStep == FailedStep.Apply || _currentFailedStep == FailedStep.Checkout)
                {
-                  throw new LocalGitRepositoryOperationException(() => deleteBranch() , ex);
+                  throw new LocalGitRepositoryOperationException(null, () => deleteBranch() , ex);
                }
-               throw new LocalGitRepositoryOperationException(null, ex);
+               throw new LocalGitRepositoryOperationException(null, null, ex);
             }
             throw;
          }
@@ -109,7 +109,7 @@ namespace mrHelper.GitClient
 
          // Apply a patch directly to the index
          _currentFailedStep = FailedStep.Apply;
-         string applyArgs = String.Format("apply --cached {0}", StringUtils.EscapeSpaces(patchFilepath));
+         string applyArgs = String.Format("apply --index {0}", StringUtils.EscapeSpaces(patchFilepath));
          _currentSubOperation = _operationManager.CreateDescriptor("git", applyArgs, _path, null);
          await _operationManager.Wait(_currentSubOperation);
 

@@ -101,7 +101,6 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
-      private RepositoryManager _repositoryManager;
       private CommitChainCreator _commitChainCreator;
 
       private string _initialHostName = String.Empty;

@@ -405,7 +405,6 @@ namespace mrHelper.App.Forms
             : null;
          _gitStatManager = new GitStatisticManager(this, this, this, _mergeRequestCache, _mergeRequestCache);
          _timeTrackingManager = new TimeTrackingManager(Program.Settings, this, _discussionManager);
-         _repositoryManager = new RepositoryManager(Program.Settings);
       }
 
       private void disposeWorkflowDependencies()
