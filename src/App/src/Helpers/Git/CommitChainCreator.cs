@@ -124,7 +124,7 @@ namespace mrHelper.App.Helpers
                comparisons.Add(new ComparisonResult
                   {
                      Comparison = comparison.Value,
-                     PrevSHA = _repo.ContainsSHA(shaPair.Item1) ? shaPair.Item1 : GitTools.FakeSHA(shaPair.Item1),
+                     PrevSHA = shaPair.Item1,
                      SHA = shaPair.Item2
                   });
             }
@@ -293,26 +293,29 @@ namespace mrHelper.App.Helpers
          {
             _onStatusChange(String.Format("Applying patches: {0}/{1}", iPatch++, patches.Count()));
 
+            string prevSHA = _repo.ContainsSHA(patch.PrevSHA) ? patch.PrevSHA : GitTools.FakeSHA(patch.PrevSHA);
             try
             {
-               await _currentOperation.Run(patch.PrevSHA, Helpers.GitTools.FakeSHA(patch.SHA), patch.Text);
+               await _currentOperation.Run(prevSHA, Helpers.GitTools.FakeSHA(patch.SHA), patch.Text, sdata.Branch);
             }
             catch (LocalGitRepositoryOperationException ex)
             {
-               _onStatusChange(String.Format(
-                  "Failed to apply a patch. Reverting changes made to repository {0}", _repo.Path));
-               ex.Rollback1();
+               string prefix = ex.CancelledByUser ? String.Empty : "Failed to apply a patch. ";
 
                _onStatusChange(String.Format(
-                  "Failed to apply a patch. Restoring state of repository {0}", _repo.Path));
+                  "{0} Restoring state of repository {1}", prefix, _repo.Path));
                _repo.State.RestoreState(sdata);
 
                _onStatusChange(String.Format(
-                  "Failed to apply a patch. Reverting changes made to repository {0}", _repo.Path));
-               ex.Rollback2();
+                  "{0} Reverting changes made to repository {1}", prefix, _repo.Path));
+               ex.Rollback();
 
                ExceptionHandlers.Handle("Cannot create a branch for patch", ex);
-               _onStatusChange("Failed to apply a patch");
+               if (!String.IsNullOrEmpty(prefix))
+               {
+                  _onStatusChange(prefix);
+               }
+               _currentOperation = null;
                return;
             }
          }

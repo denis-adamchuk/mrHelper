@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,15 +13,6 @@ namespace mrHelper.GitClient
 {
    internal class CreateBranchFromPatchOperation : ILocalGitRepositoryOperation
    {
-      private enum FailedStep
-      {
-         None,
-         Stash,
-         Checkout,
-         Apply,
-         Commit
-      }
-
       internal CreateBranchFromPatchOperation(string path, IExternalProcessManager operationManager)
       {
          _operationManager = operationManager;
@@ -29,7 +21,7 @@ namespace mrHelper.GitClient
 
       async public Task Run(params object[] args)
       {
-         if (args.Length != 3)
+         if (args.Length != 4)
          {
             throw new ArgumentException("Wrong number of parameters");
          }
@@ -37,6 +29,7 @@ namespace mrHelper.GitClient
          string branchPointSha = args[0].ToString();
          string branchName = args[1].ToString();
          string patch = args[2].ToString();
+         string currentBranch = args[3].ToString();
 
          string patchFilename = String.Format("{0}.patch", branchName);
          string patchFilepath = System.IO.Path.Combine(_path, patchFilename);
@@ -46,21 +39,8 @@ namespace mrHelper.GitClient
          }
          catch (Exception ex)
          {
-            throw new LocalGitRepositoryOperationException(null, null, ex);
+            throw new LocalGitRepositoryOperationException(null, ex);
          }
-
-         _currentFailedStep = FailedStep.Checkout;
-         string currentBranch = String.Empty, currentSha = String.Empty;
-
-         Action resetIndex = () => ExternalProcess.Start("git", "reset --hard", true, _path);
-         Action deleteBranch = () =>
-         {
-            if (branchName != currentBranch)
-            {
-               string delBranchArgs = String.Format("branch -d {0}", branchName);
-               ExternalProcess.Start("git", delBranchArgs, true, _path);
-            }
-         };
 
          try
          {
@@ -68,26 +48,24 @@ namespace mrHelper.GitClient
          }
          catch (Exception ex)
          {
-            if (ex is SystemException || ex is GitCallFailedException)
+            if (ex is SystemException || ex is GitCallFailedException || ex is OperationCancelledException)
             {
-               if (_currentFailedStep == FailedStep.Commit)
-               {
-                  throw new LocalGitRepositoryOperationException(() => resetIndex(), () => deleteBranch(), ex);
-               }
-               else if (_currentFailedStep == FailedStep.Apply || _currentFailedStep == FailedStep.Checkout)
-               {
-                  throw new LocalGitRepositoryOperationException(null, () => deleteBranch() , ex);
-               }
-               throw new LocalGitRepositoryOperationException(null, null, ex);
+               throw new LocalGitRepositoryOperationException(
+                  () =>
+                  {
+                     if (branchName != currentBranch)
+                     {
+                        string delBranchArgs = String.Format("branch -D {0}", branchName);
+                        ExternalProcess.Start("git", delBranchArgs, true, _path);
+                     }
+                  }, ex);
             }
             throw;
          }
          finally
          {
-            System.IO.File.Delete(patchFilepath);
+            ExternalProcess.Start("git", "reset --hard", true, _path);
          }
-
-         Debug.Assert(_currentFailedStep == FailedStep.None);
       }
 
       async public Task Cancel()
@@ -102,31 +80,59 @@ namespace mrHelper.GitClient
       async private Task doCreateBranch(string branchPointSha, string branchName, string patchFilepath)
       {
          // Checkout a branch (create if it does not exist) and reset it to a SHA
-         _currentFailedStep = FailedStep.Checkout;
          string checkoutArgs = String.Format("checkout -B {0} {1}", branchName, branchPointSha);
          _currentSubOperation = _operationManager.CreateDescriptor("git", checkoutArgs, _path, null);
          await _operationManager.Wait(_currentSubOperation);
+         if (_currentSubOperation == null)
+         {
+            throw new OperationCancelledException();
+         }
 
          // Apply a patch directly to the index
-         _currentFailedStep = FailedStep.Apply;
-         string applyArgs = String.Format("apply --index {0}", StringUtils.EscapeSpaces(patchFilepath));
+         string applyArgs = String.Format("apply --reject --ignore-space-change --ignore-whitespace {0}",
+            StringUtils.EscapeSpaces(patchFilepath));
          _currentSubOperation = _operationManager.CreateDescriptor("git", applyArgs, _path, null);
+         try
+         {
+            await _operationManager.Wait(_currentSubOperation);
+         }
+         catch (GitCallFailedException ex)
+         {
+            // exception is swallowed because git apply which generates .rej files throws
+            ExceptionHandlers.Handle("git apply failed", ex);
+         }
+         finally
+         {
+            System.IO.File.Delete(patchFilepath);
+         }
+         if (_currentSubOperation == null)
+         {
+            throw new OperationCancelledException();
+         }
+
+         // Add all files to index
+         _currentSubOperation = _operationManager.CreateDescriptor("git", "add .", _path, null);
          await _operationManager.Wait(_currentSubOperation);
+         if (_currentSubOperation == null)
+         {
+            throw new OperationCancelledException();
+         }
 
          // Create a commit with patch
-         _currentFailedStep = FailedStep.Commit;
          string commitArgs = String.Format("commit -m {0}", branchName);
          _currentSubOperation = _operationManager.CreateDescriptor("git", commitArgs, _path, null);
          await _operationManager.Wait(_currentSubOperation);
+         if (_currentSubOperation == null)
+         {
+            throw new OperationCancelledException();
+         }
 
-         _currentFailedStep = FailedStep.None;
          _currentSubOperation = null;
       }
 
       private string _path;
       private readonly IExternalProcessManager _operationManager;
       private ExternalProcess.AsyncTaskDescriptor _currentSubOperation;
-      private FailedStep _currentFailedStep;
    }
 }
 

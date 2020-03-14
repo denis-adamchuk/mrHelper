@@ -138,6 +138,7 @@ namespace mrHelper.App.Forms
          {
             if (!await _searchWorkflowManager.LoadCurrentUserAsync(hostname))
             {
+               enableMergeRequestSearchControls(true);
                return;
             }
          }
@@ -151,6 +152,7 @@ namespace mrHelper.App.Forms
 
          if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query))
          {
+            enableMergeRequestSearchControls(true);
             return;
          }
 
@@ -161,7 +163,6 @@ namespace mrHelper.App.Forms
 
       private void onLoadAllSearchMergeRequests()
       {
-         disableAllSearchUIControls(false);
          listViewFoundMergeRequests.Items.Clear();
       }
 

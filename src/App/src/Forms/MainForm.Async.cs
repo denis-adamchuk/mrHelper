@@ -189,11 +189,14 @@ namespace mrHelper.App.Forms
             enableControlsOnGitAsyncOperation(false);
             try
             {
+               IInstantProjectChecker checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
+                  ? _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk)
+                  : _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk);
+
                // Using local checker because it does not make a GitLab request and it is quite enough here because
                // user may select only those commits that already loaded and cached and have timestamps less
-               // than latest merge request version
-               await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk), updateGitStatusText);
+               // than latest merge request version (this is possible for Open MR only)
+               await _gitClientUpdater.UpdateAsync(repo, checker, updateGitStatusText);
             }
             catch (Exception ex)
             {
