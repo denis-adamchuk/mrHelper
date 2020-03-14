@@ -75,7 +75,7 @@ namespace mrHelper.App.Forms
          MergeRequest mergeRequest = getMergeRequest(null).Value;
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await onLaunchDiffToolAsync(mrk, mergeRequest.State == "opened");
+         await onLaunchDiffToolAsync(mrk, mergeRequest.State);
       }
 
       async private void ButtonAddComment_Click(object sender, EventArgs e)
@@ -681,7 +681,7 @@ namespace mrHelper.App.Forms
          MergeRequest mergeRequest = getMergeRequest(null).Value;
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
+         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.State);
       }
 
       async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1142,21 +1142,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
+      private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
-         // TODO - Update right part of the form
-
          deselectAllListViewItems(listViewMergeRequests);
          deselectAllListViewItems(listViewFoundMergeRequests);
 
          bool isLiveMode = tabControlMode.SelectedTab == tabPageLive;
          labelTimeTrackingTrackedLabel.Visible = isLiveMode;
          buttonEditTime.Visible = isLiveMode;
-
-         if (isLiveMode)
-         {
-            await _searchWorkflowManager.CancelAsync();
-         }
       }
 
       protected override void OnFontChanged(EventArgs e)

@@ -81,6 +81,7 @@ namespace mrHelper.App.Forms
          {
             disableAllUIControls(true);
          }
+         disableAllSearchUIControls(true);
 
          bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
          string projectname = shouldUseLastSelection ?

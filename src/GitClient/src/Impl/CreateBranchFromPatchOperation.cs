@@ -65,6 +65,7 @@ namespace mrHelper.GitClient
          finally
          {
             ExternalProcess.Start("git", "reset --hard", true, _path);
+            ExternalProcess.Start("git", "clean -x -d -f", true, _path);
          }
       }
 

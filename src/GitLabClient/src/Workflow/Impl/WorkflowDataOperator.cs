@@ -58,17 +58,27 @@ namespace mrHelper.Client.Workflow
          return CommonOperator.GetMergeRequestsAsync(_client, projectName);
       }
 
-      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(string search)
+      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(string search, int maxResults)
       {
          try
          {
            return (IEnumerable<MergeRequest>)(await _client.RunAsync(async (gitlab) =>
-              await gitlab.MergeRequests.LoadAllTaskAsync(
+              await gitlab.MergeRequests.LoadTaskAsync(
                  new GlobalMergeRequestsFilter
                  {
                     WIP = MergeRequestsFilter.WorkInProgressFilter.All,
                     State = MergeRequestsFilter.StateFilter.All,
                     Search = search
+                 },
+                 new PageFilter
+                 {
+                    PerPage = maxResults,
+                    PageNumber = 1
+                 },
+                 new SortFilter
+                 {
+                    Ascending = false,
+                    OrderBy = "updated_at"
                  })));
          }
          catch (Exception ex)

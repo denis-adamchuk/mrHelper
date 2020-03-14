@@ -119,6 +119,7 @@ namespace mrHelper.App.Forms
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.listViewFoundMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
          this.columnHeaderFoundIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -150,7 +151,6 @@ namespace mrHelper.App.Forms
          this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxKnownHosts.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
@@ -978,7 +978,7 @@ namespace mrHelper.App.Forms
          this.textBoxSearch.Name = "textBoxSearch";
          this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
          this.textBoxSearch.TabIndex = 1;
-         this.textBoxSearch.KeyDown += TextBoxSearch_KeyDown;
+         this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
          // 
          // listViewFoundMergeRequests
          // 
@@ -1019,6 +1019,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundIId.Tag = "IId";
          this.columnHeaderFoundIId.Text = "IId";
          this.columnHeaderFoundIId.Width = 40;
+         // 
+         // columnHeaderFoundState
+         // 
+         this.columnHeaderFoundState.Tag = "State";
+         this.columnHeaderFoundState.Text = "State";
+         this.columnHeaderFoundState.Width = 80;
          // 
          // columnHeaderFoundAuthor
          // 
@@ -1168,9 +1174,10 @@ namespace mrHelper.App.Forms
          // linkLabelAbortGit
          // 
          this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelAbortGit.AutoSize = true;
          this.linkLabelAbortGit.Location = new System.Drawing.Point(887, 31);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
-         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 15);
+         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
          this.linkLabelAbortGit.TabIndex = 15;
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
@@ -1179,12 +1186,11 @@ namespace mrHelper.App.Forms
          // 
          // labelGitStatus
          // 
-         this.labelGitStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
          this.labelGitStatus.AutoEllipsis = true;
+         this.labelGitStatus.AutoSize = true;
          this.labelGitStatus.Location = new System.Drawing.Point(0, 31);
          this.labelGitStatus.Name = "labelGitStatus";
-         this.labelGitStatus.Size = new System.Drawing.Size(881, 16);
+         this.labelGitStatus.Size = new System.Drawing.Size(510, 13);
          this.labelGitStatus.TabIndex = 1;
          this.labelGitStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore";
@@ -1380,12 +1386,6 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // columnHeaderFoundState
-         // 
-         this.columnHeaderFoundState.Tag = "State";
-         this.columnHeaderFoundState.Text = "State";
-         this.columnHeaderFoundState.Width = 80;
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1429,6 +1429,7 @@ namespace mrHelper.App.Forms
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.panelStatusBar.ResumeLayout(false);
+         this.panelStatusBar.PerformLayout();
          this.panelBottomMenu.ResumeLayout(false);
          this.panelBottomMenu.PerformLayout();
          this.groupBoxTimeTracking.ResumeLayout(false);

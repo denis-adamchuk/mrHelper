@@ -138,7 +138,6 @@ namespace mrHelper.App.Forms
          {
             if (!await _searchWorkflowManager.LoadCurrentUserAsync(hostname))
             {
-               enableMergeRequestSearchControls(true);
                return;
             }
          }
@@ -150,9 +149,9 @@ namespace mrHelper.App.Forms
       {
          onLoadAllSearchMergeRequests();
 
-         if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query))
+         if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query,
+            Common.Constants.Constants.MaxSearchResultsPerProject))
          {
-            enableMergeRequestSearchControls(true);
             return;
          }
 
@@ -164,6 +163,7 @@ namespace mrHelper.App.Forms
       private void onLoadAllSearchMergeRequests()
       {
          listViewFoundMergeRequests.Items.Clear();
+         labelWorkflowStatus.Text = "Search in progress";
       }
 
       private void onFailedLoadProjectSearchMergeRequests()
@@ -176,7 +176,8 @@ namespace mrHelper.App.Forms
       private void onProjectSearchMergeRequestsLoaded(string hostname, Project project,
          IEnumerable<MergeRequest> mergeRequests)
       {
-         labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
+         labelWorkflowStatus.Text = String.Format(
+            "Search results for project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Search] Project {0} loaded. Loaded {1} merge requests",
@@ -188,15 +189,13 @@ namespace mrHelper.App.Forms
 
       private void onAllSearchMergeRequestsLoaded(string hostname)
       {
-         enableMergeRequestSearchControls(true);
-
          if (listViewFoundMergeRequests.Items.Count > 0)
          {
             enableListView(listViewFoundMergeRequests);
          }
          else
          {
-            labelWorkflowStatus.Text = "Nothing found";
+            labelWorkflowStatus.Text = "Nothing found. Try more specific search query.";
          }
       }
 
@@ -206,7 +205,8 @@ namespace mrHelper.App.Forms
       {
          if (mergeRequestIId != 0)
          {
-            labelWorkflowStatus.Text = String.Format("Loading merge request with IId {0}...", mergeRequestIId);
+            labelWorkflowStatus.Text = String.Format(
+               "Loading merge request with IId {0}...", mergeRequestIId);
          }
          else
          {
@@ -314,7 +314,6 @@ namespace mrHelper.App.Forms
 
       private void disableAllSearchUIControls(bool clearListView)
       {
-         enableMergeRequestSearchControls(false);
          disableListView(listViewFoundMergeRequests, clearListView);
 
          enableMergeRequestActions(false);
@@ -347,9 +346,9 @@ namespace mrHelper.App.Forms
          setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
       }
 
-      async private Task restoreChainOfCommits(ILocalGitRepository repo, string baseSHA, IEnumerable<string> commits)
+      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, string baseSHA, IEnumerable<string> commits)
       {
-         enableControlsOnGitAsyncOperation(false);
+         enableControlsOnGitAsyncOperation(false, "restoring merged commits");
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, repo, baseSHA, commits);
          try
@@ -360,7 +359,7 @@ namespace mrHelper.App.Forms
          {
             _commitChainCreator = null;
          }
-         enableControlsOnGitAsyncOperation(true);
+         enableControlsOnGitAsyncOperation(true, "restoring merged commits");
       }
    }
 }

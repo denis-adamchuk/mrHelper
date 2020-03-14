@@ -20,7 +20,7 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author)
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string state)
       {
          Debug.Assert(getHostName() != String.Empty);
          Debug.Assert(_currentUser.ContainsKey(getHostName()));
@@ -28,10 +28,13 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
 
+         // To pre-load discussions for MR in Search mode
+         _discussionManager.CheckForUpdates(mrk, 1, -1);
+
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
-            enableControlsOnGitAsyncOperation(false);
+            enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
@@ -73,10 +76,13 @@ namespace mrHelper.App.Forms
             }
             finally
             {
-               enableControlsOnGitAsyncOperation(true);
+               enableControlsOnGitAsyncOperation(true, "updating git repository");
             }
 
-            await restoreChainOfCommits(repo, getBaseCommitSha(), getChainOfCommits());
+            if (state == "merged")
+            {
+               await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
+            }
          }
          else
          {
@@ -160,7 +166,7 @@ namespace mrHelper.App.Forms
          form.Show();
       }
 
-      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, bool opened)
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, string state)
       {
          if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
          {
@@ -186,7 +192,7 @@ namespace mrHelper.App.Forms
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
-            enableControlsOnGitAsyncOperation(false);
+            enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
                IInstantProjectChecker checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
@@ -225,7 +231,7 @@ namespace mrHelper.App.Forms
             }
             finally
             {
-               enableControlsOnGitAsyncOperation(true);
+               enableControlsOnGitAsyncOperation(true, "updating git repository");
             }
          }
          else
@@ -235,9 +241,12 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         await restoreChainOfCommits(repo, getBaseCommitSha(), getChainOfCommits());
-         leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
-         rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
+         if (state == "merged")
+         {
+            await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
+            leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
+            rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
+         }
 
          labelWorkflowStatus.Text = "Launching diff tool...";
 

@@ -473,15 +473,17 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void enableControlsOnGitAsyncOperation(bool enabled)
+      private void enableControlsOnGitAsyncOperation(bool enabled, string operation)
       {
          linkLabelAbortGit.Visible = !enabled;
+         linkLabelAbortGit.Text = String.Format("Abort {0}", operation);
 
          tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
 
          buttonDiffTool.Enabled = enabled;
          buttonDiscussions.Enabled = enabled;
          listViewMergeRequests.Enabled = enabled;
+         listViewFoundMergeRequests.Enabled = enabled;
          enableMergeRequestFilterControls(enabled);
          enableMergeRequestSearchControls(enabled);
 

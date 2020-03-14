@@ -28,7 +28,7 @@ namespace mrHelper.App.Helpers
 
       async public Task CreateChainAsync()
       {
-         if (String.IsNullOrEmpty(_baseSHA) || _commits == null)
+         if (_repo == null || String.IsNullOrEmpty(_baseSHA) || _commits == null)
          {
             return;
          }
@@ -153,12 +153,13 @@ namespace mrHelper.App.Helpers
          int iComparison = 1;
          foreach (ComparisonResult comparisonResult in comparisonResults)
          {
-            _onStatusChange(String.Format(
-               "Creating patches: {0}/{1}", iComparison++, comparisonResults.Count()));
+            string status = String.Format(
+               "Creating patches: {0}/{1}", iComparison++, comparisonResults.Count());
+            _onStatusChange(status);
 
             try
             {
-               string text = await createPatchText(comparisonResult);
+               string text = await createPatchText(comparisonResult, status);
                if (String.IsNullOrEmpty(text))
                {
                   return null;
@@ -180,17 +181,21 @@ namespace mrHelper.App.Helpers
          return patches;
       }
 
-      async private Task<string> createPatchText(ComparisonResult comparisonResult)
+      async private Task<string> createPatchText(ComparisonResult comparisonResult, string status)
       {
          StringBuilder stringBuilder = new StringBuilder();
+         int iFile = 1;
          foreach (DiffStruct diff in comparisonResult.Comparison.Diffs)
          {
+            _onStatusChange(status +
+               String.Format(". Processed files: {0}/{1}", iFile++, comparisonResult.Comparison.Diffs.Count()));
+
             string gitDiff;
             if (diff.Diff == String.Empty)
             {
                gitDiff = await createDiffFromRawFiles(diff.Old_Path, comparisonResult.PrevSHA,
-                  diff.New_Path, comparisonResult.SHA);
-               if (String.IsNullOrEmpty(gitDiff))
+                  diff.New_Path, comparisonResult.SHA, diff.New_File, diff.Deleted_File);
+               if (gitDiff == null)
                {
                   return null;
                }
@@ -198,6 +203,11 @@ namespace mrHelper.App.Helpers
             else
             {
                gitDiff = diff.Diff.Replace("\\n", "\n");
+            }
+
+            if (gitDiff == String.Empty)
+            {
+               continue;
             }
 
             stringBuilder.AppendLine(String.Format("--- a/{0}", diff.Old_Path));
@@ -208,20 +218,24 @@ namespace mrHelper.App.Helpers
       }
 
       async private Task<string> createDiffFromRawFiles(string oldFilename, string oldSha,
-         string newFilename, string newSha)
+         string newFilename, string newSha, bool isNew, bool isDeleted)
       {
          GitLabSharp.Entities.File? oldFile = null;
          GitLabSharp.Entities.File? newFile = null;
 
          try
          {
-            oldFile = await _repositoryManager.LoadFileAsync(_repo.ProjectKey, oldFilename, oldSha);
+            oldFile = isNew
+               ? new File { Content = String.Empty, File_Name = Guid.NewGuid().ToString() }
+               : await _repositoryManager.LoadFileAsync(_repo.ProjectKey, oldFilename, oldSha);
             if (oldFile == null)
             {
                return null;
             }
 
-            newFile = await _repositoryManager.LoadFileAsync(_repo.ProjectKey, newFilename, newSha);
+            newFile = isDeleted
+               ? new File { Content = String.Empty, File_Name = Guid.NewGuid().ToString() }
+               : await _repositoryManager.LoadFileAsync(_repo.ProjectKey, newFilename, newSha);
             if (newFile == null)
             {
                return null;

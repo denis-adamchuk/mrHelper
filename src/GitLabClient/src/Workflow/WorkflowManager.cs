@@ -61,25 +61,15 @@ namespace mrHelper.Client.Workflow
          return await loadCurrentUserAsync(hostname);
       }
 
-      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, string search)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, string search, int maxResults)
       {
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
-         Dictionary<Project, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync(hostname, search);
+         Dictionary<Project, IEnumerable<MergeRequest>> mergeRequests =
+            await loadMergeRequestsAsync(hostname, search, maxResults);
          if (mergeRequests == null)
          {
             return false; // cancelled
-         }
-
-         foreach (KeyValuePair<Project, IEnumerable<MergeRequest>> keyValuePair in mergeRequests)
-         {
-            foreach (MergeRequest mergeRequest in keyValuePair.Value)
-            {
-               if (!await loadLatestVersionAsync(hostname, keyValuePair.Key.Path_With_Namespace, mergeRequest))
-               {
-                  return false; // cancelled
-               }
-            }
          }
 
          return true;
@@ -186,12 +176,12 @@ namespace mrHelper.Client.Workflow
       }
 
       async private Task<Dictionary<Project, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(
-         string hostname, string search)
+         string hostname, string search, int maxResults)
       {
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await _operator.SearchMergeRequestsAsync(search);
+            mergeRequests = await _operator.SearchMergeRequestsAsync(search, maxResults);
          }
          catch (OperatorException ex)
          {

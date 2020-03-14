@@ -128,6 +128,11 @@ namespace mrHelper.Client.Discussions
 
       private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
       {
+         if (interval < 1)
+         {
+            return;
+         }
+
          System.Timers.Timer timer = new System.Timers.Timer
          {
             Interval = interval,
