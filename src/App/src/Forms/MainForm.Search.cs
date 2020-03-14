@@ -345,22 +345,6 @@ namespace mrHelper.App.Forms
          int maxLineCount = 2;
          setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
       }
-
-      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, string baseSHA, IEnumerable<string> commits)
-      {
-         enableControlsOnGitAsyncOperation(false, "restoring merged commits");
-         _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, repo, baseSHA, commits);
-         try
-         {
-            await _commitChainCreator.CreateChainAsync();
-         }
-         finally
-         {
-            _commitChainCreator = null;
-         }
-         enableControlsOnGitAsyncOperation(true, "restoring merged commits");
-      }
    }
 }
 

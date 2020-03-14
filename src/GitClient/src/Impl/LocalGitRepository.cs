@@ -23,12 +23,51 @@ namespace mrHelper.GitClient
 
       public bool ContainsSHA(string sha)
       {
-         return containsEntity(sha);
+         if (_cached_existingSha.Contains(sha))
+         {
+            return true;
+         }
+         if (containsEntity(sha))
+         {
+            _cached_existingSha.Add(sha);
+            return true;
+         }
+         return false;
       }
 
       public bool ContainsBranch(string branchName)
       {
-         return containsEntity(branchName);
+         if (_cached_existingBranch.Contains(branchName))
+         {
+            return true;
+         }
+         if (containsEntity(branchName))
+         {
+            _cached_existingBranch.Add(branchName);
+            return true;
+         }
+         return false;
+      }
+
+      public bool ContainsSHAOrBranch(string sha, string branchName)
+      {
+         if (_cached_existingSha.Contains(sha) || _cached_existingBranch.Contains(branchName))
+         {
+            return true;
+         }
+
+         bool result = false;
+         if (containsEntity(sha))
+         {
+            _cached_existingSha.Add(sha);
+            result = true;
+         }
+         if (containsEntity(branchName))
+         {
+            _cached_existingBranch.Add(branchName);
+            result = true;
+         }
+         return result;
       }
       // @{ IGitRepository
 
@@ -51,9 +90,9 @@ namespace mrHelper.GitClient
          return !_cached_isValidRepository.Value;
       }
 
-      public ILocalGitRepositoryState State => _state;
+      public ILocalGitRepositoryState State { get; }
 
-      public ILocalGitRepositoryOperations Operations => _operations;
+      public ILocalGitRepositoryOperations Operations { get; }
       // @} ILocalGitRepository
 
       // Host Name and Project Name
@@ -124,8 +163,8 @@ namespace mrHelper.GitClient
 
          _operationManager = new GitOperationManager(synchronizeInvoke, path);
          _data = new LocalGitRepositoryData(_operationManager, Path);
-         _state = new LocalGitRepositoryState(Path);
-         _operations = new LocalGitRepositoryOperations(Path, _operationManager);
+         State = new LocalGitRepositoryState(Path);
+         Operations = new LocalGitRepositoryOperations(Path, _operationManager);
 
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2} "
@@ -197,10 +236,10 @@ namespace mrHelper.GitClient
 
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
+      private HashSet<string> _cached_existingSha = new HashSet<string>();
+      private HashSet<string> _cached_existingBranch = new HashSet<string>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
-      private readonly ILocalGitRepositoryState _state;
-      private readonly ILocalGitRepositoryOperations _operations;
       private readonly IExternalProcessManager _operationManager;
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
    }

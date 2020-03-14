@@ -28,8 +28,10 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
 
-         // To pre-load discussions for MR in Search mode
-         _discussionManager.CheckForUpdates(mrk, 1, -1);
+         if (isSearchMode())
+         {
+            _discussionManager.ForceUpdate(mrk); // Pre-load discussions for MR in Search mode
+         }
 
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
@@ -81,7 +83,7 @@ namespace mrHelper.App.Forms
 
             if (state == "merged")
             {
-               await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
+               await restoreChainOfMergedCommits(repo, mrk);
             }
          }
          else
@@ -253,7 +255,7 @@ namespace mrHelper.App.Forms
          int pid;
          try
          {
-            string arguments = "difftool --dir-diff --tool=" +
+            string arguments = "difftool --no-symlinks --dir-diff --tool=" +
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
             pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;
          }
@@ -450,6 +452,35 @@ namespace mrHelper.App.Forms
       }
 
       private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
+
+      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
+      {
+         _commitChainCreator = new CommitChainCreator(Program.Settings,
+            status => labelWorkflowStatus.Text = status, repo, mrk);
+         await restoreChainOfMergedCommits();
+      }
+
+      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo,
+         string baseSha, IEnumerable<string> commits)
+      {
+         _commitChainCreator = new CommitChainCreator(Program.Settings,
+            status => labelWorkflowStatus.Text = status, repo, baseSha, commits);
+         await restoreChainOfMergedCommits();
+      }
+
+      async private Task restoreChainOfMergedCommits()
+      {
+         enableControlsOnGitAsyncOperation(false, "restoring merged commits");
+         try
+         {
+            await _commitChainCreator.CreateChainAsync();
+         }
+         finally
+         {
+            _commitChainCreator = null;
+         }
+         enableControlsOnGitAsyncOperation(true, "restoring merged commits");
+      }
    }
 }
 

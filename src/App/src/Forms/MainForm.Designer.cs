@@ -1174,10 +1174,9 @@ namespace mrHelper.App.Forms
          // linkLabelAbortGit
          // 
          this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelAbortGit.AutoSize = true;
          this.linkLabelAbortGit.Location = new System.Drawing.Point(887, 31);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
-         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
+         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 15);
          this.linkLabelAbortGit.TabIndex = 15;
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
@@ -1186,11 +1185,12 @@ namespace mrHelper.App.Forms
          // 
          // labelGitStatus
          // 
+         this.labelGitStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.labelGitStatus.AutoEllipsis = true;
-         this.labelGitStatus.AutoSize = true;
          this.labelGitStatus.Location = new System.Drawing.Point(0, 31);
          this.labelGitStatus.Name = "labelGitStatus";
-         this.labelGitStatus.Size = new System.Drawing.Size(510, 13);
+         this.labelGitStatus.Size = new System.Drawing.Size(881, 16);
          this.labelGitStatus.TabIndex = 1;
          this.labelGitStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore";

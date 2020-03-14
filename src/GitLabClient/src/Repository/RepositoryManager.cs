@@ -56,7 +56,25 @@ namespace mrHelper.Client.Repository
             {
                return null;
             }
-            throw new RepositoryManagerException("Cannot perform comparison", ex);
+            throw new RepositoryManagerException("Cannot load file", ex);
+         }
+      }
+
+      async public Task<Commit?> LoadCommitAsync(ProjectKey projectKey, string sha)
+      {
+         _operator = new RepositoryOperator(projectKey.HostName,
+            _settings.GetAccessToken(projectKey.HostName));
+         try
+         {
+            return await _operator.LoadCommitAsync(projectKey.ProjectName, sha);
+         }
+         catch (OperatorException ex)
+         {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return null;
+            }
+            throw new RepositoryManagerException("Cannot load commit", ex);
          }
       }
 

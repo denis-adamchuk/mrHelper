@@ -16,24 +16,21 @@ namespace mrHelper.Client.Versions
    /// </summary>
    internal class VersionOperator
    {
-      internal VersionOperator(IHostProperties settings)
+      internal VersionOperator(string host, string token)
       {
-         _settings = settings;
+         _client = new GitLabClient(host, token);
       }
 
       async internal Task<IEnumerable<Version>> LoadVersionsAsync(MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            return (IEnumerable<Version>)(await client.RunAsync(async (gitlab) =>
+            return (IEnumerable<Version>)(await _client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Versions.LoadAllTaskAsync()));
          }
          catch (Exception ex)
          {
-            Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                throw new OperatorException(ex);
@@ -44,17 +41,14 @@ namespace mrHelper.Client.Versions
 
       async internal Task<Version> LoadVersionAsync(Version version, MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            return (Version)(await client.RunAsync(async (gitlab) =>
+            return (Version)(await _client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Versions.Get(version.Id).LoadTaskAsync()));
          }
          catch (Exception ex)
          {
-            Debug.Assert(!(ex is GitLabClientCancelled));
             if (ex is GitLabSharpException || ex is GitLabRequestException)
             {
                throw new OperatorException(ex);
@@ -65,12 +59,15 @@ namespace mrHelper.Client.Versions
 
       internal Task<Version> GetLatestVersionAsync(MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
+         return CommonOperator.GetLatestVersionAsync(_client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
-      private readonly IHostProperties _settings;
+      async internal Task CancelAsync()
+      {
+         await _client.CancelAsync();
+      }
+
+      private readonly GitLabClient _client;
    }
 }
 

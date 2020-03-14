@@ -476,7 +476,7 @@ namespace mrHelper.App.Forms
       private void enableControlsOnGitAsyncOperation(bool enabled, string operation)
       {
          linkLabelAbortGit.Visible = !enabled;
-         linkLabelAbortGit.Text = String.Format("Abort {0}", operation);
+         linkLabelAbortGit.Tag = operation;
 
          tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
 

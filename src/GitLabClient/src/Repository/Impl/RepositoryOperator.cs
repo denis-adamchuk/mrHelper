@@ -60,6 +60,24 @@ namespace mrHelper.Client.Repository
          }
       }
 
+      async internal Task<Commit> LoadCommitAsync(string projectname, string sha)
+      {
+         try
+         {
+            return (Commit)(await _client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectname).Repository.Commits.
+                  Get(sha).LoadTaskAsync()));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       async internal Task CancelAsync()
       {
          await _client.CancelAsync();

@@ -34,6 +34,7 @@ namespace mrHelper.Common.Interfaces
 
       bool ContainsSHA(string sha);
       bool ContainsBranch(string branchName);
+      bool ContainsSHAOrBranch(string sha, string branchName);
    }
 }
 
