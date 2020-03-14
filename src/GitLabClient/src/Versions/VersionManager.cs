@@ -21,34 +21,55 @@ namespace mrHelper.Client.Versions
    {
       public VersionManager(IHostProperties settings)
       {
-         _operator = new VersionOperator(settings);
+         _settings = settings;
       }
 
-      public Task<IEnumerable<Version>> GetVersions(MergeRequestKey mrk)
+      async public Task<IEnumerable<Version>> GetVersions(MergeRequestKey mrk)
       {
+         _operator = new VersionOperator(mrk.ProjectKey.HostName,
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            return _operator.LoadVersionsAsync(mrk);
+            return await _operator.LoadVersionsAsync(mrk);
          }
          catch (OperatorException ex)
          {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return null;
+            }
             throw new VersionManagerException("Cannot load versions", ex);
          }
       }
 
-      public Task<Version> GetVersion(Version version, MergeRequestKey mrk)
+      async public Task<Version?> GetVersion(Version version, MergeRequestKey mrk)
       {
+         _operator = new VersionOperator(mrk.ProjectKey.HostName,
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
          try
          {
-            return _operator.LoadVersionAsync(version, mrk);
+            return await _operator.LoadVersionAsync(version, mrk);
          }
          catch (OperatorException ex)
          {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return null;
+            }
             throw new VersionManagerException("Cannot load version", ex);
          }
       }
 
-      private readonly VersionOperator _operator;
+      async public Task CancelAsync()
+      {
+         if (_operator != null)
+         {
+            await _operator.CancelAsync();
+         }
+      }
+
+      private readonly IHostProperties _settings;
+      private VersionOperator _operator;
    }
 }
 

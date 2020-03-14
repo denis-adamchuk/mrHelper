@@ -81,7 +81,7 @@ namespace mrHelper.App.Forms
 
             if (state == "merged")
             {
-               await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
+               await restoreChainOfMergedCommits(repo, mrk);/* getBaseCommitSha(), getChainOfCommits());*/
             }
          }
          else
@@ -243,7 +243,7 @@ namespace mrHelper.App.Forms
 
          if (state == "merged")
          {
-            await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
+            await restoreChainOfMergedCommits(repo, mrk);/* getBaseCommitSha(), getChainOfCommits());*/
             leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
             rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
          }

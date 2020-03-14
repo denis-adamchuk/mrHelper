@@ -346,11 +346,11 @@ namespace mrHelper.App.Forms
          setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
       }
 
-      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, string baseSHA, IEnumerable<string> commits)
+      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
       {
          enableControlsOnGitAsyncOperation(false, "restoring merged commits");
          _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, repo, baseSHA, commits);
+            status => labelWorkflowStatus.Text = status, repo, mrk);
          try
          {
             await _commitChainCreator.CreateChainAsync();
