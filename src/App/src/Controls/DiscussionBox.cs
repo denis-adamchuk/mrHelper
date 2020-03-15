@@ -328,13 +328,41 @@ namespace mrHelper.App.Controls
          Debug.Assert(note.Type == "DiffNote");
 
          DiffPosition position = convertToDiffPosition(note.Position);
-         htmlPanel.Text = getContext(_panelContextMaker, position,
-            _diffContextDepth, htmlPanel.Font.Height);
-         _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
-            _tooltipContextDepth, htmlPanel.Font.Height));
+
+         htmlPanel.Text = "Loading...\n\n\n";
+         _htmlToolTip.SetToolTip(htmlPanel, "Loading...");
+
+         if (IsHandleCreated)
+         {
+            HtmlPanel_HandleCreated(htmlPanel, position);
+         }
+         else
+         {
+            HandleCreated += (s, e) => HtmlPanel_HandleCreated(htmlPanel, position);
+         }
+         //BeginInvoke(new Action(
+         //   async () =>
+         //{
+         //   htmlPanel.Text = await getContext(_panelContextMaker, position,
+         //      _diffContextDepth, htmlPanel.Font.Height);
+         //   _htmlToolTip.SetToolTip(htmlPanel, await getContext(_tooltipContextMaker, position,
+         //      _tooltipContextDepth, htmlPanel.Font.Height));
+         //}), null);
       }
 
-      private string getContext(IContextMaker contextMaker, DiffPosition position,
+      private void HtmlPanel_HandleCreated(HtmlPanel htmlPanel, DiffPosition position)
+      {
+         BeginInvoke(new Action(
+            async () =>
+         {
+            htmlPanel.Text = await getContext(_panelContextMaker, position,
+               _diffContextDepth, htmlPanel.Font.Height);
+            _htmlToolTip.SetToolTip(htmlPanel, await getContext(_tooltipContextMaker, position,
+               _tooltipContextDepth, htmlPanel.Font.Height));
+         }), null);
+      }
+
+      async private Task<string> getContext(IContextMaker contextMaker, DiffPosition position,
          ContextDepth depth, int fontSizePx)
       {
          if (contextMaker == null || _formatter == null)
@@ -344,7 +372,7 @@ namespace mrHelper.App.Controls
 
          try
          {
-            DiffContext context = contextMaker.GetContext(position, depth);
+            DiffContext context = await contextMaker.GetContext(position, depth);
             return _formatter.FormatAsHTML(context, fontSizePx);
          }
          catch (Exception ex)

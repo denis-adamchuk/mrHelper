@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Context;
@@ -32,14 +32,19 @@ namespace mrHelper.Core.Git
       /// Note: filename1 or filename2 can be 'null'
       /// Throws ContextMakingException.
       /// </summary>
-      public GitDiffAnalyzer(IGitRepository gitRepository,
-         string sha1, string sha2, string filename1, string filename2)
+      async public Task AnalyzeAsync(
+         IGitRepository gitRepository, string sha1, string sha2, string filename1, string filename2)
       {
-         _sections = getDiffSections(gitRepository, sha1, sha2, filename1, filename2);
+         _sections = await getDiffSections(gitRepository, sha1, sha2, filename1, filename2);
       }
 
       public bool IsLineAddedOrModified(int linenumber)
       {
+         if (_sections == null)
+         {
+            return false;
+         }
+
          foreach (GitDiffSection section in _sections)
          {
             if (linenumber >= section.RightSectionStart && linenumber < section.RightSectionEnd)
@@ -52,6 +57,11 @@ namespace mrHelper.Core.Git
 
       public bool IsLineDeleted(int linenumber)
       {
+         if (_sections == null)
+         {
+            return false;
+         }
+
          foreach (GitDiffSection section in _sections)
          {
             if (linenumber >= section.LeftSectionStart && linenumber < section.LeftSectionEnd)
@@ -65,8 +75,8 @@ namespace mrHelper.Core.Git
       /// <summary>
       /// Throws ContextMakingException.
       /// </summary>
-      static private IEnumerable<GitDiffSection> getDiffSections(IGitRepository gitRepository,
-         string sha1, string sha2, string filename1, string filename2)
+      async static private Task<IEnumerable<GitDiffSection>> getDiffSections(
+         IGitRepository gitRepository, string sha1, string sha2, string filename1, string filename2)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
@@ -89,7 +99,7 @@ namespace mrHelper.Core.Git
          IEnumerable<string> diff;
          try
          {
-            diff = gitRepository.Data?.Get(arguments);
+            diff = await gitRepository.Data?.GetAsync(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
@@ -129,7 +139,7 @@ namespace mrHelper.Core.Git
          return sections;
       }
 
-      private readonly IEnumerable<GitDiffSection> _sections;
+      private IEnumerable<GitDiffSection> _sections;
    }
 }
 

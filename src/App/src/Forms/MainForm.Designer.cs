@@ -1176,7 +1176,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.linkLabelAbortGit.Location = new System.Drawing.Point(887, 31);
          this.linkLabelAbortGit.Name = "linkLabelAbortGit";
-         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 13);
+         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 15);
          this.linkLabelAbortGit.TabIndex = 15;
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";

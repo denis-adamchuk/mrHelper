@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
@@ -32,7 +33,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ContextMakingException.
       /// </summary>
-      public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
+      async public Task<FullContextDiff> GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
       {
          FullContextDiff fullContextDiff = new FullContextDiff
@@ -61,7 +62,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> fullDiff;
          try
          {
-            fullDiff = _gitRepository.Data?.Get(arguments);
+            fullDiff = await _gitRepository.Data?.GetAsync(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {

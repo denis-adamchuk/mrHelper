@@ -1,27 +1,31 @@
 ﻿using System;
 using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.Common.Exceptions;
-using System.Diagnostics;
 
 namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionForm : CustomFontForm
    {
-      internal NewDiscussionForm(string leftSideFileName, string rightSideFileName,
-         DiffPosition position, IGitRepository gitRepository)
+      internal NewDiscussionForm()
       {
          InitializeComponent();
          htmlPanel.BorderStyle = BorderStyle.FixedSingle;
          htmlPanel.Location = new Point(12, 73);
          htmlPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
          Controls.Add(htmlPanel);
+      }
 
+      internal void Initialize(string leftSideFileName, string rightSideFileName,
+         DiffPosition position, IGitRepository gitRepository)
+      {
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          this.Text = Constants.NewDiscussionCaption;
@@ -72,21 +76,22 @@ namespace mrHelper.App.Forms
       private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
          DiffPosition position, IGitRepository gitRepository)
       {
-         htmlPanel.Text = getContextHtmlText(position, gitRepository);
-         htmlPanel.Height = htmlPanel.DisplayRectangle.Height + 2;
+         BeginInvoke(new Action(
+            async () => htmlPanel.Text = await getContextHtmlText(position, gitRepository) ), null);
 
+         htmlPanel.Height = htmlPanel.DisplayRectangle.Height + 2;
          textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, IGitRepository gitRepository)
+      async private Task<string> getContextHtmlText(DiffPosition position, IGitRepository gitRepository)
       {
          DiffContext? context;
          try
          {
             ContextDepth depth = new ContextDepth(0, 3);
             IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
-            context = textContextMaker.GetContext(position, depth);
+            context = await textContextMaker.GetContext(position, depth);
          }
          catch (ContextMakingException ex)
          {

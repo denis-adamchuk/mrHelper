@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Core.Context
 {
@@ -26,7 +26,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
+      async public Task<DiffContext> GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -54,7 +54,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> gitResult;
          try
          {
-            gitResult = _gitRepository.Data?.Get(arguments);
+            gitResult = await _gitRepository.Data?.GetAsync(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {

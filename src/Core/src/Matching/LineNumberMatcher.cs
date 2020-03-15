@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using mrHelper.Core.Context;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
@@ -23,7 +24,7 @@ namespace mrHelper.Core.Matching
       /// Throws ArgumentException in case of bad arguments.
       /// Throws MatchingException.
       /// </summary>
-      public void Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
+      async public Task<DiffPosition> Match(MatchInfo matchInfo, DiffPosition inDiffPosition)
       {
          if (!matchInfo.IsValid())
          {
@@ -38,7 +39,7 @@ namespace mrHelper.Core.Matching
          int? oppositeLine;
          try
          {
-            oppositeLine = getOppositeLine(refs, isLeftSide, inDiffPosition.LeftPath, inDiffPosition.RightPath,
+            oppositeLine = await getOppositeLine(refs, isLeftSide, inDiffPosition.LeftPath, inDiffPosition.RightPath,
                currentLine);
          }
          catch (BadPosition)
@@ -54,16 +55,21 @@ namespace mrHelper.Core.Matching
          string currentLineAsString = currentLine.ToString();
          string oppositeLineAsString = oppositeLine?.ToString();
 
-         outDiffPosition = inDiffPosition;
-         outDiffPosition.LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString;
-         outDiffPosition.RightLine = isLeftSide ? oppositeLineAsString : currentLineAsString;
+         return new DiffPosition
+         {
+            LeftPath = inDiffPosition.LeftPath,
+            RightPath = inDiffPosition.RightPath,
+            Refs = inDiffPosition.Refs,
+            LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString,
+            RightLine = isLeftSide ? oppositeLineAsString : currentLineAsString
+         };
       }
 
-      private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,
-         int lineNumber)
+      async private Task<int?> getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName,
+         string rightFileName, int lineNumber)
       {
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
-         FullContextDiff context = provider.GetFullContextDiff(
+         FullContextDiff context = await provider.GetFullContextDiff(
             refs.LeftSHA, refs.RightSHA, leftFileName, rightFileName);
 
          Debug.Assert(context.Left.Count == context.Right.Count);

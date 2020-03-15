@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
          User currentUser = _currentUser[getHostName()];
 
          // To pre-load discussions for MR in Search mode
-         _discussionManager.CheckForUpdates(mrk, 1, -1);
+         // _discussionManager.CheckForUpdates(mrk, 1, -1);
 
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
@@ -81,7 +81,7 @@ namespace mrHelper.App.Forms
 
             if (state == "merged")
             {
-               await restoreChainOfMergedCommits(repo, mrk);/* getBaseCommitSha(), getChainOfCommits());*/
+               await restoreChainOfMergedCommits(repo, mrk);
             }
          }
          else
@@ -243,7 +243,7 @@ namespace mrHelper.App.Forms
 
          if (state == "merged")
          {
-            await restoreChainOfMergedCommits(repo, mrk);/* getBaseCommitSha(), getChainOfCommits());*/
+            await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
             leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
             rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
          }

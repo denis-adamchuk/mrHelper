@@ -361,6 +361,23 @@ namespace mrHelper.App.Forms
          }
          enableControlsOnGitAsyncOperation(true, "restoring merged commits");
       }
+
+      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo,
+         string baseSha, IEnumerable<string> commits)
+      {
+         enableControlsOnGitAsyncOperation(false, "restoring merged commits");
+         _commitChainCreator = new CommitChainCreator(Program.Settings,
+            status => labelWorkflowStatus.Text = status, repo, baseSha, commits);
+         try
+         {
+            await _commitChainCreator.CreateChainAsync();
+         }
+         finally
+         {
+            _commitChainCreator = null;
+         }
+         enableControlsOnGitAsyncOperation(true, "restoring merged commits");
+      }
    }
 }
 

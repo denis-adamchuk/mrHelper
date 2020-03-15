@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using mrHelper.Core.Git;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Core.Context
 {
@@ -27,7 +27,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
+      async public Task<DiffContext> GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -41,8 +41,9 @@ namespace mrHelper.Core.Context
                String.Format("Bad \"depth\": {0}", depth.ToString()));
          }
 
-         GitDiffAnalyzer analyzer = new GitDiffAnalyzer(_gitRepository,
-            position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath);
+         GitDiffAnalyzer analyzer = new GitDiffAnalyzer();
+         await analyzer.AnalyzeAsync(_gitRepository, position.Refs.LeftSHA, position.Refs.RightSHA,
+            position.LeftPath, position.RightPath);
 
          // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
          bool isRightSideContext = position.RightLine != null;
@@ -59,7 +60,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> gitResult;
          try
          {
-            gitResult = _gitRepository.Data?.Get(arguments);
+            gitResult = await _gitRepository.Data?.GetAsync(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {

@@ -71,7 +71,7 @@ namespace mrHelper.Core.Context
 
    public interface IContextMaker
    {
-      DiffContext GetContext(DiffPosition position, ContextDepth depth);
+      Task<DiffContext> GetContext(DiffPosition position, ContextDepth depth);
    }
 }
 

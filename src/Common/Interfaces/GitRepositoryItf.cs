@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Interfaces
@@ -24,6 +25,9 @@ namespace mrHelper.Common.Interfaces
    {
       IEnumerable<string> Get(GitShowRevisionArguments arguments);
       IEnumerable<string> Get(GitDiffArguments arguments);
+
+      Task<IEnumerable<string>> GetAsync(GitShowRevisionArguments arguments);
+      Task<IEnumerable<string>> GetAsync(GitDiffArguments arguments);
    }
 
    public interface IGitRepository

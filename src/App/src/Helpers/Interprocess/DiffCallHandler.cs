@@ -65,7 +65,7 @@ namespace mrHelper.App.Interprocess
                return;
             }
 
-            lineNumberMatcher.Match(_matchInfo, position, out position);
+            position = await lineNumberMatcher.Match(_matchInfo, position);
          }
          catch (Exception ex)
          {
@@ -80,9 +80,9 @@ namespace mrHelper.App.Interprocess
             throw;
          }
 
-         using (NewDiscussionForm form = new NewDiscussionForm(
-            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository))
+         using (NewDiscussionForm form = new NewDiscussionForm())
          {
+            form.Initialize(_matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository);
             if (form.ShowDialog() == DialogResult.OK)
             {
                try

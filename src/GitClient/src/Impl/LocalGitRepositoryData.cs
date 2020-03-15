@@ -27,6 +27,16 @@ namespace mrHelper.GitClient
          return doGet(arguments, _cachedRevisions);
       }
 
+      public Task<IEnumerable<string>> GetAsync(GitDiffArguments arguments)
+      {
+         return doGetAsync(arguments, _cachedDiffs);
+      }
+
+      public Task<IEnumerable<string>> GetAsync(GitShowRevisionArguments arguments)
+      {
+         return doGetAsync(arguments, _cachedRevisions);
+      }
+
       async public Task LoadFromDisk(GitDiffArguments arguments)
       {
          await doUpdate(arguments, _cachedDiffs);
@@ -58,6 +68,20 @@ namespace mrHelper.GitClient
                }
                throw;
             }
+         }
+         return cache.ContainsKey(arguments) ? cache[arguments] : null;
+      }
+
+      async private Task<IEnumerable<string>> doGetAsync<T>(
+         T arguments, Dictionary<T, IEnumerable<string>> cache)
+      {
+         try
+         {
+            await doUpdate(arguments, cache);
+         }
+         catch (LoadFromDiskFailedException ex)
+         {
+            throw new GitNotAvailableDataException(ex);
          }
          return cache.ContainsKey(arguments) ? cache[arguments] : null;
       }

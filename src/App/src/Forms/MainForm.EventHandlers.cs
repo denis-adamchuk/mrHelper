@@ -686,7 +686,17 @@ namespace mrHelper.App.Forms
 
       async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         Trace.TraceInformation("[MainForm] User decided to abort git update");
+         object tag = linkLabelAbortGit.Tag;
+         string message = String.Format("Do you really want to abort current operation{0}?",
+             tag == null ? String.Empty : String.Format(" ({0})", tag.ToString()));
+         if (MessageBox.Show(message, "Confirmation",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+         {
+            Trace.TraceInformation("[MainForm] User discarded to abort current operation");
+            return;
+         }
+
+         Trace.TraceInformation("[MainForm] User decided to abort current operation");
 
          await _commitChainCreator.CancelAsync();
 

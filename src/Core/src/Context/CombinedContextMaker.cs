@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
@@ -25,7 +26,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
+      async public Task<DiffContext> GetContext(DiffPosition position, ContextDepth depth)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -48,7 +49,7 @@ namespace mrHelper.Core.Context
          string rightSHA = position.Refs.RightSHA;
 
          FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
-         FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, leftFilename, rightFilename);
+         FullContextDiff context = await provider.GetFullContextDiff(leftSHA, rightSHA, leftFilename, rightFilename);
          Debug.Assert(context.Left.Count == context.Right.Count);
          if (linenumber > context.Left.Count)
          {
@@ -92,7 +93,8 @@ namespace mrHelper.Core.Context
             int? leftLineNumber = itLeft.GetLineNumber() != null ? itLeft.GetLineNumber() + 1 : null;
             int? rightLineNumber = itRight.GetLineNumber() != null ? itRight.GetLineNumber() + 1 : null;
 
-            DiffContext.Line line = getLineContext(leftLineNumber, rightLineNumber, itLeft.GetCurrent(), itRight.GetCurrent());
+            DiffContext.Line line = getLineContext(leftLineNumber, rightLineNumber,
+               itLeft.GetCurrent(), itRight.GetCurrent());
             diffContext.Lines.Add(line);
 
             if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber == linenumber)
