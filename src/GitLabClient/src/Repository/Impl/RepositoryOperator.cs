@@ -78,6 +78,46 @@ namespace mrHelper.Client.Repository
          }
       }
 
+      async internal Task<Branch> CreateNewBranchAsync(string projectname, string name, string sha)
+      {
+         try
+         {
+            return (Branch)(await _client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectname).Repository.Branches.
+                  CreateNewTaskAsync(new CreateNewBranchParameters
+                  {
+                     Name = name,
+                     Ref = sha
+                  })));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
+      async internal Task DeleteBranchAsync(string projectname, string name)
+      {
+         try
+         {
+            await _client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(projectname).Repository.Branches.
+                  Get(name).DeleteTaskAsync());
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       async internal Task CancelAsync()
       {
          await _client.CancelAsync();

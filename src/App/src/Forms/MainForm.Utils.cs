@@ -1529,30 +1529,6 @@ namespace mrHelper.App.Forms
          _mergeRequestCache.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
          _discussionManager.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
       }
-
-      private IEnumerable<string> getChainOfCommits()
-      {
-         if (comboBoxLeftCommit.Items.Count == 0)
-         {
-            return null;
-         }
-
-         return comboBoxLeftCommit.Items
-           .Cast<CommitComboBoxItem>()
-           .Select(x => x.SHA)
-           .ToArray();
-      }
-
-      private string getBaseCommitSha()
-      {
-         if (comboBoxRightCommit.Items.Count == 0)
-         {
-            return null;
-         }
-
-         return ((CommitComboBoxItem)comboBoxRightCommit.Items[comboBoxRightCommit.Items.Count - 1]).SHA;
-      }
-
    }
 }
 

@@ -125,7 +125,7 @@ namespace mrHelper.App.Forms
                      {
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
-                        await updatingRepo.Updater.ForceUpdate(
+                        await updatingRepo.Updater.Update(
                            _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(key), null);
                         return updatingRepo;
                      }
@@ -245,7 +245,8 @@ namespace mrHelper.App.Forms
 
          if (state == "merged")
          {
-            await restoreChainOfMergedCommits(repo, getBaseCommitSha(), getChainOfCommits());
+            string headCommitSha = comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
+            await restoreChainOfMergedCommits(repo, headCommitSha);
             leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
             rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
          }
@@ -428,7 +429,7 @@ namespace mrHelper.App.Forms
             _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker((dynamic)key);
          try
          {
-            await repo.Updater.ForceUpdate(instantChecker, null);
+            await repo.Updater.Update(instantChecker, null);
          }
          catch (RepositoryUpdateException ex)
          {
@@ -460,11 +461,10 @@ namespace mrHelper.App.Forms
          await restoreChainOfMergedCommits();
       }
 
-      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo,
-         string baseSha, IEnumerable<string> commits)
+      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, string headCommitSha)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, updateGitStatusText, repo, baseSha, commits);
+            status => labelWorkflowStatus.Text = status, updateGitStatusText, repo, headCommitSha);
          await restoreChainOfMergedCommits();
       }
 

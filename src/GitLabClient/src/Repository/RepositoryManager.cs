@@ -78,6 +78,42 @@ namespace mrHelper.Client.Repository
          }
       }
 
+      async public Task<Branch?> CreateNewBranchAsync(ProjectKey projectKey, string name, string sha)
+      {
+         _operator = new RepositoryOperator(projectKey.HostName,
+            _settings.GetAccessToken(projectKey.HostName));
+         try
+         {
+            return await _operator.CreateNewBranchAsync(projectKey.ProjectName, name, sha);
+         }
+         catch (OperatorException ex)
+         {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return null;
+            }
+            throw new RepositoryManagerException("Cannot create a new branch", ex);
+         }
+      }
+
+      async public Task DeleteBranchAsync(ProjectKey projectKey, string name)
+      {
+         _operator = new RepositoryOperator(projectKey.HostName,
+            _settings.GetAccessToken(projectKey.HostName));
+         try
+         {
+            await _operator.DeleteBranchAsync(projectKey.ProjectName, name);
+         }
+         catch (OperatorException ex)
+         {
+            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
+            {
+               return;
+            }
+            throw new RepositoryManagerException("Cannot delete a branch", ex);
+         }
+      }
+
       async public Task CancelAsync()
       {
          if (_operator != null)
