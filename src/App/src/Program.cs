@@ -41,7 +41,7 @@ namespace mrHelper.App
       }
 
       private static readonly Regex url_re = new Regex( String.Format(
-         @"^({0}:\/\/)?((http[s]?:\/\/)?[^:\/\s]+)\/(api\/v4\/projects\/)?(\w+\/\w+)\/merge_requests\/(\d*)",
+         @"^({0}:\/\/)?((http[s]?:\/\/)?[^:\/\s]+)\/(api\/v4\/projects\/)?([\w_-]+\/[\w_-]+)\/(?>-\/)?merge_requests\/(\d*)",
             Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       internal static UserDefinedSettings Settings = new UserDefinedSettings(true);
