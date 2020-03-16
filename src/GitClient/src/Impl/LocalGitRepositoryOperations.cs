@@ -1,3 +1,5 @@
+using System;
+using System.ComponentModel;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
@@ -10,11 +12,11 @@ namespace mrHelper.GitClient
          _path = path;
       }
 
-      public ILocalGitRepositoryOperation CreateOperation(string name)
+      public ILocalGitRepositoryOperation CreateOperation(string name, Action<string> onGitStatusChange)
       {
          if (name == "CreateBranchFromPatch")
          {
-            return new CreateBranchFromPatchOperation(_path, _operationManager);
+            return new CreateBranchFromPatchOperation(_path, _operationManager, onGitStatusChange);
          }
          return null;
       }

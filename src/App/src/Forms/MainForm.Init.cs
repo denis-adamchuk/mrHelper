@@ -276,6 +276,11 @@ namespace mrHelper.App.Forms
          unsubscribeFromWorkflowAndDependencies();
          unsubscribeFromSearchWorkflow();
 
+         if (_commitChainCreator != null)
+         {
+            await _commitChainCreator.CancelAsync();
+         }
+
          await disposeLocalGitRepositoryFactory();
          await _workflowManager.CancelAsync();
 
@@ -332,7 +337,7 @@ namespace mrHelper.App.Forms
 
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
-         labelGitStatus.Text = String.Empty;
+         updateGitStatusText(String.Empty);
 
          if (_keywords == null)
          {

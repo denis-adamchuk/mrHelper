@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -19,20 +20,22 @@ namespace mrHelper.App.Helpers
    internal class CommitChainCreator
    {
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-        ILocalGitRepository repo, MergeRequestKey mrk)
+         Action<string> onGitStatusChange, ILocalGitRepository repo, MergeRequestKey mrk)
       {
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
+         _onGitStatusChange = onGitStatusChange;
          _repo = repo;
          _mrk = mrk;
          _versionManager = new VersionManager(hostProperties);
       }
 
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-        ILocalGitRepository repo, string baseSha, IEnumerable<string> commits)
+         Action<string> onGitStatusChange, ILocalGitRepository repo, string baseSha, IEnumerable<string> commits)
       {
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
+         _onGitStatusChange = onGitStatusChange;
          _repo = repo;
          _baseSha = baseSha;
          _commits = commits;
@@ -74,8 +77,8 @@ namespace mrHelper.App.Helpers
             return;
          }
 
-         _creator = new SingleCommitChainCreatorImpl(_hostProperties, _onStatusChange, _repo, _baseSha, _commits,
-            () => saveState(), () => _stateData?.Branch ?? String.Empty);
+         _creator = new SingleCommitChainCreatorImpl(_hostProperties, _onStatusChange, _onGitStatusChange,
+            _repo, _baseSha, _commits, () => saveState(), () => _stateData?.Branch ?? String.Empty);
 
          try
          {
@@ -83,7 +86,7 @@ namespace mrHelper.App.Helpers
          }
          catch (Exception ex)
          {
-            restoreState();
+            await restoreState();
             if (ex is LocalGitRepositoryOperationException gex)
             {
                handleGitException(gex);
@@ -94,7 +97,7 @@ namespace mrHelper.App.Helpers
             }
          }
 
-         restoreState();
+         await restoreState();
       }
 
       async private Task doCreateMultiChainAsync()
@@ -117,7 +120,7 @@ namespace mrHelper.App.Helpers
                break; // cancelled by user
             }
 
-            _creator = new SingleCommitChainCreatorImpl(_hostProperties, _onStatusChange, _repo,
+            _creator = new SingleCommitChainCreatorImpl(_hostProperties, _onStatusChange, _onGitStatusChange, _repo,
                versionDetailed.Value.Base_Commit_SHA, versionDetailed.Value.Commits.Select(x => x.Id),
                () => saveState(), () => _stateData?.Branch ?? String.Empty);
 
@@ -131,7 +134,7 @@ namespace mrHelper.App.Helpers
             }
             catch (Exception ex)
             {
-               restoreState();
+               await restoreState();
                if (ex is LocalGitRepositoryOperationException gex)
                {
                   handleGitException(gex);
@@ -144,7 +147,7 @@ namespace mrHelper.App.Helpers
             }
          }
 
-         restoreState();
+         await restoreState();
       }
 
       private void handleGitException(LocalGitRepositoryOperationException ex)
@@ -160,7 +163,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void saveState()
+      async private Task saveState()
       {
          if (_stateData.HasValue)
          {
@@ -168,10 +171,10 @@ namespace mrHelper.App.Helpers
          }
 
          _onStatusChange(String.Format("Saving current state of git repository {0}", _repo.Path));
-         _stateData = _repo.State.SaveState();
+         _stateData = await _repo.State.SaveState(_onGitStatusChange);
       }
 
-      private void restoreState()
+      async private Task restoreState()
       {
          if (!_stateData.HasValue)
          {
@@ -179,7 +182,7 @@ namespace mrHelper.App.Helpers
          }
 
          _onStatusChange(String.Format("Restoring state of repository {0}", _repo.Path));
-         _repo.State.RestoreState(_stateData.Value);
+         await _repo.State.RestoreState(_stateData.Value, _onGitStatusChange);
          _stateData = null;
       }
 
@@ -199,6 +202,7 @@ namespace mrHelper.App.Helpers
       private readonly VersionManager _versionManager;
       private readonly IHostProperties _hostProperties;
       private readonly Action<string> _onStatusChange;
+      private readonly Action<string> _onGitStatusChange;
       private readonly ILocalGitRepository _repo;
       private readonly MergeRequestKey _mrk;
       private readonly string _baseSha;
@@ -209,11 +213,12 @@ namespace mrHelper.App.Helpers
       private class SingleCommitChainCreatorImpl
       {
          internal SingleCommitChainCreatorImpl(IHostProperties hostProperties, Action<string> onStatusChange,
-           ILocalGitRepository repo, string baseSha, IEnumerable<string> commits, Action onPrePatch,
-           Func<string> getCurrentBranch)
+           Action<string> onGitStatusChange, ILocalGitRepository repo, string baseSha, IEnumerable<string> commits,
+           Func<Task> onPrePatch, Func<string> getCurrentBranch)
          {
             _repositoryManager = new RepositoryManager(hostProperties);
             _onStatusChange = onStatusChange;
+            _onGitStatusChange = onGitStatusChange;
             _onPrePatch = onPrePatch;
             _getCurrentBranch = getCurrentBranch;
             _repo = repo;
@@ -251,7 +256,7 @@ namespace mrHelper.App.Helpers
                return true;
             }
 
-            _onPrePatch?.Invoke();
+            await _onPrePatch?.Invoke();
 
             IEnumerable<ComparisonResult> comparisonResults = await getComparisonResults(shaPairs, messagePrefix);
             if (comparisonResults == null)
@@ -421,7 +426,7 @@ namespace mrHelper.App.Helpers
                }
                else
                {
-                  gitDiff = diff.Diff.Replace("\\n", "\n");
+                  gitDiff = diff.Diff;
                }
 
                if (gitDiff == String.Empty)
@@ -481,8 +486,7 @@ namespace mrHelper.App.Helpers
                FileUtils.OverwriteFile(oldTempFilename, oldFileContent);
                FileUtils.OverwriteFile(newTempFilename, newFileContent);
 
-               IEnumerable<string> gitDiffOutput =
-                  ExternalProcess.Start("git", diffArguments, true, _repo.Path).StdOut;
+               IEnumerable<string> gitDiffOutput = ExternalProcess.Start("git", diffArguments, true, _repo.Path).StdOut;
 
                return String.Join("\n", gitDiffOutput.Skip(4));
             }
@@ -516,7 +520,7 @@ namespace mrHelper.App.Helpers
                return;
             }
 
-            _currentOperation = _repo.Operations.CreateOperation("CreateBranchFromPatch");
+            _currentOperation = _repo.Operations.CreateOperation("CreateBranchFromPatch", _onGitStatusChange);
 
             try
             {
@@ -540,7 +544,8 @@ namespace mrHelper.App.Helpers
 
          private readonly RepositoryManager _repositoryManager;
          private readonly Action<string> _onStatusChange;
-         private readonly Action _onPrePatch;
+         private readonly Action<string> _onGitStatusChange;
+         private readonly Func<Task> _onPrePatch;
          private readonly Func<string> _getCurrentBranch;
          private ILocalGitRepositoryOperation _currentOperation;
          private readonly ILocalGitRepository _repo;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,10 +14,12 @@ namespace mrHelper.GitClient
 {
    internal class CreateBranchFromPatchOperation : ILocalGitRepositoryOperation
    {
-      internal CreateBranchFromPatchOperation(string path, IExternalProcessManager operationManager)
+      internal CreateBranchFromPatchOperation(string path, IExternalProcessManager operationManager,
+         Action<string> onGitStatusChange)
       {
          _operationManager = operationManager;
          _path = path;
+         _onGitStatusChange = onGitStatusChange;
       }
 
       async public Task Run(params object[] args)
@@ -81,8 +84,8 @@ namespace mrHelper.GitClient
       async private Task doCreateBranch(string branchPointSha, string branchName, string patchFilepath)
       {
          // Checkout a branch (create if it does not exist) and reset it to a SHA
-         string checkoutArgs = String.Format("checkout -B {0} {1}", branchName, branchPointSha);
-         _currentSubOperation = _operationManager.CreateDescriptor("git", checkoutArgs, _path, null);
+         string checkoutArgs = String.Format("checkout --progress -B {0} {1}", branchName, branchPointSha);
+         _currentSubOperation = _operationManager.CreateDescriptor("git", checkoutArgs, _path, _onGitStatusChange);
          await _operationManager.Wait(_currentSubOperation);
          if (_currentSubOperation == null)
          {
@@ -92,7 +95,7 @@ namespace mrHelper.GitClient
          // Apply a patch directly to the index
          string applyArgs = String.Format("apply --reject --ignore-space-change --ignore-whitespace {0}",
             StringUtils.EscapeSpaces(patchFilepath));
-         _currentSubOperation = _operationManager.CreateDescriptor("git", applyArgs, _path, null);
+         _currentSubOperation = _operationManager.CreateDescriptor("git", applyArgs, _path, _onGitStatusChange);
          try
          {
             await _operationManager.Wait(_currentSubOperation);
@@ -112,7 +115,7 @@ namespace mrHelper.GitClient
          }
 
          // Add all files to index
-         _currentSubOperation = _operationManager.CreateDescriptor("git", "add .", _path, null);
+         _currentSubOperation = _operationManager.CreateDescriptor("git", "add .", _path, _onGitStatusChange);
          await _operationManager.Wait(_currentSubOperation);
          if (_currentSubOperation == null)
          {
@@ -121,18 +124,20 @@ namespace mrHelper.GitClient
 
          // Create a commit with patch
          string commitArgs = String.Format("commit -m {0}", branchName);
-         _currentSubOperation = _operationManager.CreateDescriptor("git", commitArgs, _path, null);
+         _currentSubOperation = _operationManager.CreateDescriptor("git", commitArgs, _path, _onGitStatusChange);
          await _operationManager.Wait(_currentSubOperation);
          if (_currentSubOperation == null)
          {
             throw new OperationCancelledException();
          }
 
+         _onGitStatusChange(String.Empty);
          _currentSubOperation = null;
       }
 
-      private string _path;
+      private readonly string _path;
       private readonly IExternalProcessManager _operationManager;
+      private readonly Action<string> _onGitStatusChange;
       private ExternalProcess.AsyncTaskDescriptor _currentSubOperation;
    }
 }

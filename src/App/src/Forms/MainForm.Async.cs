@@ -456,7 +456,7 @@ namespace mrHelper.App.Forms
       async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, repo, mrk);
+            status => labelWorkflowStatus.Text = status, updateGitStatusText, repo, mrk);
          await restoreChainOfMergedCommits();
       }
 
@@ -464,7 +464,7 @@ namespace mrHelper.App.Forms
          string baseSha, IEnumerable<string> commits)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, repo, baseSha, commits);
+            status => labelWorkflowStatus.Text = status, updateGitStatusText, repo, baseSha, commits);
          await restoreChainOfMergedCommits();
       }
 

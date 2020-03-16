@@ -1,6 +1,5 @@
-﻿using mrHelper.Common.Interfaces;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace mrHelper.GitClient
@@ -13,8 +12,8 @@ namespace mrHelper.GitClient
 
    public interface ILocalGitRepositoryState
    {
-      LocalGitRepositoryStateData SaveState();
-      void RestoreState(LocalGitRepositoryStateData value);
+      Task<LocalGitRepositoryStateData> SaveState(Action<string> onProgressChange);
+      Task RestoreState(LocalGitRepositoryStateData value, Action<string> onProgressChange);
    }
 }
 

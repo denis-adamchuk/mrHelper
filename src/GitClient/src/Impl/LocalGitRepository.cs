@@ -163,7 +163,7 @@ namespace mrHelper.GitClient
 
          _operationManager = new GitOperationManager(synchronizeInvoke, path);
          _data = new LocalGitRepositoryData(_operationManager, Path);
-         State = new LocalGitRepositoryState(Path);
+         State = new LocalGitRepositoryState(Path, synchronizeInvoke);
          Operations = new LocalGitRepositoryOperations(Path, _operationManager);
 
          Trace.TraceInformation(String.Format(

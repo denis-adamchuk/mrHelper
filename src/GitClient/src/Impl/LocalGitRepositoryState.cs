@@ -1,28 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
 {
    internal class LocalGitRepositoryState : ILocalGitRepositoryState
    {
-      internal LocalGitRepositoryState(string path)
+      internal LocalGitRepositoryState(string path, ISynchronizeInvoke synchronizeInvoke)
       {
          _path = path;
+         _synchronizeInvoke = synchronizeInvoke;
       }
 
-      public LocalGitRepositoryStateData SaveState()
+      async public Task<LocalGitRepositoryStateData> SaveState(Action<string> onGitStatusChange)
       {
-         IEnumerable<string> revParseOutput = ExternalProcess.Start(
-            "git", "rev-parse HEAD", true, _path).StdOut;
+         IEnumerable<string> revParseOutput = ExternalProcess.Start("git", "rev-parse HEAD", true, _path).StdOut;
          string sha = revParseOutput.Any() ? revParseOutput.First() : String.Empty;
 
          IEnumerable<string> revParseOutput2 = ExternalProcess.Start(
             "git", "rev-parse --abbrev-ref HEAD", true, _path).StdOut;
          string branch = revParseOutput2.Any() ? revParseOutput2.First() : String.Empty;
 
-         ExternalProcess.Start("git", "stash push -u", true, _path);
+         await ExternalProcess.StartAsync("git", "stash push -u", _path, onGitStatusChange, _synchronizeInvoke).Task;
+         onGitStatusChange(String.Empty);
+
          return new LocalGitRepositoryStateData
          {
             Branch = branch,
@@ -30,24 +34,28 @@ namespace mrHelper.GitClient
          };
       }
 
-      public void RestoreState(LocalGitRepositoryStateData value)
+      async public Task RestoreState(LocalGitRepositoryStateData value, Action<string> onGitStatusChange)
       {
          // Checkout a branch that we had before
          if (value.Branch == "HEAD") // detached HEAD
          {
-            ExternalProcess.Start("git", "checkout origin", true, _path);
+            await ExternalProcess.StartAsync("git", "checkout --progress origin", _path,
+               onGitStatusChange, _synchronizeInvoke).Task;
             string resetArgs = String.Format("reset --soft {0}", value.Sha);
             ExternalProcess.Start("git", resetArgs, true, _path);
          }
          else
          {
-            string checkoutArgs = String.Format("checkout -B {0} {1}", value.Branch, value.Sha);
-            ExternalProcess.Start("git", checkoutArgs, true, _path);
+            string checkoutArgs = String.Format("checkout --progress -B {0} {1}", value.Branch, value.Sha);
+            await ExternalProcess.StartAsync("git", checkoutArgs, _path, onGitStatusChange, _synchronizeInvoke).Task;
          }
 
-         ExternalProcess.Start("git", "stash pop", true, _path);
+         await ExternalProcess.StartAsync("git", "stash pop", _path, onGitStatusChange, _synchronizeInvoke).Task;
+
+         onGitStatusChange(String.Empty);
       }
 
-      private string _path;
+      private readonly string _path;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
    }
 }
