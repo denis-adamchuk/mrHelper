@@ -192,7 +192,6 @@
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitStatisticManager.cs" />
-    <Compile Include="src\Helpers\Git\GitTools.cs" />
     <Compile Include="src\Helpers\Interprocess\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\Interprocess\DiffArgumentParser.cs" />
     <Compile Include="src\Helpers\Interprocess\Snapshot.cs" />

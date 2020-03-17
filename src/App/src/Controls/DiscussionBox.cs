@@ -41,7 +41,6 @@ namespace mrHelper.App.Controls
             _panelContextMaker = new EnhancedContextMaker(gitRepository);
             _tooltipContextMaker = new CombinedContextMaker(gitRepository);
          }
-         _gitRepository = gitRepository;
          _colorScheme = colorScheme;
 
          _preContentChange = preContentChange;
@@ -1000,8 +999,8 @@ namespace mrHelper.App.Controls
             RightPath = position.New_Path,
             Refs = new mrHelper.Core.Matching.DiffRefs
             {
-               LeftSHA = GitTools.AdjustSHA(position.Base_SHA, _gitRepository),
-               RightSHA = GitTools.AdjustSHA(position.Head_SHA, _gitRepository)
+               LeftSHA = position.Base_SHA,
+               RightSHA = position.Head_SHA
             }
          };
       }
@@ -1029,8 +1028,6 @@ namespace mrHelper.App.Controls
       private readonly DiscussionEditor _editor;
 
       private readonly ColorScheme _colorScheme;
-
-      private readonly IGitRepository _gitRepository;
 
       private readonly Action<DiscussionBox> _preContentChange;
       private readonly Action<DiscussionBox, bool> _onContentChanged;

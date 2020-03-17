@@ -223,6 +223,8 @@ namespace mrHelper.App.Forms
 
       async private Task searchMergeRequestByUrlAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
       {
+         tabControlMode.SelectedTab = tabPageSearch;
+
          ProjectKey projectKey = new ProjectKey
          {
             HostName = mergeRequestUrl.Host,
@@ -231,11 +233,16 @@ namespace mrHelper.App.Forms
 
          try
          {
-            await startSearchWorkflowAsync(mergeRequestUrl.Host, new MergeRequestKey
+            if (await startSearchWorkflowAsync(mergeRequestUrl.Host,
+               new MergeRequestKey
+               {
+                  IId = mergeRequestUrl.IId,
+                  ProjectKey = projectKey
+               }))
             {
-               IId = mergeRequestUrl.IId,
-               ProjectKey = projectKey
-            });
+               selectMergeRequest(listViewFoundMergeRequests,
+                  mergeRequestUrl.Project, mergeRequestUrl.IId, true);
+            }
          }
          catch (Exception ex)
          {
@@ -331,6 +338,7 @@ namespace mrHelper.App.Forms
             }
          }
 
+         tabControlMode.SelectedTab = tabPageLive;
          if (!selectMergeRequest(listViewMergeRequests, mergeRequestUrl.Project, mergeRequestUrl.IId, true))
          {
             if (!listViewMergeRequests.Enabled)

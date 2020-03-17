@@ -247,8 +247,6 @@ namespace mrHelper.App.Forms
          {
             string headCommitSha = comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
             await restoreChainOfMergedCommits(repo, headCommitSha);
-            leftSHA = Helpers.GitTools.AdjustSHA(leftSHA, repo);
-            rightSHA = Helpers.GitTools.AdjustSHA(rightSHA, repo);
          }
 
          labelWorkflowStatus.Text = "Launching diff tool...";

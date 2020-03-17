@@ -137,6 +137,8 @@ namespace mrHelper.App.Helpers
 
          _repositoryManager = new RepositoryManager(_hostProperties);
 
+         string getFakeSha(string sha) => "fake_" + sha;
+
          try
          {
             int iBranch = 1;
@@ -146,7 +148,7 @@ namespace mrHelper.App.Helpers
                   "Creating branches at GitLab: {0}/{1}", iBranch++, shas.Count()));
 
                Branch? branch = await _repositoryManager.CreateNewBranchAsync(
-                  _repo.ProjectKey, GitTools.FakeSHA(sha), sha);
+                  _repo.ProjectKey, getFakeSha(sha), sha);
                if (branch == null)
                {
                   return; // cancelled
@@ -174,7 +176,7 @@ namespace mrHelper.App.Helpers
                      "Deleting branches at GitLab: {0}/{1}", iBranch++, shas.Count()));
 
                   await _repositoryManager.DeleteBranchAsync(
-                     _repo.ProjectKey, GitTools.FakeSHA(sha));
+                     _repo.ProjectKey, getFakeSha(sha));
                }
                catch (RepositoryManagerException ex)
                {
