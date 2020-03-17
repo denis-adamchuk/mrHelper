@@ -10,6 +10,7 @@ using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using GitLabSharp.Accessors;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Workflow
 {
@@ -61,7 +62,7 @@ namespace mrHelper.Client.Workflow
          return await loadCurrentUserAsync(hostname);
       }
 
-      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, string search, int maxResults)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, object search, int maxResults)
       {
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
@@ -176,12 +177,25 @@ namespace mrHelper.Client.Workflow
       }
 
       async private Task<Dictionary<Project, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(
-         string hostname, string search, int maxResults)
+         string hostname, object search, int maxResults)
       {
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await _operator.SearchMergeRequestsAsync(search, maxResults);
+            if (search is string searchString)
+            {
+               mergeRequests = await _operator.SearchMergeRequestsAsync(searchString, maxResults);
+            }
+            else if (search is MergeRequestKey mrk)
+            {
+               MergeRequest mr = await _operator.GetMergeRequestAsync(mrk.ProjectKey.ProjectName, mrk.IId);
+               mergeRequests = new MergeRequest[] { mr };
+            }
+            else
+            {
+               Debug.Assert(false);
+               return null;
+            }
          }
          catch (OperatorException ex)
          {

@@ -15,21 +15,23 @@ namespace mrHelper.App.Helpers
    internal class CommitChainCreator
    {
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-         Action<string> onGitStatusChange, ILocalGitRepository repo, MergeRequestKey mrk)
+         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ILocalGitRepository repo, MergeRequestKey mrk)
       {
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
          _onGitStatusChange = onGitStatusChange;
+         _onCancelEnabled = onCancelEnabled;
          _repo = repo;
          _mrk = mrk;
       }
 
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-         Action<string> onGitStatusChange, ILocalGitRepository repo, string headSha)
+         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ILocalGitRepository repo, string headSha)
       {
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
          _onGitStatusChange = onGitStatusChange;
+         _onCancelEnabled = onCancelEnabled;
          _repo = repo;
          _headSha = headSha;
       }
@@ -41,6 +43,7 @@ namespace mrHelper.App.Helpers
             return;
          }
 
+         IsCancelEnabled = true;
          if (_headSha != null)
          {
             if (!_repo.ContainsSHA(_headSha))
@@ -58,6 +61,11 @@ namespace mrHelper.App.Helpers
 
       async public Task CancelAsync()
       {
+         if (!IsCancelEnabled)
+         {
+            return;
+         }
+
          if (_repositoryManager != null)
          {
             await _repositoryManager.CancelAsync();
@@ -155,6 +163,8 @@ namespace mrHelper.App.Helpers
          }
          finally
          {
+            IsCancelEnabled = false;
+
             int iBranch = 1;
             foreach (string sha in shas)
             {
@@ -175,15 +185,30 @@ namespace mrHelper.App.Helpers
          }
       }
 
+      private bool IsCancelEnabled
+      {
+         get
+         {
+            return _isCancelEnabled;
+         }
+         set
+         {
+            _onCancelEnabled(value);
+            _isCancelEnabled = value;
+         }
+      }
+
       private readonly IHostProperties _hostProperties;
       private readonly Action<string> _onStatusChange;
       private readonly Action<string> _onGitStatusChange;
+      private readonly Action<bool> _onCancelEnabled;
       private readonly ILocalGitRepository _repo;
       private readonly MergeRequestKey _mrk;
       private readonly string _headSha;
 
       private RepositoryManager _repositoryManager;
       private VersionManager _versionManager;
+      private bool _isCancelEnabled;
    }
 }
 

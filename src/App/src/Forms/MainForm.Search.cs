@@ -63,12 +63,14 @@ namespace mrHelper.App.Forms
 
       async private Task searchMergeRequests(string query)
       {
+         _suppressExternalConnections = true;
          try
          {
-            await startSearchWorkflowAsync(getHostName(), query);
+            _suppressExternalConnections = await startSearchWorkflowAsync(getHostName(), query);
          }
          catch (Exception ex)
          {
+            _suppressExternalConnections = false;
             if (ex is WorkflowException || ex is UnknownHostException)
             {
                disableAllSearchUIControls(true);
@@ -84,7 +86,8 @@ namespace mrHelper.App.Forms
             throw;
          }
 
-         selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
+         _suppressExternalConnections = _suppressExternalConnections
+            && selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
       }
 
       async private Task<bool> switchSearchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId)
@@ -101,6 +104,7 @@ namespace mrHelper.App.Forms
 
          await _searchWorkflowManager.CancelAsync();
 
+         _suppressExternalConnections = true;
          try
          {
             return await _searchWorkflowManager.LoadMergeRequestAsync(
@@ -111,21 +115,25 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle("Cannot switch merge request", ex);
             MessageBox.Show(ex.UserMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
+         finally
+         {
+            _suppressExternalConnections = false;
+         }
 
          return false;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      async private Task startSearchWorkflowAsync(string hostname, string query)
+      async private Task<bool> startSearchWorkflowAsync(string hostname, object query)
       {
          labelWorkflowStatus.Text = String.Empty;
 
          await _searchWorkflowManager.CancelAsync();
-         if (String.IsNullOrWhiteSpace(hostname) || String.IsNullOrWhiteSpace(query))
+         if (String.IsNullOrWhiteSpace(hostname) || (query is string queryStr && String.IsNullOrWhiteSpace(queryStr)))
          {
             disableAllSearchUIControls(true);
-            return;
+            return false;
          }
 
          if (Program.Settings.GetAccessToken(hostname) == String.Empty)
@@ -138,24 +146,25 @@ namespace mrHelper.App.Forms
          {
             if (!await _searchWorkflowManager.LoadCurrentUserAsync(hostname))
             {
-               return;
+               return false;
             }
          }
 
-         await loadAllSearchMergeRequests(hostname, query);
+         return await loadAllSearchMergeRequests(hostname, query);
       }
 
-      async private Task loadAllSearchMergeRequests(string hostname, string query)
+      async private Task<bool> loadAllSearchMergeRequests(string hostname, object query)
       {
          onLoadAllSearchMergeRequests();
 
          if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query,
             Common.Constants.Constants.MaxSearchResultsPerProject))
          {
-            return;
+            return false;
          }
 
          onAllSearchMergeRequestsLoaded(hostname);
+         return true;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

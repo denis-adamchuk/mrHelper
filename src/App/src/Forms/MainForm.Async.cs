@@ -457,14 +457,16 @@ namespace mrHelper.App.Forms
       async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, updateGitStatusText, repo, mrk);
+            status => labelWorkflowStatus.Text = status, updateGitStatusText,
+            value => linkLabelAbortGit.Visible = value, repo, mrk);
          await restoreChainOfMergedCommits();
       }
 
       async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, string headCommitSha)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, updateGitStatusText, repo, headCommitSha);
+            status => labelWorkflowStatus.Text = status, updateGitStatusText,
+            value => linkLabelAbortGit.Visible = value, repo, headCommitSha);
          await restoreChainOfMergedCommits();
       }
 
