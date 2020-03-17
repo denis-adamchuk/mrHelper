@@ -103,6 +103,13 @@ namespace mrHelper.App.Helpers
       private static readonly string ListViewMergeRequestsDisplayIndicesKeyName = "LVMR_DisplayIndices";
       private static readonly string ListViewMergeRequestsDisplayIndicesDefaultValue = String.Empty;
 
+      private static readonly string ListViewFoundMergeRequestsColumnWidthsKeyName      = "LVFMR_ColWidths";
+      private static readonly string ListViewFoundMergeRequestsColumnWidthsDefaultValue = String.Empty;
+      private static readonly int    ListViewFoundMergeRequestsSingleColumnWidthDefaultValue = 100;
+
+      private static readonly string ListViewFoundMergeRequestsDisplayIndicesKeyName = "LVFMR_DisplayIndices";
+      private static readonly string ListViewFoundMergeRequestsDisplayIndicesDefaultValue = String.Empty;
+
       private static readonly string MainWindowSplitterDistanceKeyName      = "MWSplitterDistance";
       private static readonly int    MainWindowSplitterDistanceDefaultValue = 0;
 
@@ -363,17 +370,14 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-            return stringToDictionary(getValue(
-               ListViewMergeRequestsColumnWidthsKeyName, ListViewMergeRequestsColumnWidthsDefaultValue))
-               .ToDictionary(
-                  item => item.Key,
-                  item => int.TryParse(item.Value, out int result) ?
-                     result : ListViewMergeRequestsSingleColumnWidthDefaultValue);
+            return getStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName,
+                                            ListViewMergeRequestsColumnWidthsDefaultValue,
+                                            ListViewMergeRequestsSingleColumnWidthDefaultValue, -1);
          }
          set
          {
-            setValue(ListViewMergeRequestsColumnWidthsKeyName,
-               dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
+            setStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName,
+                                     ListViewMergeRequestsColumnWidthsDefaultValue, value);
          }
       }
 
@@ -381,21 +385,61 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-            return stringToDictionary(getValue(
-               ListViewMergeRequestsDisplayIndicesKeyName, ListViewMergeRequestsDisplayIndicesDefaultValue))
-               .ToDictionary(
-                  item => item.Key,
-                  item => int.TryParse(item.Value, out int result) ? result : -1)
-               .Where(x => x.Value != -1)
-               .ToDictionary(
-                  item => item.Key,
-                  item => item.Value);
+            return getStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName,
+                                            ListViewMergeRequestsDisplayIndicesDefaultValue, -1, -1);
          }
          set
          {
-            setValue(ListViewMergeRequestsDisplayIndicesKeyName,
-               dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
+            setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName,
+                                     ListViewMergeRequestsDisplayIndicesDefaultValue, value);
          }
+      }
+
+      public Dictionary<string, int> ListViewFoundMergeRequestsColumnWidths
+      {
+         get
+         {
+            return getStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName,
+                                            ListViewFoundMergeRequestsColumnWidthsDefaultValue,
+                                            ListViewFoundMergeRequestsSingleColumnWidthDefaultValue, -1);
+         }
+         set
+         {
+            setStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName,
+                                     ListViewFoundMergeRequestsColumnWidthsDefaultValue, value);
+         }
+      }
+
+      public Dictionary<string, int> ListViewFoundMergeRequestsDisplayIndices
+      {
+         get
+         {
+            return getStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName,
+                                            ListViewFoundMergeRequestsDisplayIndicesDefaultValue, -1, -1);
+         }
+         set
+         {
+            setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName,
+                                     ListViewFoundMergeRequestsDisplayIndicesDefaultValue, value);
+         }
+      }
+
+      private Dictionary<string, int> getStringToIntDictionary(string keyName, string defaultValue,
+         int fallbackValue, int errorValue)
+      {
+         return stringToDictionary(getValue(keyName, defaultValue))
+            .ToDictionary(
+               item => item.Key,
+               item => int.TryParse(item.Value, out int result) ? result : fallbackValue)
+            .Where(x => x.Value != errorValue)
+            .ToDictionary(
+               item => item.Key,
+               item => item.Value);
+      }
+
+      private void setStringToIntDictionary(string keyName, string defaultValue, Dictionary<string, int> value)
+      {
+         setValue(keyName, dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
       }
 
       public int MainWindowSplitterDistance

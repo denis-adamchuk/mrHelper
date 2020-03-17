@@ -1529,6 +1529,16 @@ namespace mrHelper.App.Forms
          _mergeRequestCache.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
          _discussionManager.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
       }
+
+      private void saveColumnWidths(ListView listView, Action<Dictionary<string, int>> saveProperty)
+      {
+         Dictionary<string, int> columnWidths = new Dictionary<string, int>();
+         foreach (ColumnHeader column in listView.Columns)
+         {
+            columnWidths[(string)column.Tag] = column.Width;
+         }
+         saveProperty(columnWidths);
+      }
    }
 }
 

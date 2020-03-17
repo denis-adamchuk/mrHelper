@@ -252,9 +252,9 @@ namespace mrHelper.App.Forms
          }
 
          Rectangle bounds = e.Bounds;
-         if (e.ColumnIndex == 0 && listViewMergeRequests.Columns[0].DisplayIndex != 0)
+         if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
          {
-            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(listViewMergeRequests, e.Item);
+            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(e.Item.ListView, e.Item);
          }
 
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
@@ -551,18 +551,26 @@ namespace mrHelper.App.Forms
 
       private void listViewMergeRequests_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
       {
-         Dictionary<string, int> columnWidths = new Dictionary<string, int>();
-         foreach (ColumnHeader column in listViewMergeRequests.Columns)
-         {
-            columnWidths[(string)column.Tag] = column.Width;
-         }
-         Program.Settings.ListViewMergeRequestsColumnWidths = columnWidths;
+         Debug.Assert(sender == listViewMergeRequests || sender == listViewFoundMergeRequests);
+         Action<Dictionary<string, int>> propertyChange = sender == listViewMergeRequests
+            ? new Action<Dictionary<string, int>>(x => Program.Settings.ListViewMergeRequestsColumnWidths = x)
+            : new Action<Dictionary<string, int>>(x => Program.Settings.ListViewFoundMergeRequestsColumnWidths = x);
+         saveColumnWidths(sender as ListView, propertyChange);
       }
 
       private void listViewMergeRequests_ColumnReordered(object sender, ColumnReorderedEventArgs e)
       {
-         Program.Settings.ListViewMergeRequestsDisplayIndices =
-            WinFormsHelpers.GetListViewDisplayIndicesOnColumnReordered(listViewMergeRequests,
+         Debug.Assert(sender == listViewMergeRequests || sender == listViewFoundMergeRequests);
+         if (sender == listViewMergeRequests)
+         {
+            Program.Settings.ListViewMergeRequestsDisplayIndices =
+               WinFormsHelpers.GetListViewDisplayIndicesOnColumnReordered(listViewMergeRequests,
+                  e.OldDisplayIndex, e.NewDisplayIndex);
+            return;
+         }
+
+         Program.Settings.ListViewFoundMergeRequestsDisplayIndices =
+            WinFormsHelpers.GetListViewDisplayIndicesOnColumnReordered(listViewFoundMergeRequests,
                e.OldDisplayIndex, e.NewDisplayIndex);
       }
 

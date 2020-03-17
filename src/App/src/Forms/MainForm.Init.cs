@@ -162,27 +162,13 @@ namespace mrHelper.App.Forms
             comboBoxDCDepth.SelectedIndex = 0;
          }
 
-         Dictionary<string, int> columnWidths = Program.Settings.ListViewMergeRequestsColumnWidths;
-         foreach (ColumnHeader column in listViewMergeRequests.Columns)
-         {
-            string columnName = (string)column.Tag;
-            if (columnWidths.ContainsKey(columnName))
-            {
-               column.Width = columnWidths[columnName];
-            }
-         }
+         loadColumnWidths(listViewMergeRequests, Program.Settings.ListViewMergeRequestsColumnWidths);
+         loadColumnWidths(listViewFoundMergeRequests, Program.Settings.ListViewFoundMergeRequestsColumnWidths);
 
-         try
-         {
-            WinFormsHelpers.ReorderListViewColumns(listViewMergeRequests,
-               Program.Settings.ListViewMergeRequestsDisplayIndices);
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
-            Program.Settings.ListViewMergeRequestsDisplayIndices =
-               WinFormsHelpers.GetListViewDisplayIndices(listViewMergeRequests);
-         }
+         loadColumnIndices(listViewMergeRequests, Program.Settings.ListViewMergeRequestsDisplayIndices,
+            x => Program.Settings.ListViewMergeRequestsDisplayIndices = x);
+         loadColumnIndices(listViewFoundMergeRequests, Program.Settings.ListViewFoundMergeRequestsDisplayIndices,
+            x => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = x);
 
          WinFormsHelpers.FillComboBox(comboBoxFonts,
             Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
@@ -198,6 +184,32 @@ namespace mrHelper.App.Forms
          }
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
+      }
+
+      private void loadColumnWidths(ListView listView, Dictionary<string, int> storedWidths)
+      {
+         foreach (ColumnHeader column in listView.Columns)
+         {
+            string columnName = (string)column.Tag;
+            if (storedWidths.ContainsKey(columnName))
+            {
+               column.Width = storedWidths[columnName];
+            }
+         }
+      }
+
+      private void loadColumnIndices(ListView listView, Dictionary<string, int> storedIndices,
+         Action<Dictionary<string, int>> storeDefaults)
+      {
+         try
+         {
+            WinFormsHelpers.ReorderListViewColumns(listView, storedIndices);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
+            storeDefaults(WinFormsHelpers.GetListViewDisplayIndices(listView));
+         }
       }
 
       private bool integrateInTools()
