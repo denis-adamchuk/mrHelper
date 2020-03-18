@@ -69,6 +69,9 @@ namespace mrHelper.App.Helpers
       private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
       private static readonly bool   CacheRevisionsDefaultValue   = true;
 
+      private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
+      private static readonly bool   DisableSSLVerificationDefaultValue = true;
+
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
 
@@ -530,6 +533,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : CacheRevisionsDefaultValue;
          }
          set { setValue(CacheRevisionsKeyName, value.ToString()); }
+      }
+
+      public bool DisableSSLVerification
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               DisableSSLVerificationKeyName, boolToString(DisableSSLVerificationDefaultValue)),
+                  out bool result) ? result : DisableSSLVerificationDefaultValue;
+         }
+         set { setValue(DisableSSLVerificationKeyName, boolToString(value)); }
       }
 
       public bool HasSelectedProjects()

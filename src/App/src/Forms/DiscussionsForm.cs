@@ -53,7 +53,7 @@ namespace mrHelper.App.Forms
          DiscussionFilterState state = new DiscussionFilterState
             {
                ByCurrentUserOnly = false,
-               ServiceMessages = true,
+               ServiceMessages = false,
                ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
             };

@@ -336,6 +336,7 @@ namespace mrHelper.App.Forms
       {
          addCustomActions();
          loadConfiguration();
+         disableSSLVerification();
          updateCaption();
          updateTabControlSelection();
          updateHostsDropdownList();

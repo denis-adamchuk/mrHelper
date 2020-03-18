@@ -1531,6 +1531,22 @@ namespace mrHelper.App.Forms
          _discussionManager.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
       }
 
+      private static void disableSSLVerification()
+      {
+         if (Program.Settings.DisableSSLVerification)
+         {
+            try
+            {
+               GitTools.DisableSSLVerification();
+               Program.Settings.DisableSSLVerification = false;
+            }
+            catch (GitTools.SSLVerificationDisableException ex)
+            {
+               ExceptionHandlers.Handle("Cannot disable SSL verification", ex);
+            }
+         }
+      }
+
       private void saveColumnWidths(ListView listView, Action<Dictionary<string, int>> saveProperty)
       {
          Dictionary<string, int> columnWidths = new Dictionary<string, int>();
