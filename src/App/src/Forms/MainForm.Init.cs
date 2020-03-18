@@ -13,6 +13,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -66,7 +67,11 @@ namespace mrHelper.App.Forms
             };
             button.Click += async (x, y) =>
             {
-               MergeRequestKey? mergeRequestKey = getMergeRequestKey();
+               MergeRequestKey? mergeRequestKey = getMergeRequestKey(null);
+               if (!mergeRequestKey.HasValue)
+               {
+                  return;
+               }
 
                labelWorkflowStatus.Text = "Command " + name + " is in progress";
                try
@@ -91,7 +96,7 @@ namespace mrHelper.App.Forms
                }
 
                bool reload = command.GetReload();
-               if (reload && mergeRequestKey.HasValue)
+               if (reload)
                {
                   enqueueCheckForUpdates(mergeRequestKey.Value,
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
@@ -157,27 +162,13 @@ namespace mrHelper.App.Forms
             comboBoxDCDepth.SelectedIndex = 0;
          }
 
-         Dictionary<string, int> columnWidths = Program.Settings.ListViewMergeRequestsColumnWidths;
-         foreach (ColumnHeader column in listViewMergeRequests.Columns)
-         {
-            string columnName = (string)column.Tag;
-            if (columnWidths.ContainsKey(columnName))
-            {
-               column.Width = columnWidths[columnName];
-            }
-         }
+         loadColumnWidths(listViewMergeRequests, Program.Settings.ListViewMergeRequestsColumnWidths);
+         loadColumnWidths(listViewFoundMergeRequests, Program.Settings.ListViewFoundMergeRequestsColumnWidths);
 
-         try
-         {
-            WinFormsHelpers.ReorderListViewColumns(listViewMergeRequests,
-               Program.Settings.ListViewMergeRequestsDisplayIndices);
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
-            Program.Settings.ListViewMergeRequestsDisplayIndices =
-               WinFormsHelpers.GetListViewDisplayIndices(listViewMergeRequests);
-         }
+         loadColumnIndices(listViewMergeRequests, Program.Settings.ListViewMergeRequestsDisplayIndices,
+            x => Program.Settings.ListViewMergeRequestsDisplayIndices = x);
+         loadColumnIndices(listViewFoundMergeRequests, Program.Settings.ListViewFoundMergeRequestsDisplayIndices,
+            x => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = x);
 
          WinFormsHelpers.FillComboBox(comboBoxFonts,
             Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
@@ -193,6 +184,32 @@ namespace mrHelper.App.Forms
          }
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
+      }
+
+      private void loadColumnWidths(ListView listView, Dictionary<string, int> storedWidths)
+      {
+         foreach (ColumnHeader column in listView.Columns)
+         {
+            string columnName = (string)column.Tag;
+            if (storedWidths.ContainsKey(columnName))
+            {
+               column.Width = storedWidths[columnName];
+            }
+         }
+      }
+
+      private void loadColumnIndices(ListView listView, Dictionary<string, int> storedIndices,
+         Action<Dictionary<string, int>> storeDefaults)
+      {
+         try
+         {
+            WinFormsHelpers.ReorderListViewColumns(listView, storedIndices);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
+            storeDefaults(WinFormsHelpers.GetListViewDisplayIndices(listView));
+         }
       }
 
       private bool integrateInTools()
@@ -249,8 +266,10 @@ namespace mrHelper.App.Forms
 
          _gitClientUpdater = new GitInteractiveUpdater();
          createWorkflowAndDependencies();
+         createSearchWorkflow();
 
          subscribeToWorkflowAndDependencies();
+         subscribeToSearchWorkflow();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
 
          initializeColorScheme();
@@ -267,6 +286,12 @@ namespace mrHelper.App.Forms
 
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
          unsubscribeFromWorkflowAndDependencies();
+         unsubscribeFromSearchWorkflow();
+
+         if (_commitChainCreator != null)
+         {
+            await _commitChainCreator.CancelAsync();
+         }
 
          await disposeLocalGitRepositoryFactory();
          await _workflowManager.CancelAsync();
@@ -325,7 +350,7 @@ namespace mrHelper.App.Forms
 
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
-         labelGitStatus.Text = String.Empty;
+         updateGitStatusText(String.Empty);
 
          if (_keywords == null)
          {
@@ -447,7 +472,7 @@ namespace mrHelper.App.Forms
 
       private void onPreLoadTrackedTime(MergeRequestKey mrk)
       {
-         MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+         MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
          if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
          {
             // change control enabled state
@@ -457,7 +482,7 @@ namespace mrHelper.App.Forms
 
       private void onPostLoadTrackedTime(MergeRequestKey mrk)
       {
-         MergeRequestKey? currentMergeRequest = getMergeRequestKey();
+         MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
          if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
          {
             // change control enabled state and update text

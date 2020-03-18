@@ -26,32 +26,37 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      string getHostName()
+      private string getHostName()
       {
          return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
       }
 
-      MergeRequest? getMergeRequest()
+      private bool isSearchMode()
       {
-         if (listViewMergeRequests.SelectedItems.Count > 0)
+         return tabControlMode.SelectedTab == tabPageSearch;
+      }
+
+      private MergeRequest? getMergeRequest(ListView proposedListView)
+      {
+         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
+         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         if (listView.SelectedItems.Count > 0)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
             return fmk.MergeRequest;
          }
          Debug.Assert(false);
          return null;
       }
 
-      MergeRequestKey? getMergeRequestKey()
+      private MergeRequestKey? getMergeRequestKey(ListView proposedListView)
       {
-         if (listViewMergeRequests.SelectedItems.Count > 0)
+         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
+         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         if (listView.SelectedItems.Count > 0)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.SelectedItems[0].Tag;
-            return new MergeRequestKey
-            {
-               ProjectKey = fmk.ProjectKey,
-               IId = fmk.MergeRequest.IId
-            };
+            FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
+            return new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId };
          }
          return null;
       }
@@ -138,18 +143,24 @@ namespace mrHelper.App.Forms
          listView.Groups.Clear();
          foreach (Project project in projects)
          {
-            ListViewGroup group = listView.Groups.Add(
-               project.Path_With_Namespace, project.Path_With_Namespace);
-            group.Tag = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+            createListViewGroupForProject(listView, hostname, project);
          }
       }
 
-      private bool selectMergeRequest(string projectname, int iid, bool exact)
+      private void createListViewGroupForProject(ListView listView,
+         string hostname, Project project)
+      {
+         ListViewGroup group = listView.Groups.Add(
+            project.Path_With_Namespace, project.Path_With_Namespace);
+         group.Tag = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+      }
+
+      private bool selectMergeRequest(ListView listView, string projectname, int iid, bool exact)
       {
          // CAUTION: this method fires ListViewMergeRequests_ItemSelectionChanged event handler which is an async method.
          // However, as the event is fired by .NET Framework internally, we cannot await it and execution does not stop.
 
-         foreach (ListViewItem item in listViewMergeRequests.Items)
+         foreach (ListViewItem item in listView.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
             if (projectname == String.Empty ||
@@ -166,7 +177,7 @@ namespace mrHelper.App.Forms
          }
 
          // selected an item from the proper group
-         foreach (ListViewGroup group in listViewMergeRequests.Groups)
+         foreach (ListViewGroup group in listView.Groups)
          {
             if (projectname == group.Name && group.Items.Count > 0)
             {
@@ -176,7 +187,7 @@ namespace mrHelper.App.Forms
          }
 
          // select whatever
-         foreach (ListViewGroup group in listViewMergeRequests.Groups)
+         foreach (ListViewGroup group in listView.Groups)
          {
             if (group.Items.Count > 0)
             {
@@ -188,27 +199,26 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void selectNotReviewedCommits(out int left, out int right)
+      private void selectNotReviewedCommits(ComboBox leftComboBox, ComboBox rightComboBox,
+         MergeRequestKey mrk, out int left, out int right)
       {
-         Debug.Assert(comboBoxLeftCommit.Items.Count == comboBoxRightCommit.Items.Count);
+         Debug.Assert(leftComboBox.Items.Count == rightComboBox.Items.Count);
 
          left = 0;
          right = 0;
 
-         Debug.Assert(getMergeRequestKey().HasValue);
-         MergeRequestKey mrk = getMergeRequestKey().Value;
          if (!_reviewedCommits.ContainsKey(mrk))
          {
             left = 0;
-            right = comboBoxRightCommit.Items.Count - 1;
+            right = rightComboBox.Items.Count - 1;
             return;
          }
 
          int? iNewestOfReviewedCommits = new Nullable<int>();
          HashSet<string> reviewedCommits = _reviewedCommits[mrk];
-         for (int iItem = 0; iItem < comboBoxLeftCommit.Items.Count; ++iItem)
+         for (int iItem = 0; iItem < leftComboBox.Items.Count; ++iItem)
          {
-            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[iItem])).SHA;
+            string sha = ((CommitComboBoxItem)(leftComboBox.Items[iItem])).SHA;
             if (reviewedCommits.Contains(sha))
             {
                iNewestOfReviewedCommits = iItem;
@@ -224,19 +234,20 @@ namespace mrHelper.App.Forms
          left = Math.Max(0, iNewestOfReviewedCommits.Value - 1);
 
          // note that it should not be left + 1 because Left CB is shifted comparing to Right CB
-         right = Math.Min(left, comboBoxRightCommit.Items.Count - 1);
+         right = Math.Min(left, rightComboBox.Items.Count - 1);
       }
 
-      private void checkComboboxCommitsOrder(bool shouldReorderRightCombobox)
+      private void checkComboboxCommitsOrder(ComboBox leftComboBox, ComboBox rightComboBox,
+         bool shouldReorderRightCombobox)
       {
-         if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
+         if (leftComboBox.SelectedItem == null || rightComboBox.SelectedItem == null)
          {
             return;
          }
 
          // Left combobox cannot select a commit older than in right combobox (replicating gitlab web ui behavior)
-         CommitComboBoxItem leftItem = (CommitComboBoxItem)(comboBoxLeftCommit.SelectedItem);
-         CommitComboBoxItem rightItem = (CommitComboBoxItem)(comboBoxRightCommit.SelectedItem);
+         CommitComboBoxItem leftItem = (CommitComboBoxItem)(leftComboBox.SelectedItem);
+         CommitComboBoxItem rightItem = (CommitComboBoxItem)(rightComboBox.SelectedItem);
          Debug.Assert(leftItem.TimeStamp.HasValue);
 
          if (rightItem.TimeStamp.HasValue)
@@ -246,11 +257,11 @@ namespace mrHelper.App.Forms
             {
                if (shouldReorderRightCombobox)
                {
-                  comboBoxRightCommit.SelectedIndex = comboBoxLeftCommit.SelectedIndex;
+                  rightComboBox.SelectedIndex = leftComboBox.SelectedIndex;
                }
                else
                {
-                  comboBoxLeftCommit.SelectedIndex = comboBoxRightCommit.SelectedIndex;
+                  leftComboBox.SelectedIndex = rightComboBox.SelectedIndex;
                }
             }
          }
@@ -260,18 +271,18 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private string getGitTag(bool left)
+      private string getGitTag(ComboBox leftComboBox, ComboBox rightComboBox, bool left)
       {
          // swap sides to be consistent with gitlab web ui
          if (!left)
          {
-            Debug.Assert(comboBoxLeftCommit.SelectedItem != null);
-            return ((CommitComboBoxItem)comboBoxLeftCommit.SelectedItem).SHA;
+            Debug.Assert(leftComboBox.SelectedItem != null);
+            return ((CommitComboBoxItem)leftComboBox.SelectedItem).SHA;
          }
          else
          {
-            Debug.Assert(comboBoxRightCommit.SelectedItem != null);
-            return ((CommitComboBoxItem)comboBoxRightCommit.SelectedItem).SHA;
+            Debug.Assert(rightComboBox.SelectedItem != null);
+            return ((CommitComboBoxItem)rightComboBox.SelectedItem).SHA;
          }
       }
 
@@ -424,10 +435,7 @@ namespace mrHelper.App.Forms
       private void disableListView(ListView listView, bool clear)
       {
          listView.Enabled = false;
-         foreach (ListViewItem item in listView.Items)
-         {
-            item.Selected = false;
-         }
+         deselectAllListViewItems(listView);
 
          if (clear)
          {
@@ -438,6 +446,14 @@ namespace mrHelper.App.Forms
       private void enableListView(ListView listView)
       {
          listView.Enabled = true;
+      }
+
+      private void deselectAllListViewItems(ListView listView)
+      {
+         foreach (ListViewItem item in listView.Items)
+         {
+            item.Selected = false;
+         }
       }
 
       private void disableComboBox(ComboBox comboBox, string text)
@@ -457,16 +473,22 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void enableControlsOnGitAsyncOperation(bool enabled)
+      private void enableControlsOnGitAsyncOperation(bool enabled, string operation)
       {
          linkLabelAbortGit.Visible = !enabled;
+         linkLabelAbortGit.Tag = operation;
+
+         tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
+
          buttonDiffTool.Enabled = enabled;
          buttonDiscussions.Enabled = enabled;
-         comboBoxHost.Enabled = enabled;
          listViewMergeRequests.Enabled = enabled;
+         listViewFoundMergeRequests.Enabled = enabled;
          enableMergeRequestFilterControls(enabled);
-         tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
+         enableMergeRequestSearchControls(enabled);
+
          _suppressExternalConnections = !enabled;
+         _canSwitchTab = enabled;
 
          if (enabled)
          {
@@ -478,6 +500,11 @@ namespace mrHelper.App.Forms
       {
          checkBoxLabels.Enabled = enabled;
          textBoxLabels.Enabled = enabled;
+      }
+
+      private void enableMergeRequestSearchControls(bool enabled)
+      {
+         textBoxSearch.Enabled = enabled;
       }
 
       private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
@@ -517,22 +544,19 @@ namespace mrHelper.App.Forms
          return commonBegin + htmlbody + commonEnd;
       }
 
-      private void updateTimeTrackingMergeRequestDetails(MergeRequest? mergeRequest)
+      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey)
       {
          if (isTrackingTime())
          {
             return;
          }
 
-         labelTimeTrackingMergeRequestName.Visible = mergeRequest.HasValue;
-         buttonTimeTrackingStart.Enabled = mergeRequest.HasValue;
+         labelTimeTrackingMergeRequestName.Visible = enabled;
+         buttonTimeTrackingStart.Enabled = enabled;
 
-         if (mergeRequest.HasValue)
+         if (enabled)
          {
-            Debug.Assert(getMergeRequestKey().HasValue);
-
-            labelTimeTrackingMergeRequestName.Text =
-               mergeRequest.Value.Title + "   " + "[" + getMergeRequestKey()?.ProjectKey.ProjectName + "]";
+            labelTimeTrackingMergeRequestName.Text = title + "   " + "[" + projectKey.ProjectName + "]";
          }
       }
 
@@ -597,26 +621,26 @@ namespace mrHelper.App.Forms
          buttonNewDiscussion.Enabled = enabled;
       }
 
-      private void enableCommitActions(bool enabled)
+      private void enableCommitActions(bool enabled, IEnumerable<string> labels, User author)
       {
          buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
          buttonDiffTool.Enabled = enabled;
-         enableCustomActions(enabled);
+         enableCustomActions(enabled, labels, author);
       }
 
-      private bool isCustomActionEnabled(MergeRequest mergeRequest, string dependency)
+      private bool isCustomActionEnabled(IEnumerable<string> labels, User author, string dependency)
       {
          if (String.IsNullOrEmpty(dependency))
          {
             return true;
          }
 
-         if (mergeRequest.Labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
+         if (labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
          {
             return true;
          }
 
-         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", mergeRequest.Author.Username))
+         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username))
          {
             return true;
          }
@@ -624,40 +648,40 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void enableCustomActions(bool enabled)
+      private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
       {
-         if (!enabled || !getMergeRequest().HasValue)
+         if (!enabled)
          {
             groupBoxActions.Controls.Cast<Control>().ToList().ForEach(x => x.Enabled = false);
             return;
          }
 
-         MergeRequest mergeRequest = getMergeRequest().Value;
          foreach (Control control in groupBoxActions.Controls)
          {
             string dependency = (string)control.Tag;
             string resolvedDependency =
                String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
-            control.Enabled = isCustomActionEnabled(mergeRequest, resolvedDependency);
+            control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
          }
       }
 
-      private void addCommitsToComboBoxes(IEnumerable<Commit> commits, string baseSha, string targetBranch)
+      private void addCommitsToComboBoxes(ComboBox leftComboBox, ComboBox rightComboBox,
+         IEnumerable<Commit> commits, string baseSha, string targetBranch)
       {
          CommitComboBoxItem latestCommitItem = new CommitComboBoxItem(commits.First())
          {
             IsLatest = true
          };
-         comboBoxLeftCommit.Items.Add(latestCommitItem);
+         leftComboBox.Items.Add(latestCommitItem);
          foreach (Commit commit in commits.Skip(1))
          {
             CommitComboBoxItem item = new CommitComboBoxItem(commit);
-            if (comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
+            if (leftComboBox.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
             {
                continue;
             }
-            comboBoxLeftCommit.Items.Add(item);
-            comboBoxRightCommit.Items.Add(item);
+            leftComboBox.Items.Add(item);
+            rightComboBox.Items.Add(item);
          }
 
          // Add target branch to the right combo-box
@@ -666,7 +690,7 @@ namespace mrHelper.App.Forms
          {
             IsBase = true
          };
-         comboBoxRightCommit.Items.Add(baseCommitItem);
+         rightComboBox.Items.Add(baseCommitItem);
       }
 
       /// <summary>
@@ -780,12 +804,12 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
-         if (!getMergeRequestKey().HasValue)
+         if (!getMergeRequestKey(null).HasValue)
          {
             return SystemColors.Window;
          }
 
-         MergeRequestKey mrk = getMergeRequestKey().Value;
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
          bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
          return wasReviewed || item.IsBase ? SystemColors.Window :
             _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);
@@ -822,7 +846,8 @@ namespace mrHelper.App.Forms
                });
                if (index == -1)
                {
-                  addListViewMergeRequestItem(mrk);
+                  ListViewItem item = addListViewMergeRequestItem(listViewMergeRequests, projectKey);
+                  setListViewItemTag(item, mrk);
                }
                else
                {
@@ -848,13 +873,13 @@ namespace mrHelper.App.Forms
          updateTrayIcon();
       }
 
-      private void addListViewMergeRequestItem(MergeRequestKey mrk)
+      private ListViewItem addListViewMergeRequestItem(ListView listView, ProjectKey projectKey)
       {
-         ListViewGroup group = listViewMergeRequests.Groups[mrk.ProjectKey.ProjectName];
-         string[] items = Enumerable.Repeat(String.Empty, listViewMergeRequests.Columns.Count).ToArray();
-         ListViewItem item = listViewMergeRequests.Items.Add(new ListViewItem(items, group));
-         Debug.Assert(item.SubItems.Count == listViewMergeRequests.Columns.Count);
-         setListViewItemTag(item, mrk);
+         ListViewGroup group = listView.Groups[projectKey.ProjectName];
+         string[] items = Enumerable.Repeat(String.Empty, listView.Columns.Count).ToArray();
+         ListViewItem item = listView.Items.Add(new ListViewItem(items, group));
+         Debug.Assert(item.SubItems.Count == listView.Columns.Count);
+         return item;
       }
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
@@ -867,7 +892,16 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         MergeRequest mr = mergeRequest.Value;
+         setListViewItemTag(item, mrk.ProjectKey, mergeRequest.Value);
+      }
+
+      private void setListViewItemTag(ListViewItem item, ProjectKey projectKey, MergeRequest mr)
+      {
+         MergeRequestKey mrk = new MergeRequestKey
+         {
+            ProjectKey = projectKey,
+            IId = mr.IId
+         };
 
          FullMergeRequestKey fmk = new FullMergeRequestKey
          {
@@ -888,12 +922,11 @@ namespace mrHelper.App.Forms
 
          void setSubItemTag(string columnTag, ListViewSubItemInfo subItemInfo)
          {
-            ColumnHeader columnHeader = listViewMergeRequests.Columns
+            ColumnHeader columnHeader = item.ListView.Columns
                .Cast<ColumnHeader>()
                .SingleOrDefault(x => x.Tag.ToString() == columnTag);
             if (columnHeader == null)
             {
-               Debug.Assert(false);
                return;
             }
 
@@ -909,6 +942,7 @@ namespace mrHelper.App.Forms
          setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty));
          setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty));
          setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty));
+         setSubItemTag("State",        new ListViewSubItemInfo(() => mr.State,                () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -1511,6 +1545,16 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle("Cannot disable SSL verification", ex);
             }
          }
+      }
+
+      private void saveColumnWidths(ListView listView, Action<Dictionary<string, int>> saveProperty)
+      {
+         Dictionary<string, int> columnWidths = new Dictionary<string, int>();
+         foreach (ColumnHeader column in listView.Columns)
+         {
+            columnWidths[(string)column.Tag] = column.Width;
+         }
+         saveProperty(columnWidths);
       }
    }
 }

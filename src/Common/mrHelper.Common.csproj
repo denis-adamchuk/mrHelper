@@ -61,6 +61,7 @@
     <Compile Include="Tools\EMailSender.cs" />
     <Compile Include="Tools\ExternalProcess.cs" />
     <Compile Include="Tools\ExternalProcessManager.cs" />
+    <Compile Include="Tools\FileUtils.cs" />
     <Compile Include="Tools\JsonFileReader.cs" />
     <Compile Include="Tools\Persistence\PersistentState.cs" />
     <Compile Include="Tools\Persistence\PersistentStateItf.cs" />

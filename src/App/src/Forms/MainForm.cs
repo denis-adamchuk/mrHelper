@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -7,6 +8,7 @@ using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
+using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -14,7 +16,6 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitClient;
 using mrHelper.CustomActions;
-using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
@@ -62,12 +63,12 @@ namespace mrHelper.App.Forms
 
       public string GetCurrentProjectName()
       {
-         return getMergeRequestKey()?.ProjectKey.ProjectName ?? String.Empty;
+         return getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
       }
 
       public int GetCurrentMergeRequestIId()
       {
-         return getMergeRequestKey()?.IId ?? 0;
+         return getMergeRequestKey(null)?.IId ?? 0;
       }
 
       public Task<ILocalGitRepositoryFactory> GetFactory()
@@ -90,6 +91,7 @@ namespace mrHelper.App.Forms
       private bool _userIsMovingSplitter2 = false;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
+      private bool _canSwitchTab = true;
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
@@ -100,6 +102,7 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
+      private CommitChainCreator _commitChainCreator;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
@@ -109,6 +112,8 @@ namespace mrHelper.App.Forms
       private WorkflowManager _workflowManager;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
+
+      private WorkflowManager _searchWorkflowManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;

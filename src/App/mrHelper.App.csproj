@@ -156,6 +156,10 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="src\Forms\MainForm.Search.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Forms\MainForm.Init.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
@@ -166,7 +170,6 @@
     </Compile>
     <Compile Include="src\Forms\MainForm.Workflow.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.ExternalCalls.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -184,6 +187,7 @@
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
     <Compile Include="src\Helpers\GitLabSharp\MergeRequestFilter.cs" />
+    <Compile Include="src\Helpers\Git\CommitChainCreator.cs" />
     <Compile Include="src\Helpers\Git\FactoryAccessorItf.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />

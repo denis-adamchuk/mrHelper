@@ -56,7 +56,6 @@ namespace mrHelper.App.Forms
          this.labelLocalGitFolder = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
-         this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.buttonEditTime = new System.Windows.Forms.Button();
          this.buttonDiffTool = new System.Windows.Forms.Button();
          this.buttonAddComment = new System.Windows.Forms.Button();
@@ -65,6 +64,7 @@ namespace mrHelper.App.Forms
          this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
          this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
+         this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -99,6 +99,8 @@ namespace mrHelper.App.Forms
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+         this.tabControlMode = new System.Windows.Forms.TabControl();
+         this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
          this.listViewMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
@@ -112,6 +114,17 @@ namespace mrHelper.App.Forms
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
+         this.tabPageSearch = new System.Windows.Forms.TabPage();
+         this.groupBoxSearch = new System.Windows.Forms.GroupBox();
+         this.textBoxSearch = new System.Windows.Forms.TextBox();
+         this.listViewFoundMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
+         this.columnHeaderFoundIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
@@ -151,7 +164,11 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Panel1.SuspendLayout();
          this.splitContainer1.Panel2.SuspendLayout();
          this.splitContainer1.SuspendLayout();
+         this.tabControlMode.SuspendLayout();
+         this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
+         this.tabPageSearch.SuspendLayout();
+         this.groupBoxSearch.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
          this.splitContainer2.Panel1.SuspendLayout();
          this.splitContainer2.Panel2.SuspendLayout();
@@ -279,21 +296,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
-         // textBoxLabels
-         // 
-         this.textBoxLabels.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxLabels.Enabled = false;
-         this.textBoxLabels.Location = new System.Drawing.Point(60, 17);
-         this.textBoxLabels.MinimumSize = new System.Drawing.Size(100, 4);
-         this.textBoxLabels.Name = "textBoxLabels";
-         this.textBoxLabels.Size = new System.Drawing.Size(168, 20);
-         this.textBoxLabels.TabIndex = 1;
-         this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following:\n#{username} o" +
-        "r label or MR IId or any substring from MR title/author name/label/branch");
-         this.textBoxLabels.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
-         this.textBoxLabels.Leave += new System.EventHandler(this.TextBoxLabels_LostFocus);
-         // 
          // buttonEditTime
          // 
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -404,6 +406,19 @@ namespace mrHelper.App.Forms
          this.linkLabelNewVersion.Visible = false;
          this.linkLabelNewVersion.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelNewVersion_LinkClicked);
          // 
+         // textBoxLabels
+         // 
+         this.textBoxLabels.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxLabels.Enabled = false;
+         this.textBoxLabels.Location = new System.Drawing.Point(60, 17);
+         this.textBoxLabels.MinimumSize = new System.Drawing.Size(100, 4);
+         this.textBoxLabels.Name = "textBoxLabels";
+         this.textBoxLabels.Size = new System.Drawing.Size(154, 20);
+         this.textBoxLabels.TabIndex = 1;
+         this.toolTip.SetToolTip(this.textBoxLabels, "To select merge requests use comma-separated list of the following:\n#{username} o" +
+        "r label or MR IId or any substring from MR title/author name/label/branch");
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -451,6 +466,7 @@ namespace mrHelper.App.Forms
          this.tabControl.Size = new System.Drawing.Size(1284, 890);
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
+         this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
          // 
          // tabPageSettings
          // 
@@ -765,7 +781,7 @@ namespace mrHelper.App.Forms
          // 
          // splitContainer1.Panel1
          // 
-         this.splitContainer1.Panel1.Controls.Add(this.groupBoxSelectMergeRequest);
+         this.splitContainer1.Panel1.Controls.Add(this.tabControlMode);
          // 
          // splitContainer1.Panel2
          // 
@@ -778,6 +794,30 @@ namespace mrHelper.App.Forms
          this.splitContainer1.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
          this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
+         // tabControlMode
+         // 
+         this.tabControlMode.Controls.Add(this.tabPageLive);
+         this.tabControlMode.Controls.Add(this.tabPageSearch);
+         this.tabControlMode.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.tabControlMode.Location = new System.Drawing.Point(0, 0);
+         this.tabControlMode.Name = "tabControlMode";
+         this.tabControlMode.SelectedIndex = 0;
+         this.tabControlMode.Size = new System.Drawing.Size(336, 858);
+         this.tabControlMode.TabIndex = 0;
+         this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
+         this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
+         // 
+         // tabPageLive
+         // 
+         this.tabPageLive.Controls.Add(this.groupBoxSelectMergeRequest);
+         this.tabPageLive.Location = new System.Drawing.Point(4, 22);
+         this.tabPageLive.Name = "tabPageLive";
+         this.tabPageLive.Padding = new System.Windows.Forms.Padding(3);
+         this.tabPageLive.Size = new System.Drawing.Size(328, 832);
+         this.tabPageLive.TabIndex = 0;
+         this.tabPageLive.Text = "Live";
+         this.tabPageLive.UseVisualStyleBackColor = true;
+         // 
          // groupBoxSelectMergeRequest
          // 
          this.groupBoxSelectMergeRequest.Controls.Add(this.buttonReloadList);
@@ -785,10 +825,10 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.Controls.Add(this.listViewMergeRequests);
          this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxLabels);
          this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(0, 0);
+         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
-         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(336, 858);
-         this.groupBoxSelectMergeRequest.TabIndex = 0;
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(322, 826);
+         this.groupBoxSelectMergeRequest.TabIndex = 1;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
@@ -796,7 +836,7 @@ namespace mrHelper.App.Forms
          // 
          this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonReloadList.Enabled = false;
-         this.buttonReloadList.Location = new System.Drawing.Point(234, 9);
+         this.buttonReloadList.Location = new System.Drawing.Point(220, 9);
          this.buttonReloadList.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
@@ -829,7 +869,7 @@ namespace mrHelper.App.Forms
          this.listViewMergeRequests.MultiSelect = false;
          this.listViewMergeRequests.Name = "listViewMergeRequests";
          this.listViewMergeRequests.OwnerDraw = true;
-         this.listViewMergeRequests.Size = new System.Drawing.Size(330, 809);
+         this.listViewMergeRequests.Size = new System.Drawing.Size(316, 777);
          this.listViewMergeRequests.TabIndex = 3;
          this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
@@ -907,6 +947,116 @@ namespace mrHelper.App.Forms
          this.checkBoxLabels.Text = "Filter";
          this.checkBoxLabels.UseVisualStyleBackColor = true;
          this.checkBoxLabels.CheckedChanged += new System.EventHandler(this.CheckBoxLabels_CheckedChanged);
+         // 
+         // tabPageSearch
+         // 
+         this.tabPageSearch.Controls.Add(this.groupBoxSearch);
+         this.tabPageSearch.Location = new System.Drawing.Point(4, 22);
+         this.tabPageSearch.Name = "tabPageSearch";
+         this.tabPageSearch.Padding = new System.Windows.Forms.Padding(3);
+         this.tabPageSearch.Size = new System.Drawing.Size(328, 832);
+         this.tabPageSearch.TabIndex = 1;
+         this.tabPageSearch.Text = "Search";
+         this.tabPageSearch.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxSearch
+         // 
+         this.groupBoxSearch.Controls.Add(this.textBoxSearch);
+         this.groupBoxSearch.Controls.Add(this.listViewFoundMergeRequests);
+         this.groupBoxSearch.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxSearch.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxSearch.Name = "groupBoxSearch";
+         this.groupBoxSearch.Size = new System.Drawing.Size(322, 826);
+         this.groupBoxSearch.TabIndex = 2;
+         this.groupBoxSearch.TabStop = false;
+         this.groupBoxSearch.Text = "Search Merge Request";
+         // 
+         // textBoxSearch
+         // 
+         this.textBoxSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxSearch.Location = new System.Drawing.Point(3, 17);
+         this.textBoxSearch.MinimumSize = new System.Drawing.Size(100, 4);
+         this.textBoxSearch.Name = "textBoxSearch";
+         this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
+         this.textBoxSearch.TabIndex = 1;
+         this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
+         // 
+         // listViewFoundMergeRequests
+         // 
+         this.listViewFoundMergeRequests.AllowColumnReorder = true;
+         this.listViewFoundMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.listViewFoundMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderFoundIId,
+            this.columnHeaderFoundState,
+            this.columnHeaderFoundAuthor,
+            this.columnHeaderFoundTitle,
+            this.columnHeaderFoundJira,
+            this.columnHeaderFoundSourceBranch,
+            this.columnHeaderFoundTargetBranch});
+         this.listViewFoundMergeRequests.FullRowSelect = true;
+         this.listViewFoundMergeRequests.GridLines = true;
+         this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewFoundMergeRequests.HideSelection = false;
+         this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 46);
+         this.listViewFoundMergeRequests.MultiSelect = false;
+         this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
+         this.listViewFoundMergeRequests.OwnerDraw = true;
+         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(316, 777);
+         this.listViewFoundMergeRequests.TabIndex = 3;
+         this.listViewFoundMergeRequests.UseCompatibleStateImageBehavior = false;
+         this.listViewFoundMergeRequests.View = System.Windows.Forms.View.Details;
+         this.listViewFoundMergeRequests.ColumnReordered += new System.Windows.Forms.ColumnReorderedEventHandler(this.listViewMergeRequests_ColumnReordered);
+         this.listViewFoundMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
+         this.listViewFoundMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
+         this.listViewFoundMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
+         this.listViewFoundMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.ListViewMergeRequests_ItemSelectionChanged);
+         this.listViewFoundMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseDown);
+         this.listViewFoundMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseMove);
+         // 
+         // columnHeaderFoundIId
+         // 
+         this.columnHeaderFoundIId.Tag = "IId";
+         this.columnHeaderFoundIId.Text = "IId";
+         this.columnHeaderFoundIId.Width = 40;
+         // 
+         // columnHeaderFoundState
+         // 
+         this.columnHeaderFoundState.Tag = "State";
+         this.columnHeaderFoundState.Text = "State";
+         this.columnHeaderFoundState.Width = 80;
+         // 
+         // columnHeaderFoundAuthor
+         // 
+         this.columnHeaderFoundAuthor.Tag = "Author";
+         this.columnHeaderFoundAuthor.Text = "Author";
+         this.columnHeaderFoundAuthor.Width = 110;
+         // 
+         // columnHeaderFoundTitle
+         // 
+         this.columnHeaderFoundTitle.Tag = "Title";
+         this.columnHeaderFoundTitle.Text = "Title";
+         this.columnHeaderFoundTitle.Width = 400;
+         // 
+         // columnHeaderFoundJira
+         // 
+         this.columnHeaderFoundJira.Tag = "Jira";
+         this.columnHeaderFoundJira.Text = "Jira";
+         this.columnHeaderFoundJira.Width = 80;
+         // 
+         // columnHeaderFoundSourceBranch
+         // 
+         this.columnHeaderFoundSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderFoundSourceBranch.Text = "Source Branch";
+         this.columnHeaderFoundSourceBranch.Width = 100;
+         // 
+         // columnHeaderFoundTargetBranch
+         // 
+         this.columnHeaderFoundTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderFoundTargetBranch.Text = "Target Branch";
+         this.columnHeaderFoundTargetBranch.Width = 100;
          // 
          // splitContainer2
          // 
@@ -1265,8 +1415,13 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
          this.splitContainer1.ResumeLayout(false);
+         this.tabControlMode.ResumeLayout(false);
+         this.tabPageLive.ResumeLayout(false);
          this.groupBoxSelectMergeRequest.ResumeLayout(false);
          this.groupBoxSelectMergeRequest.PerformLayout();
+         this.tabPageSearch.ResumeLayout(false);
+         this.groupBoxSearch.ResumeLayout(false);
+         this.groupBoxSearch.PerformLayout();
          this.splitContainer2.Panel1.ResumeLayout(false);
          this.splitContainer2.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
@@ -1314,18 +1469,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Label labelColorScheme;
       private System.Windows.Forms.GroupBox groupBoxHost;
       private System.Windows.Forms.SplitContainer splitContainer1;
-      private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
-      private mrHelper.CommonControls.Controls.ListViewEx listViewMergeRequests;
-      private System.Windows.Forms.ColumnHeader columnHeaderIId;
-      private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
-      private System.Windows.Forms.ColumnHeader columnHeaderTitle;
-      private System.Windows.Forms.ColumnHeader columnHeaderLabels;
-      private System.Windows.Forms.ColumnHeader columnHeaderJira;
-      private System.Windows.Forms.TextBox textBoxLabels;
-      private System.Windows.Forms.CheckBox checkBoxLabels;
       private System.Windows.Forms.ComboBox comboBoxHost;
-      private System.Windows.Forms.Button buttonReloadList;
-      private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
       private System.Windows.Forms.GroupBox groupBoxNotifications;
       private System.Windows.Forms.CheckBox checkBoxShowNewMergeRequests;
       private System.Windows.Forms.CheckBox checkBoxShowKeywords;
@@ -1334,8 +1478,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxShowUpdatedMergeRequests;
       private System.Windows.Forms.CheckBox checkBoxShowMergedMergeRequests;
       private System.Windows.Forms.CheckBox checkBoxShowMyActivity;
-      private System.Windows.Forms.ColumnHeader columnHeaderSourceBranch;
-      private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
       private System.Windows.Forms.SplitContainer splitContainer2;
       private System.Windows.Forms.GroupBox groupBoxSelectedMR;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel richTextBoxMergeRequestDescription;
@@ -1378,8 +1520,34 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Panel panelFreeSpace;
       private System.Windows.Forms.PictureBox pictureBox2;
       private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.ColumnHeader columnHeaderSize;
       private System.Windows.Forms.CheckBox checkBoxDisableSplitterRestrictions;
-   }
+        private System.Windows.Forms.TabControl tabControlMode;
+        private System.Windows.Forms.TabPage tabPageLive;
+        private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
+        private System.Windows.Forms.Button buttonReloadList;
+        private System.Windows.Forms.TextBox textBoxLabels;
+        private ListViewEx listViewMergeRequests;
+        private System.Windows.Forms.ColumnHeader columnHeaderIId;
+        private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
+        private System.Windows.Forms.ColumnHeader columnHeaderTitle;
+        private System.Windows.Forms.ColumnHeader columnHeaderLabels;
+        private System.Windows.Forms.ColumnHeader columnHeaderSize;
+        private System.Windows.Forms.ColumnHeader columnHeaderJira;
+        private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
+        private System.Windows.Forms.ColumnHeader columnHeaderSourceBranch;
+        private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
+        private System.Windows.Forms.CheckBox checkBoxLabels;
+        private System.Windows.Forms.TabPage tabPageSearch;
+        private System.Windows.Forms.GroupBox groupBoxSearch;
+        private System.Windows.Forms.TextBox textBoxSearch;
+        private ListViewEx listViewFoundMergeRequests;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundIId;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundAuthor;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundTitle;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundJira;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundSourceBranch;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundTargetBranch;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
+    }
 }
 

@@ -30,7 +30,8 @@ namespace mrHelper.GitClient
       {
          if (_projectWatcher != null)
          {
-            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Dispose and unsubscribe from Project Watcher"));
+            Trace.TraceInformation(String.Format(
+               "[LocalGitRepositoryUpdater] Dispose and unsubscribe from Project Watcher"));
             _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
          }
       }
@@ -40,28 +41,28 @@ namespace mrHelper.GitClient
          return _onCancelUpdate();
       }
 
-      async public Task ForceUpdate(IInstantProjectChecker instantChecker, Action<string> onProgressChange)
+      async public Task Update(IInstantProjectChecker instantChecker, Action<string> onProgressChange)
       {
          Trace.TraceInformation(String.Format(
             "[LocalGitRepositoryUpdater] Processing manual update. Stored LatestChange: {0}. ProjectChecker: {1}",
                _latestChange.ToLocalTime().ToString(), (instantChecker?.ToString() ?? "null")));
 
-         if (instantChecker == null)
-         {
-            Trace.TraceError(String.Format("[LocalGitRepositoryUpdater] Unexpected case, manual update w/o instant checker"));
-            Debug.Assert(false);
-            return;
-         }
-
          _updating = true;
          try
          {
-            DateTime newLatestChange = await instantChecker.GetLatestChangeTimestamp();
-            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository Latest Change: {0}",
-               newLatestChange.ToLocalTime().ToString()));
+            if (instantChecker != null)
+            {
+               DateTime newLatestChange = await instantChecker.GetLatestChangeTimestamp();
+               Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository Latest Change: {0}",
+                        newLatestChange.ToLocalTime().ToString()));
 
-            // this may cancel currently running onTimer update
-            await checkTimestampAndUpdate(newLatestChange, onProgressChange);
+               // this may cancel currently running onTimer update
+               await checkTimestampAndUpdate(newLatestChange, onProgressChange);
+            }
+            else
+            {
+               await checkTimestampAndUpdate(null, onProgressChange);
+            }
          }
          finally
          {
@@ -135,11 +136,20 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task checkTimestampAndUpdate(DateTime newLatestChange, Action<string> onProgressChange)
+      async private Task checkTimestampAndUpdate(DateTime? newLatestChangeOpt, Action<string> onProgressChange)
       {
+         if (!newLatestChangeOpt.HasValue)
+         {
+            await doUpdate(onProgressChange);
+            Trace.TraceInformation("[LocalGitRepositoryUpdater] Repository updated.");
+            return;
+         }
+
+         DateTime newLatestChange = newLatestChangeOpt.Value;
          if (newLatestChange > _latestChange)
          {
-            // don't send out newLatestChange! it can be misleading because it depends on IInstantProjectChecker implementation.
+            // don't send out newLatestChange!
+            // it can be misleading because it depends on IInstantProjectChecker implementation.
             await doUpdate(onProgressChange);
 
             _latestChange = newLatestChange;

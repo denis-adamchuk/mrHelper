@@ -10,6 +10,7 @@ using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using GitLabSharp.Accessors;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Workflow
 {
@@ -59,6 +60,20 @@ namespace mrHelper.Client.Workflow
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
          return await loadCurrentUserAsync(hostname);
+      }
+
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, object search, int maxResults)
+      {
+         _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
+
+         Dictionary<Project, IEnumerable<MergeRequest>> mergeRequests =
+            await loadMergeRequestsAsync(hostname, search, maxResults);
+         if (mergeRequests == null)
+         {
+            return false; // cancelled
+         }
+
+         return true;
       }
 
       async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Project project)
@@ -159,6 +174,85 @@ namespace mrHelper.Client.Workflow
 
          PostLoadProjectMergeRequests?.Invoke(hostname, project, mergeRequests);
          return mergeRequests;
+      }
+
+      async private Task<Dictionary<Project, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(
+         string hostname, object search, int maxResults)
+      {
+         IEnumerable<MergeRequest> mergeRequests;
+         try
+         {
+            if (search is string searchString)
+            {
+               mergeRequests = await _operator.SearchMergeRequestsAsync(searchString, maxResults);
+            }
+            else if (search is MergeRequestKey mrk)
+            {
+               MergeRequest mr = await _operator.GetMergeRequestAsync(mrk.ProjectKey.ProjectName, mrk.IId);
+               mergeRequests = new MergeRequest[] { mr };
+            }
+            else
+            {
+               Debug.Assert(false);
+               return null;
+            }
+         }
+         catch (OperatorException ex)
+         {
+            string cancelMessage = String.Format("Cancelled loading merge requests with search string \"{0}\"", search);
+            string errorMessage = String.Format("Cannot load merge requests with search string \"{0}\"", search);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
+            return null;
+         }
+
+         Dictionary<Project, IEnumerable<MergeRequest>> result = new Dictionary<Project, IEnumerable<MergeRequest>>();
+         foreach (KeyValuePair<int, List<MergeRequest>> keyValuePair in groupMergeRequestsByProject(mergeRequests))
+         {
+            Project? project = await resolveProject(hostname, keyValuePair.Key);
+            if (project == null)
+            {
+               return null;
+            }
+            result.Add(project.Value, keyValuePair.Value);
+         }
+
+         foreach (KeyValuePair<Project, IEnumerable<MergeRequest>> keyValuePair in result)
+         {
+            PreLoadProjectMergeRequests?.Invoke(keyValuePair.Key);
+            PostLoadProjectMergeRequests?.Invoke(hostname, keyValuePair.Key, keyValuePair.Value);
+         }
+
+         return result;
+      }
+
+      private Dictionary<int, List<MergeRequest>> groupMergeRequestsByProject(IEnumerable<MergeRequest> mergeRequests)
+      {
+         Dictionary<int, List<MergeRequest>> grouped = new Dictionary<int, List<MergeRequest>>();
+         foreach (MergeRequest mergeRequest in mergeRequests)
+         {
+            int projectId = mergeRequest.Project_Id;
+            if (!grouped.ContainsKey(projectId))
+            {
+               grouped[projectId] = new List<MergeRequest>();
+            }
+            grouped[projectId].Add(mergeRequest);
+         }
+         return grouped;
+      }
+
+      async private Task<Project?> resolveProject(string hostname, int projectId)
+      {
+         try
+         {
+            return await _operator.GetProjectAsync(projectId.ToString());
+         }
+         catch (OperatorException ex)
+         {
+            string cancelMessage = String.Format("Cancelled resolving project with Id \"{0}\"", projectId);
+            string errorMessage = String.Format("Cannot load project with Id \"{0}\"", projectId);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
+            return null;
+         }
       }
 
       async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)

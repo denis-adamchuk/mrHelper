@@ -20,6 +20,20 @@ namespace mrHelper.GitClient
       IGitRepositoryData IGitRepository.Data => DoesRequireClone() ? null : _data;
 
       public ProjectKey ProjectKey { get; }
+
+      public bool ContainsSHA(string sha)
+      {
+         if (_cached_existingSha.Contains(sha))
+         {
+            return true;
+         }
+         if (containsEntity(sha))
+         {
+            _cached_existingSha.Add(sha);
+            return true;
+         }
+         return false;
+      }
       // @{ IGitRepository
 
       // @{ ILocalGitRepository
@@ -40,6 +54,10 @@ namespace mrHelper.GitClient
          Debug.Assert(_cached_canClone.Value || _cached_isValidRepository.Value);
          return !_cached_isValidRepository.Value;
       }
+
+      public ILocalGitRepositoryState State { get; }
+
+      public ILocalGitRepositoryOperations Operations { get; }
       // @} ILocalGitRepository
 
       // Host Name and Project Name
@@ -110,6 +128,8 @@ namespace mrHelper.GitClient
 
          _operationManager = new GitOperationManager(synchronizeInvoke, path);
          _data = new LocalGitRepositoryData(_operationManager, Path);
+         State = new LocalGitRepositoryState(Path, synchronizeInvoke);
+         Operations = new LocalGitRepositoryOperations(Path, _operationManager);
 
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2} "
@@ -157,6 +177,22 @@ namespace mrHelper.GitClient
          return _cached_isValidRepository.Value;
       }
 
+      private bool containsEntity(string entity)
+      {
+         try
+         {
+            return ExternalProcess.Start("git", String.Format("cat-file -t {0}", entity), true, Path).StdErr.Count() == 0;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return false;
+            }
+            throw;
+         }
+      }
+
       private void resetCachedState()
       {
          _cached_canClone = null;
@@ -165,6 +201,7 @@ namespace mrHelper.GitClient
 
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
+      private HashSet<string> _cached_existingSha = new HashSet<string>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
       private readonly IExternalProcessManager _operationManager;

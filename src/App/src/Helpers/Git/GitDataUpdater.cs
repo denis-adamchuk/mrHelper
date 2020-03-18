@@ -89,20 +89,32 @@ namespace mrHelper.App.Helpers
                   try
                   {
                      IEnumerable<Version> allVersions  = await _versionManager.GetVersions(mrk);
+                     if (allVersions == null)
+                     {
+                        Debug.Assert(false); // how could user cancel that operation?
+                        continue;
+                     }
+
                      IEnumerable<Version> newVersions = allVersions
                         .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange);
 
                      foreach (Version version in newVersions)
                      {
-                        Version newVersionDetailed = await _versionManager.GetVersion(version, mrk);
+                        Version? newVersionDetailed = await _versionManager.GetVersion(version, mrk);
+                        if (newVersionDetailed == null)
+                        {
+                           Debug.Assert(false); // how could user cancel that operation?
+                           continue;
+                        }
+
                         Trace.TraceInformation(String.Format(
                            "[GitDataUpdater] Found new version of MR with IId={0} (created at {1}). "
                          + "PrevLatestChange={2}, LatestChange={3}",
                            mrk.IId,
-                           newVersionDetailed.Created_At.ToLocalTime().ToString(),
+                           newVersionDetailed.Value.Created_At.ToLocalTime().ToString(),
                            prevLatestChange.ToLocalTime().ToString(),
                            latestChange.ToLocalTime().ToString()));
-                        newVersionsDetailed.Add(newVersionDetailed);
+                        newVersionsDetailed.Add(newVersionDetailed.Value);
                      }
                   }
                   catch (VersionManagerException ex)

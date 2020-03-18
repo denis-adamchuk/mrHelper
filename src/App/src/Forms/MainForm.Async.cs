@@ -14,26 +14,29 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
 using mrHelper.GitClient;
 using mrHelper.Common.Interfaces;
+using System.Linq;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task showDiscussionsFormAsync()
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string state)
       {
          Debug.Assert(getHostName() != String.Empty);
          Debug.Assert(_currentUser.ContainsKey(getHostName()));
-         Debug.Assert(getMergeRequestKey().HasValue);
 
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-         MergeRequest mergeRequest = getMergeRequest().Value;
+
+         if (isSearchMode())
+         {
+            _discussionManager.ForceUpdate(mrk); // Pre-load discussions for MR in Search mode
+         }
 
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
-            enableControlsOnGitAsyncOperation(false);
+            enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
@@ -75,7 +78,16 @@ namespace mrHelper.App.Forms
             }
             finally
             {
-               enableControlsOnGitAsyncOperation(true);
+               enableControlsOnGitAsyncOperation(true, "updating git repository");
+            }
+
+            if (state == "merged")
+            {
+               if (!await restoreChainOfMergedCommits(repo, mrk))
+               {
+                  labelWorkflowStatus.Text = "Could not open Discussions";
+                  return;
+               }
             }
          }
          else
@@ -106,7 +118,7 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, mergeRequest.Title, mergeRequest.Author, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, title, author, repo,
                int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager, currentUser,
                   async (key) =>
                {
@@ -117,7 +129,7 @@ namespace mrHelper.App.Forms
                      {
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
-                        await updatingRepo.Updater.ForceUpdate(
+                        await updatingRepo.Updater.Update(
                            _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(key), null);
                         return updatingRepo;
                      }
@@ -160,7 +172,7 @@ namespace mrHelper.App.Forms
          form.Show();
       }
 
-      async private Task onLaunchDiffToolAsync()
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, string state)
       {
          if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
          {
@@ -169,8 +181,8 @@ namespace mrHelper.App.Forms
          }
 
          // Keep data before async/await
-         string leftSHA = getGitTag(true /* left */);
-         string rightSHA = getGitTag(false /* right */);
+         string leftSHA = getGitTag(comboBoxLeftCommit, comboBoxRightCommit, true /* left */);
+         string rightSHA = getGitTag(comboBoxLeftCommit, comboBoxRightCommit, false /* right */);
 
          List<string> includedSHA = new List<string>();
          for (int index = comboBoxLeftCommit.SelectedIndex; index < comboBoxLeftCommit.Items.Count; ++index)
@@ -183,20 +195,20 @@ namespace mrHelper.App.Forms
             }
          }
 
-         Debug.Assert(getMergeRequestKey().HasValue);
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
-            enableControlsOnGitAsyncOperation(false);
+            enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
+               IInstantProjectChecker checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
+                  ? _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk)
+                  : _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk);
+
                // Using local checker because it does not make a GitLab request and it is quite enough here because
                // user may select only those commits that already loaded and cached and have timestamps less
-               // than latest merge request version
-               await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk), updateGitStatusText);
+               // than latest merge request version (this is possible for Open MR only)
+               await _gitClientUpdater.UpdateAsync(repo, checker, updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -225,7 +237,7 @@ namespace mrHelper.App.Forms
             }
             finally
             {
-               enableControlsOnGitAsyncOperation(true);
+               enableControlsOnGitAsyncOperation(true, "updating git repository");
             }
          }
          else
@@ -235,12 +247,22 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         if (state == "merged")
+         {
+            string headCommitSha = comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
+            if (!await restoreChainOfMergedCommits(repo, headCommitSha))
+            {
+               labelWorkflowStatus.Text = "Could not launch diff tool";
+               return;
+            }
+         }
+
          labelWorkflowStatus.Text = "Launching diff tool...";
 
          int pid;
          try
          {
-            string arguments = "difftool --dir-diff --tool=" +
+            string arguments = "difftool --no-symlinks --dir-diff --tool=" +
                DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
             pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;
          }
@@ -279,14 +301,8 @@ namespace mrHelper.App.Forms
          comboBoxRightCommit.Refresh();
       }
 
-      async private Task onAddCommentAsync()
+      async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
       {
-         Debug.Assert(getMergeRequestKey().HasValue);
-
-         // Store data before opening a modal dialog
-         string title = getMergeRequest().Value.Title;
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
          {
@@ -316,14 +332,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task onNewDiscussionAsync()
+      async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
-         Debug.Assert(getMergeRequestKey().HasValue);
-
-         // Store data before opening a modal dialog
-         string title = getMergeRequest().Value.Title;
-         MergeRequestKey mrk = getMergeRequestKey().Value;
-
          string caption = String.Format("Create a new discussion in merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
          {
@@ -425,7 +435,7 @@ namespace mrHelper.App.Forms
             _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker((dynamic)key);
          try
          {
-            await repo.Updater.ForceUpdate(instantChecker, null);
+            await repo.Updater.Update(instantChecker, null);
          }
          catch (RepositoryUpdateException ex)
          {
@@ -449,6 +459,36 @@ namespace mrHelper.App.Forms
       }
 
       private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
+
+      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
+      {
+         _commitChainCreator = new CommitChainCreator(Program.Settings,
+            status => labelWorkflowStatus.Text = status, updateGitStatusText,
+            value => linkLabelAbortGit.Visible = value, repo, mrk);
+         return await restoreChainOfMergedCommits();
+      }
+
+      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, string headCommitSha)
+      {
+         _commitChainCreator = new CommitChainCreator(Program.Settings,
+            status => labelWorkflowStatus.Text = status, updateGitStatusText,
+            value => linkLabelAbortGit.Visible = value, repo, headCommitSha);
+         return await restoreChainOfMergedCommits();
+      }
+
+      async private Task<bool> restoreChainOfMergedCommits()
+      {
+         enableControlsOnGitAsyncOperation(false, "restoring merged commits");
+         try
+         {
+            return await _commitChainCreator.CreateChainAsync();
+         }
+         finally
+         {
+            _commitChainCreator = null;
+            enableControlsOnGitAsyncOperation(true, "restoring merged commits");
+         }
+      }
    }
 }
 

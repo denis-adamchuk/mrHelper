@@ -221,6 +221,47 @@ namespace mrHelper.App.Forms
          return true;
       }
 
+      async private Task searchMergeRequestByUrlAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      {
+         tabControlMode.SelectedTab = tabPageSearch;
+
+         ProjectKey projectKey = new ProjectKey
+         {
+            HostName = mergeRequestUrl.Host,
+            ProjectName = mergeRequestUrl.Project
+         };
+
+         try
+         {
+            if (await startSearchWorkflowAsync(mergeRequestUrl.Host,
+               new MergeRequestKey
+               {
+                  IId = mergeRequestUrl.IId,
+                  ProjectKey = projectKey
+               }))
+            {
+               selectMergeRequest(listViewFoundMergeRequests,
+                  mergeRequestUrl.Project, mergeRequestUrl.IId, true);
+            }
+         }
+         catch (Exception ex)
+         {
+            if (ex is UnknownHostException)
+            {
+               reportErrorOnConnect(url, String.Empty, ex, true);
+            }
+            else if (ex is WorkflowException)
+            {
+               reportErrorOnConnect(url, String.Empty, ex, true);
+            }
+            else
+            {
+               Debug.Assert(false);
+               ExceptionHandlers.Handle(String.Format("Unexpected error on attempt to open URL {0}", url), ex);
+            }
+         }
+      }
+
       async private Task connectToUrlAsync(string url)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", url));
@@ -257,6 +298,7 @@ namespace mrHelper.App.Forms
          {
             if (!addMissingProject(mergeRequestUrl))
             {
+               await searchMergeRequestByUrlAsync(mergeRequestUrl, url);
                return; // user decided to not add a missing project
             }
          }
@@ -264,6 +306,7 @@ namespace mrHelper.App.Forms
          {
             if (!enableDisabledProject(mergeRequestUrl))
             {
+               await searchMergeRequestByUrlAsync(mergeRequestUrl, url);
                return; // user decided to not enable a disabled project
             }
          }
@@ -295,7 +338,8 @@ namespace mrHelper.App.Forms
             }
          }
 
-         if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+         tabControlMode.SelectedTab = tabPageLive;
+         if (!selectMergeRequest(listViewMergeRequests, mergeRequestUrl.Project, mergeRequestUrl.IId, true))
          {
             if (!listViewMergeRequests.Enabled)
             {
@@ -314,7 +358,7 @@ namespace mrHelper.App.Forms
                      return; // user decided to not un-hide merge request
                   }
 
-                  if (!selectMergeRequest(mergeRequestUrl.Project, mergeRequestUrl.IId, true))
+                  if (!selectMergeRequest(listViewMergeRequests, mergeRequestUrl.Project, mergeRequestUrl.IId, true))
                   {
                      Debug.Assert(false);
                      Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
@@ -323,11 +367,11 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  // But if this MR is not cached, it is most likely is not in Open state and cannot be shown.
-                  reportErrorOnConnect(url, "Current version supports Open merge requests only. ", null, false);
+                  await searchMergeRequestByUrlAsync(mergeRequestUrl, url);
                }
             }
          }
       }
    }
 }
+

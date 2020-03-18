@@ -117,6 +117,15 @@ namespace mrHelper.Client.Discussions
          return new DiscussionEditor(mrk, discussionId, _operator);
       }
 
+      public void ForceUpdate(MergeRequestKey mrk)
+      {
+         Trace.TraceInformation(String.Format(
+            "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0} (force update)",
+            mrk.IId));
+
+         scheduleUpdate(new MergeRequestKey[] { mrk }, true);
+      }
+
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
@@ -128,6 +137,11 @@ namespace mrHelper.Client.Discussions
 
       private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
       {
+         if (interval < 1)
+         {
+            return;
+         }
+
          System.Timers.Timer timer = new System.Timers.Timer
          {
             Interval = interval,

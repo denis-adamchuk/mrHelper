@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
@@ -15,6 +17,10 @@ namespace mrHelper.GitClient
       event Action<ILocalGitRepository> Disposed;
 
       bool DoesRequireClone();
+
+      ILocalGitRepositoryState State { get; }
+
+      ILocalGitRepositoryOperations Operations { get; }
    }
 }
 

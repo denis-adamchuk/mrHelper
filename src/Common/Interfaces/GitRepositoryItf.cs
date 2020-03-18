@@ -31,6 +31,8 @@ namespace mrHelper.Common.Interfaces
       IGitRepositoryData Data { get; }
 
       ProjectKey ProjectKey { get; }
+
+      bool ContainsSHA(string sha);
    }
 }
 
