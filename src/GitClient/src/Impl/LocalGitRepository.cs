@@ -34,41 +34,6 @@ namespace mrHelper.GitClient
          }
          return false;
       }
-
-      public bool ContainsBranch(string branchName)
-      {
-         if (_cached_existingBranch.Contains(branchName))
-         {
-            return true;
-         }
-         if (containsEntity(branchName))
-         {
-            _cached_existingBranch.Add(branchName);
-            return true;
-         }
-         return false;
-      }
-
-      public bool ContainsSHAOrBranch(string sha, string branchName)
-      {
-         if (_cached_existingSha.Contains(sha) || _cached_existingBranch.Contains(branchName))
-         {
-            return true;
-         }
-
-         bool result = false;
-         if (containsEntity(sha))
-         {
-            _cached_existingSha.Add(sha);
-            result = true;
-         }
-         if (containsEntity(branchName))
-         {
-            _cached_existingBranch.Add(branchName);
-            result = true;
-         }
-         return result;
-      }
       // @{ IGitRepository
 
       // @{ ILocalGitRepository
@@ -237,7 +202,6 @@ namespace mrHelper.GitClient
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
       private HashSet<string> _cached_existingSha = new HashSet<string>();
-      private HashSet<string> _cached_existingBranch = new HashSet<string>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
       private readonly IExternalProcessManager _operationManager;

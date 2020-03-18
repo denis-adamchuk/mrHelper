@@ -9,6 +9,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.Repository;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
+using System.Diagnostics;
 
 namespace mrHelper.App.Helpers
 {
@@ -36,11 +37,11 @@ namespace mrHelper.App.Helpers
          _headSha = headSha;
       }
 
-      async public Task CreateChainAsync()
+      async public Task<bool> CreateChainAsync()
       {
          if (_repo == null)
          {
-            return;
+            return false;
          }
 
          IsCancelEnabled = true;
@@ -48,15 +49,14 @@ namespace mrHelper.App.Helpers
          {
             if (!_repo.ContainsSHA(_headSha))
             {
-               await createBranches(new string[] { _headSha });
+               return await createBranches(new string[] { _headSha });
             }
+            return true;
          }
-         else
-         {
-            _versionManager = new VersionManager(_hostProperties);
-            IEnumerable<string> shas = await getAllVersionHeadSHA(_mrk);
-            await createBranches(shas);
-         }
+
+         _versionManager = new VersionManager(_hostProperties);
+         IEnumerable<string> shas = await getAllVersionHeadSHA(_mrk);
+         return await createBranches(shas);
       }
 
       async public Task CancelAsync()
@@ -98,6 +98,8 @@ namespace mrHelper.App.Helpers
             return null;
          }
 
+         Trace.TraceInformation(String.Format("[CommitChainCreator] Found {0} versions", versions.Count()));
+
          HashSet<string> heads = new HashSet<string>();
          int iVersion = 1;
          foreach (GitLabSharp.Entities.Version version in versions)
@@ -123,17 +125,35 @@ namespace mrHelper.App.Helpers
             if (!_repo.ContainsSHA(versionDetailed.Value.Head_Commit_SHA))
             {
                heads.Add(versionDetailed.Value.Head_Commit_SHA);
+               Trace.TraceInformation(String.Format(
+                  "[CommitChainCreator] SHA {0} is not found in {1}",
+                  versionDetailed.Value.Head_Commit_SHA, _repo.Path));
+            }
+            else
+            {
+               Trace.TraceInformation(String.Format(
+                  "[CommitChainCreator] SHA {0} is found in {1}",
+                  versionDetailed.Value.Head_Commit_SHA, _repo.Path));
             }
          }
          return heads;
       }
 
-      async private Task createBranches(IEnumerable<string> shas)
+      async private Task<bool> createBranches(IEnumerable<string> shas)
       {
-         if (shas == null || !shas.Any())
+         if (shas == null)
          {
-            return;
+            return false;
          }
+
+         if (!shas.Any())
+         {
+            return true;
+         }
+
+         Trace.TraceInformation(String.Format(
+            "[CommitChainCreator] Will create and delete {0} branches in {1} at {2}",
+            shas.Count(), _repo.ProjectKey.ProjectName, _repo.ProjectKey.HostName));
 
          _repositoryManager = new RepositoryManager(_hostProperties);
 
@@ -151,7 +171,7 @@ namespace mrHelper.App.Helpers
                   _repo.ProjectKey, getFakeSha(sha), sha);
                if (branch == null)
                {
-                  return; // cancelled
+                  return false; // cancelled
                }
             }
 
@@ -185,6 +205,8 @@ namespace mrHelper.App.Helpers
                }
             }
          }
+
+         return true;
       }
 
       private bool IsCancelEnabled

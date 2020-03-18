@@ -242,7 +242,6 @@ namespace mrHelper.Client.Workflow
 
       async private Task<Project?> resolveProject(string hostname, int projectId)
       {
-         // TODO Add cache
          try
          {
             return await _operator.GetProjectAsync(projectId.ToString());

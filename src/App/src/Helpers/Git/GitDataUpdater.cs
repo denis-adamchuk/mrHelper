@@ -89,6 +89,12 @@ namespace mrHelper.App.Helpers
                   try
                   {
                      IEnumerable<Version> allVersions  = await _versionManager.GetVersions(mrk);
+                     if (allVersions == null)
+                     {
+                        Debug.Assert(false); // how could user cancel that operation?
+                        continue;
+                     }
+
                      IEnumerable<Version> newVersions = allVersions
                         .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange);
 
@@ -97,7 +103,7 @@ namespace mrHelper.App.Helpers
                         Version? newVersionDetailed = await _versionManager.GetVersion(version, mrk);
                         if (newVersionDetailed == null)
                         {
-                           // TODO Add handling
+                           Debug.Assert(false); // how could user cancel that operation?
                            continue;
                         }
 

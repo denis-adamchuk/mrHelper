@@ -83,7 +83,11 @@ namespace mrHelper.App.Forms
 
             if (state == "merged")
             {
-               await restoreChainOfMergedCommits(repo, mrk);
+               if (!await restoreChainOfMergedCommits(repo, mrk))
+               {
+                  labelWorkflowStatus.Text = "Could not open Discussions";
+                  return;
+               }
             }
          }
          else
@@ -246,7 +250,11 @@ namespace mrHelper.App.Forms
          if (state == "merged")
          {
             string headCommitSha = comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
-            await restoreChainOfMergedCommits(repo, headCommitSha);
+            if (!await restoreChainOfMergedCommits(repo, headCommitSha))
+            {
+               labelWorkflowStatus.Text = "Could not launch diff tool";
+               return;
+            }
          }
 
          labelWorkflowStatus.Text = "Launching diff tool...";
@@ -452,34 +460,34 @@ namespace mrHelper.App.Forms
 
       private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
 
-      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
+      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
             value => linkLabelAbortGit.Visible = value, repo, mrk);
-         await restoreChainOfMergedCommits();
+         return await restoreChainOfMergedCommits();
       }
 
-      async private Task restoreChainOfMergedCommits(ILocalGitRepository repo, string headCommitSha)
+      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, string headCommitSha)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
             value => linkLabelAbortGit.Visible = value, repo, headCommitSha);
-         await restoreChainOfMergedCommits();
+         return await restoreChainOfMergedCommits();
       }
 
-      async private Task restoreChainOfMergedCommits()
+      async private Task<bool> restoreChainOfMergedCommits()
       {
          enableControlsOnGitAsyncOperation(false, "restoring merged commits");
          try
          {
-            await _commitChainCreator.CreateChainAsync();
+            return await _commitChainCreator.CreateChainAsync();
          }
          finally
          {
             _commitChainCreator = null;
+            enableControlsOnGitAsyncOperation(true, "restoring merged commits");
          }
-         enableControlsOnGitAsyncOperation(true, "restoring merged commits");
       }
    }
 }

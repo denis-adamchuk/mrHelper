@@ -657,7 +657,7 @@ namespace mrHelper.App.Forms
             double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
 
             string periodicity = autoUpdateMs > oneMinuteMs
-               ? (autoUpdateMs % oneMinuteMs == 0
+               ? (autoUpdateMs % Convert.ToInt32(oneMinuteMs) == 0
                   ? String.Format("{0} minutes", autoUpdateMinutes)
                   : String.Format("{0:F1} minutes", autoUpdateMinutes))
                : String.Format("{0} seconds", autoUpdateMs / 1000);
@@ -1171,14 +1171,6 @@ namespace mrHelper.App.Forms
       }
 
       private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
-      {
-         if (!_canSwitchTab)
-         {
-            e.Cancel = true;
-         }
-      }
-
-      private void tabControlMode_Selecting(object sender, TabControlCancelEventArgs e)
       {
          if (!_canSwitchTab)
          {

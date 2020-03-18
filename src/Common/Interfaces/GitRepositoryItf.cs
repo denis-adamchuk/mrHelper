@@ -33,8 +33,6 @@ namespace mrHelper.Common.Interfaces
       ProjectKey ProjectKey { get; }
 
       bool ContainsSHA(string sha);
-      bool ContainsBranch(string branchName);
-      bool ContainsSHAOrBranch(string sha, string branchName);
    }
 }
 

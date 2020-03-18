@@ -805,7 +805,7 @@ namespace mrHelper.App.Forms
          this.tabControlMode.Size = new System.Drawing.Size(336, 858);
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
-         this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControlMode_Selecting);
+         this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
          // 
          // tabPageLive
          // 

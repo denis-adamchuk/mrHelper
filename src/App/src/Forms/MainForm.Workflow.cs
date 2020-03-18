@@ -421,7 +421,7 @@ namespace mrHelper.App.Forms
       {
          MergeRequestKey? mrk = getMergeRequestKey(listViewMergeRequests);
 
-         if (!mrk.HasValue || commits.Count() > 0)
+         if (mrk.HasValue && commits.Count() > 0)
          {
             enableComboBox(comboBoxLeftCommit);
             enableComboBox(comboBoxRightCommit);
