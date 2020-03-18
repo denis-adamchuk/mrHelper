@@ -1170,6 +1170,22 @@ namespace mrHelper.App.Forms
          buttonEditTime.Visible = isLiveMode;
       }
 
+      private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
+      {
+         if (!_canSwitchTab)
+         {
+            e.Cancel = true;
+         }
+      }
+
+      private void tabControlMode_Selecting(object sender, TabControlCancelEventArgs e)
+      {
+         if (!_canSwitchTab)
+         {
+            e.Cancel = true;
+         }
+      }
+
       protected override void OnFontChanged(EventArgs e)
       {
          base.OnFontChanged(e);

@@ -488,6 +488,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestSearchControls(enabled);
 
          _suppressExternalConnections = !enabled;
+         _canSwitchTab = enabled;
 
          if (enabled)
          {

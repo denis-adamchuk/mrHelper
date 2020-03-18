@@ -466,6 +466,7 @@ namespace mrHelper.App.Forms
          this.tabControl.Size = new System.Drawing.Size(1284, 890);
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
+         this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
          // 
          // tabPageSettings
          // 
@@ -804,6 +805,7 @@ namespace mrHelper.App.Forms
          this.tabControlMode.Size = new System.Drawing.Size(336, 858);
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
+         this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControlMode_Selecting);
          // 
          // tabPageLive
          // 
@@ -1429,7 +1431,6 @@ namespace mrHelper.App.Forms
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.panelStatusBar.ResumeLayout(false);
-         this.panelStatusBar.PerformLayout();
          this.panelBottomMenu.ResumeLayout(false);
          this.panelBottomMenu.PerformLayout();
          this.groupBoxTimeTracking.ResumeLayout(false);

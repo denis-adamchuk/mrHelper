@@ -130,7 +130,7 @@ namespace mrHelper.App.Helpers
 
       async private Task createBranches(IEnumerable<string> shas)
       {
-         if (shas == null)
+         if (shas == null || !shas.Any())
          {
             return;
          }

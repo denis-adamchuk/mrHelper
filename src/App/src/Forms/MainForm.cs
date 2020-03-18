@@ -91,6 +91,7 @@ namespace mrHelper.App.Forms
       private bool _userIsMovingSplitter2 = false;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
+      private bool _canSwitchTab = true;
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
