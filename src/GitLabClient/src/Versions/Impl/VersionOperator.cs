@@ -31,7 +31,7 @@ namespace mrHelper.Client.Versions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
                throw new OperatorException(ex);
             }
@@ -49,7 +49,7 @@ namespace mrHelper.Client.Versions
          }
          catch (Exception ex)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
             {
                throw new OperatorException(ex);
             }

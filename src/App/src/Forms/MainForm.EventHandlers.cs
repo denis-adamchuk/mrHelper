@@ -706,7 +706,10 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation("[MainForm] User decided to abort current operation");
 
-         await _commitChainCreator.CancelAsync();
+         if (_commitChainCreator != null)
+         {
+            await _commitChainCreator.CancelAsync();
+         }
 
          Debug.Assert(getMergeRequestKey(null).HasValue);
 

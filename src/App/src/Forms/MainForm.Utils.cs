@@ -487,6 +487,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestFilterControls(enabled);
          enableMergeRequestSearchControls(enabled);
 
+         buttonReloadList.Enabled = enabled;
          _suppressExternalConnections = !enabled;
          _canSwitchTab = enabled;
 

@@ -41,6 +41,7 @@ namespace mrHelper.App.Helpers
       {
          if (_repo == null)
          {
+            Trace.TraceInformation("[CommitChainCreator] No commits will be created because repository object is null");
             return false;
          }
 
@@ -89,7 +90,8 @@ namespace mrHelper.App.Helpers
             versions = await _versionManager.GetVersions(mrk);
             if (versions == null)
             {
-               return null; // cancelled by user
+               Trace.TraceInformation("[CommitChainCreator] User cancelled loading meta information");
+               return null;
             }
          }
          catch (VersionManagerException ex)
@@ -113,7 +115,9 @@ namespace mrHelper.App.Helpers
                versionDetailed = await _versionManager.GetVersion(version, mrk);
                if (versionDetailed == null)
                {
-                  return null; // cancelled by user
+                  Trace.TraceInformation(String.Format(
+                     "[CommitChainCreator] User cancelled loading detailed version {0}", version.Id));
+                  return null;
                }
             }
             catch (VersionManagerException ex)
@@ -171,17 +175,31 @@ namespace mrHelper.App.Helpers
                   _repo.ProjectKey, getFakeSha(sha), sha);
                if (branch == null)
                {
-                  return false; // cancelled
+                  Trace.TraceInformation(String.Format(
+                     "[CommitChainCreator] User cancelled creating a branch for sha {0}", sha));
+                  return false;
                }
             }
 
             _onStatusChange("Fetching new branches from remote repository");
-            await _repo.Updater.Update(null, _onGitStatusChange);
-            _onGitStatusChange(String.Empty);
+            try
+            {
+               await _repo.Updater.Update(null, _onGitStatusChange);
+            }
+            catch (RepositoryUpdateException ex)
+            {
+               ExceptionHandlers.Handle("Cannot update git repository", ex);
+               return false;
+            }
+            finally
+            {
+               _onGitStatusChange(String.Empty);
+            }
          }
          catch (RepositoryManagerException ex)
          {
             ExceptionHandlers.Handle("Cannot create a branch at GitLab", ex);
+            return false;
          }
          finally
          {

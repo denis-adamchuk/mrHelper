@@ -81,7 +81,6 @@ namespace mrHelper.App.Forms
          {
             disableAllUIControls(true);
          }
-         disableAllSearchUIControls(true);
 
          bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
          string projectname = shouldUseLastSelection ?
@@ -337,6 +336,12 @@ namespace mrHelper.App.Forms
 
       private void onLoadSingleMergeRequest(int mergeRequestIId)
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          if (mergeRequestIId != 0)
          {
             labelWorkflowStatus.Text = String.Format("Loading merge request with IId {0}...", mergeRequestIId);
@@ -365,6 +370,12 @@ namespace mrHelper.App.Forms
 
       private void onFailedLoadSingleMergeRequest()
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          richTextBoxMergeRequestDescription.Text = String.Empty;
          labelWorkflowStatus.Text = "Failed to load merge request";
 
@@ -373,6 +384,12 @@ namespace mrHelper.App.Forms
 
       private void onSingleMergeRequestLoaded(string hostname, string projectname, MergeRequest mergeRequest)
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
 
          enableMergeRequestActions(true);
@@ -392,6 +409,12 @@ namespace mrHelper.App.Forms
 
       private void onLoadCommits()
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          enableCommitActions(false, null, default(User));
          if (listViewMergeRequests.SelectedItems.Count != 0)
          {
@@ -409,6 +432,12 @@ namespace mrHelper.App.Forms
 
       private void onFailedLoadCommits()
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
          labelWorkflowStatus.Text = "Failed to load commits";
@@ -419,6 +448,12 @@ namespace mrHelper.App.Forms
       private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
          IEnumerable<Commit> commits)
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          MergeRequestKey? mrk = getMergeRequestKey(listViewMergeRequests);
 
          if (mrk.HasValue && commits.Count() > 0)
@@ -455,6 +490,12 @@ namespace mrHelper.App.Forms
       private void onLatestVersionLoaded(string hostname, string projectname,
          MergeRequest mergeRequest, GitLabSharp.Entities.Version version)
       {
+         if (isSearchMode())
+         {
+            // because this callback updates controls shared between Live and Search tabs
+            return;
+         }
+
          LoadedMergeRequestVersion?.Invoke(hostname, projectname, mergeRequest, version);
       }
 
@@ -464,8 +505,14 @@ namespace mrHelper.App.Forms
       {
          buttonReloadList.Enabled = false;
          disableListView(listViewMergeRequests, clearListView);
-
          enableMergeRequestFilterControls(false);
+
+         if (isSearchMode())
+         {
+            // to avoid touching controls shared between Live and Search tabs
+            return;
+         }
+
          enableMergeRequestActions(false);
          enableCommitActions(false, null, default(User));
          updateMergeRequestDetails(null);

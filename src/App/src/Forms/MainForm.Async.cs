@@ -28,7 +28,7 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
 
-         if (isSearchMode())
+         if (state != "opened")
          {
             _discussionManager.ForceUpdate(mrk); // Pre-load discussions for MR in Search mode
          }
