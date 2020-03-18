@@ -31,8 +31,39 @@ namespace mrHelper.App.Helpers
    {
       public bool ByCurrentUserOnly;
       public bool ServiceMessages;
+      public bool SystemNotes;
       public FilterByAnswers ByAnswers;
       public FilterByResolution ByResolution;
+
+      static public DiscussionFilterState AllExceptSystem
+      {
+         get
+         {
+            return new DiscussionFilterState
+            {
+               ByCurrentUserOnly = false,
+               ServiceMessages = true,
+               SystemNotes = false,
+               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
+               ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
+            };
+         }
+      }
+
+      static public DiscussionFilterState Default
+      {
+         get
+         {
+            return new DiscussionFilterState
+            {
+               ByCurrentUserOnly = false,
+               ServiceMessages = false,
+               SystemNotes = false,
+               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
+               ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
+            };
+         }
+      }
    }
 
    /// <summary>
@@ -51,7 +82,12 @@ namespace mrHelper.App.Helpers
 
       public bool DoesMatchFilter(Discussion discussion)
       {
-         if (discussion.Notes.Count() == 0 || discussion.Notes.First().System)
+         if (discussion.Notes.Count() == 0)
+         {
+            return false;
+         }
+
+         if (!Filter.SystemNotes && discussion.Notes.First().System)
          {
             return false;
          }

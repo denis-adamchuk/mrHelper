@@ -50,16 +50,10 @@ namespace mrHelper.App.Forms
 
          InitializeComponent();
 
-         DiscussionFilterState state = new DiscussionFilterState
-            {
-               ByCurrentUserOnly = false,
-               ServiceMessages = false,
-               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
-            };
-
-         DisplayFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor, state);
-         SystemFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor, state);
+         DisplayFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
+            DiscussionFilterState.Default);
+         SystemFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
+            DiscussionFilterState.AllExceptSystem);
 
          FilterPanel = new DiscussionFilterPanel(DisplayFilter.Filter,
             () =>

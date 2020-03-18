@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Diagnostics;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
@@ -9,7 +11,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.Repository;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
-using System.Diagnostics;
 
 namespace mrHelper.App.Helpers
 {
@@ -62,9 +63,9 @@ namespace mrHelper.App.Helpers
 
       async public Task CancelAsync()
       {
-         if (!IsCancelEnabled)
+         while (!IsCancelEnabled)
          {
-            return;
+            await Task.Delay(50);
          }
 
          if (_repositoryManager != null)
@@ -155,8 +156,10 @@ namespace mrHelper.App.Helpers
             return true;
          }
 
+         IsCancelEnabled = false;
+
          Trace.TraceInformation(String.Format(
-            "[CommitChainCreator] Will create and delete {0} branches in {1} at {2}",
+            "[CommitChainCreator] Will create/delete {0} branches in {1} at {2}",
             shas.Count(), _repo.ProjectKey.ProjectName, _repo.ProjectKey.HostName));
 
          _repositoryManager = new RepositoryManager(_hostProperties);
@@ -171,6 +174,8 @@ namespace mrHelper.App.Helpers
                _onStatusChange(String.Format(
                   "Creating branches at GitLab: {0}/{1}", iBranch++, shas.Count()));
 
+               Trace.TraceInformation(String.Format(
+                  "[CommitChainCreator] Creating branch {0} at GitLab", getFakeSha(sha)));
                Branch? branch = await _repositoryManager.CreateNewBranchAsync(
                   _repo.ProjectKey, getFakeSha(sha), sha);
                if (branch == null)
@@ -203,8 +208,6 @@ namespace mrHelper.App.Helpers
          }
          finally
          {
-            IsCancelEnabled = false;
-
             int iBranch = 1;
             foreach (string sha in shas)
             {
@@ -213,15 +216,18 @@ namespace mrHelper.App.Helpers
                   _onStatusChange(String.Format(
                      "Deleting branches at GitLab: {0}/{1}", iBranch++, shas.Count()));
 
-                  await _repositoryManager.DeleteBranchAsync(
-                     _repo.ProjectKey, getFakeSha(sha));
+                  Trace.TraceInformation(String.Format(
+                     "[CommitChainCreator] Deleting branch {0} at GitLab", getFakeSha(sha)));
+                  await _repositoryManager.DeleteBranchAsync(_repo.ProjectKey, getFakeSha(sha));
                }
-               catch (RepositoryManagerException ex)
+               catch (Exception ex)
                {
                   ExceptionHandlers.Handle("Cannot delete a branch at GitLab", ex);
                   continue;
                }
             }
+
+            IsCancelEnabled = true;
          }
 
          return true;

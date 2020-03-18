@@ -1226,6 +1226,7 @@ namespace mrHelper.App.Forms
       private void onHostSelected()
       {
          updateProjectsListView();
+         disableListView(listViewFoundMergeRequests, true);
       }
 
       private void updateProjectsListView()
