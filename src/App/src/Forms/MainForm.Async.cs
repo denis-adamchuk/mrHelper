@@ -464,7 +464,7 @@ namespace mrHelper.App.Forms
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            value => linkLabelAbortGit.Visible = value, repo, mrk);
+            onCommitChainCancelEnabled, this, repo, mrk);
          return await restoreChainOfMergedCommits();
       }
 
@@ -472,7 +472,7 @@ namespace mrHelper.App.Forms
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            value => linkLabelAbortGit.Visible = value, repo, headCommitSha);
+            onCommitChainCancelEnabled, this, repo, headCommitSha);
          return await restoreChainOfMergedCommits();
       }
 
@@ -485,7 +485,6 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            _commitChainCreator = null;
             enableControlsOnGitAsyncOperation(true, "restoring merged commits");
          }
       }

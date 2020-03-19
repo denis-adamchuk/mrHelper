@@ -92,6 +92,7 @@ namespace mrHelper.App.Forms
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
       private bool _canSwitchTab = true;
+      private bool _notifyOnCommitChainCancelEnabled;
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;

@@ -288,11 +288,7 @@ namespace mrHelper.App.Forms
          unsubscribeFromWorkflowAndDependencies();
          unsubscribeFromSearchWorkflow();
 
-         if (_commitChainCreator != null)
-         {
-            await _commitChainCreator.CancelAsync();
-         }
-
+         await finalizeCommitChainCreator();
          await disposeLocalGitRepositoryFactory();
          await _workflowManager.CancelAsync();
 
@@ -457,6 +453,14 @@ namespace mrHelper.App.Forms
 
          _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
+      }
+
+      private async Task finalizeCommitChainCreator()
+      {
+         if (_commitChainCreator != null)
+         {
+            await _commitChainCreator.CancelAsync();
+         }
       }
 
       private void onGitInitStatusChange(string status)

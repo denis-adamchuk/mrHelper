@@ -17,23 +17,27 @@ namespace mrHelper.App.Helpers
    internal class CommitChainCreator
    {
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ILocalGitRepository repo, MergeRequestKey mrk)
+         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
+         ILocalGitRepository repo, MergeRequestKey mrk)
       {
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
          _onGitStatusChange = onGitStatusChange;
          _onCancelEnabled = onCancelEnabled;
+         _synchronizeInvoke = synchronizeInvoke;
          _repo = repo;
          _mrk = mrk;
       }
 
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ILocalGitRepository repo, string headSha)
+         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
+         ILocalGitRepository repo, string headSha)
       {
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
          _onGitStatusChange = onGitStatusChange;
          _onCancelEnabled = onCancelEnabled;
+         _synchronizeInvoke = synchronizeInvoke;
          _repo = repo;
          _headSha = headSha;
       }
@@ -46,7 +50,6 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         IsCancelEnabled = true;
          if (_headSha != null)
          {
             if (!_repo.ContainsSHA(_headSha))
@@ -63,10 +66,17 @@ namespace mrHelper.App.Helpers
 
       async public Task CancelAsync()
       {
+         if (!IsCancelEnabled)
+         {
+            Trace.TraceInformation("[CommitChainCreator] Cancellation is not enabled, waiting");
+         }
+
          while (!IsCancelEnabled)
          {
             await Task.Delay(50);
          }
+
+         Trace.TraceInformation("[CommitChainCreator] Cancellation is enabled");
 
          if (_repositoryManager != null)
          {
@@ -178,13 +188,11 @@ namespace mrHelper.App.Helpers
                   "[CommitChainCreator] Creating branch {0} at GitLab", getFakeSha(sha)));
                Branch? branch = await _repositoryManager.CreateNewBranchAsync(
                   _repo.ProjectKey, getFakeSha(sha), sha);
-               if (branch == null)
-               {
-                  Trace.TraceInformation(String.Format(
-                     "[CommitChainCreator] User cancelled creating a branch for sha {0}", sha));
-                  return false;
-               }
+               Debug.Assert(branch.HasValue); // it is not possible to cancel it
             }
+
+            Trace.TraceInformation(String.Format(
+               "[CommitChainCreator] Created {0} branches", shas.Count()));
 
             _onStatusChange("Fetching new branches from remote repository");
             try
@@ -208,32 +216,34 @@ namespace mrHelper.App.Helpers
          }
          finally
          {
-            int iBranch = 1;
-            foreach (string sha in shas)
-            {
-               try
+            _synchronizeInvoke.BeginInvoke(new Action(
+               async () =>
                {
-                  _onStatusChange(String.Format(
-                     "Deleting branches at GitLab: {0}/{1}", iBranch++, shas.Count()));
+                  int iBranch = 0;
+                  foreach (string sha in shas)
+                  {
+                     try
+                     {
+                        Trace.TraceInformation(String.Format(
+                           "[CommitChainCreator] Deleting branch {0} at GitLab", getFakeSha(sha)));
+                        await _repositoryManager.DeleteBranchAsync(_repo.ProjectKey, getFakeSha(sha));
+                        iBranch++;
+                     }
+                     catch (Exception ex)
+                     {
+                        ExceptionHandlers.Handle("Cannot delete a branch at GitLab", ex);
+                        continue;
+                     }
+                  }
 
-                  Trace.TraceInformation(String.Format(
-                     "[CommitChainCreator] Deleting branch {0} at GitLab", getFakeSha(sha)));
-                  await _repositoryManager.DeleteBranchAsync(_repo.ProjectKey, getFakeSha(sha));
-               }
-               catch (Exception ex)
-               {
-                  ExceptionHandlers.Handle("Cannot delete a branch at GitLab", ex);
-                  continue;
-               }
-            }
-
-            IsCancelEnabled = true;
+                  Trace.TraceInformation(String.Format("[CommitChainCreator] Deleted {0} branches", iBranch));
+                  IsCancelEnabled = true;
+               }), null);
          }
-
          return true;
       }
 
-      private bool IsCancelEnabled
+      public bool IsCancelEnabled
       {
          get
          {
@@ -250,13 +260,14 @@ namespace mrHelper.App.Helpers
       private readonly Action<string> _onStatusChange;
       private readonly Action<string> _onGitStatusChange;
       private readonly Action<bool> _onCancelEnabled;
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ILocalGitRepository _repo;
       private readonly MergeRequestKey _mrk;
       private readonly string _headSha;
 
       private RepositoryManager _repositoryManager;
       private VersionManager _versionManager;
-      private bool _isCancelEnabled;
+      private bool _isCancelEnabled = true;
    }
 }
 

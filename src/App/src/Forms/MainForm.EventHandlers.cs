@@ -45,7 +45,14 @@ namespace mrHelper.App.Forms
 
          if (checkBoxMinimizeOnClose.Checked && !_exiting && e.CloseReason == CloseReason.UserClosing)
          {
-            onHideToTray(e);
+            e.Cancel = true;
+            onHideToTray();
+            return;
+         }
+
+         if (!isReadyToClose())
+         {
+            e.Cancel = true;
             return;
          }
 
@@ -879,9 +886,8 @@ namespace mrHelper.App.Forms
          Program.Settings.Update();
       }
 
-      private void onHideToTray(FormClosingEventArgs e)
+      private void onHideToTray()
       {
-         e.Cancel = true;
          if (_requireShowingTooltipOnHideToTray)
          {
             // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
