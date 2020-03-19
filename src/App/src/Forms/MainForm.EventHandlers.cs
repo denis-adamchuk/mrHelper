@@ -634,7 +634,7 @@ namespace mrHelper.App.Forms
          onTextBoxLabelsUpdate();
       }
 
-      private void TextBoxLabels_LostFocus(object sender, EventArgs e)
+      private void textBoxLabels_Leave(object sender, EventArgs e)
       {
          onTextBoxLabelsUpdate();
       }
