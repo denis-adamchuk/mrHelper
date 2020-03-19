@@ -86,6 +86,12 @@ namespace mrHelper.App.Forms
             throw;
          }
 
+         if (!isSearchMode())
+         {
+            _suppressExternalConnections = false;
+            return;
+         }
+
          _suppressExternalConnections = _suppressExternalConnections
             && selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
       }
@@ -103,6 +109,8 @@ namespace mrHelper.App.Forms
          }
 
          await _searchWorkflowManager.CancelAsync();
+
+         await Task.Delay(300);
 
          _suppressExternalConnections = true;
          try
@@ -218,31 +226,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (mergeRequestIId != 0)
-         {
-            labelWorkflowStatus.Text = String.Format(
-               "Loading merge request with IId {0}...", mergeRequestIId);
-         }
-         else
-         {
-            labelWorkflowStatus.Text = String.Empty;
-         }
-
-         enableMergeRequestActions(false);
-         enableCommitActions(false, null, default(User));
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-         updateTotalTime(null);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
-
-         if (mergeRequestIId != 0)
-         {
-            richTextBoxMergeRequestDescription.Text = "Loading...";
-         }
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Loading merge request with IId {0}",
-            mergeRequestIId.ToString()));
+         onLoadSingleMergeRequestCommon(mergeRequestIId);
       }
 
       private void onFailedLoadSingleSearchMergeRequest()
@@ -253,10 +237,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         richTextBoxMergeRequestDescription.Text = String.Empty;
-         labelWorkflowStatus.Text = "Failed to load merge request";
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Failed to load merge request"));
+         onFailedLoadSingleMergeRequestCommon();
       }
 
       private void onSingleSearchMergeRequestLoaded(string hostname, string projectname, MergeRequest mergeRequest)
@@ -267,20 +248,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
-
-         enableMergeRequestActions(true);
-         FullMergeRequestKey fmk = new FullMergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
-            MergeRequest = mergeRequest
-         };
-         updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey);
-
-         labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Merge request loaded"));
+         onSingleMergeRequestLoadedCommon(hostname, projectname, mergeRequest);
       }
 
       private void onLoadSearchCommits()
@@ -291,20 +259,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         enableCommitActions(false, null, default(User));
-
-         if (listViewFoundMergeRequests.SelectedItems.Count != 0)
-         {
-            disableComboBox(comboBoxLeftCommit, "Loading...");
-            disableComboBox(comboBoxRightCommit, "Loading...");
-         }
-         else
-         {
-            disableComboBox(comboBoxLeftCommit, String.Empty);
-            disableComboBox(comboBoxRightCommit, String.Empty);
-         }
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Loading commits"));
+         onLoadCommitsCommon(listViewFoundMergeRequests);
       }
 
       private void onFailedLoadSearchCommits()
@@ -315,11 +270,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
-         labelWorkflowStatus.Text = "Failed to load commits";
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Failed to load commits"));
+         onFailedLoadCommitsCommon();
       }
 
       private void onSearchCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
@@ -331,27 +282,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (commits.Count() > 0)
-         {
-            enableComboBox(comboBoxLeftCommit);
-            enableComboBox(comboBoxRightCommit);
-
-            addCommitsToComboBoxes(comboBoxLeftCommit, comboBoxRightCommit, commits,
-               mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
-            comboBoxLeftCommit.SelectedIndex = 0;
-            comboBoxRightCommit.SelectedIndex = comboBoxRightCommit.Items.Count - 1;
-
-            enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
-         }
-         else
-         {
-            disableComboBox(comboBoxLeftCommit, String.Empty);
-            disableComboBox(comboBoxRightCommit, String.Empty);
-         }
-
-         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count());
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Loaded {0} commits", commits.Count()));
+         onCommitsLoadedCommon(hostname, projectname, mergeRequest, commits, listViewFoundMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -366,12 +297,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         enableMergeRequestActions(false);
-         enableCommitActions(false, null, default(User));
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableCommonUIControls();
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

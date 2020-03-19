@@ -1032,7 +1032,7 @@ namespace mrHelper.App.Forms
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs);
          }
 
-         if (listViewMergeRequests.SelectedItems.Count == 0)
+         if (listViewMergeRequests.SelectedItems.Count == 0 || isSearchMode())
          {
             return;
          }
@@ -1588,6 +1588,138 @@ namespace mrHelper.App.Forms
          {
             linkLabelAbortGit.Visible = false;
          }
+      }
+
+      private void onLoadSingleMergeRequestCommon(int mergeRequestIId)
+      {
+         string message = mergeRequestIId != 0
+            ? String.Format("Loading merge request with IId {0}...", mergeRequestIId)
+            : String.Empty;
+         labelWorkflowStatus.Text = message;
+
+         enableMergeRequestActions(false);
+         enableCommitActions(false, null, default(User));
+         updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
+         updateTotalTime(null);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
+
+         if (mergeRequestIId != 0)
+         {
+            richTextBoxMergeRequestDescription.Text = "Loading...";
+         }
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Loading merge request with IId {0} IsSearchMode={1}",
+            mergeRequestIId.ToString(), isSearchMode().ToString()));
+      }
+
+      private void onFailedLoadSingleMergeRequestCommon()
+      {
+         richTextBoxMergeRequestDescription.Text = String.Empty;
+         labelWorkflowStatus.Text = "Failed to load merge request";
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Failed to load merge request IsSearchMode={0}", isSearchMode().ToString()));
+      }
+
+      private void onSingleMergeRequestLoadedCommon(string hostname, string projectname, MergeRequest mergeRequest)
+      {
+         Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
+
+         enableMergeRequestActions(true);
+         FullMergeRequestKey fmk = new FullMergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+            MergeRequest = mergeRequest
+         };
+         updateMergeRequestDetails(fmk);
+         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey);
+         updateTotalTime(new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId });
+
+         labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
+      }
+
+      private void onLoadCommitsCommon(ListView listView)
+      {
+         enableCommitActions(false, null, default(User));
+         if (listView.SelectedItems.Count != 0)
+         {
+            disableComboBox(comboBoxLeftCommit, "Loading...");
+            disableComboBox(comboBoxRightCommit, "Loading...");
+         }
+         else
+         {
+            disableComboBox(comboBoxLeftCommit, String.Empty);
+            disableComboBox(comboBoxRightCommit, String.Empty);
+         }
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Loading commits IsSearchMode={0}", isSearchMode().ToString()));
+      }
+
+      private void onFailedLoadCommitsCommon()
+      {
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
+         labelWorkflowStatus.Text = "Failed to load commits";
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Failed to load commits IsSearchMode={0}", isSearchMode().ToString()));
+      }
+
+      private void onCommitsLoadedCommon(string hostname, string projectname, MergeRequest mergeRequest,
+         IEnumerable<Commit> commits, ListView listView)
+      {
+         MergeRequestKey? mrk = getMergeRequestKey(listView);
+
+         if (mrk.HasValue && commits.Count() > 0)
+         {
+            enableComboBox(comboBoxLeftCommit);
+            enableComboBox(comboBoxRightCommit);
+
+            addCommitsToComboBoxes(comboBoxLeftCommit, comboBoxRightCommit, commits,
+               mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
+            if (listView == listViewMergeRequests)
+            {
+               selectNotReviewedCommits(comboBoxLeftCommit, comboBoxRightCommit, mrk.Value,
+                  out int left, out int right);
+               comboBoxLeftCommit.SelectedIndex = left;
+               comboBoxRightCommit.SelectedIndex = right;
+            }
+            else
+            {
+               comboBoxLeftCommit.SelectedIndex = 0;
+               comboBoxRightCommit.SelectedIndex = comboBoxRightCommit.Items.Count - 1;
+            }
+
+            enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
+         }
+         else
+         {
+            disableComboBox(comboBoxLeftCommit, String.Empty);
+            disableComboBox(comboBoxRightCommit, String.Empty);
+         }
+
+         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count());
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Loaded {0} commits IsSearchMode={0}", commits.Count(), isSearchMode().ToString()));
+      }
+
+      private void disableCommonUIControls()
+      {
+         enableMergeRequestActions(false);
+         enableCommitActions(false, null, default(User));
+         updateMergeRequestDetails(null);
+         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
+         updateTotalTime(null);
+         disableComboBox(comboBoxLeftCommit, String.Empty);
+         disableComboBox(comboBoxRightCommit, String.Empty);
       }
    }
 }

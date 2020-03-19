@@ -113,6 +113,13 @@ namespace mrHelper.App.Forms
             }
             throw;
          }
+
+         if (isSearchMode())
+         {
+            _suppressExternalConnections = false;
+            return;
+         }
+
          _suppressExternalConnections = _suppressExternalConnections
             && selectMergeRequest(listViewMergeRequests, projectname, iid, false);
       }
@@ -130,6 +137,8 @@ namespace mrHelper.App.Forms
          }
 
          await _workflowManager.CancelAsync();
+
+         await Task.Delay(300);
 
          IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
             projectKey.HostName, Program.Settings);
@@ -342,30 +351,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (mergeRequestIId != 0)
-         {
-            labelWorkflowStatus.Text = String.Format("Loading merge request with IId {0}...", mergeRequestIId);
-         }
-         else
-         {
-            labelWorkflowStatus.Text = String.Empty;
-         }
-
-         enableMergeRequestActions(false);
-         enableCommitActions(false, null, default(User));
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-         updateTotalTime(null);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
-
-         if (mergeRequestIId != 0)
-         {
-            richTextBoxMergeRequestDescription.Text = "Loading...";
-         }
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading merge request with IId {0}",
-            mergeRequestIId.ToString()));
+         onLoadSingleMergeRequestCommon(mergeRequestIId);
       }
 
       private void onFailedLoadSingleMergeRequest()
@@ -376,10 +362,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         richTextBoxMergeRequestDescription.Text = String.Empty;
-         labelWorkflowStatus.Text = "Failed to load merge request";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load merge request"));
+         onFailedLoadSingleMergeRequestCommon();
       }
 
       private void onSingleMergeRequestLoaded(string hostname, string projectname, MergeRequest mergeRequest)
@@ -390,21 +373,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
-
-         enableMergeRequestActions(true);
-         FullMergeRequestKey fmk = new FullMergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
-            MergeRequest = mergeRequest
-         };
-         updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey);
-         updateTotalTime(new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId });
-
-         labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Merge request loaded"));
+         onSingleMergeRequestLoadedCommon(hostname, projectname, mergeRequest);
       }
 
       private void onLoadCommits()
@@ -415,19 +384,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         enableCommitActions(false, null, default(User));
-         if (listViewMergeRequests.SelectedItems.Count != 0)
-         {
-            disableComboBox(comboBoxLeftCommit, "Loading...");
-            disableComboBox(comboBoxRightCommit, "Loading...");
-         }
-         else
-         {
-            disableComboBox(comboBoxLeftCommit, String.Empty);
-            disableComboBox(comboBoxRightCommit, String.Empty);
-         }
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading commits"));
+         onLoadCommitsCommon(listViewMergeRequests);
       }
 
       private void onFailedLoadCommits()
@@ -438,11 +395,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
-         labelWorkflowStatus.Text = "Failed to load commits";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load commits"));
+         onFailedLoadCommitsCommon();
       }
 
       private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
@@ -454,31 +407,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         MergeRequestKey? mrk = getMergeRequestKey(listViewMergeRequests);
-
-         if (mrk.HasValue && commits.Count() > 0)
-         {
-            enableComboBox(comboBoxLeftCommit);
-            enableComboBox(comboBoxRightCommit);
-
-            addCommitsToComboBoxes(comboBoxLeftCommit, comboBoxRightCommit, commits,
-               mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
-            selectNotReviewedCommits(comboBoxLeftCommit, comboBoxRightCommit, mrk.Value,
-               out int left, out int right);
-            comboBoxLeftCommit.SelectedIndex = left;
-            comboBoxRightCommit.SelectedIndex = right;
-
-            enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
-         }
-         else
-         {
-            disableComboBox(comboBoxLeftCommit, String.Empty);
-            disableComboBox(comboBoxRightCommit, String.Empty);
-         }
-
-         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count());
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loaded {0} commits", commits.Count()));
+         onCommitsLoadedCommon(hostname, projectname, mergeRequest, commits, listViewMergeRequests);
 
          scheduleSilentUpdate(new MergeRequestKey
          {
@@ -513,13 +442,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         enableMergeRequestActions(false);
-         enableCommitActions(false, null, default(User));
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-         updateTotalTime(null);
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableCommonUIControls();
       }
    }
 }

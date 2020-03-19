@@ -337,16 +337,20 @@ namespace mrHelper.App.Forms
          ListView listView = (sender as ListView);
          listView.Refresh();
 
+         if ((listView == listViewMergeRequests && isSearchMode())
+          || (listView == listViewFoundMergeRequests && !isSearchMode()))
+         {
+            return;
+         }
+
          // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
-         if (listView == listViewMergeRequests
-            && (tabControlMode.SelectedTab == tabPageSearch || listView.SelectedItems.Count < 1))
+         if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
          {
             await switchMergeRequestByUserAsync(default(ProjectKey), 0);
             return;
          }
 
-         if (listView == listViewFoundMergeRequests
-            && (tabControl.SelectedTab == tabPageLive || listView.SelectedItems.Count < 1))
+         if (listView == listViewFoundMergeRequests && listView.SelectedItems.Count < 1)
          {
             await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0);
             return;
@@ -359,9 +363,12 @@ namespace mrHelper.App.Forms
          }
          else if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId))
          {
-            Debug.Assert(getMergeRequestKey(listViewMergeRequests).HasValue);
-            _lastMergeRequestsByHosts[key.ProjectKey.HostName] =
-               getMergeRequestKey(listViewMergeRequests).Value;
+            if (!isSearchMode())
+            {
+               Debug.Assert(getMergeRequestKey(listViewMergeRequests).HasValue);
+               _lastMergeRequestsByHosts[key.ProjectKey.HostName] =
+                  getMergeRequestKey(listViewMergeRequests).Value;
+            }
          }
       }
 
@@ -1177,6 +1184,7 @@ namespace mrHelper.App.Forms
          bool isLiveMode = tabControlMode.SelectedTab == tabPageLive;
          labelTimeTrackingTrackedLabel.Visible = isLiveMode;
          buttonEditTime.Visible = isLiveMode;
+         labelWorkflowStatus.Text = String.Empty;
       }
 
       private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
