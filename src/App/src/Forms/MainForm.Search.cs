@@ -110,8 +110,6 @@ namespace mrHelper.App.Forms
 
          await _searchWorkflowManager.CancelAsync();
 
-         await Task.Delay(300);
-
          _suppressExternalConnections = true;
          try
          {

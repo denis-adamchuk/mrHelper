@@ -234,16 +234,21 @@ namespace mrHelper.Client.Discussions
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
          Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
+         int noteCount = await _operator.GetNoteCount(mrk);
 
          DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
-         if (_cachedDiscussions.ContainsKey(mrk) && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp)
+         if (_cachedDiscussions.ContainsKey(mrk)
+          && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp
+          && noteCount == _cachedDiscussions[mrk].NoteCount)
          {
             if (additionalLogging)
             {
                Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Discussions are up-to-date, remote time stamp {0}, cached time stamp {1}",
+                  "[DiscussionManager] Discussions are up-to-date, "
+                + "remote time stamp {0}, cached time stamp {1}, note count {2}",
                   mergeRequestUpdatedAt.ToLocalTime().ToString(),
-                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString()));
+                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString(),
+                  noteCount));
             }
             return;
          }
@@ -279,15 +284,17 @@ namespace mrHelper.Client.Discussions
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
-             + " cached time stamp {4} (was {5} before update)",
+             + " cached time stamp {4} (was {5} before update), note count = {6}",
                discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                mergeRequestUpdatedAt.ToLocalTime().ToString(),
                _cachedDiscussions.ContainsKey(mrk) ?
-                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A"));
+                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A",
+               noteCount));
 
             _cachedDiscussions[mrk] = new CachedDiscussions
             {
                TimeStamp = mergeRequestUpdatedAt,
+               NoteCount = noteCount,
                Discussions = discussions.ToArray()
             };
          }
@@ -396,6 +403,7 @@ namespace mrHelper.Client.Discussions
       private struct CachedDiscussions
       {
          public DateTime TimeStamp;
+         public int NoteCount;
          public IEnumerable<Discussion> Discussions;
       }
 

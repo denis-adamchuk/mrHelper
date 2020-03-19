@@ -138,8 +138,6 @@ namespace mrHelper.App.Forms
 
          await _workflowManager.CancelAsync();
 
-         await Task.Delay(300);
-
          IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
             projectKey.HostName, Program.Settings);
 

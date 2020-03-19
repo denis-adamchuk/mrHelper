@@ -28,6 +28,27 @@ namespace mrHelper.Client.Discussions
          return CommonOperator.GetMostRecentUpdatedNoteAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
+      async internal Task<int> GetNoteCount(MergeRequestKey mrk)
+      {
+         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
+            _settings.GetAccessToken(mrk.ProjectKey.HostName));
+         try
+         {
+            return (int)(await client.RunAsync(async (gitlab) =>
+               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                  Notes.CountAsync()));
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(!(ex is GitLabClientCancelled));
+            if (ex is GitLabSharpException || ex is GitLabRequestException)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       async internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
