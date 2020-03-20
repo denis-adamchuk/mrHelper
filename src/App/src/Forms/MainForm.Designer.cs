@@ -971,7 +971,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSearch.Size = new System.Drawing.Size(322, 826);
          this.groupBoxSearch.TabIndex = 2;
          this.groupBoxSearch.TabStop = false;
-         this.groupBoxSearch.Text = "Search Merge Request";
+         this.groupBoxSearch.Text = "Search Merge Request (by title and description)";
          // 
          // textBoxSearch
          // 
@@ -983,6 +983,7 @@ namespace mrHelper.App.Forms
          this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
          this.textBoxSearch.TabIndex = 1;
          this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
+         this.toolTip.SetToolTip(this.textBoxSearch, "Press Enter to search");
          // 
          // listViewFoundMergeRequests
          // 
