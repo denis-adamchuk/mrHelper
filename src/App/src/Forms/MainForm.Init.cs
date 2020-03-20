@@ -218,7 +218,8 @@ namespace mrHelper.App.Forms
          if (String.IsNullOrEmpty(gitPath))
          {
             MessageBox.Show(
-               "Git for Windows (version 2) is not installed. It must be installed at least for the current user. Application cannot start.",
+               "Git for Windows (version 2) is not installed. "
+             + "It must be installed at least for the current user. Application cannot start.",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
          }

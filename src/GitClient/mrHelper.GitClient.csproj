@@ -46,6 +46,7 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\GitTools.cs" />
     <Compile Include="src\Impl\CreateBranchFromPatchOperation.cs" />
     <Compile Include="src\Impl\GitClientInternalExceptions.cs" />
     <Compile Include="src\Impl\GitOperationManager.cs" />

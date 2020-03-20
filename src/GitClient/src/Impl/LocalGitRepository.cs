@@ -84,7 +84,8 @@ namespace mrHelper.GitClient
             string arguments = clone
                ? String.Format("clone --progress {0}/{1} {2}",
                   ProjectKey.HostName, ProjectKey.ProjectName, StringUtils.EscapeSpaces(Path))
-               : "fetch --progress";
+               : String.Format("fetch --progress {0}",
+                  GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
 
             if (_updateOperationDescriptor == null)
             {
