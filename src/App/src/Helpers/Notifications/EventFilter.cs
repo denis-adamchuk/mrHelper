@@ -46,7 +46,6 @@ namespace mrHelper.App.Helpers
          MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
          if (!mergeRequest.HasValue)
          {
-            // TODO Consider not suppressing OnMention event even if MR is closed
             return true;
          }
 

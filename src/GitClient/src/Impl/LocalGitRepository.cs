@@ -93,10 +93,16 @@ namespace mrHelper.GitClient
 
                try
                {
+                  Trace.TraceInformation(String.Format(
+                     "[LocalGitRepository] START git with arguments \"{0}\" in \"{1}\" for {2}",
+                     arguments, Path, projectKey.ProjectName));
                   await _operationManager.Wait(_updateOperationDescriptor);
                }
                finally
                {
+                  Trace.TraceInformation(String.Format(
+                     "[LocalGitRepository] FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
+                     arguments, Path, projectKey.ProjectName));
                   _updateOperationDescriptor = null;
                }
 
