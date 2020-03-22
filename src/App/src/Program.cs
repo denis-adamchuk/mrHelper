@@ -40,9 +40,9 @@ namespace mrHelper.App
          Application.Exit();
       }
 
-      private static readonly Regex url_re = new Regex( String.Format(
-         @"^({0}:\/\/)?((http[s]?:\/\/)?[^:\/\s]+)\/(api\/v4\/projects\/)?([\w_-]+\/[\w_-]+)\/(?>-\/)?merge_requests\/(\d*)",
-            Constants.CustomProtocolName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+      private static readonly Regex url_re = new Regex(String.Format(
+         @"({0}:\/\/)?{1}", Constants.CustomProtocolName, GitLabSharp.UrlParser.RegEx),
+         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       internal static UserDefinedSettings Settings = new UserDefinedSettings(true);
       internal static ServiceManager ServiceManager;
