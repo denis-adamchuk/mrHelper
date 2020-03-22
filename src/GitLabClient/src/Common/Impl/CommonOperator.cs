@@ -6,6 +6,7 @@ using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Common
 {
@@ -14,14 +15,30 @@ namespace mrHelper.Client.Common
    /// </summary>
    internal static class CommonOperator
    {
-      async internal static Task<IEnumerable<MergeRequest>> GetMergeRequestsAsync(
-         GitLabClient client, string projectName)
+      async internal static Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
+         GitLabClient client, object search, int? maxResults, bool onlyOpen)
       {
          try
          {
-           return (IEnumerable<MergeRequest>)(await client.RunAsync(async (gitlab) =>
-              await gitlab.Projects.Get(projectName).MergeRequests.LoadAllTaskAsync(
-                 new MergeRequestsFilter { WIP = MergeRequestsFilter.WorkInProgressFilter.All })));
+            return (IEnumerable<MergeRequest>)(await client.RunAsync(
+               async (gitlab) =>
+               {
+                  if (search is Types.SearchByIId sid)
+                  {
+                     return new MergeRequest[]
+                        { await gitlab.Projects.Get(sid.ProjectName).MergeRequests.Get(sid.IId).LoadTaskAsync() };
+                  }
+
+                  BaseMergeRequestAccessor accessor = search is Types.SearchByProject sbp
+                     ? (BaseMergeRequestAccessor)gitlab.Projects.Get(sbp.ProjectName).MergeRequests
+                     : (BaseMergeRequestAccessor)gitlab.MergeRequests;
+                  if (maxResults.HasValue)
+                  {
+                     PageFilter pageFilter = new PageFilter { PageNumber = 1, PerPage = maxResults.Value };
+                     return await accessor.LoadTaskAsync(convertSearchToFilter(search, onlyOpen), pageFilter);
+                  }
+                  return await accessor.LoadAllTaskAsync(convertSearchToFilter(search, onlyOpen));
+               }));
          }
          catch (Exception ex)
          {
@@ -72,21 +89,38 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async internal static Task<MergeRequest> GetMergeRequestAsync(GitLabClient client, string projectName, int iid)
+      private static MergeRequestsFilter convertSearchToFilter(object search, bool onlyOpen)
       {
-         try
+         MergeRequestsFilter.WorkInProgressFilter wipFilter = onlyOpen
+            ? MergeRequestsFilter.WorkInProgressFilter.Yes
+            : MergeRequestsFilter.WorkInProgressFilter.All;
+         MergeRequestsFilter.StateFilter stateFilter = onlyOpen
+            ? MergeRequestsFilter.StateFilter.Open
+            : MergeRequestsFilter.StateFilter.All;
+
+         if (search is Types.SearchByIId sbi)
          {
-            return (MergeRequest)(await client.RunAsync(async (gl) =>
-               await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync()));
+            return new MergeRequestsFilter
+               { WIP = wipFilter, State = stateFilter, IIds = new int[] { sbi.IId } };
          }
-         catch (Exception ex)
+         else if (search is Types.SearchByProject sbp)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
+            return new MergeRequestsFilter
+               { WIP = wipFilter, State = stateFilter };
          }
+         else if (search is Types.SearchByTargetBranch sbt)
+         {
+            return new MergeRequestsFilter
+               { WIP = wipFilter, State = stateFilter, TargetBranch = sbt.TargetBranchName };
+         }
+         else if (search is Types.SearchByText sbtxt)
+         {
+            return new MergeRequestsFilter
+               { WIP = wipFilter, State = stateFilter, Search = sbtxt.Text };
+         }
+
+         Debug.Assert(false);
+         return new MergeRequestsFilter{};
       }
    }
 }

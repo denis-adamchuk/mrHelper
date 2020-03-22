@@ -162,7 +162,8 @@ namespace mrHelper.Client.Workflow
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await _operator.GetMergeRequestsAsync(projectName);
+            SearchByProject searchByProject = new SearchByProject { ProjectName = projectName };
+            mergeRequests = await _operator.SearchMergeRequestsAsync(searchByProject, null, true);
          }
          catch (OperatorException ex)
          {
@@ -182,20 +183,7 @@ namespace mrHelper.Client.Workflow
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            if (search is string searchString)
-            {
-               mergeRequests = await _operator.SearchMergeRequestsAsync(searchString, maxResults);
-            }
-            else if (search is MergeRequestKey mrk)
-            {
-               MergeRequest mr = await _operator.GetMergeRequestAsync(mrk.ProjectKey.ProjectName, mrk.IId);
-               mergeRequests = new MergeRequest[] { mr };
-            }
-            else
-            {
-               Debug.Assert(false);
-               return null;
-            }
+            mergeRequests = await _operator.SearchMergeRequestsAsync(search, maxResults, false);
          }
          catch (OperatorException ex)
          {
@@ -262,7 +250,9 @@ namespace mrHelper.Client.Workflow
          MergeRequest mergeRequest = new MergeRequest();
          try
          {
-            mergeRequest = await _operator.GetMergeRequestAsync(projectName, mergeRequestIId);
+            SearchByIId searchByIId = new SearchByIId { ProjectName = projectName, IId = mergeRequestIId };
+            IEnumerable<MergeRequest> mergeRequests = await _operator.SearchMergeRequestsAsync(searchByIId, null, true);
+            mergeRequest = mergeRequests.FirstOrDefault();
          }
          catch (OperatorException ex)
          {

@@ -1,5 +1,4 @@
-using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
@@ -24,7 +23,8 @@ namespace mrHelper.Client.MergeRequests
       internal Task<IEnumerable<MergeRequest>> GetMergeRequestsAsync(string host, string project)
       {
          GitLabClient client = new GitLabClient(host, _settings.GetAccessToken(host));
-         return CommonOperator.GetMergeRequestsAsync(client, project);
+         SearchByProject searchByProject = new SearchByProject { ProjectName = project };
+         return CommonOperator.SearchMergeRequestsAsync(client, searchByProject, null, true);
       }
 
       internal Task<Version> GetLatestVersionAsync(MergeRequestKey mrk)
@@ -34,11 +34,14 @@ namespace mrHelper.Client.MergeRequests
          return CommonOperator.GetLatestVersionAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
       }
 
-      internal Task<MergeRequest> GetMergeRequestAsync(MergeRequestKey mrk)
+      async internal Task<MergeRequest> GetMergeRequestAsync(MergeRequestKey mrk)
       {
          GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
             _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         return CommonOperator.GetMergeRequestAsync(client, mrk.ProjectKey.ProjectName, mrk.IId);
+         SearchByIId searchByIId = new SearchByIId { ProjectName = mrk.ProjectKey.ProjectName, IId = mrk.IId };
+         IEnumerable<MergeRequest> mergeRequests =
+            await CommonOperator.SearchMergeRequestsAsync(client, searchByIId, null, true);
+         return mergeRequests.FirstOrDefault();
       }
 
       private readonly IHostProperties _settings;

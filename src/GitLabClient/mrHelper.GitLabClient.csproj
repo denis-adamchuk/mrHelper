@@ -52,6 +52,7 @@
     <Compile Include="src\Discussions\Impl\DiscussionParser.cs" />
     <Compile Include="src\Repository\Impl\RepositoryOperator.cs" />
     <Compile Include="src\Repository\RepositoryManager.cs" />
+    <Compile Include="src\Types\SearchQueryTypes.cs" />
     <Compile Include="src\Versions\Impl\VersionOperator.cs" />
     <Compile Include="src\MergeRequests\CachedMergeRequestProviderItf.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />

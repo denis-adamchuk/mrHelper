@@ -53,47 +53,9 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      internal Task<IEnumerable<MergeRequest>> GetMergeRequestsAsync(string projectName)
+      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(object search, int? maxResults, bool onlyOpen)
       {
-         return CommonOperator.GetMergeRequestsAsync(_client, projectName);
-      }
-
-      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(string search, int maxResults)
-      {
-         try
-         {
-           return (IEnumerable<MergeRequest>)(await _client.RunAsync(async (gitlab) =>
-              await gitlab.MergeRequests.LoadTaskAsync(
-                 new GlobalMergeRequestsFilter
-                 {
-                    WIP = MergeRequestsFilter.WorkInProgressFilter.All,
-                    State = MergeRequestsFilter.StateFilter.All,
-                    Search = search
-                 },
-                 new PageFilter
-                 {
-                    PerPage = maxResults,
-                    PageNumber = 1
-                 },
-                 new SortFilter
-                 {
-                    Ascending = false,
-                    OrderBy = "updated_at"
-                 })));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
-      }
-
-      internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid)
-      {
-         return CommonOperator.GetMergeRequestAsync(_client, projectName, iid);
+         return CommonOperator.SearchMergeRequestsAsync(_client, search, maxResults, onlyOpen);
       }
 
       async internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid)

@@ -225,19 +225,13 @@ namespace mrHelper.App.Forms
       {
          tabControlMode.SelectedTab = tabPageSearch;
 
-         ProjectKey projectKey = new ProjectKey
-         {
-            HostName = mergeRequestUrl.Host,
-            ProjectName = mergeRequestUrl.Project
-         };
-
          try
          {
             if (await startSearchWorkflowAsync(mergeRequestUrl.Host,
-               new MergeRequestKey
+               new SearchByIId
                {
                   IId = mergeRequestUrl.IId,
-                  ProjectKey = projectKey
+                  ProjectName = mergeRequestUrl.Project,
                }))
             {
                selectMergeRequest(listViewFoundMergeRequests,

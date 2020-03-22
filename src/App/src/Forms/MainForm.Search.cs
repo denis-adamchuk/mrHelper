@@ -61,7 +61,7 @@ namespace mrHelper.App.Forms
          _searchWorkflowManager.FailedLoadCommits -=  onFailedLoadSearchCommits;
       }
 
-      async private Task searchMergeRequests(string query)
+      async private Task searchMergeRequests(object query)
       {
          _suppressExternalConnections = true;
          try

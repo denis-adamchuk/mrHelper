@@ -65,6 +65,7 @@ namespace mrHelper.App.Forms
          this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
+         this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -116,7 +117,8 @@ namespace mrHelper.App.Forms
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearch = new System.Windows.Forms.GroupBox();
-         this.textBoxSearch = new System.Windows.Forms.TextBox();
+         this.radioButtonSearchByTargetBranch = new System.Windows.Forms.RadioButton();
+         this.radioButtonSearchByTitleAndDescription = new System.Windows.Forms.RadioButton();
          this.listViewFoundMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
          this.columnHeaderFoundIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -420,6 +422,18 @@ namespace mrHelper.App.Forms
         "r label or MR IId or any substring from MR title/author name/label/branch");
          this.textBoxLabels.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
          this.textBoxLabels.Leave += new System.EventHandler(this.textBoxLabels_Leave);
+         // 
+         // textBoxSearch
+         // 
+         this.textBoxSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxSearch.Location = new System.Drawing.Point(3, 42);
+         this.textBoxSearch.MinimumSize = new System.Drawing.Size(100, 4);
+         this.textBoxSearch.Name = "textBoxSearch";
+         this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
+         this.textBoxSearch.TabIndex = 1;
+         this.toolTip.SetToolTip(this.textBoxSearch, "Press Enter to search");
+         this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
          // 
          // contextMenuStrip
          // 
@@ -963,6 +977,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSearch
          // 
+         this.groupBoxSearch.Controls.Add(this.radioButtonSearchByTargetBranch);
+         this.groupBoxSearch.Controls.Add(this.radioButtonSearchByTitleAndDescription);
          this.groupBoxSearch.Controls.Add(this.textBoxSearch);
          this.groupBoxSearch.Controls.Add(this.listViewFoundMergeRequests);
          this.groupBoxSearch.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -971,19 +987,29 @@ namespace mrHelper.App.Forms
          this.groupBoxSearch.Size = new System.Drawing.Size(322, 826);
          this.groupBoxSearch.TabIndex = 2;
          this.groupBoxSearch.TabStop = false;
-         this.groupBoxSearch.Text = "Search Merge Request (by title and description)";
+         this.groupBoxSearch.Text = "Search Merge";
          // 
-         // textBoxSearch
+         // radioButtonSearchByTargetBranch
          // 
-         this.textBoxSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxSearch.Location = new System.Drawing.Point(3, 17);
-         this.textBoxSearch.MinimumSize = new System.Drawing.Size(100, 4);
-         this.textBoxSearch.Name = "textBoxSearch";
-         this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
-         this.textBoxSearch.TabIndex = 1;
-         this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
-         this.toolTip.SetToolTip(this.textBoxSearch, "Press Enter to search");
+         this.radioButtonSearchByTargetBranch.AutoSize = true;
+         this.radioButtonSearchByTargetBranch.Location = new System.Drawing.Point(212, 19);
+         this.radioButtonSearchByTargetBranch.Name = "radioButtonSearchByTargetBranch";
+         this.radioButtonSearchByTargetBranch.Size = new System.Drawing.Size(107, 17);
+         this.radioButtonSearchByTargetBranch.TabIndex = 5;
+         this.radioButtonSearchByTargetBranch.TabStop = true;
+         this.radioButtonSearchByTargetBranch.Text = "by Target Branch";
+         this.radioButtonSearchByTargetBranch.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonSearchByTitleAndDescription
+         // 
+         this.radioButtonSearchByTitleAndDescription.AutoSize = true;
+         this.radioButtonSearchByTitleAndDescription.Location = new System.Drawing.Point(3, 19);
+         this.radioButtonSearchByTitleAndDescription.Name = "radioButtonSearchByTitleAndDescription";
+         this.radioButtonSearchByTitleAndDescription.Size = new System.Drawing.Size(136, 17);
+         this.radioButtonSearchByTitleAndDescription.TabIndex = 4;
+         this.radioButtonSearchByTitleAndDescription.TabStop = true;
+         this.radioButtonSearchByTitleAndDescription.Text = "by Title and Description";
+         this.radioButtonSearchByTitleAndDescription.UseVisualStyleBackColor = true;
          // 
          // listViewFoundMergeRequests
          // 
@@ -1003,11 +1029,11 @@ namespace mrHelper.App.Forms
          this.listViewFoundMergeRequests.GridLines = true;
          this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
          this.listViewFoundMergeRequests.HideSelection = false;
-         this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 46);
+         this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 68);
          this.listViewFoundMergeRequests.MultiSelect = false;
          this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
          this.listViewFoundMergeRequests.OwnerDraw = true;
-         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(316, 777);
+         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(316, 755);
          this.listViewFoundMergeRequests.TabIndex = 3;
          this.listViewFoundMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewFoundMergeRequests.View = System.Windows.Forms.View.Details;
@@ -1551,6 +1577,8 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundSourceBranch;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTargetBranch;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
+        private System.Windows.Forms.RadioButton radioButtonSearchByTargetBranch;
+        private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
     }
 }
 

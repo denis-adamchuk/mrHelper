@@ -376,7 +376,20 @@ namespace mrHelper.App.Forms
       {
          if (e.KeyCode == Keys.Enter)
          {
-            await searchMergeRequests(textBoxSearch.Text);
+            if (radioButtonSearchByTargetBranch.Checked)
+            {
+               await searchMergeRequests(
+                  new SearchByTargetBranch { TargetBranchName = textBoxSearch.Text });
+            }
+            else if (radioButtonSearchByTitleAndDescription.Checked)
+            {
+               await searchMergeRequests(
+                  new SearchByText { Text = textBoxSearch.Text });
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
          }
       }
 
