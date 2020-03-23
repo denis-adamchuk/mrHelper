@@ -996,13 +996,13 @@ namespace mrHelper.App.Forms
          this.radioButtonSearchByTargetBranch.Name = "radioButtonSearchByTargetBranch";
          this.radioButtonSearchByTargetBranch.Size = new System.Drawing.Size(107, 17);
          this.radioButtonSearchByTargetBranch.TabIndex = 5;
-         this.radioButtonSearchByTargetBranch.TabStop = true;
          this.radioButtonSearchByTargetBranch.Text = "by Target Branch";
          this.radioButtonSearchByTargetBranch.UseVisualStyleBackColor = true;
          // 
          // radioButtonSearchByTitleAndDescription
          // 
          this.radioButtonSearchByTitleAndDescription.AutoSize = true;
+         this.radioButtonSearchByTitleAndDescription.Checked = true;
          this.radioButtonSearchByTitleAndDescription.Location = new System.Drawing.Point(3, 19);
          this.radioButtonSearchByTitleAndDescription.Name = "radioButtonSearchByTitleAndDescription";
          this.radioButtonSearchByTitleAndDescription.Size = new System.Drawing.Size(136, 17);
