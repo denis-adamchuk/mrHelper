@@ -1708,7 +1708,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count());
 
          Trace.TraceInformation(String.Format(
-            "[MainForm] Loaded {0} commits IsSearchMode={0}", commits.Count(), isSearchMode().ToString()));
+            "[MainForm] Loaded {0} commits IsSearchMode={1}", commits.Count(), isSearchMode().ToString()));
       }
 
       private void disableCommonUIControls()
