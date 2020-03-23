@@ -61,12 +61,12 @@ namespace mrHelper.App.Forms
          _searchWorkflowManager.FailedLoadCommits -=  onFailedLoadSearchCommits;
       }
 
-      async private Task searchMergeRequests(object query)
+      async private Task searchMergeRequests(object query, int? maxResults)
       {
          _suppressExternalConnections = true;
          try
          {
-            _suppressExternalConnections = await startSearchWorkflowAsync(getHostName(), query);
+            _suppressExternalConnections = await startSearchWorkflowAsync(getHostName(), query, maxResults);
          }
          catch (Exception ex)
          {
@@ -131,12 +131,12 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      async private Task<bool> startSearchWorkflowAsync(string hostname, object query)
+      async private Task<bool> startSearchWorkflowAsync(string hostname, object query, int? maxResults)
       {
          labelWorkflowStatus.Text = String.Empty;
 
          await _searchWorkflowManager.CancelAsync();
-         if (String.IsNullOrWhiteSpace(hostname) || (query is string queryStr && String.IsNullOrWhiteSpace(queryStr)))
+         if (String.IsNullOrWhiteSpace(hostname))
          {
             disableAllSearchUIControls(true);
             return false;
@@ -156,15 +156,14 @@ namespace mrHelper.App.Forms
             }
          }
 
-         return await loadAllSearchMergeRequests(hostname, query);
+         return await loadAllSearchMergeRequests(hostname, query, maxResults);
       }
 
-      async private Task<bool> loadAllSearchMergeRequests(string hostname, object query)
+      async private Task<bool> loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
       {
          onLoadAllSearchMergeRequests();
 
-         if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query,
-            Common.Constants.Constants.MaxSearchResultsPerProject))
+         if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query, maxResults))
          {
             return false;
          }

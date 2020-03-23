@@ -49,7 +49,7 @@ namespace mrHelper.Common.Constants
       public static IEnumerable<string> DiscussionsWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
-      public static int MaxSearchResultsPerProject = 20;
+      public static int MaxSearchByTitleAndDescriptionResults = 20;
    }
 }
 

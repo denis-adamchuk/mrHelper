@@ -339,6 +339,8 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
          fillColorSchemesList();
          prepareControlsToStart();
+         resetMinimumSizes();
+         updateMinimumSizes();
       }
 
       private void prepareControlsToStart()
@@ -377,6 +379,12 @@ namespace mrHelper.App.Forms
          {
             splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
          }
+
+         radioButtonSearchByTitleAndDescription.Text += String.Format(
+            " (up to {0} results)", Constants.MaxSearchByTitleAndDescriptionResults);
+         radioButtonSearchByTargetBranch.Location = new System.Drawing.Point(
+            radioButtonSearchByTitleAndDescription.Location.X + radioButtonSearchByTitleAndDescription.Width + 20,
+            radioButtonSearchByTargetBranch.Location.Y);
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
       }

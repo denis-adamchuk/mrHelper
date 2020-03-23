@@ -232,7 +232,7 @@ namespace mrHelper.App.Forms
                {
                   IId = mergeRequestUrl.IId,
                   ProjectName = mergeRequestUrl.Project,
-               }))
+               }, null))
             {
                selectMergeRequest(listViewFoundMergeRequests,
                   mergeRequestUrl.Project, mergeRequestUrl.IId, true);

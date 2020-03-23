@@ -343,7 +343,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         // had to use this hack, because it is not possible to prevent deselect on a click on empty area in ListView
+         // had to use this hack, because it is not possible to prevent deselecting a row
+         // on a click on empty area in ListView
          if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
          {
             await switchMergeRequestByUserAsync(default(ProjectKey), 0);
@@ -365,7 +366,13 @@ namespace mrHelper.App.Forms
          {
             if (!isSearchMode())
             {
-               Debug.Assert(getMergeRequestKey(listViewMergeRequests).HasValue);
+               if (!getMergeRequestKey(listViewMergeRequests).HasValue)
+               {
+                  Debug.Assert(false);
+                  Trace.TraceError("Bad MRK in ListViewMergeRequests_ItemSelectionChanged");
+                  return;
+               }
+
                _lastMergeRequestsByHosts[key.ProjectKey.HostName] =
                   getMergeRequestKey(listViewMergeRequests).Value;
             }
@@ -379,12 +386,14 @@ namespace mrHelper.App.Forms
             if (radioButtonSearchByTargetBranch.Checked)
             {
                await searchMergeRequests(
-                  new SearchByTargetBranch { TargetBranchName = textBoxSearch.Text });
+                  new SearchByTargetBranch { TargetBranchName = textBoxSearch.Text }, null);
             }
             else if (radioButtonSearchByTitleAndDescription.Checked)
             {
+               // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
+               Debug.Assert(Constants.MaxSearchByTitleAndDescriptionResults <= 100);
                await searchMergeRequests(
-                  new SearchByText { Text = textBoxSearch.Text });
+                  new SearchByText { Text = textBoxSearch.Text }, Constants.MaxSearchByTitleAndDescriptionResults);
             }
             else
             {
@@ -1124,6 +1133,7 @@ namespace mrHelper.App.Forms
          string theme = comboBoxThemes.SelectedItem.ToString();
          Program.Settings.VisualThemeName = theme;
          applyTheme(theme);
+         resetMinimumSizes();
       }
 
       private void comboBoxFonts_SelectionChangeCommitted(object sender, EventArgs e)
@@ -1183,10 +1193,7 @@ namespace mrHelper.App.Forms
 
       private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
       {
-         if (tabControl.SelectedTab == tabPageMR)
-         {
-            updateMinimumSizes();
-         }
+         updateMinimumSizes();
       }
 
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
@@ -1198,6 +1205,7 @@ namespace mrHelper.App.Forms
          labelTimeTrackingTrackedLabel.Visible = isLiveMode;
          buttonEditTime.Visible = isLiveMode;
          labelWorkflowStatus.Text = String.Empty;
+         richTextBoxMergeRequestDescription.Text = String.Empty;
       }
 
       private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
@@ -1230,6 +1238,7 @@ namespace mrHelper.App.Forms
 
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
+         resetMinimumSizes();
       }
 
       protected override void OnDpiChanged(DpiChangedEventArgs e)
@@ -1243,11 +1252,7 @@ namespace mrHelper.App.Forms
          applyFont(font);
 
          resetMinimumSizes();
-
-         if (tabControl.SelectedTab == tabPageMR)
-         {
-            updateMinimumSizes();
-         }
+         updateMinimumSizes();
       }
    }
 }

@@ -62,7 +62,7 @@ namespace mrHelper.Client.Workflow
          return await loadCurrentUserAsync(hostname);
       }
 
-      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, object search, int maxResults)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, object search, int? maxResults)
       {
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
@@ -178,7 +178,7 @@ namespace mrHelper.Client.Workflow
       }
 
       async private Task<Dictionary<Project, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(
-         string hostname, object search, int maxResults)
+         string hostname, object search, int? maxResults)
       {
          IEnumerable<MergeRequest> mergeRequests;
          try

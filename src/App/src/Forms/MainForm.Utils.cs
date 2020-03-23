@@ -1200,6 +1200,8 @@ namespace mrHelper.App.Forms
             pictureBox2.Visible = true;
             listViewMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
             listViewMergeRequests.BackgroundImageTiled = true;
+            listViewFoundMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
+            listViewFoundMergeRequests.BackgroundImageTiled = true;
             richTextBoxMergeRequestDescription.BaseStylesheet =
                  mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS
                + mrHelper.App.Properties.Resources.NewYear2020_CSS;
@@ -1211,6 +1213,7 @@ namespace mrHelper.App.Forms
             pictureBox2.BackgroundImage = null;
             pictureBox2.Visible = false;
             listViewMergeRequests.BackgroundImage = null;
+            listViewFoundMergeRequests.BackgroundImage = null;
             richTextBoxMergeRequestDescription.BaseStylesheet =
                mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
          }
@@ -1219,8 +1222,6 @@ namespace mrHelper.App.Forms
             String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
 
          Program.Settings.VisualThemeName = theme;
-
-         resetMinimumSizes();
       }
 
       private void onHostSelected()
@@ -1329,8 +1330,9 @@ namespace mrHelper.App.Forms
 
       private int getLeftPaneMinWidth()
       {
-         return
-            calcHorzDistance(null, groupBoxSelectMergeRequest)
+         return Math.Max(
+            calcHorzDistance(null, tabControlMode)
+          + calcHorzDistance(null, groupBoxSelectMergeRequest)
           + calcHorzDistance(null, checkBoxLabels)
           + checkBoxLabels.MinimumSize.Width
           + calcHorzDistance(checkBoxLabels, textBoxLabels)
@@ -1338,7 +1340,15 @@ namespace mrHelper.App.Forms
           + calcHorzDistance(textBoxLabels, buttonReloadList, true)
           + buttonReloadList.MinimumSize.Width
           + calcHorzDistance(buttonReloadList, null)
-          + calcHorzDistance(groupBoxSelectMergeRequest, null);
+          + calcHorzDistance(groupBoxSelectMergeRequest, null),
+            calcHorzDistance(null, groupBoxSelectMergeRequest)
+          + calcHorzDistance(null, radioButtonSearchByTitleAndDescription)
+          + radioButtonSearchByTitleAndDescription.Width
+          + calcHorzDistance(radioButtonSearchByTitleAndDescription, radioButtonSearchByTargetBranch)
+          + radioButtonSearchByTargetBranch.Width
+          + 10 /* cannot use calcHorzDistance(radioButtonSearchByTargetBranch, null) because its Anchor is Top+Left */
+          + calcHorzDistance(groupBoxSelectMergeRequest, null)
+          + calcHorzDistance(tabControlMode, null));
       }
 
       private int getRightPaneMinWidth()
@@ -1431,7 +1441,7 @@ namespace mrHelper.App.Forms
 
       private void updateMinimumSizes()
       {
-         if (!_invalidMinSizes)
+         if (!_invalidMinSizes || tabControl.SelectedTab != tabPageMR)
          {
             return;
          }
