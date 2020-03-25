@@ -30,7 +30,7 @@ namespace mrHelper.Client.Workflow
                   if (rx.InnerException is System.Net.WebException wx)
                   {
                      System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
-                     if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                     if (response != null && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                      {
                         return wx.Message + " Check your access token!";
                      }

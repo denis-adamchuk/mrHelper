@@ -1205,7 +1205,7 @@ namespace mrHelper.App.Forms
          labelTimeTrackingTrackedLabel.Visible = isLiveMode;
          buttonEditTime.Visible = isLiveMode;
          labelWorkflowStatus.Text = String.Empty;
-         richTextBoxMergeRequestDescription.Text = String.Empty;
+         disableCommonUIControls();
       }
 
       private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
