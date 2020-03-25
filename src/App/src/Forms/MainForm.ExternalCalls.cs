@@ -13,6 +13,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using GitLabSharp.Entities;
 
 namespace mrHelper.App.Forms
 {
@@ -221,7 +222,7 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      async private Task searchMergeRequestByUrlAsync(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      async private Task openUrlAtSearchTab(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
       {
          tabControlMode.SelectedTab = tabPageSearch;
 
@@ -286,13 +287,32 @@ namespace mrHelper.App.Forms
             return; // unknown host
          }
 
+         MergeRequest? mergeRequest = await _workflowManager.LoadMergeRequestOnlyAsync(
+            mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
+         if (mergeRequest == null)
+         {
+            reportErrorOnConnect(url, "Merge Request does not exist. ", null, false);
+            return;
+         }
+
+         if (mergeRequestUrl.Host != getHostName() && !await restartWorkflowByUrl(url, mergeRequestUrl.Host))
+         {
+            return;
+         }
+
+         if (mergeRequest.Value.State != "opened")
+         {
+            await openUrlAtSearchTab(mergeRequestUrl, url);
+            return;
+         }
+
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
             mergeRequestUrl.Host, Program.Settings);
          if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
          {
             if (!addMissingProject(mergeRequestUrl))
             {
-               await searchMergeRequestByUrlAsync(mergeRequestUrl, url);
+               await openUrlAtSearchTab(mergeRequestUrl, url);
                return; // user decided to not add a missing project
             }
          }
@@ -300,11 +320,16 @@ namespace mrHelper.App.Forms
          {
             if (!enableDisabledProject(mergeRequestUrl))
             {
-               await searchMergeRequestByUrlAsync(mergeRequestUrl, url);
+               await openUrlAtSearchTab(mergeRequestUrl, url);
                return; // user decided to not enable a disabled project
             }
          }
 
+         await openUrlAtLiveTab(mergeRequestUrl, url);
+      }
+
+      async private Task openUrlAtLiveTab(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
+      {
          ProjectKey projectKey = new ProjectKey
          {
             HostName = mergeRequestUrl.Host,
@@ -320,7 +345,8 @@ namespace mrHelper.App.Forms
                return; // could not restart workflow
             }
 
-            projects = ConfigurationHelper.GetProjectsForHost(mergeRequestUrl.Host, Program.Settings);
+            IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
+               mergeRequestUrl.Host, Program.Settings);
             if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
             {
                // This may happen if project list changed while we were in 'await'
@@ -361,7 +387,9 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  await searchMergeRequestByUrlAsync(mergeRequestUrl, url);
+                  Debug.Assert(false);
+                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
+                  reportErrorOnConnect(url, "Something went wrong. ", null, false);
                }
             }
          }
