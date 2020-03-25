@@ -132,6 +132,17 @@ namespace mrHelper.CommonControls.Tools
          Debug.Assert(false);
          return new Rectangle();
       }
+
+      public static IEnumerable<Control> GetAllSubControls(Control container)
+      {
+         List<Control> controlList = new List<Control>();
+         foreach (Control control in container.Controls)
+         {
+            controlList.AddRange(GetAllSubControls(control));
+            controlList.Add(control);
+         }
+         return controlList;
+      }
    }
 }
 

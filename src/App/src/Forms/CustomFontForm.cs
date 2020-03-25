@@ -22,7 +22,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font]);
+         this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font], FontStyle.Regular, GraphicsUnit.Point, 204, false);
       }
 
       public float CurrentFontMultiplier

@@ -32,6 +32,7 @@ namespace mrHelper.Common.Constants
 
       public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>
       {
+         { "Design",  8.25 }, // Design-time font size
          { "Tiny",    8.25 },
          { "Small",   9.00 },
          { "Medium",  9.75 },

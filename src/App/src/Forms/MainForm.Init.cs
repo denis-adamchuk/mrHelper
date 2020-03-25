@@ -432,7 +432,7 @@ namespace mrHelper.App.Forms
 
       private void disposeWorkflowDependencies()
       {
-         _timeTrackingManager.Dispose();
+         _timeTrackingManager?.Dispose();
          _gitDataUpdater?.Dispose();
          _gitStatManager.Dispose();
          _userNotifier.Dispose();

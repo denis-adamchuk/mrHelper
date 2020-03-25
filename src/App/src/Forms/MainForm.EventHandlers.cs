@@ -1220,6 +1220,11 @@ namespace mrHelper.App.Forms
       {
          base.OnFontChanged(e);
 
+         if (!this.Created)
+         {
+            return;
+         }
+
          // see 9b65d7413c
          if (richTextBoxMergeRequestDescription.Location.X < 0
           || richTextBoxMergeRequestDescription.Location.Y < 0)
@@ -1245,14 +1250,8 @@ namespace mrHelper.App.Forms
       {
          base.OnDpiChanged(e);
 
-         Trace.TraceInformation("DPI changed to {0}", this.DeviceDpi);
-
-         string font = comboBoxFonts.SelectedItem.ToString();
-         Program.Settings.MainWindowFontSizeName = font;
-         applyFont(font);
-
-         resetMinimumSizes();
-         updateMinimumSizes();
+         MessageBox.Show("System DPI has changed. It is recommended to restart application to update layout.",
+            "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
       }
    }
 }
