@@ -1487,6 +1487,12 @@ namespace mrHelper.App.Forms
          if (leftPaneMinWidth + rightPaneMinWidth > this.splitContainer1.Width ||
              topRightPaneMinHeight + bottomRightPaneMinHeight > this.splitContainer2.Height)
          {
+            Trace.TraceError(String.Format(
+               "[MainForm] SplitContainer size conflict. "
+             + "SplitContainer1.Width = {0}, leftPaneMinWidth = {1}, rightPaneMinWidth = {2}. "
+             + "SplitContainer2.Height = {3}, topRightPaneMinHeight = {4}, bottomRightPaneMinHeight = {5}",
+               splitContainer1.Width, leftPaneMinWidth, rightPaneMinWidth,
+               splitContainer2.Height, topRightPaneMinHeight, bottomRightPaneMinHeight));
             Debug.Assert(false);
             resetMinimumSizes();
             _invalidMinSizes = false;
