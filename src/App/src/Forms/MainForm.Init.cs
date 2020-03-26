@@ -382,8 +382,9 @@ namespace mrHelper.App.Forms
 
          radioButtonSearchByTitleAndDescription.Text += String.Format(
             " (up to {0} results)", Constants.MaxSearchByTitleAndDescriptionResults);
+         radioButtonSearchByTitleAndDescription.Text += "            ";
          radioButtonSearchByTargetBranch.Location = new System.Drawing.Point(
-            radioButtonSearchByTitleAndDescription.Location.X + radioButtonSearchByTitleAndDescription.Width + 20,
+            radioButtonSearchByTitleAndDescription.Location.X + radioButtonSearchByTitleAndDescription.Width,
             radioButtonSearchByTargetBranch.Location.Y);
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
