@@ -34,7 +34,10 @@ namespace mrHelper.App.Forms
 
       internal MainForm()
       {
+         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
+         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+
          _trayIcon = new TrayIcon(notifyIcon);
 
          Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
@@ -48,7 +51,14 @@ namespace mrHelper.App.Forms
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
          this.linkLabelConnectedTo.Text = String.Empty;
 
-         Trace.TraceInformation("Current DPI is {0}", this.DeviceDpi);
+         foreach (Control control in CommonControls.Tools.WinFormsHelpers.GetAllSubControls(this))
+         {
+            if (control.Anchor.HasFlag(AnchorStyles.Right)
+               && (control.MinimumSize.Width != 0 || control.MinimumSize.Height != 0))
+            {
+               Debug.Assert(false);
+            }
+         }
       }
 
       public string GetCurrentHostName()

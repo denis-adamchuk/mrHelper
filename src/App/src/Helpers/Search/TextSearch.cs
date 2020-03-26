@@ -25,19 +25,8 @@ namespace mrHelper.App.Helpers
       internal TextSearch(Control container, SearchQuery query, Func<Control, bool> isSearchableControl)
       {
          Query = query;
-         _allControls = getControls(container).ToArray();
+         _allControls = CommonControls.Tools.WinFormsHelpers.GetAllSubControls(container).ToArray();
          _isSearchableControl = isSearchableControl;
-      }
-
-      private static IEnumerable<Control> getControls(Control container)
-      {
-         List<Control> controlList = new List<Control>();
-         foreach (Control control in container.Controls)
-         {
-            controlList.AddRange(getControls(control));
-            controlList.Add(control);
-         }
-         return controlList;
       }
 
       internal SearchQuery Query { get; private set; }

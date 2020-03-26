@@ -303,7 +303,6 @@ namespace mrHelper.App.Forms
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonEditTime.Enabled = false;
          this.buttonEditTime.Location = new System.Drawing.Point(824, 19);
-         this.buttonEditTime.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
          this.buttonEditTime.TabIndex = 13;
@@ -317,7 +316,6 @@ namespace mrHelper.App.Forms
          this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiffTool.Enabled = false;
          this.buttonDiffTool.Location = new System.Drawing.Point(824, 19);
-         this.buttonDiffTool.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(96, 32);
          this.buttonDiffTool.TabIndex = 7;
@@ -344,7 +342,6 @@ namespace mrHelper.App.Forms
          this.buttonDiscussions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonDiscussions.Enabled = false;
          this.buttonDiscussions.Location = new System.Drawing.Point(722, 19);
-         this.buttonDiscussions.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 10;
@@ -414,7 +411,6 @@ namespace mrHelper.App.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxLabels.Enabled = false;
          this.textBoxLabels.Location = new System.Drawing.Point(60, 17);
-         this.textBoxLabels.MinimumSize = new System.Drawing.Size(100, 4);
          this.textBoxLabels.Name = "textBoxLabels";
          this.textBoxLabels.Size = new System.Drawing.Size(154, 20);
          this.textBoxLabels.TabIndex = 1;
@@ -428,7 +424,6 @@ namespace mrHelper.App.Forms
          this.textBoxSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxSearch.Location = new System.Drawing.Point(3, 42);
-         this.textBoxSearch.MinimumSize = new System.Drawing.Size(100, 4);
          this.textBoxSearch.Name = "textBoxSearch";
          this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
          this.textBoxSearch.TabIndex = 1;
@@ -853,7 +848,6 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonReloadList.Enabled = false;
          this.buttonReloadList.Location = new System.Drawing.Point(220, 9);
-         this.buttonReloadList.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
          this.buttonReloadList.TabIndex = 2;

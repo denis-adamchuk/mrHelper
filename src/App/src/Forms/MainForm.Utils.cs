@@ -1336,9 +1336,9 @@ namespace mrHelper.App.Forms
           + calcHorzDistance(null, checkBoxLabels)
           + checkBoxLabels.MinimumSize.Width
           + calcHorzDistance(checkBoxLabels, textBoxLabels)
-          + textBoxLabels.MinimumSize.Width
+          + 100 /* cannot use textBoxLabels.MinimumSize.Width, see 9b65d7413c */
           + calcHorzDistance(textBoxLabels, buttonReloadList, true)
-          + buttonReloadList.MinimumSize.Width
+          + buttonReloadList.Size.Width
           + calcHorzDistance(buttonReloadList, null)
           + calcHorzDistance(groupBoxSelectMergeRequest, null),
             calcHorzDistance(null, groupBoxSelectMergeRequest)
@@ -1482,6 +1482,22 @@ namespace mrHelper.App.Forms
 
          // First, apply new size to the Form because this action resizes it the Format is too small for split containers
          this.MinimumSize = new Size(clientAreaMinWidth + nonClientAreaWidth, clientAreaMinHeight + nonClientAreaHeight);
+
+         // Validate widths
+         if (leftPaneMinWidth + rightPaneMinWidth > this.splitContainer1.Width ||
+             topRightPaneMinHeight + bottomRightPaneMinHeight > this.splitContainer2.Height)
+         {
+            Trace.TraceError(String.Format(
+               "[MainForm] SplitContainer size conflict. "
+             + "SplitContainer1.Width = {0}, leftPaneMinWidth = {1}, rightPaneMinWidth = {2}. "
+             + "SplitContainer2.Height = {3}, topRightPaneMinHeight = {4}, bottomRightPaneMinHeight = {5}",
+               splitContainer1.Width, leftPaneMinWidth, rightPaneMinWidth,
+               splitContainer2.Height, topRightPaneMinHeight, bottomRightPaneMinHeight));
+            Debug.Assert(false);
+            resetMinimumSizes();
+            _invalidMinSizes = false;
+            return;
+         }
 
          // Then, apply new sizes to split containers
          this.splitContainer1.Panel1MinSize = leftPaneMinWidth;
