@@ -22,7 +22,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font], FontStyle.Regular, GraphicsUnit.Point, 204, false);
+         this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font],
+            this.Font.Style, GraphicsUnit.Point, this.Font.GdiCharSet, this.Font.GdiVerticalFont);
       }
 
       public float CurrentFontMultiplier
