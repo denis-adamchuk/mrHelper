@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using GitLabSharp;
+using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
 using mrHelper.Client.Types;
@@ -13,7 +14,6 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using GitLabSharp.Entities;
 
 namespace mrHelper.App.Forms
 {
