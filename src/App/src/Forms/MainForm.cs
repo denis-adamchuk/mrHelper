@@ -63,23 +63,20 @@ namespace mrHelper.App.Forms
 
       private void fixNonStandardDPIIssue()
       {
-         if (this.DeviceDpi != 96)
-         {
-            // Sometimes Windows DPI behavior is strange when changed to non-default (and even back)
-            // without signing out - windows got scaled incorrectly but after signing out they work ok.
-            // There is a workaround for it.
-            // Component positions are defined at design-time with DPI 96 and when ResumeLauout occurs within
-            // InitializeComponent(), .NET checks CurrentAutoScaleDimensions to figure out a scale factor.
-            // CurrentAutoScaleDimensions depends on the current font and we need to set it explicitly in advance.
-            // This font has to be scaled in accordance with current DPI what gives a proper scale factor for
-            // ResumeLayout().
+         // Sometimes Windows DPI behavior is strange when changed to non-default (and even back)
+         // without signing out - windows got scaled incorrectly but after signing out they work ok.
+         // There is a workaround for it.
+         // Component positions are defined at design-time with DPI 96 and when ResumeLauout occurs within
+         // InitializeComponent(), .NET checks CurrentAutoScaleDimensions to figure out a scale factor.
+         // CurrentAutoScaleDimensions depends on the current font and we need to set it explicitly in advance.
+         // This font has to be scaled in accordance with current DPI what gives a proper scale factor for
+         // ResumeLayout().
 
-            float designTimeFontSize = (float)Constants.FontSizeChoices["Design"];
-            float designTimeDPI = 96;
-            float currentDPI = this.DeviceDpi;
-            this.Font = new System.Drawing.Font(this.Font.FontFamily, designTimeFontSize * (designTimeDPI / currentDPI),
-               System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 204, false);
-         }
+         float designTimeFontSize = (float)Constants.FontSizeChoices["Design"];
+         float designTimeDPI = 96;
+         float currentDPI = this.DeviceDpi;
+         this.Font = new System.Drawing.Font(this.Font.FontFamily, designTimeFontSize * (designTimeDPI / currentDPI),
+            System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 204, false);
       }
 
       public string GetCurrentHostName()
