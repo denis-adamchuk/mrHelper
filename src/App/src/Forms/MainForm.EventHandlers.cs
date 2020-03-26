@@ -1225,6 +1225,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         Trace.TraceInformation(String.Format("[MainForm] Font changed, new emSize = {0}", this.Font.Size));
+         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+
          // see 9b65d7413c
          if (richTextBoxMergeRequestDescription.Location.X < 0
           || richTextBoxMergeRequestDescription.Location.Y < 0)
@@ -1249,6 +1252,9 @@ namespace mrHelper.App.Forms
       protected override void OnDpiChanged(DpiChangedEventArgs e)
       {
          base.OnDpiChanged(e);
+
+         Trace.TraceInformation(String.Format("[MainForm] DPI changed, new DPI = {0}", this.DeviceDpi));
+         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          MessageBox.Show("System DPI has changed. It is recommended to restart application to update layout.",
             "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);

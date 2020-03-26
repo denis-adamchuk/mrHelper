@@ -48,7 +48,10 @@ namespace mrHelper.App.Forms
             throw new ArgumentException("Bad user Id");
          }
 
+         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
+            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
+         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          DisplayFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
             DiscussionFilterState.Default);
@@ -108,12 +111,6 @@ namespace mrHelper.App.Forms
          {
             throw new NoDiscussionsToShow();
          }
-      }
-
-      private void DiscussionsForm_Load(object sender, EventArgs e)
-      {
-         // without this, controls inside UserControls compute wrong auto size in High DPI mode
-         this.Scale(new SizeF(1.0f, 1.0f));
       }
 
       private void applyTheme(string theme)

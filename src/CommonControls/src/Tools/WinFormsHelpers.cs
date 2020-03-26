@@ -143,6 +143,39 @@ namespace mrHelper.CommonControls.Tools
          }
          return controlList;
       }
+
+      public static void FixNonStandardDPIIssue(Control control, float designTimeFontSize, int designTimeDPI)
+      {
+         // Sometimes Windows DPI behavior is strange when changed to non-default (and even back)
+         // without signing out - windows got scaled incorrectly but after signing out they work ok.
+         // There is a workaround for it.
+         // Component positions are defined at design-time with DPI 96 and when ResumeLauout occurs within
+         // InitializeComponent(), .NET checks CurrentAutoScaleDimensions to figure out a scale factor.
+         // CurrentAutoScaleDimensions depends on the current font and we need to set it explicitly in advance.
+         // This font has to be scaled in accordance with current DPI what gives a proper scale factor for
+         // ResumeLayout().
+
+         float currentDPI = control.DeviceDpi;
+         float newEmSize = designTimeFontSize * (designTimeDPI / currentDPI);
+         float oldEmSize = control.Font.Size;
+
+         control.Font = new System.Drawing.Font(control.Font.FontFamily, newEmSize,
+            control.Font.Style, System.Drawing.GraphicsUnit.Point, control.Font.GdiCharSet, control.Font.GdiVerticalFont);
+
+         Trace.TraceInformation(String.Format(
+            "[{0}] FixNonStandardDPIIssue(): Current DPI = {1}. Old font emSize = {2}. New font emSize = {3}. "
+          + "Design-time: Font-Size: {4}, DPI: {5}",
+            control.ToString(), currentDPI, oldEmSize, newEmSize, designTimeFontSize, designTimeDPI));
+      }
+
+      public static void LogScaleDimensions(ContainerControl control)
+      {
+         Trace.TraceInformation(String.Format("[{0}] CurrentAutoScaleDimensions = {1}/{2}, AutoScaleDimensions = {3}/{4}",
+            control.ToString(),
+            control.CurrentAutoScaleDimensions.Width, control.CurrentAutoScaleDimensions.Height,
+            control.AutoScaleDimensions.Width, control.AutoScaleDimensions.Height));
+      }
+
    }
 }
 
