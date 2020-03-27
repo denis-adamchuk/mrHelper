@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using mrHelper.Common.Exceptions;
@@ -34,7 +35,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      public static class GitVersion
+      public static class GitVersionAccessor
       {
          public class UnknownVersionException : ExceptionEx
          {
@@ -44,16 +45,16 @@ namespace mrHelper.GitClient
             }
          }
 
-         public static Version Get()
+         public static Version GetVersion()
          {
-            if (_version == null)
+            if (_cachedVersion == null)
             {
-               _version = getVersion();
+               _cachedVersion = getVersion();
             }
-            return _version;
+            return _cachedVersion;
          }
 
-         private static Version _version;
+         private static Version _cachedVersion;
 
          private static Version getVersion()
          {
@@ -96,14 +97,37 @@ namespace mrHelper.GitClient
       {
          try
          {
-            Version version = GitVersion.Get();
+            Version version = GitVersionAccessor.GetVersion();
             return version.Major > 2 || (version.Major == 2 && version.Minor >= 23);
          }
-         catch (GitVersion.UnknownVersionException ex)
+         catch (GitVersionAccessor.UnknownVersionException ex)
          {
             ExceptionHandlers.Handle("Cannot detect git version", ex);
          }
          return false;
+      }
+
+      public static void TraceGitConfiguration()
+      {
+         try
+         {
+            foreach (string arguments in
+               new string[]{ "--version", "config --global --list", "config --system --list" })
+            {
+               IEnumerable<string> stdOut = ExternalProcess.Start("git", arguments, true, String.Empty).StdOut;
+               if (stdOut.Any())
+               {
+                  Trace.TraceInformation(String.Format("git {0} ==>\n{1}", arguments, String.Join("\n", stdOut)));
+               }
+            }
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               ExceptionHandlers.Handle("Cannot trace git configuration", ex);
+            }
+         }
       }
    }
 }

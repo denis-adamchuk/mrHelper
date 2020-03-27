@@ -229,6 +229,8 @@ namespace mrHelper.App.Forms
          System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + gitBinaryFolder);
          Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
             System.Environment.GetEnvironmentVariable("PATH")));
+         System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
+         Trace.TraceInformation("Set GIT_TERMINAL_PROMPT=0");
 
          IIntegratedDiffTool diffTool = new BC3Tool();
          DiffToolIntegration integration = new DiffToolIntegration();
@@ -252,6 +254,10 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
             }
             return false;
+         }
+         finally
+         {
+            GitClient.GitTools.TraceGitConfiguration();
          }
 
          return true;

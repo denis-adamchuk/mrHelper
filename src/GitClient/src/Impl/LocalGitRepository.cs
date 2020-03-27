@@ -82,10 +82,9 @@ namespace mrHelper.GitClient
          {
             bool clone = canClone();
             string arguments = clone
-               ? String.Format("clone --progress {0}/{1} {2}",
-                  ProjectKey.HostName, ProjectKey.ProjectName, StringUtils.EscapeSpaces(Path))
-               : String.Format("fetch --progress {0}",
-                  GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
+               ? String.Format("clone {0} {1}/{2} {3}",
+                  getCloneArguments(), ProjectKey.HostName, ProjectKey.ProjectName, StringUtils.EscapeSpaces(Path))
+               : String.Format("fetch {0}", getFetchArguments());
 
             if (_updateOperationDescriptor == null)
             {
@@ -204,6 +203,16 @@ namespace mrHelper.GitClient
       {
          _cached_canClone = null;
          _cached_isValidRepository = null;
+      }
+
+      private string getCloneArguments()
+      {
+         return " --progress -c credential.helper=manager -c credential.interactive=auto -c credential.modalPrompt=true";
+      }
+
+      private string getFetchArguments()
+      {
+         return String.Format(" --progress {0}", GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
       }
 
       private bool? _cached_isValidRepository;
