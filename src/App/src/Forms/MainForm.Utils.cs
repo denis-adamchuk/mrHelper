@@ -319,23 +319,6 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private string getHostWithPrefix(string host)
-      {
-         string supportedProtocolPrefix = "https://";
-         string unsupportedProtocolPrefix = "http://";
-
-         if (host.StartsWith(supportedProtocolPrefix))
-         {
-            return host;
-         }
-         else if (host.StartsWith(unsupportedProtocolPrefix))
-         {
-           return host.Replace(unsupportedProtocolPrefix, supportedProtocolPrefix);
-         }
-
-         return supportedProtocolPrefix + host;
-      }
-
       private string getDefaultColorSchemeFileName()
       {
          return String.Format("{0}.{1}", DefaultColorSchemeName, ColorSchemeFileNamePrefix);
@@ -510,39 +493,16 @@ namespace mrHelper.App.Forms
 
       private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
       {
-         richTextBoxMergeRequestDescription.Text = getMergeRequestDescriptionHtmlText(fmk);
+         string body = fmk.HasValue
+            ? MarkDownUtils.ConvertToHtml(
+               fmk.Value.MergeRequest.Description,
+               StringUtils.GetHostWithPrefix(fmk.Value.ProjectKey.HostName) + "/" + fmk.Value.ProjectKey.ProjectName,
+               _mergeRequestDescriptionMarkdownPipeline)
+            : String.Empty;
+
+         richTextBoxMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          richTextBoxMergeRequestDescription.Update();
          linkLabelConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
-      }
-
-      private string getMergeRequestDescriptionHtmlText(FullMergeRequestKey? fmk)
-      {
-         string commonBegin = string.Format(@"
-            <html>
-               <head>
-               </head>
-               <body>
-                  <div>");
-
-         string commonEnd = @"
-                  </div>
-               </body>
-            </html>";
-
-         string htmlbody = String.Empty;
-         if (fmk.HasValue)
-         {
-            htmlbody =
-               System.Net.WebUtility.HtmlDecode(
-                  Markdig.Markdown.ToHtml(
-                     System.Net.WebUtility.HtmlEncode(fmk.Value.MergeRequest.Description),
-                        _mergeRequestDescriptionMarkdownPipeline));
-
-            htmlbody = htmlbody.Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/{1}/uploads/",
-               getHostWithPrefix(fmk.Value.ProjectKey.HostName), fmk.Value.ProjectKey.ProjectName));
-         }
-
-         return commonBegin + htmlbody + commonEnd;
       }
 
       private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey)
@@ -1203,7 +1163,7 @@ namespace mrHelper.App.Forms
             listViewFoundMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
             listViewFoundMergeRequests.BackgroundImageTiled = true;
             richTextBoxMergeRequestDescription.BaseStylesheet =
-                 mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS
+                 mrHelper.App.Properties.Resources.Common_CSS
                + mrHelper.App.Properties.Resources.NewYear2020_CSS;
          }
          else
@@ -1215,7 +1175,7 @@ namespace mrHelper.App.Forms
             listViewMergeRequests.BackgroundImage = null;
             listViewFoundMergeRequests.BackgroundImage = null;
             richTextBoxMergeRequestDescription.BaseStylesheet =
-               mrHelper.App.Properties.Resources.MergeRequestDescriptionCSS;
+               mrHelper.App.Properties.Resources.Common_CSS;
          }
 
          richTextBoxMergeRequestDescription.BaseStylesheet +=

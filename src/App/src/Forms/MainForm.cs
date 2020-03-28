@@ -39,14 +39,7 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          _trayIcon = new TrayIcon(notifyIcon);
-
-         Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
-         {
-            RequireHeaderSeparator = false
-         };
-         _mergeRequestDescriptionMarkdownPipeline = Markdig.MarkdownExtensions
-            .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
-            .Build();
+         _mergeRequestDescriptionMarkdownPipeline = MarkDownUtils.CreatePipeline();
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
          this.linkLabelConnectedTo.Text = String.Empty;

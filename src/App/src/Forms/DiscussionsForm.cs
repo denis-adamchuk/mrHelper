@@ -356,7 +356,7 @@ namespace mrHelper.App.Forms
                   updateSearch();
                },
                sender => MostRecentFocusedDiscussionControl = sender,
-               this)
+               this, _mergeRequestKey.ProjectKey)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false

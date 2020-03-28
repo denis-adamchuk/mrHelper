@@ -14,6 +14,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -268,7 +269,7 @@ namespace mrHelper.App.Forms
          try
          {
             mergeRequestUrl = UrlParser.ParseMergeRequestUrl(url);
-            mergeRequestUrl.Host = getHostWithPrefix(mergeRequestUrl.Host);
+            mergeRequestUrl.Host = StringUtils.GetHostWithPrefix(mergeRequestUrl.Host);
          }
          catch (Exception ex)
          {

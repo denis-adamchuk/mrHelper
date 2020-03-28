@@ -124,7 +124,7 @@ namespace mrHelper.App.Forms
          for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
-            string host = getHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
+            string host = StringUtils.GetHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
             string accessToken = Program.Settings.KnownAccessTokens.Length > iKnownHost
                ? Program.Settings.KnownAccessTokens[iKnownHost]
                : String.Empty;

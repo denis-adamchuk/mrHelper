@@ -15,6 +15,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.CommonControls.Controls;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -23,7 +24,7 @@ namespace mrHelper.App.Controls
       internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
          int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
          Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged,
-         Action<Control> onControlGotFocus, CustomFontForm parent)
+         Action<Control> onControlGotFocus, CustomFontForm parent, ProjectKey projectKey)
       {
          Parent = parent;
 
@@ -32,6 +33,7 @@ namespace mrHelper.App.Controls
          _editor = editor;
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
+         _imagePath = StringUtils.GetHostWithPrefix(projectKey.HostName) + "/" + projectKey.ProjectName;
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
@@ -47,28 +49,38 @@ namespace mrHelper.App.Controls
          _onContentChanged = onContentChanged;
          _onControlGotFocus = onControlGotFocus;
 
-         _toolTip = new ToolTip
-         {
-            AutoPopDelay = 5000,
-            InitialDelay = 500,
-            ReshowDelay = 100
-         };
-
          _toolTipNotifier = new ToolTip();
 
-         _htmlToolTip = new HtmlToolTip
+         _htmlDiffContextToolTip = new HtmlToolTip
          {
-            AutoPopDelay = 10000, // 10s
+            AutoPopDelay = 20000, // 20s
+            InitialDelay = 150,
             BaseStylesheet = ".htmltooltip { padding: 1px; }"
          };
 
-         Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
+         _htmlDiscussionNoteToolTip = new HtmlToolTipWithGoodImages()
          {
-            RequireHeaderSeparator = false
+            AutoPopDelay = 20000, // 20s
+            InitialDelay = 150,
+            BaseStylesheet = Properties.Resources.Common_CSS +
+            "body" +
+            "{" +
+               "width: 800px;" + // for some reason `max-width` does not work for `body` so have to use `width`
+               "height: auto;" +
+            "}" +
+            "body div" +
+            "{" +
+               "border: 0px;" +
+            "}" +
+            "img" +
+            "{" +
+               "max-width: 100%;" +
+               "max-height: auto;" +
+               "padding: 2px;" +
+            "}",
          };
-         _specialDiscussionNoteMarkdownPipeline = Markdig.MarkdownExtensions
-            .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
-            .Build();
+
+         _specialDiscussionNoteMarkdownPipeline = MarkDownUtils.CreatePipeline();
 
          onCreate();
       }
@@ -329,7 +341,7 @@ namespace mrHelper.App.Controls
          DiffPosition position = convertToDiffPosition(note.Position);
          htmlPanel.Text = getContext(_panelContextMaker, position,
             _diffContextDepth, htmlPanel.Font.Height);
-         _htmlToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
+         _htmlDiffContextToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
             _tooltipContextDepth, htmlPanel.Font.Height));
       }
 
@@ -444,32 +456,6 @@ namespace mrHelper.App.Controls
          return prefix + body;
       }
 
-      private string getHtmlDiscussionNoteText(ref DiscussionNote note, int fontSizePx)
-      {
-         string css = mrHelper.App.Properties.Resources.DiscussionNoteCSS;
-         css += String.Format("body div {{ font-size: {0}px; }}", fontSizePx);
-
-         string commonBegin = string.Format(@"
-            <html>
-               <head>
-                  <style>{0}</style>
-               </head>
-               <body>
-                  <div>", css);
-
-         string commonEnd = @"
-                  </div>
-               </body>
-            </html>";
-
-         string htmlbody =
-            System.Net.WebUtility.HtmlDecode(
-               Markdig.Markdown.ToHtml(
-                  System.Net.WebUtility.HtmlEncode(note.Body), _specialDiscussionNoteMarkdownPipeline));
-
-         return commonBegin + htmlbody + commonEnd;
-      }
-
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
          if (!isServiceDiscussionNote(note))
@@ -480,7 +466,6 @@ namespace mrHelper.App.Controls
                Text = getNoteText(note, firstNoteAuthor),
                Multiline = true,
                BackColor = getNoteColor(note),
-               Tag = note,
                AutoSize = false,
             };
             textBox.GotFocus += Control_GotFocus;
@@ -488,7 +473,8 @@ namespace mrHelper.App.Controls
             textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
             textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
             textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
-            _toolTip.SetToolTip(textBox, getNoteTooltipText(note));
+
+            updateDiscussionNoteInTextBox(textBox, note);
 
             return textBox;
          }
@@ -502,15 +488,25 @@ namespace mrHelper.App.Controls
                Parent = this
             };
             htmlPanel.GotFocus += Control_GotFocus;
-            htmlPanel.FontChanged += (sender, e) => setNoteHtmlText(htmlPanel);
+            htmlPanel.FontChanged += (sender, e) => setServiceDiscussionNoteHtmlText(htmlPanel);
 
-            setNoteHtmlText(htmlPanel);
+            setServiceDiscussionNoteHtmlText(htmlPanel);
 
             return htmlPanel;
          }
       }
 
-      private void setNoteHtmlText(HtmlPanel htmlPanel)
+      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote note)
+      {
+         textBox.Tag = note;
+
+         string body = getNoteTooltipHtml(note)
+                     + "<br><br>"
+                     + MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
+      }
+
+      private void setServiceDiscussionNoteHtmlText(HtmlPanel htmlPanel)
       {
          DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
 
@@ -518,7 +514,12 @@ namespace mrHelper.App.Controls
          htmlPanel.Width = 0;
          htmlPanel.Height = 0;
 
-         htmlPanel.Text = getHtmlDiscussionNoteText(ref note, htmlPanel.Font.Height);
+         htmlPanel.BaseStylesheet = String.Format(
+            "{0} body div {{ font-size: {1}px; }}", Properties.Resources.Common_CSS, htmlPanel.Font.Height);
+
+         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         htmlPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         htmlPanel.PerformLayout();
 
          // Use computed size as the control size. Height must be set BEFORE Width.
          htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2;
@@ -631,14 +632,17 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-      private string getNoteTooltipText(DiscussionNote note)
+      private string getNoteTooltipHtml(DiscussionNote note)
       {
          string result = string.Empty;
          if (note.Resolvable)
          {
-            result += note.Resolved ? "Resolved." : "Not resolved.";
+            string text = note.Resolved ? "Resolved." : "Not resolved.";
+            string color = note.Resolved ? "green" : "red";
+            result += String.Format("<i style=\"color: {0}\">{1}&nbsp;&nbsp;&nbsp;</i>", color, text);
          }
-         result += " Created by " + note.Author.Name + " at " + note.Created_At.ToLocalTime().ToString("g");
+         result += "Created by <b>" + note.Author.Name + "</b> at ";
+         result += "<span style=\"color: blue\">" + note.Created_At.ToLocalTime().ToString("g") + "</span>";
          return result;
       }
 
@@ -712,7 +716,7 @@ namespace mrHelper.App.Controls
          {
             _panelContext.Width = width * remainingPercents / 100;
             _panelContext.Height = (_panelContext as HtmlPanel).AutoScrollMinSize.Height + 2;
-            _htmlToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
+            _htmlDiffContextToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
       }
 
@@ -851,7 +855,7 @@ namespace mrHelper.App.Controls
 
          if (!textBox.IsDisposed)
          {
-            textBox.Tag = note;
+            updateDiscussionNoteInTextBox(textBox, note);
             _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
          }
       }
@@ -1005,6 +1009,20 @@ namespace mrHelper.App.Controls
          };
       }
 
+      /// <summary>
+      /// The only purpose of this class is to disable async image loading.
+      /// Given feature prevents showing full-size images because their size are unknown
+      /// at the moment of tooltip rendering.
+      /// </summary>
+      internal class HtmlToolTipWithGoodImages : HtmlToolTip
+      {
+         internal HtmlToolTipWithGoodImages()
+            : base()
+         {
+            this._htmlContainer.AvoidAsyncImagesLoading = true;
+         }
+      }
+
       // Widths in %
       private readonly int HorzMarginWidth = 1;
       private readonly int LabelAuthorWidth = 5;
@@ -1019,6 +1037,7 @@ namespace mrHelper.App.Controls
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
+      private readonly string _imagePath;
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
@@ -1033,9 +1052,9 @@ namespace mrHelper.App.Controls
       private readonly Action<DiscussionBox, bool> _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
 
-      private readonly System.Windows.Forms.ToolTip _toolTip;
       private readonly System.Windows.Forms.ToolTip _toolTipNotifier;
-      private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlToolTip;
+      private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiffContextToolTip;
+      private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiscussionNoteToolTip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }

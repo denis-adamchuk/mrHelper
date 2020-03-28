@@ -477,7 +477,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            string hostname = getHostWithPrefix(form.Host);
+            string hostname = StringUtils.GetHostWithPrefix(form.Host);
             if (!addKnownHost(hostname, form.AccessToken))
             {
                MessageBox.Show("Such host is already in the list", "Host will not be added",

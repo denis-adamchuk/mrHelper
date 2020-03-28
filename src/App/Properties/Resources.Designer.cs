@@ -71,6 +71,43 @@ namespace mrHelper.App.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to body {
+        ///   width: 100%;
+        ///   margin: 0;
+        ///}
+        ///
+        ///body div { 
+        ///   font-family: Microsoft Sans Serif, Sans Serif;
+        ///   padding: 1px;
+        ///   border: 1px solid white;
+        ///}
+        ///
+        ///table {
+        ///   border: solid 1px #DDEEEE;
+        ///   border-collapse: collapse;
+        ///   border-spacing: 0;
+        ///}
+        ///
+        ///table thead th {
+        ///   background-color: #E4E7E6;
+        ///   border: solid 1px #DDEEEE;
+        ///   color: #333;
+        ///   padding: 5px;
+        ///   text-align: left;
+        ///   text-shadow: 1px 1px 1px #fff;
+        ///}
+        ///
+        ///table tbody td {
+        ///   background-color: #FBFBF5;
+        ///   border: solid 1px #DDEE [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Common_CSS {
+            get {
+                return ResourceManager.GetString("Common_CSS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon DefaultAppIcon {
@@ -81,86 +118,12 @@ namespace mrHelper.App.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to body {
-        ///   width: 100%;
-        ///   margin: 0;
-        ///}
-        ///
-        ///body div { 
-        ///   font-family: Microsoft Sans Serif, Sans Serif;
-        ///   padding: 1px;
-        ///   border: 1px solid white;
-        ///}
-        ///
-        ///table {
-        ///   border: solid 1px #DDEEEE;
-        ///   border-collapse: collapse;
-        ///   border-spacing: 0;
-        ///}
-        ///
-        ///table thead th {
-        ///   background-color: #E4E7E6;
-        ///   border: solid 1px #DDEEEE;
-        ///   color: #333;
-        ///   padding: 5px;
-        ///   text-align: left;
-        ///   text-shadow: 1px 1px 1px #fff;
-        ///}
-        ///
-        ///table tbody td {
-        ///   background-color: #FBFBF5;
-        ///   border: solid 1px #DDEE [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string DiscussionNoteCSS {
-            get {
-                return ResourceManager.GetString("DiscussionNoteCSS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap HappyNY2020 {
             get {
                 object obj = ResourceManager.GetObject("HappyNY2020", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to body {
-        ///   width: 100%;
-        ///   margin: 0;
-        ///}
-        ///
-        ///body div { 
-        ///   font-family: Microsoft Sans Serif, Sans Serif;
-        ///   padding: 1px;
-        ///   border: 1px solid white;
-        ///}
-        ///
-        ///table {
-        ///   border: solid 1px #DDEEEE;
-        ///   border-collapse: collapse;
-        ///   border-spacing: 0;
-        ///}
-        ///
-        ///table thead th {
-        ///   background-color: #E4E7E6;
-        ///   border: solid 1px #DDEEEE;
-        ///   color: #333;
-        ///   padding: 5px;
-        ///   text-align: left;
-        ///   text-shadow: 1px 1px 1px #fff;
-        ///}
-        ///
-        ///table tbody td {
-        ///   background-color: #FBFBF5;
-        ///   border: solid 1px #DDEE [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string MergeRequestDescriptionCSS {
-            get {
-                return ResourceManager.GetString("MergeRequestDescriptionCSS", resourceCulture);
             }
         }
         
