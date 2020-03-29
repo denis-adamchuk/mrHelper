@@ -15,6 +15,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -288,7 +289,8 @@ namespace mrHelper.App.Forms
             return; // unknown host
          }
 
-         MergeRequest? mergeRequest = await _workflowManager.LoadMergeRequestOnlyAsync(
+         SearchManager searchManager = new SearchManager(Program.Settings);
+         MergeRequest? mergeRequest = await searchManager.SearchMergeRequestAsync(
             mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
          if (mergeRequest == null)
          {

@@ -57,7 +57,7 @@ namespace mrHelper.Client.Common
             IEnumerable<Version> versions = (IEnumerable<Version>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(projectName).MergeRequests.Get(iid).
                   Versions.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 })));
-            return versions.Count() > 0 ? versions.First() : new Version();
+            return versions.Any() ? versions.First() : new Version();
          }
          catch (Exception ex)
          {
@@ -77,7 +77,23 @@ namespace mrHelper.Client.Common
                await gitlab.Projects.Get(projectName).MergeRequests.Get(iid).
                   Notes.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 },
                                       new SortFilter { Ascending = false, OrderBy = "updated_at" })));
-            return notes.Count() > 0 ? notes.First() : new Note();
+            return notes.Any() ? notes.First() : new Note();
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
+      async internal static Task<IEnumerable<User>> SearchUserAsync(GitLabClient client, string name)
+      {
+         try
+         {
+            return (IEnumerable<User>)(await client.RunAsync(async (gitlab) => await gitlab.Users.SearchTaskAsync(name)));
          }
          catch (Exception ex)
          {

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GitLabSharp.Entities;
+using mrHelper.Client.Common;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,7 +11,7 @@ namespace mrHelper.App.Forms
 {
    public partial class EditProjectsForm : CustomFontForm
    {
-      public EditProjectsForm(IEnumerable<Tuple<string, bool>> projects)
+      public EditProjectsForm(IEnumerable<Tuple<string, bool>> projects, string hostname)
       {
          Debug.Assert(projects != null);
 
@@ -18,6 +20,8 @@ namespace mrHelper.App.Forms
          updateProjectsListView(projects);
 
          applyFont(Program.Settings.MainWindowFontSizeName);
+
+         _hostname = hostname;
       }
 
       public IEnumerable<Tuple<string, bool>> Projects
@@ -95,7 +99,7 @@ namespace mrHelper.App.Forms
          buttonToggleState.Text = tag.Item2 ? "Disable" : "Enable";
       }
 
-      private void buttonAddProject_Click(object sender, EventArgs e)
+      async private void buttonAddProject_Click(object sender, EventArgs e)
       {
          using (AddProjectForm form = new AddProjectForm())
          {
@@ -104,19 +108,35 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            if (form.ProjectName.Count(x => x == '/') != 1)
+            string projectName = form.ProjectName;
+            if (projectName.Count(x => x == '/') != 1)
             {
-               MessageBox.Show("Wrong format of project name. It should include a group name too.", "Project will not be added",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               MessageBox.Show("Wrong format of project name. It should include a group name too.",
+                  "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                return;
+            }
+
+            int slashIndex = projectName.IndexOf('/');
+            if (projectName.IndexOf(" ", 0, slashIndex) != -1)
+            {
+               SearchManager searchManager = new SearchManager(Program.Settings);
+               User? user = await searchManager.SearchUserAsync(_hostname, projectName.Substring(0, slashIndex));
+               if (user == null)
+               {
+                  MessageBox.Show("Project name has a space and looks like a name of a user but there is no such user",
+                     "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                  return;
+               }
+
+               projectName = user.Value.Username + projectName.Substring(slashIndex);
             }
 
             if (listViewProjects.Items
                .Cast<ListViewItem>()
-               .Any(x => x.Text == form.ProjectName))
+               .Any(x => x.Text == projectName))
             {
-               MessageBox.Show("Such project is already in the list", "Project will not be added",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               MessageBox.Show(String.Format("Project {0} is already in the list", projectName),
+                  "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                return;
             }
 
@@ -189,8 +209,9 @@ namespace mrHelper.App.Forms
 
             buttonOK.PerformClick();
          }
-
       }
+
+      private readonly string _hostname;
    }
 }
 

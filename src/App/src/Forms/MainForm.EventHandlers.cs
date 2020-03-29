@@ -1159,7 +1159,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         using (EditProjectsForm form = new EditProjectsForm(projects))
+         using (EditProjectsForm form = new EditProjectsForm(projects, host))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {

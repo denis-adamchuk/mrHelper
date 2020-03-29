@@ -104,22 +104,6 @@ namespace mrHelper.Client.Workflow
          return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
       }
 
-      async public Task<MergeRequest?> LoadMergeRequestOnlyAsync(string hostname, string projectName, int mergeRequestIId)
-      {
-         WorkflowDataOperator op = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
-
-         try
-         {
-            SearchByIId searchByIId = new SearchByIId { ProjectName = projectName, IId = mergeRequestIId };
-            IEnumerable<MergeRequest> mergeRequests = await op.SearchMergeRequestsAsync(searchByIId, null, true);
-            return mergeRequests.Any() ? mergeRequests.First() : new Nullable<MergeRequest>();
-         }
-         catch (OperatorException)
-         {
-            return null;
-         }
-      }
-
       async public Task CancelAsync()
       {
          if (_operator != null)
