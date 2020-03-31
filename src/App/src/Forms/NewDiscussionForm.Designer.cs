@@ -154,7 +154,7 @@
          this.MinimizeBox = false;
          this.MinimumSize = new System.Drawing.Size(900, 303);
          this.Name = "NewDiscussionForm";
-         this.Text = "Create New Discussion";
+         this.Text = "Start New Thread";
          this.TopMost = true;
          this.Shown += new System.EventHandler(this.NewDiscussionForm_Shown);
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();

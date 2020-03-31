@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
-         this.Text = Constants.NewDiscussionCaption;
+         this.Text = Constants.StartNewThreadCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
 

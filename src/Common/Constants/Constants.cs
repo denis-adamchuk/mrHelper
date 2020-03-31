@@ -10,7 +10,7 @@ namespace mrHelper.Common.Constants
    {
       public static string CustomProtocolName = "mrhelper";
       public static string MainWindowCaption  = "Merge Request Helper";
-      public static string NewDiscussionCaption = "Create New Discussion";
+      public static string StartNewThreadCaption = "Start New Thread";
 
       public static string IconSchemeFileName = "icons.json";
       public static string ProjectListFileName = "projects.json";

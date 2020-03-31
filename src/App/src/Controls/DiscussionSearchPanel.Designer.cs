@@ -103,7 +103,7 @@
          this.textBoxSearch.Name = "textBoxSearch";
          this.textBoxSearch.Size = new System.Drawing.Size(242, 20);
          this.textBoxSearch.TabIndex = 0;
-         this.toolTipSearchPanel.SetToolTip(this.textBoxSearch, "Search text in discussions and comments.");
+         this.toolTipSearchPanel.SetToolTip(this.textBoxSearch, "Search text in threads and comments.");
          this.textBoxSearch.TextChanged += new System.EventHandler(this.textBoxSearch_TextChanged);
          this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
          // 

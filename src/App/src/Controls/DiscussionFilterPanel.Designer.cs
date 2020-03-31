@@ -88,7 +88,7 @@
          this.radioButtonShowNotResolvedOnly.Size = new System.Drawing.Size(192, 17);
          this.radioButtonShowNotResolvedOnly.TabIndex = 2;
          this.radioButtonShowNotResolvedOnly.TabStop = true;
-         this.radioButtonShowNotResolvedOnly.Text = "Show not resolved discussions only";
+         this.radioButtonShowNotResolvedOnly.Text = "Show not resolved threads only";
          this.radioButtonShowNotResolvedOnly.UseVisualStyleBackColor = true;
          // 
          // radioButtonShowResolvedOnly
@@ -99,7 +99,7 @@
          this.radioButtonShowResolvedOnly.Size = new System.Drawing.Size(174, 17);
          this.radioButtonShowResolvedOnly.TabIndex = 1;
          this.radioButtonShowResolvedOnly.TabStop = true;
-         this.radioButtonShowResolvedOnly.Text = "Show resolved discussions only";
+         this.radioButtonShowResolvedOnly.Text = "Show resolved threads only";
          this.radioButtonShowResolvedOnly.UseVisualStyleBackColor = true;
          // 
          // radioButtonNoFilterByResolution
@@ -133,7 +133,7 @@
          this.radioButtonShowUnansweredOnly.Size = new System.Drawing.Size(210, 17);
          this.radioButtonShowUnansweredOnly.TabIndex = 2;
          this.radioButtonShowUnansweredOnly.TabStop = true;
-         this.radioButtonShowUnansweredOnly.Text = "Show discussions without answers only";
+         this.radioButtonShowUnansweredOnly.Text = "Show threads without answers only";
          this.radioButtonShowUnansweredOnly.UseVisualStyleBackColor = true;
          // 
          // radioButtonShowAnsweredOnly
@@ -144,7 +144,7 @@
          this.radioButtonShowAnsweredOnly.Size = new System.Drawing.Size(195, 17);
          this.radioButtonShowAnsweredOnly.TabIndex = 1;
          this.radioButtonShowAnsweredOnly.TabStop = true;
-         this.radioButtonShowAnsweredOnly.Text = "Show discussions with answers only";
+         this.radioButtonShowAnsweredOnly.Text = "Show threads with answers only";
          this.radioButtonShowAnsweredOnly.UseVisualStyleBackColor = true;
          // 
          // radioButtonNoFilterByAnswers
@@ -165,7 +165,7 @@
          this.checkBoxCreatedByMe.Name = "checkBoxCreatedByMe";
          this.checkBoxCreatedByMe.Size = new System.Drawing.Size(198, 17);
          this.checkBoxCreatedByMe.TabIndex = 0;
-         this.checkBoxCreatedByMe.Text = "Show discussions started by me only";
+         this.checkBoxCreatedByMe.Text = "Show threads started by me only";
          this.checkBoxCreatedByMe.UseVisualStyleBackColor = true;
          // 
          // DiscussionFilterPanel

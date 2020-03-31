@@ -334,7 +334,7 @@ namespace mrHelper.App.Forms
 
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
-         string caption = String.Format("Create a new discussion in merge request \"{0}\"", title);
+         string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
          using (NewDiscussionItemForm form = new NewDiscussionItemForm(caption))
          {
             if (form.ShowDialog() == DialogResult.OK)

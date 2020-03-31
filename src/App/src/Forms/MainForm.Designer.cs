@@ -347,7 +347,7 @@ namespace mrHelper.App.Forms
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
          this.buttonDiscussions.TabIndex = 10;
          this.buttonDiscussions.Text = "Discussions";
-         this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of Discussions");
+         this.toolTip.SetToolTip(this.buttonDiscussions, "Show full list of comments and threads");
          this.buttonDiscussions.UseVisualStyleBackColor = true;
          this.buttonDiscussions.Click += new System.EventHandler(this.ButtonDiscussions_Click);
          // 
@@ -359,8 +359,8 @@ namespace mrHelper.App.Forms
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
          this.buttonNewDiscussion.TabIndex = 9;
-         this.buttonNewDiscussion.Text = "New discussion";
-         this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable discussion");
+         this.buttonNewDiscussion.Text = "New thread";
+         this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable thread");
          this.buttonNewDiscussion.UseVisualStyleBackColor = true;
          this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);
          // 
@@ -552,7 +552,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
          this.checkBoxShowOnMention.Size = new System.Drawing.Size(242, 17);
          this.checkBoxShowOnMention.TabIndex = 15;
-         this.checkBoxShowOnMention.Text = "When someone mentioned me in a discussion";
+         this.checkBoxShowOnMention.Text = "When someone mentioned me";
          this.checkBoxShowOnMention.UseVisualStyleBackColor = true;
          this.checkBoxShowOnMention.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
@@ -563,7 +563,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowResolvedAll.Name = "checkBoxShowResolvedAll";
          this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(144, 17);
          this.checkBoxShowResolvedAll.TabIndex = 14;
-         this.checkBoxShowResolvedAll.Text = "Resolved All Discussions";
+         this.checkBoxShowResolvedAll.Text = "Resolved All Threads";
          this.checkBoxShowResolvedAll.UseVisualStyleBackColor = true;
          this.checkBoxShowResolvedAll.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 

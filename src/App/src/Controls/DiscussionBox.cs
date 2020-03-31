@@ -544,7 +544,7 @@ namespace mrHelper.App.Controls
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
          {
             Tag = textBox,
-            Text = (discussionResolved ? "Unresolve" : "Resolve") + " Discussion",
+            Text = (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
             Enabled = note.Resolvable
          };
          menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
@@ -605,7 +605,7 @@ namespace mrHelper.App.Controls
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
          {
             Tag = textBox,
-            Text = "Resolve/Unresolve Discussion",
+            Text = "Resolve/Unresolve Thread",
             Enabled = firstNote.Resolvable
          };
          menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
@@ -856,7 +856,7 @@ namespace mrHelper.App.Controls
          if (!textBox.IsDisposed)
          {
             updateDiscussionNoteInTextBox(textBox, note);
-            _toolTipNotifier.Show("Discussion note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
+            _toolTipNotifier.Show("Thread note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
          }
       }
 
@@ -909,7 +909,7 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            string message = "Cannot toggle 'Resolved' state of a discussion";
+            string message = "Cannot toggle 'Resolved' state of a thread";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;

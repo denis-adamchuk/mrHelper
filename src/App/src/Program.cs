@@ -192,10 +192,10 @@ namespace mrHelper.App
             return;
          }
 
-         IntPtr concurrentDiscussionWindow = context.GetWindowByCaption(Constants.NewDiscussionCaption, false);
+         IntPtr concurrentDiscussionWindow = context.GetWindowByCaption(Constants.StartNewThreadCaption, false);
          if (concurrentDiscussionWindow != IntPtr.Zero)
          {
-            Trace.TraceWarning("Found a concurrent Create New Discussion window");
+            Trace.TraceWarning(String.Format("Found a concurrent {0} window", Constants.StartNewThreadCaption));
             Win32Tools.ForceWindowIntoForeground(concurrentDiscussionWindow);
             return;
          }
