@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
@@ -18,7 +16,6 @@ using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
-using mrHelper.CommonControls.Controls;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 
@@ -563,6 +560,22 @@ namespace mrHelper.App.Forms
             (span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss"));
       }
 
+      private string getDiscussionCount(MergeRequestKey mrk)
+      {
+         if (_discussionManager == null)
+         {
+            return "N/A";
+         }
+
+         _discussionManager.GetDiscussionCount(mrk, out int? resolvable, out int? resolved);
+         if (resolvable == null || resolved == null)
+         {
+            return "N/A";
+         }
+
+         return String.Format("{0} / {1}", resolved.Value, resolvable.Value);
+      }
+
       private string getSize(FullMergeRequestKey? fmk)
       {
          if (!fmk.HasValue)
@@ -763,6 +776,36 @@ namespace mrHelper.App.Forms
          return defaultColor;
       }
 
+      private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
+      {
+         _discussionManager.GetDiscussionCount(
+            new MergeRequestKey
+            {
+               IId = fmk.MergeRequest.IId,
+               ProjectKey = fmk.ProjectKey
+            },
+            out int? resolvable,
+            out int? resolved);
+
+         if (resolvable == null || resolved == null)
+         {
+            return Color.Black;
+         }
+
+         if (resolvable.Value == resolved.Value && resolvable.Value == 0)
+         {
+            return isSelected ? Color.LightGray : Color.Gray;
+         }
+
+         if (resolvable.Value == resolved.Value)
+         {
+            return isSelected ? Color.SpringGreen : Color.Green;
+         }
+
+         Debug.Assert(resolvable.Value > resolved.Value);
+         return isSelected ? Color.Orange : Color.Red;
+      }
+
       private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
       {
          if (!getMergeRequestKey(null).HasValue)
@@ -894,16 +937,17 @@ namespace mrHelper.App.Forms
             item.SubItems[columnHeader.Index].Tag = subItemInfo;
          }
 
-         setSubItemTag("IId",          new ListViewSubItemInfo(() => mr.IId.ToString(),       () => mr.Web_Url));
-         setSubItemTag("Author",       new ListViewSubItemInfo(() => author,                  () => String.Empty));
-         setSubItemTag("Title",        new ListViewSubItemInfo(() => mr.Title,                () => String.Empty));
-         setSubItemTag("Labels",       new ListViewSubItemInfo(() => formatLabels(mr),        () => String.Empty));
-         setSubItemTag("Size",         new ListViewSubItemInfo(() => getSize(fmk),            () => String.Empty));
-         setSubItemTag("Jira",         new ListViewSubItemInfo(() => jiraTask,                () => jiraTaskUrl));
-         setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),   () => String.Empty));
-         setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,        () => String.Empty));
-         setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,        () => String.Empty));
-         setSubItemTag("State",        new ListViewSubItemInfo(() => mr.State,                () => String.Empty));
+         setSubItemTag("IId",          new ListViewSubItemInfo(() => mr.IId.ToString(),         () => mr.Web_Url));
+         setSubItemTag("Author",       new ListViewSubItemInfo(() => author,                    () => String.Empty));
+         setSubItemTag("Title",        new ListViewSubItemInfo(() => mr.Title,                  () => String.Empty));
+         setSubItemTag("Labels",       new ListViewSubItemInfo(() => formatLabels(mr),          () => String.Empty));
+         setSubItemTag("Size",         new ListViewSubItemInfo(() => getSize(fmk),              () => String.Empty));
+         setSubItemTag("Jira",         new ListViewSubItemInfo(() => jiraTask,                  () => jiraTaskUrl));
+         setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),     () => String.Empty));
+         setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,          () => String.Empty));
+         setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,          () => String.Empty));
+         setSubItemTag("State",        new ListViewSubItemInfo(() => mr.State,                  () => String.Empty));
+         setSubItemTag("Resolved",     new ListViewSubItemInfo(() => getDiscussionCount(mrk),   () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)

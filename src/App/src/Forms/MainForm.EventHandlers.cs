@@ -291,9 +291,16 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            if (isSelected && e.ColumnIndex == 3)
+            if (isSelected && e.ColumnIndex == columnHeaderLabels.Index)
             {
                using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest, SystemColors.Window)))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+               }
+            }
+            else if (e.ColumnIndex == columnHeaderResolved.Index)
+            {
+               using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
                {
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }

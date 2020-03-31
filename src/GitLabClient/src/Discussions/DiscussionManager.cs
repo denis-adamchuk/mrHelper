@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
@@ -75,6 +74,19 @@ namespace mrHelper.Client.Discussions
             timer.Dispose();
          }
          _oneShotTimers.Clear();
+      }
+
+      public void GetDiscussionCount(MergeRequestKey mrk, out int? resolvable, out int? resolved)
+      {
+         if (!_cachedDiscussions.ContainsKey(mrk))
+         {
+            resolvable = null;
+            resolved = null;
+            return;
+         }
+
+         resolvable = _cachedDiscussions[mrk].ResolvableDiscussionCount;
+         resolved = _cachedDiscussions[mrk].ResolvedDiscussionCount;
       }
 
       async public Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
@@ -291,11 +303,15 @@ namespace mrHelper.Client.Discussions
                   _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A",
                noteCount));
 
+            calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
+
             _cachedDiscussions[mrk] = new CachedDiscussions
             {
                TimeStamp = mergeRequestUpdatedAt,
                NoteCount = noteCount,
-               Discussions = discussions.ToArray()
+               Discussions = discussions.ToArray(),
+               ResolvableDiscussionCount = resolvableDiscussionCount,
+               ResolvedDiscussionCount = resolvedDiscussionCount
             };
          }
          else
@@ -307,6 +323,24 @@ namespace mrHelper.Client.Discussions
          }
 
          PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
+      }
+
+      private void calcDiscussionCount(IEnumerable<Discussion> discussions, out int resolvable, out int resolved)
+      {
+         resolvable = 0;
+         resolved = 0;
+
+         foreach (Discussion discussion in discussions)
+         {
+            if (discussion.Notes.Any(x => x.Resolvable))
+            {
+               ++resolvable;
+               if (discussion.Notes.All(x => !x.Resolvable || x.Resolved))
+               {
+                  ++resolved;
+               }
+            }
+         }
       }
 
       private void onDiscussionParserEvent(UserEvents.DiscussionEvent e)
@@ -404,6 +438,8 @@ namespace mrHelper.Client.Discussions
       {
          public DateTime TimeStamp;
          public int NoteCount;
+         public int ResolvableDiscussionCount;
+         public int ResolvedDiscussionCount;
          public IEnumerable<Discussion> Discussions;
       }
 

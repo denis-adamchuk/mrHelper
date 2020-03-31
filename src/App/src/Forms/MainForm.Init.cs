@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
@@ -458,6 +459,8 @@ namespace mrHelper.App.Forms
 
          _timeTrackingManager.PreLoadTotalTime += onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime += onPostLoadTrackedTime;
+
+         _discussionManager.PostLoadDiscussions += onPostLoadDiscussions;
       }
 
       private void unsubscribeFromWorkflowAndDependencies()
@@ -469,6 +472,8 @@ namespace mrHelper.App.Forms
 
          _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
+
+         _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
       }
 
       private async Task finalizeCommitChainCreator()
@@ -510,6 +515,13 @@ namespace mrHelper.App.Forms
          }
 
          // Update total time column in the table
+         listViewMergeRequests.Invalidate();
+      }
+
+      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+         DateTime dateTime, bool b)
+      {
+         // Update Discussions column in the table
          listViewMergeRequests.Invalidate();
       }
 

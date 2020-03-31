@@ -114,6 +114,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderResolved = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearch = new System.Windows.Forms.GroupBox();
@@ -869,6 +870,7 @@ namespace mrHelper.App.Forms
             this.columnHeaderSize,
             this.columnHeaderJira,
             this.columnHeaderTotalTime,
+            this.columnHeaderResolved,
             this.columnHeaderSourceBranch,
             this.columnHeaderTargetBranch});
          this.listViewMergeRequests.FullRowSelect = true;
@@ -944,6 +946,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderTargetBranch.Tag = "TargetBranch";
          this.columnHeaderTargetBranch.Text = "Target Branch";
          this.columnHeaderTargetBranch.Width = 100;
+         // 
+         // columnHeaderResolved
+         // 
+         this.columnHeaderResolved.Tag = "Resolved";
+         this.columnHeaderResolved.Text = "Resolved";
+         this.columnHeaderResolved.Width = 65;
          // 
          // checkBoxLabels
          // 
@@ -1559,6 +1567,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
         private System.Windows.Forms.ColumnHeader columnHeaderSourceBranch;
         private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
+        private System.Windows.Forms.ColumnHeader columnHeaderResolved;
         private System.Windows.Forms.CheckBox checkBoxLabels;
         private System.Windows.Forms.TabPage tabPageSearch;
         private System.Windows.Forms.GroupBox groupBoxSearch;
