@@ -12,6 +12,7 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using static mrHelper.App.Helpers.ServiceManager;
 using static mrHelper.Client.Common.UserEvents;
+using mrHelper.Client.Discussions;
 using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
@@ -556,8 +557,18 @@ namespace mrHelper.App.Forms
 
       private string convertTotalTimeToText(TimeSpan? span)
       {
-         return !span.HasValue ? "Loading..." :
-            (span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss"));
+         if (!span.HasValue)
+         {
+            return "N/A";
+         }
+
+         // See comment for TimeSpan.MinValue in TimeTrackingManager
+         if (span.Value == TimeSpan.MinValue)
+         {
+            return "Loading...";
+         }
+
+         return span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss");
       }
 
       private string getDiscussionCount(MergeRequestKey mrk)
@@ -567,13 +578,21 @@ namespace mrHelper.App.Forms
             return "N/A";
          }
 
-         _discussionManager.GetDiscussionCount(mrk, out int? resolvable, out int? resolved);
-         if (resolvable == null || resolved == null)
+         DiscussionManager.DiscussionCount dc = _discussionManager.GetDiscussionCount(mrk);
+         switch (dc.Status)
          {
-            return "N/A";
+            case DiscussionManager.DiscussionCount.EStatus.NotAvailable:
+               return "N/A";
+
+            case DiscussionManager.DiscussionCount.EStatus.Loading:
+               return "Loading...";
+
+            case DiscussionManager.DiscussionCount.EStatus.Ready:
+               return String.Format("{0} / {1}", dc.Resolved.Value, dc.Resolvable.Value);
          }
 
-         return String.Format("{0} / {1}", resolved.Value, resolvable.Value);
+         Debug.Assert(false);
+         return "N/A";
       }
 
       private string getSize(FullMergeRequestKey? fmk)
@@ -778,31 +797,25 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         _discussionManager.GetDiscussionCount(
+         DiscussionManager.DiscussionCount dc = _discussionManager.GetDiscussionCount(
             new MergeRequestKey
             {
                IId = fmk.MergeRequest.IId,
                ProjectKey = fmk.ProjectKey
-            },
-            out int? resolvable,
-            out int? resolved);
+            });
 
-         if (resolvable == null || resolved == null)
+         if (dc.Status != DiscussionManager.DiscussionCount.EStatus.Ready
+          || dc.Resolvable == null || dc.Resolved == null)
          {
             return Color.Black;
          }
 
-         if (resolvable.Value == resolved.Value && resolvable.Value == 0)
-         {
-            return isSelected ? Color.LightGray : Color.Gray;
-         }
-
-         if (resolvable.Value == resolved.Value)
+         if (dc.Resolvable.Value == dc.Resolved.Value)
          {
             return isSelected ? Color.SpringGreen : Color.Green;
          }
 
-         Debug.Assert(resolvable.Value > resolved.Value);
+         Debug.Assert(dc.Resolvable.Value > dc.Resolved.Value);
          return isSelected ? Color.Orange : Color.Red;
       }
 
@@ -1559,8 +1572,8 @@ namespace mrHelper.App.Forms
 
       private void enqueueCheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
       {
-         _mergeRequestCache.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
-         _discussionManager.CheckForUpdates(mrk, firstChanceDelay, secondChanceDelay);
+         _mergeRequestCache.CheckForUpdates(mrk, new int[] { firstChanceDelay, secondChanceDelay });
+         _discussionManager.CheckForUpdates(mrk, new int[] { firstChanceDelay, secondChanceDelay });
       }
 
       private static void disableSSLVerification()

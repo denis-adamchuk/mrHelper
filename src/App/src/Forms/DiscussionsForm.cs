@@ -13,6 +13,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.GitClient;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Forms
 {
@@ -354,6 +355,7 @@ namespace mrHelper.App.Forms
                   // 'lite' means that there were no a preceding PreContentChange event, so we did not suspend layout
                   updateLayout(null, true, lite);
                   updateSearch();
+                  _manager.CheckForUpdates(_mergeRequestKey, new int[] { Constants.DiscussionCheckOnNewThreadInterval });
                },
                sender => MostRecentFocusedDiscussionControl = sender,
                this, _mergeRequestKey.ProjectKey)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -7,14 +8,13 @@ using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
+using mrHelper.GitClient;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
-using mrHelper.Client.MergeRequests;
-using mrHelper.GitClient;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
-using System.Linq;
 
 namespace mrHelper.App.Forms
 {
@@ -326,6 +326,8 @@ namespace mrHelper.App.Forms
                {
                   MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  labelWorkflowStatus.Text = "Cannot create a discussion";
+                  return;
                }
                labelWorkflowStatus.Text = "Comment added";
             }
@@ -357,8 +359,12 @@ namespace mrHelper.App.Forms
                {
                   MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  labelWorkflowStatus.Text = "Cannot create a discussion";
+                  return;
                }
-               labelWorkflowStatus.Text = "Discussion created";
+               labelWorkflowStatus.Text = "Thread started";
+
+               _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval });
             }
          }
       }

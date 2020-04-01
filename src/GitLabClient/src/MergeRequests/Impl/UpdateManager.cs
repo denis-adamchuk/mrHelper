@@ -48,14 +48,21 @@ namespace mrHelper.Client.MergeRequests
          _oneShotTimers.Clear();
       }
 
-      public void RequestOneShotUpdate(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
+      public void RequestOneShotUpdate(MergeRequestKey mrk, int[] intervals)
       {
-         enqueueOneShotTimer(mrk, firstChanceDelay);
-         enqueueOneShotTimer(mrk, secondChanceDelay);
+         foreach (int interval in intervals)
+         {
+            enqueueOneShotTimer(mrk, interval);
+         }
       }
 
       private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
       {
+         if (interval < 1)
+         {
+            return;
+         }
+
          System.Timers.Timer timer = new System.Timers.Timer
          {
             Interval = interval,

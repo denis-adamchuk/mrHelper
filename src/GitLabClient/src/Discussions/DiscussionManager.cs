@@ -29,7 +29,7 @@ namespace mrHelper.Client.Discussions
    {
       public event Action<MergeRequestKey> PreLoadDiscussions;
       public event Action<MergeRequestKey, IEnumerable<Discussion>, DateTime, bool> PostLoadDiscussions;
-      public event Action FailedLoadDiscussions;
+      public event Action<MergeRequestKey> FailedLoadDiscussions;
 
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
@@ -76,17 +76,43 @@ namespace mrHelper.Client.Discussions
          _oneShotTimers.Clear();
       }
 
-      public void GetDiscussionCount(MergeRequestKey mrk, out int? resolvable, out int? resolved)
+      public struct DiscussionCount
       {
-         if (!_cachedDiscussions.ContainsKey(mrk))
+         public enum EStatus
          {
-            resolvable = null;
-            resolved = null;
-            return;
+            NotAvailable,
+            Loading,
+            Ready
          }
 
-         resolvable = _cachedDiscussions[mrk].ResolvableDiscussionCount;
-         resolved = _cachedDiscussions[mrk].ResolvedDiscussionCount;
+         public int? Resolvable;
+         public int? Resolved;
+         public EStatus Status;
+      }
+
+      public DiscussionCount GetDiscussionCount(MergeRequestKey mrk)
+      {
+         int? resolvable = null;
+         int? resolved = null;
+         DiscussionCount.EStatus status = DiscussionCount.EStatus.NotAvailable;
+
+         if (_updating.Contains(mrk))
+         {
+            status = DiscussionCount.EStatus.Loading;
+         }
+         else if (_cachedDiscussions.ContainsKey(mrk))
+         {
+            status = DiscussionCount.EStatus.Ready;
+            resolvable = _cachedDiscussions[mrk].ResolvableDiscussionCount;
+            resolved = _cachedDiscussions[mrk].ResolvedDiscussionCount;
+         }
+
+         return new DiscussionCount
+         {
+            Resolvable = resolvable,
+            Resolved = resolved,
+            Status = status
+         };
       }
 
       async public Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
@@ -141,10 +167,12 @@ namespace mrHelper.Client.Discussions
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public void CheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
+      public void CheckForUpdates(MergeRequestKey mrk, int[] intervals)
       {
-         enqueueOneShotTimer(mrk, firstChanceDelay);
-         enqueueOneShotTimer(mrk, secondChanceDelay);
+         foreach (int interval in intervals)
+         {
+            enqueueOneShotTimer(mrk, interval);
+         }
       }
 
       private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
@@ -245,6 +273,14 @@ namespace mrHelper.Client.Discussions
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
+         // TODO - GitLab has a bug. It does not amend updated_at timestamp of notes when they got resolved
+         // by Resolve Thread button (the same for API call).
+         // So this is a workaround for the bug, load discussions always but do nothing
+         // if number of discussions did not change.
+         // This kills caching but I don't see another choice for now,
+         // may be they fix it and we revert this kludge later.
+
+         /*
          Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
          int noteCount = await _operator.GetNoteCount(mrk);
 
@@ -264,6 +300,10 @@ namespace mrHelper.Client.Discussions
             }
             return;
          }
+         */
+
+         int noteCount = 0;
+         DateTime mergeRequestUpdatedAt = default(Note).Updated_At;
 
          if (_closed.Contains(mrk))
          {
@@ -275,16 +315,15 @@ namespace mrHelper.Client.Discussions
          }
 
          IEnumerable<Discussion> discussions;
-
-         PreLoadDiscussions?.Invoke(mrk);
          try
          {
             _updating.Add(mrk);
+            PreLoadDiscussions?.Invoke(mrk);
             discussions = await _operator.GetDiscussionsAsync(mrk);
          }
          catch (OperatorException)
          {
-            FailedLoadDiscussions?.Invoke();
+            FailedLoadDiscussions?.Invoke(mrk);
             throw;
          }
          finally

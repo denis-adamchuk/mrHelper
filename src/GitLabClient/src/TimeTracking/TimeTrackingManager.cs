@@ -52,7 +52,7 @@ namespace mrHelper.Client.TimeTracking
       }
 
       public event Action<MergeRequestKey> PreLoadTotalTime;
-      public event Action FailedLoadTotalTime;
+      public event Action<MergeRequestKey> FailedLoadTotalTime;
       public event Action<MergeRequestKey> PostLoadTotalTime;
 
       public TimeSpan? GetTotalTime(MergeRequestKey mrk)
@@ -136,6 +136,9 @@ namespace mrHelper.Client.TimeTracking
 
       private void onPreLoadDiscussions(MergeRequestKey mrk)
       {
+         // TODO TimeSpan.MinValue is a bad design decision, consider implementing States
+         // by analogy with DiscussionManager.GetDiscussionCount()
+         _times[mrk] = TimeSpan.MinValue;
          PreLoadTotalTime?.Invoke(mrk);
       }
 
@@ -145,9 +148,13 @@ namespace mrHelper.Client.TimeTracking
          processDiscussions(mrk, discussions);
       }
 
-      private void onFailedLoadDiscussions()
+      private void onFailedLoadDiscussions(MergeRequestKey mrk)
       {
-         FailedLoadTotalTime?.Invoke();
+         if (_times.ContainsKey(mrk))
+         {
+            _times.Remove(mrk);
+         }
+         FailedLoadTotalTime?.Invoke(mrk);
       }
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)

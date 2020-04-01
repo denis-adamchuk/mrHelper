@@ -459,8 +459,11 @@ namespace mrHelper.App.Forms
 
          _timeTrackingManager.PreLoadTotalTime += onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime += onPostLoadTrackedTime;
+         _timeTrackingManager.FailedLoadTotalTime += onFailedLoadTotalTime;
 
+         _discussionManager.PreLoadDiscussions += onPreLoadDiscussions;
          _discussionManager.PostLoadDiscussions += onPostLoadDiscussions;
+         _discussionManager.FailedLoadDiscussions += onFailedLoadDiscussions;
       }
 
       private void unsubscribeFromWorkflowAndDependencies()
@@ -472,8 +475,11 @@ namespace mrHelper.App.Forms
 
          _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
          _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
+         _timeTrackingManager.FailedLoadTotalTime -= onFailedLoadTotalTime;
 
+         _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
          _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
+         _discussionManager.FailedLoadDiscussions -= onFailedLoadDiscussions;
       }
 
       private async Task finalizeCommitChainCreator()
@@ -497,20 +503,25 @@ namespace mrHelper.App.Forms
 
       private void onPreLoadTrackedTime(MergeRequestKey mrk)
       {
-         MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
-         if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
-         {
-            // change control enabled state
-            updateTotalTime(mrk);
-         }
+         onTrackedTimeManagerEvent(mrk);
       }
 
       private void onPostLoadTrackedTime(MergeRequestKey mrk)
       {
+         onTrackedTimeManagerEvent(mrk);
+      }
+
+      private void onFailedLoadTotalTime(MergeRequestKey mrk)
+      {
+         onTrackedTimeManagerEvent(mrk);
+      }
+
+      private void onTrackedTimeManagerEvent(MergeRequestKey mrk)
+      {
          MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
          if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
          {
-            // change control enabled state and update text
+            // change control enabled state
             updateTotalTime(mrk);
          }
 
@@ -518,8 +529,23 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.Invalidate();
       }
 
+      private void onPreLoadDiscussions(MergeRequestKey mrk)
+      {
+         onDiscussionManagerEvent();
+      }
+
       private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          DateTime dateTime, bool b)
+      {
+         onDiscussionManagerEvent();
+      }
+
+      private void onFailedLoadDiscussions(MergeRequestKey mrk)
+      {
+         onDiscussionManagerEvent();
+      }
+
+      private void onDiscussionManagerEvent()
       {
          // Update Discussions column in the table
          listViewMergeRequests.Invalidate();

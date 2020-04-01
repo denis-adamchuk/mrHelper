@@ -27,6 +27,9 @@ namespace mrHelper.Common.Constants
 
       public static int CheckForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
 
+      public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
+      public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 1000 * 15; // 15 seconds
+
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";
 

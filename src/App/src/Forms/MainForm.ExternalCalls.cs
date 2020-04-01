@@ -79,7 +79,15 @@ namespace mrHelper.App.Forms
                "Cannot create a discussion",
                MessageBoxButtons.OK, MessageBoxIcon.Error,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            return;
          }
+
+         MergeRequestKey mrk = new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
+            IId = snapshot.MergeRequestIId
+         };
+         _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval });
       }
 
       /// <summary>
