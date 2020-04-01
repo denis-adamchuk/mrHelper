@@ -1681,7 +1681,7 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey);
          updateTotalTime(new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId });
 
-         labelWorkflowStatus.Text = String.Format("Merge request with Id {0} loaded", mergeRequest.Id);
+         labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", mergeRequest.IId);
 
          Trace.TraceInformation(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
