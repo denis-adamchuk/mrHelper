@@ -951,7 +951,7 @@ namespace mrHelper.App.Controls
             removeTextBoxes();
             // it is not an error here, we treat it as 'last discussion item has been deleted'
             // Seems it was the only note in the discussion, remove ourselves from parents controls
-            Parent.Controls.Remove(this);
+            Parent?.Controls.Remove(this);
             _onContentChanged(this, false);
             return;
          }

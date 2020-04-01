@@ -302,8 +302,9 @@ namespace mrHelper.Client.Discussions
          }
          */
 
+         Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
+         DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
          int noteCount = 0;
-         DateTime mergeRequestUpdatedAt = default(Note).Updated_At;
 
          if (_closed.Contains(mrk))
          {
