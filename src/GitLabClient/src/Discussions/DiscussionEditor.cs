@@ -20,11 +20,13 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionEditor
    {
-      internal DiscussionEditor(MergeRequestKey mrk, string discussionId, DiscussionOperator discussionOperator)
+      internal DiscussionEditor(MergeRequestKey mrk, string discussionId, DiscussionOperator discussionOperator,
+         Action onDiscussionResolved)
       {
          _operator = discussionOperator;
          _mergeRequestKey = mrk;
          _discussionId = discussionId;
+         _onDiscussionResolved = onDiscussionResolved;
       }
 
       async public Task<Discussion> GetDiscussion()
@@ -97,11 +99,16 @@ namespace mrHelper.Client.Discussions
          {
             throw new DiscussionEditorException("Cannot change discussion resolve state", ex);
          }
+         finally
+         {
+            _onDiscussionResolved();
+         }
       }
 
       private readonly DiscussionOperator _operator;
       private MergeRequestKey _mergeRequestKey;
       private readonly string _discussionId;
+      private readonly Action _onDiscussionResolved;
    }
 }
 

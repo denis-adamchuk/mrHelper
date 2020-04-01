@@ -946,7 +946,7 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            ExceptionHandlers.Handle("Not an error - last discussion item has bee deleted", ex);
+            ExceptionHandlers.Handle("Not an error - last discussion item has been deleted", ex);
 
             removeTextBoxes();
             // it is not an error here, we treat it as 'last discussion item has been deleted'
@@ -963,7 +963,7 @@ namespace mrHelper.App.Controls
          {
             // It happens when Discussion has System notes like 'a line changed ...'
             // along with a user note that has been just deleted
-            Parent.Controls.Remove(this);
+            Parent?.Controls.Remove(this);
             _onContentChanged(this, false);
             return;
          }

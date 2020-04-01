@@ -152,7 +152,21 @@ namespace mrHelper.Client.Discussions
 
       public DiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
       {
-         return new DiscussionEditor(mrk, discussionId, _operator);
+         return new DiscussionEditor(mrk, discussionId, _operator,
+            () =>
+            {
+               // TODO It can be removed when GitLab issue is fixed, see commit message
+               if (!_cachedDiscussions.ContainsKey(mrk) || _updating.Contains(mrk))
+               {
+                  return;
+               }
+
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Remove MR from cache after a Thread is (un)resolved: "
+                + "Host={0}, Project={1}, IId={2}",
+                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+               _cachedDiscussions.Remove(mrk);
+            });
       }
 
       public void ForceUpdate(MergeRequestKey mrk)
@@ -273,14 +287,6 @@ namespace mrHelper.Client.Discussions
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
-         // TODO - GitLab has a bug. It does not amend updated_at timestamp of notes when they got resolved
-         // by Resolve Thread button (the same for API call).
-         // So this is a workaround for the bug, load discussions always but do nothing
-         // if number of discussions did not change.
-         // This kills caching but I don't see another choice for now,
-         // may be they fix it and we revert this kludge later.
-
-         /*
          Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
          int noteCount = await _operator.GetNoteCount(mrk);
 
@@ -293,18 +299,14 @@ namespace mrHelper.Client.Discussions
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Discussions are up-to-date, "
-                + "remote time stamp {0}, cached time stamp {1}, note count {2}",
+                + "remote time stamp {0}, cached time stamp {1}, note count {2}, resolved {3}, resolvable {4}",
                   mergeRequestUpdatedAt.ToLocalTime().ToString(),
                   _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString(),
-                  noteCount));
+                  noteCount,
+                  _cachedDiscussions[mrk].ResolvedDiscussionCount, _cachedDiscussions[mrk].ResolvableDiscussionCount));
             }
             return;
          }
-         */
-
-         Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
-         DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
-         int noteCount = 0;
 
          if (_closed.Contains(mrk))
          {
@@ -334,16 +336,16 @@ namespace mrHelper.Client.Discussions
 
          if (!_closed.Contains(mrk))
          {
+            calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
+
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
-             + " cached time stamp {4} (was {5} before update), note count = {6}",
+             + " cached time stamp {4} (was {5} before update), note count = {6}, resolved = {7}, resolvable = {8}",
                discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                mergeRequestUpdatedAt.ToLocalTime().ToString(),
                _cachedDiscussions.ContainsKey(mrk) ?
                   _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A",
-               noteCount));
-
-            calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
+               noteCount, resolvedDiscussionCount, resolvableDiscussionCount));
 
             _cachedDiscussions[mrk] = new CachedDiscussions
             {
