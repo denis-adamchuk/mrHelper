@@ -691,7 +691,7 @@ namespace mrHelper.App.Forms
          updateVisibleMergeRequests();
       }
 
-      async private void ButtonReloadList_Click(object sender, EventArgs e)
+      private void ButtonReloadList_Click(object sender, EventArgs e)
       {
          if (Program.Settings.ShowWarningOnReloadList)
          {
@@ -706,7 +706,7 @@ namespace mrHelper.App.Forms
                : String.Format("{0} seconds", autoUpdateMs / 1000);
 
             string message = String.Format(
-               "Merge Request list updates each {0} and you don't usually need to reload it manually", periodicity);
+               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
             MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             Program.Settings.ShowWarningOnReloadList = false;
@@ -715,7 +715,18 @@ namespace mrHelper.App.Forms
          if (getHostName() != String.Empty)
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
-            await switchHostToSelected();
+
+            buttonReloadList.Enabled = false;
+
+            string oldButtonText = buttonReloadList.Text;
+            buttonReloadList.Text = "Updating...";
+
+            enqueueCheckForUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval },
+               () =>
+               {
+                  buttonReloadList.Enabled = true;
+                  buttonReloadList.Text = oldButtonText;
+               });
          }
       }
 

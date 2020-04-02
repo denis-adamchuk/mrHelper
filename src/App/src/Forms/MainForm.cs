@@ -82,6 +82,7 @@ namespace mrHelper.App.Forms
       public event Action<string, User, IEnumerable<Project>> Connected;
       public event Action<string, Project, IEnumerable<MergeRequest>> LoadedMergeRequests;
       public event Action<string, string, MergeRequest, GitLabSharp.Entities.Version> LoadedMergeRequestVersion;
+      public event Action<string, IEnumerable<Project>> LoadedProjects;
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
       {

@@ -29,6 +29,7 @@ namespace mrHelper.Client.MergeRequests
          _workflowEventNotifier.Connected += onConnected;
          _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
          _workflowEventNotifier.LoadedMergeRequestVersion += onLoadedMergeRequestVersion;
+         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
       }
 
       public void Dispose()
@@ -36,6 +37,7 @@ namespace mrHelper.Client.MergeRequests
          _workflowEventNotifier.Connected -= onConnected;
          _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
          _workflowEventNotifier.LoadedMergeRequestVersion -= onLoadedMergeRequestVersion;
+         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
          if (_updateManager != null)
          {
@@ -104,9 +106,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Request to update the specified MR after the specified time periods (in milliseconds)
       /// </summary>
-      public void CheckForUpdates(MergeRequestKey mrk, int[] intervals)
+      public void CheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
-         _updateManager.RequestOneShotUpdate(mrk, intervals);
+         _updateManager.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
       }
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
@@ -121,6 +123,8 @@ namespace mrHelper.Client.MergeRequests
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
+         Trace.TraceInformation(String.Format( "[MergeRequestCache] Connected to {0}", hostname));
+
          _hostname = hostname;
          _cache = new WorkflowDetailsCache();
 
@@ -128,7 +132,36 @@ namespace mrHelper.Client.MergeRequests
          {
             _updateManager.OnUpdate -= onUpdate;
             _updateManager.Dispose();
+            _updateManager = null;
          }
+      }
+
+      private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
+      {
+         Trace.TraceInformation(String.Format(
+            "[MergeRequestCache] Loaded {0} merge requests for project {1} at hostname {2}",
+            mergeRequests.Count(), project.Path_With_Namespace, hostname));
+
+         _cache?.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
+      }
+
+      private void onLoadedMergeRequestVersion(string hostname, string projectname,
+         MergeRequest mergeRequest, Version version)
+      {
+         Trace.TraceInformation(String.Format(
+            "[MergeRequestCache] Loaded a version of merge request with IId {0} for project {1} at hostname {2}",
+            mergeRequest.IId, projectname, hostname));
+
+         _cache?.UpdateLatestVersion(new MergeRequestKey
+         {
+            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+            IId = mergeRequest.IId
+         }, version);
+      }
+
+      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      {
+         Debug.Assert(_updateManager == null);
 
          _updateManager = new UpdateManager(_synchronizeInvoke, _updateOperator, _hostname, projects, _cache,
             _autoUpdatePeriodMs);
@@ -137,21 +170,6 @@ namespace mrHelper.Client.MergeRequests
          Trace.TraceInformation(String.Format(
             "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
             hostname, projects.Count()));
-      }
-
-      private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
-      {
-         _cache?.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
-      }
-
-      private void onLoadedMergeRequestVersion(string hostname, string projectname,
-         MergeRequest mergeRequest, Version version)
-      {
-         _cache?.UpdateLatestVersion(new MergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
-            IId = mergeRequest.IId
-         }, version);
       }
 
       private string _hostname;

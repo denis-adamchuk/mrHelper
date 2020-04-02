@@ -37,8 +37,9 @@ namespace mrHelper.Client.MergeRequests
 
       public void Dispose()
       {
-         _timer.Stop();
-         _timer.Dispose();
+         _timer?.Stop();
+         _timer?.Dispose();
+         _timer = null;
 
          foreach (System.Timers.Timer timer in _oneShotTimers)
          {
@@ -48,15 +49,15 @@ namespace mrHelper.Client.MergeRequests
          _oneShotTimers.Clear();
       }
 
-      public void RequestOneShotUpdate(MergeRequestKey mrk, int[] intervals)
+      public void RequestOneShotUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          foreach (int interval in intervals)
          {
-            enqueueOneShotTimer(mrk, interval);
+            enqueueOneShotTimer(mrk, interval, onUpdateFinished);
          }
       }
 
-      private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
+      private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
       {
          if (interval < 1)
          {
@@ -67,7 +68,7 @@ namespace mrHelper.Client.MergeRequests
          {
             Interval = interval,
             AutoReset = false,
-            SynchronizingObject = _timer.SynchronizingObject
+            SynchronizingObject = _timer?.SynchronizingObject
          };
 
          timer.Elapsed +=
@@ -80,32 +81,18 @@ namespace mrHelper.Client.MergeRequests
                return;
             }
 
-            IWorkflowDetails oldDetails = _cache.Details.Clone();
+            IEnumerable<UserEvents.MergeRequestEvent> updates =
+               await (mrk.HasValue ? updateOneOnTimer(mrk.Value) : updateAllOnTimer());
 
-            try
+            if (updates != null)
             {
-               await loadDataAndUpdateCacheAsync(mrk);
-            }
-            catch (UpdateException ex)
-            {
-               ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
-               return;
+               OnUpdate?.Invoke(updates);
             }
 
-            IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
-               oldDetails, _cache.Details);
-
-            int legalUpdates = updates.Count(x => x.Labels);
-            Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
-
-            Trace.TraceInformation(
-               String.Format(
-                  "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
-                  legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
-
-            OnUpdate?.Invoke(updates);
+            onUpdateFinished?.Invoke();
+            _timer?.Start();
          };
-
+         _timer?.Stop();
          timer.Start();
 
          _oneShotTimers.Add(timer);
@@ -123,12 +110,66 @@ namespace mrHelper.Client.MergeRequests
             return;
          }
 
+         IEnumerable<UserEvents.MergeRequestEvent> updates = await updateAllOnTimer();
+
+         if (updates != null)
+         {
+            OnUpdate?.Invoke(updates);
+         }
+      }
+
+      async private Task<IEnumerable<UserEvents.MergeRequestEvent>> updateOneOnTimer(MergeRequestKey mrk)
+      {
+         if (_updating)
+         {
+            return null;
+         }
+
+         IWorkflowDetails oldDetails = _cache.Details.Clone();
+
+         try
+         {
+            _updating = true;
+            await loadDataAndUpdateCacheAsync(mrk);
+         }
+         catch (UpdateException ex)
+         {
+            ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
+            return null;
+         }
+         finally
+         {
+            _updating = false;
+         }
+
+         IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
+            oldDetails, _cache.Details);
+
+         int legalUpdates = updates.Count(x => x.Labels);
+         Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
+
+         Trace.TraceInformation(
+            String.Format(
+               "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
+               legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+
+         return updates;
+      }
+
+      async private Task<IEnumerable<UserEvents.MergeRequestEvent>> updateAllOnTimer()
+      {
+         if (_updating)
+         {
+            return null;
+         }
+
          IWorkflowDetails oldDetails = _cache.Details.Clone();
 
          foreach (Project project in _projects)
          {
             try
             {
+               _updating = true;
                await loadDataAndUpdateCacheAsync(_hostname, project);
             }
             catch (UpdateException ex)
@@ -136,6 +177,10 @@ namespace mrHelper.Client.MergeRequests
                ExceptionHandlers.Handle(String.Format(
                   "Cannot update project {0}", project.Path_With_Namespace), ex);
                continue;
+            }
+            finally
+            {
+               _updating = false;
             }
          }
 
@@ -150,7 +195,7 @@ namespace mrHelper.Client.MergeRequests
                updates.Count(x => x.Labels),
                updates.Count(x => x.Closed)));
 
-         OnUpdate?.Invoke(updates);
+         return updates;
       }
 
       async private Task loadDataAndUpdateCacheAsync(string hostname, Project project)
@@ -227,7 +272,7 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      private readonly System.Timers.Timer _timer;
+      private System.Timers.Timer _timer;
       private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
       private readonly WorkflowDetailsCache _cache;
@@ -236,6 +281,8 @@ namespace mrHelper.Client.MergeRequests
 
       private readonly string _hostname;
       private readonly IEnumerable<Project> _projects;
+
+      private bool _updating; /// prevents re-entrance in timer updates
    }
 }
 

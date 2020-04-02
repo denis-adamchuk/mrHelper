@@ -87,7 +87,8 @@ namespace mrHelper.App.Forms
             ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
             IId = snapshot.MergeRequestIId
          };
-         _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval });
+         _discussionManager.CheckForUpdates(mrk,
+            new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
       }
 
       /// <summary>

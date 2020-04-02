@@ -48,17 +48,23 @@ namespace mrHelper.Client.Discussions
 
          if (initialSnapshot)
          {
-            // consider all notes already parsed and skip checking
-            _latestParsingTime[mrk] = updatedAt;
-            return;
+            if (!_latestParsingTime.ContainsKey(mrk))
+            {
+               // consider all notes already parsed and skip checking
+               _latestParsingTime[mrk] = updatedAt;
+               return;
+            }
          }
+
+         // If we already processed this MR, then notify on new notes only, otherwise on everything
+         DateTime? lastProcessedTime = _latestParsingTime.ContainsKey(mrk)
+            ? _latestParsingTime[mrk] : new Nullable<DateTime>();
 
          foreach (Discussion discussion in discussions)
          {
             foreach (DiscussionNote note in discussion.Notes)
             {
-               Debug.Assert(_latestParsingTime.ContainsKey(mrk) || !initialSnapshot);
-               if (_latestParsingTime.ContainsKey(mrk) && note.Updated_At <= _latestParsingTime[mrk])
+               if (lastProcessedTime.HasValue && note.Updated_At <= lastProcessedTime.Value)
                {
                   continue;
                }
@@ -139,6 +145,7 @@ namespace mrHelper.Client.Discussions
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
+         _latestParsingTime.Clear();
       }
 
       private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =

@@ -65,8 +65,8 @@ namespace mrHelper.Client.Discussions
          _parser.DiscussionEvent -= onDiscussionParserEvent;
          _parser.Dispose();
 
-         _timer.Stop();
-         _timer.Dispose();
+         _timer?.Stop();
+         _timer?.Dispose();
 
          foreach (System.Timers.Timer timer in _oneShotTimers)
          {
@@ -96,7 +96,7 @@ namespace mrHelper.Client.Discussions
          int? resolved = null;
          DiscussionCount.EStatus status = DiscussionCount.EStatus.NotAvailable;
 
-         if (_updating.Contains(mrk))
+         if (_loading.HasValue && _loading.Value.Equals(mrk))
          {
             status = DiscussionCount.EStatus.Loading;
          }
@@ -117,21 +117,16 @@ namespace mrHelper.Client.Discussions
 
       async public Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
-         if (_updating.Contains(mrk))
+         if (isUpdating(mrk))
          {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Waiting for completion of updating discussions for MR: Host={0}, Project={1}, IId={2}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            // To avoid re-entrance in updateDiscussionsAsync()
+            await waitForUpdateCompetion(mrk);
          }
-
-         while (_updating.Contains(mrk))
-         {
-            await Task.Delay(50);
-         }
+         Debug.Assert(!_updating.Contains(mrk));
 
          try
          {
-            await updateDiscussionsAsync(mrk, true, !_updating.Contains(mrk));
+            await updateDiscussionsAsync(mrk, true, false);
          }
          catch (OperatorException ex)
          {
@@ -140,9 +135,8 @@ namespace mrHelper.Client.Discussions
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
          }
 
-         Debug.Assert(!_closed.Contains(mrk));
-         Debug.Assert(_cachedDiscussions.ContainsKey(mrk));
-         return _cachedDiscussions[mrk].Discussions;
+         Debug.Assert(!_reconnect || !_cachedDiscussions.ContainsKey(mrk));
+         return _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].Discussions : null;
       }
 
       public DiscussionCreator GetDiscussionCreator(MergeRequestKey mrk)
@@ -156,7 +150,7 @@ namespace mrHelper.Client.Discussions
             () =>
             {
                // TODO It can be removed when GitLab issue is fixed, see commit message
-               if (!_cachedDiscussions.ContainsKey(mrk) || _updating.Contains(mrk))
+               if (!_cachedDiscussions.ContainsKey(mrk))
                {
                   return;
                }
@@ -169,27 +163,18 @@ namespace mrHelper.Client.Discussions
             });
       }
 
-      public void ForceUpdate(MergeRequestKey mrk)
-      {
-         Trace.TraceInformation(String.Format(
-            "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0} (force update)",
-            mrk.IId));
-
-         scheduleUpdate(new MergeRequestKey[] { mrk }, true);
-      }
-
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public void CheckForUpdates(MergeRequestKey mrk, int[] intervals)
+      public void CheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          foreach (int interval in intervals)
          {
-            enqueueOneShotTimer(mrk, interval);
+            enqueueOneShotTimer(mrk, interval, onUpdateFinished);
          }
       }
 
-      private void enqueueOneShotTimer(MergeRequestKey mrk, int interval)
+      private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
       {
          if (interval < 1)
          {
@@ -200,17 +185,27 @@ namespace mrHelper.Client.Discussions
          {
             Interval = interval,
             AutoReset = false,
-            SynchronizingObject = _timer.SynchronizingObject
+            SynchronizingObject = _timer?.SynchronizingObject
          };
 
          timer.Elapsed += (s, e) =>
          {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
-               mrk.IId));
+            if (mrk.HasValue)
+            {
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
+               mrk.Value.IId));
+               scheduleUpdate(new MergeRequestKey[] { mrk.Value }, false);
+            }
+            else
+            {
+               onTimer(null, null);
+            }
 
-            scheduleUpdate(new MergeRequestKey[] { mrk }, false);
+            onUpdateFinished?.Invoke();
+            _timer?.Start();
          };
+         _timer?.Stop();
          timer.Start();
 
          _oneShotTimers.Add(timer);
@@ -218,78 +213,185 @@ namespace mrHelper.Client.Discussions
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         Trace.TraceInformation(String.Format(
-            "[DiscussionManager] Scheduling update of discussions for {0} merge requests on a timer update",
-            _cachedDiscussions.Count));
+         Trace.TraceInformation(
+            "[DiscussionManager] Scheduling update of discussions for ALL merge requests on a timer update");
 
-         scheduleUpdate(_cachedDiscussions.Keys.ToArray(), false);
+         scheduleUpdate(null /* update all cached at the moment of update processing */, false);
+      }
+
+      async private Task processScheduledUpdate(ScheduledUpdate scheduledUpdate)
+      {
+         if (scheduledUpdate.MergeRequests == null)
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests (ALL)",
+               _cachedDiscussions.Keys.Count()));
+         }
+         else
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests",
+               scheduledUpdate.MergeRequests.Count()));
+         }
+
+         IEnumerable<MergeRequestKey> mergeRequests = scheduledUpdate.MergeRequests == null ?
+            _cachedDiscussions.Keys.ToArray() : scheduledUpdate.MergeRequests;
+
+         foreach (MergeRequestKey mrk in mergeRequests)
+         {
+            try
+            {
+               await updateDiscussionsAsync(mrk, false, scheduledUpdate.InitialSnapshot);
+            }
+            catch (OperatorException ex)
+            {
+               ExceptionHandlers.Handle(String.Format(
+                  "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
+                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
+            }
+
+            if (_reconnect)
+            {
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] update loop is cancelled due to _reconnect state. Last processed MR: " +
+                  "Host={0}, Project={1}, IId={2}",
+                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+               break;
+            }
+         }
       }
 
       private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, bool initialSnapshot)
       {
-         _timer.SynchronizingObject.BeginInvoke(new Action(
-            async () =>
+         _scheduledUpdates.Enqueue(new ScheduledUpdate
          {
-            if (initialSnapshot && _reconnect)
-            {
-               Trace.TraceInformation("[DiscussionManager] _reconnect state is reset due to initial snapshot request");
-               _reconnect = false;
-            }
-            else if (_reconnect)
-            {
-               Trace.TraceInformation("[DiscussionManager] update is skipped due to _reconnect state");
-               return;
-            }
+            MergeRequests = keys?.ToArray(), // make a copy just in case
+            InitialSnapshot = initialSnapshot
+         });
 
-            foreach (MergeRequestKey mrk in keys)
+         _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
+         {
+            // 1. To avoid re-entrance in updateDiscussionsAsync()
+            // 2. Make it before resetting _reconnect flag to allow an ongoing update loop to break
+            await waitForUpdateCompetion(null);
+            Debug.Assert(!_updating.Any());
+
+            if (_scheduledUpdates.Any())
             {
-               try
-               {
-                  await updateDiscussionsAsync(mrk, false, initialSnapshot);
-               }
-               catch (OperatorException ex)
-               {
-                  ExceptionHandlers.Handle(String.Format(
-                     "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
-                     mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
-                  continue;
-               }
+               ScheduledUpdate scheduledUpdate = _scheduledUpdates.Dequeue();
 
                if (_reconnect)
                {
-                  Trace.TraceInformation("[DiscussionManager] update loop is cancelled due to _reconnect state");
-                  break;
+                  if (!scheduledUpdate.InitialSnapshot)
+                  {
+                     Trace.TraceInformation("[DiscussionManager] update is skipped due to _reconnect state");
+                     return;
+                  }
+                  Debug.Assert(!_cachedDiscussions.Any() && !_closed.Any());
+                  _reconnect = false;
                }
-            }
-         }), null);
-      }
 
-      private void scheduleCleanup()
-      {
-         _timer.SynchronizingObject.BeginInvoke(new Action(
-            async () =>
-         {
-            if (_updating.Any())
-            {
-               Trace.TraceInformation("[DiscussionManager] Waiting for updates completion to clean up state");
+               await processScheduledUpdate(scheduledUpdate);
             }
-
-            while (_updating.Any())
-            {
-               await Task.Delay(50);
-            }
-
-            _cachedDiscussions.Clear();
-            _closed.Clear();
-            Trace.TraceInformation("[DiscussionManager] State cleaned up");
          }), null);
       }
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
       {
-         Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
-         int noteCount = await _operator.GetNoteCount(mrk);
+         if (_updating.Contains(mrk))
+         {
+            // Such update can be caused by GetDiscussionsAsync() called while we are looping in processScheduledUpdate()
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] update is skipped due to concurrent update request for MR: " +
+               "Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            return;
+         }
 
+         try
+         {
+            _updating.Add(mrk);
+            if (_reconnect)
+            {
+               return;
+            }
+
+            Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
+            int noteCount = await _operator.GetNoteCount(mrk);
+            if (_reconnect || !needToLoadDiscussions(mostRecentNote, mrk, noteCount, additionalLogging))
+            {
+               return;
+            }
+
+            IEnumerable<Discussion> discussions;
+            try
+            {
+               _loading = mrk;
+               PreLoadDiscussions?.Invoke(mrk);
+               discussions = await _operator.GetDiscussionsAsync(mrk);
+            }
+            catch (OperatorException)
+            {
+               FailedLoadDiscussions?.Invoke(mrk);
+               throw;
+            }
+            finally
+            {
+               _loading = null;
+            }
+
+            if (!_reconnect)
+            {
+               cacheDiscussions(mrk, noteCount, mostRecentNote.Updated_At, discussions);
+            }
+            PostLoadDiscussions?.Invoke(mrk, discussions, mostRecentNote.Updated_At, initialSnapshot);
+         }
+         finally
+         {
+            _updating.Remove(mrk);
+         }
+      }
+
+      async private Task waitForUpdateCompetion(MergeRequestKey? mrk)
+      {
+         if (mrk.HasValue)
+         {
+            if (_updating.Contains(mrk.Value))
+            {
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Waiting for completion of updating discussions for MR: "
+                + "Host={0}, Project={1}, IId={2}",
+                  mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString()));
+
+               while (_updating.Contains(mrk.Value)) //-V3120
+               {
+                  await Task.Delay(50);
+               }
+            }
+         }
+         else
+         {
+            if (_updating.Any())
+            {
+               Trace.TraceInformation(String.Format(
+                  "[DiscussionManager] Waiting for completion of updating discussions"));
+
+               while (_updating.Any()) //-V3120
+               {
+                  await Task.Delay(50);
+               }
+            }
+         }
+      }
+
+      private bool isUpdating(MergeRequestKey mrk)
+      {
+         return _updating.Contains(mrk);
+      }
+
+      private bool needToLoadDiscussions(Note mostRecentNote, MergeRequestKey mrk,
+         int noteCount, bool additionalLogging)
+      {
          DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
          if (_cachedDiscussions.ContainsKey(mrk)
           && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp
@@ -305,7 +407,7 @@ namespace mrHelper.Client.Discussions
                   noteCount,
                   _cachedDiscussions[mrk].ResolvedDiscussionCount, _cachedDiscussions[mrk].ResolvableDiscussionCount));
             }
-            return;
+            return false;
          }
 
          if (_closed.Contains(mrk))
@@ -314,26 +416,15 @@ namespace mrHelper.Client.Discussions
                "[DiscussionManager] Will not update MR because it is closed: Host={0}, Project={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _closed.Remove(mrk);
-            return;
+            return false;
          }
 
-         IEnumerable<Discussion> discussions;
-         try
-         {
-            _updating.Add(mrk);
-            PreLoadDiscussions?.Invoke(mrk);
-            discussions = await _operator.GetDiscussionsAsync(mrk);
-         }
-         catch (OperatorException)
-         {
-            FailedLoadDiscussions?.Invoke(mrk);
-            throw;
-         }
-         finally
-         {
-            _updating.Remove(mrk);
-         }
+         return true;
+      }
 
+      private void cacheDiscussions(MergeRequestKey mrk, int noteCount, DateTime mergeRequestUpdatedAt,
+         IEnumerable<Discussion> discussions)
+      {
          if (!_closed.Contains(mrk))
          {
             calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
@@ -363,8 +454,6 @@ namespace mrHelper.Client.Discussions
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _closed.Remove(mrk);
          }
-
-         PostLoadDiscussions?.Invoke(mrk, discussions, mergeRequestUpdatedAt, initialSnapshot);
       }
 
       private void calcDiscussionCount(IEnumerable<Discussion> discussions, out int resolvable, out int resolved)
@@ -425,7 +514,6 @@ namespace mrHelper.Client.Discussions
                      "[DiscussionManager] Clean up closed MR: Host={0}, Project={1}, IId={2}",
                      closedMRK.ProjectKey.HostName, closedMRK.ProjectKey.ProjectName, closedMRK.IId.ToString()));
                   _cachedDiscussions.Remove(closedMRK);
-                  _updating.Remove(closedMRK);
                   _closed.Add(closedMRK);
                }
                break;
@@ -438,6 +526,15 @@ namespace mrHelper.Client.Discussions
                Debug.Assert(false);
                break;
          }
+      }
+
+      private void clearCache()
+      {
+         Trace.TraceInformation(String.Format(
+            "[DiscussionManager] State cleaned up ({0} cached and {1} closed)",
+            _cachedDiscussions.Count(), _closed.Count()));
+         _cachedDiscussions.Clear();
+         _closed.Clear();
       }
 
       private void onLoadedMergeRequests(string hostname, Project project,
@@ -459,18 +556,19 @@ namespace mrHelper.Client.Discussions
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
+         Trace.TraceInformation(String.Format("[DiscussionManager] Connected to {0}", hostname));
+
          _currentUser = user;
          _reconnect = true;
-
-         Trace.TraceInformation("[DiscussionManager] Scheduling clean-up");
-         scheduleCleanup();
+         _scheduledUpdates.Clear();
+         clearCache();
       }
 
       private readonly DiscussionParser _parser;
       private readonly MergeRequestCache _mergeRequestCache;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
 
-      private readonly System.Timers.Timer _timer;
+      private System.Timers.Timer _timer;
       private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
       private readonly DiscussionOperator _operator;
@@ -489,9 +587,15 @@ namespace mrHelper.Client.Discussions
          new Dictionary<MergeRequestKey, CachedDiscussions>();
 
       /// <summary>
-      /// temporary _updating collection allows to avoid re-entrance in updateDiscussionsAsync()
+      /// _updating collection allows to avoid re-entrance in updateDiscussionsAsync()
+      /// It cannot be a single value because GetDiscussionsAsync() may interleave with processScheduledUpdate()
       /// </summary>
       private readonly HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
+
+      /// <summary>
+      /// temporary key to track Loading status
+      /// </summary>
+      private MergeRequestKey? _loading;
 
       /// <summary>
       /// temporary _closed collection serves to not cache what is not needed to cache
@@ -502,6 +606,17 @@ namespace mrHelper.Client.Discussions
       /// Shows that reconnect is in progress, and all updates are ignored within this period
       /// </summary>
       private bool _reconnect;
+
+      private struct ScheduledUpdate
+      {
+         internal IEnumerable<MergeRequestKey> MergeRequests;
+         internal bool InitialSnapshot;
+      }
+
+      /// <summary>
+      /// Queue of updates scheduled in scheduleUpdates() method for asynchronous processing
+      /// </summary>
+      private readonly Queue<ScheduledUpdate> _scheduledUpdates = new Queue<ScheduledUpdate>();
    }
 }
 

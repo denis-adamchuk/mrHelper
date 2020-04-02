@@ -160,6 +160,7 @@ namespace mrHelper.Client.TimeTracking
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
+         _times.Clear();
       }
 
       private readonly TimeTrackingOperator _operator;

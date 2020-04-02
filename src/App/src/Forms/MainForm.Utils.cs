@@ -1044,9 +1044,10 @@ namespace mrHelper.App.Forms
                ProjectKey = e.FullMergeRequestKey.ProjectKey,
                IId = e.FullMergeRequestKey.MergeRequest.IId
             };
-            enqueueCheckForUpdates(mrk,
+
+            enqueueCheckForUpdates(mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
-               Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs);
+               Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
          }
 
          if (listViewMergeRequests.SelectedItems.Count == 0 || isSearchMode())
@@ -1570,10 +1571,23 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
       }
 
-      private void enqueueCheckForUpdates(MergeRequestKey mrk, int firstChanceDelay, int secondChanceDelay)
+      private void enqueueCheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished = null)
       {
-         _mergeRequestCache.CheckForUpdates(mrk, new int[] { firstChanceDelay, secondChanceDelay });
-         _discussionManager.CheckForUpdates(mrk, new int[] { firstChanceDelay, secondChanceDelay });
+         bool mergeRequestUpdateFinished = false;
+         bool discussionUpdateFinished = false;
+
+         Action onSingleUpdateFinished = () =>
+         {
+            if (mergeRequestUpdateFinished && discussionUpdateFinished)
+            {
+               onUpdateFinished?.Invoke();
+            }
+         };
+
+         _mergeRequestCache.CheckForUpdates(mrk, intervals,
+            () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
+         _discussionManager.CheckForUpdates(mrk, intervals,
+            () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
       }
 
       private static void disableSSLVerification()

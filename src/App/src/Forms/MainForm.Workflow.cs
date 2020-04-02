@@ -72,6 +72,13 @@ namespace mrHelper.App.Forms
 
       async private Task switchHostToSelected()
       {
+         // When this thing happens, everything reconnects. If there are some things at gitlab that user
+         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
+         // things, missed events are not desirable.
+         // TODO - Avoid using this method to refresh current host data in cases like project list change and other.
+         // See Reload List button handler for possible solution.
+
          string hostName = getHostName();
          if (hostName != String.Empty)
          {
@@ -323,6 +330,8 @@ namespace mrHelper.App.Forms
 
       private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
       {
+         LoadedProjects?.Invoke(hostname, projects);
+
          updateVisibleMergeRequests();
 
          buttonReloadList.Enabled = true;

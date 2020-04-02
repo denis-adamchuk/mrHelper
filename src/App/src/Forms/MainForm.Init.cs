@@ -99,9 +99,9 @@ namespace mrHelper.App.Forms
                bool reload = command.GetReload();
                if (reload)
                {
-                  enqueueCheckForUpdates(mergeRequestKey.Value,
+                  enqueueCheckForUpdates(mergeRequestKey, new int[] {
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                     Program.Settings.OneShotUpdateSecondChanceDelayMs);
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs });
                }
             };
             groupBoxActions.Controls.Add(button);

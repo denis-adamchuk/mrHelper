@@ -30,7 +30,8 @@ namespace mrHelper.App.Forms
 
          if (state != "opened")
          {
-            _discussionManager.ForceUpdate(mrk); // Pre-load discussions for MR in Search mode
+            // Pre-load discussions for MR in Search mode
+            _discussionManager.CheckForUpdates(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
          ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
@@ -364,7 +365,7 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval });
+               _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
             }
          }
       }
