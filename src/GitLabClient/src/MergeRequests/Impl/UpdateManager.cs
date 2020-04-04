@@ -7,10 +7,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.Common;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -165,23 +166,29 @@ namespace mrHelper.Client.MergeRequests
 
          IWorkflowDetails oldDetails = _cache.Details.Clone();
 
-         foreach (Project project in _projects)
+         try
          {
-            try
+            _updating = true;
+
+            async Task loadProject(Project project)
             {
-               _updating = true;
-               await loadDataAndUpdateCacheAsync(_hostname, project);
+               try
+               {
+                  await loadDataAndUpdateCacheAsync(_hostname, project);
+               }
+               catch (UpdateException ex)
+               {
+                  ExceptionHandlers.Handle(String.Format(
+                     "Cannot update project {0}", project.Path_With_Namespace), ex);
+               }
             }
-            catch (UpdateException ex)
-            {
-               ExceptionHandlers.Handle(String.Format(
-                  "Cannot update project {0}", project.Path_With_Namespace), ex);
-               continue;
-            }
-            finally
-            {
-               _updating = false;
-            }
+
+            await TaskUtils.RunConcurrentFunctionsAsync(_projects, x => loadProject(x),
+               Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, null);
+         }
+         finally
+         {
+            _updating = false;
          }
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(_hostname, _projects,
@@ -204,17 +211,20 @@ namespace mrHelper.Client.MergeRequests
             await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
 
          Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
-         foreach (MergeRequest mergeRequest in mergeRequests)
+         async Task loadVersion(MergeRequest x)
          {
             ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
             MergeRequestKey mrk = new MergeRequestKey
             {
                ProjectKey = projectKey,
-               IId = mergeRequest.IId
+               IId = x.IId
             };
 
             latestVersions[mrk] = await loadLatestVersionAsync(mrk);
          }
+
+         await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => loadVersion(x),
+            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, null);
 
          _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
          foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)

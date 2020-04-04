@@ -56,6 +56,18 @@ namespace mrHelper.Common.Constants
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
+
+      public static int GitInstancesInBatch = 5;
+      public static int GitInstancesInterBatchDelay = 1000; // ms
+
+      public static int MergeRequestsInBatch = 20;
+      public static int MergeRequestsInterBatchDelay = 0;
+
+      public static int ProjectsInBatch = 20;
+      public static int ProjectsInterBatchDelay = 0;
+
+      public static int VersionsInBatch = 20;
+      public static int VersionsInterBatchDelay = 0;
    }
 }
 

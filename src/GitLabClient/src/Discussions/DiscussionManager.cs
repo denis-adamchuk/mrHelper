@@ -7,10 +7,12 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Client.Workflow;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Workflow;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.Client.Discussions
 {
@@ -22,6 +24,12 @@ namespace mrHelper.Client.Discussions
       }
    }
 
+   /// TODO This class was not designed well. Consider splitting it into:
+   /// - Manager
+   /// - Storage
+   /// - State
+   /// - Updater/Loader
+   /// by analogy with MergeRequestCached and its internals
    /// <summary>
    /// Manages merge request discussions
    /// </summary>
@@ -237,8 +245,13 @@ namespace mrHelper.Client.Discussions
          IEnumerable<MergeRequestKey> mergeRequests = scheduledUpdate.MergeRequests == null ?
             _cachedDiscussions.Keys.ToArray() : scheduledUpdate.MergeRequests;
 
-         foreach (MergeRequestKey mrk in mergeRequests)
+         async Task updateDiscussions(MergeRequestKey mrk)
          {
+            if (_reconnect)
+            {
+               return;
+            }
+
             try
             {
                await updateDiscussionsAsync(mrk, false, scheduledUpdate.InitialSnapshot);
@@ -249,15 +262,15 @@ namespace mrHelper.Client.Discussions
                   "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
                   mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
             }
+         }
 
-            if (_reconnect)
-            {
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] update loop is cancelled due to _reconnect state. Last processed MR: " +
-                  "Host={0}, Project={1}, IId={2}",
-                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
-               break;
-            }
+         await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => updateDiscussions(x),
+            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => _reconnect);
+
+         if (_reconnect)
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] update loop is cancelled due to _reconnect state"));
          }
       }
 

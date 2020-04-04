@@ -7,6 +7,7 @@ using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
@@ -18,14 +19,17 @@ namespace mrHelper.Client.Workflow
    {
       internal WorkflowDataOperator(string host, string token)
       {
-         _client = new GitLabClient(host, token);
+         _host = host;
+         _token = token;
       }
 
       async internal Task<User> GetCurrentUserAsync()
       {
+         GitLabClient client = new GitLabClient(_host, _token);
+         _clients.Add(client);
          try
          {
-            return (User)(await _client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
+            return (User)(await client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync() ));
          }
          catch (Exception ex)
          {
@@ -34,14 +38,20 @@ namespace mrHelper.Client.Workflow
                throw new OperatorException(ex);
             }
             throw;
+         }
+         finally
+         {
+            _clients.Remove(client);
          }
       }
 
       async internal Task<Project> GetProjectAsync(string projectName)
       {
+         GitLabClient client = new GitLabClient(_host, _token);
+         _clients.Add(client);
          try
          {
-            return (Project)(await _client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
+            return (Project)(await client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
          }
          catch (Exception ex)
          {
@@ -51,18 +61,34 @@ namespace mrHelper.Client.Workflow
             }
             throw;
          }
+         finally
+         {
+            _clients.Remove(client);
+         }
       }
 
-      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(object search, int? maxResults, bool onlyOpen)
+      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
+         object search, int? maxResults, bool onlyOpen)
       {
-         return CommonOperator.SearchMergeRequestsAsync(_client, search, maxResults, onlyOpen);
+         GitLabClient client = new GitLabClient(_host, _token);
+         _clients.Add(client);
+         try
+         {
+            return await CommonOperator.SearchMergeRequestsAsync(client, search, maxResults, onlyOpen);
+         }
+         finally
+         {
+            _clients.Remove(client);
+         }
       }
 
       async internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid)
       {
+         GitLabClient client = new GitLabClient(_host, _token);
+         _clients.Add(client);
          try
          {
-            return (IEnumerable<Commit>)(await _client.RunAsync(async (gl) =>
+            return (IEnumerable<Commit>)(await client.RunAsync(async (gl) =>
                await gl.Projects.Get(projectName).MergeRequests.Get(iid).Commits.LoadAllTaskAsync()));
          }
          catch (Exception ex)
@@ -73,19 +99,39 @@ namespace mrHelper.Client.Workflow
             }
             throw;
          }
+         finally
+         {
+            _clients.Remove(client);
+         }
       }
 
-      internal Task<Version> GetLatestVersionAsync(string projectName, int iid)
+      async internal Task<Version> GetLatestVersionAsync(string projectName, int iid)
       {
-         return CommonOperator.GetLatestVersionAsync(_client, projectName, iid);
+         GitLabClient client = new GitLabClient(_host, _token);
+         _clients.Add(client);
+         try
+         {
+            return await CommonOperator.GetLatestVersionAsync(client, projectName, iid);
+         }
+         finally
+         {
+            _clients.Remove(client);
+         }
       }
 
       public Task CancelAsync()
       {
-         return _client.CancelAsync();
+         List<Task> tasks = new List<Task>();
+         foreach (GitLabClient client in _clients)
+         {
+            tasks.Add(client.CancelAsync());
+         }
+         return Task.WhenAll(tasks);
       }
 
-      private readonly GitLabClient _client;
+      private readonly List<GitLabClient> _clients = new List<GitLabClient>();
+      private readonly string _host;
+      private readonly string _token;
    }
 }
 

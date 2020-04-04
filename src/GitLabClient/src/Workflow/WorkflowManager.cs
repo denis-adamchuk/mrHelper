@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Entities;
+using GitLabSharp.Accessors;
 using Version = GitLabSharp.Entities.Version;
+using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using GitLabSharp.Accessors;
-using mrHelper.Client.Types;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.Client.Workflow
 {
@@ -76,25 +78,78 @@ namespace mrHelper.Client.Workflow
          return true;
       }
 
-      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, Project project)
+      async public Task<bool> LoadAllMergeRequestsAsync(string hostname, IEnumerable<Project> projects,
+         Action<string, string> onForbiddenProject)
       {
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
-         IEnumerable<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
-         if (mergeRequests == null)
+         Exception exception = null;
+         bool cancelled = false;
+         async Task loadVersion(Project project, MergeRequest mergeRequest)
          {
-            return false; // cancelled
-         }
-
-         foreach (MergeRequest mergeRequest in mergeRequests)
-         {
-            if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
+            if (cancelled)
             {
-               return false; // cancelled
+               return;
+            }
+
+            try
+            {
+               if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
+               {
+                  cancelled = true;
+               }
+            }
+            catch (WorkflowException ex)
+            {
+               exception = ex;
+               cancelled = true;
             }
          }
 
-         return true;
+         async Task loadProject(Project project)
+         {
+            if (cancelled)
+            {
+               return;
+            }
+
+            try
+            {
+               IEnumerable<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(hostname, project);
+               if (mergeRequests == null)
+               {
+                  cancelled = true;
+               }
+               else
+               {
+                  await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => loadVersion(project, x),
+                     Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
+               }
+            }
+            catch (WorkflowException ex)
+            {
+               if (isForbiddenProjectException(ex))
+               {
+                  onForbiddenProject?.Invoke(hostname, project.Path_With_Namespace);
+                  return;
+               }
+               exception = ex;
+               cancelled = true;
+            }
+         }
+
+         await TaskUtils.RunConcurrentFunctionsAsync(projects, x => loadProject(x),
+            Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
+         if (!cancelled)
+         {
+            return true;
+         }
+
+         if (exception != null)
+         {
+            throw exception;
+         }
+         return false;
       }
 
       async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
@@ -194,14 +249,29 @@ namespace mrHelper.Client.Workflow
          }
 
          Dictionary<Project, IEnumerable<MergeRequest>> result = new Dictionary<Project, IEnumerable<MergeRequest>>();
-         foreach (KeyValuePair<int, List<MergeRequest>> keyValuePair in groupMergeRequestsByProject(mergeRequests))
+
+         bool cancelled = false;
+         async Task resolve(KeyValuePair<int, List<MergeRequest>> keyValuePair)
          {
+            if (cancelled)
+            {
+               return;
+            }
+
             Project? project = await resolveProject(hostname, keyValuePair.Key);
             if (project == null)
             {
-               return null;
+               cancelled = true;
+               return;
             }
             result.Add(project.Value, keyValuePair.Value);
+         }
+
+         await TaskUtils.RunConcurrentFunctionsAsync(groupMergeRequestsByProject(mergeRequests), x => resolve(x),
+            Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
+         if (cancelled)
+         {
+            return null;
          }
 
          foreach (KeyValuePair<Project, IEnumerable<MergeRequest>> keyValuePair in result)
@@ -323,6 +393,22 @@ namespace mrHelper.Client.Workflow
          failureCallback?.Invoke();
 
          throw new WorkflowException(errorMessage, ex);
+      }
+
+      private static bool isForbiddenProjectException(WorkflowException ex)
+      {
+         if (ex.InnerException?.InnerException is GitLabRequestException rx)
+         {
+            if (rx.InnerException is System.Net.WebException wx)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+               {
+                  return true;
+               }
+            }
+         }
+         return false;
       }
 
       private readonly IHostProperties _settings;

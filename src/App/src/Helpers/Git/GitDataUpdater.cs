@@ -5,15 +5,16 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Exceptions;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.GitClient;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Client.MergeRequests;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Helpers
 {
@@ -83,58 +84,26 @@ namespace mrHelper.App.Helpers
 
                foreach (MergeRequest mergeRequest in _mergeRequestProvider.GetMergeRequests(repo.ProjectKey))
                {
-                  MergeRequestKey mrk = new MergeRequestKey { ProjectKey = repo.ProjectKey, IId = mergeRequest.IId };
-
-                  List<Version> newVersionsDetailed = new List<Version>();
-                  try
+                  MergeRequestKey mrk = new MergeRequestKey
                   {
-                     IEnumerable<Version> allVersions  = await _versionManager.GetVersions(mrk);
-                     if (allVersions == null)
-                     {
-                        Debug.Assert(false); // how could user cancel that operation?
-                        continue;
-                     }
+                     ProjectKey = repo.ProjectKey,
+                     IId = mergeRequest.IId
+                  };
 
-                     IEnumerable<Version> newVersions = allVersions
-                        .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange);
-
-                     foreach (Version version in newVersions)
-                     {
-                        Version? newVersionDetailed = await _versionManager.GetVersion(version, mrk);
-                        if (newVersionDetailed == null)
-                        {
-                           Debug.Assert(false); // how could user cancel that operation?
-                           continue;
-                        }
-
-                        Trace.TraceInformation(String.Format(
-                           "[GitDataUpdater] Found new version of MR with IId={0} (created at {1}). "
-                         + "PrevLatestChange={2}, LatestChange={3}",
-                           mrk.IId,
-                           newVersionDetailed.Value.Created_At.ToLocalTime().ToString(),
-                           prevLatestChange.ToLocalTime().ToString(),
-                           latestChange.ToLocalTime().ToString()));
-                        newVersionsDetailed.Add(newVersionDetailed.Value);
-                     }
-                  }
-                  catch (VersionManagerException ex)
-                  {
-                     ExceptionHandlers.Handle("Cannot load versions", ex);
-                     continue;
-                  }
-
+                  IEnumerable<Version> newVersionsDetailed =
+                     await loadNewVersions(mrk, prevLatestChange, latestChange);
                   if (!_latestChanges.ContainsKey(repo))
                   {
                      // LocalGitRepository was removed from collection while we were loading versions
                      break;
                   }
 
-                  if (newVersionsDetailed.Count > 0)
+                  if (newVersionsDetailed.Count() > 0)
                   {
                      Trace.TraceInformation(String.Format(
                         "[GitDataUpdater] Start processing of merge request: "
                       + "Host={0}, Project={1}, IId={2}. Versions: {3}",
-                        mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count));
+                        mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, newVersionsDetailed.Count()));
 
                      gatherArguments(newVersionsDetailed,
                         out HashSet<GitDiffArguments> diffArgs,
@@ -162,6 +131,51 @@ namespace mrHelper.App.Helpers
 
                _updating.Remove(repo);
             }), null);
+      }
+
+      async private Task<IEnumerable<Version>> loadNewVersions(
+         MergeRequestKey mrk, DateTime prevLatestChange, DateTime latestChange)
+      {
+         List<Version> newVersionsDetailed = new List<Version>();
+         try
+         {
+            IEnumerable<Version> allVersions = await _versionManager.GetVersions(mrk);
+            if (allVersions == null)
+            {
+               Debug.Assert(false); // how could user cancel that operation?
+               return newVersionsDetailed;
+            }
+
+            IEnumerable<Version> newVersions = allVersions
+               .Where(x => x.Created_At > prevLatestChange && x.Created_At <= latestChange);
+
+            async Task loadVersionDetails(Version version)
+            {
+               Version? newVersionDetailed = await _versionManager.GetVersion(version, mrk);
+               if (newVersionDetailed == null)
+               {
+                  Debug.Assert(false); // how could user cancel that operation?
+                  return;
+               }
+
+               Trace.TraceInformation(String.Format(
+                  "[GitDataUpdater] Found new version of MR with IId={0} (created at {1}). "
+                + "PrevLatestChange={2}, LatestChange={3}",
+                  mrk.IId,
+                  newVersionDetailed.Value.Created_At.ToLocalTime().ToString(),
+                  prevLatestChange.ToLocalTime().ToString(),
+                  latestChange.ToLocalTime().ToString()));
+               newVersionsDetailed.Add(newVersionDetailed.Value);
+            }
+
+            await TaskUtils.RunConcurrentFunctionsAsync(newVersions, x => loadVersionDetails(x),
+               Constants.VersionsInBatch, Constants.VersionsInterBatchDelay, null);
+         }
+         catch (VersionManagerException ex)
+         {
+            ExceptionHandlers.Handle("Cannot load versions", ex);
+         }
+         return newVersionsDetailed;
       }
 
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
@@ -255,45 +269,10 @@ namespace mrHelper.App.Helpers
       async private static Task doCacheAsync(ILocalGitRepository repo,
          HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
       {
-         await doBatchUpdateAsync(diffArgs, x => repo.Data?.LoadFromDisk(x));
-         await doBatchUpdateAsync(revisionArgs, x => repo.Data?.LoadFromDisk(x));
-      }
-
-      async private static Task doBatchUpdateAsync<T>(IEnumerable<T> args, Func<T, Task> func)
-      {
-         int remaining = args.Count();
-         while (remaining > 0 )
-         {
-            Task[] tasks = args
-               .Skip(args.Count() - remaining)
-               .Take(MaxGitInParallel)
-               .Select(x => func(x))
-               .ToArray();
-            remaining -= tasks.Length;
-
-            Task aggregateTask = Task.WhenAll(tasks);
-            try
-            {
-               await aggregateTask;
-            }
-            catch (Exception)
-            {
-               if (aggregateTask.IsFaulted)
-               {
-                  foreach (Exception ex in aggregateTask.Exception.Flatten().InnerExceptions)
-                  {
-                     ExceptionHandlers.Handle("Cannot load data from disk", ex);
-                  }
-                  continue;
-               }
-               else
-               {
-                  Debug.Assert(false);
-               }
-            }
-
-            await Task.Delay(InterBatchDelay);
-         }
+         await TaskUtils.RunConcurrentFunctionsAsync(diffArgs, x => repo.Data?.LoadFromDisk(x),
+            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
+         await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs, x => repo.Data?.LoadFromDisk(x),
+            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
@@ -318,9 +297,6 @@ namespace mrHelper.App.Helpers
             }
          }), null);
       }
-
-      private static readonly int MaxGitInParallel  = 5;
-      private static readonly int InterBatchDelay   = 1000; // ms
 
       private readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
       private readonly Dictionary<ILocalGitRepository, DateTime> _latestChanges =

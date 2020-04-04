@@ -220,54 +220,26 @@ namespace mrHelper.App.Forms
       {
          onLoadAllMergeRequests();
 
-         foreach (Project project in enabledProjects)
+         if (!await _workflowManager.LoadAllMergeRequestsAsync(
+            hostname, enabledProjects, (x, y) => onForbiddenProject(x, y)))
          {
-            try
-            {
-               if (!await _workflowManager.LoadAllMergeRequestsAsync(hostname, project))
-               {
-                  return false;
-               }
-            }
-            catch (WorkflowException ex)
-            {
-               if (!handleWorkflowException(hostname, project, ex))
-               {
-                  throw;
-               }
-               ExceptionHandlers.Handle("Cannot load merge requests for project (handled)", ex);
-            }
+            return false;
          }
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
          return true;
       }
 
-      private bool handleWorkflowException(string hostname, Project project, WorkflowException ex)
+      private void onForbiddenProject(string hostname, string projectname)
       {
-         if (ex.InnerException?.InnerException is GitLabRequestException rx)
-         {
-            if (rx.InnerException is System.Net.WebException wx)
-            {
-               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+         string message = String.Format(
+            "You don't have access to project {0} at {1}. "
+          + "Loading of this project will be disabled. You may turn it on at Settings tab.",
+            projectname, hostname);
+         MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+         Trace.TraceInformation("[MainForm.Workflow] User notified that project will be disabled");
 
-               if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-               {
-                  string message = String.Format(
-                     "You don't have access to project {0} at {1}. "
-                   + "Loading of this project will be disabled. You may turn it on at Settings tab.",
-                     project.Path_With_Namespace, hostname);
-                  MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                  Trace.TraceInformation("[MainForm.Workflow] User notified that project will be disabled");
-
-                  changeProjectEnabledState(hostname, project.Path_With_Namespace, false);
-
-                  return true;
-               }
-            }
-         }
-
-         return false;
+         changeProjectEnabledState(hostname, projectname, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,30 +268,25 @@ namespace mrHelper.App.Forms
       private void onLoadAllMergeRequests()
       {
          disableAllUIControls(false);
+         labelWorkflowStatus.Text = "Loading merge requests...";
       }
 
       private void onLoadProjectMergeRequests(Project project)
       {
-         labelWorkflowStatus.Text = String.Format("Loading merge requests of project {0}...",
-            project.Path_With_Namespace);
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading merge requests of project {0}",
-            project.Path_With_Namespace));
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] Loading merge requests of project {0}", project.Path_With_Namespace));
       }
 
       private void onFailedLoadProjectMergeRequests()
       {
-         labelWorkflowStatus.Text = "Failed to load merge requests";
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load merge requests"));
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] Failed to load merge requests for one of projects"));
       }
 
       private void onProjectMergeRequestsLoaded(string hostname, Project project,
          IEnumerable<MergeRequest> mergeRequests)
       {
          LoadedMergeRequests?.Invoke(hostname, project, mergeRequests);
-
-         labelWorkflowStatus.Text = String.Format("Project {0} loaded", project.Path_With_Namespace);
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
@@ -330,6 +297,8 @@ namespace mrHelper.App.Forms
 
       private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
       {
+         labelWorkflowStatus.Text = "Merge requests loaded";
+
          LoadedProjects?.Invoke(hostname, projects);
 
          updateVisibleMergeRequests();
