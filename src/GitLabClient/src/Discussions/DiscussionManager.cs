@@ -55,7 +55,7 @@ namespace mrHelper.Client.Discussions
 
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connected += onConnected;
-         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
+         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -66,7 +66,7 @@ namespace mrHelper.Client.Discussions
       public void Dispose()
       {
          _workflowEventNotifier.Connected -= onConnected;
-         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
+         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
          _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
 
@@ -224,26 +224,26 @@ namespace mrHelper.Client.Discussions
          Trace.TraceInformation(
             "[DiscussionManager] Scheduling update of discussions for ALL merge requests on a timer update");
 
-         scheduleUpdate(null /* update all cached at the moment of update processing */, false);
+         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */, false);
       }
 
       async private Task processScheduledUpdate(ScheduledUpdate scheduledUpdate)
       {
+         IEnumerable<MergeRequestKey> mergeRequests = scheduledUpdate.MergeRequests == null ?
+            getAllMergeRequests(_hostname, _projects) : scheduledUpdate.MergeRequests;
+
          if (scheduledUpdate.MergeRequests == null)
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests (ALL)",
-               _cachedDiscussions.Keys.Count()));
+               mergeRequests.Count()));
          }
          else
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests",
-               scheduledUpdate.MergeRequests.Count()));
+               mergeRequests.Count()));
          }
-
-         IEnumerable<MergeRequestKey> mergeRequests = scheduledUpdate.MergeRequests == null ?
-            _cachedDiscussions.Keys.ToArray() : scheduledUpdate.MergeRequests;
 
          async Task updateDiscussions(MergeRequestKey mrk)
          {
@@ -265,7 +265,8 @@ namespace mrHelper.Client.Discussions
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => updateDiscussions(x),
-            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => _reconnect);
+            Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+            () => _reconnect);
 
          if (_reconnect)
          {
@@ -550,21 +551,39 @@ namespace mrHelper.Client.Discussions
          _closed.Clear();
       }
 
-      private void onLoadedMergeRequests(string hostname, Project project,
-         IEnumerable<MergeRequest> mergeRequests)
+      private IEnumerable<MergeRequestKey> getAllMergeRequests(string hostname, IEnumerable<Project> projects)
       {
-         Trace.TraceInformation(String.Format(
-            "[DiscussionManager] Scheduling update of discussions for {0} merge requests of {1} on Workflow event",
-            mergeRequests.Count(), project.Path_With_Namespace));
+         List<MergeRequestKey> mergeRequestKeys = new List<MergeRequestKey>();
+         if (hostname == String.Empty || projects == null)
+         {
+            return mergeRequestKeys;
+         }
 
-         IEnumerable<MergeRequestKey> mergeRequestKeys = mergeRequests
-            .Select(x => new MergeRequestKey
+         foreach (Project project in projects)
+         {
+            ProjectKey projectKey = new ProjectKey
             {
-               ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
-               IId = x.IId
-            });
+               HostName = hostname,
+               ProjectName = project.Path_With_Namespace
+            };
 
-         scheduleUpdate(mergeRequestKeys.ToArray(), true);
+            foreach (MergeRequest mergeRequest in _mergeRequestCache.GetMergeRequests(projectKey))
+            {
+               MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
+               mergeRequestKeys.Add(mrk);
+            }
+         }
+         return mergeRequestKeys;
+      }
+
+      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      {
+         Trace.TraceInformation(
+            "[DiscussionManager] Scheduling update of discussions for ALL merge requests on Workflow event");
+
+         _hostname = hostname;
+         _projects = projects.ToArray();
+         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */, true);
       }
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
@@ -575,11 +594,16 @@ namespace mrHelper.Client.Discussions
          _reconnect = true;
          _scheduledUpdates.Clear();
          clearCache();
+
+         _hostname = String.Empty;
+         _projects = null;
       }
 
       private readonly DiscussionParser _parser;
       private readonly MergeRequestCache _mergeRequestCache;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private string _hostname;
+      private IEnumerable<Project> _projects;
 
       private System.Timers.Timer _timer;
       private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
