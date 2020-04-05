@@ -25,16 +25,19 @@ namespace mrHelper.App.Helpers
    {
       internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
+         ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory,
+         bool createMissingCommits)
       {
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connected += onConnected;
 
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
+         _hostProperties = hostProperties;
          _versionManager = new VersionManager(hostProperties);
          _mergeRequestProvider = mergeRequestProvider;
          _projectCheckerFactory = projectCheckerFactory;
+         _createMissingCommits = createMissingCommits;
       }
 
       public void Dispose()
@@ -100,6 +103,16 @@ namespace mrHelper.App.Helpers
 
                   if (newVersionsDetailed.Count() > 0)
                   {
+                     if (_createMissingCommits)
+                     {
+                        await createMissingCommits(newVersionsDetailed, repo);
+                        if (!_latestChanges.ContainsKey(repo))
+                        {
+                           // LocalGitRepository was removed from collection while we were loading versions
+                           break;
+                        }
+                     }
+
                      Trace.TraceInformation(String.Format(
                         "[GitDataUpdater] Start processing of merge request: "
                       + "Host={0}, Project={1}, IId={2}. Versions: {3}",
@@ -183,6 +196,29 @@ namespace mrHelper.App.Helpers
          repo.Disposed -= onLocalGitRepositoryDisposed;
          repo.Updated -= onLocalGitRepositoryUpdated;
          _latestChanges.Remove(repo);
+      }
+
+      async private Task createMissingCommits(IEnumerable<Version> versions, ILocalGitRepository repo)
+      {
+         if (versions == null || repo == null)
+         {
+            return;
+         }
+
+         async Task createCommits(Version version)
+         {
+            if (!_latestChanges.ContainsKey(repo) || String.IsNullOrWhiteSpace(version.Head_Commit_SHA))
+            {
+               return;
+            }
+
+            CommitChainCreator commitChainCreator = new CommitChainCreator(
+               _hostProperties, null, null, null, _synchronizeInvoke, repo, version.Head_Commit_SHA);
+            await commitChainCreator.CreateChainAsync();
+         }
+
+         await TaskUtils.RunConcurrentFunctionsAsync(versions, x => createCommits(x),
+            Constants.BranchInBatch, Constants.BranchInterBatchDelay, () => !_latestChanges.ContainsKey(repo));
       }
 
       private void gatherArguments(IEnumerable<Version> versions,
@@ -307,6 +343,8 @@ namespace mrHelper.App.Helpers
       private readonly IProjectCheckerFactory _projectCheckerFactory;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
+      private readonly IHostProperties _hostProperties;
+      private readonly bool _createMissingCommits;
 
       private static readonly int MaxDiffsInVersion = 200;
    }

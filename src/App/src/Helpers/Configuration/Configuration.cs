@@ -69,6 +69,9 @@ namespace mrHelper.App.Helpers
       private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
       private static readonly bool   CacheRevisionsDefaultValue   = true;
 
+      private static readonly string CreateMissingCommitsWhenCacheRevisionsKeyName        = "CreateMissingCommitsWhenCacheRevisionsInBackground";
+      private static readonly bool   CreateMissingCommitsWhenCacheRevisionsDefaultValue   = false;
+
       private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
       private static readonly bool   DisableSSLVerificationDefaultValue = true;
 
@@ -533,6 +536,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : CacheRevisionsDefaultValue;
          }
          set { setValue(CacheRevisionsKeyName, value.ToString()); }
+      }
+
+      public bool CreateMissingCommitsWhenCacheRevisionsInBackground
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               CreateMissingCommitsWhenCacheRevisionsKeyName, CreateMissingCommitsWhenCacheRevisionsDefaultValue.ToString()),
+                  out bool result) ? result : CreateMissingCommitsWhenCacheRevisionsDefaultValue;
+         }
+         set { setValue(CreateMissingCommitsWhenCacheRevisionsKeyName, value.ToString()); }
       }
 
       public bool DisableSSLVerification

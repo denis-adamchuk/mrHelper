@@ -432,7 +432,8 @@ namespace mrHelper.App.Forms
          _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
             _eventFilter);
          _gitDataUpdater = Program.Settings.CacheRevisionsInBackground
-            ? new GitDataUpdater(this, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache)
+            ? new GitDataUpdater(this, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache,
+               Program.Settings.CreateMissingCommitsWhenCacheRevisionsInBackground)
             : null;
          _gitStatManager = new GitStatisticManager(this, this, this, _mergeRequestCache, _mergeRequestCache);
          _timeTrackingManager = new TimeTrackingManager(Program.Settings, this, _discussionManager);
