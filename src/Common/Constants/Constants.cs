@@ -71,6 +71,9 @@ namespace mrHelper.Common.Constants
 
       public static int VersionsInBatch = 20;
       public static int VersionsInterBatchDelay = 0;
+
+      public static int BranchInBatch = 5;
+      public static int BranchInterBatchDelay = 0;
    }
 }
 

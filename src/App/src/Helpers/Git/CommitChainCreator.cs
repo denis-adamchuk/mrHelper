@@ -11,6 +11,8 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.Repository;
 using mrHelper.Client.Types;
 using mrHelper.Client.Versions;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Helpers
 {
@@ -20,6 +22,11 @@ namespace mrHelper.App.Helpers
          Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepository repo, MergeRequestKey mrk)
       {
+         if (repo == null || hostProperties == null || mrk.Equals(default(MergeRequestKey)))
+         {
+            throw new ArgumentException("Bad arguments");
+         }
+
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
          _onGitStatusChange = onGitStatusChange;
@@ -33,6 +40,11 @@ namespace mrHelper.App.Helpers
          Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepository repo, string headSha)
       {
+         if (repo == null || hostProperties == null || headSha == null)
+         {
+            throw new ArgumentException("Bad arguments");
+         }
+
          _hostProperties = hostProperties;
          _onStatusChange = onStatusChange;
          _onGitStatusChange = onGitStatusChange;
@@ -96,7 +108,7 @@ namespace mrHelper.App.Helpers
          IEnumerable<GitLabSharp.Entities.Version> versions;
          try
          {
-            _onStatusChange("Loading meta information about versions from GitLab");
+            _onStatusChange?.Invoke("Loading meta information about versions from GitLab");
 
             versions = await _versionManager.GetVersions(mrk);
             if (versions == null)
@@ -114,27 +126,33 @@ namespace mrHelper.App.Helpers
          Trace.TraceInformation(String.Format("[CommitChainCreator] Found {0} versions", versions.Count()));
 
          HashSet<string> heads = new HashSet<string>();
-         int iVersion = 1;
-         foreach (GitLabSharp.Entities.Version version in versions)
+         bool cancelled = false;
+         async Task loadHeads(GitLabSharp.Entities.Version version)
          {
+            if (cancelled)
+            {
+               return;
+            }
+
             GitLabSharp.Entities.Version? versionDetailed;
             try
             {
-               _onStatusChange(String.Format(
-                  "Loading versions from GitLab: {0}/{1}", iVersion++, versions.Count()));
+               _onStatusChange?.Invoke(String.Format(
+                  "Loading {0} version{1} from GitLab", versions.Count(), versions.Count() > 1 ? "s" : ""));
 
                versionDetailed = await _versionManager.GetVersion(version, mrk);
                if (versionDetailed == null)
                {
                   Trace.TraceInformation(String.Format(
                      "[CommitChainCreator] User cancelled loading detailed version {0}", version.Id));
-                  return null;
+                  cancelled = true;
+                  return;
                }
             }
             catch (VersionManagerException ex)
             {
                ExceptionHandlers.Handle("Cannot load meta information about versions", ex);
-               return null;
+               return;
             }
 
             if (!_repo.ContainsSHA(versionDetailed.Value.Head_Commit_SHA))
@@ -151,6 +169,8 @@ namespace mrHelper.App.Helpers
                   versionDetailed.Value.Head_Commit_SHA, _repo.Path));
             }
          }
+         await TaskUtils.RunConcurrentFunctionsAsync(versions, x => loadHeads(x),
+            Constants.VersionsInBatch, Constants.VersionsInterBatchDelay, () => cancelled);
          return heads;
       }
 
@@ -178,11 +198,10 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            int iBranch = 1;
-            foreach (string sha in shas)
+            async Task createBranch(string sha)
             {
-               _onStatusChange(String.Format(
-                  "Creating branches at GitLab: {0}/{1}", iBranch++, shas.Count()));
+               _onStatusChange?.Invoke(String.Format(
+                  "Creating {0} branch{1} at GitLab", shas.Count(), shas.Count() > 1 ? "es" : ""));
 
                Trace.TraceInformation(String.Format(
                   "[CommitChainCreator] Creating branch {0} at GitLab", getFakeSha(sha)));
@@ -190,11 +209,13 @@ namespace mrHelper.App.Helpers
                   _repo.ProjectKey, getFakeSha(sha), sha);
                Debug.Assert(branch.HasValue); // it is not possible to cancel it
             }
+            await TaskUtils.RunConcurrentFunctionsAsync(shas, x => createBranch(x),
+               Constants.BranchInBatch, Constants.BranchInterBatchDelay, null);
 
             Trace.TraceInformation(String.Format(
                "[CommitChainCreator] Created {0} branches", shas.Count()));
 
-            _onStatusChange("Fetching new branches from remote repository");
+            _onStatusChange?.Invoke("Fetching new branches from remote repository");
             try
             {
                await _repo.Updater.Update(null, _onGitStatusChange);
@@ -206,7 +227,7 @@ namespace mrHelper.App.Helpers
             }
             finally
             {
-               _onGitStatusChange(String.Empty);
+               _onGitStatusChange?.Invoke(String.Empty);
             }
          }
          catch (RepositoryManagerException ex)
@@ -220,7 +241,7 @@ namespace mrHelper.App.Helpers
                async () =>
                {
                   int iBranch = 0;
-                  foreach (string sha in shas)
+                  async Task deleteBranch(string sha)
                   {
                      try
                      {
@@ -232,9 +253,10 @@ namespace mrHelper.App.Helpers
                      catch (Exception ex)
                      {
                         ExceptionHandlers.Handle("Cannot delete a branch at GitLab", ex);
-                        continue;
                      }
                   }
+                  await TaskUtils.RunConcurrentFunctionsAsync(shas, x => deleteBranch(x),
+                     Constants.BranchInBatch, Constants.BranchInterBatchDelay, null);
 
                   Trace.TraceInformation(String.Format("[CommitChainCreator] Deleted {0} branches", iBranch));
                   IsCancelEnabled = true;
@@ -251,7 +273,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            _onCancelEnabled(value);
+            _onCancelEnabled?.Invoke(value);
             _isCancelEnabled = value;
          }
       }
