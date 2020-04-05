@@ -218,7 +218,7 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> loadAllMergeRequests(string hostname, IEnumerable<Project> enabledProjects)
       {
-         onLoadAllMergeRequests();
+         onLoadAllMergeRequests(enabledProjects);
 
          if (!await _workflowManager.LoadAllMergeRequestsAsync(
             hostname, enabledProjects, (x, y) => onForbiddenProject(x, y), (x, y) => onNotFoundProject(x, y)))
@@ -277,10 +277,11 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllMergeRequests()
+      private void onLoadAllMergeRequests(IEnumerable<Project> projects)
       {
          disableAllUIControls(false);
-         labelWorkflowStatus.Text = "Loading merge requests...";
+         labelWorkflowStatus.Text = String.Format(
+            "Loading merge requests of {0} project{1}...", projects.Count(), projects.Count() > 1 ? "s" : "");
       }
 
       private void onLoadProjectMergeRequests(Project project)
