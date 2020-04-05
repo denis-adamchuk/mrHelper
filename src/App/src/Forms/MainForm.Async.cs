@@ -81,15 +81,6 @@ namespace mrHelper.App.Forms
             {
                enableControlsOnGitAsyncOperation(true, "updating git repository");
             }
-
-            if (state == "merged")
-            {
-               if (!await restoreChainOfMergedCommits(repo, mrk))
-               {
-                  labelWorkflowStatus.Text = "Could not open Discussions";
-                  return;
-               }
-            }
          }
          else
          {
@@ -100,16 +91,26 @@ namespace mrHelper.App.Forms
                Trace.TraceInformation("[MainForm] User rejected to show discussions without git repository");
                return;
             }
-            else
-            {
-               Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
-               repo = null;
-            }
+
+            Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(mrk);
          if (discussions == null || _exiting)
          {
+            return;
+         }
+
+         IEnumerable<string> headShaFromDiscussions =
+               discussions
+               .Where(x => x.Notes != null && x.Notes.Any() && x.Notes.First().Type == "DiffNote")
+               .Select(x => x.Notes.First().Position.Head_SHA).Distinct();
+
+         if (repo != null
+          && headShaFromDiscussions.Any()
+          && !await restoreChainOfMergedCommits(repo, headShaFromDiscussions))
+         {
+            labelWorkflowStatus.Text = "Could not open Discussions";
             return;
          }
 
@@ -251,7 +252,7 @@ namespace mrHelper.App.Forms
          if (state == "merged")
          {
             string headCommitSha = comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
-            if (!await restoreChainOfMergedCommits(repo, headCommitSha))
+            if (!await restoreChainOfMergedCommits(repo, new string[] { headCommitSha }))
             {
                labelWorkflowStatus.Text = "Could not launch diff tool";
                return;
@@ -467,19 +468,11 @@ namespace mrHelper.App.Forms
 
       private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
 
-      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, MergeRequestKey mrk)
+      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, IEnumerable<string> heads)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, mrk);
-         return await restoreChainOfMergedCommits();
-      }
-
-      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, string headCommitSha)
-      {
-         _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, headCommitSha);
+            onCommitChainCancelEnabled, this, repo, heads);
          return await restoreChainOfMergedCommits();
       }
 

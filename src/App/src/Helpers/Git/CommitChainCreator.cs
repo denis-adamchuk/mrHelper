@@ -20,9 +20,9 @@ namespace mrHelper.App.Helpers
    {
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
          Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepository repo, MergeRequestKey mrk)
+         ILocalGitRepository repo, IEnumerable<string> headShas)
       {
-         if (repo == null || hostProperties == null || mrk.Equals(default(MergeRequestKey)))
+         if (repo == null || hostProperties == null || headShas == null)
          {
             throw new ArgumentException("Bad arguments");
          }
@@ -33,25 +33,7 @@ namespace mrHelper.App.Helpers
          _onCancelEnabled = onCancelEnabled;
          _synchronizeInvoke = synchronizeInvoke;
          _repo = repo;
-         _mrk = mrk;
-      }
-
-      internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
-         Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepository repo, string headSha)
-      {
-         if (repo == null || hostProperties == null || headSha == null)
-         {
-            throw new ArgumentException("Bad arguments");
-         }
-
-         _hostProperties = hostProperties;
-         _onStatusChange = onStatusChange;
-         _onGitStatusChange = onGitStatusChange;
-         _onCancelEnabled = onCancelEnabled;
-         _synchronizeInvoke = synchronizeInvoke;
-         _repo = repo;
-         _headSha = headSha;
+         _headShas = headShas;
       }
 
       async public Task<bool> CreateChainAsync()
@@ -62,18 +44,8 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         if (_headSha != null)
-         {
-            if (!_repo.ContainsSHA(_headSha))
-            {
-               return await createBranches(new string[] { _headSha });
-            }
-            return true;
-         }
-
-         _versionManager = new VersionManager(_hostProperties);
-         IEnumerable<string> shas = await getAllVersionHeadSHA(_mrk);
-         return await createBranches(shas);
+         IEnumerable<string> heads = _headShas.Where(x => !_repo.ContainsSHA(x)).ToArray();
+         return await createBranches(heads);
       }
 
       async public Task CancelAsync()
@@ -95,83 +67,7 @@ namespace mrHelper.App.Helpers
             await _repositoryManager.CancelAsync();
          }
 
-         if (_versionManager != null)
-         {
-            await _versionManager.CancelAsync();
-         }
-
          await _repo.Updater.CancelUpdate();
-      }
-
-      async private Task<IEnumerable<string>> getAllVersionHeadSHA(MergeRequestKey mrk)
-      {
-         IEnumerable<GitLabSharp.Entities.Version> versions;
-         try
-         {
-            _onStatusChange?.Invoke("Loading meta information about versions from GitLab");
-
-            versions = await _versionManager.GetVersions(mrk);
-            if (versions == null)
-            {
-               Trace.TraceInformation("[CommitChainCreator] User cancelled loading meta information");
-               return null;
-            }
-         }
-         catch (VersionManagerException ex)
-         {
-            ExceptionHandlers.Handle("Cannot load meta information about versions", ex);
-            return null;
-         }
-
-         Trace.TraceInformation(String.Format("[CommitChainCreator] Found {0} versions", versions.Count()));
-
-         HashSet<string> heads = new HashSet<string>();
-         bool cancelled = false;
-         async Task loadHeads(GitLabSharp.Entities.Version version)
-         {
-            if (cancelled)
-            {
-               return;
-            }
-
-            GitLabSharp.Entities.Version? versionDetailed;
-            try
-            {
-               _onStatusChange?.Invoke(String.Format(
-                  "Loading {0} version{1} from GitLab", versions.Count(), versions.Count() > 1 ? "s" : ""));
-
-               versionDetailed = await _versionManager.GetVersion(version, mrk);
-               if (versionDetailed == null)
-               {
-                  Trace.TraceInformation(String.Format(
-                     "[CommitChainCreator] User cancelled loading detailed version {0}", version.Id));
-                  cancelled = true;
-                  return;
-               }
-            }
-            catch (VersionManagerException ex)
-            {
-               ExceptionHandlers.Handle("Cannot load meta information about versions", ex);
-               return;
-            }
-
-            if (!_repo.ContainsSHA(versionDetailed.Value.Head_Commit_SHA))
-            {
-               heads.Add(versionDetailed.Value.Head_Commit_SHA);
-               Trace.TraceInformation(String.Format(
-                  "[CommitChainCreator] SHA {0} is not found in {1}",
-                  versionDetailed.Value.Head_Commit_SHA, _repo.Path));
-            }
-            else
-            {
-               Trace.TraceInformation(String.Format(
-                  "[CommitChainCreator] SHA {0} is found in {1}",
-                  versionDetailed.Value.Head_Commit_SHA, _repo.Path));
-            }
-         }
-         await TaskUtils.RunConcurrentFunctionsAsync(versions, x => loadHeads(x),
-            Constants.VersionsInBatch, Constants.VersionsInterBatchDelay, () => cancelled);
-         return heads;
       }
 
       async private Task<bool> createBranches(IEnumerable<string> shas)
@@ -201,7 +97,7 @@ namespace mrHelper.App.Helpers
             async Task createBranch(string sha)
             {
                _onStatusChange?.Invoke(String.Format(
-                  "Creating {0} branch{1} at GitLab", shas.Count(), shas.Count() > 1 ? "es" : ""));
+                  "Creating {0} branch{1} at GitLab...", shas.Count(), shas.Count() > 1 ? "es" : ""));
 
                Trace.TraceInformation(String.Format(
                   "[CommitChainCreator] Creating branch {0} at GitLab", getFakeSha(sha)));
@@ -215,7 +111,7 @@ namespace mrHelper.App.Helpers
             Trace.TraceInformation(String.Format(
                "[CommitChainCreator] Created {0} branches", shas.Count()));
 
-            _onStatusChange?.Invoke("Fetching new branches from remote repository");
+            _onStatusChange?.Invoke("Fetching new branches from remote repository...");
             try
             {
                await _repo.Updater.Update(null, _onGitStatusChange);
@@ -284,11 +180,9 @@ namespace mrHelper.App.Helpers
       private readonly Action<bool> _onCancelEnabled;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ILocalGitRepository _repo;
-      private readonly MergeRequestKey _mrk;
-      private readonly string _headSha;
+      private readonly IEnumerable<string> _headShas;
 
       private RepositoryManager _repositoryManager;
-      private VersionManager _versionManager;
       private bool _isCancelEnabled = true;
    }
 }

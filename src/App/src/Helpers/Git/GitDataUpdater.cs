@@ -213,7 +213,7 @@ namespace mrHelper.App.Helpers
             }
 
             CommitChainCreator commitChainCreator = new CommitChainCreator(
-               _hostProperties, null, null, null, _synchronizeInvoke, repo, version.Head_Commit_SHA);
+               _hostProperties, null, null, null, _synchronizeInvoke, repo, new string[] { version.Head_Commit_SHA });
             await commitChainCreator.CreateChainAsync();
          }
 
