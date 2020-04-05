@@ -104,7 +104,7 @@ namespace mrHelper.Client.Discussions
          int? resolved = null;
          DiscussionCount.EStatus status = DiscussionCount.EStatus.NotAvailable;
 
-         if (_loading.HasValue && _loading.Value.Equals(mrk))
+         if (_loading.Contains(mrk))
          {
             status = DiscussionCount.EStatus.Loading;
          }
@@ -340,7 +340,7 @@ namespace mrHelper.Client.Discussions
             IEnumerable<Discussion> discussions;
             try
             {
-               _loading = mrk;
+               _loading.Add(mrk);
                PreLoadDiscussions?.Invoke(mrk);
                discussions = await _operator.GetDiscussionsAsync(mrk);
             }
@@ -351,7 +351,7 @@ namespace mrHelper.Client.Discussions
             }
             finally
             {
-               _loading = null;
+               _loading.Remove(mrk);
             }
 
             if (!_reconnect)
@@ -626,13 +626,15 @@ namespace mrHelper.Client.Discussions
       /// <summary>
       /// _updating collection allows to avoid re-entrance in updateDiscussionsAsync()
       /// It cannot be a single value because GetDiscussionsAsync() may interleave with processScheduledUpdate()
+      /// and because we load multiple MR at once
       /// </summary>
       private readonly HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
 
       /// <summary>
-      /// temporary key to track Loading status
+      /// temporary colletion to track Loading status
+      /// It cannot be a single value because we load multiple MR at once
       /// </summary>
-      private MergeRequestKey? _loading;
+      private readonly HashSet<MergeRequestKey> _loading = new HashSet<MergeRequestKey>();
 
       /// <summary>
       /// temporary _closed collection serves to not cache what is not needed to cache
