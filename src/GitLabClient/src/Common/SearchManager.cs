@@ -49,6 +49,19 @@ namespace mrHelper.Client.Common
          }
       }
 
+      async public Task<Project?> SearchProjectAsync(string hostname, string projectname)
+      {
+         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         try
+         {
+            return await CommonOperator.SearchProjectAsync(client, projectname);
+         }
+         catch (OperatorException)
+         {
+            return null;
+         }
+      }
+
       private readonly IHostProperties _settings;
    }
 }

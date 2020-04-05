@@ -116,10 +116,11 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            SearchManager searchManager = new SearchManager(Program.Settings);
+
             int slashIndex = projectName.IndexOf('/');
             if (projectName.IndexOf(" ", 0, slashIndex) != -1)
             {
-               SearchManager searchManager = new SearchManager(Program.Settings);
                User? user = await searchManager.SearchUserAsync(_hostname, projectName.Substring(0, slashIndex));
                if (user == null)
                {
@@ -136,6 +137,14 @@ namespace mrHelper.App.Forms
                .Any(x => x.Text == projectName))
             {
                MessageBox.Show(String.Format("Project {0} is already in the list", projectName),
+                  "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               return;
+            }
+
+            Project? project = await searchManager.SearchProjectAsync(_hostname, projectName);
+            if (project == null)
+            {
+               MessageBox.Show(String.Format("There is no project {0} at {1}", projectName, _hostname),
                   "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                return;
             }

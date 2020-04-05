@@ -105,6 +105,22 @@ namespace mrHelper.Client.Common
          }
       }
 
+      async internal static Task<Project?> SearchProjectAsync(GitLabClient client, string projectname)
+      {
+         try
+         {
+            return (Project)(await client.RunAsync(async (gitlab) => await gitlab.Projects.Get(projectname).LoadTaskAsync()));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       private static MergeRequestsFilter convertSearchToFilter(object search, bool onlyOpen)
       {
          MergeRequestsFilter.WorkInProgressFilter wipFilter = onlyOpen

@@ -79,7 +79,7 @@ namespace mrHelper.Client.Workflow
       }
 
       async public Task<bool> LoadAllMergeRequestsAsync(string hostname, IEnumerable<Project> projects,
-         Action<string, string> onForbiddenProject)
+         Action<string, string> onForbiddenProject, Action<string, string> onNotFoundProject)
       {
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
@@ -131,6 +131,11 @@ namespace mrHelper.Client.Workflow
                if (isForbiddenProjectException(ex))
                {
                   onForbiddenProject?.Invoke(hostname, project.Path_With_Namespace);
+                  return;
+               }
+               else if (isNotFoundProjectException(ex))
+               {
+                  onNotFoundProject?.Invoke(hostname, project.Path_With_Namespace);
                   return;
                }
                exception = ex;
@@ -403,6 +408,22 @@ namespace mrHelper.Client.Workflow
             {
                System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+               {
+                  return true;
+               }
+            }
+         }
+         return false;
+      }
+
+      private static bool isNotFoundProjectException(WorkflowException ex)
+      {
+         if (ex.InnerException?.InnerException is GitLabRequestException rx)
+         {
+            if (rx.InnerException is System.Net.WebException wx)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                {
                   return true;
                }

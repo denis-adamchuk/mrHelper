@@ -221,7 +221,7 @@ namespace mrHelper.App.Forms
          onLoadAllMergeRequests();
 
          if (!await _workflowManager.LoadAllMergeRequestsAsync(
-            hostname, enabledProjects, (x, y) => onForbiddenProject(x, y)))
+            hostname, enabledProjects, (x, y) => onForbiddenProject(x, y), (x, y) => onNotFoundProject(x, y)))
          {
             return false;
          }
@@ -237,7 +237,19 @@ namespace mrHelper.App.Forms
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
             projectname, hostname);
          MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-         Trace.TraceInformation("[MainForm.Workflow] User notified that project will be disabled");
+         Trace.TraceInformation("[MainForm.Workflow] Forbidden project. User notified that project will be disabled");
+
+         changeProjectEnabledState(hostname, projectname, false);
+      }
+
+      private void onNotFoundProject(string hostname, string projectname)
+      {
+         string message = String.Format(
+            "There is no project {0} at {1}. "
+          + "Loading of this project will be disabled. You may turn it on at Settings tab.",
+            projectname, hostname);
+         MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+         Trace.TraceInformation("[MainForm.Workflow] Project not found. User notified that project will be disabled");
 
          changeProjectEnabledState(hostname, projectname, false);
       }
