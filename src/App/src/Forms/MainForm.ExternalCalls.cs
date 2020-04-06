@@ -128,13 +128,15 @@ namespace mrHelper.App.Forms
             exceptionMessage = wfex.UserMessage;
          }
 
-         string message = String.Format("{0}Cannot open merge request from URL. {1}", msg, exceptionMessage);
+         string msgBoxMessage = String.Format("{0}Cannot open merge request from URL. {1}", msg, exceptionMessage);
 
-         MessageBox.Show(message, error ? "Error" : "Warning", MessageBoxButtons.OK,
+         MessageBox.Show(msgBoxMessage, error ? "Error" : "Warning", MessageBoxButtons.OK,
             error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
             MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
 
-         ExceptionHandlers.Handle(String.Format("Cannot open URL {0}", url), ex);
+         string errorMessage = String.Format("Cannot open URL {0}", url);
+         ExceptionHandlers.Handle(errorMessage, ex);
+         labelWorkflowStatus.Text = errorMessage;
       }
 
       async private Task<bool> restartWorkflowByUrl(string url, string hostname)
@@ -298,6 +300,7 @@ namespace mrHelper.App.Forms
             return; // unknown host
          }
 
+         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
          SearchManager searchManager = new SearchManager(Program.Settings);
          MergeRequest? mergeRequest = await searchManager.SearchMergeRequestAsync(
             mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
