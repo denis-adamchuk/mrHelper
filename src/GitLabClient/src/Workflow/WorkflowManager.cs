@@ -402,34 +402,27 @@ namespace mrHelper.Client.Workflow
 
       private static bool isForbiddenProjectException(WorkflowException ex)
       {
-         if (ex.InnerException?.InnerException is GitLabRequestException rx)
-         {
-            if (rx.InnerException is System.Net.WebException wx)
-            {
-               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
-               if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-               {
-                  return true;
-               }
-            }
-         }
-         return false;
+         System.Net.HttpWebResponse response = getWebResponse(ex);
+         return response != null ? response.StatusCode == System.Net.HttpStatusCode.Forbidden : false;
       }
 
       private static bool isNotFoundProjectException(WorkflowException ex)
+      {
+         System.Net.HttpWebResponse response = getWebResponse(ex);
+         return response != null ? response.StatusCode == System.Net.HttpStatusCode.NotFound : false;
+      }
+
+      private static System.Net.HttpWebResponse getWebResponse(WorkflowException ex)
       {
          if (ex.InnerException?.InnerException is GitLabRequestException rx)
          {
             if (rx.InnerException is System.Net.WebException wx)
             {
                System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
-               if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-               {
-                  return true;
-               }
+               return response;
             }
          }
-         return false;
+         return null;
       }
 
       private readonly IHostProperties _settings;
