@@ -63,8 +63,8 @@ namespace mrHelper.Common.Constants
       public static int MergeRequestsInBatch = 20;
       public static int MergeRequestsInterBatchDelay = 0;
 
-      public static int CrossProjectMergeRequestsInBatch = 50;
-      public static int CrossProjectMergeRequestsInterBatchDelay = 0;
+      public static int CrossProjectMergeRequestsInBatch = 20;
+      public static int CrossProjectMergeRequestsInterBatchDelay = 200;
 
       public static int ProjectsInBatch = 20;
       public static int ProjectsInterBatchDelay = 0;
