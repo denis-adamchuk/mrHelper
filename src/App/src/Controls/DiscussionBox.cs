@@ -803,7 +803,7 @@ namespace mrHelper.App.Controls
       private void stopEdit(TextBox textBox)
       {
          textBox.ReadOnly = true;
-         if (_textboxesNotes.Contains(textBox))
+         if (_textboxesNotes?.Contains(textBox) ?? false)
          {
             textBox.BackColor = getNoteColor((DiscussionNote)textBox.Tag);
          }
@@ -925,18 +925,20 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         void removeTextBoxes()
+         // Get rid of old text boxes
+         // #227:
+         // It must be done before `await` because context menu shown for invisible control throws ArgumentException.
+         // So if we hide text boxes in _preContentChanged() and process WM_MOUSEUP in `await` below we're in a trouble.
+         for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
          {
-            for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
+            if (_textboxesNotes?.Any(x => x == Controls[iControl]) ?? false)
             {
-               if (_textboxesNotes.Any(x => x == Controls[iControl]))
-               {
-                  Controls.Remove(Controls[iControl]);
-               }
+               Controls.Remove(Controls[iControl]);
             }
-            _textboxesNotes = null;
          }
+         _textboxesNotes = null;
 
+         // To suspend layout and hide me
          _preContentChange(this);
 
          // Load updated discussion
@@ -948,16 +950,12 @@ namespace mrHelper.App.Controls
          {
             ExceptionHandlers.Handle("Not an error - last discussion item has been deleted", ex);
 
-            removeTextBoxes();
             // it is not an error here, we treat it as 'last discussion item has been deleted'
             // Seems it was the only note in the discussion, remove ourselves from parents controls
             Parent?.Controls.Remove(this);
             _onContentChanged(this, false);
             return;
          }
-
-         // Get rid of old text boxes
-         removeTextBoxes();
 
          if (Discussion.Notes.Count() == 0 || Discussion.Notes.First().System)
          {
@@ -975,19 +973,22 @@ namespace mrHelper.App.Controls
             Controls.Add(note);
          }
 
-         // To reposition new controls
+         // To reposition new controls and unhide me back
          _onContentChanged(this, false);
       }
 
       private bool isDiscussionResolved()
       {
          bool result = true;
-         foreach (Control textBox in _textboxesNotes)
+         if (_textboxesNotes != null)
          {
-            DiscussionNote note = (DiscussionNote)(textBox.Tag);
-            if (note.Resolvable && !note.Resolved)
+            foreach (Control textBox in _textboxesNotes)
             {
-               result = false;
+               DiscussionNote note = (DiscussionNote)(textBox.Tag);
+               if (note.Resolvable && !note.Resolved)
+               {
+                  result = false;
+               }
             }
          }
          return result;
