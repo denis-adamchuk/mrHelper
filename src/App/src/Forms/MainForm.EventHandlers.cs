@@ -793,7 +793,19 @@ namespace mrHelper.App.Forms
 
          try
          {
-            Process.Start(_newVersionFilePath);
+            string applicationPath = AppFinder.GetInstallPath(new string[] { "mrHelper" });
+            if (String.IsNullOrWhiteSpace(applicationPath))
+            {
+               applicationPath = Application.StartupPath;
+               Trace.TraceInformation(String.Format(
+                  "[CheckForUpdates] Using Startup Path \"{0}\"", applicationPath));
+            }
+            else
+            {
+               Trace.TraceInformation(String.Format(
+                  "[CheckForUpdates] Using Application Path \"{0}\"", applicationPath));
+            }
+            Process.Start(_newVersionFilePath, "TARGETDIR=" + StringUtils.EscapeSpaces(applicationPath));
          }
          catch (Exception ex)
          {
