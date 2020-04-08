@@ -43,6 +43,12 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm] Requested to close the Main Form. Reason: {0}",
             e.CloseReason.ToString()));
 
+         if (e.CloseReason == CloseReason.ApplicationExitCall)
+         {
+            // abnormal exit
+            return;
+         }
+
          if (checkBoxMinimizeOnClose.Checked && !_exiting && e.CloseReason == CloseReason.UserClosing)
          {
             e.Cancel = true;
