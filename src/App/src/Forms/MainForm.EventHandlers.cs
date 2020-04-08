@@ -1286,8 +1286,11 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm] DPI changed, new DPI = {0}", this.DeviceDpi));
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
-         MessageBox.Show("System DPI has changed. It is recommended to restart application to update layout.",
-            "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+         _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText
+         {
+            Title = "System DPI has changed",
+            Text = "It is recommended to restart application to update layout"
+         });
       }
    }
 }
