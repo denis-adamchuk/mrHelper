@@ -49,8 +49,6 @@ namespace mrHelper.App.Controls
          _onContentChanged = onContentChanged;
          _onControlGotFocus = onControlGotFocus;
 
-         _toolTipNotifier = new ToolTip();
-
          _htmlDiffContextToolTip = new HtmlToolTip
          {
             AutoPopDelay = 20000, // 20s
@@ -250,7 +248,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         await onDeleteNoteAsync(textBox);
+         await onDeleteNoteAsync((DiscussionNote)textBox.Tag);
       }
 
       async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
@@ -267,7 +265,7 @@ namespace mrHelper.App.Controls
          DiscussionNote note = (DiscussionNote)(textBox.Tag);
          Debug.Assert(note.Resolvable);
 
-         await onToggleResolveNoteAsync((DiscussionNote)textBox.Tag);
+         await onToggleResolveNoteAsync(note);
       }
 
       async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
@@ -496,14 +494,22 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote note)
+      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote? note)
       {
          textBox.Tag = note;
 
-         string body = getNoteTooltipHtml(note)
-                     + "<br><br>"
-                     + MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
-         _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
+         if (note.HasValue)
+         {
+            string body = getNoteTooltipHtml(note.Value)
+                        + "<br><br>"
+                        + MarkDownUtils.ConvertToHtml(note.Value.Body, _imagePath,
+                           _specialDiscussionNoteMarkdownPipeline);
+            _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
+         }
+         else if (_htmlDiscussionNoteToolTip.GetToolTip(textBox) != null)
+         {
+            _htmlDiscussionNoteToolTip.SetToolTip(textBox, null);
+         }
       }
 
       private void setServiceDiscussionNoteHtmlText(HtmlPanel htmlPanel)
@@ -778,6 +784,8 @@ namespace mrHelper.App.Controls
 
       async private Task onReplyAsync(string body)
       {
+         disableAllTextBoxes();
+
          try
          {
             await _editor.ReplyAsync(body);
@@ -839,6 +847,10 @@ namespace mrHelper.App.Controls
 
          note.Body = textBox.Text;
 
+         Color oldColor = textBox.BackColor;
+         ContextMenu oldMenu = textBox.ContextMenu;
+         disableTextBox(textBox); // let's make a visual effect similar to other modifications
+
          try
          {
             note = await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
@@ -855,14 +867,15 @@ namespace mrHelper.App.Controls
 
          if (!textBox.IsDisposed)
          {
+            textBox.BackColor = oldColor;
+            textBox.ContextMenu = oldMenu;
             updateDiscussionNoteInTextBox(textBox, note);
-            _toolTipNotifier.Show("Thread note was edited", textBox, textBox.Width + 20, 0, 2000 /* ms */);
          }
       }
 
-      async private Task onDeleteNoteAsync(TextBox textBox)
+      async private Task onDeleteNoteAsync(DiscussionNote note)
       {
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         disableAllTextBoxes();
 
          try
          {
@@ -881,10 +894,11 @@ namespace mrHelper.App.Controls
 
       async private Task onToggleResolveNoteAsync(DiscussionNote note)
       {
-         bool wasResolved = note.Resolved;
+         disableAllTextBoxes();
 
          try
          {
+            bool wasResolved = note.Resolved;
             await _editor.ResolveNoteAsync(note.Id, !wasResolved);
          }
          catch (DiscussionEditorException ex)
@@ -901,6 +915,7 @@ namespace mrHelper.App.Controls
       async private Task onToggleResolveDiscussionAsync()
       {
          bool wasResolved = isDiscussionResolved();
+         disableAllTextBoxes();
 
          Discussion discussion;
          try
@@ -918,6 +933,25 @@ namespace mrHelper.App.Controls
          await refreshDiscussion(discussion);
       }
 
+      private void disableTextBox(TextBox textBox)
+      {
+         if (textBox != null)
+         {
+            textBox.BackColor = Color.LightGray;
+            textBox.ContextMenu = new ContextMenu();
+            updateDiscussionNoteInTextBox(textBox, null);
+         }
+      }
+
+      private void disableAllTextBoxes()
+      {
+         foreach (Control textBox in _textboxesNotes)
+         {
+            disableTextBox(textBox as TextBox);
+         }
+         disableTextBox(_textboxFilename as TextBox);
+      }
+
       async private Task refreshDiscussion(Discussion? discussion = null)
       {
          if (Parent == null)
@@ -925,21 +959,29 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         // Get rid of old text boxes
-         // #227:
-         // It must be done before `await` because context menu shown for invisible control throws ArgumentException.
-         // So if we hide text boxes in _preContentChanged() and process WM_MOUSEUP in `await` below we're in a trouble.
-         for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
+         void prepareToRefresh()
          {
-            if (_textboxesNotes?.Any(x => x == Controls[iControl]) ?? false)
+            // Get rid of old text boxes
+            // #227:
+            // It must be done before `await` because context menu shown for invisible control throws ArgumentException.
+            // So if we hide text boxes in _preContentChanged() and process WM_MOUSEUP in `await` below we're in a trouble.
+            for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
             {
-               Controls.Remove(Controls[iControl]);
+               if (_textboxesNotes?.Any(x => x == Controls[iControl]) ?? false)
+               {
+                  Controls.Remove(Controls[iControl]);
+               }
             }
-         }
-         _textboxesNotes = null;
+            _textboxesNotes = null;
+            if (_textboxFilename != null)
+            {
+               Controls.Remove(_textboxFilename);
+               _textboxFilename = null;
+            }
 
-         // To suspend layout and hide me
-         _preContentChange(this);
+            // To suspend layout and hide me
+            _preContentChange(this);
+         }
 
          // Load updated discussion
          try
@@ -952,6 +994,7 @@ namespace mrHelper.App.Controls
 
             // it is not an error here, we treat it as 'last discussion item has been deleted'
             // Seems it was the only note in the discussion, remove ourselves from parents controls
+            prepareToRefresh();
             Parent?.Controls.Remove(this);
             _onContentChanged(this, false);
             return;
@@ -961,10 +1004,13 @@ namespace mrHelper.App.Controls
          {
             // It happens when Discussion has System notes like 'a line changed ...'
             // along with a user note that has been just deleted
+            prepareToRefresh();
             Parent?.Controls.Remove(this);
             _onContentChanged(this, false);
             return;
          }
+
+         prepareToRefresh();
 
          // Create controls
          _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
@@ -972,6 +1018,8 @@ namespace mrHelper.App.Controls
          {
             Controls.Add(note);
          }
+         _textboxFilename = createTextboxFilename(Discussion.Notes.First());
+         Controls.Add(_textboxFilename);
 
          // To reposition new controls and unhide me back
          _onContentChanged(this, false);
@@ -984,10 +1032,13 @@ namespace mrHelper.App.Controls
          {
             foreach (Control textBox in _textboxesNotes)
             {
-               DiscussionNote note = (DiscussionNote)(textBox.Tag);
-               if (note.Resolvable && !note.Resolved)
+               if (textBox != null)
                {
-                  result = false;
+                  DiscussionNote note = (DiscussionNote)(textBox.Tag);
+                  if (note.Resolvable && !note.Resolved)
+                  {
+                     result = false;
+                  }
                }
             }
          }
@@ -1053,7 +1104,6 @@ namespace mrHelper.App.Controls
       private readonly Action<DiscussionBox, bool> _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
 
-      private readonly System.Windows.Forms.ToolTip _toolTipNotifier;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiffContextToolTip;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiscussionNoteToolTip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
