@@ -37,7 +37,6 @@ namespace mrHelper.App.Controls
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
-         _formatter = new DiffContextFormatter();
          if (gitRepository != null)
          {
             _panelContextMaker = new EnhancedContextMaker(gitRepository);
@@ -52,8 +51,7 @@ namespace mrHelper.App.Controls
          _htmlDiffContextToolTip = new HtmlToolTip
          {
             AutoPopDelay = 20000, // 20s
-            InitialDelay = 150,
-            BaseStylesheet = ".htmltooltip { padding: 1px; }"
+            InitialDelay = 150
          };
 
          _htmlDiscussionNoteToolTip = new HtmlToolTipWithGoodImages()
@@ -334,19 +332,25 @@ namespace mrHelper.App.Controls
       private void setDiffContextText(HtmlPanel htmlPanel)
       {
          DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
+         DiffPosition position = convertToDiffPosition(note.Position);
          Debug.Assert(note.Type == "DiffNote");
 
-         DiffPosition position = convertToDiffPosition(note.Position);
-         htmlPanel.Text = getContext(_panelContextMaker, position,
-            _diffContextDepth, htmlPanel.Font.Height);
-         _htmlDiffContextToolTip.SetToolTip(htmlPanel, getContext(_tooltipContextMaker, position,
-            _tooltipContextDepth, htmlPanel.Font.Height));
+         string html = getContext(_panelContextMaker, position,
+            _diffContextDepth, htmlPanel.Font.Height, out string css);
+         htmlPanel.BaseStylesheet = css;
+         htmlPanel.Text = html;
+
+         string tooltipHtml = getContext(_tooltipContextMaker, position,
+            _tooltipContextDepth, htmlPanel.Font.Height, out string tooltipCSS);
+         _htmlDiffContextToolTip.BaseStylesheet = tooltipCSS + ".htmltooltip { padding: 1px; }";
+         _htmlDiffContextToolTip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
       private string getContext(IContextMaker contextMaker, DiffPosition position,
-         ContextDepth depth, int fontSizePx)
+         ContextDepth depth, int fontSizePx, out string stylesheet)
       {
-         if (contextMaker == null || _formatter == null)
+         stylesheet = String.Empty;
+         if (contextMaker == null)
          {
             return "<html><body>Cannot access git repository and render diff context</body></html>";
          }
@@ -354,7 +358,9 @@ namespace mrHelper.App.Controls
          try
          {
             DiffContext context = contextMaker.GetContext(position, depth);
-            return _formatter.FormatAsHTML(context, fontSizePx);
+            DiffContextFormatter formatter = new DiffContextFormatter(fontSizePx, 2);
+            stylesheet = formatter.GetStylesheet();
+            return formatter.GetBody(context);
          }
          catch (Exception ex)
          {
@@ -1095,7 +1101,6 @@ namespace mrHelper.App.Controls
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
-      private readonly DiffContextFormatter _formatter;
       private readonly DiscussionEditor _editor;
 
       private readonly ColorScheme _colorScheme;

@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace mrHelper.Core.Context
 {
@@ -14,37 +8,36 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class DiffContextFormatter
    {
-      public DiffContextFormatter()
+      public DiffContextFormatter(int fontSizePx, int rowsVPaddingPx)
       {
-         _css = loadStylesFromCSS();
+         _fontSizePx = fontSizePx;
+         _rowsVPaddingPx = rowsVPaddingPx;
+      }
+
+      public string GetStylesheet()
+      {
+         return loadStylesFromCSS() + getCustomStyle(_fontSizePx, _rowsVPaddingPx);
       }
 
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public string FormatAsHTML(DiffContext context, int fontSizePx, int rowsVPaddingPx = 2)
+      public string GetBody(DiffContext context)
       {
-         return getContextHTML(context, fontSizePx, rowsVPaddingPx);
+         return getContextHTML(context);
       }
 
-      private string getContextHTML(DiffContext ctx, int fontSizePx, int rowsVPaddingPx)
+      private string getContextHTML(DiffContext ctx)
       {
-         string customStyle = getCustomStyle(fontSizePx, rowsVPaddingPx);
-
-         string commonBegin = string.Format(@"
-            <html>
-               <head>
-                  <style>{0}{1}</style>
-               </head>
+         string commonBegin = @"
                <body>
                   <table cellspacing=""0"" cellpadding=""0"">
-                      <tbody>", _css, customStyle);
+                      <tbody>";
 
          string commonEnd = @"
                       </tbody>
                    </table>
-                </body>
-             </html>";
+                </body>";
 
          return commonBegin + getTableBody(ctx) + commonEnd;
       }
@@ -61,8 +54,8 @@ namespace mrHelper.Core.Context
                font-size: {0}px;
             }}
             td {{
-               padding-top: {1}px; 
-               padding-bottom: {1}px; 
+               padding-top: {1}px;
+               padding-bottom: {1}px;
             }}", fontSizePx, rowsVPaddingPx);
       }
 
@@ -77,7 +70,7 @@ namespace mrHelper.Core.Context
 
             body
               += "<tr" + (iLine == ctx.SelectedIndex && highlightSelected ? " class=\"selected\"" : "") + ">"
-               + "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>" 
+               + "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>"
                + "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>"
                + "<td class=\"" + getDiffCellClass(line) + "\">" + getCode(line) + "</td>"
                + "</tr>";
@@ -132,7 +125,8 @@ namespace mrHelper.Core.Context
          return spaces + System.Net.WebUtility.HtmlEncode(trimmed);
       }
 
-      private readonly string _css;
+      private readonly int _fontSizePx;
+      private readonly int _rowsVPaddingPx;
    }
 }
 

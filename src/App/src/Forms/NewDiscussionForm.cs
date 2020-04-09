@@ -17,34 +17,16 @@ namespace mrHelper.App.Forms
          DiffPosition position, IGitRepository gitRepository)
       {
          InitializeComponent();
-         htmlPanel.BorderStyle = BorderStyle.FixedSingle;
-         htmlPanel.Location = new Point(12, 73);
-         htmlPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-         Controls.Add(htmlPanel);
+         htmlPanel.AutoScroll = false;
+         htmlPanel.BorderStyle = BorderStyle.None;
+         htmlPanel.Dock = DockStyle.Fill;
+         htmlContextCanvas.Controls.Add(htmlPanel);
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          this.Text = Constants.StartNewThreadCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
-
-         applyTheme(Program.Settings.VisualThemeName);
-      }
-
-      private void applyTheme(string theme)
-      {
-         if (theme == "New Year 2020")
-         {
-            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.Penguin;
-            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            pictureBox1.Visible = true;
-            htmlPanel.Width = pictureBox1.Location.X - 50 - htmlPanel.Location.X;
-         }
-         else
-         {
-            pictureBox1.Visible = false;
-            htmlPanel.Width = textBoxDiscussionBody.Width;
-         }
       }
 
       public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }
@@ -72,15 +54,18 @@ namespace mrHelper.App.Forms
       private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
          DiffPosition position, IGitRepository gitRepository)
       {
-         htmlPanel.Text = getContextHtmlText(position, gitRepository);
-         htmlPanel.Height = htmlPanel.DisplayRectangle.Height + 2;
+         string html = getContextHtmlText(position, gitRepository, out string stylesheet);
+         htmlPanel.BaseStylesheet = stylesheet;
+         htmlPanel.Text = html;
 
          textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, IGitRepository gitRepository)
+      private string getContextHtmlText(DiffPosition position, IGitRepository gitRepository, out string stylesheet)
       {
+         stylesheet = String.Empty;
+
          DiffContext? context;
          try
          {
@@ -96,8 +81,9 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(context.HasValue);
-         DiffContextFormatter formatter = new DiffContextFormatter();
-         return formatter.FormatAsHTML(context.Value, htmlPanel.Font.Height, 2);
+         DiffContextFormatter formatter = new DiffContextFormatter(htmlPanel.Font.Height, 0);
+         stylesheet = formatter.GetStylesheet();
+         return formatter.GetBody(context.Value);
       }
    }
 }
