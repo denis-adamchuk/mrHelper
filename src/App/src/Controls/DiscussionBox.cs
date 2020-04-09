@@ -129,7 +129,6 @@ namespace mrHelper.App.Controls
                if (!textBox.ReadOnly)
                {
                   onCancelEditNote(textBox);
-                  updateTextboxHeight(textBox);
                }
                if (Control.ModifierKeys == Keys.Shift)
                {
@@ -144,7 +143,6 @@ namespace mrHelper.App.Controls
          else if (e.KeyCode == Keys.Escape && !textBox.ReadOnly)
          {
             onCancelEditNote(textBox);
-            updateTextboxHeight(textBox);
          }
       }
 
@@ -831,6 +829,7 @@ namespace mrHelper.App.Controls
 
          Debug.Assert(Discussion.Notes.Count() > 0);
          textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
+         updateTextboxHeight(textBox);
       }
 
       async private Task onSubmitNewBodyAsync(TextBox textBox)

@@ -37,8 +37,6 @@ namespace mrHelper.CommonControls.Controls
       {
          get
          {
-            Height = base.PreferredHeight; // without this, EM_GETLINECOUNT returns wrong result
-
             int numberOfLines = NativeMethods.SendMessage(CachedHandle, NativeMethods.EM_GETLINECOUNT,
                IntPtr.Zero, IntPtr.Zero).ToInt32();
             return calcPreferredHeight(numberOfLines);
