@@ -503,11 +503,17 @@ namespace mrHelper.App.Forms
          linkLabelConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
       }
 
-      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey)
+      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title = null,
+         ProjectKey projectKey = default(ProjectKey), User author = default(User))
       {
          if (isTrackingTime())
          {
             return;
+         }
+
+         if (!isTimeTrackingAllowed(author, projectKey.HostName))
+         {
+            enabled = false;
          }
 
          labelTimeTrackingMergeRequestName.Visible = enabled;
@@ -515,11 +521,14 @@ namespace mrHelper.App.Forms
 
          if (enabled)
          {
+            Debug.Assert(!String.IsNullOrEmpty(title) && !projectKey.Equals(default(ProjectKey)));
             labelTimeTrackingMergeRequestName.Text = title + "   " + "[" + projectKey.ProjectName + "]";
          }
+
+         labelTimeTrackingMergeRequestName.Refresh();
       }
 
-      private void updateTotalTime(MergeRequestKey? mrk)
+      private void updateTotalTime(MergeRequestKey? mrk = null, User author = default(User), string hostname = null)
       {
          if (isTrackingTime())
          {
@@ -529,7 +538,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!mrk.HasValue)
+         if (!mrk.HasValue || !isTimeTrackingAllowed(author, hostname))
          {
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             buttonEditTime.Enabled = false;
@@ -537,12 +546,14 @@ namespace mrHelper.App.Forms
          else
          {
             TimeSpan? span = getTotalTime(mrk.Value);
-            labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}", convertTotalTimeToText(span));
+            labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
+               convertTotalTimeToText(span, true));
             buttonEditTime.Enabled = span.HasValue;
          }
 
          // Update total time column in the table
          listViewMergeRequests.Invalidate();
+         labelTimeTrackingTrackedLabel.Refresh();
       }
 
       private TimeSpan? getTotalTime(MergeRequestKey? mrk)
@@ -555,7 +566,7 @@ namespace mrHelper.App.Forms
          return _timeTrackingManager.GetTotalTime(mrk.Value);
       }
 
-      private string convertTotalTimeToText(TimeSpan? span)
+      private string convertTotalTimeToText(TimeSpan? span, bool isTimeTrackingAllowed)
       {
          if (!span.HasValue)
          {
@@ -568,7 +579,24 @@ namespace mrHelper.App.Forms
             return "Loading...";
          }
 
-         return span.Value == TimeSpan.Zero ? "Not Started" : span.Value.ToString(@"hh\:mm\:ss");
+         if (span.Value != TimeSpan.Zero)
+         {
+            return span.Value.ToString(@"hh\:mm\:ss");
+         }
+
+         return isTimeTrackingAllowed ? "Not Started" : "Not Allowed";
+      }
+
+      private bool isTimeTrackingAllowed(User mergeRequestAuthor, string hostname)
+      {
+         if (mergeRequestAuthor.Id == default(User).Id || String.IsNullOrWhiteSpace(hostname))
+         {
+            return true;
+         }
+
+         return !_currentUser.ContainsKey(hostname)
+              || _currentUser[hostname].Id != mergeRequestAuthor.Id
+              || Program.Settings.AllowAuthorToTrackTime;
       }
 
       private string getDiscussionCount(MergeRequestKey mrk)
@@ -935,7 +963,8 @@ namespace mrHelper.App.Forms
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
 
-         string getTotalTimeText(MergeRequestKey key) => convertTotalTimeToText(getTotalTime(key));
+         string getTotalTimeText(MergeRequestKey key) =>
+            convertTotalTimeToText(getTotalTime(key), isTimeTrackingAllowed(mr.Author, projectKey.HostName));
 
          void setSubItemTag(string columnTag, ListViewSubItemInfo subItemInfo)
          {
@@ -1657,8 +1686,8 @@ namespace mrHelper.App.Forms
          enableMergeRequestActions(false);
          enableCommitActions(false, null, default(User));
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-         updateTotalTime(null);
+         updateTimeTrackingMergeRequestDetails(false);
+         updateTotalTime();
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
 
@@ -1692,8 +1721,12 @@ namespace mrHelper.App.Forms
             MergeRequest = mergeRequest
          };
          updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey);
-         updateTotalTime(new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId });
+         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey, mergeRequest.Author);
+         updateTotalTime(new MergeRequestKey
+            {
+               ProjectKey = fmk.ProjectKey,
+               IId = fmk.MergeRequest.IId
+            }, mergeRequest.Author, hostname);
 
          labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", mergeRequest.IId);
 
@@ -1773,8 +1806,8 @@ namespace mrHelper.App.Forms
          enableMergeRequestActions(false);
          enableCommitActions(false, null, default(User));
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-         updateTotalTime(null);
+         updateTimeTrackingMergeRequestDetails(false);
+         updateTotalTime();
          disableComboBox(comboBoxLeftCommit, String.Empty);
          disableComboBox(comboBoxRightCommit, String.Empty);
       }

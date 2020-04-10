@@ -136,6 +136,10 @@ namespace mrHelper.App.Forms
          // Store data before opening a modal dialog
          Debug.Assert(getMergeRequestKey(null).HasValue);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+         Debug.Assert(getMergeRequest(null).HasValue);
+         MergeRequest mr = getMergeRequest(null).Value;
+
          TimeSpan oldSpan = getTotalTime(mrk) ?? TimeSpan.Zero;
 
          using (EditTimeForm form = new EditTimeForm(oldSpan))
@@ -159,7 +163,8 @@ namespace mrHelper.App.Forms
                      return;
                   }
 
-                  updateTotalTime(mrk);
+                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName);
+
                   labelWorkflowStatus.Text = "Total spent time updated";
 
                   Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
@@ -968,7 +973,7 @@ namespace mrHelper.App.Forms
       {
          if (isTrackingTime())
          {
-            updateTotalTime(null);
+            updateTotalTime();
          }
       }
 
@@ -998,7 +1003,7 @@ namespace mrHelper.App.Forms
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(null);
+         updateTotalTime();
 
          updateTrayIcon();
       }
@@ -1062,15 +1067,15 @@ namespace mrHelper.App.Forms
             MergeRequest mergeRequest = getMergeRequest(null).Value;
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey);
+            updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey, mergeRequest.Author);
 
             // Take care of controls that 'time tracking' mode shares with normal mode
-            updateTotalTime(mrk);
+            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName);
          }
          else
          {
-            updateTimeTrackingMergeRequestDetails(false, String.Empty, default(ProjectKey));
-            updateTotalTime(null);
+            updateTimeTrackingMergeRequestDetails(false);
+            updateTotalTime();
          }
 
          updateTrayIcon();

@@ -23,6 +23,9 @@ namespace mrHelper.App.Helpers
       private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
+      private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
+      private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
+
       private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
       private static readonly bool   CheckedLabelsFilterDefaultValue = false;
 
@@ -186,6 +189,17 @@ namespace mrHelper.App.Helpers
       {
          get { return getValue(LocalGitFolderKeyName, LocalGitFolderDefaultValue); }
          set { setValue(LocalGitFolderKeyName, value); }
+      }
+
+      public bool AllowAuthorToTrackTime
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               AllowAuthorToTrackTimeKeyName, boolToString(AllowAuthorToTrackTimeDefaultValue)),
+                  out bool result) ? result : AllowAuthorToTrackTimeDefaultValue;
+         }
+         set { setValue(AllowAuthorToTrackTimeKeyName, boolToString(value)); }
       }
 
       public bool CheckedLabelsFilter
