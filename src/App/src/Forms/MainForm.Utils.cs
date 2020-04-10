@@ -197,90 +197,88 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void selectNotReviewedCommits(ComboBox leftComboBox, ComboBox rightComboBox,
-         MergeRequestKey mrk, out int left, out int right)
+      private static void selectNotReviewedCommits(bool isSearchMode,
+         ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit, HashSet<string> reviewedCommits)
       {
-         Debug.Assert(leftComboBox.Items.Count == rightComboBox.Items.Count);
-
-         left = 0;
-         right = 0;
-
-         if (!_reviewedCommits.ContainsKey(mrk))
+         Tuple<int, int> getCommitIndices()
          {
-            left = 0;
-            right = rightComboBox.Items.Count - 1;
-            return;
-         }
+            int DefaultLatestIndex = 0;
+            int DefaultEarliestIndex = comboBoxEarliestCommit.Items.Count - 1;
 
-         int? iNewestOfReviewedCommits = new Nullable<int>();
-         HashSet<string> reviewedCommits = _reviewedCommits[mrk];
-         for (int iItem = 0; iItem < leftComboBox.Items.Count; ++iItem)
-         {
-            string sha = ((CommitComboBoxItem)(leftComboBox.Items[iItem])).SHA;
-            if (reviewedCommits.Contains(sha))
+            int? iNewestReviewedCommitIndex = new Nullable<int>();
+            if (!isSearchMode)
             {
-               iNewestOfReviewedCommits = iItem;
-               break;
+               for (int iItem = 0; iItem < comboBoxLatestCommit.Items.Count; ++iItem)
+               {
+                  string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[iItem])).SHA;
+                  if (reviewedCommits.Contains(sha))
+                  {
+                     iNewestReviewedCommitIndex = iItem;
+                     break;
+                  }
+               }
+            }
+
+            if (!iNewestReviewedCommitIndex.HasValue)
+            {
+               return new Tuple<int, int>(DefaultLatestIndex, DefaultEarliestIndex);
+            }
+
+            if (Program.Settings.AutoSelectNewestCommit)
+            {
+               return new Tuple<int, int>(0, Math.Max(0, iNewestReviewedCommitIndex.Value - 1));
+            }
+            else
+            {
+               // note that `earliest` should not be `latest + 1` because Latest CB is shifted comparing to Earliest CB
+               int latest = Math.Max(0, iNewestReviewedCommitIndex.Value - 1);
+               int earliest = Math.Min(latest, comboBoxEarliestCommit.Items.Count - 1);
+               return new Tuple<int, int>(latest, earliest);
             }
          }
 
-         if (!iNewestOfReviewedCommits.HasValue)
-         {
-            return;
-         }
-
-         left = Math.Max(0, iNewestOfReviewedCommits.Value - 1);
-
-         // note that it should not be left + 1 because Left CB is shifted comparing to Right CB
-         right = Math.Min(left, rightComboBox.Items.Count - 1);
+         Debug.Assert(comboBoxLatestCommit.Items.Count == comboBoxEarliestCommit.Items.Count);
+         Tuple<int, int> indices = getCommitIndices();
+         comboBoxLatestCommit.SelectedIndex = indices.Item1;
+         comboBoxEarliestCommit.SelectedIndex = indices.Item2;
       }
 
-      private void checkComboboxCommitsOrder(ComboBox leftComboBox, ComboBox rightComboBox,
+      private HashSet<string> getReviewedCommits(MergeRequestKey mrk)
+      {
+         return _reviewedCommits.ContainsKey(mrk) ?  _reviewedCommits[mrk] : new HashSet<string>();
+      }
+
+      private static void checkComboboxCommitsOrder(ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit,
          bool shouldReorderRightCombobox)
       {
-         if (leftComboBox.SelectedItem == null || rightComboBox.SelectedItem == null)
+         if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
          {
             return;
          }
 
-         // Left combobox cannot select a commit older than in right combobox (replicating gitlab web ui behavior)
-         CommitComboBoxItem leftItem = (CommitComboBoxItem)(leftComboBox.SelectedItem);
-         CommitComboBoxItem rightItem = (CommitComboBoxItem)(rightComboBox.SelectedItem);
-         Debug.Assert(leftItem.TimeStamp.HasValue);
+         // Latest combobox cannot select a commit older than in Earliest combobox (replicating gitlab web ui behavior)
+         CommitComboBoxItem latestCBItem = (CommitComboBoxItem)(comboBoxLatestCommit.SelectedItem);
+         CommitComboBoxItem earliestCBItem = (CommitComboBoxItem)(comboBoxEarliestCommit.SelectedItem);
+         Debug.Assert(latestCBItem.TimeStamp.HasValue);
 
-         if (rightItem.TimeStamp.HasValue)
+         if (earliestCBItem.TimeStamp.HasValue)
          {
             // Check if order is broken
-            if (leftItem.TimeStamp.Value <= rightItem.TimeStamp.Value)
+            if (latestCBItem.TimeStamp.Value <= earliestCBItem.TimeStamp.Value)
             {
                if (shouldReorderRightCombobox)
                {
-                  rightComboBox.SelectedIndex = leftComboBox.SelectedIndex;
+                  comboBoxEarliestCommit.SelectedIndex = comboBoxLatestCommit.SelectedIndex;
                }
                else
                {
-                  leftComboBox.SelectedIndex = rightComboBox.SelectedIndex;
+                  comboBoxLatestCommit.SelectedIndex = comboBoxEarliestCommit.SelectedIndex;
                }
             }
          }
          else
          {
             // It is ok because a commit w/o timestamp is the oldest one
-         }
-      }
-
-      private string getGitTag(ComboBox leftComboBox, ComboBox rightComboBox, bool left)
-      {
-         // swap sides to be consistent with gitlab web ui
-         if (!left)
-         {
-            Debug.Assert(leftComboBox.SelectedItem != null);
-            return ((CommitComboBoxItem)leftComboBox.SelectedItem).SHA;
-         }
-         else
-         {
-            Debug.Assert(rightComboBox.SelectedItem != null);
-            return ((CommitComboBoxItem)rightComboBox.SelectedItem).SHA;
          }
       }
 
@@ -686,23 +684,23 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void addCommitsToComboBoxes(ComboBox leftComboBox, ComboBox rightComboBox,
+      private static void addCommitsToComboBoxes(ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit,
          IEnumerable<Commit> commits, string baseSha, string targetBranch)
       {
          CommitComboBoxItem latestCommitItem = new CommitComboBoxItem(commits.First())
          {
             IsLatest = true
          };
-         leftComboBox.Items.Add(latestCommitItem);
+         comboBoxLatestCommit.Items.Add(latestCommitItem);
          foreach (Commit commit in commits.Skip(1))
          {
             CommitComboBoxItem item = new CommitComboBoxItem(commit);
-            if (leftComboBox.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
+            if (comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
             {
                continue;
             }
-            leftComboBox.Items.Add(item);
-            rightComboBox.Items.Add(item);
+            comboBoxLatestCommit.Items.Add(item);
+            comboBoxEarliestCommit.Items.Add(item);
          }
 
          // Add target branch to the right combo-box
@@ -711,7 +709,7 @@ namespace mrHelper.App.Forms
          {
             IsBase = true
          };
-         rightComboBox.Items.Add(baseCommitItem);
+         comboBoxEarliestCommit.Items.Add(baseCommitItem);
       }
 
       /// <summary>
@@ -1688,8 +1686,8 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false);
          updateTotalTime();
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableComboBox(comboBoxLatestCommit, String.Empty);
+         disableComboBox(comboBoxEarliestCommit, String.Empty);
 
          if (mergeRequestIId != 0)
          {
@@ -1739,13 +1737,13 @@ namespace mrHelper.App.Forms
          enableCommitActions(false, null, default(User));
          if (listView.SelectedItems.Count != 0)
          {
-            disableComboBox(comboBoxLeftCommit, "Loading...");
-            disableComboBox(comboBoxRightCommit, "Loading...");
+            disableComboBox(comboBoxLatestCommit, "Loading...");
+            disableComboBox(comboBoxEarliestCommit, "Loading...");
          }
          else
          {
-            disableComboBox(comboBoxLeftCommit, String.Empty);
-            disableComboBox(comboBoxRightCommit, String.Empty);
+            disableComboBox(comboBoxLatestCommit, String.Empty);
+            disableComboBox(comboBoxEarliestCommit, String.Empty);
          }
 
          Trace.TraceInformation(String.Format(
@@ -1754,8 +1752,8 @@ namespace mrHelper.App.Forms
 
       private void onFailedLoadCommitsCommon()
       {
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableComboBox(comboBoxLatestCommit, String.Empty);
+         disableComboBox(comboBoxEarliestCommit, String.Empty);
          labelWorkflowStatus.Text = "Failed to load commits";
 
          Trace.TraceInformation(String.Format(
@@ -1769,30 +1767,20 @@ namespace mrHelper.App.Forms
 
          if (mrk.HasValue && commits.Count() > 0)
          {
-            enableComboBox(comboBoxLeftCommit);
-            enableComboBox(comboBoxRightCommit);
+            enableComboBox(comboBoxLatestCommit);
+            enableComboBox(comboBoxEarliestCommit);
 
-            addCommitsToComboBoxes(comboBoxLeftCommit, comboBoxRightCommit, commits,
+            addCommitsToComboBoxes(comboBoxLatestCommit, comboBoxEarliestCommit, commits,
                mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
-            if (listView == listViewMergeRequests)
-            {
-               selectNotReviewedCommits(comboBoxLeftCommit, comboBoxRightCommit, mrk.Value,
-                  out int left, out int right);
-               comboBoxLeftCommit.SelectedIndex = left;
-               comboBoxRightCommit.SelectedIndex = right;
-            }
-            else
-            {
-               comboBoxLeftCommit.SelectedIndex = 0;
-               comboBoxRightCommit.SelectedIndex = comboBoxRightCommit.Items.Count - 1;
-            }
+            selectNotReviewedCommits(listView == listViewFoundMergeRequests,
+               comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
 
             enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
          {
-            disableComboBox(comboBoxLeftCommit, String.Empty);
-            disableComboBox(comboBoxRightCommit, String.Empty);
+            disableComboBox(comboBoxLatestCommit, String.Empty);
+            disableComboBox(comboBoxEarliestCommit, String.Empty);
          }
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", commits.Count());
@@ -1808,8 +1796,8 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false);
          updateTotalTime();
-         disableComboBox(comboBoxLeftCommit, String.Empty);
-         disableComboBox(comboBoxRightCommit, String.Empty);
+         disableComboBox(comboBoxLatestCommit, String.Empty);
+         disableComboBox(comboBoxEarliestCommit, String.Empty);
       }
    }
 }

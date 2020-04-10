@@ -449,29 +449,29 @@ namespace mrHelper.App.Forms
          e.DrawFocusRectangle();
       }
 
-      private void ComboBoxLeftCommit_SelectedIndexChanged(object sender, EventArgs e)
+      private void ComboBoxLatestCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         checkComboboxCommitsOrder(comboBoxLeftCommit, comboBoxRightCommit, true /* I'm left one */);
+         checkComboboxCommitsOrder(comboBoxLatestCommit, comboBoxEarliestCommit, true /* I'm the latest one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
          setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
       }
 
-      private void ComboBoxRightCommit_SelectedIndexChanged(object sender, EventArgs e)
+      private void ComboBoxEarliestCommit_SelectedIndexChanged(object sender, EventArgs e)
       {
-         checkComboboxCommitsOrder(comboBoxLeftCommit, comboBoxRightCommit, false /* because I'm the right one */);
+         checkComboboxCommitsOrder(comboBoxLatestCommit, comboBoxEarliestCommit, false /* because I'm the earliest one */);
          setCommitComboboxTooltipText(sender as ComboBox, toolTip);
          setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
       }
 
       private Label getLabelForComboBox(ComboBox box)
       {
-         if (box == comboBoxLeftCommit)
+         if (box == comboBoxLatestCommit)
          {
-            return labelLeftCommitTimestampLabel;
+            return labelLatestCommitTimestampLabel;
          }
-         else if (box == comboBoxRightCommit)
+         else if (box == comboBoxEarliestCommit)
          {
-            return labelRightCommitTimestampLabel;
+            return labelEarliestCommitTimestampLabel;
          }
          return null;
       }
@@ -564,6 +564,18 @@ namespace mrHelper.App.Forms
       {
          Program.Settings.DisableSplitterRestrictions = (sender as CheckBox).Checked;
          resetMinimumSizes();
+      }
+
+      private void checkBoxAutoSelectNewestCommit_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.AutoSelectNewestCommit = (sender as CheckBox).Checked;
+
+         MergeRequestKey? mrk = getMergeRequestKey(null);
+         if (mrk.HasValue)
+         {
+            selectNotReviewedCommits(isSearchMode(),
+               comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
+         }
       }
 
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)

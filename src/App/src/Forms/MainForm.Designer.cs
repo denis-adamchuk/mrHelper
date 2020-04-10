@@ -66,6 +66,7 @@ namespace mrHelper.App.Forms
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
+         this.buttonReloadList = new System.Windows.Forms.Button();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,6 +84,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
          this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.checkBoxAutoSelectNewestCommit = new System.Windows.Forms.CheckBox();
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.labelFontSize = new System.Windows.Forms.Label();
          this.comboBoxFonts = new System.Windows.Forms.ComboBox();
@@ -103,7 +105,6 @@ namespace mrHelper.App.Forms
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
-         this.buttonReloadList = new System.Windows.Forms.Button();
          this.listViewMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -112,9 +113,9 @@ namespace mrHelper.App.Forms
          this.columnHeaderSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderResolved = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.columnHeaderResolved = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxLabels = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearch = new System.Windows.Forms.GroupBox();
@@ -144,14 +145,14 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
-         this.buttonTimeTrackingCancel = new CommonControls.Controls.ConfirmCancelButton();
+         this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
-         this.labelRightCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxRightCommit = new System.Windows.Forms.ComboBox();
-         this.labelLeftCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxLeftCommit = new System.Windows.Forms.ComboBox();
+         this.labelEarliestCommitTimestampLabel = new System.Windows.Forms.Label();
+         this.comboBoxEarliestCommit = new System.Windows.Forms.ComboBox();
+         this.labelLatestCommitTimestampLabel = new System.Windows.Forms.Label();
+         this.comboBoxLatestCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
@@ -431,6 +432,19 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.textBoxSearch, "Press Enter to search");
          this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
          // 
+         // buttonReloadList
+         // 
+         this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonReloadList.Enabled = false;
+         this.buttonReloadList.Location = new System.Drawing.Point(220, 9);
+         this.buttonReloadList.Name = "buttonReloadList";
+         this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
+         this.buttonReloadList.TabIndex = 2;
+         this.buttonReloadList.Text = "Update List";
+         this.toolTip.SetToolTip(this.buttonReloadList, "Update merge request list in the background");
+         this.buttonReloadList.UseVisualStyleBackColor = true;
+         this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -550,7 +564,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention.AutoSize = true;
          this.checkBoxShowOnMention.Location = new System.Drawing.Point(234, 42);
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
-         this.checkBoxShowOnMention.Size = new System.Drawing.Size(242, 17);
+         this.checkBoxShowOnMention.Size = new System.Drawing.Size(170, 17);
          this.checkBoxShowOnMention.TabIndex = 15;
          this.checkBoxShowOnMention.Text = "When someone mentioned me";
          this.checkBoxShowOnMention.UseVisualStyleBackColor = true;
@@ -561,7 +575,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowResolvedAll.AutoSize = true;
          this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(234, 19);
          this.checkBoxShowResolvedAll.Name = "checkBoxShowResolvedAll";
-         this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(144, 17);
+         this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(127, 17);
          this.checkBoxShowResolvedAll.TabIndex = 14;
          this.checkBoxShowResolvedAll.Text = "Resolved All Threads";
          this.checkBoxShowResolvedAll.UseVisualStyleBackColor = true;
@@ -602,6 +616,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestCommit);
          this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
          this.groupBoxOther.Controls.Add(this.labelFontSize);
          this.groupBoxOther.Controls.Add(this.comboBoxFonts);
@@ -614,10 +629,21 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 177);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 199);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
+         // 
+         // checkBoxAutoSelectNewestCommit
+         // 
+         this.checkBoxAutoSelectNewestCommit.AutoSize = true;
+         this.checkBoxAutoSelectNewestCommit.Location = new System.Drawing.Point(6, 174);
+         this.checkBoxAutoSelectNewestCommit.Name = "checkBoxAutoSelectNewestCommit";
+         this.checkBoxAutoSelectNewestCommit.Size = new System.Drawing.Size(152, 17);
+         this.checkBoxAutoSelectNewestCommit.TabIndex = 13;
+         this.checkBoxAutoSelectNewestCommit.Text = "Auto-select newest commit";
+         this.checkBoxAutoSelectNewestCommit.UseVisualStyleBackColor = true;
+         this.checkBoxAutoSelectNewestCommit.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestCommit_CheckedChanged);
          // 
          // checkBoxDisableSplitterRestrictions
          // 
@@ -844,19 +870,6 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
-         // buttonReloadList
-         // 
-         this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonReloadList.Enabled = false;
-         this.buttonReloadList.Location = new System.Drawing.Point(220, 9);
-         this.buttonReloadList.Name = "buttonReloadList";
-         this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
-         this.buttonReloadList.TabIndex = 2;
-         this.buttonReloadList.Text = "Update List";
-         this.toolTip.SetToolTip(this.buttonReloadList, "Update merge request list in the background");
-         this.buttonReloadList.UseVisualStyleBackColor = true;
-         this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
-         // 
          // listViewMergeRequests
          // 
          this.listViewMergeRequests.AllowColumnReorder = true;
@@ -936,6 +949,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderTotalTime.Text = "Total Time";
          this.columnHeaderTotalTime.Width = 70;
          // 
+         // columnHeaderResolved
+         // 
+         this.columnHeaderResolved.Tag = "Resolved";
+         this.columnHeaderResolved.Text = "Resolved";
+         this.columnHeaderResolved.Width = 65;
+         // 
          // columnHeaderSourceBranch
          // 
          this.columnHeaderSourceBranch.Tag = "SourceBranch";
@@ -947,12 +966,6 @@ namespace mrHelper.App.Forms
          this.columnHeaderTargetBranch.Tag = "TargetBranch";
          this.columnHeaderTargetBranch.Text = "Target Branch";
          this.columnHeaderTargetBranch.Width = 100;
-         // 
-         // columnHeaderResolved
-         // 
-         this.columnHeaderResolved.Tag = "Resolved";
-         this.columnHeaderResolved.Text = "Resolved";
-         this.columnHeaderResolved.Width = 65;
          // 
          // checkBoxLabels
          // 
@@ -1306,6 +1319,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonTimeTrackingCancel
          // 
+         this.buttonTimeTrackingCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonTimeTrackingCancel.Enabled = false;
          this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
          this.buttonTimeTrackingCancel.MinimumSize = new System.Drawing.Size(96, 0);
@@ -1344,10 +1358,10 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSelectCommits
          // 
-         this.groupBoxSelectCommits.Controls.Add(this.labelRightCommitTimestampLabel);
-         this.groupBoxSelectCommits.Controls.Add(this.comboBoxRightCommit);
-         this.groupBoxSelectCommits.Controls.Add(this.labelLeftCommitTimestampLabel);
-         this.groupBoxSelectCommits.Controls.Add(this.comboBoxLeftCommit);
+         this.groupBoxSelectCommits.Controls.Add(this.labelEarliestCommitTimestampLabel);
+         this.groupBoxSelectCommits.Controls.Add(this.comboBoxEarliestCommit);
+         this.groupBoxSelectCommits.Controls.Add(this.labelLatestCommitTimestampLabel);
+         this.groupBoxSelectCommits.Controls.Add(this.comboBoxLatestCommit);
          this.groupBoxSelectCommits.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBoxSelectCommits.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectCommits.Name = "groupBoxSelectCommits";
@@ -1356,53 +1370,53 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectCommits.TabStop = false;
          this.groupBoxSelectCommits.Text = "Select commits";
          // 
-         // labelRightCommitTimestampLabel
+         // labelEarliestCommitTimestampLabel
          // 
-         this.labelRightCommitTimestampLabel.AutoEllipsis = true;
-         this.labelRightCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelRightCommitTimestampLabel.Location = new System.Drawing.Point(3, 82);
-         this.labelRightCommitTimestampLabel.Name = "labelRightCommitTimestampLabel";
-         this.labelRightCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-         this.labelRightCommitTimestampLabel.Size = new System.Drawing.Size(920, 22);
-         this.labelRightCommitTimestampLabel.TabIndex = 8;
-         this.labelRightCommitTimestampLabel.Text = "Created at:";
+         this.labelEarliestCommitTimestampLabel.AutoEllipsis = true;
+         this.labelEarliestCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
+         this.labelEarliestCommitTimestampLabel.Location = new System.Drawing.Point(3, 82);
+         this.labelEarliestCommitTimestampLabel.Name = "labelEarliestCommitTimestampLabel";
+         this.labelEarliestCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+         this.labelEarliestCommitTimestampLabel.Size = new System.Drawing.Size(920, 22);
+         this.labelEarliestCommitTimestampLabel.TabIndex = 8;
+         this.labelEarliestCommitTimestampLabel.Text = "Created at:";
          // 
-         // comboBoxRightCommit
+         // comboBoxEarliestCommit
          // 
-         this.comboBoxRightCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxRightCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxRightCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxRightCommit.FormattingEnabled = true;
-         this.comboBoxRightCommit.Location = new System.Drawing.Point(3, 61);
-         this.comboBoxRightCommit.Name = "comboBoxRightCommit";
-         this.comboBoxRightCommit.Size = new System.Drawing.Size(920, 21);
-         this.comboBoxRightCommit.TabIndex = 6;
-         this.comboBoxRightCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxRightCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxRightCommit_SelectedIndexChanged);
+         this.comboBoxEarliestCommit.Dock = System.Windows.Forms.DockStyle.Top;
+         this.comboBoxEarliestCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+         this.comboBoxEarliestCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxEarliestCommit.FormattingEnabled = true;
+         this.comboBoxEarliestCommit.Location = new System.Drawing.Point(3, 61);
+         this.comboBoxEarliestCommit.Name = "comboBoxEarliestCommit";
+         this.comboBoxEarliestCommit.Size = new System.Drawing.Size(920, 21);
+         this.comboBoxEarliestCommit.TabIndex = 6;
+         this.comboBoxEarliestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
+         this.comboBoxEarliestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxEarliestCommit_SelectedIndexChanged);
          // 
-         // labelLeftCommitTimestampLabel
+         // labelLatestCommitTimestampLabel
          // 
-         this.labelLeftCommitTimestampLabel.AutoEllipsis = true;
-         this.labelLeftCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelLeftCommitTimestampLabel.Location = new System.Drawing.Point(3, 37);
-         this.labelLeftCommitTimestampLabel.Name = "labelLeftCommitTimestampLabel";
-         this.labelLeftCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 6);
-         this.labelLeftCommitTimestampLabel.Size = new System.Drawing.Size(920, 24);
-         this.labelLeftCommitTimestampLabel.TabIndex = 7;
-         this.labelLeftCommitTimestampLabel.Text = "Created at:";
+         this.labelLatestCommitTimestampLabel.AutoEllipsis = true;
+         this.labelLatestCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
+         this.labelLatestCommitTimestampLabel.Location = new System.Drawing.Point(3, 37);
+         this.labelLatestCommitTimestampLabel.Name = "labelLatestCommitTimestampLabel";
+         this.labelLatestCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 6);
+         this.labelLatestCommitTimestampLabel.Size = new System.Drawing.Size(920, 24);
+         this.labelLatestCommitTimestampLabel.TabIndex = 7;
+         this.labelLatestCommitTimestampLabel.Text = "Created at:";
          // 
-         // comboBoxLeftCommit
+         // comboBoxLatestCommit
          // 
-         this.comboBoxLeftCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxLeftCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxLeftCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLeftCommit.FormattingEnabled = true;
-         this.comboBoxLeftCommit.Location = new System.Drawing.Point(3, 16);
-         this.comboBoxLeftCommit.Name = "comboBoxLeftCommit";
-         this.comboBoxLeftCommit.Size = new System.Drawing.Size(920, 21);
-         this.comboBoxLeftCommit.TabIndex = 5;
-         this.comboBoxLeftCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxLeftCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLeftCommit_SelectedIndexChanged);
+         this.comboBoxLatestCommit.Dock = System.Windows.Forms.DockStyle.Top;
+         this.comboBoxLatestCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+         this.comboBoxLatestCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxLatestCommit.FormattingEnabled = true;
+         this.comboBoxLatestCommit.Location = new System.Drawing.Point(3, 16);
+         this.comboBoxLatestCommit.Name = "comboBoxLatestCommit";
+         this.comboBoxLatestCommit.Size = new System.Drawing.Size(920, 21);
+         this.comboBoxLatestCommit.TabIndex = 5;
+         this.comboBoxLatestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
+         this.comboBoxLatestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLatestCommit_SelectedIndexChanged);
          // 
          // panel4
          // 
@@ -1524,8 +1538,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBoxSelectCommits;
       private System.Windows.Forms.Button buttonDiffTool;
-      private System.Windows.Forms.ComboBox comboBoxRightCommit;
-      private System.Windows.Forms.ComboBox comboBoxLeftCommit;
+      private System.Windows.Forms.ComboBox comboBoxEarliestCommit;
+      private System.Windows.Forms.ComboBox comboBoxLatestCommit;
       private System.Windows.Forms.CheckBox checkBoxShowServiceNotifications;
       private System.Windows.Forms.ComboBox comboBoxThemes;
       private System.Windows.Forms.ComboBox comboBoxFonts;
@@ -1539,8 +1553,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonAddComment;
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Button buttonNewDiscussion;
-        private System.Windows.Forms.Label labelRightCommitTimestampLabel;
-        private System.Windows.Forms.Label labelLeftCommitTimestampLabel;
+        private System.Windows.Forms.Label labelEarliestCommitTimestampLabel;
+        private System.Windows.Forms.Label labelLatestCommitTimestampLabel;
       private System.Windows.Forms.Panel panelStatusBar;
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
       private System.Windows.Forms.Label labelGitStatus;
@@ -1583,6 +1597,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
         private System.Windows.Forms.RadioButton radioButtonSearchByTargetBranch;
         private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
-    }
+      private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestCommit;
+   }
 }
 

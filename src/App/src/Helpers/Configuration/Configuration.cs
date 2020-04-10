@@ -23,6 +23,9 @@ namespace mrHelper.App.Helpers
       private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
+      private static readonly string AutoSelectNewestCommitKeyName      = "AutoSelectNewestCommit";
+      private static readonly bool   AutoSelectNewestCommitDefaultValue = false;
+
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
 
@@ -189,6 +192,17 @@ namespace mrHelper.App.Helpers
       {
          get { return getValue(LocalGitFolderKeyName, LocalGitFolderDefaultValue); }
          set { setValue(LocalGitFolderKeyName, value); }
+      }
+
+      public bool AutoSelectNewestCommit
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               AutoSelectNewestCommitKeyName, boolToString(AutoSelectNewestCommitDefaultValue)),
+                  out bool result) ? result : AutoSelectNewestCommitDefaultValue;
+         }
+         set { setValue(AutoSelectNewestCommitKeyName, boolToString(value)); }
       }
 
       public bool AllowAuthorToTrackTime

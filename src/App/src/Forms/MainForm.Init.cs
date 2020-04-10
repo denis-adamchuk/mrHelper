@@ -145,6 +145,8 @@ namespace mrHelper.App.Forms
          textBoxLabels.Text = Program.Settings.LastUsedLabels;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
+         checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
+
          checkBoxShowNewMergeRequests.Checked = Program.Settings.Notifications_NewMergeRequests;
          checkBoxShowMergedMergeRequests.Checked = Program.Settings.Notifications_MergedMergeRequests;
          checkBoxShowUpdatedMergeRequests.Checked = Program.Settings.Notifications_UpdatedMergeRequests;

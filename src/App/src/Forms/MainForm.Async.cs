@@ -176,20 +176,21 @@ namespace mrHelper.App.Forms
 
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, string state)
       {
-         if (comboBoxLeftCommit.SelectedItem == null || comboBoxRightCommit.SelectedItem == null)
+         if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
          {
             Debug.Assert(false);
             return;
          }
 
          // Keep data before async/await
-         string leftSHA = getGitTag(comboBoxLeftCommit, comboBoxRightCommit, true /* left */);
-         string rightSHA = getGitTag(comboBoxLeftCommit, comboBoxRightCommit, false /* right */);
+         string getGitTag(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
+         string leftSHA = getGitTag(comboBoxEarliestCommit);
+         string rightSHA = getGitTag(comboBoxLatestCommit);
 
          List<string> includedSHA = new List<string>();
-         for (int index = comboBoxLeftCommit.SelectedIndex; index < comboBoxLeftCommit.Items.Count; ++index)
+         for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
          {
-            string sha = ((CommitComboBoxItem)(comboBoxLeftCommit.Items[index])).SHA;
+            string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[index])).SHA;
             includedSHA.Add(sha);
             if (sha == leftSHA)
             {
@@ -251,7 +252,7 @@ namespace mrHelper.App.Forms
 
          if (state == "merged")
          {
-            string headCommitSha = comboBoxLeftCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
+            string headCommitSha = comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
             if (!await restoreChainOfMergedCommits(repo, new string[] { headCommitSha }))
             {
                labelWorkflowStatus.Text = "Could not launch diff tool";
@@ -299,8 +300,8 @@ namespace mrHelper.App.Forms
          }
          includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
 
-         comboBoxLeftCommit.Refresh();
-         comboBoxRightCommit.Refresh();
+         comboBoxLatestCommit.Refresh();
+         comboBoxEarliestCommit.Refresh();
       }
 
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
