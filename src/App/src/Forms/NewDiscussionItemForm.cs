@@ -11,6 +11,9 @@ namespace mrHelper.App.Forms
          this.Text = caption;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
+
+         buttonCancel.ConfirmationCondition =
+            () => textBox.TextLength > MaximumTextLengthTocancelWithoutConfirmation;
       }
 
       internal string Body => textBox.Text;
@@ -29,5 +32,7 @@ namespace mrHelper.App.Forms
       {
          this.ActiveControl = textBox;
       }
+
+      private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
    }
 }

@@ -52,6 +52,9 @@ namespace mrHelper.App.Forms
                Debug.Assert(false);
             }
          }
+
+         buttonTimeTrackingCancel.ConfirmationCondition = () => true;
+         buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
       }
 
       public string GetCurrentHostName()

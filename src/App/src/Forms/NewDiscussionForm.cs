@@ -27,6 +27,9 @@ namespace mrHelper.App.Forms
          this.Text = Constants.StartNewThreadCaption;
          this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
+
+         buttonCancel.ConfirmationCondition =
+            () => textBoxDiscussionBody.TextLength > MaximumTextLengthTocancelWithoutConfirmation;
       }
 
       public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }
@@ -85,6 +88,8 @@ namespace mrHelper.App.Forms
          stylesheet = formatter.GetStylesheet();
          return formatter.GetBody(context.Value);
       }
+
+      private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
    }
 }
 

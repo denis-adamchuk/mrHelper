@@ -32,7 +32,7 @@
          this.labelM = new System.Windows.Forms.Label();
          this.labelS = new System.Windows.Forms.Label();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.buttonCancel = new System.Windows.Forms.Button();
+         this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.numericUpDownH = new System.Windows.Forms.NumericUpDown();
          this.numericUpDownM = new System.Windows.Forms.NumericUpDown();
          this.numericUpDownS = new System.Windows.Forms.NumericUpDown();
@@ -80,6 +80,7 @@
          // 
          // buttonCancel
          // 
+         this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(133, 47);
          this.buttonCancel.Name = "buttonCancel";
@@ -92,7 +93,7 @@
          // 
          this.numericUpDownH.Location = new System.Drawing.Point(12, 13);
          this.numericUpDownH.Maximum = new decimal(new int[] {
-            59,
+            23,
             0,
             0,
             0});
@@ -160,7 +161,7 @@
       private System.Windows.Forms.Label labelM;
       private System.Windows.Forms.Label labelS;
       private System.Windows.Forms.Button buttonOK;
-      private System.Windows.Forms.Button buttonCancel;
+      private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private System.Windows.Forms.NumericUpDown numericUpDownH;
       private System.Windows.Forms.NumericUpDown numericUpDownM;
       private System.Windows.Forms.NumericUpDown numericUpDownS;

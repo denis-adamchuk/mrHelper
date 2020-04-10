@@ -176,6 +176,11 @@ namespace mrHelper.CommonControls.Tools
             control.AutoScaleDimensions.Width, control.AutoScaleDimensions.Height));
       }
 
+      public static bool ShowConfirmationDialog(string confirmationText)
+      {
+         return MessageBox.Show(confirmationText, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+            MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+      }
    }
 }
 

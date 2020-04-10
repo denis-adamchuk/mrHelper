@@ -13,6 +13,8 @@ namespace mrHelper.App.Forms
          numericUpDownS.Value = span.Seconds;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
+
+         buttonCancel.ConfirmationCondition = () => !span.Equals(TimeSpan);
       }
 
       private void NumericUpDown_KeyDown(object sender, KeyEventArgs e)
@@ -25,12 +27,16 @@ namespace mrHelper.App.Forms
          }
       }
 
-      public TimeSpan GetTimeSpan()
+      public TimeSpan TimeSpan
       {
-         int h = Decimal.ToInt32(numericUpDownH.Value);
-         int m = Decimal.ToInt32(numericUpDownM.Value);
-         int s = Decimal.ToInt32(numericUpDownS.Value);
-         return new TimeSpan(h, m, s);
+         get
+         {
+            int h = Decimal.ToInt32(numericUpDownH.Value);
+            int m = Decimal.ToInt32(numericUpDownM.Value);
+            int s = Decimal.ToInt32(numericUpDownS.Value);
+            return new TimeSpan(h, m, s);
+         }
       }
    }
 }
+

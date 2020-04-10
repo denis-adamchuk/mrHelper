@@ -22,6 +22,8 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          _hostname = hostname;
+
+         buttonCancel.ConfirmationCondition = () => !Enumerable.SequenceEqual(projects, Projects);
       }
 
       public IEnumerable<Tuple<string, bool>> Projects

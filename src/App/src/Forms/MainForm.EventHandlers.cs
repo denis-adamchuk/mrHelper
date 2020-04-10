@@ -142,7 +142,7 @@ namespace mrHelper.App.Forms
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
-               TimeSpan newSpan = form.GetTimeSpan();
+               TimeSpan newSpan = form.TimeSpan;
                bool add = newSpan > oldSpan;
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
                if (diff != TimeSpan.Zero)

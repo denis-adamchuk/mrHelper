@@ -144,7 +144,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
-         this.buttonTimeTrackingCancel = new System.Windows.Forms.Button();
+         this.buttonTimeTrackingCancel = new CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
@@ -1518,7 +1518,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
       private System.Windows.Forms.Button buttonEditTime;
       private System.Windows.Forms.Label labelTimeTrackingTrackedLabel;
-      private System.Windows.Forms.Button buttonTimeTrackingCancel;
+      private CommonControls.Controls.ConfirmCancelButton buttonTimeTrackingCancel;
       private System.Windows.Forms.Button buttonTimeTrackingStart;
       private System.Windows.Forms.Panel panel1;
       private System.Windows.Forms.GroupBox groupBoxActions;

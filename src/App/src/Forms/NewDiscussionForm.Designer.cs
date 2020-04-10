@@ -28,7 +28,7 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.buttonCancel = new System.Windows.Forms.Button();
+         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
          this.textBoxFileName = new System.Windows.Forms.TextBox();
          this.buttonOK = new System.Windows.Forms.Button();
@@ -131,7 +131,7 @@
       #endregion
 
       private System.Windows.Forms.TextBox textBoxDiscussionBody;
-      private System.Windows.Forms.Button buttonCancel;
+      private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;

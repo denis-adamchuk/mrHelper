@@ -28,7 +28,7 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.buttonCancel = new System.Windows.Forms.Button();
+         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
          this.buttonOK = new System.Windows.Forms.Button();
          this.textBox = new System.Windows.Forms.TextBox();
          this.SuspendLayout();
@@ -92,6 +92,6 @@
 
       private System.Windows.Forms.TextBox textBox;
       private System.Windows.Forms.Button buttonOK;
-      private System.Windows.Forms.Button buttonCancel;
+      private CommonControls.Controls.ConfirmCancelButton buttonCancel;
    }
 }

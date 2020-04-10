@@ -34,7 +34,7 @@
          this.buttonRemoveProject = new System.Windows.Forms.Button();
          this.buttonToggleState = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.buttonCancel = new System.Windows.Forms.Button();
+         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
          this.buttonUp = new System.Windows.Forms.Button();
          this.buttonDown = new System.Windows.Forms.Button();
          this.SuspendLayout();
@@ -181,7 +181,7 @@
         private System.Windows.Forms.Button buttonToggleState;
         private System.Windows.Forms.ColumnHeader columnHeaderName;
       private System.Windows.Forms.Button buttonOK;
-      private System.Windows.Forms.Button buttonCancel;
+      private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private System.Windows.Forms.Button buttonUp;
       private System.Windows.Forms.Button buttonDown;
    }
