@@ -146,6 +146,8 @@ namespace mrHelper.App.Forms
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
+         checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
+         checkBoxShowVersions.Checked = checkBoxShowVersionsByDefault.Checked;
 
          checkBoxShowNewMergeRequests.Checked = Program.Settings.Notifications_NewMergeRequests;
          checkBoxShowMergedMergeRequests.Checked = Program.Settings.Notifications_MergedMergeRequests;

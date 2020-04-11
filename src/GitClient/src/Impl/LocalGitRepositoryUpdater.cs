@@ -54,7 +54,7 @@ namespace mrHelper.GitClient
             {
                DateTime newLatestChange = await instantChecker.GetLatestChangeTimestamp();
                Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository Latest Change: {0}",
-                        newLatestChange.ToLocalTime().ToString()));
+                  newLatestChange.ToLocalTime().ToString()));
 
                // this may cancel currently running onTimer update
                await checkTimestampAndUpdate(newLatestChange, onProgressChange);

@@ -302,7 +302,7 @@ namespace mrHelper.App
          string filenamePrefix = isMainInstance ? "mrhelper.main" : "mrhelper.second.instance";
          string filenameSuffix = isMainInstance ? String.Empty : ".id" + context.CurrentProcess.Id.ToString();
          string filename = String.Format("{0}.{1}{2}.log", filenamePrefix,
-            DateTime.Now.ToString(Constants.TimeStampFilenameFormat), filenameSuffix);
+            DateTime.Now.ToString(Constants.TimeStampLogFilenameFormat), filenameSuffix);
 
          return Path.Combine(getFullLogPath(), filename);
       }

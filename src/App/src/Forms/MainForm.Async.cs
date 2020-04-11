@@ -183,9 +183,9 @@ namespace mrHelper.App.Forms
          }
 
          // Keep data before async/await
-         string getGitTag(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
-         string leftSHA = getGitTag(comboBoxEarliestCommit);
-         string rightSHA = getGitTag(comboBoxLatestCommit);
+         string getSHA(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
+         string leftSHA = getSHA(comboBoxEarliestCommit);
+         string rightSHA = getSHA(comboBoxLatestCommit);
 
          List<string> includedSHA = new List<string>();
          for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
@@ -250,14 +250,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (state == "merged")
+         if (!await restoreChainOfMergedCommits(repo, new string[] { leftSHA, rightSHA }))
          {
-            string headCommitSha = comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().First().SHA;
-            if (!await restoreChainOfMergedCommits(repo, new string[] { headCommitSha }))
-            {
-               labelWorkflowStatus.Text = "Could not launch diff tool";
-               return;
-            }
+            labelWorkflowStatus.Text = "Could not launch diff tool";
+            return;
          }
 
          labelWorkflowStatus.Text = "Launching diff tool...";

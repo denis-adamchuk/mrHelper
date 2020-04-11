@@ -15,10 +15,12 @@ namespace mrHelper.Common.Constants
       public static string IconSchemeFileName = "icons.json";
       public static string ProjectListFileName = "projects.json";
 
-      public static string TimeStampFilenameFormat = "yyyy_MM_dd_HHmmss";
+      public static string TimeStampLogFilenameFormat = "yyyy_MM_dd_HHmmss";
 
       public static string BugReportLogArchiveName => String.Format(
-         "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampFilenameFormat));
+         "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampLogFilenameFormat));
+
+      public static string TimeStampFormat = "d-MMM-yyyy HH:mm";
 
       public static int FullContextSize = 20000;
 

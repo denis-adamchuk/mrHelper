@@ -141,33 +141,31 @@ namespace mrHelper.App.Forms
          internal string AccessToken;
       }
 
+      private enum ECommitComboBoxItemStatus
+      {
+         Normal,
+         Base,
+         Latest
+      }
+
       private struct CommitComboBoxItem
       {
-         internal string SHA;
-         internal string Text;
-         internal bool IsLatest;
-         internal bool IsBase;
-         internal DateTime? TimeStamp;
-         internal string Message;
+         internal string SHA { get; }
+         internal string Text { get; }
+         internal ECommitComboBoxItemStatus Status { get; }
+         internal EComparableEntityType Type { get; }
+         internal DateTime? TimeStamp { get; }
+         internal string Message { get; }
 
-         public override string ToString()
-         {
-            return Text;
-         }
-
-         internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp, string message)
+         internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp, string message,
+            ECommitComboBoxItemStatus status, EComparableEntityType type)
          {
             SHA = sha;
             Text = text;
             TimeStamp = timeStamp;
-            IsLatest = false;
-            IsBase = false;
             Message = message;
-         }
-
-         internal CommitComboBoxItem(Commit commit)
-            : this(commit.Id, commit.Title, commit.Created_At, commit.Message)
-         {
+            Status = status;
+            Type = type;
          }
       }
 

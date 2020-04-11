@@ -47,7 +47,7 @@ namespace mrHelper.Client.Workflow
 
    /// <summary>
    /// Provides access to main GitLab workflow actions: load user, load merge requests etc
-   /// Supports chains of actions (loading a merge request also loads its versions and commits)
+   /// Supports chains of actions (loading a merge request also loads its versions or commits)
    /// Each action toggles Pre-{Action}-Event and either Post-{Action}-Event or Failed-{Action}-Event
    /// </summary>
    public class WorkflowManager
@@ -157,11 +157,12 @@ namespace mrHelper.Client.Workflow
          return false;
       }
 
-      async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId)
+      async public Task<bool> LoadMergeRequestAsync(string hostname, string projectname, int mergeRequestIId,
+         EComparableEntityType comparableEntityType)
       {
          _operator = new WorkflowDataOperator(hostname, _settings.GetAccessToken(hostname));
 
-         return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId);
+         return await loadMergeRequestAsync(hostname, projectname, mergeRequestIId, comparableEntityType);
       }
 
       async public Task CancelAsync()
@@ -184,9 +185,9 @@ namespace mrHelper.Client.Workflow
       public event Action<string, string, MergeRequest> PostLoadSingleMergeRequest;
       public event Action FailedLoadSingleMergeRequest;
 
-      public event Action PreLoadCommits;
-      public event Action<string, string, MergeRequest, IEnumerable<Commit>> PostLoadCommits;
-      public event Action FailedLoadCommits;
+      public event Action PreLoadComparableEntities;
+      public event Action<string, string, MergeRequest, System.Collections.IEnumerable> PostLoadComparableEntities;
+      public event Action FailedLoadComparableEntities;
 
       public event Action PreLoadLatestVersion;
       public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
@@ -318,7 +319,8 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId)
+      async private Task<bool> loadMergeRequestAsync(string hostname, string projectName, int mergeRequestIId,
+         EComparableEntityType comparableEntityType)
       {
          PreLoadSingleMergeRequest?.Invoke(mergeRequestIId);
 
@@ -340,12 +342,25 @@ namespace mrHelper.Client.Workflow
          PostLoadSingleMergeRequest?.Invoke(hostname, projectName, mergeRequest);
 
          return await loadLatestVersionAsync(hostname, projectName, mergeRequest)
-             && await loadCommitsAsync(hostname, projectName, mergeRequest);
+             && await loadComparableEntitiesAsync(hostname, projectName, mergeRequest, comparableEntityType);
+      }
+
+      private Task<bool> loadComparableEntitiesAsync(string hostname, string projectName, MergeRequest mergeRequest,
+         EComparableEntityType comparableEntityType)
+      {
+         switch (comparableEntityType)
+         {
+            case EComparableEntityType.Commit: return loadCommitsAsync(hostname, projectName, mergeRequest);
+            case EComparableEntityType.Version: return loadVersionsAsync(hostname, projectName, mergeRequest);
+         }
+
+         Debug.Assert(false);
+         return Task.FromResult(true);
       }
 
       async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
       {
-         PreLoadCommits?.Invoke();
+         PreLoadComparableEntities?.Invoke();
          IEnumerable<Commit> commits;
          try
          {
@@ -357,12 +372,34 @@ namespace mrHelper.Client.Workflow
                mergeRequest.IId);
             string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
                mergeRequest.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCommits);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadComparableEntities);
             return false;
          }
-         PostLoadCommits?.Invoke(hostname, projectName, mergeRequest, commits);
+         PostLoadComparableEntities?.Invoke(hostname, projectName, mergeRequest, commits);
          return true;
       }
+
+      async private Task<bool> loadVersionsAsync(string hostname, string projectName, MergeRequest mergeRequest)
+      {
+         PreLoadComparableEntities?.Invoke();
+         IEnumerable<Version> versions;
+         try
+         {
+            versions = await _operator.GetVersionsAsync(projectName, mergeRequest.IId);
+         }
+         catch (OperatorException ex)
+         {
+            string cancelMessage = String.Format("Cancelled loading versions for merge request with IId {0}",
+               mergeRequest.IId);
+            string errorMessage = String.Format("Cannot load versions for merge request with IId {0}",
+               mergeRequest.IId);
+            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadComparableEntities);
+            return false;
+         }
+         PostLoadComparableEntities?.Invoke(hostname, projectName, mergeRequest, versions);
+         return true;
+      }
+
 
       async private Task<bool> loadLatestVersionAsync(string hostname, string projectname, MergeRequest mergeRequest)
       {

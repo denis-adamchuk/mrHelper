@@ -9,13 +9,14 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
+using mrHelper.Core.Context;
+using mrHelper.Core.Matching;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Discussions;
-using mrHelper.Core.Context;
-using mrHelper.Core.Matching;
 using mrHelper.CommonControls.Controls;
-using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -652,7 +653,8 @@ namespace mrHelper.App.Controls
             result += String.Format("<i style=\"color: {0}\">{1}&nbsp;&nbsp;&nbsp;</i>", color, text);
          }
          result += "Created by <b>" + note.Author.Name + "</b> at ";
-         result += "<span style=\"color: blue\">" + note.Created_At.ToLocalTime().ToString("g") + "</span>";
+         result += String.Format("<span style=\"color: blue\">{0}</span>",
+            note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
          return result;
       }
 

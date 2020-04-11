@@ -19,5 +19,11 @@
    {
       public string Text;
    }
+
+   public enum EComparableEntityType
+   {
+      Commit,
+      Version
+   }
 }
 

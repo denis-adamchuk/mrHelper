@@ -38,9 +38,9 @@ namespace mrHelper.App.Forms
          _searchWorkflowManager.PostLoadSingleMergeRequest += onSingleSearchMergeRequestLoaded;
          _searchWorkflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleSearchMergeRequest;
 
-         _searchWorkflowManager.PreLoadCommits += onLoadSearchCommits;
-         _searchWorkflowManager.PostLoadCommits += onSearchCommitsLoaded;
-         _searchWorkflowManager.FailedLoadCommits +=  onFailedLoadSearchCommits;
+         _searchWorkflowManager.PreLoadComparableEntities += onLoadSearchComparableEntities;
+         _searchWorkflowManager.PostLoadComparableEntities += onSearchComparableEntitiesLoaded;
+         _searchWorkflowManager.FailedLoadComparableEntities +=  onFailedLoadSearchComparableEntities;
       }
 
       private void unsubscribeFromSearchWorkflow()
@@ -56,9 +56,9 @@ namespace mrHelper.App.Forms
          _searchWorkflowManager.PostLoadSingleMergeRequest -= onSingleSearchMergeRequestLoaded;
          _searchWorkflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleSearchMergeRequest;
 
-         _searchWorkflowManager.PreLoadCommits -= onLoadSearchCommits;
-         _searchWorkflowManager.PostLoadCommits -= onSearchCommitsLoaded;
-         _searchWorkflowManager.FailedLoadCommits -=  onFailedLoadSearchCommits;
+         _searchWorkflowManager.PreLoadComparableEntities -= onLoadSearchComparableEntities;
+         _searchWorkflowManager.PostLoadComparableEntities -= onSearchComparableEntitiesLoaded;
+         _searchWorkflowManager.FailedLoadComparableEntities -=  onFailedLoadSearchComparableEntities;
       }
 
       async private Task searchMergeRequests(object query, int? maxResults)
@@ -96,7 +96,8 @@ namespace mrHelper.App.Forms
             && selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
       }
 
-      async private Task<bool> switchSearchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId)
+      async private Task<bool> switchSearchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId,
+         bool showVersions)
       {
          Trace.TraceInformation(String.Format("[MainForm.Search] User requested to change merge request to IId {0}",
             mergeRequestIId.ToString()));
@@ -114,7 +115,8 @@ namespace mrHelper.App.Forms
          try
          {
             return await _searchWorkflowManager.LoadMergeRequestAsync(
-               projectKey.HostName, projectKey.ProjectName, mergeRequestIId);
+               projectKey.HostName, projectKey.ProjectName, mergeRequestIId,
+               showVersions ? EComparableEntityType.Version : EComparableEntityType.Commit);
          }
          catch (WorkflowException ex)
          {
@@ -248,7 +250,7 @@ namespace mrHelper.App.Forms
          onSingleMergeRequestLoadedCommon(hostname, projectname, mergeRequest);
       }
 
-      private void onLoadSearchCommits()
+      private void onLoadSearchComparableEntities()
       {
          if (!isSearchMode())
          {
@@ -256,10 +258,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onLoadCommitsCommon(listViewFoundMergeRequests);
+         onLoadComparableEntitiesCommon(listViewFoundMergeRequests);
       }
 
-      private void onFailedLoadSearchCommits()
+      private void onFailedLoadSearchComparableEntities()
       {
          if (!isSearchMode())
          {
@@ -267,11 +269,11 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onFailedLoadCommitsCommon();
+         onFailedLoadComparableEntitiesCommon();
       }
 
-      private void onSearchCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
-         IEnumerable<Commit> commits)
+      private void onSearchComparableEntitiesLoaded(string hostname, string projectname, MergeRequest mergeRequest,
+         System.Collections.IEnumerable commits)
       {
          if (!isSearchMode())
          {
@@ -279,7 +281,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onCommitsLoadedCommon(hostname, projectname, mergeRequest, commits, listViewFoundMergeRequests);
+         onComparableEntitiesLoadedCommon(hostname, projectname, mergeRequest, commits, listViewFoundMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

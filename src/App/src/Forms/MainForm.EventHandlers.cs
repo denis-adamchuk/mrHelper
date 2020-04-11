@@ -203,7 +203,7 @@ namespace mrHelper.App.Forms
 
                if (getHostName() != String.Empty)
                {
-                  // Emulating a host switch here to trigger RevisionCacher to work at the new location
+                  // Emulating a host switch here to trigger GitDataUpdater to work at the new location
                   Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
                   await switchHostToSelected();
                }
@@ -361,26 +361,28 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         bool showVersions = checkBoxShowVersions.Checked;
+
          // had to use this hack, because it is not possible to prevent deselecting a row
          // on a click on empty area in ListView
          if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
          {
-            await switchMergeRequestByUserAsync(default(ProjectKey), 0);
+            await switchMergeRequestByUserAsync(default(ProjectKey), 0, showVersions);
             return;
          }
 
          if (listView == listViewFoundMergeRequests && listView.SelectedItems.Count < 1)
          {
-            await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0);
+            await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0, showVersions);
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
          if (listView == listViewFoundMergeRequests)
          {
-            await switchSearchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId);
+            await switchSearchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId, showVersions);
          }
-         else if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId))
+         else if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId, showVersions))
          {
             if (!isSearchMode())
             {
@@ -418,6 +420,32 @@ namespace mrHelper.App.Forms
                Debug.Assert(false);
             }
          }
+      }
+
+      private void checkBoxShowVersionsByDefault_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.ShowVersionsByDefault = (sender as CheckBox).Checked;
+      }
+
+      private void checkBoxShowVersions_CheckedChanged(object sender, EventArgs e)
+      {
+         bool showVersions = (sender as CheckBox).Checked;
+         groupBoxSelectCommits.Text = showVersions ? "Select versions for diff tool" : "Select commits for diff tool";
+
+         if ((isSearchMode() && listViewFoundMergeRequests.SelectedItems.Count < 1) ||
+            (!isSearchMode() && listViewMergeRequests.SelectedItems.Count < 1))
+         {
+            return;
+         }
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm] User changed Show Versions to {0}. Reloading current Merge Request",
+            showVersions.ToString()));
+
+         ListViewItem selected = isSearchMode() ?
+            listViewFoundMergeRequests.SelectedItems[0] : listViewMergeRequests.SelectedItems[0];
+         selected.Selected = false;
+         selected.Selected = true;
       }
 
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
@@ -905,11 +933,6 @@ namespace mrHelper.App.Forms
          base.WndProc(ref rMessage);
       }
 
-      private static string formatCommitComboboxItem(CommitComboBoxItem item)
-      {
-         return item.Text + (item.IsLatest ? " [Latest]" : String.Empty);
-      }
-
       private static void setCommitComboboxTooltipText(ComboBox comboBox, ToolTip tooltip)
       {
          tooltip.SetToolTip(comboBox, String.Empty);
@@ -920,35 +943,12 @@ namespace mrHelper.App.Forms
          }
 
          CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
-         if (item.IsBase)
+         if (item.Status == ECommitComboBoxItemStatus.Base)
          {
             return;
          }
 
          tooltip.SetToolTip(comboBox, String.Format("{0}", item.Message));
-      }
-
-      private static void setCommitComboboxLabels(ComboBox comboBox, Label labelTimestamp)
-      {
-         labelTimestamp.Text = "Created at: ";
-
-         if (comboBox.SelectedItem == null)
-         {
-            labelTimestamp.Text += "N/A";
-            return;
-         }
-
-         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
-         if (item.IsBase)
-         {
-            labelTimestamp.Text += "N/A";
-            return;
-         }
-
-         if (item.TimeStamp != null)
-         {
-            labelTimestamp.Text += String.Format("{0}", item.TimeStamp.Value.ToLocalTime().ToString());
-         }
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)

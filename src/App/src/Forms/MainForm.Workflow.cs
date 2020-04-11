@@ -42,9 +42,9 @@ namespace mrHelper.App.Forms
          _workflowManager.PostLoadSingleMergeRequest += onSingleMergeRequestLoaded;
          _workflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleMergeRequest;
 
-         _workflowManager.PreLoadCommits += onLoadCommits;
-         _workflowManager.PostLoadCommits += onCommitsLoaded;
-         _workflowManager.FailedLoadCommits +=  onFailedLoadCommits;
+         _workflowManager.PreLoadComparableEntities += onLoadComparableEntities;
+         _workflowManager.PostLoadComparableEntities += onComparableEntitiesLoaded;
+         _workflowManager.FailedLoadComparableEntities +=  onFailedLoadComparableEntities;
 
          _workflowManager.PostLoadLatestVersion += onLatestVersionLoaded;
       }
@@ -63,9 +63,9 @@ namespace mrHelper.App.Forms
          _workflowManager.PostLoadSingleMergeRequest -= onSingleMergeRequestLoaded;
          _workflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleMergeRequest;
 
-         _workflowManager.PreLoadCommits -= onLoadCommits;
-         _workflowManager.PostLoadCommits -= onCommitsLoaded;
-         _workflowManager.FailedLoadCommits -=  onFailedLoadCommits;
+         _workflowManager.PreLoadComparableEntities -= onLoadComparableEntities;
+         _workflowManager.PostLoadComparableEntities -= onComparableEntitiesLoaded;
+         _workflowManager.FailedLoadComparableEntities -=  onFailedLoadComparableEntities;
 
          _workflowManager.PostLoadLatestVersion -= onLatestVersionLoaded;
       }
@@ -131,7 +131,8 @@ namespace mrHelper.App.Forms
             && selectMergeRequest(listViewMergeRequests, projectname, iid, false);
       }
 
-      async private Task<bool> switchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId)
+      async private Task<bool> switchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId,
+         bool showVersions)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             mergeRequestIId.ToString()));
@@ -161,7 +162,8 @@ namespace mrHelper.App.Forms
          try
          {
             return await _workflowManager.LoadMergeRequestAsync(
-               projectKey.HostName, projectKey.ProjectName, mergeRequestIId);
+               projectKey.HostName, projectKey.ProjectName, mergeRequestIId,
+               showVersions ? EComparableEntityType.Version : EComparableEntityType.Commit);
          }
          catch (WorkflowException ex)
          {
@@ -365,7 +367,7 @@ namespace mrHelper.App.Forms
          onSingleMergeRequestLoadedCommon(hostname, projectname, mergeRequest);
       }
 
-      private void onLoadCommits()
+      private void onLoadComparableEntities()
       {
          if (isSearchMode())
          {
@@ -373,10 +375,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onLoadCommitsCommon(listViewMergeRequests);
+         onLoadComparableEntitiesCommon(listViewMergeRequests);
       }
 
-      private void onFailedLoadCommits()
+      private void onFailedLoadComparableEntities()
       {
          if (isSearchMode())
          {
@@ -384,11 +386,11 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onFailedLoadCommitsCommon();
+         onFailedLoadComparableEntitiesCommon();
       }
 
-      private void onCommitsLoaded(string hostname, string projectname, MergeRequest mergeRequest,
-         IEnumerable<Commit> commits)
+      private void onComparableEntitiesLoaded(string hostname, string projectname, MergeRequest mergeRequest,
+         System.Collections.IEnumerable commits)
       {
          if (isSearchMode())
          {
@@ -396,7 +398,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onCommitsLoadedCommon(hostname, projectname, mergeRequest, commits, listViewMergeRequests);
+         onComparableEntitiesLoadedCommon(hostname, projectname, mergeRequest, commits, listViewMergeRequests);
 
          scheduleSilentUpdate(new MergeRequestKey
          {
