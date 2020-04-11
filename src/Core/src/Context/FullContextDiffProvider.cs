@@ -57,7 +57,6 @@ namespace mrHelper.Core.Context
             }
          };
 
-
          IEnumerable<string> fullDiff;
          try
          {

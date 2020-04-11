@@ -567,11 +567,13 @@ namespace mrHelper.Client.Discussions
                ProjectName = project.Path_With_Namespace
             };
 
-            foreach (MergeRequest mergeRequest in _mergeRequestCache.GetMergeRequests(projectKey))
-            {
-               MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
-               mergeRequestKeys.Add(mrk);
-            }
+            mergeRequestKeys.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
+               .Select(x => new MergeRequestKey
+                  {
+                     ProjectKey = projectKey,
+                     IId = x.IId
+                  })
+               .ToList());
          }
          return mergeRequestKeys;
       }

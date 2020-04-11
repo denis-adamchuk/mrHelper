@@ -331,7 +331,7 @@ namespace mrHelper.App.Controls
       private void setDiffContextText(HtmlPanel htmlPanel)
       {
          DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
-         DiffPosition position = convertToDiffPosition(note.Position);
+         DiffPosition position = PositionConverter.Convert(note.Position);
          Debug.Assert(note.Type == "DiffNote");
 
          string html = getContext(_panelContextMaker, position,
@@ -1050,22 +1050,6 @@ namespace mrHelper.App.Controls
             }
          }
          return result;
-      }
-
-      private DiffPosition convertToDiffPosition(Position position)
-      {
-         return new DiffPosition
-         {
-            LeftLine = position.Old_Line,
-            LeftPath = position.Old_Path,
-            RightLine = position.New_Line,
-            RightPath = position.New_Path,
-            Refs = new mrHelper.Core.Matching.DiffRefs
-            {
-               LeftSHA = position.Base_SHA,
-               RightSHA = position.Head_SHA
-            }
-         };
       }
 
       /// <summary>
