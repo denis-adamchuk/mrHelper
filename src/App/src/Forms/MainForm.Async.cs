@@ -115,7 +115,7 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = "Rendering Discussions Form...";
-         labelWorkflowStatus.Update();
+         labelWorkflowStatus.Refresh();
 
          DiscussionsForm form;
          try
@@ -167,6 +167,7 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = "Discussions opened";
+         labelWorkflowStatus.Refresh();
 
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
             mrk.IId, (repo?.Path ?? "null")));

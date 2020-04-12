@@ -341,7 +341,8 @@ namespace mrHelper.App.Controls
 
          string tooltipHtml = getContext(_tooltipContextMaker, position,
             _tooltipContextDepth, htmlPanel.Font.Height, out string tooltipCSS);
-         _htmlDiffContextToolTip.BaseStylesheet = tooltipCSS + ".htmltooltip { padding: 1px; }";
+         _htmlDiffContextToolTip.BaseStylesheet =
+            String.Format("{0} .htmltooltip {{ padding: 1px; }}", tooltipCSS);
          _htmlDiffContextToolTip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
@@ -645,17 +646,16 @@ namespace mrHelper.App.Controls
 
       private string getNoteTooltipHtml(DiscussionNote note)
       {
-         string result = string.Empty;
+         System.Text.StringBuilder result = new System.Text.StringBuilder();
          if (note.Resolvable)
          {
             string text = note.Resolved ? "Resolved." : "Not resolved.";
             string color = note.Resolved ? "green" : "red";
-            result += String.Format("<i style=\"color: {0}\">{1}&nbsp;&nbsp;&nbsp;</i>", color, text);
+            result.AppendFormat("<i style=\"color: {0}\">{1}&nbsp;&nbsp;&nbsp;</i>", color, text);
          }
-         result += "Created by <b>" + note.Author.Name + "</b> at ";
-         result += String.Format("<span style=\"color: blue\">{0}</span>",
-            note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
-         return result;
+         result.AppendFormat("Created by <b> {0} </b> at <span style=\"color: blue\">{1}</span>",
+            note.Author.Name, note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
+         return result.ToString();
       }
 
       private Color getNoteColor(DiscussionNote note)
