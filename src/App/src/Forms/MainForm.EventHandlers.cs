@@ -729,17 +729,19 @@ namespace mrHelper.App.Forms
       private void onTextBoxLabelsUpdate()
       {
          Program.Settings.LastUsedLabels = textBoxLabels.Text;
-
-         if (Program.Settings.CheckedLabelsFilter)
+         if (_mergeRequestFilter != null)
          {
-            updateVisibleMergeRequests();
+            _mergeRequestFilter.Filter = createMergeRequestFilterState();
          }
       }
 
       private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
-         updateVisibleMergeRequests();
+         if (_mergeRequestFilter != null)
+         {
+            _mergeRequestFilter.Filter = createMergeRequestFilterState();
+         }
       }
 
       private void ButtonReloadList_Click(object sender, EventArgs e)

@@ -942,12 +942,11 @@ namespace mrHelper.App.Forms
             }
          }
 
-         string[] selected = ConfigurationHelper.GetLabels(Program.Settings);
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
             if (!_mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
-               || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
+               || !_mergeRequestFilter.DoesMatchFilter(fmk.MergeRequest))
             {
                listViewMergeRequests.Items.RemoveAt(index);
             }
@@ -1906,6 +1905,14 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private MergeRequestFilterState createMergeRequestFilterState()
+      {
+         return new MergeRequestFilterState
+         {
+            Keywords = ConfigurationHelper.GetLabels(Program.Settings),
+            Enabled = Program.Settings.CheckedLabelsFilter
+         };
+      }
    }
 }
 

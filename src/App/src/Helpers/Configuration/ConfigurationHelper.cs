@@ -10,11 +10,6 @@ namespace mrHelper.App.Helpers
    {
       public static string[] GetLabels(UserDefinedSettings settings)
       {
-         if (!settings.CheckedLabelsFilter)
-         {
-             return null;
-         }
-
          return settings.LastUsedLabels
             .Split(',')
             .Select(x => x.Trim(' '))
