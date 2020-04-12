@@ -114,7 +114,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         labelWorkflowStatus.Text = "Rendering Discussions Form...";
+         labelWorkflowStatus.Text = "Rendering discussion contexts...";
          labelWorkflowStatus.Refresh();
 
          DiscussionsForm form;
@@ -166,13 +166,15 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         labelWorkflowStatus.Text = "Discussions opened";
+         labelWorkflowStatus.Text = "Opening Discussions view...";
          labelWorkflowStatus.Refresh();
 
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
             mrk.IId, (repo?.Path ?? "null")));
 
          form.Show();
+
+         labelWorkflowStatus.Text = "Discussions opened";
       }
 
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, string state)

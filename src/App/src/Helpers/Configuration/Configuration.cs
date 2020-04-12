@@ -76,7 +76,7 @@ namespace mrHelper.App.Helpers
          60 * 1000; // 60 seconds
 
       private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
-      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 2 * 60 * 1000; // 2 minutes
+      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
 
       private static readonly string CreateMissingCommitsWhenCacheRevisionsKeyName        = "CreateMissingCommitsWhenCacheRevisionsInBackground";
       private static readonly bool   CreateMissingCommitsWhenCacheRevisionsDefaultValue   = false;

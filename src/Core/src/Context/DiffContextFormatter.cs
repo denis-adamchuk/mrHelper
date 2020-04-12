@@ -129,7 +129,7 @@ namespace mrHelper.Core.Context
          StringBuilder result = new StringBuilder();
          for (int i = 0; i < leadingSpaces; ++i)
          {
-            result.Append("&nbsp");
+            result.Append("&nbsp;");
          }
 
          result.Append(System.Net.WebUtility.HtmlEncode(trimmed));
