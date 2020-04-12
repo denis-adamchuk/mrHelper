@@ -59,7 +59,7 @@ namespace mrHelper.Common.Constants
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
 
-      public static int GitInstancesInBatch = 5;
+      public static int GitInstancesInBatch = 10;
       public static int GitInstancesInterBatchDelay = 1000; // ms
 
       public static int MergeRequestsInBatch = 20;

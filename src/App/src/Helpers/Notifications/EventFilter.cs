@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using static mrHelper.Client.Common.UserEvents;
 
@@ -14,13 +12,15 @@ namespace mrHelper.App.Helpers
    internal class EventFilter : IDisposable
    {
       internal EventFilter(UserDefinedSettings settings, IWorkflowEventNotifier workflowEventNotifier,
-         ICachedMergeRequestProvider mergeRequestProvider)
+         ICachedMergeRequestProvider mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
       {
          _settings = settings;
          _mergeRequestProvider = mergeRequestProvider;
 
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connected += onConnected;
+
+         _mergeRequestFilter = mergeRequestFilter;
       }
 
       public void Dispose()
@@ -32,7 +32,7 @@ namespace mrHelper.App.Helpers
       {
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
-         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest, ConfigurationHelper.GetLabels(_settings))
+         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
             || (isServiceEvent(mergeRequest)                                    && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
             || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
@@ -49,7 +49,7 @@ namespace mrHelper.App.Helpers
             return true;
          }
 
-         return (MergeRequestFilter.IsFilteredMergeRequest(mergeRequest.Value, ConfigurationHelper.GetLabels(_settings))
+         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest.Value)
             || (isServiceEvent(e)                                               && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser ?? new User(), e)            && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_AllThreadsResolved)
@@ -115,6 +115,7 @@ namespace mrHelper.App.Helpers
       private User? _currentUser;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private readonly MergeRequestFilter _mergeRequestFilter;
    }
 }
 

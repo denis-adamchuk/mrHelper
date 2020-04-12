@@ -75,8 +75,8 @@ namespace mrHelper.App.Helpers
       private static readonly int    OneShotUpdateOnNewMergeRequestSecondChanceDelayMsDefaultValue   =
          60 * 1000; // 60 seconds
 
-      private static readonly string CacheRevisionsKeyName        = "CacheRevisionsInBackground";
-      private static readonly bool   CacheRevisionsDefaultValue   = true;
+      private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
+      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
 
       private static readonly string CreateMissingCommitsWhenCacheRevisionsKeyName        = "CreateMissingCommitsWhenCacheRevisionsInBackground";
       private static readonly bool   CreateMissingCommitsWhenCacheRevisionsDefaultValue   = false;
@@ -569,15 +569,16 @@ namespace mrHelper.App.Helpers
          set { setValue(OneShotUpdateOnNewMergeRequestSecondChanceDelayMsKeyName, value.ToString()); }
       }
 
-      public bool CacheRevisionsInBackground
+      public int CacheRevisionsPeriodMs
       {
          get
          {
-            return bool.TryParse(getValue(
-               CacheRevisionsKeyName, CacheRevisionsDefaultValue.ToString()),
-                  out bool result) ? result : CacheRevisionsDefaultValue;
+            return int.TryParse(getValue(
+               CacheRevisionsPeriodMsKeyName,
+               CacheRevisionsPeriodMsDefaultValue.ToString()),
+                  out int result) ? result : CacheRevisionsPeriodMsDefaultValue;
          }
-         set { setValue(CacheRevisionsKeyName, value.ToString()); }
+         set { setValue(CacheRevisionsPeriodMsKeyName, value.ToString()); }
       }
 
       public bool CreateMissingCommitsWhenCacheRevisionsInBackground

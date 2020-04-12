@@ -170,6 +170,7 @@ namespace mrHelper.App.Forms
       }
 
       private MergeRequestCache _mergeRequestCache;
+      private MergeRequestFilter _mergeRequestFilter;
 
       private struct ListViewSubItemInfo
       {

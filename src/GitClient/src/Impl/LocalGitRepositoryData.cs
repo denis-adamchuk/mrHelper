@@ -44,22 +44,30 @@ namespace mrHelper.GitClient
 
       private IEnumerable<string> doGet<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
-         if (!cache.ContainsKey(arguments) && ((dynamic)arguments).IsValid())
+         if (cache.TryGetValue(arguments, out IEnumerable<string> value))
          {
-            try
-            {
-               cache[arguments] = ExternalProcess.Start("git", arguments.ToString(), true, _path).StdOut;
-            }
-            catch (Exception ex)
-            {
-               if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-               {
-                  throw new GitNotAvailableDataException(ex);
-               }
-               throw;
-            }
+            return value;
          }
-         return cache.ContainsKey(arguments) ? cache[arguments] : null;
+
+         if (!((dynamic)arguments).IsValid())
+         {
+            return null;
+         }
+
+         try
+         {
+            IEnumerable<string> stdOut = ExternalProcess.Start("git", arguments.ToString(), true, _path).StdOut;
+            cache.Add(arguments, stdOut);
+            return stdOut;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               throw new GitNotAvailableDataException(ex);
+            }
+            throw;
+         }
       }
 
       async private Task doUpdate<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)

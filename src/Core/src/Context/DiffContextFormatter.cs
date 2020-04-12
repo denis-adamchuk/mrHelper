@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 namespace mrHelper.Core.Context
 {
@@ -39,7 +40,7 @@ namespace mrHelper.Core.Context
                    </table>
                 </body>";
 
-         return commonBegin + getTableBody(ctx) + commonEnd;
+         return String.Format("{0} {1} {2}", commonBegin, getTableBody(ctx), commonEnd);
       }
 
       private string loadStylesFromCSS()
@@ -62,20 +63,29 @@ namespace mrHelper.Core.Context
       private string getTableBody(DiffContext ctx)
       {
          bool highlightSelected = ctx.Lines.Count() > 1;
-         string body = string.Empty;
+         StringBuilder body = new StringBuilder();
 
          for (int iLine = 0; iLine < ctx.Lines.Count(); ++iLine)
          {
             DiffContext.Line line = ctx.Lines[iLine];
 
-            body
-              += "<tr" + (iLine == ctx.SelectedIndex && highlightSelected ? " class=\"selected\"" : "") + ">"
-               + "<td class=\"linenumbers\">" + getLeftLineNumber(line) + "</td>"
-               + "<td class=\"linenumbers\">" + getRightLineNumber(line) + "</td>"
-               + "<td class=\"" + getDiffCellClass(line) + "\">" + getCode(line) + "</td>"
-               + "</tr>";
+            body.Append("<tr");
+            body.Append((iLine == ctx.SelectedIndex && highlightSelected ? " class=\"selected\"" : ""));
+            body.Append(">");
+            body.Append("<td class=\"linenumbers\">");
+            body.Append(getLeftLineNumber(line));
+            body.Append("</td>");
+            body.Append("<td class=\"linenumbers\">");
+            body.Append(getRightLineNumber(line));
+            body.Append("</td>");
+            body.Append("<td class=\"");
+            body.Append(getDiffCellClass(line));
+            body.Append("\">");
+            body.Append(getCode(line));
+            body.Append("</td>");
+            body.Append("</tr>");
          }
-         return body;
+         return body.ToString();
       }
 
       private string getLeftLineNumber(DiffContext.Line line)
@@ -116,13 +126,14 @@ namespace mrHelper.Core.Context
          string trimmed = line.Text.TrimStart();
          int leadingSpaces = line.Text.Length - trimmed.Length;
 
-         string spaces = string.Empty;
+         StringBuilder result = new StringBuilder();
          for (int i = 0; i < leadingSpaces; ++i)
          {
-            spaces += "&nbsp;";
+            result.Append("&nbsp;");
          }
 
-         return spaces + System.Net.WebUtility.HtmlEncode(trimmed);
+         result.Append(System.Net.WebUtility.HtmlEncode(trimmed));
+         return result.ToString();
       }
 
       private readonly int _fontSizePx;

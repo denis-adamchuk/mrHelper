@@ -729,17 +729,19 @@ namespace mrHelper.App.Forms
       private void onTextBoxLabelsUpdate()
       {
          Program.Settings.LastUsedLabels = textBoxLabels.Text;
-
-         if (Program.Settings.CheckedLabelsFilter)
+         if (_mergeRequestFilter != null)
          {
-            updateVisibleMergeRequests();
+            _mergeRequestFilter.Filter = createMergeRequestFilterState();
          }
       }
 
       private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
-         updateVisibleMergeRequests();
+         if (_mergeRequestFilter != null)
+         {
+            _mergeRequestFilter.Filter = createMergeRequestFilterState();
+         }
       }
 
       private void ButtonReloadList_Click(object sender, EventArgs e)
@@ -1041,7 +1043,8 @@ namespace mrHelper.App.Forms
             if (span.TotalSeconds > 1)
             {
                labelWorkflowStatus.Text = "Sending tracked time...";
-               string duration = span.ToString("hh") + "h " + span.ToString("mm") + "m " + span.ToString("ss") + "s";
+               string duration = String.Format("{0}h {1}m {2}s",
+                  span.ToString("hh"), span.ToString("mm"), span.ToString("ss"));
                string status = String.Format("Tracked time {0} sent successfully", duration);
                try
                {

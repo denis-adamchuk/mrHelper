@@ -492,7 +492,8 @@ namespace mrHelper.App.Forms
          string body = fmk.HasValue
             ? MarkDownUtils.ConvertToHtml(
                fmk.Value.MergeRequest.Description,
-               StringUtils.GetHostWithPrefix(fmk.Value.ProjectKey.HostName) + "/" + fmk.Value.ProjectKey.ProjectName,
+               String.Format("{0}/{1}",
+                  StringUtils.GetHostWithPrefix(fmk.Value.ProjectKey.HostName), fmk.Value.ProjectKey.ProjectName),
                _mergeRequestDescriptionMarkdownPipeline)
             : String.Empty;
 
@@ -520,7 +521,7 @@ namespace mrHelper.App.Forms
          if (enabled)
          {
             Debug.Assert(!String.IsNullOrEmpty(title) && !projectKey.Equals(default(ProjectKey)));
-            labelTimeTrackingMergeRequestName.Text = title + "   " + "[" + projectKey.ProjectName + "]";
+            labelTimeTrackingMergeRequestName.Text = String.Format("{0}   [{1}]", title, projectKey.ProjectName);
          }
 
          labelTimeTrackingMergeRequestName.Refresh();
@@ -942,12 +943,11 @@ namespace mrHelper.App.Forms
             }
          }
 
-         string[] selected = ConfigurationHelper.GetLabels(Program.Settings);
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
             if (!_mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
-               || MergeRequestFilter.IsFilteredMergeRequest(fmk.MergeRequest, selected))
+               || !_mergeRequestFilter.DoesMatchFilter(fmk.MergeRequest))
             {
                listViewMergeRequests.Items.RemoveAt(index);
             }
@@ -1002,7 +1002,7 @@ namespace mrHelper.App.Forms
          string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
          string jiraTask = getJiraTask(mr);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
-            jiraServiceUrl + "/browse/" + jiraTask : String.Empty;
+            String.Format("{0}/browse/{1}", jiraServiceUrl, jiraTask) : String.Empty;
 
          string getTotalTimeText(MergeRequestKey key) =>
             convertTotalTimeToText(getTotalTime(key), isTimeTrackingAllowed(mr.Author, projectKey.HostName));
@@ -1278,6 +1278,8 @@ namespace mrHelper.App.Forms
 
       private void applyTheme(string theme)
       {
+         string cssEx = String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
+
          if (theme == "New Year 2020")
          {
             pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.PleaseInspect;
@@ -1291,8 +1293,8 @@ namespace mrHelper.App.Forms
             listViewFoundMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
             listViewFoundMergeRequests.BackgroundImageTiled = true;
             richTextBoxMergeRequestDescription.BaseStylesheet =
-                 mrHelper.App.Properties.Resources.Common_CSS
-               + mrHelper.App.Properties.Resources.NewYear2020_CSS;
+               String.Format("{0}{1}{2}", mrHelper.App.Properties.Resources.NewYear2020_CSS,
+                  mrHelper.App.Properties.Resources.Common_CSS, cssEx);
          }
          else
          {
@@ -1303,11 +1305,8 @@ namespace mrHelper.App.Forms
             listViewMergeRequests.BackgroundImage = null;
             listViewFoundMergeRequests.BackgroundImage = null;
             richTextBoxMergeRequestDescription.BaseStylesheet =
-               mrHelper.App.Properties.Resources.Common_CSS;
+               String.Format("{0}{1}", mrHelper.App.Properties.Resources.Common_CSS, cssEx);
          }
-
-         richTextBoxMergeRequestDescription.BaseStylesheet +=
-            String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
 
          Program.Settings.VisualThemeName = theme;
       }
@@ -1853,9 +1852,12 @@ namespace mrHelper.App.Forms
                {
                   switch (item.Status)
                   {
-                     case ECommitComboBoxItemStatus.Normal: return item.Text;
-                     case ECommitComboBoxItemStatus.Base:   return item.Text + " [Base]";
-                     case ECommitComboBoxItemStatus.Latest: return item.Text + " [Latest]";
+                     case ECommitComboBoxItemStatus.Normal:
+                        return item.Text;
+                     case ECommitComboBoxItemStatus.Base:
+                        return String.Format("{0} [Base]", item.Text);
+                     case ECommitComboBoxItemStatus.Latest:
+                        return String.Format("{0} [Latest]", item.Text);
                   }
                   break;
                }
@@ -1868,11 +1870,11 @@ namespace mrHelper.App.Forms
                   switch (item.Status)
                   {
                      case ECommitComboBoxItemStatus.Normal:
-                        return item.Text + " (" + sha + ") created at " + timestamp;
+                        return String.Format("{0} ({1}) created at {2}", item.Text, sha, timestamp);
                      case ECommitComboBoxItemStatus.Base:
-                        return item.Text + " [Base]";
+                        return String.Format("{0} [Base]", item.Text);
                      case ECommitComboBoxItemStatus.Latest:
-                        return "Latest " + item.Text + " (" + sha + ") created at " + timestamp;
+                        return String.Format("Latest {0} ({1}) created at {2}", item.Text, sha, timestamp);
                   }
                   break;
                }
@@ -1884,28 +1886,34 @@ namespace mrHelper.App.Forms
 
       private static void setCommitComboboxLabels(ComboBox comboBox, Label labelTimestamp)
       {
-         labelTimestamp.Text = "Created at: ";
-
          if (comboBox.SelectedItem == null)
          {
-            labelTimestamp.Text += "N/A";
+            labelTimestamp.Text = "Created at: N/A";
             return;
          }
 
          CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
          if (item.Status == ECommitComboBoxItemStatus.Base)
          {
-            labelTimestamp.Text += "N/A";
+            labelTimestamp.Text = "Created at: N/A";
             return;
          }
 
          if (item.TimeStamp != null)
          {
-            labelTimestamp.Text += String.Format("{0}",
+            labelTimestamp.Text = String.Format("Created at: {0}",
                item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat));
          }
       }
 
+      private MergeRequestFilterState createMergeRequestFilterState()
+      {
+         return new MergeRequestFilterState
+         {
+            Keywords = ConfigurationHelper.GetLabels(Program.Settings),
+            Enabled = Program.Settings.CheckedLabelsFilter
+         };
+      }
    }
 }
 
