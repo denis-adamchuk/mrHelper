@@ -49,12 +49,20 @@ namespace mrHelper.App.Helpers
             return true;
          }
 
+         bool onMention =
+            (!isCurrentUserActivity(_currentUser ?? new User(), e) || _settings.Notifications_MyActivity)
+            && e.EventType == DiscussionEvent.Type.MentionedCurrentUser && _settings.Notifications_OnMention;
+         if (onMention)
+         {
+            // `on mention` is a special case which should work disregarding to the _mergeRequestFilter
+            return false;
+         }
+
          return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest.Value)
-            || (isServiceEvent(e)                                               && !_settings.Notifications_Service)
-            || (isCurrentUserActivity(_currentUser ?? new User(), e)            && !_settings.Notifications_MyActivity)
-            || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads          && !_settings.Notifications_AllThreadsResolved)
-            || (e.EventType == DiscussionEvent.Type.MentionedCurrentUser        && !_settings.Notifications_OnMention)
-            || (e.EventType == DiscussionEvent.Type.Keyword                     && !_settings.Notifications_Keywords));
+            || (isServiceEvent(e)                                         && !_settings.Notifications_Service)
+            || (isCurrentUserActivity(_currentUser ?? new User(), e)      && !_settings.Notifications_MyActivity)
+            || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads    && !_settings.Notifications_AllThreadsResolved)
+            || (e.EventType == DiscussionEvent.Type.Keyword               && !_settings.Notifications_Keywords));
       }
 
       private static bool isCurrentUserActivity(User currentUser, MergeRequest m)
