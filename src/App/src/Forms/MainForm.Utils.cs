@@ -1825,6 +1825,11 @@ namespace mrHelper.App.Forms
          {
             disableComboBox(comboBoxLatestCommit, String.Empty);
             disableComboBox(comboBoxEarliestCommit, String.Empty);
+            if (count == 0)
+            {
+               // Just to be able to switch between versions and commits
+               checkBoxShowVersions.Enabled = true;
+            }
          }
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", count);
@@ -1864,7 +1869,8 @@ namespace mrHelper.App.Forms
 
             case EComparableEntityType.Version:
                {
-                  string sha = item.SHA.Length > 10 ? item.SHA.Substring(0, 10) : item.SHA;
+                  string sha = String.IsNullOrWhiteSpace(item.SHA)
+                     ? "N/A" : (item.SHA.Length > 10 ? item.SHA.Substring(0, 10) : item.SHA);
                   string timestamp = item.TimeStamp.HasValue ?
                      item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat) : String.Empty;
                   switch (item.Status)
