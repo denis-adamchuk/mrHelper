@@ -355,12 +355,6 @@ namespace mrHelper.App.Forms
          ListView listView = (sender as ListView);
          listView.Refresh();
 
-         if ((listView == listViewMergeRequests && isSearchMode())
-          || (listView == listViewFoundMergeRequests && !isSearchMode()))
-         {
-            return;
-         }
-
          bool showVersions = checkBoxShowVersions.Checked;
 
          // had to use this hack, because it is not possible to prevent deselecting a row
