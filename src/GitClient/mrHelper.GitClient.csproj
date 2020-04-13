@@ -54,6 +54,7 @@
     <Compile Include="src\Impl\LocalGitRepositoryData.cs" />
     <Compile Include="src\Impl\LocalGitRepositoryFactory.cs" />
     <Compile Include="src\Impl\LocalGitRepositoryOperations.cs" />
+    <Compile Include="src\Impl\LocalGitRepositoryPathFinder.cs" />
     <Compile Include="src\Impl\LocalGitRepositoryState.cs" />
     <Compile Include="src\Impl\LocalGitRepositoryUpdater.cs" />
     <Compile Include="src\LocalGitRepositoryDataItf.cs" />

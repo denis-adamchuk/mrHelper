@@ -43,30 +43,30 @@ namespace mrHelper.GitClient
       /// </summary>
       public ILocalGitRepository GetRepository(string hostName, string projectName)
       {
-         string[] splitted = projectName.Split('/');
-         if (splitted.Length < 2)
+         ProjectKey key = new ProjectKey
          {
-            throw new ArgumentException("Bad project name \"" + projectName + "\"");
+            HostName = hostName,
+            ProjectName = projectName
+         };
+
+         if (_repos.TryGetValue(key, out LocalGitRepository cachedRepository))
+         {
+            return cachedRepository;
          }
 
-         string path = Path.Combine(ParentFolder, splitted[1]);
-
-         ProjectKey key = new ProjectKey{ HostName = hostName, ProjectName = projectName };
-         if (!_repos.ContainsKey(key))
+         LocalGitRepository repo;
+         try
          {
-            LocalGitRepository repo;
-            try
-            {
-               repo = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke);
-            }
-            catch (ArgumentException ex)
-            {
-               ExceptionHandlers.Handle("Cannot create LocalGitRepository", ex);
-               return null;
-            }
-            _repos[key] = repo;
+            string path = LocalGitRepositoryPathFinder.FindPath(ParentFolder, key);
+            repo = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke);
          }
-         return _repos[key];
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("Cannot create LocalGitRepository", ex);
+            return null;
+         }
+         _repos[key] = repo;
+         return repo;
       }
 
       async public Task DisposeProjectAsync(string hostName, string projectName)

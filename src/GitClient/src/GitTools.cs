@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using mrHelper.Common.Exceptions;
@@ -126,6 +127,52 @@ namespace mrHelper.GitClient
             if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
             {
                ExceptionHandlers.Handle("Cannot trace git configuration", ex);
+            }
+         }
+      }
+
+      public static bool IsValidGitRepository(string path)
+      {
+         try
+         {
+            return Directory.Exists(path)
+               && ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, path).StdErr.Count() == 0;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return false;
+            }
+            else
+            {
+               throw;
+            }
+         }
+      }
+
+      public static string GetRepositoryName(string path)
+      {
+         if (!IsValidGitRepository(path))
+         {
+            return null;
+         }
+
+         try
+         {
+            IEnumerable<string> stdOut =
+               ExternalProcess.Start("git", "config --get remote.origin.url", true, path).StdOut;
+            return stdOut.Any() ? stdOut.First() : null;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return null;
+            }
+            else
+            {
+               throw;
             }
          }
       }

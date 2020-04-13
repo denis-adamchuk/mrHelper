@@ -163,23 +163,7 @@ namespace mrHelper.GitClient
 
       private bool isValidRepository()
       {
-         try
-         {
-            _cached_isValidRepository = Directory.Exists(Path)
-                && ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, Path).StdErr.Count() == 0;
-         }
-         catch (Exception ex)
-         {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               _cached_isValidRepository = false;
-            }
-            else
-            {
-               throw;
-            }
-         }
-
+         _cached_isValidRepository = GitTools.IsValidGitRepository(Path);
          return _cached_isValidRepository.Value;
       }
 
