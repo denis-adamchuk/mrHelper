@@ -142,8 +142,7 @@ namespace mrHelper.Client.TimeTracking
          PreLoadTotalTime?.Invoke(mrk);
       }
 
-      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
-         DateTime dateTime, bool b)
+      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          processDiscussions(mrk, discussions);
       }

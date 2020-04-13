@@ -26,49 +26,31 @@ namespace mrHelper.Client.Discussions
          _workflowEventNotifier.Connected += onConnected;
 
          _discussionManager = discussionManager;
-         _discussionManager.PostLoadDiscussions += processDiscussions;
+         _discussionManager.PostLoadDiscussionsInternal += processDiscussions;
       }
 
       public void Dispose()
       {
          _workflowEventNotifier.Connected -= onConnected;
 
-         _discussionManager.PostLoadDiscussions -= processDiscussions;
+         _discussionManager.PostLoadDiscussionsInternal -= processDiscussions;
       }
 
-      internal event Action<UserEvents.DiscussionEvent> DiscussionEvent;
+      internal event Action<UserEvents.DiscussionEvent, DateTime,
+         DiscussionManager.EDiscussionUpdateType> DiscussionEvent;
 
       private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
-         DateTime updatedAt, bool initialSnapshot)
+         DiscussionManager.EDiscussionUpdateType type)
       {
          if (discussions.Count() == 0)
          {
             return;
          }
 
-         if (initialSnapshot)
-         {
-            if (!_latestParsingTime.ContainsKey(mrk))
-            {
-               // consider all notes already parsed and skip checking
-               _latestParsingTime[mrk] = updatedAt;
-               return;
-            }
-         }
-
-         // If we already processed this MR, then notify on new notes only, otherwise on everything
-         DateTime? lastProcessedTime = _latestParsingTime.ContainsKey(mrk)
-            ? _latestParsingTime[mrk] : new Nullable<DateTime>();
-
          foreach (Discussion discussion in discussions)
          {
             foreach (DiscussionNote note in discussion.Notes)
             {
-               if (lastProcessedTime.HasValue && note.Updated_At <= lastProcessedTime.Value)
-               {
-                  continue;
-               }
-
                if (note.System && note.Body == "resolved all threads")
                {
                   DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
@@ -76,7 +58,7 @@ namespace mrHelper.Client.Discussions
                      EventType = UserEvents.DiscussionEvent.Type.ResolvedAllThreads,
                      Details = note.Author,
                      MergeRequestKey = mrk
-                  });
+                  }, note.Updated_At, type);
                }
                else if (isUserMentioned(note.Body, _currentUser))
                {
@@ -85,7 +67,7 @@ namespace mrHelper.Client.Discussions
                      EventType = UserEvents.DiscussionEvent.Type.MentionedCurrentUser,
                      Details = note.Author,
                      MergeRequestKey = mrk
-                  });
+                  }, note.Updated_At, type);
                }
                else if (_keywords != null)
                {
@@ -102,14 +84,12 @@ namespace mrHelper.Client.Discussions
                               Author = note.Author
                            },
                            MergeRequestKey = mrk
-                        });
+                        }, note.Updated_At, type);
                      }
                   }
                }
             }
          }
-
-         _latestParsingTime[mrk] = updatedAt;
       }
 
       private static bool isUserMentioned(string text, User user)

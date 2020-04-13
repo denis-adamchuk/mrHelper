@@ -35,8 +35,16 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    public class DiscussionManager : IDisposable
    {
+      public enum EDiscussionUpdateType
+      {
+         InitialSnapshot,
+         PeriodicUpdate,
+         NewMergeRequest
+      }
+
       public event Action<MergeRequestKey> PreLoadDiscussions;
-      public event Action<MergeRequestKey, IEnumerable<Discussion>, DateTime, bool> PostLoadDiscussions;
+      public event Action<MergeRequestKey, IEnumerable<Discussion>> PostLoadDiscussions;
+      internal event Action<MergeRequestKey, IEnumerable<Discussion>, EDiscussionUpdateType> PostLoadDiscussionsInternal;
       public event Action<MergeRequestKey> FailedLoadDiscussions;
 
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
@@ -134,7 +142,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await updateDiscussionsAsync(mrk, true, false);
+            await updateDiscussionsAsync(mrk, true, EDiscussionUpdateType.PeriodicUpdate);
          }
          catch (OperatorException ex)
          {
@@ -203,7 +211,7 @@ namespace mrHelper.Client.Discussions
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
                mrk.Value.IId));
-               scheduleUpdate(new MergeRequestKey[] { mrk.Value }, false);
+               scheduleUpdate(new MergeRequestKey[] { mrk.Value }, EDiscussionUpdateType.PeriodicUpdate);
             }
             else
             {
@@ -224,7 +232,8 @@ namespace mrHelper.Client.Discussions
          Trace.TraceInformation(
             "[DiscussionManager] Scheduling update of discussions for ALL merge requests on a timer update");
 
-         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */, false);
+         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
+            EDiscussionUpdateType.PeriodicUpdate);
       }
 
       async private Task processScheduledUpdate(ScheduledUpdate scheduledUpdate)
@@ -254,7 +263,7 @@ namespace mrHelper.Client.Discussions
 
             try
             {
-               await updateDiscussionsAsync(mrk, false, scheduledUpdate.InitialSnapshot);
+               await updateDiscussionsAsync(mrk, false, scheduledUpdate.Type);
             }
             catch (OperatorException ex)
             {
@@ -275,12 +284,12 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, bool initialSnapshot)
+      private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, EDiscussionUpdateType type)
       {
          _scheduledUpdates.Enqueue(new ScheduledUpdate
          {
             MergeRequests = keys?.ToArray(), // make a copy just in case
-            InitialSnapshot = initialSnapshot
+            Type = type
          });
 
          _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
@@ -296,7 +305,7 @@ namespace mrHelper.Client.Discussions
 
                if (_reconnect)
                {
-                  if (!scheduledUpdate.InitialSnapshot)
+                  if (scheduledUpdate.Type != EDiscussionUpdateType.InitialSnapshot)
                   {
                      Trace.TraceInformation("[DiscussionManager] update is skipped due to _reconnect state");
                      return;
@@ -310,7 +319,7 @@ namespace mrHelper.Client.Discussions
          }), null);
       }
 
-      async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, bool initialSnapshot)
+      async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, EDiscussionUpdateType type)
       {
          if (_updating.Contains(mrk))
          {
@@ -358,7 +367,8 @@ namespace mrHelper.Client.Discussions
             {
                cacheDiscussions(mrk, noteCount, mostRecentNote.Updated_At, discussions);
             }
-            PostLoadDiscussions?.Invoke(mrk, discussions, mostRecentNote.Updated_At, initialSnapshot);
+            PostLoadDiscussions?.Invoke(mrk, discussions);
+            PostLoadDiscussionsInternal?.Invoke(mrk, discussions, type);
          }
          finally
          {
@@ -443,17 +453,20 @@ namespace mrHelper.Client.Discussions
          {
             calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
 
+            DateTime? prevUpdateTimestamp = _cachedDiscussions.ContainsKey(mrk) ?
+               _cachedDiscussions[mrk].TimeStamp : new Nullable<DateTime>();
+
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
              + " cached time stamp {4} (was {5} before update), note count = {6}, resolved = {7}, resolvable = {8}",
                discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                mergeRequestUpdatedAt.ToLocalTime().ToString(),
-               _cachedDiscussions.ContainsKey(mrk) ?
-                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString() : "N/A",
+               prevUpdateTimestamp?.ToLocalTime().ToString() ?? "N/A",
                noteCount, resolvedDiscussionCount, resolvableDiscussionCount));
 
             _cachedDiscussions[mrk] = new CachedDiscussions
             {
+               PrevTimeStamp = prevUpdateTimestamp,
                TimeStamp = mergeRequestUpdatedAt,
                NoteCount = noteCount,
                Discussions = discussions.ToArray(),
@@ -488,9 +501,32 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private void onDiscussionParserEvent(UserEvents.DiscussionEvent e)
+      private void onDiscussionParserEvent(UserEvents.DiscussionEvent e,
+         DateTime eventTimestamp, EDiscussionUpdateType type)
       {
-         DiscussionEvent?.Invoke(e);
+         switch (type)
+         {
+            case EDiscussionUpdateType.InitialSnapshot:
+               // Don't send out any notifications on initial snapshot, e.g. when just connected to host
+               // because we don't want to notify about all old events
+               return;
+
+            case EDiscussionUpdateType.NewMergeRequest:
+               // Notify about whatever is found in a new merge request
+               DiscussionEvent?.Invoke(e);
+               return;
+
+            case EDiscussionUpdateType.PeriodicUpdate:
+               // Notify about new events in merge requests that are cached already
+               if (_cachedDiscussions.TryGetValue(e.MergeRequestKey, out CachedDiscussions cached)
+                 && cached.PrevTimeStamp.HasValue && eventTimestamp > cached.PrevTimeStamp.Value)
+               {
+                  DiscussionEvent?.Invoke(e);
+               }
+               return;
+         }
+
+         Debug.Assert(false);
       }
 
       private void onMergeRequestEvent(Common.UserEvents.MergeRequestEvent e)
@@ -513,7 +549,7 @@ namespace mrHelper.Client.Discussions
                      e.FullMergeRequestKey.MergeRequest.IId));
                   _closed.Remove(mrk);
                }
-               scheduleUpdate(new MergeRequestKey[] { mrk }, false);
+               scheduleUpdate(new MergeRequestKey[] { mrk }, EDiscussionUpdateType.NewMergeRequest);
                break;
 
             case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
@@ -585,7 +621,8 @@ namespace mrHelper.Client.Discussions
 
          _hostname = hostname;
          _projects = projects.ToArray();
-         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */, true);
+         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
+            EDiscussionUpdateType.InitialSnapshot);
       }
 
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
@@ -615,6 +652,7 @@ namespace mrHelper.Client.Discussions
 
       private struct CachedDiscussions
       {
+         public DateTime? PrevTimeStamp;
          public DateTime TimeStamp;
          public int NoteCount;
          public int ResolvableDiscussionCount;
@@ -651,7 +689,7 @@ namespace mrHelper.Client.Discussions
       private struct ScheduledUpdate
       {
          internal IEnumerable<MergeRequestKey> MergeRequests;
-         internal bool InitialSnapshot;
+         internal EDiscussionUpdateType Type;
       }
 
       /// <summary>

@@ -543,8 +543,7 @@ namespace mrHelper.App.Forms
          onDiscussionManagerEvent();
       }
 
-      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
-         DateTime dateTime, bool b)
+      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          onDiscussionManagerEvent();
       }
