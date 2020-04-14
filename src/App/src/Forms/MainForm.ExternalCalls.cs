@@ -71,14 +71,9 @@ namespace mrHelper.App.Forms
          {
             await handler.HandleAsync(gitRepository);
          }
-         catch (DiscussionCreatorException ex)
+         catch (DiscussionCreatorException)
          {
-            ExceptionHandlers.Handle("Cannot create a discussion from diff tool", ex);
-            MessageBox.Show(
-               "Something went wrong at GitLab. See Merge Request Helper log files for details",
-               "Cannot create a discussion",
-               MessageBoxButtons.OK, MessageBoxIcon.Error,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            Debug.Assert(false);
             return;
          }
 

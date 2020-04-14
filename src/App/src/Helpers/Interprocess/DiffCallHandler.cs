@@ -93,7 +93,7 @@ namespace mrHelper.App.Interprocess
                {
                   string message = "Cannot create a discussion at GitLab";
                   ExceptionHandlers.Handle(message, ex);
-                  MessageBox.Show(String.Format("{0}. Check your connection and try again", message),
+                  MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                }

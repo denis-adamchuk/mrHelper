@@ -62,12 +62,29 @@ namespace mrHelper.Client.Discussions
       async private Task<bool> handleGitlabError(NewDiscussionParameters parameters, OperatorException ex,
          bool revertOnError)
       {
+         if (ex == null)
+         {
+            Trace.TraceWarning("[DiscussionCreator] An exception with null value was caught");
+            return false;
+         }
+
+         if (!parameters.Position.HasValue)
+         {
+            Trace.TraceWarning("[DiscussionCreator] Unexpected situation at GitLab");
+            return false;
+         }
+
          if (ex.InnerException is GitLabRequestException rx)
          {
             if (rx.InnerException is System.Net.WebException wx)
             {
-               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               if (wx.Response == null)
+               {
+                  Trace.TraceWarning("[DiscussionCreator] Null Response in WebException");
+                  return false;
+               }
 
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
                if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                {
                   // Something went wrong at the GitLab, let's report a discussion without Position
@@ -93,7 +110,7 @@ namespace mrHelper.Client.Discussions
       {
          Debug.Assert(parameters.Position.HasValue);
 
-         Trace.TraceInformation("Reporting a discussion without Position (fallback)");
+         Trace.TraceInformation("[DicsussionCreator] Reporting a discussion without Position (fallback)");
 
          parameters.Body = getFallbackInfo(parameters.Position.Value) + "<br>" + parameters.Body;
          parameters.Position = null;
@@ -122,7 +139,7 @@ namespace mrHelper.Client.Discussions
       {
          Debug.Assert(parameters.Position.HasValue);
 
-         Trace.TraceInformation("Looking up for a note with bad position...");
+         Trace.TraceInformation("[DicsussionCreator] Looking up for a note with bad position...");
 
          IEnumerable<Discussion> discussions;
          try
@@ -144,7 +161,7 @@ namespace mrHelper.Client.Discussions
                if (note.Type == "DiffNote" && note.Author.Equals(_currentUser) && note.Body == parameters.Body)
                {
                   Trace.TraceInformation(
-                     "Deleting discussion note." +
+                     "[DicsussionCreator] Deleting discussion note." +
                      " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
                      note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
 
@@ -164,7 +181,7 @@ namespace mrHelper.Client.Discussions
          }
 
          string message = deletedNoteId.HasValue
-            ? String.Format("Deleted note with Id {0}", deletedNoteId.Value)
+            ? String.Format("[DicsussionCreator] Deleted note with Id {0}", deletedNoteId.Value)
             : "Could not find a note to delete (or could not delete it)";
          Trace.TraceInformation(message);
       }
