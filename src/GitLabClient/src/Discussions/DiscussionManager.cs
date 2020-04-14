@@ -51,7 +51,7 @@ namespace mrHelper.Client.Discussions
 
       public DiscussionManager(IHostProperties settings, IWorkflowEventNotifier workflowEventNotifier,
          MergeRequestCache mergeRequestCache, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords,
-         int autoUpdatePeriodMs)
+         int autoUpdatePeriodMs, MergeRequestFilter mergeRequestFilter)
       {
          _operator = new DiscussionOperator(settings);
 
@@ -60,6 +60,7 @@ namespace mrHelper.Client.Discussions
 
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
+         _mergeRequestFilter = mergeRequestFilter;
 
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connected += onConnected;
@@ -238,20 +239,26 @@ namespace mrHelper.Client.Discussions
 
       async private Task processScheduledUpdate(ScheduledUpdate scheduledUpdate)
       {
-         IEnumerable<MergeRequestKey> mergeRequests = scheduledUpdate.MergeRequests == null ?
-            getAllMergeRequests(_hostname, _projects) : scheduledUpdate.MergeRequests;
+         getAllMergeRequests(_hostname, _projects,
+            out IEnumerable<MergeRequestKey> matchingFilter,
+            out IEnumerable<MergeRequestKey> nonMatchingFilter);
+
+         IEnumerable<MergeRequestKey> highPriorityMergeRequests =
+            scheduledUpdate.MergeRequests == null ? matchingFilter : scheduledUpdate.MergeRequests;
+         IEnumerable<MergeRequestKey> lowPriorityMergeRequests =
+            scheduledUpdate.MergeRequests == null ? nonMatchingFilter : new MergeRequestKey[] { };
 
          if (scheduledUpdate.MergeRequests == null)
          {
             Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests (ALL)",
-               mergeRequests.Count()));
+               "[DiscussionManager] Processing scheduled update of discussions for {0}/{1} merge requests (ALL)",
+               highPriorityMergeRequests.Count(), lowPriorityMergeRequests.Count()));
          }
          else
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests",
-               mergeRequests.Count()));
+               scheduledUpdate.MergeRequests.Count()));
          }
 
          async Task updateDiscussions(MergeRequestKey mrk)
@@ -273,7 +280,11 @@ namespace mrHelper.Client.Discussions
             }
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => updateDiscussions(x),
+         await TaskUtils.RunConcurrentFunctionsAsync(highPriorityMergeRequests, x => updateDiscussions(x),
+            Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+            () => _reconnect);
+
+         await TaskUtils.RunConcurrentFunctionsAsync(lowPriorityMergeRequests, x => updateDiscussions(x),
             Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
             () => _reconnect);
 
@@ -587,31 +598,42 @@ namespace mrHelper.Client.Discussions
          _closed.Clear();
       }
 
-      private IEnumerable<MergeRequestKey> getAllMergeRequests(string hostname, IEnumerable<Project> projects)
+      private void getAllMergeRequests(string hostname, IEnumerable<Project> projects,
+         out IEnumerable<MergeRequestKey> matchingFilter, out IEnumerable<MergeRequestKey> nonMatchingFilter)
       {
-         List<MergeRequestKey> mergeRequestKeys = new List<MergeRequestKey>();
-         if (hostname == String.Empty || projects == null)
+         List<MergeRequestKey> matchingFilterList = new List<MergeRequestKey>();
+         List<MergeRequestKey> nonMatchingFilterList = new List<MergeRequestKey>();
+         if (hostname != String.Empty && projects != null)
          {
-            return mergeRequestKeys;
-         }
-
-         foreach (Project project in projects)
-         {
-            ProjectKey projectKey = new ProjectKey
+            foreach (Project project in projects)
             {
-               HostName = hostname,
-               ProjectName = project.Path_With_Namespace
-            };
+               ProjectKey projectKey = new ProjectKey
+               {
+                  HostName = hostname,
+                  ProjectName = project.Path_With_Namespace
+               };
 
-            mergeRequestKeys.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
-               .Select(x => new MergeRequestKey
-                  {
-                     ProjectKey = projectKey,
-                     IId = x.IId
-                  })
-               .ToList());
+               matchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
+                  .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
+                  .Select(x => new MergeRequestKey
+                     {
+                        ProjectKey = projectKey,
+                        IId = x.IId
+                     })
+                  .ToList());
+
+               nonMatchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
+                  .Where(x => !_mergeRequestFilter.DoesMatchFilter(x))
+                  .Select(x => new MergeRequestKey
+                     {
+                        ProjectKey = projectKey,
+                        IId = x.IId
+                     })
+                  .ToList());
+            }
          }
-         return mergeRequestKeys;
+         matchingFilter = matchingFilterList;
+         nonMatchingFilter = nonMatchingFilterList;
       }
 
       private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
@@ -638,8 +660,10 @@ namespace mrHelper.Client.Discussions
          _projects = null;
       }
 
-      private readonly DiscussionParser _parser;
       private readonly MergeRequestCache _mergeRequestCache;
+      private readonly MergeRequestFilter _mergeRequestFilter;
+
+      private readonly DiscussionParser _parser;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private string _hostname;
       private IEnumerable<Project> _projects;

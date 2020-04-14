@@ -25,7 +25,8 @@ namespace mrHelper.App.Helpers
       internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory,
-         DiscussionManager discussionManager, bool createMissingCommits, int autoUpdatePeriodMs)
+         DiscussionManager discussionManager, bool createMissingCommits, int autoUpdatePeriodMs,
+         MergeRequestFilter mergeRequestFilter)
       {
          if (autoUpdatePeriodMs < 1)
          {
@@ -41,6 +42,7 @@ namespace mrHelper.App.Helpers
          _projectCheckerFactory = projectCheckerFactory;
          _discussionManager = discussionManager;
          _createMissingCommits = createMissingCommits;
+         _mergeRequestFilter = mergeRequestFilter;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -107,8 +109,8 @@ namespace mrHelper.App.Helpers
 
          try
          {
-
             IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestProvider.GetMergeRequests(repo.ProjectKey)
+               .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
                .Select(x => new MergeRequestKey
                {
                   ProjectKey = repo.ProjectKey,
@@ -390,6 +392,7 @@ namespace mrHelper.App.Helpers
       private readonly DiscussionManager _discussionManager;
 
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly MergeRequestFilter _mergeRequestFilter;
 
       private readonly System.Timers.Timer _timer;
 
