@@ -304,6 +304,7 @@ namespace mrHelper.App.Forms
             reportErrorOnConnect(url, "Merge Request does not exist. ", null, false);
             return;
          }
+         labelWorkflowStatus.Text = String.Empty;
 
          if (mergeRequestUrl.Host != getHostName() && !await restartWorkflowByUrl(url, mergeRequestUrl.Host))
          {

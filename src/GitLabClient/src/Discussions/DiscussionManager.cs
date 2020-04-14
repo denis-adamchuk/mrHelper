@@ -251,7 +251,7 @@ namespace mrHelper.Client.Discussions
          if (scheduledUpdate.MergeRequests == null)
          {
             Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Processing scheduled update of discussions for {0}/{1} merge requests (ALL)",
+               "[DiscussionManager] Processing scheduled update of discussions for {0}+{1} merge requests (ALL)",
                highPriorityMergeRequests.Count(), lowPriorityMergeRequests.Count()));
          }
          else

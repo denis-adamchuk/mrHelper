@@ -1870,7 +1870,7 @@ namespace mrHelper.App.Forms
             case EComparableEntityType.Version:
                {
                   string sha = String.IsNullOrWhiteSpace(item.SHA)
-                     ? "N/A" : (item.SHA.Length > 10 ? item.SHA.Substring(0, 10) : item.SHA);
+                     ? "No SHA" : (item.SHA.Length > 10 ? item.SHA.Substring(0, 10) : item.SHA);
                   string timestamp = item.TimeStamp.HasValue ?
                      item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat) : String.Empty;
                   switch (item.Status)
