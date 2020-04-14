@@ -34,7 +34,7 @@ namespace mrHelper.App.Helpers
          }
 
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
 
          _factoryAccessor = factoryAccessor;
          _hostProperties = hostProperties;
@@ -52,18 +52,12 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
          _timer?.Stop();
          _timer?.Dispose();
 
-         foreach (ILocalGitRepository repo in _connected)
-         {
-            repo.Updated -= onLocalGitRepositoryUpdated;
-            repo.Disposed -= onLocalGitRepositoryDisposed;
-         }
-         _connected.Clear();
-         _latestChanges.Clear();
+         unsubscribeFromAll();
       }
 
       private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
@@ -75,6 +69,11 @@ namespace mrHelper.App.Helpers
       }
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
+      {
+         updateAll();
+      }
+
+      private void updateAll()
       {
          Trace.TraceInformation("[GitDataUpdater] Scheduling update of all repositories (on timer)");
 
@@ -226,17 +225,7 @@ namespace mrHelper.App.Helpers
 
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
       {
-         repo.Disposed -= onLocalGitRepositoryDisposed;
-         repo.Updated -= onLocalGitRepositoryUpdated;
-         _connected.Remove(repo);
-
-         IEnumerable<MergeRequestKey> toRemove = _latestChanges.Keys.Where(x => x.ProjectKey.Equals(repo.ProjectKey));
-         foreach (MergeRequestKey key in toRemove.ToArray())
-         {
-            _latestChanges.Remove(key);
-         }
-
-         Debug.Assert(isConsistentState(repo));
+         unsubscribeFromOne(repo);
       }
 
       async private Task createMissingCommits(IEnumerable<Discussion> discussions, ILocalGitRepository repo)
@@ -334,8 +323,10 @@ namespace mrHelper.App.Helpers
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
       {
+         unsubscribeFromAll();
+
          _timer.SynchronizingObject.BeginInvoke(new Action(
             async () =>
          {
@@ -354,7 +345,35 @@ namespace mrHelper.App.Helpers
                   repo.Disposed += onLocalGitRepositoryDisposed;
                }
             }
+
+            updateAll();
          }), null);
+      }
+
+      private void unsubscribeFromOne(ILocalGitRepository repo)
+      {
+         repo.Disposed -= onLocalGitRepositoryDisposed;
+         repo.Updated -= onLocalGitRepositoryUpdated;
+         _connected.Remove(repo);
+
+         IEnumerable<MergeRequestKey> toRemove = _latestChanges.Keys.Where(x => x.ProjectKey.Equals(repo.ProjectKey));
+         foreach (MergeRequestKey key in toRemove.ToArray())
+         {
+            _latestChanges.Remove(key);
+         }
+
+         Debug.Assert(isConsistentState(repo));
+      }
+
+      private void unsubscribeFromAll()
+      {
+         foreach (ILocalGitRepository repo in _connected)
+         {
+            repo.Updated -= onLocalGitRepositoryUpdated;
+            repo.Disposed -= onLocalGitRepositoryDisposed;
+         }
+         _connected.Clear();
+         _latestChanges.Clear();
       }
 
       private bool isConnected(ILocalGitRepository repo)

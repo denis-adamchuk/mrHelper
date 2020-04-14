@@ -27,7 +27,7 @@ namespace mrHelper.App.Helpers
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
 
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
@@ -37,14 +37,9 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
-         foreach (KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> keyValuePair in _gitStatistic)
-         {
-            keyValuePair.Key.Updated -= onLocalGitRepositoryUpdated;
-            keyValuePair.Key.Disposed -= onLocalGitRepositoryDisposed;
-         }
-         _gitStatistic.Clear();
+         unsubscribeFromAll();
       }
 
       /// <summary>
@@ -87,6 +82,16 @@ namespace mrHelper.App.Helpers
       }
 
       internal event Action Update;
+
+      private void updateAll()
+      {
+         Trace.TraceInformation("[GitStatisticManager] Scheduling update of all repositories");
+
+         foreach (ILocalGitRepository repo in _gitStatistic.Keys)
+         {
+            scheduleUpdate(repo);
+         }
+      }
 
       private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
       {
@@ -297,14 +302,13 @@ namespace mrHelper.App.Helpers
 
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
       {
-         repo.Disposed -= onLocalGitRepositoryDisposed;
-         repo.Updated -= onLocalGitRepositoryUpdated;
-         _gitStatistic.Remove(repo);
-         Update?.Invoke();
+         unsubscribeFromOne(repo);
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
       {
+         unsubscribeFromAll();
+
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
          {
@@ -333,7 +337,26 @@ namespace mrHelper.App.Helpers
             }
 
             Update?.Invoke();
+            updateAll();
          }), null);
+      }
+
+      private void unsubscribeFromOne(ILocalGitRepository repo)
+      {
+         repo.Disposed -= onLocalGitRepositoryDisposed;
+         repo.Updated -= onLocalGitRepositoryUpdated;
+         _gitStatistic.Remove(repo);
+      }
+
+      private void unsubscribeFromAll()
+      {
+         foreach (KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> keyValuePair in _gitStatistic)
+         {
+            keyValuePair.Key.Updated -= onLocalGitRepositoryUpdated;
+            keyValuePair.Key.Disposed -= onLocalGitRepositoryDisposed;
+         }
+         _gitStatistic.Clear();
+         Update?.Invoke();
       }
 
       private bool isConnected(ILocalGitRepository repo)

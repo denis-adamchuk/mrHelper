@@ -695,7 +695,7 @@ namespace mrHelper.Client.Discussions
       private readonly HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
 
       /// <summary>
-      /// temporary colletion to track Loading status
+      /// temporary collection to track Loading status
       /// It cannot be a single value because we load multiple MR at once
       /// </summary>
       private readonly HashSet<MergeRequestKey> _loading = new HashSet<MergeRequestKey>();
