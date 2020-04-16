@@ -188,7 +188,7 @@ namespace mrHelper.App.Forms
             string newFolder = localGitFolderBrowser.SelectedPath;
             Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
 
-            if (getLocalGitRepositoryFactory(newFolder) != null)
+            if (_gitClientFactory == null || _gitClientFactory.ParentFolder != newFolder)
             {
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
                Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
@@ -201,12 +201,9 @@ namespace mrHelper.App.Forms
                Trace.TraceInformation(String.Format("[MainForm] Parent folder changed to {0}",
                   newFolder));
 
-               if (getHostName() != String.Empty)
-               {
-                  // Emulating a host switch here to trigger GitDataUpdater to work at the new location
-                  Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
-                  await switchHostToSelected();
-               }
+               // Emulating a host switch here to trigger GitDataUpdater to work at the new location
+               Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
+               await switchHostToSelected();
             }
 
             updateTabControlSelection();
@@ -1218,15 +1215,6 @@ namespace mrHelper.App.Forms
 
             if (!Enumerable.SequenceEqual(projects, form.Projects))
             {
-               if (_gitClientFactory != null)
-               {
-                  List<Tuple<string, bool>> toRemove = projects
-                     .Where(x => x.Item2)
-                     .Where(x => !form.Projects.Any(y => y.Item1 == x.Item1 && y.Item2))
-                     .ToList();
-                  toRemove.ForEach(async x => await _gitClientFactory.DisposeProjectAsync(host, x.Item1));
-               }
-
                ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
                updateProjectsListView();
 

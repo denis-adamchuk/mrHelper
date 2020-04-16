@@ -325,8 +325,6 @@ namespace mrHelper.App.Helpers
 
       private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
       {
-         unsubscribeFromAll();
-
          _timer.SynchronizingObject.BeginInvoke(new Action(
             async () =>
          {
@@ -345,8 +343,6 @@ namespace mrHelper.App.Helpers
                   repo.Disposed += onLocalGitRepositoryDisposed;
                }
             }
-
-            updateAll();
          }), null);
       }
 

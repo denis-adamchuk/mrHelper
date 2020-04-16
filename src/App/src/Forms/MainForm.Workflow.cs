@@ -79,6 +79,8 @@ namespace mrHelper.App.Forms
          // TODO - Avoid using this method to refresh current host data in cases like project list change and other.
          // See Reload List button handler for possible solution.
 
+         await disposeLocalGitRepositoryFactory();
+
          string hostName = getHostName();
          if (hostName != String.Empty)
          {

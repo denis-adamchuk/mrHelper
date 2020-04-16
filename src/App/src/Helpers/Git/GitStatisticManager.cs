@@ -307,8 +307,6 @@ namespace mrHelper.App.Helpers
 
       private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
       {
-         unsubscribeFromAll();
-
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
          {
@@ -337,7 +335,6 @@ namespace mrHelper.App.Helpers
             }
 
             Update?.Invoke();
-            updateAll();
          }), null);
       }
 
