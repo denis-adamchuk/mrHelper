@@ -27,7 +27,7 @@ namespace mrHelper.App.Helpers
          ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
       {
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
+         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
 
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
@@ -37,7 +37,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
+         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
 
          unsubscribeFromAll();
       }
@@ -305,33 +305,30 @@ namespace mrHelper.App.Helpers
          unsubscribeFromOne(repo);
       }
 
-      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
       {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
          {
-            foreach (Project project in projects)
+            ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+            ILocalGitRepository repo =
+               (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
+            if (repo != null && !isConnected(repo))
             {
-               ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-               ILocalGitRepository repo =
-                  (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
-               if (repo != null && !isConnected(repo))
+               _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
                {
-                  _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
+                  State = new RepositoryState
                   {
-                     State = new RepositoryState
-                     {
-                        LatestChange = DateTime.MinValue,
-                        IsCloned = !repo.DoesRequireClone()
-                     },
-                     Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
-                  });
+                     LatestChange = DateTime.MinValue,
+                     IsCloned = !repo.DoesRequireClone()
+                  },
+                  Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
+               });
 
-                  Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
-                     repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-                  repo.Updated += onLocalGitRepositoryUpdated;
-                  repo.Disposed += onLocalGitRepositoryDisposed;
-               }
+               Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
+                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+               repo.Updated += onLocalGitRepositoryUpdated;
+               repo.Disposed += onLocalGitRepositoryDisposed;
             }
 
             Update?.Invoke();

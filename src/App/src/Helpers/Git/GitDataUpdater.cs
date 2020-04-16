@@ -34,7 +34,7 @@ namespace mrHelper.App.Helpers
          }
 
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
+         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
 
          _factoryAccessor = factoryAccessor;
          _hostProperties = hostProperties;
@@ -52,7 +52,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
+         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
 
          _timer?.Stop();
          _timer?.Dispose();
@@ -323,25 +323,22 @@ namespace mrHelper.App.Helpers
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
-      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
       {
          _timer.SynchronizingObject.BeginInvoke(new Action(
             async () =>
          {
-            foreach (Project project in projects)
+            ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+            ILocalGitRepository repo =
+               (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
+            if (repo != null && !isConnected(repo))
             {
-               ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-               ILocalGitRepository repo =
-                  (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
-               if (repo != null && !isConnected(repo))
-               {
-                  _connected.Add(repo);
+               _connected.Add(repo);
 
-                  Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
-                     repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-                  repo.Updated += onLocalGitRepositoryUpdated;
-                  repo.Disposed += onLocalGitRepositoryDisposed;
-               }
+               Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
+                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+               repo.Updated += onLocalGitRepositoryUpdated;
+               repo.Disposed += onLocalGitRepositoryDisposed;
             }
          }), null);
       }

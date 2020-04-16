@@ -153,11 +153,6 @@ namespace mrHelper.GitClient
 
       public static string GetRepositoryName(string path)
       {
-         if (!IsValidGitRepository(path))
-         {
-            return null;
-         }
-
          try
          {
             IEnumerable<string> stdOut =
