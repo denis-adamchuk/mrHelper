@@ -110,7 +110,7 @@ namespace mrHelper.App.Controls
 
          if (e.KeyCode == Keys.F2 && textBox.ReadOnly)
          {
-            DiscussionNote note = (DiscussionNote)(textBox.Tag);
+            DiscussionNote note = getNoteFromTextBox(textBox);
             if (canBeModified(note))
             {
                onStartEditNote(textBox);
@@ -245,7 +245,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         await onDeleteNoteAsync((DiscussionNote)textBox.Tag);
+         await onDeleteNoteAsync(getNoteFromTextBox(textBox));
       }
 
       async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
@@ -257,9 +257,13 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         stopEdit(textBox); // prevent submitting body modifications in the current handler
+         TextBox editingTextBox = getEditingTextBox();
+         if (editingTextBox != null)
+         {
+            await onSubmitNewBodyAsync(editingTextBox);
+         }
 
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         DiscussionNote note = getNoteFromTextBox(textBox);
          Debug.Assert(note.Resolvable);
 
          await onToggleResolveNoteAsync(note);
@@ -274,7 +278,11 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         stopEdit(textBox); // prevent submitting body modifications in the current handler
+         TextBox editingTextBox = getEditingTextBox();
+         if (editingTextBox != null)
+         {
+            await onSubmitNewBodyAsync(editingTextBox);
+         }
 
          await onToggleResolveDiscussionAsync();
       }
@@ -827,7 +835,7 @@ namespace mrHelper.App.Controls
       {
          stopEdit(textBox);
 
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         DiscussionNote note = getNoteFromTextBox(textBox);
 
          Debug.Assert(Discussion.Notes.Count() > 0);
          textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
@@ -838,7 +846,7 @@ namespace mrHelper.App.Controls
       {
          stopEdit(textBox);
 
-         DiscussionNote note = (DiscussionNote)(textBox.Tag);
+         DiscussionNote note = getNoteFromTextBox(textBox);
          if (textBox.Text == note.Body)
          {
             return;
@@ -1041,7 +1049,7 @@ namespace mrHelper.App.Controls
             {
                if (textBox != null)
                {
-                  DiscussionNote note = (DiscussionNote)(textBox.Tag);
+                  DiscussionNote note = getNoteFromTextBox(textBox as TextBox);
                   if (note.Resolvable && !note.Resolved)
                   {
                      result = false;
@@ -1064,6 +1072,24 @@ namespace mrHelper.App.Controls
          {
             this._htmlContainer.AvoidAsyncImagesLoading = true;
          }
+      }
+
+      private DiscussionNote getNoteFromTextBox(TextBox textBox)
+      {
+         return (textBox == null || textBox.Tag == null)
+            ? default(DiscussionNote) : (DiscussionNote)(textBox.Tag);
+      }
+
+      private TextBox getEditingTextBox()
+      {
+         foreach (Control control in _textboxesNotes)
+         {
+            if (!(control as TextBox).ReadOnly)
+            {
+               return control as TextBox;
+            }
+         }
+         return null;
       }
 
       // Widths in %
