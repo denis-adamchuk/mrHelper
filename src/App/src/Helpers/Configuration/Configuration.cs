@@ -29,6 +29,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersions";
       private static readonly bool   ShowVersionsDefaultValue = false;
 
+      private static readonly string ShallowCloneAllowedKeyName      = "ShallowCloneAllowed";
+      private static readonly bool   ShallowCloneAllowedDefaultValue = false;
+
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
 
@@ -77,9 +80,6 @@ namespace mrHelper.App.Helpers
 
       private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
       private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
-
-      private static readonly string CreateMissingCommitsWhenCacheRevisionsKeyName        = "CreateMissingCommitsWhenCacheRevisionsInBackground";
-      private static readonly bool   CreateMissingCommitsWhenCacheRevisionsDefaultValue   = false;
 
       private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
       private static readonly bool   DisableSSLVerificationDefaultValue = true;
@@ -217,6 +217,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowVersionsDefaultValue;
          }
          set { setValue(ShowVersionsKeyName, boolToString(value)); }
+      }
+
+      public bool ShallowCloneAllowed
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               ShallowCloneAllowedKeyName, boolToString(ShallowCloneAllowedDefaultValue)),
+                  out bool result) ? result : ShallowCloneAllowedDefaultValue;
+         }
+         set { setValue(ShallowCloneAllowedKeyName, boolToString(value)); }
       }
 
       public bool AllowAuthorToTrackTime
@@ -579,17 +590,6 @@ namespace mrHelper.App.Helpers
                   out int result) ? result : CacheRevisionsPeriodMsDefaultValue;
          }
          set { setValue(CacheRevisionsPeriodMsKeyName, value.ToString()); }
-      }
-
-      public bool CreateMissingCommitsWhenCacheRevisionsInBackground
-      {
-         get
-         {
-            return bool.TryParse(getValue(
-               CreateMissingCommitsWhenCacheRevisionsKeyName, CreateMissingCommitsWhenCacheRevisionsDefaultValue.ToString()),
-                  out bool result) ? result : CreateMissingCommitsWhenCacheRevisionsDefaultValue;
-         }
-         set { setValue(CreateMissingCommitsWhenCacheRevisionsKeyName, value.ToString()); }
       }
 
       public bool DisableSSLVerification

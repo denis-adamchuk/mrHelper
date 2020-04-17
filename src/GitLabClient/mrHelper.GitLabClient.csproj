@@ -55,7 +55,6 @@
     <Compile Include="src\Repository\RepositoryManager.cs" />
     <Compile Include="src\Types\MergeRequestFilter.cs" />
     <Compile Include="src\Types\WorkflowTypes.cs" />
-    <Compile Include="src\Versions\Impl\VersionOperator.cs" />
     <Compile Include="src\MergeRequests\CachedMergeRequestProviderItf.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />
     <Compile Include="src\MergeRequests\ProjectCheckerFactoryItf.cs" />
@@ -74,7 +73,6 @@
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsChecker.cs" />
     <Compile Include="src\MergeRequests\Impl\LocalProjectChecker.cs" />
     <Compile Include="src\MergeRequests\Impl\RemoteProjectChecker.cs" />
-    <Compile Include="src\Versions\VersionManager.cs" />
     <Compile Include="src\Workflow\WorkflowEventNotifierItf.cs" />
     <Compile Include="src\Workflow\WorkflowManager.cs" />
     <Compile Include="src\Workflow\Impl\WorkflowDataOperator.cs" />

@@ -108,7 +108,7 @@ namespace mrHelper.App.Forms
 
          if (repo != null
           && headShaFromDiscussions.Any()
-          && !await restoreChainOfMergedCommits(repo, headShaFromDiscussions))
+          && !await fetchMissingCommits(repo, headShaFromDiscussions))
          {
             labelWorkflowStatus.Text = "Could not open Discussions";
             return;
@@ -253,7 +253,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!await restoreChainOfMergedCommits(repo, new string[] { leftSHA, rightSHA }))
+         if (!await fetchMissingCommits(repo, new string[] { leftSHA, rightSHA }))
          {
             labelWorkflowStatus.Text = "Could not launch diff tool";
             return;
@@ -468,15 +468,15 @@ namespace mrHelper.App.Forms
 
       private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
 
-      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, IEnumerable<string> heads)
+      async private Task<bool> fetchMissingCommits(ILocalGitRepository repo, IEnumerable<string> heads)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, heads);
-         return await restoreChainOfMergedCommits();
+            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path));
+         return await fetchMissingCommits();
       }
 
-      async private Task<bool> restoreChainOfMergedCommits()
+      async private Task<bool> fetchMissingCommits()
       {
          enableControlsOnGitAsyncOperation(false, "restoring merged commits");
          try

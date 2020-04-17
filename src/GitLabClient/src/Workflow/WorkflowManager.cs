@@ -85,7 +85,7 @@ namespace mrHelper.Client.Workflow
 
          Exception exception = null;
          bool cancelled = false;
-         async Task loadVersion(Project project, MergeRequest mergeRequest)
+         async Task loadVersionsLocal(Project project, MergeRequest mergeRequest)
          {
             if (cancelled)
             {
@@ -94,7 +94,7 @@ namespace mrHelper.Client.Workflow
 
             try
             {
-               if (!await loadLatestVersionAsync(hostname, project.Path_With_Namespace, mergeRequest))
+               if (!await loadVersionsAsync(hostname, project.Path_With_Namespace, mergeRequest, false))
                {
                   cancelled = true;
                }
@@ -122,7 +122,7 @@ namespace mrHelper.Client.Workflow
                }
                else
                {
-                  await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => loadVersion(project, x),
+                  await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => loadVersionsLocal(project, x),
                      Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
                }
             }
@@ -189,9 +189,9 @@ namespace mrHelper.Client.Workflow
       public event Action<string, string, MergeRequest, System.Collections.IEnumerable> PostLoadComparableEntities;
       public event Action FailedLoadComparableEntities;
 
-      public event Action PreLoadLatestVersion;
-      public event Action<string, string, MergeRequest, Version> PostLoadLatestVersion;
-      public event Action FailedLoadLatestVersion;
+      public event Action PreLoadVersions;
+      public event Action<string, string, MergeRequest, IEnumerable<Version>> PostLoadVersions;
+      public event Action FailedLoadVersions;
 
       async private Task<bool> loadCurrentUserAsync(string hostName)
       {
@@ -206,7 +206,7 @@ namespace mrHelper.Client.Workflow
          {
             string cancelMessage = String.Format("Cancelled loading current user from host \"{0}\"", hostName);
             string errorMessage = String.Format("Cannot load user from host \"{0}\"", hostName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadCurrentUser);
+            handleOperatorException(ex, cancelMessage, errorMessage, new Action[] { FailedLoadCurrentUser });
             return false;
          }
 
@@ -230,7 +230,7 @@ namespace mrHelper.Client.Workflow
          {
             string cancelMessage = String.Format("Cancelled loading merge requests for project \"{0}\"", projectName);
             string errorMessage = String.Format("Cannot load project \"{0}\"", projectName);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
+            handleOperatorException(ex, cancelMessage, errorMessage, new Action[] { FailedLoadProjectMergeRequests });
             return null;
          }
 
@@ -250,7 +250,7 @@ namespace mrHelper.Client.Workflow
          {
             string cancelMessage = String.Format("Cancelled loading merge requests with search string \"{0}\"", search);
             string errorMessage = String.Format("Cannot load merge requests with search string \"{0}\"", search);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
+            handleOperatorException(ex, cancelMessage, errorMessage, new Action[] { FailedLoadProjectMergeRequests });
             return null;
          }
 
@@ -314,7 +314,7 @@ namespace mrHelper.Client.Workflow
          {
             string cancelMessage = String.Format("Cancelled resolving project with Id \"{0}\"", projectId);
             string errorMessage = String.Format("Cannot load project with Id \"{0}\"", projectId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadProjectMergeRequests);
+            handleOperatorException(ex, cancelMessage, errorMessage, new Action[] { FailedLoadProjectMergeRequests });
             return null;
          }
       }
@@ -335,27 +335,24 @@ namespace mrHelper.Client.Workflow
          {
             string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mergeRequestIId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mergeRequestIId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadSingleMergeRequest);
+            handleOperatorException(ex, cancelMessage, errorMessage, new Action[] { FailedLoadSingleMergeRequest });
             return false;
          }
 
          PostLoadSingleMergeRequest?.Invoke(hostname, projectName, mergeRequest);
 
-         return await loadLatestVersionAsync(hostname, projectName, mergeRequest)
-             && await loadComparableEntitiesAsync(hostname, projectName, mergeRequest, comparableEntityType);
-      }
-
-      private Task<bool> loadComparableEntitiesAsync(string hostname, string projectName, MergeRequest mergeRequest,
-         EComparableEntityType comparableEntityType)
-      {
          switch (comparableEntityType)
          {
-            case EComparableEntityType.Commit: return loadCommitsAsync(hostname, projectName, mergeRequest);
-            case EComparableEntityType.Version: return loadVersionsAsync(hostname, projectName, mergeRequest);
+            case EComparableEntityType.Commit:
+               return await loadVersionsAsync(hostname, projectName, mergeRequest, false)
+                   && await loadCommitsAsync(hostname, projectName, mergeRequest);
+
+            case EComparableEntityType.Version:
+               return await loadVersionsAsync(hostname, projectName, mergeRequest, true);
          }
 
          Debug.Assert(false);
-         return Task.FromResult(true);
+         return true;
       }
 
       async private Task<bool> loadCommitsAsync(string hostname, string projectName, MergeRequest mergeRequest)
@@ -372,16 +369,28 @@ namespace mrHelper.Client.Workflow
                mergeRequest.IId);
             string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
                mergeRequest.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadComparableEntities);
+            handleOperatorException(ex, cancelMessage, errorMessage, new Action[] { FailedLoadComparableEntities });
             return false;
          }
          PostLoadComparableEntities?.Invoke(hostname, projectName, mergeRequest, commits);
          return true;
       }
 
-      async private Task<bool> loadVersionsAsync(string hostname, string projectName, MergeRequest mergeRequest)
+      async private Task<bool> loadVersionsAsync(string hostname, string projectName, MergeRequest mergeRequest,
+         bool invokeCompareableEntitiesCallback)
       {
-         PreLoadComparableEntities?.Invoke();
+         List<Action> failureActions = new List<Action> { FailedLoadVersions };
+         if (invokeCompareableEntitiesCallback)
+         {
+            failureActions.Add(FailedLoadComparableEntities);
+         }
+
+         if (invokeCompareableEntitiesCallback)
+         {
+            PreLoadComparableEntities?.Invoke();
+         }
+         PreLoadVersions?.Invoke();
+
          IEnumerable<Version> versions;
          try
          {
@@ -393,37 +402,21 @@ namespace mrHelper.Client.Workflow
                mergeRequest.IId);
             string errorMessage = String.Format("Cannot load versions for merge request with IId {0}",
                mergeRequest.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadComparableEntities);
+            handleOperatorException(ex, cancelMessage, errorMessage, failureActions);
             return false;
          }
-         PostLoadComparableEntities?.Invoke(hostname, projectName, mergeRequest, versions);
-         return true;
-      }
 
+         if (invokeCompareableEntitiesCallback)
+         {
+            PostLoadComparableEntities?.Invoke(hostname, projectName, mergeRequest, versions);
+         }
+         PostLoadVersions?.Invoke(hostname, projectName, mergeRequest, versions);
 
-      async private Task<bool> loadLatestVersionAsync(string hostname, string projectname, MergeRequest mergeRequest)
-      {
-         PreLoadLatestVersion?.Invoke();
-         Version latestVersion;
-         try
-         {
-            latestVersion = await _operator.GetLatestVersionAsync(projectname, mergeRequest.IId);
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading latest version for merge request with IId {0}",
-               mergeRequest.IId);
-            string errorMessage = String.Format("Cannot load latest version for merge request with IId {0}",
-               mergeRequest.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, FailedLoadLatestVersion);
-            return false;
-         }
-         PostLoadLatestVersion?.Invoke(hostname, projectname, mergeRequest, latestVersion);
          return true;
       }
 
       private void handleOperatorException(OperatorException ex, string cancelMessage, string errorMessage,
-         Action failureCallback)
+         IEnumerable<Action> failureActions)
       {
          bool cancelled = ex.InnerException is GitLabClientCancelled;
          if (cancelled)
@@ -432,7 +425,7 @@ namespace mrHelper.Client.Workflow
             return;
          }
 
-         failureCallback?.Invoke();
+         failureActions?.ToList().ForEach(x => x?.Invoke());
 
          throw new WorkflowException(errorMessage, ex);
       }

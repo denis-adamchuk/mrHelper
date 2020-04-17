@@ -1,13 +1,10 @@
 using System;
-using System.Linq;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
-using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Workflow
@@ -111,16 +108,7 @@ namespace mrHelper.Client.Workflow
          _clients.Add(client);
          try
          {
-            return (IEnumerable<Version>)(await client.RunAsync(async (gl) =>
-               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
+            return await CommonOperator.GetVersionsAsync(client, projectName, iid);
          }
          finally
          {

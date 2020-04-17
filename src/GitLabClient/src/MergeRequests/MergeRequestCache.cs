@@ -6,7 +6,6 @@ using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
@@ -28,7 +27,7 @@ namespace mrHelper.Client.MergeRequests
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connected += onConnected;
          _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
-         _workflowEventNotifier.LoadedMergeRequestVersion += onLoadedMergeRequestVersion;
+         _workflowEventNotifier.LoadMergeRequestVersions += onLoadedMergeRequestVersions;
          _workflowEventNotifier.LoadedProjects += onLoadedProjects;
       }
 
@@ -36,7 +35,7 @@ namespace mrHelper.Client.MergeRequests
       {
          _workflowEventNotifier.Connected -= onConnected;
          _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
-         _workflowEventNotifier.LoadedMergeRequestVersion -= onLoadedMergeRequestVersion;
+         _workflowEventNotifier.LoadMergeRequestVersions -= onLoadedMergeRequestVersions;
          _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
          if (_updateManager != null)
@@ -60,22 +59,27 @@ namespace mrHelper.Client.MergeRequests
 
       public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
       {
-         return _cache != null ? new LocalProjectChecker(mrk, _cache.Details.Clone()) : null;
+         return _cache != null ? new LocalProjectChecker(getAllVersions(mrk.ProjectKey)) : null;
       }
 
       public IInstantProjectChecker GetLocalProjectChecker(ProjectKey projectKey)
       {
-         return GetLocalProjectChecker(getLatestMergeRequest(projectKey));
+         return _cache != null ? new LocalProjectChecker(getAllVersions(projectKey)) : null;
       }
 
       public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
       {
-         return new RemoteProjectChecker(mrk, _updateOperator);
+         return new RemoteProjectChecker(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
       }
 
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _cache?.Details.GetLatestVersion(mrk) ?? default(Version);
+         return _cache?.Details.GetVersions(mrk).LastOrDefault() ?? default(Version);
+      }
+
+      public Version GetLatestVersion(ProjectKey projectKey)
+      {
+         return getAllVersions(projectKey).OrderBy(x => x.Created_At).LastOrDefault();
       }
 
       public IProjectCheckerFactory GetProjectCheckerFactory()
@@ -88,19 +92,25 @@ namespace mrHelper.Client.MergeRequests
          return _projectWatcher;
       }
 
-      private MergeRequestKey getLatestMergeRequest(ProjectKey projectKey)
+      private IEnumerable<Version> getAllVersions(ProjectKey projectKey)
       {
-         if (_cache == null)
+         List<Version> versions = new List<Version>();
+         if (_cache != null)
          {
-            return default(MergeRequestKey);
-         }
-
-         return _cache.Details.GetMergeRequests(projectKey).
-            Select(x => new MergeRequestKey
+            foreach (MergeRequest mergeRequest in _cache.Details.GetMergeRequests(projectKey))
             {
-               ProjectKey = projectKey,
-               IId = x.IId
-            }).OrderByDescending(x => _cache.Details.GetLatestVersion(x).Created_At).FirstOrDefault();
+               MergeRequestKey mrk = new MergeRequestKey
+               {
+                  ProjectKey = projectKey,
+                  IId = mergeRequest.IId
+               };
+               foreach (Version version in _cache.Details.GetVersions(mrk))
+               {
+                  versions.Add(version);
+               }
+            }
+         }
+         return versions;
       }
 
       /// <summary>
@@ -113,7 +123,7 @@ namespace mrHelper.Client.MergeRequests
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         _projectWatcher.ProcessUpdates(updates, _cache.Details);
+         _projectWatcher.ProcessUpdates(updates);
 
          foreach (UserEvents.MergeRequestEvent update in updates)
          {
@@ -145,18 +155,18 @@ namespace mrHelper.Client.MergeRequests
          _cache?.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
       }
 
-      private void onLoadedMergeRequestVersion(string hostname, string projectname,
-         MergeRequest mergeRequest, Version version)
+      private void onLoadedMergeRequestVersions(string hostname, string projectname,
+         MergeRequest mergeRequest, IEnumerable<Version> versions)
       {
          Trace.TraceInformation(String.Format(
-            "[MergeRequestCache] Loaded a version of merge request with IId {0} for project {1} at hostname {2}",
-            mergeRequest.IId, projectname, hostname));
+            "[MergeRequestCache] Loaded {0} version of merge request with IId {1} for project {2} at hostname {3}",
+            versions.Count(), mergeRequest.IId, projectname, hostname));
 
-         _cache?.UpdateLatestVersion(new MergeRequestKey
+         _cache?.UpdateVersions(new MergeRequestKey
          {
             ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
             IId = mergeRequest.IId
-         }, version);
+         }, versions);
       }
 
       private void onLoadedProjects(string hostname, IEnumerable<Project> projects)

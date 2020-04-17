@@ -50,6 +50,24 @@ namespace mrHelper.Client.Common
          }
       }
 
+      async internal static Task<IEnumerable<Version>> GetVersionsAsync(
+         GitLabClient client, string projectName, int iid)
+      {
+         try
+         {
+            return (IEnumerable<Version>)(await client.RunAsync(async (gl) =>
+               await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync()));
+         }
+         catch (Exception ex)
+         {
+            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
+            {
+               throw new OperatorException(ex);
+            }
+            throw;
+         }
+      }
+
       async internal static Task<Version> GetLatestVersionAsync(GitLabClient client, string projectName, int iid)
       {
          try

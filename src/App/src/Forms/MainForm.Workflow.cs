@@ -46,7 +46,7 @@ namespace mrHelper.App.Forms
          _workflowManager.PostLoadComparableEntities += onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities +=  onFailedLoadComparableEntities;
 
-         _workflowManager.PostLoadLatestVersion += onLatestVersionLoaded;
+         _workflowManager.PostLoadVersions += onLatestVersionLoaded;
       }
 
       private void unsubscribeFromWorkflow()
@@ -67,7 +67,7 @@ namespace mrHelper.App.Forms
          _workflowManager.PostLoadComparableEntities -= onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities -=  onFailedLoadComparableEntities;
 
-         _workflowManager.PostLoadLatestVersion -= onLatestVersionLoaded;
+         _workflowManager.PostLoadVersions -= onLatestVersionLoaded;
       }
 
       async private Task switchHostToSelected()
@@ -410,7 +410,7 @@ namespace mrHelper.App.Forms
       }
 
       private void onLatestVersionLoaded(string hostname, string projectname,
-         MergeRequest mergeRequest, GitLabSharp.Entities.Version version)
+         MergeRequest mergeRequest, IEnumerable<GitLabSharp.Entities.Version> version)
       {
          if (isSearchMode())
          {
@@ -418,7 +418,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         LoadedMergeRequestVersion?.Invoke(hostname, projectname, mergeRequest, version);
+         LoadMergeRequestVersions?.Invoke(hostname, projectname, mergeRequest, version);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

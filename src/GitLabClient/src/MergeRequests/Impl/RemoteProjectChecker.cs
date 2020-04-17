@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -12,8 +15,10 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    public class RemoteProjectChecker : IInstantProjectChecker
    {
-      internal RemoteProjectChecker(MergeRequestKey mrk, UpdateOperator updateOperator)
+      internal RemoteProjectChecker(IEnumerable<Version> localVersions,
+         MergeRequestKey mrk, UpdateOperator updateOperator)
       {
+         _localVersions = localVersions;
          _mergeRequestKey = mrk;
          _operator = updateOperator;
       }
@@ -22,17 +27,33 @@ namespace mrHelper.Client.MergeRequests
       /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      async public Task<DateTime> GetLatestChangeTimestamp()
+      async public Task<ProjectSnapshot> GetProjectSnapshot()
       {
+         List<Version> allVersions = new List<Version>();
+         allVersions.AddRange(_localVersions);
+
          try
          {
-            return (await _operator.GetLatestVersionAsync(_mergeRequestKey)).Created_At;
+            IEnumerable<Version> remoteVersions = await _operator.GetVersionsAsync(_mergeRequestKey);
+            allVersions.AddRange(remoteVersions);
          }
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle("Cannot obtain latest version for RemoteProjectChecker", ex);
          }
-         return DateTime.MinValue;
+
+         List<string> shas = new List<string>();
+         foreach (Version version in allVersions)
+         {
+            shas.Add(version.Base_Commit_SHA);
+            shas.Add(version.Head_Commit_SHA);
+         }
+
+         return new ProjectSnapshot
+         {
+            LatestChange = allVersions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
+            Sha = shas
+         };
       }
 
       public override string ToString()
@@ -41,7 +62,9 @@ namespace mrHelper.Client.MergeRequests
             _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId);
       }
 
-      private MergeRequestKey _mergeRequestKey;
+      private readonly IEnumerable<Version> _localVersions;
+      private readonly MergeRequestKey _mergeRequestKey;
+
       private readonly UpdateOperator _operator;
    }
 }

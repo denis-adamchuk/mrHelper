@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace mrHelper.Common.Interfaces
 {
@@ -9,20 +8,15 @@ namespace mrHelper.Common.Interfaces
       public string ProjectName;
    }
 
-   public struct ProjectUpdate
-   {
-      public ProjectKey ProjectKey;
-
-      /// <summary>
-      /// Timestamp of an event within the given project that caused this update.
-      /// If there are multiple events, Timestamp belongs to the latest of them.
-      /// </summary>
-      public DateTime Timestamp;
-   }
+   /// <summary>
+   /// Timestamp of an event within the given project that caused this update.
+   /// If there are multiple events, Timestamp belongs to the latest of them.
+   /// </summary>
+   public class ProjectUpdate : System.Collections.Generic.Dictionary<ProjectKey, ProjectSnapshot> {}
 
    public interface IProjectWatcher
    {
-      event Action<IEnumerable<ProjectUpdate>> OnProjectUpdate;
+      event Action<ProjectUpdate> OnProjectUpdate;
    }
 }
 

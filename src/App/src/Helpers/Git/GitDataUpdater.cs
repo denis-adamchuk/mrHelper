@@ -24,8 +24,8 @@ namespace mrHelper.App.Helpers
    {
       internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
          IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory,
-         DiscussionManager discussionManager, bool createMissingCommits, int autoUpdatePeriodMs,
+         ICachedMergeRequestProvider mergeRequestProvider,
+         DiscussionManager discussionManager, int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
       {
          if (autoUpdatePeriodMs < 1)
@@ -39,9 +39,7 @@ namespace mrHelper.App.Helpers
          _factoryAccessor = factoryAccessor;
          _hostProperties = hostProperties;
          _mergeRequestProvider = mergeRequestProvider;
-         _projectCheckerFactory = projectCheckerFactory;
          _discussionManager = discussionManager;
-         _createMissingCommits = createMissingCommits;
          _mergeRequestFilter = mergeRequestFilter;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
@@ -152,15 +150,6 @@ namespace mrHelper.App.Helpers
          }
 
          newDiscussions = newDiscussions.Take(MaxDiscussionsInMergeRequest);
-         if (_createMissingCommits)
-         {
-            await createMissingCommits(newDiscussions, repo);
-            if (!isConnected(repo))
-            {
-               // LocalGitRepository was removed from collection while we were restoring commits
-               return;
-            }
-         }
 
          DateTime latestChange =
             newDiscussions
@@ -226,23 +215,6 @@ namespace mrHelper.App.Helpers
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
       {
          unsubscribeFromOne(repo);
-      }
-
-      async private Task createMissingCommits(IEnumerable<Discussion> discussions, ILocalGitRepository repo)
-      {
-         if (discussions == null || repo == null)
-         {
-            return;
-         }
-
-         IEnumerable<string> headShaFromDiscussions = discussions
-            .Select(x => x.Notes.First().Position.Head_SHA).Distinct();
-         if (headShaFromDiscussions.Any())
-         {
-            CommitChainCreator commitChainCreator = new CommitChainCreator(
-               _hostProperties, null, null, null, _timer.SynchronizingObject, repo, headShaFromDiscussions);
-            await commitChainCreator.CreateChainAsync();
-         }
       }
 
       private void gatherArguments(IEnumerable<Discussion> discussions,
@@ -317,9 +289,24 @@ namespace mrHelper.App.Helpers
       async private static Task doCacheAsync(ILocalGitRepository repo,
          HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
       {
-         await TaskUtils.RunConcurrentFunctionsAsync(diffArgs, x => repo.Data?.LoadFromDisk(x),
+         // On timer update we may got into situation when not all SHA are already fetched.
+         // For example, if we just cloned the repository and still in progress of initial
+         // fetching. A simple solution is to request updates using DummyProjectChecker.
+
+         await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
+            async x =>
+            {
+               await repo.Updater.Update(
+                  new DummyProjectChecker(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
+               await repo.Data?.LoadFromDisk(x);
+            },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
-         await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs, x => repo.Data?.LoadFromDisk(x),
+         await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
+            async x =>
+            {
+               await repo.Updater.Update(new DummyProjectChecker(new string[] { x.Sha }), null);
+               repo.Data?.LoadFromDisk(x);
+            },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
@@ -396,9 +383,7 @@ namespace mrHelper.App.Helpers
          new Dictionary<MergeRequestKey, DateTime>();
 
       private readonly IHostProperties _hostProperties;
-      private readonly bool _createMissingCommits;
 
-      private readonly IProjectCheckerFactory _projectCheckerFactory;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
       private readonly DiscussionManager _discussionManager;

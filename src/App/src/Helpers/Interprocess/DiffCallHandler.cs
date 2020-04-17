@@ -36,7 +36,8 @@ namespace mrHelper.App.Interprocess
             "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
-         LocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(_snapshot.TempFolder, null, null);
+         LocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(
+            _snapshot.TempFolder, null, null, Program.Settings.ShallowCloneAllowed);
          ILocalGitRepository tempRepository = factory.GetRepository(_snapshot.Host, _snapshot.Project);
          if (tempRepository == null)
          {

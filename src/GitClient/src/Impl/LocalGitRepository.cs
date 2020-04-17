@@ -54,10 +54,6 @@ namespace mrHelper.GitClient
          Debug.Assert(_cached_canClone.Value || _cached_isValidRepository.Value);
          return !_cached_isValidRepository.Value;
       }
-
-      public ILocalGitRepositoryState State { get; }
-
-      public ILocalGitRepositoryOperations Operations { get; }
       // @} ILocalGitRepository
 
       // Host Name and Project Name
@@ -68,7 +64,7 @@ namespace mrHelper.GitClient
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal LocalGitRepository(ProjectKey projectKey, string path, IProjectWatcher projectWatcher,
-         ISynchronizeInvoke synchronizeInvoke)
+         ISynchronizeInvoke synchronizeInvoke, bool shallowCloneAllowed)
       {
          Path = path;
          if (!canClone() && !isValidRepository())
@@ -77,70 +73,17 @@ namespace mrHelper.GitClient
          }
 
          ProjectKey = projectKey;
-         _updater = new LocalGitRepositoryUpdater(projectWatcher,
-            async (reportProgress) =>
-         {
-            bool clone = canClone();
-            string arguments = clone
-               ? String.Format("clone {0} {1}/{2} {3}",
-                  getCloneArguments(), ProjectKey.HostName, ProjectKey.ProjectName, StringUtils.EscapeSpaces(Path))
-               : String.Format("fetch {0}", getFetchArguments());
-
-            if (_updateOperationDescriptor == null)
-            {
-               _updateOperationDescriptor = _operationManager.CreateDescriptor(
-                  "git", arguments, clone ? String.Empty : Path, reportProgress);
-
-               try
-               {
-                  Trace.TraceInformation(String.Format(
-                     "[LocalGitRepository] START git with arguments \"{0}\" in \"{1}\" for {2}",
-                     arguments, Path, projectKey.ProjectName));
-                  await _operationManager.Wait(_updateOperationDescriptor);
-               }
-               finally
-               {
-                  Trace.TraceInformation(String.Format(
-                     "[LocalGitRepository] FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
-                     arguments, Path, projectKey.ProjectName));
-                  _updateOperationDescriptor = null;
-               }
-
-               if (clone)
-               {
-                  resetCachedState();
-               }
-
-               Updated?.Invoke(this);
-            }
-            else
-            {
-               await _operationManager.Join(_updateOperationDescriptor, reportProgress);
-            }
-         },
-         projectKeyToCheck => ProjectKey.Equals(projectKeyToCheck),
-         synchronizeInvoke,
-            async () =>
-         {
-            try
-            {
-               await _operationManager.Cancel(_updateOperationDescriptor);
-            }
-            finally
-            {
-               _updateOperationDescriptor = null;
-            }
-         });
-
-         _operationManager = new GitOperationManager(synchronizeInvoke, path);
+         _operationManager = new GitOperationManager(synchronizeInvoke, Path);
+         _updater = new LocalGitRepositoryUpdater(projectWatcher, this,
+            _operationManager, synchronizeInvoke, shallowCloneAllowed, GitTools.IsSingleCommitFetchSupported(Path));
          _data = new LocalGitRepositoryData(_operationManager, Path);
-         State = new LocalGitRepositoryState(Path, synchronizeInvoke);
-         Operations = new LocalGitRepositoryOperations(Path, _operationManager);
+         _updater.Cloned += resetCachedState;
+         _updater.Updated += () => Updated?.Invoke(this);
 
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2} "
           + "can clone at this path = {3}, isValidRepository = {4}",
-            path, ProjectKey.HostName, ProjectKey.ProjectName, canClone(), isValidRepository()));
+            Path, ProjectKey.HostName, ProjectKey.ProjectName, canClone(), isValidRepository()));
       }
 
       async internal Task DisposeAsync()
@@ -189,23 +132,12 @@ namespace mrHelper.GitClient
          _cached_isValidRepository = null;
       }
 
-      private string getCloneArguments()
-      {
-         return " --progress -c credential.helper=manager -c credential.interactive=auto -c credential.modalPrompt=true";
-      }
-
-      private string getFetchArguments()
-      {
-         return String.Format(" --progress {0}", GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
-      }
-
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
       private HashSet<string> _cached_existingSha = new HashSet<string>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
       private readonly IExternalProcessManager _operationManager;
-      private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
    }
 }
 

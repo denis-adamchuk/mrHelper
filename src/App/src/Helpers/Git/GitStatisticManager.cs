@@ -128,11 +128,10 @@ namespace mrHelper.App.Helpers
          {
             DateTime prevLatestChange = _gitStatistic[repo].State.LatestChange;
 
-            // Use local project checker for the whole Project because it is always not less
+            // Use locally cached information for the whole Project because it is always not less
             // than the latest version of any merge request that we have locally.
             // This allows to guarantee that each MR is processed once and not on each git repository update.
-            DateTime latestChange = await _projectCheckerFactory.GetLocalProjectChecker(repo.ProjectKey).
-               GetLatestChangeTimestamp();
+            DateTime latestChange = _mergeRequestProvider.GetLatestVersion(repo.ProjectKey).Created_At;
 
             Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
@@ -163,12 +162,6 @@ namespace mrHelper.App.Helpers
 
             foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
             {
-               if (!isConnected(repo))
-               {
-                  // LocalGitRepository was removed from collection while we were caching current MR
-                  break;
-               }
-
                DiffStatisticKey key = keyValuePair.Key.IId;
                resetCachedStatistic(repo, key);
                Update?.Invoke();
@@ -176,12 +169,6 @@ namespace mrHelper.App.Helpers
 
             foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
             {
-               if (!isConnected(repo))
-               {
-                  // LocalGitRepository was removed from collection while we were caching current MR
-                  break;
-               }
-
                DiffStatisticKey key = keyValuePair.Key.IId;
                if (String.IsNullOrEmpty(keyValuePair.Value.Base_Commit_SHA)
                 || String.IsNullOrEmpty(keyValuePair.Value.Head_Commit_SHA))
@@ -201,6 +188,7 @@ namespace mrHelper.App.Helpers
                   }
                };
 
+               bool success = true;
                try
                {
                   await repo.Data?.LoadFromDisk(args);
@@ -209,7 +197,7 @@ namespace mrHelper.App.Helpers
                {
                   ExceptionHandlers.Handle(String.Format(
                      "Cannot update git statistic for MR with IID {0}", key), ex);
-                  continue;
+                  success = false;
                }
 
                if (!isConnected(repo))
@@ -217,10 +205,12 @@ namespace mrHelper.App.Helpers
                   // LocalGitRepository was removed from collection while we were caching current MR
                   break;
                }
-
-               DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, args);
-               updateCachedStatistic(repo, key, latestChange, diffStat);
-               Update?.Invoke();
+               else if (success)
+               {
+                  DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, args);
+                  updateCachedStatistic(repo, key, latestChange, diffStat);
+                  Update?.Invoke();
+               }
             }
          }
          finally

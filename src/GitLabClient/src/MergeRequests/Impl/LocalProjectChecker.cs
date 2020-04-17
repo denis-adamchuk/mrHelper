@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 
@@ -12,48 +13,38 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    public class LocalProjectChecker : IInstantProjectChecker
    {
-      internal LocalProjectChecker(MergeRequestKey mrk, IWorkflowDetails details)
+      internal LocalProjectChecker(IEnumerable<Version> versions)
       {
-         _mergeRequestKey = mrk;
-         _details = details;
+         _versions = versions;
       }
 
       /// <summary>
       /// Get a timestamp of the most recent change of a project the merge request belongs to
       /// Throws nothing
       /// </summary>
-      public Task<DateTime> GetLatestChangeTimestamp()
+      public Task<ProjectSnapshot> GetProjectSnapshot()
       {
-         return Task.FromResult(_details.GetLatestVersion(_mergeRequestKey).Created_At);
+         List<string> shas = new List<string>();
+         foreach (Version version in _versions)
+         {
+            shas.Add(version.Base_Commit_SHA);
+            shas.Add(version.Head_Commit_SHA);
+         }
 
-         /*
-            Commented out: advanced algorithm of detecting the most latest timestamp
-            It optimizes things in some cases but in case of big number of MRs it may become inefficient
-            and cause often `git fetch` calls. May be it will be optimized and uncommented later.
-
-            int projectId = Details.GetProjectId(MergeRequestId);
-            Debug.Assert(projectId != 0);
-
-            DateTime dateTime = DateTime.MinValue;
-
-            IEnumerable<MergeRequest> mergeRequests = Details.GetMergeRequests(projectId);
-            foreach (MergeRequest mergeRequest in mergeRequests)
-            {
-               DateTime latestChange = Details.GetLatestChangeTimestamp(mergeRequest.Id);
-               dateTime = latestChange > dateTime ? latestChange : dateTime;
-            }
-
-            return dateTime;
-         */
+         ProjectSnapshot projectSnapshot = new ProjectSnapshot
+         {
+            LatestChange = _versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
+            Sha = shas
+         };
+         return Task.FromResult(projectSnapshot);
       }
 
       public override string ToString()
       {
-         return String.Format("LocalProjectChecker. MergeRequest IId: {0}", _mergeRequestKey.IId);
+         return String.Format("LocalProjectChecker. Version Count: {0}", _versions.Count());
       }
 
-      private MergeRequestKey _mergeRequestKey;
-      private readonly IWorkflowDetails _details;
+      private readonly IEnumerable<Version> _versions;
    }
 }
 

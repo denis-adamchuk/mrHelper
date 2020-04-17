@@ -6,9 +6,7 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
-using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -84,7 +82,8 @@ namespace mrHelper.App.Forms
 
       public event Action<string, User, IEnumerable<Project>> Connected;
       public event Action<string, Project, IEnumerable<MergeRequest>> LoadedMergeRequests;
-      public event Action<string, string, MergeRequest, GitLabSharp.Entities.Version> LoadedMergeRequestVersion;
+      public event Action<string, string, MergeRequest, IEnumerable<GitLabSharp.Entities.Version>>
+         LoadMergeRequestVersions;
       public event Action<string, IEnumerable<Project>> LoadedProjects;
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer

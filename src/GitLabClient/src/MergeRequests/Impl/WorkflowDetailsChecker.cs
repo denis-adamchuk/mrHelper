@@ -6,6 +6,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -125,10 +126,17 @@ namespace mrHelper.Client.MergeRequests
                MergeRequest = mergeRequest.MergeRequest
             };
 
+            MergeRequestKey mergeRequestKey = new MergeRequestKey
+            {
+               ProjectKey = fmk.ProjectKey,
+               IId = fmk.MergeRequest.IId
+            };
+
             updates.Add(new UserEvents.MergeRequestEvent
                {
                   FullMergeRequestKey = fmk,
                   EventType = UserEvents.MergeRequestEvent.Type.NewMergeRequest,
+                  NewVersions = newDetails.GetVersions(mergeRequestKey),
                   Scope = null
                });
          }
@@ -164,12 +172,12 @@ namespace mrHelper.Client.MergeRequests
                ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
                IId = mergeRequest.IId
             };
-            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestVersion(mergeRequestKey).Created_At;
-            DateTime newCachedChangeTimestamp = newDetails.GetLatestVersion(mergeRequestKey).Created_At;
+            IEnumerable<Version> oldVersions = oldDetails.GetVersions(mergeRequestKey);
+            IEnumerable<Version> newVersions = newDetails.GetVersions(mergeRequestKey);
 
             bool labelsUpdated = !Enumerable.SequenceEqual(mrPair.Item1.MergeRequest.Labels,
                                                            mrPair.Item2.MergeRequest.Labels);
-            bool commitsUpdated = newCachedChangeTimestamp > previouslyCachedChangeTimestamp;
+            bool commitsUpdated = newVersions.Count() > oldVersions.Count();
 
             bool detailsUpdated =
                   mrPair.Item1.MergeRequest.Author.Id     != mrPair.Item2.MergeRequest.Author.Id
@@ -190,6 +198,7 @@ namespace mrHelper.Client.MergeRequests
                   {
                      FullMergeRequestKey = fmk,
                      EventType = UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
+                     NewVersions = newVersions.Except(oldVersions),
                      Scope = new UserEvents.MergeRequestEvent.UpdateScope
                      {
                         Commits = commitsUpdated,

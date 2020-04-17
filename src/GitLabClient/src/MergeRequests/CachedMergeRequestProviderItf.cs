@@ -21,6 +21,11 @@ namespace mrHelper.Client.MergeRequests
       /// Return currently cached latest version of the given Merge Request
       /// </summary>
       Version GetLatestVersion(MergeRequestKey mrk);
+
+      /// <summary>
+      /// Return currently cached latest version among all cached Merge Requests
+      /// </summary>
+      Version GetLatestVersion(ProjectKey projectKey);
    }
 }
 

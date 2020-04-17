@@ -13,23 +13,23 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class ProjectWatcher : IProjectWatcher
    {
-      public event Action<IEnumerable<ProjectUpdate>> OnProjectUpdate;
+      public event Action<ProjectUpdate> OnProjectUpdate;
 
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
-      internal void ProcessUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates, IWorkflowDetails details)
+      internal void ProcessUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         IEnumerable<ProjectUpdate> projectUpdates = getProjectUpdates(updates, details);
+         ProjectUpdate projectUpdates = getProjectUpdates(updates);
 
          if (projectUpdates.Count() > 0)
          {
-            foreach (ProjectUpdate projectUpdate in projectUpdates)
+            foreach (KeyValuePair<ProjectKey, ProjectSnapshot> projectUpdate in projectUpdates)
             {
                Trace.TraceInformation(
                   String.Format("[ProjectWatcher] Updating project: Host {0}, Name {1}, TimeStamp {2}",
-                     projectUpdate.ProjectKey.HostName, projectUpdate.ProjectKey.ProjectName,
-                     projectUpdate.Timestamp.ToLocalTime().ToString()));
+                     projectUpdate.Key.HostName, projectUpdate.Key.ProjectName,
+                     projectUpdate.Value.LatestChange.ToLocalTime().ToString()));
             }
             OnProjectUpdate?.Invoke(projectUpdates);
          }
@@ -38,10 +38,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private IEnumerable<ProjectUpdate> getProjectUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates,
-         IWorkflowDetails details)
+      private ProjectUpdate getProjectUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         List<ProjectUpdate> projectUpdates = new List<ProjectUpdate>();
+         ProjectUpdate projectUpdates = new ProjectUpdate();
 
          // Check all the updated merge request to figure out the latest change among them
          DateTime updateTimestamp = DateTime.MinValue;
@@ -53,25 +52,38 @@ namespace mrHelper.Client.MergeRequests
                continue;
             }
 
-            // Excluding duplicates
-            for (int iUpdate = projectUpdates.Count - 1; iUpdate >= 0; --iUpdate)
+            if (update.NewVersions == null || !update.NewVersions.Any())
             {
-               if (projectUpdates[iUpdate].ProjectKey.ProjectName == update.FullMergeRequestKey.ProjectKey.ProjectName)
-               {
-                  projectUpdates.RemoveAt(iUpdate);
-               }
+               Debug.Assert(false);
+               continue;
             }
 
+            ProjectKey projectKey = update.FullMergeRequestKey.ProjectKey;
             MergeRequestKey mrk = new MergeRequestKey
             {
-               ProjectKey = update.FullMergeRequestKey.ProjectKey,
+               ProjectKey = projectKey,
                IId = update.FullMergeRequestKey.MergeRequest.IId
             };
 
-            updateTimestamp = details.GetLatestVersion(mrk).Created_At > updateTimestamp ?
-               details.GetLatestVersion(mrk).Created_At : updateTimestamp;
+            // Excluding duplicates
+            if (!projectUpdates.Any(x => x.Equals(projectKey)))
+            {
+               projectUpdates.Add(projectKey, new ProjectSnapshot());
+            }
 
-            projectUpdates.Add(new ProjectUpdate { ProjectKey = mrk.ProjectKey, Timestamp = updateTimestamp });
+            ProjectSnapshot projectUpdated = projectUpdates[update.FullMergeRequestKey.ProjectKey];
+            foreach (ProjectSnapshot projectUpdate in projectUpdates.Values)
+            {
+               DateTime versionsTimestamp = update.NewVersions.OrderBy(x => x.Created_At).Last().Created_At;
+               updateTimestamp = versionsTimestamp > updateTimestamp ? versionsTimestamp : updateTimestamp;
+               projectUpdate.LatestChange = updateTimestamp;
+
+               foreach (GitLabSharp.Entities.Version version in update.NewVersions)
+               {
+                  projectUpdate.Sha.Add(version.Head_Commit_SHA);
+                  projectUpdate.Sha.Add(version.Base_Commit_SHA);
+               }
+            }
          }
 
          return projectUpdates;

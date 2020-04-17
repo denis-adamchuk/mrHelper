@@ -22,7 +22,7 @@ namespace mrHelper.GitClient
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
       public LocalGitRepositoryFactory(string parentFolder, IProjectWatcher projectWatcher,
-         ISynchronizeInvoke synchronizeInvoke)
+         ISynchronizeInvoke synchronizeInvoke, bool shallowCloneAllowed)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -32,6 +32,7 @@ namespace mrHelper.GitClient
          ParentFolder = parentFolder;
          _projectWatcher = projectWatcher;
          _synchronizeInvoke = synchronizeInvoke;
+         _shallowCloneAllowed = shallowCloneAllowed;
 
          Trace.TraceInformation(String.Format(
             "[LocalGitRepositoryFactory] Created LocalGitRepositoryFactory for parentFolder {0}", parentFolder));
@@ -58,7 +59,7 @@ namespace mrHelper.GitClient
          try
          {
             string path = LocalGitRepositoryPathFinder.FindPath(ParentFolder, key);
-            repo = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke);
+            repo = new LocalGitRepository(key, path, _projectWatcher, _synchronizeInvoke, _shallowCloneAllowed);
          }
          catch (ArgumentException ex)
          {
@@ -84,6 +85,8 @@ namespace mrHelper.GitClient
          new Dictionary<ProjectKey, LocalGitRepository>();
       private readonly IProjectWatcher _projectWatcher;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
+
+      private readonly bool _shallowCloneAllowed;
    }
 }
 
