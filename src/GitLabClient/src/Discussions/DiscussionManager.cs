@@ -376,6 +376,8 @@ namespace mrHelper.Client.Discussions
 
             if (!_reconnect)
             {
+               // TODO Re-calculate timestamp, `mostRecentNote.Updated_At` might became outdated
+               // while we were in `await` calls above
                cacheDiscussions(mrk, noteCount, mostRecentNote.Updated_At, discussions);
             }
             PostLoadDiscussions?.Invoke(mrk, discussions);

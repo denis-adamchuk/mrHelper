@@ -795,8 +795,9 @@ namespace mrHelper.App.Forms
       {
          if (_gitClientFactory != null)
          {
-            await _gitClientFactory.DisposeAsync();
+            LocalGitRepositoryFactory factory = _gitClientFactory;
             _gitClientFactory = null;
+            await factory.DisposeAsync();
          }
       }
 
