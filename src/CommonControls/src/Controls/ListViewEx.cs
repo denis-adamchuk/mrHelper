@@ -15,6 +15,7 @@ namespace mrHelper.CommonControls.Controls
    {
       public ListViewEx()
       {
+         InitializeComponent();
          DoubleBuffered = true;
       }
    }

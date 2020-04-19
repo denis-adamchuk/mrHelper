@@ -116,20 +116,6 @@ namespace mrHelper.Client.Workflow
          }
       }
 
-      async internal Task<Version> GetLatestVersionAsync(string projectName, int iid)
-      {
-         GitLabClient client = new GitLabClient(_host, _token);
-         _clients.Add(client);
-         try
-         {
-            return await CommonOperator.GetLatestVersionAsync(client, projectName, iid);
-         }
-         finally
-         {
-            _clients.Remove(client);
-         }
-      }
-
       public Task CancelAsync()
       {
          List<Task> tasks = new List<Task>();

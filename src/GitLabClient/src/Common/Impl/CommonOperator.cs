@@ -68,25 +68,6 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async internal static Task<Version> GetLatestVersionAsync(GitLabClient client, string projectName, int iid)
-      {
-         try
-         {
-            IEnumerable<Version> versions = (IEnumerable<Version>)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectName).MergeRequests.Get(iid).
-                  Versions.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 })));
-            return versions.Any() ? versions.First() : new Version();
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
-      }
-
       async internal static Task<Note> GetMostRecentUpdatedNoteAsync(GitLabClient client, string projectName, int iid)
       {
          try

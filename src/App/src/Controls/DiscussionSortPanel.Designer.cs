@@ -20,12 +20,6 @@
          base.Dispose(disposing);
       }
 
-      private void subscribeToEvents()
-      {
-         this.radioButtonSortDefault.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
-         this.radioButtonSortByReviewer.CheckedChanged += new System.EventHandler(this.SortElement_CheckedChanged);
-      }
-
       #region Component Designer generated code
 
       /// <summary> 

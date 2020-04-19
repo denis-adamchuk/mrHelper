@@ -40,10 +40,8 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       private ProjectUpdate getProjectUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         ProjectUpdate projectUpdates = new ProjectUpdate();
+         ProjectUpdate allProjectSnapshots = new ProjectUpdate();
 
-         // Check all the updated merge request to figure out the latest change among them
-         DateTime updateTimestamp = DateTime.MinValue;
          foreach (UserEvents.MergeRequestEvent update in updates)
          {
             bool mayCauseProjectChange = update.New || update.Commits;
@@ -59,34 +57,25 @@ namespace mrHelper.Client.MergeRequests
             }
 
             ProjectKey projectKey = update.FullMergeRequestKey.ProjectKey;
-            MergeRequestKey mrk = new MergeRequestKey
+            if (!allProjectSnapshots.Any(x => x.Equals(projectKey)))
             {
-               ProjectKey = projectKey,
-               IId = update.FullMergeRequestKey.MergeRequest.IId
-            };
-
-            // Excluding duplicates
-            if (!projectUpdates.Any(x => x.Equals(projectKey)))
-            {
-               projectUpdates.Add(projectKey, new ProjectSnapshot());
+               allProjectSnapshots.Add(projectKey, new ProjectSnapshot());
             }
 
-            ProjectSnapshot projectUpdated = projectUpdates[update.FullMergeRequestKey.ProjectKey];
-            foreach (ProjectSnapshot projectUpdate in projectUpdates.Values)
-            {
-               DateTime versionsTimestamp = update.NewVersions.OrderBy(x => x.Created_At).Last().Created_At;
-               updateTimestamp = versionsTimestamp > updateTimestamp ? versionsTimestamp : updateTimestamp;
-               projectUpdate.LatestChange = updateTimestamp;
+            ProjectSnapshot singleProjectSnapshot = allProjectSnapshots[update.FullMergeRequestKey.ProjectKey];
 
-               foreach (GitLabSharp.Entities.Version version in update.NewVersions)
-               {
-                  projectUpdate.Sha.Add(version.Head_Commit_SHA);
-                  projectUpdate.Sha.Add(version.Base_Commit_SHA);
-               }
+            DateTime versionsTimestamp = update.NewVersions.OrderBy(x => x.Created_At).Last().Created_At;
+            singleProjectSnapshot.LatestChange = versionsTimestamp > singleProjectSnapshot.LatestChange
+               ? versionsTimestamp : singleProjectSnapshot.LatestChange;
+
+            foreach (GitLabSharp.Entities.Version version in update.NewVersions)
+            {
+               singleProjectSnapshot.Sha.Add(version.Head_Commit_SHA);
+               singleProjectSnapshot.Sha.Add(version.Base_Commit_SHA);
             }
          }
 
-         return projectUpdates;
+         return allProjectSnapshots;
       }
    }
 }

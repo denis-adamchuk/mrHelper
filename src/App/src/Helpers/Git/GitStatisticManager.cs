@@ -22,9 +22,11 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitStatisticManager : IDisposable
    {
-      internal GitStatisticManager(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
+      internal GitStatisticManager(
+         IWorkflowEventNotifier workflowEventNotifier,
+         ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         ICachedMergeRequestProvider mergeRequestProvider, IProjectCheckerFactory projectCheckerFactory)
+         ICachedMergeRequestProvider mergeRequestProvider)
       {
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
@@ -32,7 +34,6 @@ namespace mrHelper.App.Helpers
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
          _mergeRequestProvider = mergeRequestProvider;
-         _projectCheckerFactory = projectCheckerFactory;
       }
 
       public void Dispose()
@@ -82,16 +83,6 @@ namespace mrHelper.App.Helpers
       }
 
       internal event Action Update;
-
-      private void updateAll()
-      {
-         Trace.TraceInformation("[GitStatisticManager] Scheduling update of all repositories");
-
-         foreach (ILocalGitRepository repo in _gitStatistic.Keys)
-         {
-            scheduleUpdate(repo);
-         }
-      }
 
       private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
       {
@@ -384,7 +375,6 @@ namespace mrHelper.App.Helpers
       private readonly Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
          new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
 
-      private readonly IProjectCheckerFactory _projectCheckerFactory;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
 

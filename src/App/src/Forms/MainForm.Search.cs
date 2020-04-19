@@ -170,7 +170,7 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         onAllSearchMergeRequestsLoaded(hostname);
+         onAllSearchMergeRequestsLoaded();
          return true;
       }
 
@@ -203,7 +203,7 @@ namespace mrHelper.App.Forms
          fillListViewSearchMergeRequests(hostname, project, mergeRequests);
       }
 
-      private void onAllSearchMergeRequestsLoaded(string hostname)
+      private void onAllSearchMergeRequestsLoaded()
       {
          if (listViewFoundMergeRequests.Items.Count > 0)
          {
@@ -281,7 +281,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onComparableEntitiesLoadedCommon(hostname, projectname, mergeRequest, commits, listViewFoundMergeRequests);
+         onComparableEntitiesLoadedCommon(mergeRequest, commits, listViewFoundMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

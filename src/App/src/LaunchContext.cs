@@ -51,7 +51,7 @@ namespace mrHelper.App
             StringBuilder strbTitle = new StringBuilder(255);
             foreach (IntPtr window in handles)
             {
-               int nLength = NativeMethods.GetWindowText(window, strbTitle, strbTitle.Capacity + 1);
+               NativeMethods.GetWindowText(window, strbTitle, strbTitle.Capacity + 1);
                string strTitle = strbTitle.ToString();
                if ((startsWith && strTitle.StartsWith(caption)) || (!startsWith && strTitle == caption))
                {

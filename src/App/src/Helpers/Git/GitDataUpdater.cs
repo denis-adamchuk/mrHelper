@@ -22,10 +22,12 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitDataUpdater : IDisposable
    {
-      internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
-         IHostProperties hostProperties, ILocalGitRepositoryFactoryAccessor factoryAccessor,
+      internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier,
+         ISynchronizeInvoke synchronizeInvoke,
+         ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider,
-         DiscussionManager discussionManager, int autoUpdatePeriodMs,
+         DiscussionManager discussionManager,
+         int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
       {
          if (autoUpdatePeriodMs < 1)
@@ -37,7 +39,6 @@ namespace mrHelper.App.Helpers
          _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
 
          _factoryAccessor = factoryAccessor;
-         _hostProperties = hostProperties;
          _mergeRequestProvider = mergeRequestProvider;
          _discussionManager = discussionManager;
          _mergeRequestFilter = mergeRequestFilter;
@@ -381,8 +382,6 @@ namespace mrHelper.App.Helpers
       private readonly HashSet<ILocalGitRepository> _connected = new HashSet<ILocalGitRepository>();
       private readonly Dictionary<MergeRequestKey, DateTime> _latestChanges =
          new Dictionary<MergeRequestKey, DateTime>();
-
-      private readonly IHostProperties _hostProperties;
 
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;

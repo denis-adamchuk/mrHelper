@@ -376,9 +376,7 @@ namespace mrHelper.Client.Discussions
 
             if (!_reconnect)
             {
-               // TODO Re-calculate timestamp, `mostRecentNote.Updated_At` might became outdated
-               // while we were in `await` calls above
-               cacheDiscussions(mrk, noteCount, mostRecentNote.Updated_At, discussions);
+               cacheDiscussions(mrk, discussions);
             }
             PostLoadDiscussions?.Invoke(mrk, discussions);
             PostLoadDiscussionsInternal?.Invoke(mrk, discussions, type);
@@ -459,11 +457,17 @@ namespace mrHelper.Client.Discussions
          return true;
       }
 
-      private void cacheDiscussions(MergeRequestKey mrk, int noteCount, DateTime mergeRequestUpdatedAt,
-         IEnumerable<Discussion> discussions)
+      private void cacheDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          if (!_closed.Contains(mrk))
          {
+            int noteCount = discussions.Select(x => x.Notes?.Count() ?? 0).Sum();
+            DateTime latestNoteTimestamp = discussions
+               .Select(x => x.Notes
+                  .OrderBy(y => y.Updated_At)
+                  .LastOrDefault())
+               .OrderBy(z => z.Updated_At)
+               .LastOrDefault().Updated_At;
             calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
 
             DateTime? prevUpdateTimestamp = _cachedDiscussions.ContainsKey(mrk) ?
@@ -473,14 +477,14 @@ namespace mrHelper.Client.Discussions
                "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
              + " cached time stamp {4} (was {5} before update), note count = {6}, resolved = {7}, resolvable = {8}",
                discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
-               mergeRequestUpdatedAt.ToLocalTime().ToString(),
+               latestNoteTimestamp.ToLocalTime().ToString(),
                prevUpdateTimestamp?.ToLocalTime().ToString() ?? "N/A",
                noteCount, resolvedDiscussionCount, resolvableDiscussionCount));
 
             _cachedDiscussions[mrk] = new CachedDiscussions
             {
                PrevTimeStamp = prevUpdateTimestamp,
-               TimeStamp = mergeRequestUpdatedAt,
+               TimeStamp = latestNoteTimestamp,
                NoteCount = noteCount,
                Discussions = discussions.ToArray(),
                ResolvableDiscussionCount = resolvableDiscussionCount,

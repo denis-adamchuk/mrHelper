@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using mrHelper.Core.Matching;
 
 namespace mrHelper.Core.Context
 {
-   internal class Helpers
+   internal static class Helpers
    {
       public static bool IsValidPosition(DiffPosition position)
       {

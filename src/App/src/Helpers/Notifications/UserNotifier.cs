@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Discussions;
@@ -17,10 +13,9 @@ namespace mrHelper.App.Helpers
 {
    internal class UserNotifier : IDisposable
    {
-      internal UserNotifier(TrayIcon trayIcon, UserDefinedSettings settings,
-         MergeRequestCache mergeRequestCache, DiscussionManager discussionManager, EventFilter eventFilter)
+      internal UserNotifier(TrayIcon trayIcon, MergeRequestCache mergeRequestCache,
+         DiscussionManager discussionManager, EventFilter eventFilter)
       {
-         _settings = settings;
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
 
@@ -122,7 +117,8 @@ namespace mrHelper.App.Helpers
 
       private void notifyOnEvent<EventT>(EventT e)
       {
-         if (_eventFilter.NeedSuppressEvent((dynamic)e))
+         if ((e is UserEvents.DiscussionEvent   de && _eventFilter.NeedSuppressEvent(de))
+          || (e is UserEvents.MergeRequestEvent me && _eventFilter.NeedSuppressEvent(me)))
          {
             return;
          }
@@ -138,7 +134,6 @@ namespace mrHelper.App.Helpers
          return projectName;
       }
 
-      private readonly UserDefinedSettings _settings;
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;

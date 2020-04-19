@@ -20,7 +20,7 @@ namespace mrHelper.Common.Tools
             string filename = System.IO.Path.GetFileName(logarchivepath);
             int position = message.Body.Length + 1;
             int attachmentType = (int)Outlook.OlAttachmentType.olByValue;
-            Outlook.Attachment oAttach = message.Attachments.Add(logarchivepath, attachmentType, position, filename);
+            message.Attachments.Add(logarchivepath, attachmentType, position, filename);
          }
 
          message.Display();

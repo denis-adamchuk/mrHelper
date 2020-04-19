@@ -686,7 +686,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private static CommitComboBoxItem getItem(Commit commit, int? index,
+      private static CommitComboBoxItem getItem(Commit commit,
          ECommitComboBoxItemStatus status, EComparableEntityType type)
       {
          Debug.Assert(type == EComparableEntityType.Commit);
@@ -729,19 +729,31 @@ namespace mrHelper.App.Forms
             return EComparableEntityType.Version;
          }
 
-         EComparableEntityType type = getType();
+         CommitComboBoxItem getCommitItem(object commit, int? index, ECommitComboBoxItemStatus status)
+         {
+            CommitComboBoxItem result = new CommitComboBoxItem();
+            if (commit is Commit c)
+            {
+               result = getItem(c, status, getType());
+            }
+            else if (commit is GitLabSharp.Entities.Version v)
+            {
+               result = getItem(v, index, status, getType());
+            }
+            return result;
+         }
 
          // Add latest commit
-         CommitComboBoxItem latestCommitItem = getItem((dynamic)(commits.First()), null,
-            ECommitComboBoxItemStatus.Latest, type);
+         CommitComboBoxItem latestCommitItem = getCommitItem(commits.First(), null, ECommitComboBoxItemStatus.Latest);
          comboBoxLatestCommit.Items.Add(latestCommitItem);
 
          // Add other commits
          int iCommit = commits.Count() - 1;
-         foreach (dynamic commit in commits.Skip(1))
+         foreach (object commit in commits.Skip(1))
          {
-            CommitComboBoxItem item = getItem(commit, iCommit--, ECommitComboBoxItemStatus.Normal, type);
-            if (type == EComparableEntityType.Commit
+            CommitComboBoxItem item = getCommitItem(commit, iCommit--, ECommitComboBoxItemStatus.Normal);
+
+            if (getType() == EComparableEntityType.Commit
              && comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
             {
                continue;
@@ -752,7 +764,7 @@ namespace mrHelper.App.Forms
 
          // Add target branch to the right combo-box
          CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch, null, String.Empty,
-            ECommitComboBoxItemStatus.Base, type);
+            ECommitComboBoxItemStatus.Base, getType());
          comboBoxEarliestCommit.Items.Add(baseCommitItem);
       }
 
@@ -1803,7 +1815,7 @@ namespace mrHelper.App.Forms
             "[MainForm] Failed to load commits IsSearchMode={0}", isSearchMode().ToString()));
       }
 
-      private void onComparableEntitiesLoadedCommon(string hostname, string projectname, MergeRequest mergeRequest,
+      private void onComparableEntitiesLoadedCommon(MergeRequest mergeRequest,
          System.Collections.IEnumerable entities, ListView listView)
       {
          MergeRequestKey? mrk = getMergeRequestKey(listView);

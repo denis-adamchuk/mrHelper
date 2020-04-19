@@ -435,8 +435,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName,
-                                     ListViewMergeRequestsColumnWidthsDefaultValue, value);
+            setStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName, value);
          }
       }
 
@@ -449,8 +448,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName,
-                                     ListViewMergeRequestsDisplayIndicesDefaultValue, value);
+            setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName, value);
          }
       }
 
@@ -464,8 +462,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName,
-                                     ListViewFoundMergeRequestsColumnWidthsDefaultValue, value);
+            setStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName, value);
          }
       }
 
@@ -478,8 +475,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName,
-                                     ListViewFoundMergeRequestsDisplayIndicesDefaultValue, value);
+            setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName, value);
          }
       }
 
@@ -496,7 +492,7 @@ namespace mrHelper.App.Helpers
                item => item.Value);
       }
 
-      private void setStringToIntDictionary(string keyName, string defaultValue, Dictionary<string, int> value)
+      private void setStringToIntDictionary(string keyName, Dictionary<string, int> value)
       {
          setValue(keyName, dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
       }

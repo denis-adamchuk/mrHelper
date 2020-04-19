@@ -400,7 +400,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onComparableEntitiesLoadedCommon(hostname, projectname, mergeRequest, commits, listViewMergeRequests);
+         onComparableEntitiesLoadedCommon(mergeRequest, commits, listViewMergeRequests);
 
          scheduleSilentUpdate(new MergeRequestKey
          {
