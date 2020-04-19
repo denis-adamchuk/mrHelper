@@ -20,6 +20,7 @@ using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -111,6 +112,7 @@ namespace mrHelper.App.Forms
 
       private void loadConfiguration()
       {
+         _loadingConfiguration = true;
          Trace.TraceInformation("[MainForm] Loading configuration");
          Program.Settings.PropertyChanged += onSettingsPropertyChanged;
 
@@ -148,6 +150,7 @@ namespace mrHelper.App.Forms
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
          checkBoxShowVersions.Checked = checkBoxShowVersionsByDefault.Checked;
+         checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;
@@ -192,6 +195,7 @@ namespace mrHelper.App.Forms
          }
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
+         _loadingConfiguration = false;
       }
 
       private void loadColumnWidths(ListView listView, Dictionary<string, int> storedWidths)

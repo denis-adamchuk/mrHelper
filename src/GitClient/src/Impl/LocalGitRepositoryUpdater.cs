@@ -223,7 +223,7 @@ namespace mrHelper.GitClient
          {
             if (_localGitRepository.DoesRequireClone())
             {
-               await cloneAsync(true);
+               await cloneAsync(false);
                _latestFullFetchTimeStamp = projectUpdate.LatestChange;
                Trace.TraceInformation(String.Format(
                   "[LocalGitRepositoryUpdater] Repository cloned. Updating LatestChange timestamp to {0}",
@@ -301,19 +301,23 @@ namespace mrHelper.GitClient
 
       async private Task fetchCommitsAsync(IEnumerable<string> shas)
       {
+         IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
+
          int iCommit = 0;
-         foreach (string sha in shas.Distinct())
+         foreach (string sha in goodSha)
          {
-            if (sha != null && !_localGitRepository.ContainsSHA(sha))
+            if (!_localGitRepository.ContainsSHA(sha))
             {
                string arguments = String.Format("fetch {0}", getFetchArguments(sha));
                await doUpdateOperationAsync(arguments, _localGitRepository.Path);
                ++iCommit;
             }
          }
+
          if (iCommit > 0)
          {
-            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Fetched commits: {0}", iCommit));
+            Trace.TraceInformation(String.Format(
+               "[LocalGitRepositoryUpdater] Fetched commits: {0}. Total: {1}", iCommit, goodSha.Count()));
          }
       }
 

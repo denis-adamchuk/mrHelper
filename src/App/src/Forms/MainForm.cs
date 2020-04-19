@@ -91,6 +91,7 @@ namespace mrHelper.App.Forms
          Interval = timeTrackingTimerInterval
       };
 
+      private bool _loadingConfiguration = false;
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
       private bool _userIsMovingSplitter1 = false;

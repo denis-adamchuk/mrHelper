@@ -67,6 +67,12 @@ namespace mrHelper.App.Forms
          this.textBoxLabels = new System.Windows.Forms.TextBox();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
+         this.checkBoxShowVersionsByDefault = new System.Windows.Forms.CheckBox();
+         this.checkBoxAutoSelectNewestCommit = new System.Windows.Forms.CheckBox();
+         this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
+         this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowVersions = new System.Windows.Forms.CheckBox();
+         this.checkBoxUseShallowClone = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -84,9 +90,6 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
          this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
          this.groupBoxOther = new System.Windows.Forms.GroupBox();
-         this.checkBoxShowVersionsByDefault = new System.Windows.Forms.CheckBox();
-         this.checkBoxAutoSelectNewestCommit = new System.Windows.Forms.CheckBox();
-         this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.labelFontSize = new System.Windows.Forms.Label();
          this.comboBoxFonts = new System.Windows.Forms.ComboBox();
          this.comboBoxThemes = new System.Windows.Forms.ComboBox();
@@ -94,7 +97,6 @@ namespace mrHelper.App.Forms
          this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
          this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelDepth = new System.Windows.Forms.Label();
-         this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.buttonEditProjects = new System.Windows.Forms.Button();
@@ -154,7 +156,6 @@ namespace mrHelper.App.Forms
          this.comboBoxEarliestCommit = new System.Windows.Forms.ComboBox();
          this.labelLatestCommitTimestampLabel = new System.Windows.Forms.Label();
          this.comboBoxLatestCommit = new System.Windows.Forms.ComboBox();
-         this.checkBoxShowVersions = new System.Windows.Forms.CheckBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
@@ -447,6 +448,84 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
          // 
+         // checkBoxShowVersionsByDefault
+         // 
+         this.checkBoxShowVersionsByDefault.AutoSize = true;
+         this.checkBoxShowVersionsByDefault.Location = new System.Drawing.Point(6, 197);
+         this.checkBoxShowVersionsByDefault.Name = "checkBoxShowVersionsByDefault";
+         this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(232, 17);
+         this.checkBoxShowVersionsByDefault.TabIndex = 14;
+         this.checkBoxShowVersionsByDefault.Text = "Show changes between versions by default";
+         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, "When checked, diff tool shows changes between versions by analogy with GitLab Web" +
+        " UI");
+         this.checkBoxShowVersionsByDefault.UseVisualStyleBackColor = true;
+         this.checkBoxShowVersionsByDefault.CheckedChanged += new System.EventHandler(this.checkBoxShowVersionsByDefault_CheckedChanged);
+         // 
+         // checkBoxAutoSelectNewestCommit
+         // 
+         this.checkBoxAutoSelectNewestCommit.AutoSize = true;
+         this.checkBoxAutoSelectNewestCommit.Location = new System.Drawing.Point(6, 174);
+         this.checkBoxAutoSelectNewestCommit.Name = "checkBoxAutoSelectNewestCommit";
+         this.checkBoxAutoSelectNewestCommit.Size = new System.Drawing.Size(152, 17);
+         this.checkBoxAutoSelectNewestCommit.TabIndex = 13;
+         this.checkBoxAutoSelectNewestCommit.Text = "Auto-select newest commit";
+         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestCommit, "When a merge request is selected, select the most recent available commit for dif" +
+        "f tool");
+         this.checkBoxAutoSelectNewestCommit.UseVisualStyleBackColor = true;
+         this.checkBoxAutoSelectNewestCommit.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestCommit_CheckedChanged);
+         // 
+         // checkBoxDisableSplitterRestrictions
+         // 
+         this.checkBoxDisableSplitterRestrictions.AutoSize = true;
+         this.checkBoxDisableSplitterRestrictions.Location = new System.Drawing.Point(6, 151);
+         this.checkBoxDisableSplitterRestrictions.Name = "checkBoxDisableSplitterRestrictions";
+         this.checkBoxDisableSplitterRestrictions.Size = new System.Drawing.Size(147, 17);
+         this.checkBoxDisableSplitterRestrictions.TabIndex = 12;
+         this.checkBoxDisableSplitterRestrictions.Text = "Disable splitter restrictions";
+         this.toolTip.SetToolTip(this.checkBoxDisableSplitterRestrictions, "Allow any position for horizontal and vertical splitters at the main window");
+         this.checkBoxDisableSplitterRestrictions.UseVisualStyleBackColor = true;
+         this.checkBoxDisableSplitterRestrictions.CheckedChanged += new System.EventHandler(this.CheckBoxDisableSplitterRestrictions_CheckedChanged);
+         // 
+         // checkBoxMinimizeOnClose
+         // 
+         this.checkBoxMinimizeOnClose.AutoSize = true;
+         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 128);
+         this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
+         this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
+         this.checkBoxMinimizeOnClose.TabIndex = 8;
+         this.checkBoxMinimizeOnClose.Text = "Minimize on close";
+         this.toolTip.SetToolTip(this.checkBoxMinimizeOnClose, "Don\'t exit on closing the main window but minimize the application to the tray");
+         this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
+         this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
+         // 
+         // checkBoxShowVersions
+         // 
+         this.checkBoxShowVersions.AutoSize = true;
+         this.checkBoxShowVersions.Dock = System.Windows.Forms.DockStyle.Top;
+         this.checkBoxShowVersions.Enabled = false;
+         this.checkBoxShowVersions.Location = new System.Drawing.Point(3, 16);
+         this.checkBoxShowVersions.Name = "checkBoxShowVersions";
+         this.checkBoxShowVersions.Padding = new System.Windows.Forms.Padding(2, 4, 0, 6);
+         this.checkBoxShowVersions.Size = new System.Drawing.Size(920, 27);
+         this.checkBoxShowVersions.TabIndex = 9;
+         this.checkBoxShowVersions.Text = "Show changes between versions";
+         this.toolTip.SetToolTip(this.checkBoxShowVersions, "When checked, diff tool shows changes between versions by analogy with GitLab Web" +
+        " UI");
+         this.checkBoxShowVersions.UseVisualStyleBackColor = true;
+         this.checkBoxShowVersions.CheckedChanged += new System.EventHandler(this.checkBoxShowVersions_CheckedChanged);
+         // 
+         // checkBoxUseShallowClone
+         // 
+         this.checkBoxUseShallowClone.AutoSize = true;
+         this.checkBoxUseShallowClone.Location = new System.Drawing.Point(6, 220);
+         this.checkBoxUseShallowClone.Name = "checkBoxUseShallowClone";
+         this.checkBoxUseShallowClone.Size = new System.Drawing.Size(180, 17);
+         this.checkBoxUseShallowClone.TabIndex = 15;
+         this.checkBoxUseShallowClone.Text = "Use shallow clone (experimental)";
+         this.toolTip.SetToolTip(this.checkBoxUseShallowClone, "Use depth=1 in git clone and fetch commands");
+         this.checkBoxUseShallowClone.UseVisualStyleBackColor = true;
+         this.checkBoxUseShallowClone.CheckedChanged += new System.EventHandler(this.checkBoxUseShallowClone_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -618,6 +697,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxUseShallowClone);
          this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
          this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestCommit);
          this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
@@ -632,46 +712,10 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 224);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 248);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
-         // 
-         // checkBoxShowVersionsByDefault
-         // 
-         this.checkBoxShowVersionsByDefault.AutoSize = true;
-         this.checkBoxShowVersionsByDefault.Location = new System.Drawing.Point(6, 197);
-         this.checkBoxShowVersionsByDefault.Name = "checkBoxShowVersionsByDefault";
-         this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(232, 17);
-         this.checkBoxShowVersionsByDefault.TabIndex = 14;
-         this.checkBoxShowVersionsByDefault.Text = "Show changes between versions by default";
-         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, "When checked, diff tool shows changes between versions by analogy with GitLab Web UI");
-         this.checkBoxShowVersionsByDefault.UseVisualStyleBackColor = true;
-         this.checkBoxShowVersionsByDefault.CheckedChanged += new System.EventHandler(this.checkBoxShowVersionsByDefault_CheckedChanged);
-         // 
-         // checkBoxAutoSelectNewestCommit
-         // 
-         this.checkBoxAutoSelectNewestCommit.AutoSize = true;
-         this.checkBoxAutoSelectNewestCommit.Location = new System.Drawing.Point(6, 174);
-         this.checkBoxAutoSelectNewestCommit.Name = "checkBoxAutoSelectNewestCommit";
-         this.checkBoxAutoSelectNewestCommit.Size = new System.Drawing.Size(152, 17);
-         this.checkBoxAutoSelectNewestCommit.TabIndex = 13;
-         this.checkBoxAutoSelectNewestCommit.Text = "Auto-select newest commit";
-         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestCommit, "When a merge request is selected, select the most recent available commit for diff tool");
-         this.checkBoxAutoSelectNewestCommit.UseVisualStyleBackColor = true;
-         this.checkBoxAutoSelectNewestCommit.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestCommit_CheckedChanged);
-         // 
-         // checkBoxDisableSplitterRestrictions
-         // 
-         this.checkBoxDisableSplitterRestrictions.AutoSize = true;
-         this.checkBoxDisableSplitterRestrictions.Location = new System.Drawing.Point(6, 151);
-         this.checkBoxDisableSplitterRestrictions.Name = "checkBoxDisableSplitterRestrictions";
-         this.checkBoxDisableSplitterRestrictions.Size = new System.Drawing.Size(147, 17);
-         this.checkBoxDisableSplitterRestrictions.TabIndex = 12;
-         this.checkBoxDisableSplitterRestrictions.Text = "Disable splitter restrictions";
-         this.toolTip.SetToolTip(this.checkBoxDisableSplitterRestrictions, "Allow any position for horizontal and vertical splitters at the main window");
-         this.checkBoxDisableSplitterRestrictions.UseVisualStyleBackColor = true;
-         this.checkBoxDisableSplitterRestrictions.CheckedChanged += new System.EventHandler(this.CheckBoxDisableSplitterRestrictions_CheckedChanged);
          // 
          // labelFontSize
          // 
@@ -738,18 +782,6 @@ namespace mrHelper.App.Forms
          this.labelDepth.Size = new System.Drawing.Size(94, 13);
          this.labelDepth.TabIndex = 5;
          this.labelDepth.Text = "Diff Context Depth";
-         // 
-         // checkBoxMinimizeOnClose
-         // 
-         this.checkBoxMinimizeOnClose.AutoSize = true;
-         this.checkBoxMinimizeOnClose.Location = new System.Drawing.Point(6, 128);
-         this.checkBoxMinimizeOnClose.Name = "checkBoxMinimizeOnClose";
-         this.checkBoxMinimizeOnClose.Size = new System.Drawing.Size(109, 17);
-         this.checkBoxMinimizeOnClose.TabIndex = 8;
-         this.checkBoxMinimizeOnClose.Text = "Minimize on close";
-         this.toolTip.SetToolTip(this.checkBoxMinimizeOnClose, "Don't exit on closing the main window but minimize the application to the tray");
-         this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
-         this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
          // 
          // groupBoxGit
          // 
@@ -1437,21 +1469,6 @@ namespace mrHelper.App.Forms
          this.comboBoxLatestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
          this.comboBoxLatestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLatestCommit_SelectedIndexChanged);
          // 
-         // checkBoxShowVersions
-         // 
-         this.checkBoxShowVersions.AutoSize = true;
-         this.checkBoxShowVersions.Dock = System.Windows.Forms.DockStyle.Top;
-         this.checkBoxShowVersions.Enabled = false;
-         this.checkBoxShowVersions.Location = new System.Drawing.Point(3, 16);
-         this.checkBoxShowVersions.Name = "checkBoxShowVersions";
-         this.checkBoxShowVersions.Padding = new System.Windows.Forms.Padding(2, 4, 0, 6);
-         this.checkBoxShowVersions.Size = new System.Drawing.Size(920, 27);
-         this.checkBoxShowVersions.TabIndex = 9;
-         this.checkBoxShowVersions.Text = "Show changes between versions";
-         this.toolTip.SetToolTip(this.checkBoxShowVersions, "When checked, diff tool shows changes between versions by analogy with GitLab Web UI");
-         this.checkBoxShowVersions.UseVisualStyleBackColor = true;
-         this.checkBoxShowVersions.CheckedChanged += new System.EventHandler(this.checkBoxShowVersions_CheckedChanged);
-         // 
          // panel4
          // 
          this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
@@ -1635,6 +1652,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestCommit;
       private System.Windows.Forms.CheckBox checkBoxShowVersions;
       private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
-   }
+        private System.Windows.Forms.CheckBox checkBoxUseShallowClone;
+    }
 }
 
