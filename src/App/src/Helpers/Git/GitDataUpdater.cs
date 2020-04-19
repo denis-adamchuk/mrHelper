@@ -298,14 +298,14 @@ namespace mrHelper.App.Helpers
             async x =>
             {
                await repo.Updater.Update(
-                  new DummyProjectChecker(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
+                  new CommitBasedUpdateFactory(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
                await repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               await repo.Updater.Update(new DummyProjectChecker(new string[] { x.Sha }), null);
+               await repo.Updater.Update(new CommitBasedUpdateFactory(new string[] { x.Sha }), null);
                repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);

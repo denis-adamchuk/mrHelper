@@ -198,7 +198,7 @@ namespace mrHelper.Client.MergeRequests
                   {
                      FullMergeRequestKey = fmk,
                      EventType = UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
-                     NewVersions = newVersions.Except(oldVersions),
+                     NewVersions = newVersions,
                      Scope = new UserEvents.MergeRequestEvent.UpdateScope
                      {
                         Commits = commitsUpdated,

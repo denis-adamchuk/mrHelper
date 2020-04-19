@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
@@ -12,7 +12,7 @@ using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
-   public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider, IProjectCheckerFactory
+   public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider
    {
       public event Action<Common.UserEvents.MergeRequestEvent> MergeRequestEvent;
 
@@ -57,19 +57,19 @@ namespace mrHelper.Client.MergeRequests
          return result.Id == default(MergeRequest).Id ? new MergeRequest?() : result;
       }
 
-      public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
+      public IProjectUpdateFactory GetLocalProjectChecker(MergeRequestKey mrk)
       {
-         return _cache != null ? new LocalProjectChecker(getAllVersions(mrk.ProjectKey)) : null;
+         return _cache != null ? new LocalVersionBasedUpdateFactory(getAllVersions(mrk.ProjectKey)) : null;
       }
 
-      public IInstantProjectChecker GetLocalProjectChecker(ProjectKey projectKey)
+      public IProjectUpdateFactory GetLocalProjectChecker(ProjectKey projectKey)
       {
-         return _cache != null ? new LocalProjectChecker(getAllVersions(projectKey)) : null;
+         return _cache != null ? new LocalVersionBasedUpdateFactory(getAllVersions(projectKey)) : null;
       }
 
-      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
+      public IProjectUpdateFactory GetRemoteProjectChecker(MergeRequestKey mrk)
       {
-         return new RemoteProjectChecker(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
+         return new RemoteVersionBasedUpdateFactory(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
       }
 
       public Version GetLatestVersion(MergeRequestKey mrk)
@@ -80,11 +80,6 @@ namespace mrHelper.Client.MergeRequests
       public Version GetLatestVersion(ProjectKey projectKey)
       {
          return getAllVersions(projectKey).OrderBy(x => x.Created_At).LastOrDefault();
-      }
-
-      public IProjectCheckerFactory GetProjectCheckerFactory()
-      {
-         return this;
       }
 
       public IProjectWatcher GetProjectWatcher()

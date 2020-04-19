@@ -57,7 +57,6 @@
     <Compile Include="src\Types\WorkflowTypes.cs" />
     <Compile Include="src\MergeRequests\CachedMergeRequestProviderItf.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />
-    <Compile Include="src\MergeRequests\ProjectCheckerFactoryItf.cs" />
     <Compile Include="src\TimeTracking\TimeTracker.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingManager.cs" />
     <Compile Include="src\TimeTracking\Impl\TimeTrackingOperator.cs" />
@@ -71,8 +70,8 @@
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsItf.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsCache.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsChecker.cs" />
-    <Compile Include="src\MergeRequests\Impl\LocalProjectChecker.cs" />
-    <Compile Include="src\MergeRequests\Impl\RemoteProjectChecker.cs" />
+    <Compile Include="src\MergeRequests\Impl\LocalVersionBasedUpdateFactory.cs" />
+    <Compile Include="src\MergeRequests\Impl\RemoteVersionBasedUpdateFactory.cs" />
     <Compile Include="src\Workflow\WorkflowEventNotifierItf.cs" />
     <Compile Include="src\Workflow\WorkflowManager.cs" />
     <Compile Include="src\Workflow\Impl\WorkflowDataOperator.cs" />

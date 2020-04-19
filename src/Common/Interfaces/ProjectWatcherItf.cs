@@ -8,15 +8,20 @@ namespace mrHelper.Common.Interfaces
       public string ProjectName;
    }
 
-   /// <summary>
-   /// Timestamp of an event within the given project that caused this update.
-   /// If there are multiple events, Timestamp belongs to the latest of them.
-   /// </summary>
-   public class ProjectUpdate : System.Collections.Generic.Dictionary<ProjectKey, ProjectSnapshot> {}
+   public class ProjectWatcherUpdateArgs
+   {
+      public ProjectKey ProjectKey;
+
+      /// <summary>
+      /// Project Update contains the timestamp of an event within the given project that caused this update.
+      /// If there were multiple events, Timestamp belongs to the latest of them.
+      /// </summary>
+      public FullProjectUpdate ProjectUpdate;
+   }
 
    public interface IProjectWatcher
    {
-      event Action<ProjectUpdate> OnProjectUpdate;
+      event Action<ProjectWatcherUpdateArgs> OnProjectUpdate;
    }
 }
 

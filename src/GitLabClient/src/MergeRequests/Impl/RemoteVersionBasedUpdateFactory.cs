@@ -11,11 +11,11 @@ using Version = GitLabSharp.Entities.Version;
 namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
-   /// Detects the latest change in a merge request by means of a request to GitLab
+   /// Detects the latest change among given versions, including remote versions for a given merge request
    /// </summary>
-   public class RemoteProjectChecker : IInstantProjectChecker
+   public class RemoteVersionBasedUpdateFactory : IProjectUpdateFactory
    {
-      internal RemoteProjectChecker(IEnumerable<Version> localVersions,
+      internal RemoteVersionBasedUpdateFactory(IEnumerable<Version> localVersions,
          MergeRequestKey mrk, UpdateOperator updateOperator)
       {
          _localVersions = localVersions;
@@ -23,11 +23,7 @@ namespace mrHelper.Client.MergeRequests
          _operator = updateOperator;
       }
 
-      /// <summary>
-      /// Get a timestamp of the most recent change of a project the merge request belongs to
-      /// Throws nothing
-      /// </summary>
-      async public Task<ProjectSnapshot> GetProjectSnapshot()
+      async public Task<IProjectUpdate> GetUpdate()
       {
          List<Version> allVersions = new List<Version>();
          allVersions.AddRange(_localVersions);
@@ -49,7 +45,7 @@ namespace mrHelper.Client.MergeRequests
             shas.Add(version.Head_Commit_SHA);
          }
 
-         return new ProjectSnapshot
+         return new FullProjectUpdate
          {
             LatestChange = allVersions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
             Sha = shas
@@ -58,7 +54,7 @@ namespace mrHelper.Client.MergeRequests
 
       public override string ToString()
       {
-         return String.Format("RemoteProjectChecker. MRK: HostName={0}, ProjectName={1}, IId={2}",
+         return String.Format("RemoteVersionBasedUpdateFactory. MRK: HostName={0}, ProjectName={1}, IId={2}",
             _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId);
       }
 

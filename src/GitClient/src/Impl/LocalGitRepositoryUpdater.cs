@@ -1,11 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using System.Linq;
 using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
@@ -15,6 +15,13 @@ namespace mrHelper.GitClient
    /// </summary>
    internal class LocalGitRepositoryUpdater : IDisposable, ILocalGitRepositoryUpdater
    {
+      internal enum EUpdateMode
+      {
+         ShallowClone, // implies single commit fetching
+         FullCloneWithoutSingleCommitFetches,
+         FullCloneWithSingleCommitFetches
+      }
+
       /// <summary>
       /// Bind to the specific LocalGitRepository object
       /// </summary>
@@ -23,15 +30,13 @@ namespace mrHelper.GitClient
          ILocalGitRepository localGitRepository,
          IExternalProcessManager operationManager,
          ISynchronizeInvoke synchronizeInvoke,
-         bool shallowCloneAllowed,
-         bool singleCommitFetchSupported)
+         EUpdateMode mode)
       {
          _projectWatcher = projectWatcher;
          _localGitRepository = localGitRepository;
          _operationManager = operationManager;
          _synchronizeInvoke = synchronizeInvoke;
-         _shallowCloneAllowed = shallowCloneAllowed;
-         _singleCommitFetchSupported = singleCommitFetchSupported;
+         _updateMode = mode;
       }
 
       internal event Action Cloned;
@@ -59,7 +64,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      async public Task Update(IInstantProjectChecker instantChecker, Action<string> onProgressChange)
+      async public Task Update(IProjectUpdateFactory instantChecker, Action<string> onProgressChange)
       {
          if (instantChecker == null)
          {
@@ -77,8 +82,16 @@ namespace mrHelper.GitClient
             await Task.Delay(50);
          }
 
-         ProjectSnapshot projectSnapshot = await instantChecker.GetProjectSnapshot();
-         await enqueueAndProcess(projectSnapshot);
+         _updating = true;
+         try
+         {
+            IProjectUpdate projectSnapshot = await instantChecker.GetUpdate();
+            await enqueueAndProcess(projectSnapshot);
+         }
+         finally
+         {
+            _updating = false;
+         }
 
          _onProgressChange = null;
 
@@ -91,7 +104,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      private void onProjectWatcherUpdate(ProjectUpdate updates)
+      private void onProjectWatcherUpdate(ProjectWatcherUpdateArgs args)
       {
          if (_synchronizeInvoke == null)
          {
@@ -99,41 +112,76 @@ namespace mrHelper.GitClient
             return;
          }
 
-         _synchronizeInvoke.BeginInvoke(new Action<ProjectUpdate>(
-            async (updatesInternal) =>
-               await onProjectWatcherUpdateAsync(updatesInternal) ), new object[] { updates });
+         _synchronizeInvoke.BeginInvoke(new Action<ProjectWatcherUpdateArgs>(
+            async (argsInternal) =>
+               await onProjectWatcherUpdateAsync(argsInternal) ), new object[] { args });
       }
 
-      async private Task onProjectWatcherUpdateAsync(ProjectUpdate updates)
+      async private Task onProjectWatcherUpdateAsync(ProjectWatcherUpdateArgs args)
       {
          Debug.Assert(_subscribed);
 
-         if (!updates.TryGetValue(_localGitRepository.ProjectKey, out ProjectSnapshot snapshot))
+         if (!args.ProjectKey.Equals(_localGitRepository.ProjectKey))
          {
             return;
          }
 
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepositoryUpdater] Auto-updating git repository {0}",
+            "[LocalGitRepositoryUpdater] Received an update from project watcher for git repository {0}",
            _localGitRepository.ProjectKey.ProjectName));
 
+         if (_updating)
+         {
+            enqueue(args.ProjectUpdate);
+            return;
+         }
+
+         _updating = true;
          try
          {
-            await enqueueAndProcess(snapshot);
+            await enqueueAndProcess(args.ProjectUpdate);
          }
          catch (RepositoryUpdateException ex)
          {
             ExceptionHandlers.Handle("Repository update failed (triggered by PW)", ex);
          }
+         finally
+         {
+            _updating = false;
+         }
       }
 
-      async private Task enqueueAndProcess(ProjectSnapshot projectSnapshot)
+      async private Task enqueueAndProcess(IProjectUpdate update)
       {
-         _projectSnapshots.Enqueue(projectSnapshot);
+         enqueue(update);
+         await processQueue();
+      }
 
+      private void enqueue(IProjectUpdate update)
+      {
+         _queuedUpdates.Enqueue(update);
+      }
+
+      async private Task processQueue()
+      {
          try
          {
-            await processQueuedSnapshots();
+            while (_queuedUpdates.Any())
+            {
+               Debug.Assert(_updateOperationDescriptor == null);
+
+               IProjectUpdate request = _queuedUpdates.Dequeue();
+               if (request is FullProjectUpdate ps)
+               {
+                  await processFullProjectUpdate(ps);
+               }
+               else if (request is PartialProjectUpdate pu)
+               {
+                  await processPartialProjectUpdate(pu);
+               }
+
+               Debug.Assert(_updateOperationDescriptor == null);
+            }
          }
          catch (GitException ex)
          {
@@ -151,36 +199,23 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task processQueuedSnapshots()
+      async private Task processFullProjectUpdate(FullProjectUpdate projectUpdate)
       {
-         if (_updating)
+         if (projectUpdate.Sha == null
+         || !projectUpdate.Sha.Any()
+         ||  projectUpdate.LatestChange == DateTime.MinValue)
          {
-            return;
+            Debug.Assert(false);
+            Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
+            throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         _updating = true;
-         try
-         {
-            while (_projectSnapshots.Any())
-            {
-               await processSnapshot(_projectSnapshots.Dequeue());
-            }
-         }
-         finally
-         {
-            _updating = false;
-         }
-      }
-
-      async private Task processSnapshot(ProjectSnapshot projectSnapshot)
-      {
-         Debug.Assert(_updateOperationDescriptor == null);
-
-         if (_shallowCloneAllowed)
+         if (_updateMode == EUpdateMode.ShallowClone)
          {
             if (_localGitRepository.DoesRequireClone())
             {
                await cloneAsync(true);
+               Trace.TraceInformation("[LocalGitRepositoryUpdater] Repository cloned (shallow clone)");
                Cloned?.Invoke();
             }
          }
@@ -188,25 +223,64 @@ namespace mrHelper.GitClient
          {
             if (_localGitRepository.DoesRequireClone())
             {
-               await cloneAsync(false);
+               await cloneAsync(true);
+               _latestFullFetchTimeStamp = projectUpdate.LatestChange;
+               Trace.TraceInformation(String.Format(
+                  "[LocalGitRepositoryUpdater] Repository cloned. Updating LatestChange timestamp to {0}",
+                  _latestFullFetchTimeStamp.ToLocalTime().ToString()));
                Cloned?.Invoke();
-               _latestFullFetchTimeStamp = projectSnapshot.LatestChange;
             }
 
-            if (projectSnapshot.LatestChange > _latestFullFetchTimeStamp)
+            if (projectUpdate.LatestChange > _latestFullFetchTimeStamp)
             {
                await fetchAsync();
-               _latestFullFetchTimeStamp = projectSnapshot.LatestChange;
+               _latestFullFetchTimeStamp = projectUpdate.LatestChange;
+               Trace.TraceInformation(String.Format(
+                  "[LocalGitRepositoryUpdater] Repository updated. Updating LatestChange timestamp to {0}",
+                  _latestFullFetchTimeStamp.ToLocalTime().ToString()));
+            }
+            else if (projectUpdate.LatestChange == _latestFullFetchTimeStamp)
+            {
+               Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository is not updated"));
+            }
+            else if (projectUpdate.LatestChange < _latestFullFetchTimeStamp)
+            {
+               Trace.TraceInformation("[LocalGitRepositoryUpdater] New LatestChange is older than a previous one");
             }
          }
 
-         if (_singleCommitFetchSupported)
+         if (_updateMode != EUpdateMode.FullCloneWithoutSingleCommitFetches)
          {
-            await fetchMissingCommitsAsync(projectSnapshot);
+            await fetchCommitsAsync(projectUpdate.Sha);
          }
          Updated?.Invoke();
+      }
 
-         Debug.Assert(_updateOperationDescriptor == null);
+      async private Task processPartialProjectUpdate(PartialProjectUpdate projectUpdate)
+      {
+         if (projectUpdate.Sha == null || !projectUpdate.Sha.Any())
+         {
+            Debug.Assert(false);
+            Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
+            throw new RepositoryUpdateException("Cannot update git repository", null);
+         }
+
+         if (_localGitRepository.DoesRequireClone())
+         {
+            Trace.TraceError(
+               "[LocalGitRepositoryUpdater] Partial updates cannot be applied to a not cloned repository");
+            throw new RepositoryUpdateException("Cannot update git repository", null);
+         }
+
+         if (_updateMode == EUpdateMode.FullCloneWithoutSingleCommitFetches)
+         {
+            Trace.TraceError(
+               "[LocalGitRepositoryUpdater] Partial updates are not supported in this repository");
+            throw new RepositoryUpdateException("Cannot update git repository", null);
+         }
+
+         await fetchCommitsAsync(projectUpdate.Sha);
+         Updated?.Invoke();
       }
 
       async private Task cloneAsync(bool shallowClone)
@@ -225,15 +299,21 @@ namespace mrHelper.GitClient
          await doUpdateOperationAsync(arguments, _localGitRepository.Path);
       }
 
-      async private Task fetchMissingCommitsAsync(ProjectSnapshot projectSnapshot)
+      async private Task fetchCommitsAsync(IEnumerable<string> shas)
       {
-         foreach (string sha in projectSnapshot.Sha.Distinct())
+         int iCommit = 0;
+         foreach (string sha in shas.Distinct())
          {
-            if (!_localGitRepository.ContainsSHA(sha))
+            if (sha != null && !_localGitRepository.ContainsSHA(sha))
             {
                string arguments = String.Format("fetch {0}", getFetchArguments(sha));
                await doUpdateOperationAsync(arguments, _localGitRepository.Path);
+               ++iCommit;
             }
+         }
+         if (iCommit > 0)
+         {
+            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Fetched commits: {0}", iCommit));
          }
       }
 
@@ -256,7 +336,7 @@ namespace mrHelper.GitClient
          {
             _updateOperationDescriptor = descriptor;
             Trace.TraceInformation(String.Format(
-               "[LocalGitRepository] START git with arguments \"{0}\" in \"{1}\" for {2}",
+               "[LocalGitRepositoryUpdater] START git with arguments \"{0}\" in \"{1}\" for {2}",
                arguments,
                _localGitRepository.Path,
                _localGitRepository.ProjectKey.ProjectName));
@@ -265,7 +345,7 @@ namespace mrHelper.GitClient
          finally
          {
             Trace.TraceInformation(String.Format(
-               "[LocalGitRepository] FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
+               "[LocalGitRepositoryUpdater] FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
                arguments,
                _localGitRepository.Path,
                _localGitRepository.ProjectKey.ProjectName));
@@ -297,12 +377,10 @@ namespace mrHelper.GitClient
       private readonly ILocalGitRepository _localGitRepository;
       private readonly IExternalProcessManager _operationManager;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-
-      private readonly bool _shallowCloneAllowed;
-      private readonly bool _singleCommitFetchSupported;
+      private readonly EUpdateMode _updateMode;
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
-      private readonly Queue<ProjectSnapshot> _projectSnapshots = new Queue<ProjectSnapshot>();
+      private readonly Queue<IProjectUpdate> _queuedUpdates = new Queue<IProjectUpdate>();
 
       private bool _updating = false;
       private bool _subscribed = false;

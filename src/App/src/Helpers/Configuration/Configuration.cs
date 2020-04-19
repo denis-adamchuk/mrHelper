@@ -29,8 +29,8 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersions";
       private static readonly bool   ShowVersionsDefaultValue = false;
 
-      private static readonly string ShallowCloneAllowedKeyName      = "ShallowCloneAllowed";
-      private static readonly bool   ShallowCloneAllowedDefaultValue = false;
+      private static readonly string UseShallowCloneKeyName      = "UseShallowClone";
+      private static readonly bool   UseShallowCloneDefaultValue = false;
 
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
@@ -219,15 +219,15 @@ namespace mrHelper.App.Helpers
          set { setValue(ShowVersionsKeyName, boolToString(value)); }
       }
 
-      public bool ShallowCloneAllowed
+      public bool UseShallowClone
       {
          get
          {
             return bool.TryParse(getValue(
-               ShallowCloneAllowedKeyName, boolToString(ShallowCloneAllowedDefaultValue)),
-                  out bool result) ? result : ShallowCloneAllowedDefaultValue;
+               UseShallowCloneKeyName, boolToString(UseShallowCloneDefaultValue)),
+                  out bool result) ? result : UseShallowCloneDefaultValue;
          }
-         set { setValue(ShallowCloneAllowedKeyName, boolToString(value)); }
+         set { setValue(UseShallowCloneKeyName, boolToString(value)); }
       }
 
       public bool AllowAuthorToTrackTime

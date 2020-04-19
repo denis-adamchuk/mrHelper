@@ -64,7 +64,7 @@ namespace mrHelper.GitClient
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal LocalGitRepository(ProjectKey projectKey, string path, IProjectWatcher projectWatcher,
-         ISynchronizeInvoke synchronizeInvoke, bool shallowCloneAllowed)
+         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
       {
          Path = path;
          if (!canClone() && !isValidRepository())
@@ -72,10 +72,20 @@ namespace mrHelper.GitClient
             throw new ArgumentException("Path \"" + path + "\" already exists but it is not a valid git repository");
          }
 
+         if (useShallowClone && !GitTools.IsSingleCommitFetchSupported(Path))
+         {
+            throw new ArgumentException("Cannot use shallow clone if single commit fetch is not supported");
+         }
+
+         LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
+            ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
+            : (GitTools.IsSingleCommitFetchSupported(Path)
+               ? LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches
+               : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithoutSingleCommitFetches);
+
          ProjectKey = projectKey;
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new LocalGitRepositoryUpdater(projectWatcher, this,
-            _operationManager, synchronizeInvoke, shallowCloneAllowed, GitTools.IsSingleCommitFetchSupported(Path));
+         _updater = new LocalGitRepositoryUpdater(projectWatcher, this, _operationManager, synchronizeInvoke, mode);
          _data = new LocalGitRepositoryData(_operationManager, Path);
          _updater.Cloned += resetCachedState;
          _updater.Updated += () => Updated?.Invoke(this);

@@ -4,15 +4,22 @@ using System.Threading.Tasks;
 
 namespace mrHelper.Common.Interfaces
 {
-   public class ProjectSnapshot
+   public interface IProjectUpdate {}
+
+   public class FullProjectUpdate : IProjectUpdate
    {
-      public DateTime LatestChange = DateTime.MinValue;
-      public List<string> Sha = new List<string>();
+      public DateTime LatestChange;
+      public IEnumerable<string> Sha;
    }
 
-   public interface IInstantProjectChecker
+   public class PartialProjectUpdate : IProjectUpdate
    {
-      Task<ProjectSnapshot> GetProjectSnapshot();
+      public IEnumerable<string> Sha;
+   }
+
+   public interface IProjectUpdateFactory
+   {
+      Task<IProjectUpdate> GetUpdate();
    }
 }
 

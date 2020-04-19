@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 
@@ -13,34 +12,46 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class ProjectWatcher : IProjectWatcher
    {
-      public event Action<ProjectUpdate> OnProjectUpdate;
+      public event Action<ProjectWatcherUpdateArgs> OnProjectUpdate;
 
       /// <summary>
       /// Convert passed updates to ProjectUpdates and notify subscribers
       /// </summary>
       internal void ProcessUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         ProjectUpdate projectUpdates = getProjectUpdates(updates);
+         Dictionary<ProjectKey, FullProjectUpdate> projectUpdates = getProjectUpdates(updates);
 
          if (projectUpdates.Count() > 0)
          {
-            foreach (KeyValuePair<ProjectKey, ProjectSnapshot> projectUpdate in projectUpdates)
+            foreach (KeyValuePair<ProjectKey, FullProjectUpdate> projectUpdate in projectUpdates)
             {
                Trace.TraceInformation(
                   String.Format("[ProjectWatcher] Updating project: Host {0}, Name {1}, TimeStamp {2}",
                      projectUpdate.Key.HostName, projectUpdate.Key.ProjectName,
                      projectUpdate.Value.LatestChange.ToLocalTime().ToString()));
+               OnProjectUpdate?.Invoke(new ProjectWatcherUpdateArgs
+               {
+                  ProjectKey = projectUpdate.Key,
+                  ProjectUpdate = projectUpdate.Value
+               });
             }
-            OnProjectUpdate?.Invoke(projectUpdates);
          }
+      }
+
+      private class FullProjectUpdateInternal
+      {
+         public DateTime LatestChange;
+         public List<string> Sha;
       }
 
       /// <summary>
       /// Convert a list of Project Id to list of Project names
       /// </summary>
-      private ProjectUpdate getProjectUpdates(IEnumerable<UserEvents.MergeRequestEvent> updates)
+      private Dictionary<ProjectKey, FullProjectUpdate> getProjectUpdates(
+         IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         ProjectUpdate allProjectSnapshots = new ProjectUpdate();
+         Dictionary<ProjectKey, FullProjectUpdateInternal> resultInternal =
+            new Dictionary<ProjectKey, FullProjectUpdateInternal>();
 
          foreach (UserEvents.MergeRequestEvent update in updates)
          {
@@ -57,25 +68,35 @@ namespace mrHelper.Client.MergeRequests
             }
 
             ProjectKey projectKey = update.FullMergeRequestKey.ProjectKey;
-            if (!allProjectSnapshots.Any(x => x.Equals(projectKey)))
+            if (!resultInternal.Any(x => x.Equals(projectKey)))
             {
-               allProjectSnapshots.Add(projectKey, new ProjectSnapshot());
+               resultInternal.Add(projectKey, new FullProjectUpdateInternal
+               {
+                  LatestChange = DateTime.MinValue,
+                  Sha = new List<string>()
+               });
             }
 
-            ProjectSnapshot singleProjectSnapshot = allProjectSnapshots[update.FullMergeRequestKey.ProjectKey];
+            FullProjectUpdateInternal projectUpdate = resultInternal[projectKey];
 
             DateTime versionsTimestamp = update.NewVersions.OrderBy(x => x.Created_At).Last().Created_At;
-            singleProjectSnapshot.LatestChange = versionsTimestamp > singleProjectSnapshot.LatestChange
-               ? versionsTimestamp : singleProjectSnapshot.LatestChange;
+            projectUpdate.LatestChange = versionsTimestamp > projectUpdate.LatestChange ?
+               versionsTimestamp : projectUpdate.LatestChange ;
 
             foreach (GitLabSharp.Entities.Version version in update.NewVersions)
             {
-               singleProjectSnapshot.Sha.Add(version.Head_Commit_SHA);
-               singleProjectSnapshot.Sha.Add(version.Base_Commit_SHA);
+               projectUpdate.Sha.Add(version.Head_Commit_SHA);
+               projectUpdate.Sha.Add(version.Base_Commit_SHA);
             }
          }
 
-         return allProjectSnapshots;
+         return resultInternal.ToDictionary(
+            x => x.Key,
+            x => new FullProjectUpdate
+            {
+               LatestChange = x.Value.LatestChange,
+               Sha = x.Value.Sha
+            });
       }
    }
 }

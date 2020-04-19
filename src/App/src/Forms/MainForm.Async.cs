@@ -42,7 +42,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk), updateGitStatusText);
+                  _mergeRequestCache.GetRemoteProjectChecker(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -132,7 +132,7 @@ namespace mrHelper.App.Forms
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
                         await updatingRepo.Updater.Update(
-                           _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(key), null);
+                           _mergeRequestCache.GetRemoteProjectChecker(key), null);
                         return updatingRepo;
                      }
                      else
@@ -207,9 +207,9 @@ namespace mrHelper.App.Forms
             enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
-               IInstantProjectChecker checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
-                  ? _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk)
-                  : _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk);
+               IProjectUpdateFactory checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
+                  ? _mergeRequestCache.GetLocalProjectChecker(mrk)
+                  : _mergeRequestCache.GetRemoteProjectChecker(mrk);
 
                // Using local checker because it does not make a GitLab request and it is quite enough here because
                // user may select only those commits that already loaded and cached and have timestamps less
@@ -439,8 +439,7 @@ namespace mrHelper.App.Forms
 
          // Use Local Project Checker here because Remote Project Checker looks overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
-         IInstantProjectChecker instantChecker =
-            _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker((dynamic)key);
+         IProjectUpdateFactory instantChecker = _mergeRequestCache.GetLocalProjectChecker((dynamic)key);
          try
          {
             await repo.Updater.Update(instantChecker, null);

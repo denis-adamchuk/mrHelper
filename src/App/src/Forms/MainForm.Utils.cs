@@ -793,7 +793,7 @@ namespace mrHelper.App.Forms
             try
             {
                _gitClientFactory = new LocalGitRepositoryFactory(localFolder,
-                  _mergeRequestCache.GetProjectWatcher(), this, Program.Settings.ShallowCloneAllowed);
+                  _mergeRequestCache.GetProjectWatcher(), this, Program.Settings.UseShallowClone);
             }
             catch (ArgumentException ex)
             {

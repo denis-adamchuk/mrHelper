@@ -32,7 +32,7 @@ namespace mrHelper.App.Helpers
       /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(ILocalGitRepository repo, IInstantProjectChecker instantChecker,
+      async internal Task UpdateAsync(ILocalGitRepository repo, IProjectUpdateFactory instantChecker,
          Action<string> onProgressChange)
       {
          if (repo.DoesRequireClone() && !isCloneAllowed(repo.Path))
