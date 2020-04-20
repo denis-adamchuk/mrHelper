@@ -141,50 +141,49 @@ namespace mrHelper.GitClient
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (_updateMode == EUpdateMode.ShallowClone)
+         DateTime prevLatestTimeStamp = _lastestFullUpdateTimestamp;
+         if (_localGitRepository.DoesRequireClone())
          {
-            if (_localGitRepository.DoesRequireClone())
-            {
-               await cloneAsync(true);
-               Trace.TraceInformation("[LocalGitRepositoryUpdater] Repository cloned (shallow clone)");
-               Cloned?.Invoke();
-            }
+            await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
+            _lastestFullUpdateTimestamp = projectUpdate.LatestChange;
+            Trace.TraceInformation(String.Format(
+               "[LocalGitRepositoryUpdater] Repository cloned. Updating LatestChange timestamp to {0}",
+               _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
+            Cloned?.Invoke();
          }
-         else
-         {
-            if (_localGitRepository.DoesRequireClone())
-            {
-               await cloneAsync(false);
-               _latestFullFetchTimeStamp = projectUpdate.LatestChange;
-               Trace.TraceInformation(String.Format(
-                  "[LocalGitRepositoryUpdater] Repository cloned. Updating LatestChange timestamp to {0}",
-                  _latestFullFetchTimeStamp.ToLocalTime().ToString()));
-               Cloned?.Invoke();
-            }
 
-            if (projectUpdate.LatestChange > _latestFullFetchTimeStamp)
+         if (projectUpdate.LatestChange > _lastestFullUpdateTimestamp)
+         {
+            if (_updateMode != EUpdateMode.ShallowClone)
             {
                await fetchAsync();
-               _latestFullFetchTimeStamp = projectUpdate.LatestChange;
-               Trace.TraceInformation(String.Format(
-                  "[LocalGitRepositoryUpdater] Repository updated. Updating LatestChange timestamp to {0}",
-                  _latestFullFetchTimeStamp.ToLocalTime().ToString()));
             }
-            else if (projectUpdate.LatestChange == _latestFullFetchTimeStamp)
-            {
-               Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository is not updated"));
-            }
-            else if (projectUpdate.LatestChange < _latestFullFetchTimeStamp)
-            {
-               Trace.TraceInformation("[LocalGitRepositoryUpdater] New LatestChange is older than a previous one");
-            }
+            _lastestFullUpdateTimestamp = projectUpdate.LatestChange;
+            Trace.TraceInformation(String.Format(
+               "[LocalGitRepositoryUpdater] Repository {0} updated. Updating LatestChange timestamp to {1}",
+               _updateMode == EUpdateMode.ShallowClone ? "not" : String.Empty,
+               _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
+         }
+         else if (projectUpdate.LatestChange == _lastestFullUpdateTimestamp)
+         {
+            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository not updated"));
+         }
+         else if (projectUpdate.LatestChange < _lastestFullUpdateTimestamp)
+         {
+            // This is not a problem and may happen when, for example, a Merge Request with the most newest
+            // version has been closed.
+            Trace.TraceInformation("[LocalGitRepositoryUpdater] New LatestChange is older than a previous one");
          }
 
          if (_updateMode != EUpdateMode.FullCloneWithoutSingleCommitFetches)
          {
             await fetchCommitsAsync(projectUpdate.Sha);
          }
-         Updated?.Invoke();
+
+         if (_lastestFullUpdateTimestamp != prevLatestTimeStamp)
+         {
+            Updated?.Invoke();
+         }
       }
 
       async private Task processPartialProjectUpdate(PartialProjectUpdate projectUpdate)
@@ -210,8 +209,10 @@ namespace mrHelper.GitClient
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         await fetchCommitsAsync(projectUpdate.Sha);
-         Updated?.Invoke();
+         if (await fetchCommitsAsync(projectUpdate.Sha))
+         {
+            Updated?.Invoke();
+         }
       }
 
       async private Task cloneAsync(bool shallowClone)
@@ -230,7 +231,7 @@ namespace mrHelper.GitClient
          await doUpdateOperationAsync(arguments, _localGitRepository.Path);
       }
 
-      async private Task fetchCommitsAsync(IEnumerable<string> shas)
+      async private Task<bool> fetchCommitsAsync(IEnumerable<string> shas)
       {
          IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
 
@@ -249,7 +250,9 @@ namespace mrHelper.GitClient
          {
             Trace.TraceInformation(String.Format(
                "[LocalGitRepositoryUpdater] Fetched commits: {0}. Total: {1}", iCommit, goodSha.Count()));
+            return true;
          }
+         return false;
       }
 
       async private Task doUpdateOperationAsync(string arguments, string path)
@@ -317,7 +320,7 @@ namespace mrHelper.GitClient
 
       private bool _updating = false;
       private Action<string> _onProgressChange;
-      private DateTime _latestFullFetchTimeStamp = DateTime.MinValue;
+      private DateTime _lastestFullUpdateTimestamp = DateTime.MinValue;
    }
 }
 

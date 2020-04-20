@@ -178,7 +178,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Discussions opened";
       }
 
-      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, string state)
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
          {

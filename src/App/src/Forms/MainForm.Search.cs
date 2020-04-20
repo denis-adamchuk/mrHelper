@@ -1,20 +1,14 @@
 using System;
 using System.Linq;
-using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using GitLabSharp;
 using GitLabSharp.Entities;
-using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
-using mrHelper.Client.Repository;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {

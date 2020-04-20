@@ -23,7 +23,7 @@ namespace mrHelper.App.Helpers
          return String.Format("CommitBasedUpdateFactory. Sha Count: {0}", _shas.Count());
       }
 
-      private List<string> _shas;
+      private readonly List<string> _shas;
    }
 }
 

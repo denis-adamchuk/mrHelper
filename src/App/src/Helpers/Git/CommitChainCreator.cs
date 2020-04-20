@@ -198,7 +198,7 @@ namespace mrHelper.App.Helpers
 
       private RepositoryManager _repositoryManager;
       private bool _isCancelEnabled = true;
-      private bool _singleCommitFetchSupported;
+      private readonly bool _singleCommitFetchSupported;
    }
 }
 

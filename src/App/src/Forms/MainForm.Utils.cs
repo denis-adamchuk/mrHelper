@@ -37,7 +37,7 @@ namespace mrHelper.App.Forms
       private MergeRequest? getMergeRequest(ListView proposedListView)
       {
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         ListView listView = proposedListView ?? currentListView;
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
       private MergeRequestKey? getMergeRequestKey(ListView proposedListView)
       {
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         ListView listView = proposedListView ?? currentListView;
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
@@ -1660,13 +1660,13 @@ namespace mrHelper.App.Forms
          bool mergeRequestUpdateFinished = false;
          bool discussionUpdateFinished = false;
 
-         Action onSingleUpdateFinished = () =>
+         void onSingleUpdateFinished()
          {
             if (mergeRequestUpdateFinished && discussionUpdateFinished)
             {
                onUpdateFinished?.Invoke();
             }
-         };
+         }
 
          _mergeRequestCache.CheckForUpdates(mrk, intervals,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });

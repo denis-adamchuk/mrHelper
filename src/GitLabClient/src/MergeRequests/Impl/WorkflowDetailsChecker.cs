@@ -126,12 +126,6 @@ namespace mrHelper.Client.MergeRequests
                MergeRequest = mergeRequest.MergeRequest
             };
 
-            MergeRequestKey mergeRequestKey = new MergeRequestKey
-            {
-               ProjectKey = fmk.ProjectKey,
-               IId = fmk.MergeRequest.IId
-            };
-
             updates.Add(new UserEvents.MergeRequestEvent
                {
                   FullMergeRequestKey = fmk,

@@ -83,12 +83,10 @@ namespace mrHelper.App.Forms
       async private void ButtonDifftool_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await onLaunchDiffToolAsync(mrk, mergeRequest.State);
+         await onLaunchDiffToolAsync(mrk);
       }
 
       async private void ButtonAddComment_Click(object sender, EventArgs e)

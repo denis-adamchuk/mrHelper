@@ -147,7 +147,7 @@ namespace mrHelper.Client.MergeRequests
          MergeRequest mergeRequest, IEnumerable<Version> versions)
       {
          Trace.TraceInformation(String.Format(
-            "[MergeRequestCache] Loaded {0} version of merge request with IId {1} for project {2} at hostname {3}",
+            "[MergeRequestCache] Loaded {0} versions of merge request with IId {1} for project {2} at hostname {3}",
             versions.Count(), mergeRequest.IId, projectname, hostname));
 
          _cache?.UpdateVersions(new MergeRequestKey

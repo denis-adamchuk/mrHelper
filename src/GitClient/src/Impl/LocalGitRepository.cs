@@ -143,7 +143,7 @@ namespace mrHelper.GitClient
 
       private bool? _cached_isValidRepository;
       private bool? _cached_canClone;
-      private HashSet<string> _cached_existingSha = new HashSet<string>();
+      private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;
       private readonly IExternalProcessManager _operationManager;

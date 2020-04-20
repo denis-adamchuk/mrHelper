@@ -22,7 +22,7 @@ namespace mrHelper.Client.MergeRequests
 
          if (mergeRequests.Count() != previouslyCachedMergeRequests.Count())
          {
-            Trace.TraceInformation(String.Format(
+            Debug.WriteLine(String.Format(
                "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                projectname, hostname, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
          }
@@ -50,7 +50,7 @@ namespace mrHelper.Client.MergeRequests
 
          if (newLatestVersion.Created_At != oldLatestVersion.Created_At)
          {
-            Trace.TraceInformation(String.Format(
+            Debug.WriteLine(String.Format(
                "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
                mrk.IId,
                newLatestVersion.Created_At.ToLocalTime().ToString(),

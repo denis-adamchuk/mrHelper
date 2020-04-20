@@ -23,7 +23,7 @@ namespace mrHelper.CommonControls.Controls
          }
       }
 
-      private static string DefaultConfirmationText = "All changes will be lost, are you sure?";
+      private static readonly string DefaultConfirmationText = "All changes will be lost, are you sure?";
 
       private Func<bool> _confirmationCondition;
    }

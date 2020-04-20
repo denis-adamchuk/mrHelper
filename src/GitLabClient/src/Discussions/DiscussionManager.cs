@@ -143,7 +143,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await updateDiscussionsAsync(mrk, true, EDiscussionUpdateType.PeriodicUpdate);
+            await updateDiscussionsAsync(mrk, EDiscussionUpdateType.PeriodicUpdate);
          }
          catch (OperatorException ex)
          {
@@ -244,7 +244,7 @@ namespace mrHelper.Client.Discussions
             out IEnumerable<MergeRequestKey> nonMatchingFilter);
 
          IEnumerable<MergeRequestKey> highPriorityMergeRequests =
-            scheduledUpdate.MergeRequests == null ? matchingFilter : scheduledUpdate.MergeRequests;
+            scheduledUpdate.MergeRequests ?? matchingFilter;
          IEnumerable<MergeRequestKey> lowPriorityMergeRequests =
             scheduledUpdate.MergeRequests == null ? nonMatchingFilter : new MergeRequestKey[] { };
 
@@ -270,7 +270,7 @@ namespace mrHelper.Client.Discussions
 
             try
             {
-               await updateDiscussionsAsync(mrk, false, scheduledUpdate.Type);
+               await updateDiscussionsAsync(mrk, scheduledUpdate.Type);
             }
             catch (OperatorException ex)
             {
@@ -330,7 +330,7 @@ namespace mrHelper.Client.Discussions
          }), null);
       }
 
-      async private Task updateDiscussionsAsync(MergeRequestKey mrk, bool additionalLogging, EDiscussionUpdateType type)
+      async private Task updateDiscussionsAsync(MergeRequestKey mrk, EDiscussionUpdateType type)
       {
          if (_updating.Contains(mrk))
          {
@@ -352,7 +352,7 @@ namespace mrHelper.Client.Discussions
 
             Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
             int noteCount = await _operator.GetNoteCount(mrk);
-            if (_reconnect || !needToLoadDiscussions(mostRecentNote, mrk, noteCount, additionalLogging))
+            if (_reconnect || !needToLoadDiscussions(mostRecentNote, mrk, noteCount))
             {
                return;
             }
@@ -424,24 +424,20 @@ namespace mrHelper.Client.Discussions
          return _updating.Contains(mrk);
       }
 
-      private bool needToLoadDiscussions(Note mostRecentNote, MergeRequestKey mrk,
-         int noteCount, bool additionalLogging)
+      private bool needToLoadDiscussions(Note mostRecentNote, MergeRequestKey mrk, int noteCount)
       {
          DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
          if (_cachedDiscussions.ContainsKey(mrk)
           && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp
           && noteCount == _cachedDiscussions[mrk].NoteCount)
          {
-            if (additionalLogging)
-            {
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Discussions are up-to-date, "
-                + "remote time stamp {0}, cached time stamp {1}, note count {2}, resolved {3}, resolvable {4}",
-                  mergeRequestUpdatedAt.ToLocalTime().ToString(),
-                  _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString(),
-                  noteCount,
-                  _cachedDiscussions[mrk].ResolvedDiscussionCount, _cachedDiscussions[mrk].ResolvableDiscussionCount));
-            }
+            Debug.WriteLine(String.Format(
+               "[DiscussionManager] Discussions are up-to-date, "
+             + "remote time stamp {0}, cached time stamp {1}, note count {2}, resolved {3}, resolvable {4}",
+               mergeRequestUpdatedAt.ToLocalTime().ToString(),
+               _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString(),
+               noteCount,
+               _cachedDiscussions[mrk].ResolvedDiscussionCount, _cachedDiscussions[mrk].ResolvableDiscussionCount));
             return false;
          }
 
@@ -674,8 +670,8 @@ namespace mrHelper.Client.Discussions
       private string _hostname;
       private IEnumerable<Project> _projects;
 
-      private System.Timers.Timer _timer;
-      private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
+      private readonly System.Timers.Timer _timer;
+      private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
       private readonly DiscussionOperator _operator;
       private User _currentUser;
