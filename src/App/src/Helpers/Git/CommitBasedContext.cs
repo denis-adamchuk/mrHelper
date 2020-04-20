@@ -6,9 +6,9 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Helpers
 {
-   internal class CommitBasedUpdateFactory : IProjectUpdateFactory
+   internal class CommitBasedContext : IProjectUpdateContext
    {
-      internal CommitBasedUpdateFactory(IEnumerable<string> shas)
+      internal CommitBasedContext(IEnumerable<string> shas)
       {
          _shas = shas.ToList();
       }

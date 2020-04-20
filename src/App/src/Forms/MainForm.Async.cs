@@ -15,6 +15,7 @@ using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
+using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -42,7 +43,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote checker because there are might be discussions reported by other users on newer commits
                await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestCache.GetRemoteProjectChecker(mrk), updateGitStatusText);
+                  _mergeRequestCache.GetRemoteVersionBasedContext(mrk), updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -132,7 +133,7 @@ namespace mrHelper.App.Forms
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
                         await updatingRepo.Updater.Update(
-                           _mergeRequestCache.GetRemoteProjectChecker(key), null);
+                           _mergeRequestCache.GetRemoteVersionBasedContext(key), null);
                         return updatingRepo;
                      }
                      else
@@ -207,9 +208,9 @@ namespace mrHelper.App.Forms
             enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
-               IProjectUpdateFactory checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
-                  ? _mergeRequestCache.GetLocalProjectChecker(mrk)
-                  : _mergeRequestCache.GetRemoteProjectChecker(mrk);
+               IProjectUpdateContext checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
+                  ? _mergeRequestCache.GetLocalVersionBasedContext(mrk)
+                  : _mergeRequestCache.GetRemoteVersionBasedContext(mrk);
 
                // Using local checker because it does not make a GitLab request and it is quite enough here because
                // user may select only those commits that already loaded and cached and have timestamps less
@@ -439,7 +440,7 @@ namespace mrHelper.App.Forms
 
          // Use Local Project Checker here because Remote Project Checker looks overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
-         IProjectUpdateFactory instantChecker = _mergeRequestCache.GetLocalProjectChecker((dynamic)key);
+         IProjectUpdateContext instantChecker = _mergeRequestCache.GetLocalVersionBasedContext((dynamic)key);
          try
          {
             await repo.Updater.Update(instantChecker, null);

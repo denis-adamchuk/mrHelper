@@ -13,9 +13,9 @@ namespace mrHelper.Client.MergeRequests
    /// <summary>
    /// Detects the latest change among given versions, including remote versions for a given merge request
    /// </summary>
-   public class RemoteVersionBasedUpdateFactory : IProjectUpdateFactory
+   public class RemoteVersionBasedContext : IProjectUpdateContext
    {
-      internal RemoteVersionBasedUpdateFactory(IEnumerable<Version> localVersions,
+      internal RemoteVersionBasedContext(IEnumerable<Version> localVersions,
          MergeRequestKey mrk, UpdateOperator updateOperator)
       {
          _localVersions = localVersions;

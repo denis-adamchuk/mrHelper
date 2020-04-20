@@ -63,7 +63,7 @@ namespace mrHelper.GitClient
       /// or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal LocalGitRepository(ProjectKey projectKey, string path, IProjectWatcher projectWatcher,
+      internal LocalGitRepository(ProjectKey projectKey, string path,
          ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
       {
          Path = path;
@@ -85,7 +85,7 @@ namespace mrHelper.GitClient
 
          ProjectKey = projectKey;
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new LocalGitRepositoryUpdater(projectWatcher, this, _operationManager, synchronizeInvoke, mode);
+         _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
          _data = new LocalGitRepositoryData(_operationManager, Path);
          _updater.Cloned += resetCachedState;
          _updater.Updated += () => Updated?.Invoke(this);
@@ -99,7 +99,6 @@ namespace mrHelper.GitClient
       async internal Task DisposeAsync()
       {
          Trace.TraceInformation(String.Format("[LocalGitRepository] Disposing LocalGitRepository at path {0}", Path));
-         _updater.Dispose();
          _data.DisableUpdates();
          await _operationManager.CancelAll();
          Disposed?.Invoke(this);

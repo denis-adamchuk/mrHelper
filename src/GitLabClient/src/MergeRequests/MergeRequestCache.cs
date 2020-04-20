@@ -57,19 +57,19 @@ namespace mrHelper.Client.MergeRequests
          return result.Id == default(MergeRequest).Id ? new MergeRequest?() : result;
       }
 
-      public IProjectUpdateFactory GetLocalProjectChecker(MergeRequestKey mrk)
+      public IProjectUpdateContext GetLocalVersionBasedContext(MergeRequestKey mrk)
       {
-         return _cache != null ? new LocalVersionBasedUpdateFactory(getAllVersions(mrk.ProjectKey)) : null;
+         return new LocalVersionBasedContext(getAllVersions(mrk.ProjectKey));
       }
 
-      public IProjectUpdateFactory GetLocalProjectChecker(ProjectKey projectKey)
+      public IProjectUpdateContext GetLocalVersionBasedContext(ProjectKey projectKey)
       {
-         return _cache != null ? new LocalVersionBasedUpdateFactory(getAllVersions(projectKey)) : null;
+         return new LocalVersionBasedContext(getAllVersions(projectKey));
       }
 
-      public IProjectUpdateFactory GetRemoteProjectChecker(MergeRequestKey mrk)
+      public IProjectUpdateContext GetRemoteVersionBasedContext(MergeRequestKey mrk)
       {
-         return new RemoteVersionBasedUpdateFactory(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
+         return new RemoteVersionBasedContext(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
       }
 
       public Version GetLatestVersion(MergeRequestKey mrk)
@@ -80,11 +80,6 @@ namespace mrHelper.Client.MergeRequests
       public Version GetLatestVersion(ProjectKey projectKey)
       {
          return getAllVersions(projectKey).OrderBy(x => x.Created_At).LastOrDefault();
-      }
-
-      public IProjectWatcher GetProjectWatcher()
-      {
-         return _projectWatcher;
       }
 
       private IEnumerable<Version> getAllVersions(ProjectKey projectKey)
@@ -118,8 +113,6 @@ namespace mrHelper.Client.MergeRequests
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         _projectWatcher.ProcessUpdates(updates);
-
          foreach (UserEvents.MergeRequestEvent update in updates)
          {
             MergeRequestEvent?.Invoke(update);
@@ -179,7 +172,6 @@ namespace mrHelper.Client.MergeRequests
 
       private string _hostname;
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
-      private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private UpdateManager _updateManager;
       private readonly UpdateOperator _updateOperator;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;

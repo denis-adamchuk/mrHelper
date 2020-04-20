@@ -63,15 +63,14 @@
     <Compile Include="src\Types\MergeRequestKey.cs" />
     <Compile Include="src\Common\Impl\OperatorException.cs" />
     <Compile Include="src\MergeRequests\MergeRequestCache.cs" />
-    <Compile Include="src\MergeRequests\Impl\ProjectWatcher.cs" />
     <Compile Include="src\MergeRequests\Impl\UpdateManager.cs" />
     <Compile Include="src\MergeRequests\Impl\UpdateOperator.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetails.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsItf.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsCache.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsChecker.cs" />
-    <Compile Include="src\MergeRequests\Impl\LocalVersionBasedUpdateFactory.cs" />
-    <Compile Include="src\MergeRequests\Impl\RemoteVersionBasedUpdateFactory.cs" />
+    <Compile Include="src\MergeRequests\Impl\LocalVersionBasedContext.cs" />
+    <Compile Include="src\MergeRequests\Impl\RemoteVersionBasedContext.cs" />
     <Compile Include="src\Workflow\WorkflowEventNotifierItf.cs" />
     <Compile Include="src\Workflow\WorkflowManager.cs" />
     <Compile Include="src\Workflow\Impl\WorkflowDataOperator.cs" />

@@ -17,7 +17,7 @@ namespace mrHelper.Common.Interfaces
       public IEnumerable<string> Sha;
    }
 
-   public interface IProjectUpdateFactory
+   public interface IProjectUpdateContext
    {
       Task<IProjectUpdate> GetUpdate();
    }

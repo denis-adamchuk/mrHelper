@@ -13,7 +13,7 @@ namespace mrHelper.GitClient
    /// <summary>
    /// Updates attached ILocalGitRepository object
    /// </summary>
-   internal class LocalGitRepositoryUpdater : IDisposable, ILocalGitRepositoryUpdater
+   internal class LocalGitRepositoryUpdater : ILocalGitRepositoryUpdater
    {
       internal enum EUpdateMode
       {
@@ -26,31 +26,17 @@ namespace mrHelper.GitClient
       /// Bind to the specific LocalGitRepository object
       /// </summary>
       internal LocalGitRepositoryUpdater(
-         IProjectWatcher projectWatcher,
          ILocalGitRepository localGitRepository,
          IExternalProcessManager operationManager,
-         ISynchronizeInvoke synchronizeInvoke,
          EUpdateMode mode)
       {
-         _projectWatcher = projectWatcher;
          _localGitRepository = localGitRepository;
          _operationManager = operationManager;
-         _synchronizeInvoke = synchronizeInvoke;
          _updateMode = mode;
       }
 
       internal event Action Cloned;
       internal event Action Updated;
-
-      public void Dispose()
-      {
-         if (_projectWatcher != null)
-         {
-            Trace.TraceInformation(String.Format(
-               "[LocalGitRepositoryUpdater] Dispose and unsubscribe from Project Watcher"));
-            _projectWatcher.OnProjectUpdate -= onProjectWatcherUpdate;
-         }
-      }
 
       async public Task CancelUpdate()
       {
@@ -64,7 +50,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      async public Task Update(IProjectUpdateFactory instantChecker, Action<string> onProgressChange)
+      async public Task Update(IProjectUpdateContext instantChecker, Action<string> onProgressChange)
       {
          if (instantChecker == null)
          {
@@ -94,61 +80,6 @@ namespace mrHelper.GitClient
          }
 
          _onProgressChange = null;
-
-         // if doUpdate succeeded, it is ok to start periodic updates
-         if (!_subscribed)
-         {
-            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Subscribe to Project Watcher"));
-            _projectWatcher.OnProjectUpdate += onProjectWatcherUpdate;
-            _subscribed = true;
-         }
-      }
-
-      private void onProjectWatcherUpdate(ProjectWatcherUpdateArgs args)
-      {
-         if (_synchronizeInvoke == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         _synchronizeInvoke.BeginInvoke(new Action<ProjectWatcherUpdateArgs>(
-            async (argsInternal) =>
-               await onProjectWatcherUpdateAsync(argsInternal) ), new object[] { args });
-      }
-
-      async private Task onProjectWatcherUpdateAsync(ProjectWatcherUpdateArgs args)
-      {
-         Debug.Assert(_subscribed);
-
-         if (!args.ProjectKey.Equals(_localGitRepository.ProjectKey))
-         {
-            return;
-         }
-
-         Trace.TraceInformation(String.Format(
-            "[LocalGitRepositoryUpdater] Received an update from project watcher for git repository {0}",
-           _localGitRepository.ProjectKey.ProjectName));
-
-         if (_updating)
-         {
-            enqueue(args.ProjectUpdate);
-            return;
-         }
-
-         _updating = true;
-         try
-         {
-            await enqueueAndProcess(args.ProjectUpdate);
-         }
-         catch (RepositoryUpdateException ex)
-         {
-            ExceptionHandlers.Handle("Repository update failed (triggered by PW)", ex);
-         }
-         finally
-         {
-            _updating = false;
-         }
       }
 
       async private Task enqueueAndProcess(IProjectUpdate update)
@@ -377,17 +308,14 @@ namespace mrHelper.GitClient
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
       }
 
-      private readonly IProjectWatcher _projectWatcher;
       private readonly ILocalGitRepository _localGitRepository;
       private readonly IExternalProcessManager _operationManager;
-      private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly EUpdateMode _updateMode;
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
       private readonly Queue<IProjectUpdate> _queuedUpdates = new Queue<IProjectUpdate>();
 
       private bool _updating = false;
-      private bool _subscribed = false;
       private Action<string> _onProgressChange;
       private DateTime _latestFullFetchTimeStamp = DateTime.MinValue;
    }

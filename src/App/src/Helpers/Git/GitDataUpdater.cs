@@ -292,20 +292,22 @@ namespace mrHelper.App.Helpers
       {
          // On timer update we may got into situation when not all SHA are already fetched.
          // For example, if we just cloned the repository and still in progress of initial
-         // fetching. A simple solution is to request updates using DummyProjectChecker.
+         // fetching. A simple solution is to request updates using CommitBasedContext.
+         // Update() call will return from `await` only when all ongoing updates within
+         // the project are finished.
 
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
             {
                await repo.Updater.Update(
-                  new CommitBasedUpdateFactory(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
+                  new CommitBasedContext(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
                await repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               await repo.Updater.Update(new CommitBasedUpdateFactory(new string[] { x.Sha }), null);
+               await repo.Updater.Update(new CommitBasedContext(new string[] { x.Sha }), null);
                repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);

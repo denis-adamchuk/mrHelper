@@ -25,7 +25,6 @@ namespace mrHelper.Client.Common
          public FullMergeRequestKey FullMergeRequestKey;
          public Type EventType;
          public object Scope;
-         public IEnumerable<Version> NewVersions;
 
          public bool New => EventType == Type.NewMergeRequest;
          public bool Commits => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Commits;

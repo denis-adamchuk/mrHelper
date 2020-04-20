@@ -136,7 +136,6 @@ namespace mrHelper.Client.MergeRequests
                {
                   FullMergeRequestKey = fmk,
                   EventType = UserEvents.MergeRequestEvent.Type.NewMergeRequest,
-                  NewVersions = newDetails.GetVersions(mergeRequestKey),
                   Scope = null
                });
          }
@@ -198,7 +197,6 @@ namespace mrHelper.Client.MergeRequests
                   {
                      FullMergeRequestKey = fmk,
                      EventType = UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
-                     NewVersions = newVersions,
                      Scope = new UserEvents.MergeRequestEvent.UpdateScope
                      {
                         Commits = commitsUpdated,

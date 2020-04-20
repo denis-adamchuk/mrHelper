@@ -792,8 +792,8 @@ namespace mrHelper.App.Forms
 
             try
             {
-               _gitClientFactory = new LocalGitRepositoryFactory(localFolder,
-                  _mergeRequestCache.GetProjectWatcher(), this, Program.Settings.UseShallowClone);
+               _gitClientFactory = new LocalGitRepositoryFactory(
+                  localFolder, this, Program.Settings.UseShallowClone);
             }
             catch (ArgumentException ex)
             {
@@ -1118,6 +1118,8 @@ namespace mrHelper.App.Forms
 
       private void processUpdate(MergeRequestEvent e)
       {
+         scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
+
          updateVisibleMergeRequests();
 
          if (e.New)

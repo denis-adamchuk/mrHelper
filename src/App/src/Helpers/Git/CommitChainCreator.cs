@@ -163,7 +163,7 @@ namespace mrHelper.App.Helpers
          _onStatusChange?.Invoke("Fetching new branches from remote repository...");
          try
          {
-            await _repo.Updater.Update(new CommitBasedUpdateFactory(shas), _onGitStatusChange);
+            await _repo.Updater.Update(new CommitBasedContext(shas), _onGitStatusChange);
          }
          catch (RepositoryUpdateException ex)
          {

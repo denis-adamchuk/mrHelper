@@ -10,9 +10,9 @@ namespace mrHelper.Client.MergeRequests
    /// <summary>
    /// Detects the latest change among given versions
    /// </summary>
-   public class LocalVersionBasedUpdateFactory : IProjectUpdateFactory
+   public class LocalVersionBasedContext : IProjectUpdateContext
    {
-      internal LocalVersionBasedUpdateFactory(IEnumerable<Version> versions)
+      internal LocalVersionBasedContext(IEnumerable<Version> versions)
       {
          _versions = versions;
       }
