@@ -17,7 +17,9 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    internal class DiscussionParser : IDisposable
    {
-      internal DiscussionParser(IWorkflowEventNotifier workflowEventNotifier, DiscussionManager discussionManager,
+      internal DiscussionParser(
+         IWorkflowEventNotifier workflowEventNotifier,
+         IDiscussionLoaderInternal discussionLoader,
          IEnumerable<string> keywords)
       {
          _keywords = keywords;
@@ -25,22 +27,21 @@ namespace mrHelper.Client.Discussions
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connected += onConnected;
 
-         _discussionManager = discussionManager;
-         _discussionManager.PostLoadDiscussionsInternal += processDiscussions;
+         _discussionLoader = discussionLoader;
+         _discussionLoader.PostLoadDiscussionsInternal += processDiscussions;
       }
 
       public void Dispose()
       {
          _workflowEventNotifier.Connected -= onConnected;
 
-         _discussionManager.PostLoadDiscussionsInternal -= processDiscussions;
+         _discussionLoader.PostLoadDiscussionsInternal -= processDiscussions;
       }
 
-      internal event Action<UserEvents.DiscussionEvent, DateTime,
-         DiscussionManager.EDiscussionUpdateType> DiscussionEvent;
+      internal event Action<UserEvents.DiscussionEvent, DateTime, EDiscussionUpdateType> DiscussionEvent;
 
       private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
-         DiscussionManager.EDiscussionUpdateType type)
+         EDiscussionUpdateType type)
       {
          if (discussions.Count() == 0)
          {
@@ -122,7 +123,7 @@ namespace mrHelper.Client.Discussions
          return false;
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user)
       {
          _currentUser = user;
          _latestParsingTime.Clear();
@@ -133,7 +134,7 @@ namespace mrHelper.Client.Discussions
       private User _currentUser;
       private readonly IEnumerable<string> _keywords;
 
-      private readonly DiscussionManager _discussionManager;
+      private readonly IDiscussionLoaderInternal _discussionLoader;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }

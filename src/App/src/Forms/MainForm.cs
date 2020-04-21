@@ -20,8 +20,7 @@ namespace mrHelper.App.Forms
    internal partial class MainForm :
       CustomFontForm,
       ICommandCallback,
-      ILocalGitRepositoryFactoryAccessor,
-      IWorkflowEventNotifier
+      ILocalGitRepositoryFactoryAccessor
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -79,12 +78,6 @@ namespace mrHelper.App.Forms
       {
          return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
       }
-
-      public event Action<string, User, IEnumerable<Project>> Connected;
-      public event Action<string, Project, IEnumerable<MergeRequest>> LoadedMergeRequests;
-      public event Action<string, string, MergeRequest, IEnumerable<GitLabSharp.Entities.Version>>
-         LoadMergeRequestVersions;
-      public event Action<string, IEnumerable<Project>> LoadedProjects;
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
       {

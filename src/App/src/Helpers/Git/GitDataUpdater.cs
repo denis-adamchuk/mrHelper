@@ -22,11 +22,12 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitDataUpdater : IDisposable
    {
-      internal GitDataUpdater(IWorkflowEventNotifier workflowEventNotifier,
+      internal GitDataUpdater(
+         IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider,
-         DiscussionManager discussionManager,
+         IDiscussionProvider discussionProvider,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
       {
@@ -40,7 +41,7 @@ namespace mrHelper.App.Helpers
 
          _factoryAccessor = factoryAccessor;
          _mergeRequestProvider = mergeRequestProvider;
-         _discussionManager = discussionManager;
+         _discussionProvider = discussionProvider;
          _mergeRequestFilter = mergeRequestFilter;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
@@ -192,7 +193,7 @@ namespace mrHelper.App.Helpers
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionManager.GetDiscussionsAsync(mrk);
+            discussions = await _discussionProvider.GetDiscussionsAsync(mrk);
          }
          catch (DiscussionManagerException ex)
          {
@@ -387,7 +388,7 @@ namespace mrHelper.App.Helpers
 
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
-      private readonly DiscussionManager _discussionManager;
+      private readonly IDiscussionProvider _discussionProvider;
 
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly MergeRequestFilter _mergeRequestFilter;

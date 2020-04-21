@@ -29,37 +29,41 @@ namespace mrHelper.Client.Discussions
    /// - Storage
    /// - State
    /// - Updater/Loader
-   /// by analogy with MergeRequestCached and its internals
+   /// by analogy with MergeRequestCache and its internals
    /// <summary>
    /// Manages merge request discussions
    /// </summary>
-   public class DiscussionManager : IDisposable
+   public class DiscussionManager :
+      IDisposable,
+      IDiscussionProvider,
+      IDiscussionLoaderInternal,
+      IDiscussionLoader,
+      IDiscussionEditorFactory,
+      IDiscussionCreatorFactory
    {
-      public enum EDiscussionUpdateType
-      {
-         InitialSnapshot,
-         PeriodicUpdate,
-         NewMergeRequest
-      }
-
       public event Action<MergeRequestKey> PreLoadDiscussions;
       public event Action<MergeRequestKey, IEnumerable<Discussion>> PostLoadDiscussions;
-      internal event Action<MergeRequestKey, IEnumerable<Discussion>, EDiscussionUpdateType> PostLoadDiscussionsInternal;
+      public event Action<MergeRequestKey, IEnumerable<Discussion>, EDiscussionUpdateType> PostLoadDiscussionsInternal;
       public event Action<MergeRequestKey> FailedLoadDiscussions;
 
       public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
 
-      public DiscussionManager(IHostProperties settings, IWorkflowEventNotifier workflowEventNotifier,
-         MergeRequestCache mergeRequestCache, ISynchronizeInvoke synchronizeInvoke, IEnumerable<string> keywords,
-         int autoUpdatePeriodMs, MergeRequestFilter mergeRequestFilter)
+      public DiscussionManager(
+         IHostProperties settings,
+         IWorkflowEventNotifier workflowEventNotifier,
+         ICachedMergeRequestProvider mergeRequestCache,
+         ISynchronizeInvoke synchronizeInvoke,
+         IEnumerable<string> keywords,
+         int autoUpdatePeriodMs,
+         MergeRequestFilter mergeRequestFilter)
       {
          _operator = new DiscussionOperator(settings);
 
          _parser = new DiscussionParser(workflowEventNotifier, this, keywords);
          _parser.DiscussionEvent += onDiscussionParserEvent;
 
-         _mergeRequestCache = mergeRequestCache;
-         _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
+         _mergeRequestProvider = mergeRequestCache;
+         _mergeRequestProvider.MergeRequestEvent += onMergeRequestEvent;
          _mergeRequestFilter = mergeRequestFilter;
 
          _workflowEventNotifier = workflowEventNotifier;
@@ -77,7 +81,7 @@ namespace mrHelper.Client.Discussions
          _workflowEventNotifier.Connected -= onConnected;
          _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
-         _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+         _mergeRequestProvider.MergeRequestEvent -= onMergeRequestEvent;
 
          _parser.DiscussionEvent -= onDiscussionParserEvent;
          _parser.Dispose();
@@ -542,7 +546,7 @@ namespace mrHelper.Client.Discussions
          Debug.Assert(false);
       }
 
-      private void onMergeRequestEvent(Common.UserEvents.MergeRequestEvent e)
+      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
       {
          switch (e.EventType)
          {
@@ -615,7 +619,7 @@ namespace mrHelper.Client.Discussions
                   ProjectName = project.Path_With_Namespace
                };
 
-               matchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
+               matchingFilterList.AddRange(_mergeRequestProvider.GetMergeRequests(projectKey)
                   .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
                   .Select(x => new MergeRequestKey
                      {
@@ -624,7 +628,7 @@ namespace mrHelper.Client.Discussions
                      })
                   .ToList());
 
-               nonMatchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
+               nonMatchingFilterList.AddRange(_mergeRequestProvider.GetMergeRequests(projectKey)
                   .Where(x => !_mergeRequestFilter.DoesMatchFilter(x))
                   .Select(x => new MergeRequestKey
                      {
@@ -649,7 +653,7 @@ namespace mrHelper.Client.Discussions
             EDiscussionUpdateType.InitialSnapshot);
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user)
       {
          Trace.TraceInformation(String.Format("[DiscussionManager] Connected to {0}", hostname));
 
@@ -662,7 +666,7 @@ namespace mrHelper.Client.Discussions
          _projects = null;
       }
 
-      private readonly MergeRequestCache _mergeRequestCache;
+      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
       private readonly MergeRequestFilter _mergeRequestFilter;
 
       private readonly DiscussionParser _parser;

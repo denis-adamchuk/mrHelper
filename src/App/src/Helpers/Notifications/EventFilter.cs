@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
-using static mrHelper.Client.Common.UserEvents;
+using static mrHelper.Client.Types.UserEvents;
 
 namespace mrHelper.App.Helpers
 {
@@ -115,7 +114,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user)
       {
          _currentUser = user;
       }

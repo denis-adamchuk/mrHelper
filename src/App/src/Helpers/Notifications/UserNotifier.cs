@@ -2,38 +2,40 @@
 using System.Diagnostics;
 using System.Linq;
 using GitLabSharp.Entities;
-using mrHelper.Client.Common;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Interfaces;
 using static mrHelper.App.Helpers.TrayIcon;
-using static mrHelper.Client.Common.UserEvents;
+using static mrHelper.Client.Types.UserEvents;
 
 namespace mrHelper.App.Helpers
 {
    internal class UserNotifier : IDisposable
    {
-      internal UserNotifier(TrayIcon trayIcon, MergeRequestCache mergeRequestCache,
-         DiscussionManager discussionManager, EventFilter eventFilter)
+      internal UserNotifier(
+         ICachedMergeRequestProvider mergeRequestProvider,
+         IDiscussionProvider discussionProvider,
+         EventFilter eventFilter,
+         TrayIcon trayIcon)
       {
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
 
-         _mergeRequestCache = mergeRequestCache;
-         _mergeRequestCache.MergeRequestEvent += notifyOnEvent;
-         _mergeRequestProvider = mergeRequestCache;
+         _mergeRequestProvider = mergeRequestProvider;
+         _mergeRequestProvider.MergeRequestEvent += notifyOnEvent;
+         _mergeRequestProvider = mergeRequestProvider;
 
-         _discussionManager = discussionManager;
-         _discussionManager.DiscussionEvent += notifyOnEvent;
+         _discussionProvider = discussionProvider;
+         _discussionProvider.DiscussionEvent += notifyOnEvent;
       }
 
       public void Dispose()
       {
-         _mergeRequestCache.MergeRequestEvent -= notifyOnEvent;
-         _discussionManager.DiscussionEvent -= notifyOnEvent;
+         _mergeRequestProvider.MergeRequestEvent -= notifyOnEvent;
+         _discussionProvider.DiscussionEvent -= notifyOnEvent;
       }
 
-      private TrayIcon.BalloonText getBalloonText(UserEvents.MergeRequestEvent e)
+      private TrayIcon.BalloonText getBalloonText(MergeRequestEvent e)
       {
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
          string projectName = getProjectName(e.FullMergeRequestKey.ProjectKey);
@@ -72,7 +74,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private BalloonText getBalloonText(UserEvents.DiscussionEvent e)
+      private BalloonText getBalloonText(DiscussionEvent e)
       {
          MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
          string projectName = getProjectName(e.MergeRequestKey.ProjectKey);
@@ -117,8 +119,8 @@ namespace mrHelper.App.Helpers
 
       private void notifyOnEvent<EventT>(EventT e)
       {
-         if ((e is UserEvents.DiscussionEvent   de && _eventFilter.NeedSuppressEvent(de))
-          || (e is UserEvents.MergeRequestEvent me && _eventFilter.NeedSuppressEvent(me)))
+         if ((e is DiscussionEvent   de && _eventFilter.NeedSuppressEvent(de))
+          || (e is MergeRequestEvent me && _eventFilter.NeedSuppressEvent(me)))
          {
             return;
          }
@@ -137,7 +139,6 @@ namespace mrHelper.App.Helpers
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
-      private readonly MergeRequestCache _mergeRequestCache;
-      private readonly DiscussionManager _discussionManager;
+      private readonly IDiscussionProvider _discussionProvider;
    }
 }

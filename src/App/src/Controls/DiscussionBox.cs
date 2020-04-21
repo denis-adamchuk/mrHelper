@@ -22,10 +22,15 @@ namespace mrHelper.App.Controls
 {
    internal class DiscussionBox : Panel
    {
-      internal DiscussionBox(Discussion discussion, DiscussionEditor editor, User mergeRequestAuthor, User currentUser,
-         int diffContextDepth, IGitRepository gitRepository, ColorScheme colorScheme,
-         Action<DiscussionBox> preContentChange, Action<DiscussionBox, bool> onContentChanged,
-         Action<Control> onControlGotFocus, CustomFontForm parent, ProjectKey projectKey)
+      internal DiscussionBox(
+         CustomFontForm parent,
+         DiscussionEditor editor, IGitRepository gitRepository,
+         User currentUser, ProjectKey projectKey, Discussion discussion,
+         User mergeRequestAuthor,
+         int diffContextDepth, ColorScheme colorScheme,
+         Action<DiscussionBox> preContentChange,
+         Action<DiscussionBox, bool> onContentChanged,
+         Action<Control> onControlGotFocus)
       {
          Parent = parent;
 

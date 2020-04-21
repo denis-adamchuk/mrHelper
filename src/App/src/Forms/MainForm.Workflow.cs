@@ -45,8 +45,6 @@ namespace mrHelper.App.Forms
          _workflowManager.PreLoadComparableEntities += onLoadComparableEntities;
          _workflowManager.PostLoadComparableEntities += onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities +=  onFailedLoadComparableEntities;
-
-         _workflowManager.PostLoadVersions += onLatestVersionLoaded;
       }
 
       private void unsubscribeFromWorkflow()
@@ -66,21 +64,10 @@ namespace mrHelper.App.Forms
          _workflowManager.PreLoadComparableEntities -= onLoadComparableEntities;
          _workflowManager.PostLoadComparableEntities -= onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities -=  onFailedLoadComparableEntities;
-
-         _workflowManager.PostLoadVersions -= onLatestVersionLoaded;
       }
 
       async private Task switchHostToSelected()
       {
-         // When this thing happens, everything reconnects. If there are some things at gitlab that user
-         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
-         // things, missed events are not desirable.
-         // TODO - Avoid using this method to refresh current host data in cases like project list change and other.
-         // See Reload List button handler for possible solution.
-
-         await disposeLocalGitRepositoryFactory();
-
          string hostName = getHostName();
          if (hostName != String.Empty)
          {
@@ -184,6 +171,14 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> startWorkflowAsync(string hostname)
       {
+         // When this thing happens, everything reconnects. If there are some things at gitlab that user
+         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
+         // things, missed events are not desirable.
+         // This is why "Update List" button implemented not by means of switchHostToSelected().
+
+         await disposeLocalGitRepositoryFactory();
+
          labelWorkflowStatus.Text = String.Empty;
 
          await _workflowManager.CancelAsync();
@@ -216,7 +211,6 @@ namespace mrHelper.App.Forms
          buttonReloadList.Enabled = true;
          createListViewGroupsForProjects(listViewMergeRequests, hostname, enabledProjects);
 
-         Connected?.Invoke(hostname, _currentUser[hostname], enabledProjects);
          return await loadAllMergeRequests(hostname, enabledProjects);
       }
 
@@ -303,8 +297,6 @@ namespace mrHelper.App.Forms
       private void onProjectMergeRequestsLoaded(string hostname, Project project,
          IEnumerable<MergeRequest> mergeRequests)
       {
-         LoadedMergeRequests?.Invoke(hostname, project, mergeRequests);
-
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
            project.Path_With_Namespace, mergeRequests.Count()));
@@ -315,8 +307,6 @@ namespace mrHelper.App.Forms
       private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
       {
          labelWorkflowStatus.Text = "Merge requests loaded";
-
-         LoadedProjects?.Invoke(hostname, projects);
 
          updateVisibleMergeRequests();
 
@@ -407,18 +397,6 @@ namespace mrHelper.App.Forms
             ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
             IId = mergeRequest.IId
          });
-      }
-
-      private void onLatestVersionLoaded(string hostname, string projectname,
-         MergeRequest mergeRequest, IEnumerable<GitLabSharp.Entities.Version> version)
-      {
-         if (isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         LoadMergeRequestVersions?.Invoke(hostname, projectname, mergeRequest, version);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -121,34 +121,37 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, title, author, repo,
-               int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager, currentUser,
-                  async (key) =>
+            DiscussionsForm discussionsForm = new DiscussionsForm(_discussionManager, _discussionManager, repo,
+               currentUser, mrk, discussions, title, author,
+               int.Parse(comboBoxDCDepth.Text), _colorScheme,
+               async (key) =>
+            {
+               try
                {
-                  try
+                  ILocalGitRepository updatingRepo = await getRepository(key.ProjectKey, true);
+                  if (updatingRepo != null && !updatingRepo.DoesRequireClone())
                   {
-                     ILocalGitRepository updatingRepo = await getRepository(key.ProjectKey, true);
-                     if (updatingRepo != null && !updatingRepo.DoesRequireClone())
-                     {
                         // Using remote checker because there are might be discussions reported
                         // by other users on newer commits
                         await updatingRepo.Updater.Update(
-                           _mergeRequestCache.GetRemoteVersionBasedContext(key), null);
-                        return updatingRepo;
-                     }
-                     else
-                     {
-                        Trace.TraceInformation("[MainForm] User tried to refresh Discussions w/o git repository");
-                        MessageBox.Show("Cannot update git folder, some context code snippets may be missing. ",
-                           "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                     }
+                        _mergeRequestCache.GetRemoteVersionBasedContext(key), null);
+                     return updatingRepo;
                   }
-                  catch (RepositoryUpdateException ex)
+                  else
                   {
-                     ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
+                     Trace.TraceInformation("[MainForm] User tried to refresh Discussions w/o git repository");
+                     MessageBox.Show("Cannot update git folder, some context code snippets may be missing. ",
+                        "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                   }
-                  return null;
-               });
+               }
+               catch (RepositoryUpdateException ex)
+               {
+                  ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
+               }
+               return null;
+            },
+            () => _discussionManager.CheckForUpdates(mrk,
+               new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
          catch (NoDiscussionsToShow)

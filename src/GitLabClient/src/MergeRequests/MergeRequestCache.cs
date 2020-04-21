@@ -14,10 +14,13 @@ namespace mrHelper.Client.MergeRequests
 {
    public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider
    {
-      public event Action<Common.UserEvents.MergeRequestEvent> MergeRequestEvent;
+      public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
 
-      public MergeRequestCache(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
-         IHostProperties settings, int autoUpdatePeriodMs)
+      public MergeRequestCache(
+         IWorkflowEventNotifier workflowEventNotifier,
+         ISynchronizeInvoke synchronizeInvoke,
+         IHostProperties settings,
+         int autoUpdatePeriodMs)
       {
          _synchronizeInvoke = synchronizeInvoke;
          _autoUpdatePeriodMs = autoUpdatePeriodMs;
@@ -119,7 +122,7 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user)
       {
          Trace.TraceInformation(String.Format( "[MergeRequestCache] Connected to {0}", hostname));
 

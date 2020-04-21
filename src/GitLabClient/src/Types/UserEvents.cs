@@ -1,8 +1,7 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Client.Types;
-using System.Collections.Generic;
 
-namespace mrHelper.Client.Common
+namespace mrHelper.Client.Types
 {
    public static class UserEvents
    {

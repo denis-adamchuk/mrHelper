@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
@@ -7,6 +8,8 @@ namespace mrHelper.Client.MergeRequests
 {
    public interface ICachedMergeRequestProvider
    {
+      event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
+
       /// <summary>
       /// Return open merge requests in the given project
       /// </summary>
@@ -20,12 +23,12 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Return currently cached latest version of the given Merge Request
       /// </summary>
-      Version GetLatestVersion(MergeRequestKey mrk);
+      GitLabSharp.Entities.Version GetLatestVersion(MergeRequestKey mrk);
 
       /// <summary>
       /// Return currently cached latest version among all cached Merge Requests
       /// </summary>
-      Version GetLatestVersion(ProjectKey projectKey);
+      GitLabSharp.Entities.Version GetLatestVersion(ProjectKey projectKey);
    }
 }
 

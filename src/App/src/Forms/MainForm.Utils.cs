@@ -11,7 +11,6 @@ using System.Drawing;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using static mrHelper.App.Helpers.ServiceManager;
-using static mrHelper.Client.Common.UserEvents;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
@@ -1116,7 +1115,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void processUpdate(MergeRequestEvent e)
+      private void processUpdate(Client.Types.UserEvents.MergeRequestEvent e)
       {
          scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
 

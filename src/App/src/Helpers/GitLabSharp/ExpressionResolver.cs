@@ -23,7 +23,7 @@ namespace mrHelper.App.Helpers
          return expression.Replace("%CurrentUsername%", _currentUser.Username);
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user)
       {
          _currentUser = user;
       }
