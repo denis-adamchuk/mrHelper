@@ -35,15 +35,15 @@ namespace mrHelper.App.Forms
             _discussionManager.CheckForUpdates(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
-         ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
+         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
             enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
-               // Using remote checker because there are might be discussions reported by other users on newer commits
-               await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestCache.GetRemoteVersionBasedContext(mrk), updateGitStatusText);
+               // Using remote-based provider as there are might be discussions from other users on newer commits
+               IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetRemoteBasedContextProvider(mrk);
+               await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -128,13 +128,13 @@ namespace mrHelper.App.Forms
             {
                try
                {
-                  ILocalGitRepository updatingRepo = await getRepository(key.ProjectKey, true);
-                  if (updatingRepo != null && !updatingRepo.DoesRequireClone())
+                  ILocalGitRepository updatingRepo = getRepository(key.ProjectKey, true);
+                  if (updatingRepo != null && updatingRepo.State != ELocalGitRepositoryState.NotCloned)
                   {
-                        // Using remote checker because there are might be discussions reported
-                        // by other users on newer commits
-                        await updatingRepo.Updater.Update(
-                        _mergeRequestCache.GetRemoteVersionBasedContext(key), null);
+                     // Using remote-based provider as there are might be discussions from other users on newer commits
+                     IProjectUpdateContextProvider contextProvider =
+                        _mergeRequestCache.GetRemoteBasedContextProvider(key);
+                     await updatingRepo.Updater.Update(contextProvider, null);
                      return updatingRepo;
                   }
                   else
@@ -205,20 +205,18 @@ namespace mrHelper.App.Forms
             }
          }
 
-         ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
+         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
             enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
-               IProjectUpdateContext checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
-                  ? _mergeRequestCache.GetLocalVersionBasedContext(mrk)
-                  : _mergeRequestCache.GetRemoteVersionBasedContext(mrk);
-
-               // Using local checker because it does not make a GitLab request and it is quite enough here because
-               // user may select only those commits that already loaded and cached and have timestamps less
+               // Using local-based provider because it does not make a GitLab request and it is quite enough here
+               // because user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version (this is possible for Open MR only)
-               await _gitClientUpdater.UpdateAsync(repo, checker, updateGitStatusText);
+               IProjectUpdateContextProvider contextProvider =
+                  _mergeRequestCache.GetLocalBasedContextProvider(mrk.ProjectKey);
+               await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -413,9 +411,6 @@ namespace mrHelper.App.Forms
       ProjectKey GetProjectKey(ProjectKey pk) => pk;
       ProjectKey GetProjectKey(MergeRequestKey mrk) => mrk.ProjectKey;
 
-      ProjectKey GetKeyForUpdate(ProjectKey pk) => pk;
-      MergeRequestKey GetKeyForUpdate(MergeRequestKey mrk) => mrk;
-
       async private Task performSilentUpdate<T>(T key)
       {
          ProjectKey pk = GetProjectKey((dynamic)key);
@@ -429,8 +424,8 @@ namespace mrHelper.App.Forms
 
          _silentUpdateInProgress.Add(pk);
 
-         ILocalGitRepository repo = await getRepository(pk, false);
-         if (repo == null || repo.DoesRequireClone())
+         ILocalGitRepository repo = getRepository(pk, false);
+         if (repo == null || repo.State == ELocalGitRepositoryState.NotCloned)
          {
             Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",
                pk.ProjectName, (repo == null ? "repo is null" : "must be cloned first")));
@@ -441,12 +436,12 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format(
             "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
 
-         // Use Local Project Checker here because Remote Project Checker looks overkill.
+         // Use local-based provider here because remote-based one looks an overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
-         IProjectUpdateContext instantChecker = _mergeRequestCache.GetLocalVersionBasedContext((dynamic)key);
+         IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(pk);
          try
          {
-            await repo.Updater.Update(instantChecker, null);
+            await repo.Updater.Update(contextProvider, null);
          }
          catch (RepositoryUpdateException ex)
          {

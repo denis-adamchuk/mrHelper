@@ -74,7 +74,7 @@ namespace mrHelper.App.Forms
          return getMergeRequestKey(null)?.IId ?? 0;
       }
 
-      public Task<ILocalGitRepositoryFactory> GetFactory()
+      public ILocalGitRepositoryFactory GetFactory()
       {
          return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
       }

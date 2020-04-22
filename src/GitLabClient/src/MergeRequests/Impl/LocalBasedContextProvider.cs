@@ -10,14 +10,14 @@ namespace mrHelper.Client.MergeRequests
    /// <summary>
    /// Detects the latest change among given versions
    /// </summary>
-   public class LocalVersionBasedContext : IProjectUpdateContext
+   public class LocalBasedContextProvider : IProjectUpdateContextProvider
    {
-      internal LocalVersionBasedContext(IEnumerable<Version> versions)
+      internal LocalBasedContextProvider(IEnumerable<Version> versions)
       {
          _versions = versions;
       }
 
-      public Task<IProjectUpdate> GetUpdate()
+      public Task<IProjectUpdateContext> GetContext()
       {
          List<string> shas = new List<string>();
          foreach (Version version in _versions)
@@ -26,17 +26,17 @@ namespace mrHelper.Client.MergeRequests
             shas.Add(version.Head_Commit_SHA);
          }
 
-         FullProjectUpdate update = new FullProjectUpdate
+         FullUpdateContext update = new FullUpdateContext
          {
             LatestChange = _versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
             Sha = shas
          };
-         return Task.FromResult(update as IProjectUpdate);
+         return Task.FromResult(update as IProjectUpdateContext);
       }
 
       public override string ToString()
       {
-         return String.Format("LocalVersionBasedUpdateFactory. Version Count: {0}", _versions.Count());
+         return String.Format("LocalBasedContextProvider. Version Count: {0}", _versions.Count());
       }
 
       private readonly IEnumerable<Version> _versions;

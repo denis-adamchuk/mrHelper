@@ -830,7 +830,7 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(getMergeRequestKey(null).HasValue);
 
-         ILocalGitRepository repo = await getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
+         ILocalGitRepository repo = getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
          if (repo == null)
          {
             return;

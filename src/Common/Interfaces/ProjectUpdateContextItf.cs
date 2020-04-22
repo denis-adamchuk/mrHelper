@@ -4,22 +4,22 @@ using System.Threading.Tasks;
 
 namespace mrHelper.Common.Interfaces
 {
-   public interface IProjectUpdate {}
+   public interface IProjectUpdateContext {}
 
-   public class FullProjectUpdate : IProjectUpdate
+   public class FullUpdateContext : IProjectUpdateContext
    {
       public DateTime LatestChange;
       public IEnumerable<string> Sha;
    }
 
-   public class PartialProjectUpdate : IProjectUpdate
+   public class PartialUpdateContext : IProjectUpdateContext
    {
       public IEnumerable<string> Sha;
    }
 
-   public interface IProjectUpdateContext
+   public interface IProjectUpdateContextProvider
    {
-      Task<IProjectUpdate> GetUpdate();
+      Task<IProjectUpdateContext> GetContext();
    }
 }
 

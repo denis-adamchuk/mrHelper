@@ -57,8 +57,7 @@ namespace mrHelper.GitClient
          LocalGitRepository repo;
          try
          {
-            string path = LocalGitRepositoryPathFinder.FindPath(ParentFolder, key);
-            repo = new LocalGitRepository(key, path, _synchronizeInvoke, _useShallowClone);
+            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone);
          }
          catch (ArgumentException ex)
          {

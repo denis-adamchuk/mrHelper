@@ -288,32 +288,32 @@ namespace mrHelper.App.Helpers
 
       private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
       {
-         _synchronizeInvoke.BeginInvoke(new Action(
-            async () =>
+         ProjectKey key = new ProjectKey
          {
-            ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-            ILocalGitRepository repo =
-               (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
-            if (repo != null && !isConnected(repo))
+            HostName = hostname,
+            ProjectName = project.Path_With_Namespace
+         };
+
+         ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+         if (repo != null && !isConnected(repo))
+         {
+            _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
             {
-               _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
+               State = new RepositoryState
                {
-                  State = new RepositoryState
-                  {
-                     LatestChange = DateTime.MinValue,
-                     IsCloned = !repo.DoesRequireClone()
-                  },
-                  Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
-               });
+                  LatestChange = DateTime.MinValue,
+                  IsCloned = repo.State != ELocalGitRepositoryState.NotCloned
+               },
+               Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
+            });
 
-               Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
-                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-               repo.Updated += onLocalGitRepositoryUpdated;
-               repo.Disposed += onLocalGitRepositoryDisposed;
-            }
+            Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
+               repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+            repo.Updated += onLocalGitRepositoryUpdated;
+            repo.Disposed += onLocalGitRepositoryDisposed;
+         }
 
-            Update?.Invoke();
-         }), null);
+         Update?.Invoke();
       }
 
       private void unsubscribeFromOne(ILocalGitRepository repo)

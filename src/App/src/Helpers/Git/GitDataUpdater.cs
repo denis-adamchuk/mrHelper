@@ -301,14 +301,14 @@ namespace mrHelper.App.Helpers
             async x =>
             {
                await repo.Updater.Update(
-                  new CommitBasedContext(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
+                  new CommitBasedContextProvider(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
                await repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               await repo.Updater.Update(new CommitBasedContext(new string[] { x.Sha }), null);
+               await repo.Updater.Update(new CommitBasedContextProvider(new string[] { x.Sha }), null);
                repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
@@ -316,22 +316,22 @@ namespace mrHelper.App.Helpers
 
       private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
       {
-         _timer.SynchronizingObject.BeginInvoke(new Action(
-            async () =>
+         ProjectKey key = new ProjectKey
          {
-            ProjectKey key = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
-            ILocalGitRepository repo =
-               (await _factoryAccessor.GetFactory())?.GetRepository(key.HostName, key.ProjectName);
-            if (repo != null && !isConnected(repo))
-            {
-               _connected.Add(repo);
+            HostName = hostname,
+            ProjectName = project.Path_With_Namespace
+         };
 
-               Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
-                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-               repo.Updated += onLocalGitRepositoryUpdated;
-               repo.Disposed += onLocalGitRepositoryDisposed;
-            }
-         }), null);
+         ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+         if (repo != null && !isConnected(repo))
+         {
+            _connected.Add(repo);
+
+            Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
+               repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+            repo.Updated += onLocalGitRepositoryUpdated;
+            repo.Disposed += onLocalGitRepositoryDisposed;
+         }
       }
 
       private void unsubscribeFromOne(ILocalGitRepository repo)

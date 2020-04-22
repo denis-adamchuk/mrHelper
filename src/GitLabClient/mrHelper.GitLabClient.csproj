@@ -74,8 +74,8 @@
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsItf.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsCache.cs" />
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsChecker.cs" />
-    <Compile Include="src\MergeRequests\Impl\LocalVersionBasedContext.cs" />
-    <Compile Include="src\MergeRequests\Impl\RemoteVersionBasedContext.cs" />
+    <Compile Include="src\MergeRequests\Impl\LocalBasedContextProvider.cs" />
+    <Compile Include="src\MergeRequests\Impl\RemoteBasedContextProvider.cs" />
     <Compile Include="src\Workflow\WorkflowEventNotifierItf.cs" />
     <Compile Include="src\Workflow\WorkflowManager.cs" />
     <Compile Include="src\Workflow\Impl\WorkflowDataOperator.cs" />

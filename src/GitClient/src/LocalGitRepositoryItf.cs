@@ -3,6 +3,13 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
 {
+   public enum ELocalGitRepositoryState
+   {
+      NotCloned,
+      Cloned,
+      Ready
+   }
+
    public interface ILocalGitRepository : IGitRepository
    {
       new ILocalGitRepositoryData Data { get; }
@@ -14,7 +21,7 @@ namespace mrHelper.GitClient
       event Action<ILocalGitRepository> Updated;
       event Action<ILocalGitRepository> Disposed;
 
-      bool DoesRequireClone();
+      ELocalGitRepositoryState State { get; }
    }
 }
 

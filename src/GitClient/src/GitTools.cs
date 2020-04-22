@@ -151,7 +151,60 @@ namespace mrHelper.GitClient
          }
       }
 
-      public static string GetRepositoryName(string path)
+      public static bool DoesEntityExistAtPath(string path, string entity)
+      {
+         try
+         {
+            return ExternalProcess.Start("git", String.Format("cat-file -t {0}", entity), true, path)
+               .StdErr.Count() == 0;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return false;
+            }
+            throw;
+         }
+      }
+
+      public static ProjectKey? GetRepositoryProjectKey(string path)
+      {
+         string repositoryName = getRepositoryName(path);
+         if (String.IsNullOrWhiteSpace(repositoryName))
+         {
+            return null;
+         }
+
+         Match m = gitRepo_re.Match(repositoryName);
+         if (m.Success && m.Groups.Count == 5 && m.Groups[3].Success && m.Groups[4].Success)
+         {
+            string hostname = StringUtils.GetHostWithPrefix(m.Groups[3].Value);
+
+            string gitSuffix = ".git";
+            int startIndex = m.Groups[4].Value.StartsWith(":") ? 1 : 0;
+            int endIndex = m.Groups[4].Value.EndsWith(gitSuffix)
+               ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
+
+            string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
+            return new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = project
+            };
+         }
+
+         return null;
+      }
+
+      public static bool IsSingleCommitFetchSupported(string path)
+      {
+         // TODO
+         // Check if it is possible to run commands like `git fetch origin <sha>:refs/keep-around/sha`
+         return true;
+      }
+
+      private static string getRepositoryName(string path)
       {
          try
          {
@@ -172,12 +225,10 @@ namespace mrHelper.GitClient
          }
       }
 
-      public static bool IsSingleCommitFetchSupported(string path)
-      {
-         // TODO
-         // Check if it is possible to run commands like `git fetch origin <sha>:refs/keep-around/sha`
-         return true;
-      }
+      // from https://stackoverflow.com/a/2514986/9195131
+      private static string GitRepositoryRegularExpression = @"(\w+://)?(.+@)*([\w\d\.]+)/*(.*)";
+      private static readonly Regex gitRepo_re = new Regex(GitRepositoryRegularExpression,
+         RegexOptions.Compiled | RegexOptions.IgnoreCase);
    }
 }
 

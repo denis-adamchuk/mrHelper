@@ -60,19 +60,14 @@ namespace mrHelper.Client.MergeRequests
          return result.Id == default(MergeRequest).Id ? new MergeRequest?() : result;
       }
 
-      public IProjectUpdateContext GetLocalVersionBasedContext(MergeRequestKey mrk)
+      public IProjectUpdateContextProvider GetLocalBasedContextProvider(ProjectKey projectKey)
       {
-         return new LocalVersionBasedContext(getAllVersions(mrk.ProjectKey));
+         return new LocalBasedContextProvider(getAllVersions(projectKey));
       }
 
-      public IProjectUpdateContext GetLocalVersionBasedContext(ProjectKey projectKey)
+      public IProjectUpdateContextProvider GetRemoteBasedContextProvider(MergeRequestKey mrk)
       {
-         return new LocalVersionBasedContext(getAllVersions(projectKey));
-      }
-
-      public IProjectUpdateContext GetRemoteVersionBasedContext(MergeRequestKey mrk)
-      {
-         return new RemoteVersionBasedContext(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
+         return new RemoteBasedContextProvider(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
       }
 
       public Version GetLatestVersion(MergeRequestKey mrk)

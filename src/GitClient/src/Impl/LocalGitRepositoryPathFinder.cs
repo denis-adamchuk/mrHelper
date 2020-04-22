@@ -2,8 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
@@ -33,8 +31,8 @@ namespace mrHelper.GitClient
          foreach (string childFolder in childFolders)
          {
             repositoryPath = Path.Combine(parentFolder, childFolder);
-            string repositoryName = GitTools.GetRepositoryName(repositoryPath);
-            if (String.IsNullOrWhiteSpace(repositoryName))
+            ProjectKey? projectAtPath = GitTools.GetRepositoryProjectKey(repositoryPath);
+            if (projectAtPath == null)
             {
                Trace.TraceWarning(String.Format(
                   "[LocalGitRepositoryPathFinder] Path \"{0}\" is not a valid git repository",
@@ -42,27 +40,8 @@ namespace mrHelper.GitClient
                continue;
             }
 
-            Match m = gitRepo_re.Match(repositoryName);
-            if (m.Success && m.Groups.Count == 5 && m.Groups[3].Success && m.Groups[4].Success)
+            if (projectAtPath.Equals(projectKey))
             {
-               string hostname = StringUtils.GetHostWithPrefix(m.Groups[3].Value);
-               if (hostname != projectKey.HostName)
-               {
-                  continue;
-               }
-
-               int startIndex = m.Groups[4].Value.StartsWith(":") ? 1 : 0;
-
-               string gitSuffix = ".git";
-               int endIndex = m.Groups[4].Value.EndsWith(gitSuffix)
-                  ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
-
-               string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
-               if (project != projectKey.ProjectName)
-               {
-                  continue;
-               }
-
                Trace.TraceInformation(String.Format(
                   "[LocalGitRepositoryPathFinder] Found repository at \"{0}\"", repositoryPath));
                return true;
@@ -90,11 +69,6 @@ namespace mrHelper.GitClient
             "[LocalGitRepositoryPathFinder] Proposed repository path is \"{0}\"", proposedPath));
          return proposedPath;
       }
-
-      // from https://stackoverflow.com/a/2514986/9195131
-      private static string GitRepositoryRegularExpression = @"(\w+://)?(.+@)*([\w\d\.]+)/*(.*)";
-      private static readonly Regex gitRepo_re = new Regex(GitRepositoryRegularExpression,
-         RegexOptions.Compiled | RegexOptions.IgnoreCase);
    }
 }
 

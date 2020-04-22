@@ -45,7 +45,7 @@ namespace mrHelper.App.Interprocess
             Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
             return;
          }
-         Debug.Assert(!tempRepository.DoesRequireClone());
+         Debug.Assert(tempRepository.State != ELocalGitRepositoryState.NotCloned);
          await doHandleAsync(tempRepository);
          await factory.DisposeAsync();
       }

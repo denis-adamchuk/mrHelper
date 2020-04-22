@@ -190,7 +190,7 @@
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
     <Compile Include="src\Helpers\GitLabSharp\PositionConverter.cs" />
     <Compile Include="src\Helpers\Git\CommitChainCreator.cs" />
-    <Compile Include="src\Helpers\Git\CommitBasedContext.cs" />
+    <Compile Include="src\Helpers\Git\CommitBasedContextProvider.cs" />
     <Compile Include="src\Helpers\Git\FactoryAccessorItf.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />

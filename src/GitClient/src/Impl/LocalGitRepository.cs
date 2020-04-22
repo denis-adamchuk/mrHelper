@@ -5,9 +5,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.GitClient
 {
@@ -17,7 +15,7 @@ namespace mrHelper.GitClient
    internal class LocalGitRepository : ILocalGitRepository
    {
       // @{ IGitRepository
-      IGitRepositoryData IGitRepository.Data => DoesRequireClone() ? null : _data;
+      IGitRepositoryData IGitRepository.Data => State == ELocalGitRepositoryState.NotCloned ? null : _data;
 
       public ProjectKey ProjectKey { get; }
 
@@ -27,7 +25,7 @@ namespace mrHelper.GitClient
          {
             return true;
          }
-         if (containsEntity(sha))
+         if (GitTools.DoesEntityExistAtPath(Path, sha))
          {
             _cached_existingSha.Add(sha);
             return true;
@@ -37,7 +35,7 @@ namespace mrHelper.GitClient
       // @{ IGitRepository
 
       // @{ ILocalGitRepository
-      public ILocalGitRepositoryData Data => DoesRequireClone() ? null : _data;
+      public ILocalGitRepositoryData Data => State == ELocalGitRepositoryState.NotCloned ? null : _data;
 
       public string Path { get; }
 
@@ -46,54 +44,45 @@ namespace mrHelper.GitClient
       public event Action<ILocalGitRepository> Updated;
       public event Action<ILocalGitRepository> Disposed;
 
-      public bool DoesRequireClone()
-      {
-         if (!_cached_canClone.HasValue) { canClone(); }
-         if (!_cached_isValidRepository.HasValue) { isValidRepository(); }
-
-         Debug.Assert(_cached_canClone.Value || _cached_isValidRepository.Value);
-         return !_cached_isValidRepository.Value;
-      }
+      public ELocalGitRepositoryState State { get; private set; } = ELocalGitRepositoryState.NotCloned;
       // @} ILocalGitRepository
-
-      // Host Name and Project Name
 
       /// <summary>
       /// Construct LocalGitRepository with a path that either does not exist or it is empty
       /// or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal LocalGitRepository(ProjectKey projectKey, string path,
+      internal LocalGitRepository(string parentFolder, ProjectKey projectKey,
          ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
       {
-         Path = path;
-         if (!canClone() && !isValidRepository())
-         {
-            throw new ArgumentException("Path \"" + path + "\" already exists but it is not a valid git repository");
-         }
+         Path = LocalGitRepositoryPathFinder.FindPath(parentFolder, projectKey);
 
          if (useShallowClone && !GitTools.IsSingleCommitFetchSupported(Path))
          {
             throw new ArgumentException("Cannot use shallow clone if single commit fetch is not supported");
          }
 
+         // PathFinder must guarantee the following
+         Debug.Assert(isEmptyFolder(Path) || GitTools.GetRepositoryProjectKey(Path).Equals(projectKey));
+
+         _operationManager = new GitOperationManager(synchronizeInvoke, Path);
+
          LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
             ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
             : (GitTools.IsSingleCommitFetchSupported(Path)
                ? LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches
                : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithoutSingleCommitFetches);
-
-         ProjectKey = projectKey;
-         _operationManager = new GitOperationManager(synchronizeInvoke, Path);
+         State = isEmptyFolder(Path) ? ELocalGitRepositoryState.NotCloned : ELocalGitRepositoryState.Cloned;
          _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
-         _data = new LocalGitRepositoryData(_operationManager, Path);
-         _updater.Cloned += resetCachedState;
+         _updater.Cloned += onCloned;
          _updater.Updated += () => Updated?.Invoke(this);
 
+         _data = new LocalGitRepositoryData(_operationManager, Path);
+
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepository] Created LocalGitRepository at path {0} for host {1} and project {2} "
-          + "can clone at this path = {3}, isValidRepository = {4}",
-            Path, ProjectKey.HostName, ProjectKey.ProjectName, canClone(), isValidRepository()));
+            "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2} "
+          + "with state = {3}",
+            Path, ProjectKey.HostName, ProjectKey.ProjectName, State.ToString()));
       }
 
       async internal Task DisposeAsync()
@@ -104,45 +93,16 @@ namespace mrHelper.GitClient
          Disposed?.Invoke(this);
       }
 
-      /// <summary>
-      /// Check if Clone can be called for this LocalGitRepository
-      /// </summary>
-      private bool canClone()
+      private void onCloned()
       {
-         _cached_canClone = !Directory.Exists(Path) || !Directory.EnumerateFileSystemEntries(Path).Any();
-         return _cached_canClone.Value;
+         State = ELocalGitRepositoryState.Cloned;
       }
 
-      private bool isValidRepository()
+      private static bool isEmptyFolder(string path)
       {
-         _cached_isValidRepository = GitTools.IsValidGitRepository(Path);
-         return _cached_isValidRepository.Value;
+         return !Directory.Exists(path) || !Directory.EnumerateFileSystemEntries(path).Any();
       }
 
-      private bool containsEntity(string entity)
-      {
-         try
-         {
-            return ExternalProcess.Start("git", String.Format("cat-file -t {0}", entity), true, Path).StdErr.Count() == 0;
-         }
-         catch (Exception ex)
-         {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return false;
-            }
-            throw;
-         }
-      }
-
-      private void resetCachedState()
-      {
-         _cached_canClone = null;
-         _cached_isValidRepository = null;
-      }
-
-      private bool? _cached_isValidRepository;
-      private bool? _cached_canClone;
       private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
       private readonly LocalGitRepositoryData _data;
       private readonly LocalGitRepositoryUpdater _updater;

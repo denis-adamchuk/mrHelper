@@ -50,9 +50,9 @@ namespace mrHelper.GitClient
          }
       }
 
-      async public Task Update(IProjectUpdateContext instantChecker, Action<string> onProgressChange)
+      async public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
       {
-         if (instantChecker == null)
+         if (contextProvider == null)
          {
             Debug.Assert(false);
             return;
@@ -71,8 +71,8 @@ namespace mrHelper.GitClient
          _updating = true;
          try
          {
-            IProjectUpdate projectSnapshot = await instantChecker.GetUpdate();
-            await enqueueAndProcess(projectSnapshot);
+            IProjectUpdateContext context = await contextProvider.GetContext();
+            await enqueueAndProcess(context);
          }
          finally
          {
@@ -82,15 +82,15 @@ namespace mrHelper.GitClient
          _onProgressChange = null;
       }
 
-      async private Task enqueueAndProcess(IProjectUpdate update)
+      async private Task enqueueAndProcess(IProjectUpdateContext context)
       {
-         enqueue(update);
+         enqueue(context);
          await processQueue();
       }
 
-      private void enqueue(IProjectUpdate update)
+      private void enqueue(IProjectUpdateContext context)
       {
-         _queuedUpdates.Enqueue(update);
+         _queuedUpdates.Enqueue(context);
       }
 
       async private Task processQueue()
@@ -101,12 +101,12 @@ namespace mrHelper.GitClient
             {
                Debug.Assert(_updateOperationDescriptor == null);
 
-               IProjectUpdate request = _queuedUpdates.Dequeue();
-               if (request is FullProjectUpdate ps)
+               IProjectUpdateContext request = _queuedUpdates.Dequeue();
+               if (request is FullUpdateContext ps)
                {
                   await processFullProjectUpdate(ps);
                }
-               else if (request is PartialProjectUpdate pu)
+               else if (request is PartialUpdateContext pu)
                {
                   await processPartialProjectUpdate(pu);
                }
@@ -130,11 +130,11 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task processFullProjectUpdate(FullProjectUpdate projectUpdate)
+      async private Task processFullProjectUpdate(FullUpdateContext context)
       {
-         if (projectUpdate.Sha == null
-         || !projectUpdate.Sha.Any()
-         ||  projectUpdate.LatestChange == DateTime.MinValue)
+         if (context.Sha == null
+         || !context.Sha.Any()
+         ||  context.LatestChange == DateTime.MinValue)
          {
             Debug.Assert(false);
             Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
@@ -142,33 +142,33 @@ namespace mrHelper.GitClient
          }
 
          DateTime prevLatestTimeStamp = _lastestFullUpdateTimestamp;
-         if (_localGitRepository.DoesRequireClone())
+         if (_localGitRepository.State == ELocalGitRepositoryState.NotCloned)
          {
             await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
-            _lastestFullUpdateTimestamp = projectUpdate.LatestChange;
+            _lastestFullUpdateTimestamp = context.LatestChange;
             Trace.TraceInformation(String.Format(
                "[LocalGitRepositoryUpdater] Repository cloned. Updating LatestChange timestamp to {0}",
                _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
             Cloned?.Invoke();
          }
 
-         if (projectUpdate.LatestChange > _lastestFullUpdateTimestamp)
+         if (context.LatestChange > _lastestFullUpdateTimestamp)
          {
             if (_updateMode != EUpdateMode.ShallowClone)
             {
                await fetchAsync();
             }
-            _lastestFullUpdateTimestamp = projectUpdate.LatestChange;
+            _lastestFullUpdateTimestamp = context.LatestChange;
             Trace.TraceInformation(String.Format(
                "[LocalGitRepositoryUpdater] Repository {0} updated. Updating LatestChange timestamp to {1}",
                _updateMode == EUpdateMode.ShallowClone ? "not" : String.Empty,
                _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
          }
-         else if (projectUpdate.LatestChange == _lastestFullUpdateTimestamp)
+         else if (context.LatestChange == _lastestFullUpdateTimestamp)
          {
             Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository not updated"));
          }
-         else if (projectUpdate.LatestChange < _lastestFullUpdateTimestamp)
+         else if (context.LatestChange < _lastestFullUpdateTimestamp)
          {
             // This is not a problem and may happen when, for example, a Merge Request with the most newest
             // version has been closed.
@@ -177,7 +177,7 @@ namespace mrHelper.GitClient
 
          if (_updateMode != EUpdateMode.FullCloneWithoutSingleCommitFetches)
          {
-            await fetchCommitsAsync(projectUpdate.Sha);
+            await fetchCommitsAsync(context.Sha);
          }
 
          if (_lastestFullUpdateTimestamp != prevLatestTimeStamp)
@@ -186,16 +186,16 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task processPartialProjectUpdate(PartialProjectUpdate projectUpdate)
+      async private Task processPartialProjectUpdate(PartialUpdateContext context)
       {
-         if (projectUpdate.Sha == null || !projectUpdate.Sha.Any())
+         if (context.Sha == null || !context.Sha.Any())
          {
             Debug.Assert(false);
             Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (_localGitRepository.DoesRequireClone())
+         if (_localGitRepository.State == ELocalGitRepositoryState.NotCloned)
          {
             Trace.TraceError(
                "[LocalGitRepositoryUpdater] Partial updates cannot be applied to a not cloned repository");
@@ -209,7 +209,7 @@ namespace mrHelper.GitClient
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (await fetchCommitsAsync(projectUpdate.Sha))
+         if (await fetchCommitsAsync(context.Sha))
          {
             Updated?.Invoke();
          }
@@ -316,7 +316,7 @@ namespace mrHelper.GitClient
       private readonly EUpdateMode _updateMode;
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
-      private readonly Queue<IProjectUpdate> _queuedUpdates = new Queue<IProjectUpdate>();
+      private readonly Queue<IProjectUpdateContext> _queuedUpdates = new Queue<IProjectUpdateContext>();
 
       private bool _updating = false;
       private Action<string> _onProgressChange;

@@ -783,12 +783,10 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<ILocalGitRepositoryFactory> getLocalGitRepositoryFactory(string localFolder)
+      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory(string localFolder)
       {
-         if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
+         if (_gitClientFactory == null)
          {
-            await disposeLocalGitRepositoryFactory();
-
             try
             {
                _gitClientFactory = new LocalGitRepositoryFactory(
@@ -799,6 +797,7 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
             }
          }
+         Debug.Assert(_gitClientFactory.ParentFolder == localFolder);
          return _gitClientFactory;
       }
 
@@ -816,9 +815,9 @@ namespace mrHelper.App.Forms
       /// Make some checks and create a repository
       /// </summary>
       /// <returns>null if could not create a repository</returns>
-      async private Task<ILocalGitRepository> getRepository(ProjectKey key, bool showMessageBoxOnError)
+      private ILocalGitRepository getRepository(ProjectKey key, bool showMessageBoxOnError)
       {
-         ILocalGitRepositoryFactory factory = await getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
+         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
          if (factory == null)
          {
             return null;

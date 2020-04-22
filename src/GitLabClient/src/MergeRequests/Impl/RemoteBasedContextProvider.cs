@@ -13,9 +13,9 @@ namespace mrHelper.Client.MergeRequests
    /// <summary>
    /// Detects the latest change among given versions, including remote versions for a given merge request
    /// </summary>
-   public class RemoteVersionBasedContext : IProjectUpdateContext
+   public class RemoteBasedContextProvider : IProjectUpdateContextProvider
    {
-      internal RemoteVersionBasedContext(IEnumerable<Version> localVersions,
+      internal RemoteBasedContextProvider(IEnumerable<Version> localVersions,
          MergeRequestKey mrk, UpdateOperator updateOperator)
       {
          _localVersions = localVersions;
@@ -23,7 +23,7 @@ namespace mrHelper.Client.MergeRequests
          _operator = updateOperator;
       }
 
-      async public Task<IProjectUpdate> GetUpdate()
+      async public Task<IProjectUpdateContext> GetContext()
       {
          List<Version> allVersions = new List<Version>();
          allVersions.AddRange(_localVersions);
@@ -35,7 +35,7 @@ namespace mrHelper.Client.MergeRequests
          }
          catch (OperatorException ex)
          {
-            ExceptionHandlers.Handle("Cannot obtain latest version for RemoteProjectChecker", ex);
+            ExceptionHandlers.Handle("Cannot obtain latest version for RemoteBasedUpdateProvider", ex);
          }
 
          List<string> shas = new List<string>();
@@ -45,7 +45,7 @@ namespace mrHelper.Client.MergeRequests
             shas.Add(version.Head_Commit_SHA);
          }
 
-         return new FullProjectUpdate
+         return new FullUpdateContext
          {
             LatestChange = allVersions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
             Sha = shas
@@ -54,7 +54,7 @@ namespace mrHelper.Client.MergeRequests
 
       public override string ToString()
       {
-         return String.Format("RemoteVersionBasedUpdateFactory. MRK: HostName={0}, ProjectName={1}, IId={2}",
+         return String.Format("RemoteBasedUpdateProvider. MRK: HostName={0}, ProjectName={1}, IId={2}",
             _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId);
       }
 
