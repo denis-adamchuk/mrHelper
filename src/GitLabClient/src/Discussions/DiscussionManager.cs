@@ -67,8 +67,8 @@ namespace mrHelper.Client.Discussions
          _mergeRequestFilter = mergeRequestFilter;
 
          _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connecting += onConnecting;
          _workflowEventNotifier.Connected += onConnected;
-         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -78,8 +78,8 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
+         _workflowEventNotifier.Connecting -= onConnecting;
          _workflowEventNotifier.Connected -= onConnected;
-         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
 
          _mergeRequestProvider.MergeRequestEvent -= onMergeRequestEvent;
 
@@ -642,7 +642,7 @@ namespace mrHelper.Client.Discussions
          nonMatchingFilter = nonMatchingFilterList;
       }
 
-      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, IEnumerable<Project> projects)
       {
          Trace.TraceInformation(
             "[DiscussionManager] Scheduling update of discussions for ALL merge requests on Workflow event");
@@ -653,7 +653,7 @@ namespace mrHelper.Client.Discussions
             EDiscussionUpdateType.InitialSnapshot);
       }
 
-      private void onConnected(string hostname, User user)
+      private void onConnecting(string hostname, User user)
       {
          Trace.TraceInformation(String.Format("[DiscussionManager] Connected to {0}", hostname));
 

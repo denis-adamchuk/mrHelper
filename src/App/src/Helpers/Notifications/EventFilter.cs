@@ -17,14 +17,14 @@ namespace mrHelper.App.Helpers
          _mergeRequestProvider = mergeRequestProvider;
 
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.Connecting += onConnecting;
 
          _mergeRequestFilter = mergeRequestFilter;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.Connecting -= onConnecting;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -114,7 +114,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onConnected(string hostname, User user)
+      private void onConnecting(string hostname, User user)
       {
          _currentUser = user;
       }

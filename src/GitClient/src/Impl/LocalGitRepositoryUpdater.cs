@@ -72,7 +72,7 @@ namespace mrHelper.GitClient
          try
          {
             IProjectUpdateContext context = await contextProvider.GetContext();
-            await enqueueAndProcess(context);
+            await processContext(context);
          }
          finally
          {
@@ -82,37 +82,22 @@ namespace mrHelper.GitClient
          _onProgressChange = null;
       }
 
-      async private Task enqueueAndProcess(IProjectUpdateContext context)
-      {
-         enqueue(context);
-         await processQueue();
-      }
-
-      private void enqueue(IProjectUpdateContext context)
-      {
-         _queuedUpdates.Enqueue(context);
-      }
-
-      async private Task processQueue()
+      async private Task processContext(IProjectUpdateContext context)
       {
          try
          {
-            while (_queuedUpdates.Any())
+            Debug.Assert(_updateOperationDescriptor == null);
+
+            if (context is FullUpdateContext ps)
             {
-               Debug.Assert(_updateOperationDescriptor == null);
-
-               IProjectUpdateContext request = _queuedUpdates.Dequeue();
-               if (request is FullUpdateContext ps)
-               {
-                  await processFullProjectUpdate(ps);
-               }
-               else if (request is PartialUpdateContext pu)
-               {
-                  await processPartialProjectUpdate(pu);
-               }
-
-               Debug.Assert(_updateOperationDescriptor == null);
+               await processFullProjectUpdate(ps);
             }
+            else if (context is PartialUpdateContext pu)
+            {
+               await processPartialProjectUpdate(pu);
+            }
+
+            Debug.Assert(_updateOperationDescriptor == null);
          }
          catch (GitException ex)
          {
@@ -316,7 +301,6 @@ namespace mrHelper.GitClient
       private readonly EUpdateMode _updateMode;
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
-      private readonly Queue<IProjectUpdateContext> _queuedUpdates = new Queue<IProjectUpdateContext>();
 
       private bool _updating = false;
       private Action<string> _onProgressChange;

@@ -75,10 +75,11 @@ namespace mrHelper.GitClient
          State = isEmptyFolder(Path) ? ELocalGitRepositoryState.NotCloned : ELocalGitRepositoryState.Cloned;
          _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
          _updater.Cloned += onCloned;
-         _updater.Updated += () => Updated?.Invoke(this);
+         _updater.Updated += onUpdated;
 
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
+         ProjectKey = projectKey;
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2} "
           + "with state = {3}",
@@ -96,6 +97,26 @@ namespace mrHelper.GitClient
       private void onCloned()
       {
          State = ELocalGitRepositoryState.Cloned;
+      }
+
+      private void onUpdated()
+      {
+         switch (State)
+         {
+            case ELocalGitRepositoryState.Cloned:
+               State = ELocalGitRepositoryState.Ready;
+               break;
+
+            case ELocalGitRepositoryState.Ready:
+               break; // nothing to do
+
+            case ELocalGitRepositoryState.NotCloned:
+            default:
+               Debug.Assert(false);
+               break;
+         }
+
+         Updated?.Invoke(this);
       }
 
       private static bool isEmptyFolder(string path)

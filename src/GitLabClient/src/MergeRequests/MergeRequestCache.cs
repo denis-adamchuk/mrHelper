@@ -12,11 +12,12 @@ using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
-   public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider
+   public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider, IProjectUpdateContextProviderFactory
    {
       public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
 
       public MergeRequestCache(
+         IWorkflowLoader workflowLoader,
          IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          IHostProperties settings,
@@ -28,18 +29,21 @@ namespace mrHelper.Client.MergeRequests
          _updateOperator = new UpdateOperator(settings);
 
          _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connecting += onConnecting;
          _workflowEventNotifier.Connected += onConnected;
-         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
-         _workflowEventNotifier.LoadMergeRequestVersions += onLoadedMergeRequestVersions;
-         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
+
+         _workflowLoader = workflowLoader;
+         _workflowLoader.PostLoadProjectMergeRequests += onLoadedMergeRequests;
+         _workflowLoader.PostLoadVersions += onLoadedMergeRequestVersions;
       }
 
       public void Dispose()
       {
+         _workflowEventNotifier.Connecting -= onConnecting;
          _workflowEventNotifier.Connected -= onConnected;
-         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
-         _workflowEventNotifier.LoadMergeRequestVersions -= onLoadedMergeRequestVersions;
-         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
+
+         _workflowLoader.PostLoadProjectMergeRequests -= onLoadedMergeRequests;
+         _workflowLoader.PostLoadVersions -= onLoadedMergeRequestVersions;
 
          if (_updateManager != null)
          {
@@ -117,7 +121,7 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      private void onConnected(string hostname, User user)
+      private void onConnecting(string hostname, User user)
       {
          Trace.TraceInformation(String.Format( "[MergeRequestCache] Connected to {0}", hostname));
 
@@ -155,7 +159,7 @@ namespace mrHelper.Client.MergeRequests
          }, versions);
       }
 
-      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, IEnumerable<Project> projects)
       {
          Debug.Assert(_updateManager == null);
 
@@ -172,6 +176,7 @@ namespace mrHelper.Client.MergeRequests
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
       private UpdateManager _updateManager;
       private readonly UpdateOperator _updateOperator;
+      private readonly IWorkflowLoader _workflowLoader;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly int _autoUpdatePeriodMs;

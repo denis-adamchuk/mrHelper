@@ -10,12 +10,12 @@ namespace mrHelper.App.Helpers
       public ExpressionResolver(IWorkflowEventNotifier workflowEventNotifier)
       {
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.Connecting += onConnecting;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.Connecting -= onConnecting;
       }
 
       public string Resolve(string expression)
@@ -23,7 +23,7 @@ namespace mrHelper.App.Helpers
          return expression.Replace("%CurrentUsername%", _currentUser.Username);
       }
 
-      private void onConnected(string hostname, User user)
+      private void onConnecting(string hostname, User user)
       {
          _currentUser = user;
       }

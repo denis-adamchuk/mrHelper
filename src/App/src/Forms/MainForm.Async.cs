@@ -10,11 +10,11 @@ using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
 using mrHelper.GitClient;
 using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
-using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
 using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms

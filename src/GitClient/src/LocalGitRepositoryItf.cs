@@ -5,9 +5,9 @@ namespace mrHelper.GitClient
 {
    public enum ELocalGitRepositoryState
    {
-      NotCloned,
-      Cloned,
-      Ready
+      NotCloned, // Git folder is ready for clone
+      Cloned,    // State of a git repository before the first update
+      Ready      // State of a git repository after the first update
    }
 
    public interface ILocalGitRepository : IGitRepository

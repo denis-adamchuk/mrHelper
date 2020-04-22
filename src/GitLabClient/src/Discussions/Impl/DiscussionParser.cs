@@ -25,7 +25,7 @@ namespace mrHelper.Client.Discussions
          _keywords = keywords;
 
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _workflowEventNotifier.Connecting += onConnecting;
 
          _discussionLoader = discussionLoader;
          _discussionLoader.PostLoadDiscussionsInternal += processDiscussions;
@@ -33,7 +33,7 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _workflowEventNotifier.Connecting -= onConnecting;
 
          _discussionLoader.PostLoadDiscussionsInternal -= processDiscussions;
       }
@@ -123,7 +123,7 @@ namespace mrHelper.Client.Discussions
          return false;
       }
 
-      private void onConnected(string hostname, User user)
+      private void onConnecting(string hostname, User user)
       {
          _currentUser = user;
          _latestParsingTime.Clear();

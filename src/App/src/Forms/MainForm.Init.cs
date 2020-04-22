@@ -432,26 +432,28 @@ namespace mrHelper.App.Forms
       {
          _workflowManager = new WorkflowManager(Program.Settings);
          _expressionResolver = new ExpressionResolver(_workflowManager);
-         _mergeRequestCache = new MergeRequestCache(_workflowManager, this, Program.Settings,
+         _mergeRequestCache = new MergeRequestCache(_workflowManager, _workflowManager, this, Program.Settings,
             Program.Settings.AutoUpdatePeriodMs);
-         _discussionManager = new DiscussionManager(Program.Settings, _workflowManager, _mergeRequestCache, this, _keywords,
-            Program.Settings.AutoUpdatePeriodMs, _mergeRequestFilter);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflowManager, _mergeRequestCache,
+            this, _keywords, Program.Settings.AutoUpdatePeriodMs, _mergeRequestFilter);
          _eventFilter = new EventFilter(Program.Settings, _workflowManager, _mergeRequestCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(_mergeRequestCache, _discussionManager, _eventFilter,
             _trayIcon);
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflowManager, _discussionManager);
+
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
             ? new GitDataUpdater(_workflowManager, this, this, _mergeRequestCache,
-               _discussionManager, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
+               _discussionManager, _mergeRequestCache, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
-         _gitStatManager = new GitStatisticManager(_workflowManager, this, this, _mergeRequestCache);
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflowManager, _discussionManager);
+         _gitStatManager = new GitStatisticManager(_workflowManager, this, this,_mergeRequestCache, _mergeRequestCache);
       }
 
       private void disposeWorkflowDependencies()
       {
-         _timeTrackingManager?.Dispose();
          _gitDataUpdater?.Dispose();
          _gitStatManager.Dispose();
+
+         _timeTrackingManager?.Dispose();
          _userNotifier.Dispose();
          _eventFilter.Dispose();
          _discussionManager.Dispose();

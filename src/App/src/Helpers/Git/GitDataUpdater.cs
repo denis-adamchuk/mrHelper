@@ -28,6 +28,7 @@ namespace mrHelper.App.Helpers
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
          ICachedMergeRequestProvider mergeRequestProvider,
          IDiscussionProvider discussionProvider,
+         IProjectUpdateContextProviderFactory contextProviderFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
       {
@@ -37,12 +38,13 @@ namespace mrHelper.App.Helpers
          }
 
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
+         _workflowEventNotifier.Connected += onConnected;
 
          _factoryAccessor = factoryAccessor;
          _mergeRequestProvider = mergeRequestProvider;
          _discussionProvider = discussionProvider;
          _mergeRequestFilter = mergeRequestFilter;
+         _contextProviderFactory = contextProviderFactory;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -52,7 +54,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
+         _workflowEventNotifier.Connected -= onConnected;
 
          _timer?.Stop();
          _timer?.Dispose();
@@ -85,10 +87,10 @@ namespace mrHelper.App.Helpers
 
       private void scheduleUpdate(ILocalGitRepository repo)
       {
-         _timer.SynchronizingObject.BeginInvoke(new Action(async () => await doUpdateGitRepository(repo)), null);
+         _timer.SynchronizingObject.BeginInvoke(new Action(async () => await updateGitDataAsync(repo)), null);
       }
 
-      async private Task doUpdateGitRepository(ILocalGitRepository repo)
+      async private Task updateGitDataAsync(ILocalGitRepository repo)
       {
          Debug.Assert(isConsistentState(repo));
 
@@ -108,28 +110,42 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestProvider.GetMergeRequests(repo.ProjectKey)
-               .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
-               .Select(x => new MergeRequestKey
-               {
-                  ProjectKey = repo.ProjectKey,
-                  IId = x.IId
-               });
-
-            foreach (MergeRequestKey mrk in mergeRequestKeys)
+            if (repo.State != ELocalGitRepositoryState.NotCloned)
             {
-               await updateGitDataForSingleMergeRequest(mrk, repo);
-               if (!isConnected(repo))
-               {
-                  // LocalGitRepository was removed from collection while we were caching data for this MR
-                  break;
-               }
+               await repo.Updater.Update(getContextProvider(repo), null);
             }
+            await doUpdateGitDataAsync(repo);
          }
          finally
          {
             _updating.Remove(repo);
             Debug.Assert(isConsistentState(repo));
+         }
+      }
+
+      private IProjectUpdateContextProvider getContextProvider(ILocalGitRepository repo)
+      {
+         return _contextProviderFactory.GetLocalBasedContextProvider(repo.ProjectKey);
+      }
+
+      private async Task doUpdateGitDataAsync(ILocalGitRepository repo)
+      {
+         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestProvider.GetMergeRequests(repo.ProjectKey)
+            .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
+            .Select(x => new MergeRequestKey
+            {
+               ProjectKey = repo.ProjectKey,
+               IId = x.IId
+            });
+
+         foreach (MergeRequestKey mrk in mergeRequestKeys)
+         {
+            await updateGitDataForSingleMergeRequest(mrk, repo);
+            if (!isConnected(repo))
+            {
+               // LocalGitRepository was removed from collection while we were caching data for this MR
+               break;
+            }
          }
       }
 
@@ -314,23 +330,27 @@ namespace mrHelper.App.Helpers
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
-      private void onLoadedMergeRequests(string hostname, Project project, IEnumerable<MergeRequest> mergeRequests)
+      private void onConnected(string hostname, IEnumerable<Project> projects)
       {
-         ProjectKey key = new ProjectKey
+         foreach (Project project in projects)
          {
-            HostName = hostname,
-            ProjectName = project.Path_With_Namespace
-         };
+            ProjectKey key = new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = project.Path_With_Namespace
+            };
 
-         ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
-         if (repo != null && !isConnected(repo))
-         {
-            _connected.Add(repo);
+            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+            if (repo != null && !isConnected(repo))
+            {
+               _connected.Add(repo);
 
-            Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
-               repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-            repo.Updated += onLocalGitRepositoryUpdated;
-            repo.Disposed += onLocalGitRepositoryDisposed;
+               Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
+                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+               repo.Updated += onLocalGitRepositoryUpdated;
+               repo.Disposed += onLocalGitRepositoryDisposed;
+               scheduleUpdate(repo);
+            }
          }
       }
 
@@ -391,6 +411,7 @@ namespace mrHelper.App.Helpers
       private readonly IDiscussionProvider _discussionProvider;
 
       private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly MergeRequestFilter _mergeRequestFilter;
 
       private readonly System.Timers.Timer _timer;

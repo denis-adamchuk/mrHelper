@@ -350,8 +350,7 @@ namespace mrHelper.App.Forms
             DiscussionEditor editor = _factory.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, editor, _gitRepository, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
-               _diffContextDepth,
-               _colorScheme,
+               _diffContextDepth, _colorScheme,
                // pre-content-change
                (sender) =>
                {

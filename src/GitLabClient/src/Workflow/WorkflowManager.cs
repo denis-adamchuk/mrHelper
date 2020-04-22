@@ -50,12 +50,10 @@ namespace mrHelper.Client.Workflow
    /// Supports chains of actions (loading a merge request also loads its versions or commits)
    /// Each action toggles Pre-{Action}-Event and either Post-{Action}-Event or Failed-{Action}-Event
    /// </summary>
-   public class WorkflowManager : IWorkflowEventNotifier
+   public class WorkflowManager : IWorkflowEventNotifier, IWorkflowLoader
    {
-      public event Action<string, User> Connected;
-      public event Action<string, Project, IEnumerable<MergeRequest>> LoadedMergeRequests;
-      public event Action<string, string, MergeRequest, IEnumerable<Version>> LoadMergeRequestVersions;
-      public event Action<string, IEnumerable<Project>> LoadedProjects;
+      public event Action<string, User> Connecting;
+      public event Action<string, IEnumerable<Project>> Connected;
 
       public WorkflowManager(IHostProperties settings)
       {
@@ -152,7 +150,7 @@ namespace mrHelper.Client.Workflow
             Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
          if (!cancelled)
          {
-            LoadedProjects?.Invoke(hostname, projects);
+            Connected?.Invoke(hostname, projects);
             return true;
          }
 
@@ -217,7 +215,7 @@ namespace mrHelper.Client.Workflow
          }
 
          PostLoadCurrentUser?.Invoke(hostName, currentUser);
-         Connected?.Invoke(hostName, currentUser);
+         Connecting?.Invoke(hostName, currentUser);
          return true;
       }
 
@@ -242,7 +240,6 @@ namespace mrHelper.Client.Workflow
          }
 
          PostLoadProjectMergeRequests?.Invoke(hostname, project, mergeRequests);
-         LoadedMergeRequests?.Invoke(hostname, project, mergeRequests);
          return mergeRequests;
       }
 
@@ -419,7 +416,6 @@ namespace mrHelper.Client.Workflow
             PostLoadComparableEntities?.Invoke(hostname, projectName, mergeRequest, versions);
          }
          PostLoadVersions?.Invoke(hostname, projectName, mergeRequest, versions);
-         LoadMergeRequestVersions?.Invoke(hostname, projectName, mergeRequest, versions);
 
          return true;
       }
