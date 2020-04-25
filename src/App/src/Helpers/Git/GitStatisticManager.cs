@@ -121,7 +121,7 @@ namespace mrHelper.App.Helpers
          {
             if (!repo.ExpectingClone)
             {
-               await repo.Updater.Update(getContextProvider(repo), null);
+               await repo.Updater.SilentUpdate(getContextProvider(repo));
             }
             await doUpdateGitStatistic(repo);
          }

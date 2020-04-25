@@ -134,7 +134,7 @@ namespace mrHelper.App.Forms
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =
                         _mergeRequestCache.GetRemoteBasedContextProvider(key);
-                     await updatingRepo.Updater.Update(contextProvider, null);
+                     await updatingRepo.Updater.SilentUpdate(contextProvider);
                      return updatingRepo;
                   }
                   else
@@ -439,19 +439,9 @@ namespace mrHelper.App.Forms
          // Use local-based provider here because remote-based one looks an overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
          IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(pk);
-         try
-         {
-            await repo.Updater.Update(contextProvider, null);
-         }
-         catch (RepositoryUpdateException ex)
-         {
-            ExceptionHandlers.Handle(String.Format("[MainForm] Silent update of {0} cancelled", pk.ProjectName), ex);
-            _silentUpdateInProgress.Remove(pk);
-            return;
-         }
-
-         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
+         await repo.Updater.SilentUpdate(contextProvider);
          _silentUpdateInProgress.Remove(pk);
+         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
       }
 
       private void scheduleSilentUpdate(ProjectKey pk)

@@ -35,6 +35,7 @@ namespace mrHelper.GitClient
    public interface ILocalGitRepositoryUpdater
    {
       Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange);
+      Task SilentUpdate(IProjectUpdateContextProvider contextProvider);
       Task CancelUpdate();
    }
 }

@@ -82,6 +82,18 @@ namespace mrHelper.GitClient
          _onProgressChange = null;
       }
 
+      async public Task SilentUpdate(IProjectUpdateContextProvider contextProvider)
+      {
+         try
+         {
+            await Update(contextProvider, null);
+         }
+         catch (RepositoryUpdateException ex)
+         {
+            ExceptionHandlers.Handle("Silent update failed", ex);
+         }
+      }
+
       async private Task processContext(IProjectUpdateContext context)
       {
          try

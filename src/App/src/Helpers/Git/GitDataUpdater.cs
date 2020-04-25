@@ -112,7 +112,7 @@ namespace mrHelper.App.Helpers
          {
             if (!repo.ExpectingClone)
             {
-               await repo.Updater.Update(getContextProvider(repo), null);
+               await repo.Updater.SilentUpdate(getContextProvider(repo));
             }
             await doUpdateGitDataAsync(repo);
          }
@@ -316,15 +316,15 @@ namespace mrHelper.App.Helpers
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
             {
-               await repo.Updater.Update(
-                  new CommitBasedContextProvider(new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }), null);
+               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
+                  new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }));
                await repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               await repo.Updater.Update(new CommitBasedContextProvider(new string[] { x.Sha }), null);
+               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { x.Sha }));
                repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
