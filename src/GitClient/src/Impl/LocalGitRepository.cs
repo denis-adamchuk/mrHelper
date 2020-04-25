@@ -81,7 +81,7 @@ namespace mrHelper.GitClient
 
          ProjectKey = projectKey;
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2} "
+            "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2}, "
           + "expecting clone = {3}",
             Path, ProjectKey.HostName, ProjectKey.ProjectName, ExpectingClone.ToString()));
       }

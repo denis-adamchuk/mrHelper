@@ -6,8 +6,8 @@ namespace mrHelper.Client.Workflow
 {
    public interface IWorkflowEventNotifier
    {
-      event Action<string, User> Connecting;
-      event Action<string, IEnumerable<Project>> Connected;
+      event Action<string> Connecting;
+      event Action<string, User, IEnumerable<Project>> Connected;
    }
 }
 

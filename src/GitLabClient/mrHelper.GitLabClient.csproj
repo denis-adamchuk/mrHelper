@@ -77,8 +77,11 @@
     <Compile Include="src\MergeRequests\Impl\WorkflowDetailsChecker.cs" />
     <Compile Include="src\MergeRequests\Impl\LocalBasedContextProvider.cs" />
     <Compile Include="src\MergeRequests\Impl\RemoteBasedContextProvider.cs" />
+    <Compile Include="src\Workflow\MergeRequestListLoaderItf.cs" />
     <Compile Include="src\Workflow\WorkflowEventNotifierItf.cs" />
-    <Compile Include="src\Workflow\WorkflowLoaderItf.cs" />
+    <Compile Include="src\Workflow\MergeRequestLoaderItf.cs" />
+    <Compile Include="src\Workflow\Impl\BaseWorkflowManager.cs" />
+    <Compile Include="src\Workflow\SearchWorkflowManager.cs" />
     <Compile Include="src\Workflow\WorkflowManager.cs" />
     <Compile Include="src\Workflow\Impl\WorkflowDataOperator.cs" />
   </ItemGroup>

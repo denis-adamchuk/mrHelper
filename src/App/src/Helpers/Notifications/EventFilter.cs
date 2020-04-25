@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
@@ -17,14 +18,14 @@ namespace mrHelper.App.Helpers
          _mergeRequestProvider = mergeRequestProvider;
 
          _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connecting += onConnecting;
+         _workflowEventNotifier.Connected += onConnected;
 
          _mergeRequestFilter = mergeRequestFilter;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connecting -= onConnecting;
+         _workflowEventNotifier.Connected -= onConnected;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -114,7 +115,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onConnecting(string hostname, User user)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
       }

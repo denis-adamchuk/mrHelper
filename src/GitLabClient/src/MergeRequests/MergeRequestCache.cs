@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using GitLabSharp.Entities;
-using mrHelper.Client.Common;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Interfaces;
@@ -17,7 +16,8 @@ namespace mrHelper.Client.MergeRequests
       public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
 
       public MergeRequestCache(
-         IWorkflowLoader workflowLoader,
+         IMergeRequestLoader mergeRequestLoader,
+         IMergeRequestListLoader mergeRequestListLoader,
          IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          IHostProperties settings,
@@ -32,9 +32,11 @@ namespace mrHelper.Client.MergeRequests
          _workflowEventNotifier.Connecting += onConnecting;
          _workflowEventNotifier.Connected += onConnected;
 
-         _workflowLoader = workflowLoader;
-         _workflowLoader.PostLoadProjectMergeRequests += onLoadedMergeRequests;
-         _workflowLoader.PostLoadVersions += onLoadedMergeRequestVersions;
+         _mergeRequestLoader = mergeRequestLoader;
+         _mergeRequestLoader.PostLoadVersions += onLoadedMergeRequestVersions;
+
+         _mergeRequestListLoader = mergeRequestListLoader;
+         _mergeRequestListLoader.PostLoadProjectMergeRequests += onLoadedMergeRequests;
       }
 
       public void Dispose()
@@ -42,8 +44,8 @@ namespace mrHelper.Client.MergeRequests
          _workflowEventNotifier.Connecting -= onConnecting;
          _workflowEventNotifier.Connected -= onConnected;
 
-         _workflowLoader.PostLoadProjectMergeRequests -= onLoadedMergeRequests;
-         _workflowLoader.PostLoadVersions -= onLoadedMergeRequestVersions;
+         _mergeRequestListLoader.PostLoadProjectMergeRequests -= onLoadedMergeRequests;
+         _mergeRequestLoader.PostLoadVersions -= onLoadedMergeRequestVersions;
 
          if (_updateManager != null)
          {
@@ -110,7 +112,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public void CheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
-         _updateManager.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
+         _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
       }
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
@@ -121,9 +123,9 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      private void onConnecting(string hostname, User user)
+      private void onConnecting(string hostname)
       {
-         Trace.TraceInformation(String.Format( "[MergeRequestCache] Connected to {0}", hostname));
+         Trace.TraceInformation(String.Format( "[MergeRequestCache] Connecting to {0}", hostname));
 
          _hostname = hostname;
          _cache = new WorkflowDetailsCache();
@@ -159,7 +161,7 @@ namespace mrHelper.Client.MergeRequests
          }, versions);
       }
 
-      private void onConnected(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          Debug.Assert(_updateManager == null);
 
@@ -168,7 +170,7 @@ namespace mrHelper.Client.MergeRequests
          _updateManager.OnUpdate += onUpdate;
 
          Trace.TraceInformation(String.Format(
-            "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
+            "[MergeRequestCache] Connected to {0}. Will trace updates in {1} projects",
             hostname, projects.Count()));
       }
 
@@ -176,7 +178,8 @@ namespace mrHelper.Client.MergeRequests
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
       private UpdateManager _updateManager;
       private readonly UpdateOperator _updateOperator;
-      private readonly IWorkflowLoader _workflowLoader;
+      private readonly IMergeRequestLoader _mergeRequestLoader;
+      private readonly IMergeRequestListLoader _mergeRequestListLoader;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly int _autoUpdatePeriodMs;

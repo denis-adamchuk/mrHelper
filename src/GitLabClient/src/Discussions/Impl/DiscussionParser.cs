@@ -26,6 +26,7 @@ namespace mrHelper.Client.Discussions
 
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connecting += onConnecting;
+         _workflowEventNotifier.Connected += onConnected;
 
          _discussionLoader = discussionLoader;
          _discussionLoader.PostLoadDiscussionsInternal += processDiscussions;
@@ -34,6 +35,7 @@ namespace mrHelper.Client.Discussions
       public void Dispose()
       {
          _workflowEventNotifier.Connecting -= onConnecting;
+         _workflowEventNotifier.Connected -= onConnected;
 
          _discussionLoader.PostLoadDiscussionsInternal -= processDiscussions;
       }
@@ -123,10 +125,15 @@ namespace mrHelper.Client.Discussions
          return false;
       }
 
-      private void onConnecting(string hostname, User user)
+      private void onConnecting(string hostname)
       {
-         _currentUser = user;
          _latestParsingTime.Clear();
+      }
+
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      {
+         Debug.Assert(!_latestParsingTime.Any());
+         _currentUser = user;
       }
 
       private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =

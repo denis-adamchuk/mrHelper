@@ -16,21 +16,14 @@ namespace mrHelper.App.Forms
    {
       private void createSearchWorkflow()
       {
-         _searchWorkflowManager = new WorkflowManager(Program.Settings);
+         _searchWorkflowManager = new SearchWorkflowManager(Program.Settings);
       }
 
       private void subscribeToSearchWorkflow()
       {
-         _searchWorkflowManager.PreLoadCurrentUser += onLoadCurrentUser;
-         _searchWorkflowManager.PostLoadCurrentUser += onCurrentUserLoaded;
-         _searchWorkflowManager.FailedLoadCurrentUser += onFailedLoadCurrentUser;
-
-         _searchWorkflowManager.PostLoadProjectMergeRequests += onProjectSearchMergeRequestsLoaded;
-         _searchWorkflowManager.FailedLoadProjectMergeRequests += onFailedLoadProjectSearchMergeRequests;
-
-         _searchWorkflowManager.PreLoadSingleMergeRequest += onLoadSingleSearchMergeRequest;
-         _searchWorkflowManager.PostLoadSingleMergeRequest += onSingleSearchMergeRequestLoaded;
-         _searchWorkflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PreLoadMergeRequest += onLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PostLoadMergeRequest += onSingleSearchMergeRequestLoaded;
+         _searchWorkflowManager.FailedLoadMergeRequest += onFailedLoadSingleSearchMergeRequest;
 
          _searchWorkflowManager.PreLoadComparableEntities += onLoadSearchComparableEntities;
          _searchWorkflowManager.PostLoadComparableEntities += onSearchComparableEntitiesLoaded;
@@ -39,16 +32,9 @@ namespace mrHelper.App.Forms
 
       private void unsubscribeFromSearchWorkflow()
       {
-         _searchWorkflowManager.PreLoadCurrentUser -= onLoadCurrentUser;
-         _searchWorkflowManager.PostLoadCurrentUser -= onCurrentUserLoaded;
-         _searchWorkflowManager.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
-
-         _searchWorkflowManager.PostLoadProjectMergeRequests -= onProjectSearchMergeRequestsLoaded;
-         _searchWorkflowManager.FailedLoadProjectMergeRequests -= onFailedLoadProjectSearchMergeRequests;
-
-         _searchWorkflowManager.PreLoadSingleMergeRequest -= onLoadSingleSearchMergeRequest;
-         _searchWorkflowManager.PostLoadSingleMergeRequest -= onSingleSearchMergeRequestLoaded;
-         _searchWorkflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PreLoadMergeRequest -= onLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PostLoadMergeRequest -= onSingleSearchMergeRequestLoaded;
+         _searchWorkflowManager.FailedLoadMergeRequest -= onFailedLoadSingleSearchMergeRequest;
 
          _searchWorkflowManager.PreLoadComparableEntities -= onLoadSearchComparableEntities;
          _searchWorkflowManager.PostLoadComparableEntities -= onSearchComparableEntitiesLoaded;
@@ -144,14 +130,6 @@ namespace mrHelper.App.Forms
          }
 
          disableAllSearchUIControls(true);
-         if (!_currentUser.ContainsKey(hostname))
-         {
-            if (!await _searchWorkflowManager.LoadCurrentUserAsync(hostname))
-            {
-               return false;
-            }
-         }
-
          return await loadAllSearchMergeRequests(hostname, query, maxResults);
       }
 
@@ -159,9 +137,16 @@ namespace mrHelper.App.Forms
       {
          onLoadAllSearchMergeRequests();
 
-         if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query, maxResults))
+         Dictionary<Project, IEnumerable<MergeRequest>> projectMergeRequests =
+            await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query, maxResults);
+         if (projectMergeRequests == null)
          {
             return false;
+         }
+
+         foreach (KeyValuePair<Project, IEnumerable<MergeRequest>> keyValuePair in projectMergeRequests)
+         {
+            onProjectSearchMergeRequestsLoaded(hostname, keyValuePair.Key, keyValuePair.Value);
          }
 
          onAllSearchMergeRequestsLoaded();
@@ -174,13 +159,6 @@ namespace mrHelper.App.Forms
       {
          listViewFoundMergeRequests.Items.Clear();
          labelWorkflowStatus.Text = "Search in progress";
-      }
-
-      private void onFailedLoadProjectSearchMergeRequests()
-      {
-         labelWorkflowStatus.Text = "Failed to load merge requests";
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Failed to load merge requests"));
       }
 
       private void onProjectSearchMergeRequestsLoaded(string hostname, Project project,

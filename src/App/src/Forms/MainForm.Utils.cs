@@ -465,6 +465,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestFilterControls(enabled);
          enableMergeRequestSearchControls(enabled);
 
+         checkBoxShowVersions.Enabled = enabled;
          buttonReloadList.Enabled = enabled;
          _suppressExternalConnections = !enabled;
          _canSwitchTab = enabled;
@@ -916,11 +917,10 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(string hostname, string projectname, IEnumerable<MergeRequest> mergeRequests)
+      private void cleanupReviewedCommits(ProjectKey projectKey, IEnumerable<MergeRequest> mergeRequests)
       {
          IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(
-            (x) => x.ProjectKey.HostName == hostname
-                && x.ProjectKey.ProjectName == projectname
+            (x) => x.ProjectKey.Equals(projectKey)
                 && !mergeRequests.Any(y => x.IId == y.IId));
          foreach (MergeRequestKey key in toRemove.ToArray())
          {

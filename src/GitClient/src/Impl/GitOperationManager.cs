@@ -46,7 +46,7 @@ namespace mrHelper.GitClient
          }
          catch (CancellAllInProgressException)
          {
-            Debug.Assert(false);
+            throw new OperationCancelledException();
          }
       }
 

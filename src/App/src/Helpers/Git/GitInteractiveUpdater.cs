@@ -55,7 +55,7 @@ namespace mrHelper.App.Helpers
       {
          if (!System.IO.Directory.Exists(path))
          {
-            if (MessageBox.Show(String.Format("There is no git repository at \"{0}\"."
+            if (MessageBox.Show(String.Format("There is no git repository at \"{0}\". "
                + "Do you want to run 'git clone'?", path), "Information", MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.No)
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -114,7 +113,7 @@ namespace mrHelper.App.Forms
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
-      private WorkflowManager _searchWorkflowManager;
+      private SearchWorkflowManager _searchWorkflowManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;

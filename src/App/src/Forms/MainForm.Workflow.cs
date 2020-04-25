@@ -30,40 +30,28 @@ namespace mrHelper.App.Forms
    {
       private void subscribeToWorkflow()
       {
-         _workflowManager.PreLoadCurrentUser += onLoadCurrentUser;
-         _workflowManager.PostLoadCurrentUser += onCurrentUserLoaded;
-         _workflowManager.FailedLoadCurrentUser += onFailedLoadCurrentUser;
-
-         _workflowManager.PreLoadProjectMergeRequests += onLoadProjectMergeRequests;
-         _workflowManager.PostLoadProjectMergeRequests += onProjectMergeRequestsLoaded;
-         _workflowManager.FailedLoadProjectMergeRequests += onFailedLoadProjectMergeRequests;
-
-         _workflowManager.PreLoadSingleMergeRequest += onLoadSingleMergeRequest;
-         _workflowManager.PostLoadSingleMergeRequest += onSingleMergeRequestLoaded;
-         _workflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleMergeRequest;
+         _workflowManager.PreLoadMergeRequest += onLoadSingleMergeRequest;
+         _workflowManager.PostLoadMergeRequest += onSingleMergeRequestLoaded;
+         _workflowManager.FailedLoadMergeRequest += onFailedLoadSingleMergeRequest;
 
          _workflowManager.PreLoadComparableEntities += onLoadComparableEntities;
          _workflowManager.PostLoadComparableEntities += onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities +=  onFailedLoadComparableEntities;
+
+         _workflowManager.Connected += workflowManager_Connected;
       }
 
       private void unsubscribeFromWorkflow()
       {
-         _workflowManager.PreLoadCurrentUser -= onLoadCurrentUser;
-         _workflowManager.PostLoadCurrentUser -= onCurrentUserLoaded;
-         _workflowManager.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
-
-         _workflowManager.PreLoadProjectMergeRequests -= onLoadProjectMergeRequests;
-         _workflowManager.PostLoadProjectMergeRequests -= onProjectMergeRequestsLoaded;
-         _workflowManager.FailedLoadProjectMergeRequests -= onFailedLoadProjectMergeRequests;
-
-         _workflowManager.PreLoadSingleMergeRequest -= onLoadSingleMergeRequest;
-         _workflowManager.PostLoadSingleMergeRequest -= onSingleMergeRequestLoaded;
-         _workflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleMergeRequest;
+         _workflowManager.PreLoadMergeRequest -= onLoadSingleMergeRequest;
+         _workflowManager.PostLoadMergeRequest -= onSingleMergeRequestLoaded;
+         _workflowManager.FailedLoadMergeRequest -= onFailedLoadSingleMergeRequest;
 
          _workflowManager.PreLoadComparableEntities -= onLoadComparableEntities;
          _workflowManager.PostLoadComparableEntities -= onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities -=  onFailedLoadComparableEntities;
+
+         _workflowManager.Connected -= workflowManager_Connected;
       }
 
       async private Task switchHostToSelected()
@@ -200,14 +188,6 @@ namespace mrHelper.App.Forms
          }
 
          disableAllUIControls(true);
-         if (!_currentUser.ContainsKey(hostname))
-         {
-            if (!await _workflowManager.LoadCurrentUserAsync(hostname))
-            {
-               return false;
-            }
-         }
-
          buttonReloadList.Enabled = true;
          createListViewGroupsForProjects(listViewMergeRequests, hostname, enabledProjects);
 
@@ -254,54 +234,11 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadCurrentUser(string hostname)
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading user from host {0}", hostname));
-      }
-
-      private void onFailedLoadCurrentUser()
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load a user"));
-      }
-
-      private void onCurrentUserLoaded(string hostname, User currentUser)
-      {
-         _currentUser.Add(hostname, currentUser);
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Current user details: Id: {0}, Name: {1}, Username: {2}",
-            currentUser.Id.ToString(), currentUser.Name, currentUser.Username));
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
       private void onLoadAllMergeRequests(IEnumerable<Project> projects)
       {
          disableAllUIControls(false);
          labelWorkflowStatus.Text = String.Format(
             "Loading merge requests of {0} project{1}...", projects.Count(), projects.Count() > 1 ? "s" : "");
-      }
-
-      private void onLoadProjectMergeRequests(Project project)
-      {
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Loading merge requests of project {0}", project.Path_With_Namespace));
-      }
-
-      private void onFailedLoadProjectMergeRequests()
-      {
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Failed to load merge requests for one of projects"));
-      }
-
-      private void onProjectMergeRequestsLoaded(string hostname, Project project,
-         IEnumerable<MergeRequest> mergeRequests)
-      {
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
-           project.Path_With_Namespace, mergeRequests.Count()));
-
-         cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
       }
 
       private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
@@ -320,7 +257,13 @@ namespace mrHelper.App.Forms
 
          foreach (Project project in projects)
          {
-            scheduleSilentUpdate(new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace });
+            ProjectKey projectKey = new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = project.Path_With_Namespace
+            };
+            scheduleSilentUpdate(projectKey);
+            cleanupReviewedCommits(projectKey, _mergeRequestCache?.GetMergeRequests(projectKey));
          }
       }
 
@@ -397,6 +340,16 @@ namespace mrHelper.App.Forms
             ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
             IId = mergeRequest.IId
          });
+      }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+      private void workflowManager_Connected(string hostname, User user, IEnumerable<Project> projects)
+      {
+         if (!_currentUser.ContainsKey(hostname))
+         {
+            _currentUser.Add(hostname, user);
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

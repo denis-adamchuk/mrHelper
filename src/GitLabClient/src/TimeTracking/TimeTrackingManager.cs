@@ -37,6 +37,7 @@ namespace mrHelper.Client.TimeTracking
 
          _workflowEventNotifier = workflowEventNotifier;
          _workflowEventNotifier.Connecting += onConnecting;
+         _workflowEventNotifier.Connected += onConnected;
 
          _discussionLoader = discussionLoader;
          _discussionLoader.PreLoadDiscussions += onPreLoadDiscussions;
@@ -47,6 +48,7 @@ namespace mrHelper.Client.TimeTracking
       public void Dispose()
       {
          _workflowEventNotifier.Connecting -= onConnecting;
+         _workflowEventNotifier.Connected -= onConnected;
 
          _discussionLoader.PreLoadDiscussions -= onPreLoadDiscussions;
          _discussionLoader.PostLoadDiscussions -= onPostLoadDiscussions;
@@ -158,10 +160,14 @@ namespace mrHelper.Client.TimeTracking
          FailedLoadTotalTime?.Invoke(mrk);
       }
 
-      private void onConnecting(string hostname, User user)
+      private void onConnecting(string hostname)
+      {
+         _times.Clear();
+      }
+
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
-         _times.Clear();
       }
 
       private readonly TimeTrackingOperator _operator;

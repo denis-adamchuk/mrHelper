@@ -38,6 +38,7 @@ namespace mrHelper.App.Helpers
          }
 
          _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connecting += onConnecting;
          _workflowEventNotifier.Connected += onConnected;
 
          _factoryAccessor = factoryAccessor;
@@ -54,6 +55,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
+         _workflowEventNotifier.Connecting -= onConnecting;
          _workflowEventNotifier.Connected -= onConnected;
 
          _timer?.Stop();
@@ -93,12 +95,10 @@ namespace mrHelper.App.Helpers
       async private Task updateGitDataAsync(ILocalGitRepository repo)
       {
          Debug.Assert(isConsistentState(repo));
-
-         ILocalGitRepositoryData data = repo.Data;
-         if (data == null)
+         if (repo.Data == null || repo.ExpectingClone)
          {
             Trace.TraceWarning(String.Format(
-               "[GitDataUpdater] Update failed. LocalGitRepositoryData is not ready (Host={0}, Project={1})",
+               "[GitDataUpdater] Update failed. Repository is not ready (Host={0}, Project={1})",
                repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
             return;
          }
@@ -110,11 +110,12 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            if (!repo.ExpectingClone)
+            await repo.Updater.SilentUpdate(getContextProvider(repo));
+            if (isConnected(repo))
             {
-               await repo.Updater.SilentUpdate(getContextProvider(repo));
+               // LocalGitRepository might be removed from collection while we were updating
+               await doUpdateGitDataAsync(repo);
             }
-            await doUpdateGitDataAsync(repo);
          }
          finally
          {
@@ -330,8 +331,14 @@ namespace mrHelper.App.Helpers
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
-      private void onConnected(string hostname, IEnumerable<Project> projects)
+      private void onConnecting(string hostname)
       {
+         unsubscribeFromAll();
+      }
+
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      {
+         Debug.Assert(!_connected.Any());
          foreach (Project project in projects)
          {
             ProjectKey key = new ProjectKey

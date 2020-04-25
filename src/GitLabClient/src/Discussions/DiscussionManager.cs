@@ -642,22 +642,21 @@ namespace mrHelper.Client.Discussions
          nonMatchingFilter = nonMatchingFilterList;
       }
 
-      private void onConnected(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
-         Trace.TraceInformation(
-            "[DiscussionManager] Scheduling update of discussions for ALL merge requests on Workflow event");
+         Trace.TraceInformation(String.Format("[DiscussionManager] Connected to {0}", hostname));
 
+         _currentUser = user;
          _hostname = hostname;
          _projects = projects.ToArray();
          scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
             EDiscussionUpdateType.InitialSnapshot);
       }
 
-      private void onConnecting(string hostname, User user)
+      private void onConnecting(string hostname)
       {
-         Trace.TraceInformation(String.Format("[DiscussionManager] Connected to {0}", hostname));
+         Trace.TraceInformation(String.Format("[DiscussionManager] Connecting to {0}", hostname));
 
-         _currentUser = user;
          _reconnect = true;
          _scheduledUpdates.Clear();
          clearCache();
