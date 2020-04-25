@@ -43,13 +43,21 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         IEnumerable<string> heads = _headShas.Where(x => !_repo.ContainsSHA(x)).ToArray();
-         if (!_singleCommitFetchSupported)
+         List<string> missingCommits = new List<string>();
+         foreach (string sha in _headShas)
          {
-            return await createBranches(heads);
+            if (!await _repo.ContainsSHAAsync(sha))
+            {
+               missingCommits.Add(sha);
+            }
          }
 
-         await fetchMissingCommits(heads);
+         if (!_singleCommitFetchSupported)
+         {
+            return await createBranches(missingCommits);
+         }
+
+         await fetchMissingCommits(missingCommits);
          return true;
       }
 

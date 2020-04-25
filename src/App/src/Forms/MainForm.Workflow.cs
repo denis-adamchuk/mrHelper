@@ -170,6 +170,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
 
          await _workflowManager.CancelAsync();
+         await _searchWorkflowManager.CancelAsync();
          if (hostname == String.Empty)
          {
             return false;
@@ -188,6 +189,7 @@ namespace mrHelper.App.Forms
          }
 
          disableAllUIControls(true);
+         disableAllSearchUIControls(true);
          buttonReloadList.Enabled = true;
          createListViewGroupsForProjects(listViewMergeRequests, hostname, enabledProjects);
 

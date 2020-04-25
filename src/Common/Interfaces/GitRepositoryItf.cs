@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Interfaces
@@ -32,7 +33,7 @@ namespace mrHelper.Common.Interfaces
 
       ProjectKey ProjectKey { get; }
 
-      bool ContainsSHA(string sha);
+      Task<bool> ContainsSHAAsync(string sha);
    }
 }
 

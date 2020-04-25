@@ -129,13 +129,18 @@ namespace mrHelper.GitClient
 
       async private Task processFullProjectUpdate(FullUpdateContext context)
       {
-         if (context.Sha == null
-         || !context.Sha.Any()
-         ||  context.LatestChange == DateTime.MinValue)
+         if (context.Sha == null)
          {
             Debug.Assert(false);
             Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
             throw new RepositoryUpdateException("Cannot update git repository", null);
+         }
+
+         if (!context.Sha.Any() || context.LatestChange == DateTime.MinValue)
+         {
+            // It is not always a problem. May happen when a MR is opened from Search tab
+            // for a project that is not added to the list.
+            Trace.TraceWarning("[LocalGitRepositoryUpdater] Repository will not be updated because of empty context");
          }
 
          DateTime prevLatestTimeStamp = _lastestFullUpdateTimestamp;
@@ -236,7 +241,7 @@ namespace mrHelper.GitClient
          int iCommit = 0;
          foreach (string sha in goodSha)
          {
-            if (!_localGitRepository.ContainsSHA(sha))
+            if (!await _localGitRepository.ContainsSHAAsync(sha))
             {
                string arguments = String.Format("fetch {0}",
                   getFetchArguments(sha, shallowFetch));

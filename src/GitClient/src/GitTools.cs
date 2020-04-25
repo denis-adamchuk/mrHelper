@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
@@ -151,20 +152,20 @@ namespace mrHelper.GitClient
          }
       }
 
-      public static bool DoesEntityExistAtPath(string path, string entity)
+      async public static Task<bool> DoesEntityExistAtPathAsync(
+         IExternalProcessManager operationManager, string path, string entity)
       {
+         string arguments = String.Format("cat-file -t {0}", entity);
+         ExternalProcess.AsyncTaskDescriptor descriptor =
+            operationManager.CreateDescriptor("git", arguments, path, null);
          try
          {
-            return ExternalProcess.Start("git", String.Format("cat-file -t {0}", entity), true, path)
-               .StdErr.Count() == 0;
+            await operationManager.Wait(descriptor);
+            return descriptor.StdErr.Count() == 0;
          }
-         catch (Exception ex)
+         catch (GitException)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return false;
-            }
-            throw;
+            return false;
          }
       }
 

@@ -19,13 +19,14 @@ namespace mrHelper.GitClient
 
       public ProjectKey ProjectKey { get; }
 
-      public bool ContainsSHA(string sha)
+      async public Task<bool> ContainsSHAAsync(string sha)
       {
          if (_cached_existingSha.Contains(sha))
          {
             return true;
          }
-         if (GitTools.DoesEntityExistAtPath(Path, sha))
+
+         if (await GitTools.DoesEntityExistAtPathAsync(_operationManager, Path, sha))
          {
             _cached_existingSha.Add(sha);
             return true;
