@@ -77,6 +77,44 @@ namespace mrHelper.App.Helpers
          return properties != null && properties.ContainsKey("username") ? properties["username"].ToString() : String.Empty;
       }
 
+      public IEnumerable<string> GetUnimportantSuffices()
+      {
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "CustomLabels");
+         if (index == -1)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] CustomLabels entry is missing"));
+            return Array.Empty<string>();
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         if (properties == null)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] CustomLabels entry has no properties"));
+            return Array.Empty<string>();
+         }
+
+         if (!properties.ContainsKey("unimportant"))
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] List of unimportant suffices is empty"));
+            return Array.Empty<string>();
+         }
+
+         List<string> result = new List<string>();
+         System.Collections.ArrayList arrayList = (System.Collections.ArrayList)properties["unimportant"];
+         foreach (Dictionary<string, object> d in arrayList)
+         {
+            foreach (KeyValuePair<string, object> kv in d)
+            {
+               if (kv.Key == "suffix")
+               {
+                  result.Add(kv.Value.ToString());
+               }
+            }
+         }
+
+         return result;
+      }
+
       public struct LatestVersionInformation
       {
          public string VersionNumber;

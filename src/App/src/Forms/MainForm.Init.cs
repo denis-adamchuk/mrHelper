@@ -378,11 +378,13 @@ namespace mrHelper.App.Forms
          if (Program.ServiceManager.GetHelpUrl() != String.Empty)
          {
             linkLabelHelp.Visible = true;
+            toolTip.SetToolTip(linkLabelHelp, Program.ServiceManager.GetHelpUrl());
          }
 
          if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
          {
             linkLabelSendFeedback.Visible = true;
+            toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
          }
 
          if (Program.Settings.MainWindowSplitterDistance != 0)

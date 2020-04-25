@@ -164,22 +164,6 @@ namespace mrHelper.App.Forms
       private MergeRequestCache _mergeRequestCache;
       private MergeRequestFilter _mergeRequestFilter;
 
-      private struct ListViewSubItemInfo
-      {
-         public ListViewSubItemInfo(Func<string> getText, Func<string> getUrl)
-         {
-            _getText = getText;
-            _getUrl = getUrl;
-         }
-
-         public bool Clickable => _getUrl() != String.Empty;
-         public string Text => _getText();
-         public string Url => _getUrl();
-
-         private readonly Func<string> _getText;
-         private readonly Func<string> _getUrl;
-      }
-
       private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();
    }
 }

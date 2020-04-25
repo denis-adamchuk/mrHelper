@@ -12,6 +12,9 @@ namespace mrHelper.Common.Constants
       public static string MainWindowCaption  = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start New Thread";
 
+      public static int MaxLabelRows = 3;
+      public static string MoreLabelsHint = "See more in tooltip";
+
       public static string IconSchemeFileName = "icons.json";
       public static string ProjectListFileName = "projects.json";
 

@@ -17,6 +17,7 @@ using mrHelper.CommonNative;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using mrHelper.CommonControls.Tools;
+using static mrHelper.App.Controls.MergeRequestListView;
 
 namespace mrHelper.App.Forms
 {
@@ -239,24 +240,6 @@ namespace mrHelper.App.Forms
          e.Graphics.DrawString(text, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
       }
 
-      Graphics GetGraphics(DrawItemEventArgs e) => e.Graphics;
-      Graphics GetGraphics(DrawListViewSubItemEventArgs e) => e.Graphics;
-
-      private void fillRectangle<T>(T e, Rectangle bounds, Color backColor, bool isSelected)
-      {
-         if (isSelected)
-         {
-            GetGraphics((dynamic)e).FillRectangle(SystemBrushes.Highlight, bounds);
-         }
-         else
-         {
-            using (Brush brush = new SolidBrush(backColor))
-            {
-               GetGraphics((dynamic)e).FillRectangle(brush, bounds);
-            }
-         }
-      }
-
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
          if (e.Item.ListView == null)
@@ -273,7 +256,7 @@ namespace mrHelper.App.Forms
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
 
          bool isSelected = e.Item.Selected;
-         fillRectangle(e, bounds, getMergeRequestColor(fmk.MergeRequest, Color.Transparent), isSelected);
+         WinFormsHelpers.FillRectangle(e, bounds, getMergeRequestColor(fmk.MergeRequest, Color.Transparent), isSelected);
 
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
 
@@ -456,7 +439,7 @@ namespace mrHelper.App.Forms
          else
          {
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            fillRectangle(e, e.Bounds, getCommitComboBoxItemColor(item), isSelected);
+            WinFormsHelpers.FillRectangle(e, e.Bounds, getCommitComboBoxItemColor(item), isSelected);
 
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;

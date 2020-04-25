@@ -108,7 +108,7 @@ namespace mrHelper.App.Forms
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
-         this.listViewMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
+         this.listViewMergeRequests = new Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -124,7 +124,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSearch = new System.Windows.Forms.GroupBox();
          this.radioButtonSearchByTargetBranch = new System.Windows.Forms.RadioButton();
          this.radioButtonSearchByTitleAndDescription = new System.Windows.Forms.RadioButton();
-         this.listViewFoundMergeRequests = new mrHelper.CommonControls.Controls.ListViewEx();
+         this.listViewFoundMergeRequests = new Controls.MergeRequestListView();
          this.columnHeaderFoundIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -1624,7 +1624,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
         private System.Windows.Forms.Button buttonReloadList;
         private mrHelper.CommonControls.Controls.DelayedTextBox textBoxLabels;
-        private ListViewEx listViewMergeRequests;
+        private Controls.MergeRequestListView listViewMergeRequests;
         private System.Windows.Forms.ColumnHeader columnHeaderIId;
         private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
         private System.Windows.Forms.ColumnHeader columnHeaderTitle;
@@ -1639,7 +1639,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.TabPage tabPageSearch;
         private System.Windows.Forms.GroupBox groupBoxSearch;
         private System.Windows.Forms.TextBox textBoxSearch;
-        private ListViewEx listViewFoundMergeRequests;
+        private Controls.MergeRequestListView listViewFoundMergeRequests;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundIId;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundAuthor;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTitle;

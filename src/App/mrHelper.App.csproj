@@ -102,6 +102,12 @@
     <Compile Include="src\Controls\DiscussionSortPanel.Designer.cs">
       <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\MergeRequestListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
+      <DependentUpon>MergeRequestListView.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\AddProjectForm.cs">
       <SubType>Form</SubType>
     </Compile>

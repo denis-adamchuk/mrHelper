@@ -63,7 +63,7 @@ namespace mrHelper.Client.Discussions
                      MergeRequestKey = mrk
                   }, note.Updated_At, type);
                }
-               else if (isUserMentioned(note.Body, _currentUser))
+               else if (Helpers.IsUserMentioned(note.Body, _currentUser))
                {
                   DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
                   {
@@ -93,36 +93,6 @@ namespace mrHelper.Client.Discussions
                }
             }
          }
-      }
-
-      private static bool isUserMentioned(string text, User user)
-      {
-         if (StringUtils.ContainsNoCase(text, user.Name))
-         {
-            return true;
-         }
-
-         string label = Constants.GitLabLabelPrefix + user.Username;
-         int idx = text.IndexOf(label, StringComparison.CurrentCultureIgnoreCase);
-         while (idx >= 0)
-         {
-            if (idx == text.Length - label.Length)
-            {
-               // text ends with label
-               return true;
-            }
-
-            if (!Char.IsLetter(text[idx + label.Length]))
-            {
-               // label is in the middle of text
-               return true;
-            }
-
-            Debug.Assert(idx != text.Length - 1);
-            idx = text.IndexOf(label, idx + 1, StringComparison.CurrentCultureIgnoreCase);
-         }
-
-         return false;
       }
 
       private void onConnecting(string hostname)

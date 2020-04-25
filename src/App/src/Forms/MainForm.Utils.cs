@@ -18,6 +18,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
+using static mrHelper.App.Controls.MergeRequestListView;
 
 namespace mrHelper.App.Forms
 {
@@ -499,7 +500,10 @@ namespace mrHelper.App.Forms
 
          richTextBoxMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          richTextBoxMergeRequestDescription.Update();
-         linkLabelConnectedTo.Text = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
+
+         string url = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
+         linkLabelConnectedTo.Text = url;
+         toolTip.SetToolTip(linkLabelConnectedTo, url);
       }
 
       private void updateTimeTrackingMergeRequestDetails(bool enabled, string title = null,
@@ -1010,6 +1014,12 @@ namespace mrHelper.App.Forms
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Constants.AuthorLabelPrefix, mr.Author.Username);
 
+         Dictionary<bool, string> labels = new Dictionary<bool, string>
+         {
+            [false] = formatLabels(fmk, false),
+            [true] = formatLabels(fmk, true)
+         };
+
          string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
          string jiraTask = getJiraTask(mr);
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
@@ -1031,17 +1041,17 @@ namespace mrHelper.App.Forms
             item.SubItems[columnHeader.Index].Tag = subItemInfo;
          }
 
-         setSubItemTag("IId",          new ListViewSubItemInfo(() => mr.IId.ToString(),         () => mr.Web_Url));
-         setSubItemTag("Author",       new ListViewSubItemInfo(() => author,                    () => String.Empty));
-         setSubItemTag("Title",        new ListViewSubItemInfo(() => mr.Title,                  () => String.Empty));
-         setSubItemTag("Labels",       new ListViewSubItemInfo(() => formatLabels(mr),          () => String.Empty));
-         setSubItemTag("Size",         new ListViewSubItemInfo(() => getSize(fmk),              () => String.Empty));
-         setSubItemTag("Jira",         new ListViewSubItemInfo(() => jiraTask,                  () => jiraTaskUrl));
-         setSubItemTag("TotalTime",    new ListViewSubItemInfo(() => getTotalTimeText(mrk),     () => String.Empty));
-         setSubItemTag("SourceBranch", new ListViewSubItemInfo(() => mr.Source_Branch,          () => String.Empty));
-         setSubItemTag("TargetBranch", new ListViewSubItemInfo(() => mr.Target_Branch,          () => String.Empty));
-         setSubItemTag("State",        new ListViewSubItemInfo(() => mr.State,                  () => String.Empty));
-         setSubItemTag("Resolved",     new ListViewSubItemInfo(() => getDiscussionCount(mrk),   () => String.Empty));
+         setSubItemTag("IId",          new ListViewSubItemInfo(x => mr.IId.ToString(),         () => mr.Web_Url));
+         setSubItemTag("Author",       new ListViewSubItemInfo(x => author,                    () => String.Empty));
+         setSubItemTag("Title",        new ListViewSubItemInfo(x => mr.Title,                  () => String.Empty));
+         setSubItemTag("Labels",       new ListViewSubItemInfo(x => labels[x],                 () => String.Empty));
+         setSubItemTag("Size",         new ListViewSubItemInfo(x => getSize(fmk),              () => String.Empty));
+         setSubItemTag("Jira",         new ListViewSubItemInfo(x => jiraTask,                  () => jiraTaskUrl));
+         setSubItemTag("TotalTime",    new ListViewSubItemInfo(x => getTotalTimeText(mrk),     () => String.Empty));
+         setSubItemTag("SourceBranch", new ListViewSubItemInfo(x => mr.Source_Branch,          () => String.Empty));
+         setSubItemTag("TargetBranch", new ListViewSubItemInfo(x => mr.Target_Branch,          () => String.Empty));
+         setSubItemTag("State",        new ListViewSubItemInfo(x => mr.State,                  () => String.Empty));
+         setSubItemTag("Resolved",     new ListViewSubItemInfo(x => getDiscussionCount(mrk),   () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -1051,32 +1061,69 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         int maxLineCountInLabels = listView.Items.Cast<ListViewItem>().
-            Select((x) => formatLabels(((FullMergeRequestKey)(x.Tag)).MergeRequest).Count((y) => y == '\n')).Max() + 1;
+         int maxLineCountInLabels = listView.Items.Cast<ListViewItem>()
+            .Select(x =>formatLabels((FullMergeRequestKey)(x.Tag), false)
+               .Count(y => y == '\n'))
+            .Max() + 1;
          int maxLineCountInAuthor = 2;
          int maxLineCount = Math.Max(maxLineCountInLabels, maxLineCountInAuthor);
          setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
       }
 
-      private static string formatLabels(MergeRequest mergeRequest)
+      private string formatLabels(FullMergeRequestKey fmk, bool tooltip)
       {
-         List<string> sortedLabels = new List<string>(mergeRequest.Labels);
-         sortedLabels.Sort();
+         User currentUser = _currentUser.ContainsKey(fmk.ProjectKey.HostName)
+            ? _currentUser[fmk.ProjectKey.HostName]
+            : default(User);
 
-         var query = sortedLabels.GroupBy(
-            (label) => label.StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1 ?
-               label.Substring(0, label.IndexOf('-')) : label,
+         IEnumerable<string> unimportantSuffices = Program.ServiceManager.GetUnimportantSuffices();
+
+         int getPriority(IEnumerable<string> labels)
+         {
+            Debug.Assert(labels.Any());
+            if (Client.Common.Helpers.IsUserMentioned(labels.First(), currentUser))
+            {
+               return 0;
+            }
+            else if (labels.Any(x => unimportantSuffices.Any(y => x.EndsWith(y))))
+            {
+               return 2;
+            }
+            return 1;
+         };
+
+         var query = fmk.MergeRequest.Labels
+            .GroupBy(label => label
+               .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
+                  ? label.Substring(0, label.IndexOf('-'))
+                  : label,
             (label) => label,
             (baseLabel, labels) => new
             {
-               Labels = labels
+               Labels = labels,
+               Priority = getPriority(labels)
             });
 
+         string joinLabels(IEnumerable<string> labels) => String.Format("{0}\n", String.Join(",", labels));
+
          StringBuilder stringBuilder = new StringBuilder();
-         foreach (var group in query)
+         int take = tooltip ? query.Count() : Constants.MaxLabelRows - 1;
+         query
+            .OrderBy(x => x.Priority)
+            .Take(take)
+            .ToList()
+            .ForEach(x => stringBuilder.Append(joinLabels(x.Labels)));
+
+         if (!tooltip)
          {
-            stringBuilder.Append(String.Join(",", group.Labels));
-            stringBuilder.Append("\n");
+            if (query.Count() > Constants.MaxLabelRows)
+            {
+               stringBuilder.Append(Constants.MoreLabelsHint);
+            }
+            else if (query.Count() == Constants.MaxLabelRows)
+            {
+               stringBuilder.Append(joinLabels(query.OrderBy(x => x.Priority).Last().Labels));
+            }
          }
 
          return stringBuilder.ToString().TrimEnd('\n');

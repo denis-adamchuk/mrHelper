@@ -43,6 +43,7 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Common\Helpers.cs" />
     <Compile Include="src\Common\Impl\CommonOperator.cs" />
     <Compile Include="src\Common\SearchManager.cs" />
     <Compile Include="src\Common\Impl\OperatorException.cs" />
