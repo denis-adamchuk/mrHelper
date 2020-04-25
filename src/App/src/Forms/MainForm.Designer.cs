@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
          this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
          this.linkLabelSendFeedback = new System.Windows.Forms.LinkLabel();
          this.linkLabelNewVersion = new System.Windows.Forms.LinkLabel();
-         this.textBoxLabels = new System.Windows.Forms.TextBox();
+         this.textBoxLabels = new mrHelper.CommonControls.Controls.DelayedTextBox();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
          this.checkBoxShowVersionsByDefault = new System.Windows.Forms.CheckBox();
@@ -1623,7 +1623,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.TabPage tabPageLive;
         private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
         private System.Windows.Forms.Button buttonReloadList;
-        private System.Windows.Forms.TextBox textBoxLabels;
+        private mrHelper.CommonControls.Controls.DelayedTextBox textBoxLabels;
         private ListViewEx listViewMergeRequests;
         private System.Windows.Forms.ColumnHeader columnHeaderIId;
         private System.Windows.Forms.ColumnHeader columnHeaderAuthor;

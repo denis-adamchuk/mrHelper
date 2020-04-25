@@ -55,6 +55,12 @@
     <Compile Include="src\Controls\ConfirmCancelButton.Designer.cs">
       <DependentUpon>ConfirmCancelButton.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\DelayedTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DelayedTextBox.Designer.cs">
+      <DependentUpon>DelayedTextBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\ListViewEx.cs">
       <SubType>Component</SubType>
     </Compile>
