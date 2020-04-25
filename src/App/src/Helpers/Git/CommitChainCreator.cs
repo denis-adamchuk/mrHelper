@@ -160,7 +160,7 @@ namespace mrHelper.App.Helpers
             return;
          }
 
-         _onStatusChange?.Invoke("Fetching new branches from remote repository...");
+         _onStatusChange?.Invoke("Fetching missing commits from remote repository...");
          try
          {
             await _repo.Updater.Update(new CommitBasedContextProvider(shas), _onGitStatusChange);

@@ -153,7 +153,7 @@ namespace mrHelper.GitClient
          {
             if (_updateMode != EUpdateMode.ShallowClone)
             {
-               await fetchAsync();
+               await fetchAsync(false);
             }
             _lastestFullUpdateTimestamp = context.LatestChange;
             Trace.TraceInformation(String.Format(
@@ -174,7 +174,7 @@ namespace mrHelper.GitClient
 
          if (_updateMode != EUpdateMode.FullCloneWithoutSingleCommitFetches)
          {
-            await fetchCommitsAsync(context.Sha);
+            await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone);
          }
 
          if (_lastestFullUpdateTimestamp != prevLatestTimeStamp)
@@ -206,7 +206,7 @@ namespace mrHelper.GitClient
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (await fetchCommitsAsync(context.Sha))
+         if (await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone))
          {
             Updated?.Invoke();
          }
@@ -222,13 +222,14 @@ namespace mrHelper.GitClient
          await doUpdateOperationAsync(arguments, String.Empty);
       }
 
-      async private Task fetchAsync()
+      async private Task fetchAsync(bool shallowFetch)
       {
-         string arguments = String.Format("fetch {0}", getFetchArguments(null));
+         string arguments = String.Format("fetch {0}",
+            getFetchArguments(null, shallowFetch));
          await doUpdateOperationAsync(arguments, _localGitRepository.Path);
       }
 
-      async private Task<bool> fetchCommitsAsync(IEnumerable<string> shas)
+      async private Task<bool> fetchCommitsAsync(IEnumerable<string> shas, bool shallowFetch)
       {
          IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
 
@@ -237,7 +238,8 @@ namespace mrHelper.GitClient
          {
             if (!_localGitRepository.ContainsSHA(sha))
             {
-               string arguments = String.Format("fetch {0}", getFetchArguments(sha));
+               string arguments = String.Format("fetch {0}",
+                  getFetchArguments(sha, shallowFetch));
                await doUpdateOperationAsync(arguments, _localGitRepository.Path);
                ++iCommit;
             }
@@ -295,7 +297,7 @@ namespace mrHelper.GitClient
               shallow ? "--depth=1" : String.Empty);
       }
 
-      private static string getFetchArguments(string sha)
+      private static string getFetchArguments(string sha, bool shallow)
       {
          if (sha == null)
          {
@@ -303,8 +305,9 @@ namespace mrHelper.GitClient
                GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
          }
 
-         return String.Format(" --progress --depth=1 --no-tags {0} {1}",
+         return String.Format(" --progress {0} --no-tags {1} {2}",
             String.Format("origin {0}:refs/keep-around/{0}", sha),
+            shallow ? "--depth=1" : String.Empty,
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
       }
 
