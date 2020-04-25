@@ -238,16 +238,24 @@ namespace mrHelper.GitClient
       {
          IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
 
-         int iCommit = 0;
-         foreach (string sha in goodSha)
-         {
-            if (!await _localGitRepository.ContainsSHAAsync(sha))
+         List<string> missingSha = new List<string>();
+         await TaskUtils.RunConcurrentFunctionsAsync(goodSha,
+            async x =>
             {
-               string arguments = String.Format("fetch {0}",
-                  getFetchArguments(sha, shallowFetch));
-               await doUpdateOperationAsync(arguments, _localGitRepository.Path);
-               ++iCommit;
-            }
+               if (!await _localGitRepository.ContainsSHAAsync(x))
+               {
+                  missingSha.Add(x);
+               }
+            },
+            20, 50, null);
+
+         int iCommit = 0;
+         foreach (string sha in missingSha)
+         {
+            string arguments = String.Format("fetch {0}",
+               getFetchArguments(sha, shallowFetch));
+            await doUpdateOperationAsync(arguments, _localGitRepository.Path);
+            ++iCommit;
          }
 
          if (iCommit > 0)

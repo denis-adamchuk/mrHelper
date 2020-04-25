@@ -156,10 +156,10 @@ namespace mrHelper.GitClient
          IExternalProcessManager operationManager, string path, string entity)
       {
          string arguments = String.Format("cat-file -t {0}", entity);
-         ExternalProcess.AsyncTaskDescriptor descriptor =
-            operationManager.CreateDescriptor("git", arguments, path, null);
          try
          {
+            ExternalProcess.AsyncTaskDescriptor descriptor =
+               operationManager.CreateDescriptor("git", arguments, path, null);
             await operationManager.Wait(descriptor);
             return descriptor.StdErr.Count() == 0;
          }
