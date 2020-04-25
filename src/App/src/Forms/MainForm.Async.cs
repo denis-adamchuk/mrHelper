@@ -129,7 +129,7 @@ namespace mrHelper.App.Forms
                try
                {
                   ILocalGitRepository updatingRepo = getRepository(key.ProjectKey, true);
-                  if (updatingRepo != null && updatingRepo.State != ELocalGitRepositoryState.NotCloned)
+                  if (updatingRepo != null && !updatingRepo.ExpectingClone)
                   {
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =
@@ -425,7 +425,7 @@ namespace mrHelper.App.Forms
          _silentUpdateInProgress.Add(pk);
 
          ILocalGitRepository repo = getRepository(pk, false);
-         if (repo == null || repo.State == ELocalGitRepositoryState.NotCloned)
+         if (repo == null || repo.ExpectingClone)
          {
             Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",
                pk.ProjectName, (repo == null ? "repo is null" : "must be cloned first")));

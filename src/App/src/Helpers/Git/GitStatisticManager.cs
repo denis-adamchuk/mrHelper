@@ -119,7 +119,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            if (repo.State != ELocalGitRepositoryState.NotCloned)
+            if (!repo.ExpectingClone)
             {
                await repo.Updater.Update(getContextProvider(repo), null);
             }
@@ -320,7 +320,7 @@ namespace mrHelper.App.Helpers
                   State = new RepositoryState
                   {
                      LatestChange = DateTime.MinValue,
-                     IsCloned = repo.State != ELocalGitRepositoryState.NotCloned
+                     IsCloned = !repo.ExpectingClone
                   },
                   Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
                });

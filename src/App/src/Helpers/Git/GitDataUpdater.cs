@@ -110,7 +110,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            if (repo.State != ELocalGitRepositoryState.NotCloned)
+            if (!repo.ExpectingClone)
             {
                await repo.Updater.Update(getContextProvider(repo), null);
             }

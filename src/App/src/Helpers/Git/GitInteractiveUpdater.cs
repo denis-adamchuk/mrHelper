@@ -35,7 +35,7 @@ namespace mrHelper.App.Helpers
       async internal Task UpdateAsync(ILocalGitRepository repo, IProjectUpdateContextProvider contextProvider,
          Action<string> onProgressChange)
       {
-         if (repo.State == ELocalGitRepositoryState.NotCloned && !isCloneAllowed(repo.Path))
+         if (repo.ExpectingClone && !isCloneAllowed(repo.Path))
          {
             InitializationStatusChange?.Invoke("Clone rejected");
             throw new InteractiveUpdateCancelledException();

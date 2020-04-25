@@ -15,7 +15,7 @@ namespace mrHelper.GitClient
    internal class LocalGitRepository : ILocalGitRepository
    {
       // @{ IGitRepository
-      IGitRepositoryData IGitRepository.Data => State == ELocalGitRepositoryState.NotCloned ? null : _data;
+      IGitRepositoryData IGitRepository.Data => ExpectingClone ? null : _data;
 
       public ProjectKey ProjectKey { get; }
 
@@ -35,7 +35,7 @@ namespace mrHelper.GitClient
       // @{ IGitRepository
 
       // @{ ILocalGitRepository
-      public ILocalGitRepositoryData Data => State == ELocalGitRepositoryState.NotCloned ? null : _data;
+      public ILocalGitRepositoryData Data => ExpectingClone ? null : _data;
 
       public string Path { get; }
 
@@ -44,7 +44,7 @@ namespace mrHelper.GitClient
       public event Action<ILocalGitRepository> Updated;
       public event Action<ILocalGitRepository> Disposed;
 
-      public ELocalGitRepositoryState State { get; private set; } = ELocalGitRepositoryState.NotCloned;
+      public bool ExpectingClone { get; private set; } = true;
       // @} ILocalGitRepository
 
       /// <summary>
@@ -72,7 +72,7 @@ namespace mrHelper.GitClient
             : (GitTools.IsSingleCommitFetchSupported(Path)
                ? LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches
                : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithoutSingleCommitFetches);
-         State = isEmptyFolder(Path) ? ELocalGitRepositoryState.NotCloned : ELocalGitRepositoryState.Cloned;
+         ExpectingClone = isEmptyFolder(Path);
          _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
          _updater.Cloned += onCloned;
          _updater.Updated += onUpdated;
@@ -82,8 +82,8 @@ namespace mrHelper.GitClient
          ProjectKey = projectKey;
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2} "
-          + "with state = {3}",
-            Path, ProjectKey.HostName, ProjectKey.ProjectName, State.ToString()));
+          + "expecting clone = {3}",
+            Path, ProjectKey.HostName, ProjectKey.ProjectName, ExpectingClone.ToString()));
       }
 
       async internal Task DisposeAsync()
@@ -96,26 +96,11 @@ namespace mrHelper.GitClient
 
       private void onCloned()
       {
-         State = ELocalGitRepositoryState.Cloned;
+         ExpectingClone = false;
       }
 
       private void onUpdated()
       {
-         switch (State)
-         {
-            case ELocalGitRepositoryState.Cloned:
-               State = ELocalGitRepositoryState.Ready;
-               break;
-
-            case ELocalGitRepositoryState.Ready:
-               break; // nothing to do
-
-            case ELocalGitRepositoryState.NotCloned:
-            default:
-               Debug.Assert(false);
-               break;
-         }
-
          Updated?.Invoke(this);
       }
 

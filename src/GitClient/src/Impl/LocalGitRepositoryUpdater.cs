@@ -127,7 +127,7 @@ namespace mrHelper.GitClient
          }
 
          DateTime prevLatestTimeStamp = _lastestFullUpdateTimestamp;
-         if (_localGitRepository.State == ELocalGitRepositoryState.NotCloned)
+         if (_localGitRepository.ExpectingClone)
          {
             await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
             _lastestFullUpdateTimestamp = context.LatestChange;
@@ -180,7 +180,7 @@ namespace mrHelper.GitClient
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (_localGitRepository.State == ELocalGitRepositoryState.NotCloned)
+         if (_localGitRepository.ExpectingClone)
          {
             Trace.TraceError(
                "[LocalGitRepositoryUpdater] Partial updates cannot be applied to a not cloned repository");
