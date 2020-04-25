@@ -5,7 +5,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
-using static mrHelper.Client.Common.UserEvents;
+using static mrHelper.Client.Types.UserEvents;
 
 namespace mrHelper.App.Helpers
 {

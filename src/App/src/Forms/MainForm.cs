@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
-using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -22,8 +19,7 @@ namespace mrHelper.App.Forms
    internal partial class MainForm :
       CustomFontForm,
       ICommandCallback,
-      ILocalGitRepositoryFactoryAccessor,
-      IWorkflowEventNotifier
+      ILocalGitRepositoryFactoryAccessor
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -77,21 +73,17 @@ namespace mrHelper.App.Forms
          return getMergeRequestKey(null)?.IId ?? 0;
       }
 
-      public Task<ILocalGitRepositoryFactory> GetFactory()
+      public ILocalGitRepositoryFactory GetFactory()
       {
          return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
       }
-
-      public event Action<string, User, IEnumerable<Project>> Connected;
-      public event Action<string, Project, IEnumerable<MergeRequest>> LoadedMergeRequests;
-      public event Action<string, string, MergeRequest, GitLabSharp.Entities.Version> LoadedMergeRequestVersion;
-      public event Action<string, IEnumerable<Project>> LoadedProjects;
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
       {
          Interval = timeTrackingTimerInterval
       };
 
+      private bool _loadingConfiguration = false;
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
       private bool _userIsMovingSplitter1 = false;
@@ -121,7 +113,7 @@ namespace mrHelper.App.Forms
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
-      private WorkflowManager _searchWorkflowManager;
+      private SearchWorkflowManager _searchWorkflowManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;

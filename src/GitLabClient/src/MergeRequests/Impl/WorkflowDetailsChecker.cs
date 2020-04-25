@@ -6,6 +6,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -164,12 +165,12 @@ namespace mrHelper.Client.MergeRequests
                ProjectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace },
                IId = mergeRequest.IId
             };
-            DateTime previouslyCachedChangeTimestamp = oldDetails.GetLatestVersion(mergeRequestKey).Created_At;
-            DateTime newCachedChangeTimestamp = newDetails.GetLatestVersion(mergeRequestKey).Created_At;
+            IEnumerable<Version> oldVersions = oldDetails.GetVersions(mergeRequestKey);
+            IEnumerable<Version> newVersions = newDetails.GetVersions(mergeRequestKey);
 
             bool labelsUpdated = !Enumerable.SequenceEqual(mrPair.Item1.MergeRequest.Labels,
                                                            mrPair.Item2.MergeRequest.Labels);
-            bool commitsUpdated = newCachedChangeTimestamp > previouslyCachedChangeTimestamp;
+            bool commitsUpdated = newVersions.Count() > oldVersions.Count();
 
             bool detailsUpdated =
                   mrPair.Item1.MergeRequest.Author.Id     != mrPair.Item2.MergeRequest.Author.Id

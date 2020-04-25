@@ -20,9 +20,9 @@ namespace mrHelper.Client.MergeRequests
       IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key);
 
       /// <summary>
-      /// Return a timestamp of the most recent version of a specified merge request
+      /// Return a list of versions of a specified merge request
       /// </summary>
-      Version GetLatestVersion(MergeRequestKey mrk);
+      IEnumerable<Version> GetVersions(MergeRequestKey mrk);
    }
 }
 

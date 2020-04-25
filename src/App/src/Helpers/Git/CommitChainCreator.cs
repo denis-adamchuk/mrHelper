@@ -9,8 +9,6 @@ using mrHelper.GitClient;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Repository;
-using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 
@@ -20,7 +18,7 @@ namespace mrHelper.App.Helpers
    {
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
          Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepository repo, IEnumerable<string> headShas)
+         ILocalGitRepository repo, IEnumerable<string> headShas, bool singleCommitFetchSupported)
       {
          if (repo == null || hostProperties == null || headShas == null)
          {
@@ -34,6 +32,7 @@ namespace mrHelper.App.Helpers
          _synchronizeInvoke = synchronizeInvoke;
          _repo = repo;
          _headShas = headShas;
+         _singleCommitFetchSupported = singleCommitFetchSupported;
       }
 
       async public Task<bool> CreateChainAsync()
@@ -44,8 +43,22 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         IEnumerable<string> heads = _headShas.Where(x => !_repo.ContainsSHA(x)).ToArray();
-         return await createBranches(heads);
+         List<string> missingCommits = new List<string>();
+         foreach (string sha in _headShas)
+         {
+            if (!await _repo.ContainsSHAAsync(sha))
+            {
+               missingCommits.Add(sha);
+            }
+         }
+
+         if (!_singleCommitFetchSupported)
+         {
+            return await createBranches(missingCommits);
+         }
+
+         await fetchMissingCommits(missingCommits);
+         return true;
       }
 
       async public Task CancelAsync()
@@ -111,20 +124,7 @@ namespace mrHelper.App.Helpers
             Trace.TraceInformation(String.Format(
                "[CommitChainCreator] Created {0} branches", shas.Count()));
 
-            _onStatusChange?.Invoke("Fetching new branches from remote repository...");
-            try
-            {
-               await _repo.Updater.Update(null, _onGitStatusChange);
-            }
-            catch (RepositoryUpdateException ex)
-            {
-               ExceptionHandlers.Handle("Cannot update git repository", ex);
-               return false;
-            }
-            finally
-            {
-               _onGitStatusChange?.Invoke(String.Empty);
-            }
+            await fetchMissingCommits(shas);
          }
          catch (RepositoryManagerException ex)
          {
@@ -161,6 +161,28 @@ namespace mrHelper.App.Helpers
          return true;
       }
 
+      async private Task fetchMissingCommits(IEnumerable<string> shas)
+      {
+         if (shas == null || !shas.Any())
+         {
+            return;
+         }
+
+         _onStatusChange?.Invoke("Fetching missing commits from remote repository...");
+         try
+         {
+            await _repo.Updater.Update(new CommitBasedContextProvider(shas), _onGitStatusChange);
+         }
+         catch (RepositoryUpdateException ex)
+         {
+            ExceptionHandlers.Handle("Cannot update git repository", ex);
+         }
+         finally
+         {
+            _onGitStatusChange?.Invoke(String.Empty);
+         }
+      }
+
       public bool IsCancelEnabled
       {
          get
@@ -184,6 +206,7 @@ namespace mrHelper.App.Helpers
 
       private RepositoryManager _repositoryManager;
       private bool _isCancelEnabled = true;
+      private readonly bool _singleCommitFetchSupported;
    }
 }
 

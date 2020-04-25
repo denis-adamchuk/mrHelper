@@ -32,10 +32,10 @@ namespace mrHelper.App.Helpers
       /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(ILocalGitRepository repo, IInstantProjectChecker instantChecker,
+      async internal Task UpdateAsync(ILocalGitRepository repo, IProjectUpdateContextProvider contextProvider,
          Action<string> onProgressChange)
       {
-         if (repo.DoesRequireClone() && !isCloneAllowed(repo.Path))
+         if (repo.ExpectingClone && !isCloneAllowed(repo.Path))
          {
             InitializationStatusChange?.Invoke("Clone rejected");
             throw new InteractiveUpdateCancelledException();
@@ -43,7 +43,7 @@ namespace mrHelper.App.Helpers
 
          InitializationStatusChange?.Invoke("Updating git repository...");
 
-         await runAsync(async () => await repo.Updater.Update(instantChecker, onProgressChange));
+         await runAsync(async () => await repo.Updater.Update(contextProvider, onProgressChange));
          InitializationStatusChange?.Invoke("Git repository updated");
       }
 
@@ -55,7 +55,7 @@ namespace mrHelper.App.Helpers
       {
          if (!System.IO.Directory.Exists(path))
          {
-            if (MessageBox.Show(String.Format("There is no git repository at \"{0}\"."
+            if (MessageBox.Show(String.Format("There is no git repository at \"{0}\". "
                + "Do you want to run 'git clone'?", path), "Information", MessageBoxButtons.YesNo,
                MessageBoxIcon.Information) == DialogResult.No)
             {

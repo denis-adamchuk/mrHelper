@@ -1,24 +1,27 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using GitLabSharp.Entities;
-using mrHelper.Client.Common;
 using mrHelper.Client.Types;
-using mrHelper.Client.Versions;
 using mrHelper.Client.Workflow;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.MergeRequests
 {
-   public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider, IProjectCheckerFactory
+   public class MergeRequestCache : IDisposable, ICachedMergeRequestProvider, IProjectUpdateContextProviderFactory
    {
-      public event Action<Common.UserEvents.MergeRequestEvent> MergeRequestEvent;
+      public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
 
-      public MergeRequestCache(IWorkflowEventNotifier workflowEventNotifier, ISynchronizeInvoke synchronizeInvoke,
-         IHostProperties settings, int autoUpdatePeriodMs)
+      public MergeRequestCache(
+         IMergeRequestLoader mergeRequestLoader,
+         IMergeRequestListLoader mergeRequestListLoader,
+         IWorkflowEventNotifier workflowEventNotifier,
+         ISynchronizeInvoke synchronizeInvoke,
+         IHostProperties settings,
+         int autoUpdatePeriodMs)
       {
          _synchronizeInvoke = synchronizeInvoke;
          _autoUpdatePeriodMs = autoUpdatePeriodMs;
@@ -26,18 +29,23 @@ namespace mrHelper.Client.MergeRequests
          _updateOperator = new UpdateOperator(settings);
 
          _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connecting += onConnecting;
          _workflowEventNotifier.Connected += onConnected;
-         _workflowEventNotifier.LoadedMergeRequests += onLoadedMergeRequests;
-         _workflowEventNotifier.LoadedMergeRequestVersion += onLoadedMergeRequestVersion;
-         _workflowEventNotifier.LoadedProjects += onLoadedProjects;
+
+         _mergeRequestLoader = mergeRequestLoader;
+         _mergeRequestLoader.PostLoadVersions += onLoadedMergeRequestVersions;
+
+         _mergeRequestListLoader = mergeRequestListLoader;
+         _mergeRequestListLoader.PostLoadProjectMergeRequests += onLoadedMergeRequests;
       }
 
       public void Dispose()
       {
+         _workflowEventNotifier.Connecting -= onConnecting;
          _workflowEventNotifier.Connected -= onConnected;
-         _workflowEventNotifier.LoadedMergeRequests -= onLoadedMergeRequests;
-         _workflowEventNotifier.LoadedMergeRequestVersion -= onLoadedMergeRequestVersion;
-         _workflowEventNotifier.LoadedProjects -= onLoadedProjects;
+
+         _mergeRequestListLoader.PostLoadProjectMergeRequests -= onLoadedMergeRequests;
+         _mergeRequestLoader.PostLoadVersions -= onLoadedMergeRequestVersions;
 
          if (_updateManager != null)
          {
@@ -58,49 +66,45 @@ namespace mrHelper.Client.MergeRequests
          return result.Id == default(MergeRequest).Id ? new MergeRequest?() : result;
       }
 
-      public IInstantProjectChecker GetLocalProjectChecker(MergeRequestKey mrk)
+      public IProjectUpdateContextProvider GetLocalBasedContextProvider(ProjectKey projectKey)
       {
-         return _cache != null ? new LocalProjectChecker(mrk, _cache.Details.Clone()) : null;
+         return new LocalBasedContextProvider(getAllVersions(projectKey));
       }
 
-      public IInstantProjectChecker GetLocalProjectChecker(ProjectKey projectKey)
+      public IProjectUpdateContextProvider GetRemoteBasedContextProvider(MergeRequestKey mrk)
       {
-         return GetLocalProjectChecker(getLatestMergeRequest(projectKey));
-      }
-
-      public IInstantProjectChecker GetRemoteProjectChecker(MergeRequestKey mrk)
-      {
-         return new RemoteProjectChecker(mrk, _updateOperator);
+         return new RemoteBasedContextProvider(getAllVersions(mrk.ProjectKey), mrk, _updateOperator);
       }
 
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _cache?.Details.GetLatestVersion(mrk) ?? default(Version);
+         return _cache?.Details.GetVersions(mrk).LastOrDefault() ?? default(Version);
       }
 
-      public IProjectCheckerFactory GetProjectCheckerFactory()
+      public Version GetLatestVersion(ProjectKey projectKey)
       {
-         return this;
+         return getAllVersions(projectKey).OrderBy(x => x.Created_At).LastOrDefault();
       }
 
-      public IProjectWatcher GetProjectWatcher()
+      private IEnumerable<Version> getAllVersions(ProjectKey projectKey)
       {
-         return _projectWatcher;
-      }
-
-      private MergeRequestKey getLatestMergeRequest(ProjectKey projectKey)
-      {
-         if (_cache == null)
+         List<Version> versions = new List<Version>();
+         if (_cache != null)
          {
-            return default(MergeRequestKey);
-         }
-
-         return _cache.Details.GetMergeRequests(projectKey).
-            Select(x => new MergeRequestKey
+            foreach (MergeRequest mergeRequest in _cache.Details.GetMergeRequests(projectKey))
             {
-               ProjectKey = projectKey,
-               IId = x.IId
-            }).OrderByDescending(x => _cache.Details.GetLatestVersion(x).Created_At).FirstOrDefault();
+               MergeRequestKey mrk = new MergeRequestKey
+               {
+                  ProjectKey = projectKey,
+                  IId = mergeRequest.IId
+               };
+               foreach (Version version in _cache.Details.GetVersions(mrk))
+               {
+                  versions.Add(version);
+               }
+            }
+         }
+         return versions;
       }
 
       /// <summary>
@@ -108,22 +112,20 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public void CheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
-         _updateManager.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
+         _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
       }
 
       private void onUpdate(IEnumerable<UserEvents.MergeRequestEvent> updates)
       {
-         _projectWatcher.ProcessUpdates(updates, _cache.Details);
-
          foreach (UserEvents.MergeRequestEvent update in updates)
          {
             MergeRequestEvent?.Invoke(update);
          }
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onConnecting(string hostname)
       {
-         Trace.TraceInformation(String.Format( "[MergeRequestCache] Connected to {0}", hostname));
+         Trace.TraceInformation(String.Format( "[MergeRequestCache] Connecting to {0}", hostname));
 
          _hostname = hostname;
          _cache = new WorkflowDetailsCache();
@@ -145,21 +147,21 @@ namespace mrHelper.Client.MergeRequests
          _cache?.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
       }
 
-      private void onLoadedMergeRequestVersion(string hostname, string projectname,
-         MergeRequest mergeRequest, Version version)
+      private void onLoadedMergeRequestVersions(string hostname, string projectname,
+         MergeRequest mergeRequest, IEnumerable<Version> versions)
       {
          Trace.TraceInformation(String.Format(
-            "[MergeRequestCache] Loaded a version of merge request with IId {0} for project {1} at hostname {2}",
-            mergeRequest.IId, projectname, hostname));
+            "[MergeRequestCache] Loaded {0} versions of merge request with IId {1} for project {2} at hostname {3}",
+            versions.Count(), mergeRequest.IId, projectname, hostname));
 
-         _cache?.UpdateLatestVersion(new MergeRequestKey
+         _cache?.UpdateVersions(new MergeRequestKey
          {
             ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
             IId = mergeRequest.IId
-         }, version);
+         }, versions);
       }
 
-      private void onLoadedProjects(string hostname, IEnumerable<Project> projects)
+      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          Debug.Assert(_updateManager == null);
 
@@ -168,15 +170,16 @@ namespace mrHelper.Client.MergeRequests
          _updateManager.OnUpdate += onUpdate;
 
          Trace.TraceInformation(String.Format(
-            "[MergeRequestCache] Set hostname for updates to {0}, will trace updates in {1} projects",
+            "[MergeRequestCache] Connected to {0}. Will trace updates in {1} projects",
             hostname, projects.Count()));
       }
 
       private string _hostname;
       private WorkflowDetailsCache _cache = new WorkflowDetailsCache();
-      private readonly ProjectWatcher _projectWatcher = new ProjectWatcher();
       private UpdateManager _updateManager;
       private readonly UpdateOperator _updateOperator;
+      private readonly IMergeRequestLoader _mergeRequestLoader;
+      private readonly IMergeRequestListLoader _mergeRequestListLoader;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly int _autoUpdatePeriodMs;

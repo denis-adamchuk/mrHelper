@@ -28,27 +28,31 @@ namespace mrHelper.Client.TimeTracking
    /// </summary>
    public class TimeTrackingManager : IDisposable
    {
-      public TimeTrackingManager(IHostProperties settings, IWorkflowEventNotifier workflowEventNotifier,
-         DiscussionManager discussionManager)
+      public TimeTrackingManager(
+         IHostProperties settings,
+         IWorkflowEventNotifier workflowEventNotifier,
+         IDiscussionLoader discussionLoader)
       {
          _operator = new TimeTrackingOperator(settings);
 
          _workflowEventNotifier = workflowEventNotifier;
+         _workflowEventNotifier.Connecting += onConnecting;
          _workflowEventNotifier.Connected += onConnected;
 
-         _discussionManager = discussionManager;
-         _discussionManager.PreLoadDiscussions += onPreLoadDiscussions;
-         _discussionManager.PostLoadDiscussions += onPostLoadDiscussions;
-         _discussionManager.FailedLoadDiscussions += onFailedLoadDiscussions;
+         _discussionLoader = discussionLoader;
+         _discussionLoader.PreLoadDiscussions += onPreLoadDiscussions;
+         _discussionLoader.PostLoadDiscussions += onPostLoadDiscussions;
+         _discussionLoader.FailedLoadDiscussions += onFailedLoadDiscussions;
       }
 
       public void Dispose()
       {
+         _workflowEventNotifier.Connecting -= onConnecting;
          _workflowEventNotifier.Connected -= onConnected;
 
-         _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
-         _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
-         _discussionManager.FailedLoadDiscussions -= onFailedLoadDiscussions;
+         _discussionLoader.PreLoadDiscussions -= onPreLoadDiscussions;
+         _discussionLoader.PostLoadDiscussions -= onPostLoadDiscussions;
+         _discussionLoader.FailedLoadDiscussions -= onFailedLoadDiscussions;
       }
 
       public event Action<MergeRequestKey> PreLoadTotalTime;
@@ -156,17 +160,21 @@ namespace mrHelper.Client.TimeTracking
          FailedLoadTotalTime?.Invoke(mrk);
       }
 
+      private void onConnecting(string hostname)
+      {
+         _times.Clear();
+      }
+
       private void onConnected(string hostname, User user, IEnumerable<Project> projects)
       {
          _currentUser = user;
-         _times.Clear();
       }
 
       private readonly TimeTrackingOperator _operator;
       private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
          new Dictionary<MergeRequestKey, TimeSpan>();
       private User _currentUser;
-      private readonly DiscussionManager _discussionManager;
+      private readonly IDiscussionLoader _discussionLoader;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
    }
 }

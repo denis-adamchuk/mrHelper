@@ -13,7 +13,7 @@ namespace mrHelper.Client.MergeRequests
       internal WorkflowDetails()
       {
          _mergeRequests = new Dictionary<ProjectKey, MergeRequest[]>();
-         _changes = new Dictionary<MergeRequestKey, Version>();
+         _changes = new Dictionary<MergeRequestKey, Version[]>();
       }
 
       private WorkflowDetails(WorkflowDetails details)
@@ -21,7 +21,10 @@ namespace mrHelper.Client.MergeRequests
          _mergeRequests = details._mergeRequests.ToDictionary(
             item => item.Key,
             item => item.Value.ToArray());
-         _changes = new Dictionary<MergeRequestKey, Version>(details._changes);
+
+         _changes = details._changes.ToDictionary(
+            item => item.Key,
+            item => item.Value.ToArray());
       }
 
       /// <summary>
@@ -52,17 +55,17 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Return a timestamp of the most recent version of a specified merge request
       /// </summary>
-      public Version GetLatestVersion(MergeRequestKey mrk)
+      public IEnumerable<Version> GetVersions(MergeRequestKey mrk)
       {
-         return _changes.ContainsKey(mrk) ? _changes[mrk] : new Version();
+         return _changes.ContainsKey(mrk) ? _changes[mrk] : Array.Empty<Version>();
       }
 
       /// <summary>
       /// Update a timestamp of the most recent version of a specified merge request
       /// </summary>
-      internal void SetLatestVersion(MergeRequestKey mrk, Version version)
+      internal void SetVersions(MergeRequestKey mrk, IEnumerable<Version> versions)
       {
-         _changes[mrk] = version;
+         _changes[mrk] = versions.ToArray();
       }
 
       /// <summary>
@@ -92,7 +95,7 @@ namespace mrHelper.Client.MergeRequests
       private readonly Dictionary<ProjectKey, MergeRequest[]> _mergeRequests;
 
       // maps Merge Request to a timestamp of its latest version
-      private readonly Dictionary<MergeRequestKey, Version> _changes;
+      private readonly Dictionary<MergeRequestKey, Version[]> _changes;
    }
 }
 

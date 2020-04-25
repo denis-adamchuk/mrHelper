@@ -22,7 +22,7 @@ namespace mrHelper.Client.MergeRequests
 
          if (mergeRequests.Count() != previouslyCachedMergeRequests.Count())
          {
-            Trace.TraceInformation(String.Format(
+            Debug.WriteLine(String.Format(
                "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                projectname, hostname, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
          }
@@ -31,26 +31,30 @@ namespace mrHelper.Client.MergeRequests
       }
 
       /// <summary>
-      /// Cache passed version
+      /// Cache passed versions
       /// </summary>
-      internal void UpdateLatestVersion(MergeRequestKey mrk, Version latestVersion)
+      internal void UpdateVersions(MergeRequestKey mrk, IEnumerable<Version> versions)
       {
-         Version previouslyCachedVersion = _internalDetails.GetLatestVersion(mrk);
-         _internalDetails.SetLatestVersion(mrk, latestVersion);
+         Version oldLatestVersion =
+            _internalDetails.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
+         Version newLatestVersion =
+            versions.OrderBy(x => x.Created_At).LastOrDefault();
 
-         if (previouslyCachedVersion.Created_At > latestVersion.Created_At)
+         _internalDetails.SetVersions(mrk, versions);
+
+         if (oldLatestVersion.Created_At > newLatestVersion.Created_At)
          {
             Debug.Assert(false);
             Trace.TraceWarning("[WorkflowDetailsCache] Latest version is older than a previous one");
          }
 
-         if (latestVersion.Created_At != previouslyCachedVersion.Created_At)
+         if (newLatestVersion.Created_At != oldLatestVersion.Created_At)
          {
-            Trace.TraceInformation(String.Format(
+            Debug.WriteLine(String.Format(
                "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
                mrk.IId,
-               latestVersion.Created_At.ToLocalTime().ToString(),
-               previouslyCachedVersion.Created_At.ToLocalTime().ToString()));
+               newLatestVersion.Created_At.ToLocalTime().ToString(),
+               oldLatestVersion.Created_At.ToLocalTime().ToString()));
          }
       }
 

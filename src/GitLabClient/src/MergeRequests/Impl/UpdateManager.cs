@@ -210,7 +210,8 @@ namespace mrHelper.Client.MergeRequests
          IEnumerable<MergeRequest> mergeRequests =
             await loadMergeRequestsAsync(hostname, project.Path_With_Namespace);
 
-         Dictionary<MergeRequestKey, Version> latestVersions = new Dictionary<MergeRequestKey, Version>();
+         Dictionary<MergeRequestKey, IEnumerable<Version>> versions =
+            new Dictionary<MergeRequestKey, IEnumerable<Version>>();
          async Task loadVersion(MergeRequest x)
          {
             ProjectKey projectKey = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
@@ -220,16 +221,16 @@ namespace mrHelper.Client.MergeRequests
                IId = x.IId
             };
 
-            latestVersions[mrk] = await loadLatestVersionAsync(mrk);
+            versions[mrk] = await loadVersionsAsync(mrk);
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests, x => loadVersion(x),
             Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, null);
 
          _cache.UpdateMergeRequests(hostname, project.Path_With_Namespace, mergeRequests);
-         foreach (KeyValuePair<MergeRequestKey, Version> latestVersion in latestVersions)
+         foreach (KeyValuePair<MergeRequestKey, IEnumerable<Version>> version in versions)
          {
-            _cache.UpdateLatestVersion(latestVersion.Key, latestVersion.Value);
+            _cache.UpdateVersions(version.Key, version.Value);
          }
       }
 
@@ -260,11 +261,11 @@ namespace mrHelper.Client.MergeRequests
          }
       }
 
-      async private Task<Version> loadLatestVersionAsync(MergeRequestKey mrk)
+      async private Task<IEnumerable<Version>> loadVersionsAsync(MergeRequestKey mrk)
       {
          try
          {
-            return await _operator.GetLatestVersionAsync(mrk);
+            return await _operator.GetVersionsAsync(mrk);
          }
          catch (OperatorException ex)
          {

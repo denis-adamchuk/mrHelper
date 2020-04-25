@@ -10,11 +10,9 @@ using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
-using mrHelper.Client.Repository;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -111,6 +109,7 @@ namespace mrHelper.App.Forms
 
       private void loadConfiguration()
       {
+         _loadingConfiguration = true;
          Trace.TraceInformation("[MainForm] Loading configuration");
          Program.Settings.PropertyChanged += onSettingsPropertyChanged;
 
@@ -148,6 +147,7 @@ namespace mrHelper.App.Forms
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
          checkBoxShowVersions.Checked = checkBoxShowVersionsByDefault.Checked;
+         checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;
@@ -192,6 +192,7 @@ namespace mrHelper.App.Forms
          }
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
+         _loadingConfiguration = false;
       }
 
       private void loadColumnWidths(ListView listView, Dictionary<string, int> storedWidths)
@@ -430,28 +431,29 @@ namespace mrHelper.App.Forms
       private void createWorkflowAndDependencies()
       {
          _workflowManager = new WorkflowManager(Program.Settings);
-         _expressionResolver = new ExpressionResolver(this);
-         _mergeRequestCache = new MergeRequestCache(this, this, Program.Settings,
-            Program.Settings.AutoUpdatePeriodMs);
-         _discussionManager = new DiscussionManager(Program.Settings, this, _mergeRequestCache, this, _keywords,
-            Program.Settings.AutoUpdatePeriodMs, _mergeRequestFilter);
-         _eventFilter = new EventFilter(Program.Settings, this, _mergeRequestCache, _mergeRequestFilter);
-         _userNotifier = new UserNotifier(_trayIcon, Program.Settings, _mergeRequestCache, _discussionManager,
-            _eventFilter);
+         _expressionResolver = new ExpressionResolver(_workflowManager);
+         _mergeRequestCache = new MergeRequestCache(_workflowManager, _workflowManager, _workflowManager,
+            this, Program.Settings, Program.Settings.AutoUpdatePeriodMs);
+         _discussionManager = new DiscussionManager(Program.Settings, _workflowManager, _mergeRequestCache,
+            this, _keywords, Program.Settings.AutoUpdatePeriodMs, _mergeRequestFilter);
+         _eventFilter = new EventFilter(Program.Settings, _workflowManager, _mergeRequestCache, _mergeRequestFilter);
+         _userNotifier = new UserNotifier(_mergeRequestCache, _discussionManager, _eventFilter,
+            _trayIcon);
+         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflowManager, _discussionManager);
+
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
-            ? new GitDataUpdater(this, this, Program.Settings, this, _mergeRequestCache, _mergeRequestCache,
-               _discussionManager, Program.Settings.CreateMissingCommitsWhenCacheRevisionsInBackground,
-               Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
+            ? new GitDataUpdater(_workflowManager, this, this, _mergeRequestCache,
+               _discussionManager, _mergeRequestCache, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
-         _gitStatManager = new GitStatisticManager(this, this, this, _mergeRequestCache, _mergeRequestCache);
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, this, _discussionManager);
+         _gitStatManager = new GitStatisticManager(_workflowManager, this, this,_mergeRequestCache, _mergeRequestCache);
       }
 
       private void disposeWorkflowDependencies()
       {
-         _timeTrackingManager?.Dispose();
          _gitDataUpdater?.Dispose();
          _gitStatManager.Dispose();
+
+         _timeTrackingManager?.Dispose();
          _userNotifier.Dispose();
          _eventFilter.Dispose();
          _discussionManager.Dispose();

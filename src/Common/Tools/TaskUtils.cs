@@ -12,7 +12,7 @@ namespace mrHelper.Common.Tools
    {
       /// <summary>
       /// Runs a batch of functions of the given type simultaneously.
-      /// Each function receives a single argument of type T (TODO - This should be generalized)
+      /// Each function receives a single argument of type T which can be treated as a parallelized loop variable.
       /// </summary>
       async public static Task RunConcurrentFunctionsAsync<T>(IEnumerable<T> args, Func<T, Task> func,
          int concurrent, int interBatchDelay, Func<bool> shouldStop)

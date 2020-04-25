@@ -59,11 +59,6 @@ namespace mrHelper.App.Helpers
          return findColor<Color>(name, (x) => x, () => defaultColor);
       }
 
-      internal bool HasColor(string name)
-      {
-         return findColor<bool>(name, (x) => true, () => false);
-      }
-
       public IEnumerator<KeyValuePair<string, Color>> GetEnumerator()
       {
          foreach (KeyValuePair<string, Color> color in _colors)

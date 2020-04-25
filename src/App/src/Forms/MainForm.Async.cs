@@ -10,11 +10,12 @@ using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
 using mrHelper.GitClient;
 using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
-using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
+using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -34,15 +35,15 @@ namespace mrHelper.App.Forms
             _discussionManager.CheckForUpdates(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
-         ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
+         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
             enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
-               // Using remote checker because there are might be discussions reported by other users on newer commits
-               await _gitClientUpdater.UpdateAsync(repo,
-                  _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk), updateGitStatusText);
+               // Using remote-based provider as there are might be discussions from other users on newer commits
+               IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetRemoteBasedContextProvider(mrk);
+               await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -108,7 +109,7 @@ namespace mrHelper.App.Forms
 
          if (repo != null
           && headShaFromDiscussions.Any()
-          && !await restoreChainOfMergedCommits(repo, headShaFromDiscussions))
+          && !await fetchMissingCommits(repo, headShaFromDiscussions))
          {
             labelWorkflowStatus.Text = "Could not open Discussions";
             return;
@@ -120,34 +121,37 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(mrk, title, author, repo,
-               int.Parse(comboBoxDCDepth.Text), _colorScheme, discussions, _discussionManager, currentUser,
-                  async (key) =>
+            DiscussionsForm discussionsForm = new DiscussionsForm(_discussionManager, _discussionManager, repo,
+               currentUser, mrk, discussions, title, author,
+               int.Parse(comboBoxDCDepth.Text), _colorScheme,
+               async (key) =>
+            {
+               try
                {
-                  try
+                  ILocalGitRepository updatingRepo = getRepository(key.ProjectKey, true);
+                  if (updatingRepo != null && !updatingRepo.ExpectingClone)
                   {
-                     ILocalGitRepository updatingRepo = await getRepository(key.ProjectKey, true);
-                     if (updatingRepo != null && !updatingRepo.DoesRequireClone())
-                     {
-                        // Using remote checker because there are might be discussions reported
-                        // by other users on newer commits
-                        await updatingRepo.Updater.Update(
-                           _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(key), null);
-                        return updatingRepo;
-                     }
-                     else
-                     {
-                        Trace.TraceInformation("[MainForm] User tried to refresh Discussions w/o git repository");
-                        MessageBox.Show("Cannot update git folder, some context code snippets may be missing. ",
-                           "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                     }
+                     // Using remote-based provider as there are might be discussions from other users on newer commits
+                     IProjectUpdateContextProvider contextProvider =
+                        _mergeRequestCache.GetRemoteBasedContextProvider(key);
+                     await updatingRepo.Updater.SilentUpdate(contextProvider);
+                     return updatingRepo;
                   }
-                  catch (RepositoryUpdateException ex)
+                  else
                   {
-                     ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
+                     Trace.TraceInformation("[MainForm] User tried to refresh Discussions w/o git repository");
+                     MessageBox.Show("Cannot update git folder, some context code snippets may be missing. ",
+                        "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                   }
-                  return null;
-               });
+               }
+               catch (RepositoryUpdateException ex)
+               {
+                  ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
+               }
+               return null;
+            },
+            () => _discussionManager.CheckForUpdates(mrk,
+               new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
          catch (NoDiscussionsToShow)
@@ -177,7 +181,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Discussions opened";
       }
 
-      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk, string state)
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
          {
@@ -201,20 +205,18 @@ namespace mrHelper.App.Forms
             }
          }
 
-         ILocalGitRepository repo = await getRepository(mrk.ProjectKey, true);
+         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
          if (repo != null)
          {
             enableControlsOnGitAsyncOperation(false, "updating git repository");
             try
             {
-               IInstantProjectChecker checker = _mergeRequestCache.GetMergeRequest(mrk).HasValue
-                  ? _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker(mrk)
-                  : _mergeRequestCache.GetProjectCheckerFactory().GetRemoteProjectChecker(mrk);
-
-               // Using local checker because it does not make a GitLab request and it is quite enough here because
-               // user may select only those commits that already loaded and cached and have timestamps less
+               // Using local-based provider because it does not make a GitLab request and it is quite enough here
+               // because user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version (this is possible for Open MR only)
-               await _gitClientUpdater.UpdateAsync(repo, checker, updateGitStatusText);
+               IProjectUpdateContextProvider contextProvider =
+                  _mergeRequestCache.GetLocalBasedContextProvider(mrk.ProjectKey);
+               await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
             {
@@ -253,7 +255,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!await restoreChainOfMergedCommits(repo, new string[] { leftSHA, rightSHA }))
+         if (!await fetchMissingCommits(repo, new string[] { leftSHA, rightSHA }))
          {
             labelWorkflowStatus.Text = "Could not launch diff tool";
             return;
@@ -409,9 +411,6 @@ namespace mrHelper.App.Forms
       ProjectKey GetProjectKey(ProjectKey pk) => pk;
       ProjectKey GetProjectKey(MergeRequestKey mrk) => mrk.ProjectKey;
 
-      ProjectKey GetKeyForUpdate(ProjectKey pk) => pk;
-      MergeRequestKey GetKeyForUpdate(MergeRequestKey mrk) => mrk;
-
       async private Task performSilentUpdate<T>(T key)
       {
          ProjectKey pk = GetProjectKey((dynamic)key);
@@ -425,8 +424,8 @@ namespace mrHelper.App.Forms
 
          _silentUpdateInProgress.Add(pk);
 
-         ILocalGitRepository repo = await getRepository(pk, false);
-         if (repo == null || repo.DoesRequireClone())
+         ILocalGitRepository repo = getRepository(pk, false);
+         if (repo == null || repo.ExpectingClone)
          {
             Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",
                pk.ProjectName, (repo == null ? "repo is null" : "must be cloned first")));
@@ -437,23 +436,12 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format(
             "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
 
-         // Use Local Project Checker here because Remote Project Checker looks overkill.
+         // Use local-based provider here because remote-based one looks an overkill.
          // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
-         IInstantProjectChecker instantChecker =
-            _mergeRequestCache.GetProjectCheckerFactory().GetLocalProjectChecker((dynamic)key);
-         try
-         {
-            await repo.Updater.Update(instantChecker, null);
-         }
-         catch (RepositoryUpdateException ex)
-         {
-            ExceptionHandlers.Handle(String.Format("[MainForm] Silent update of {0} cancelled", pk.ProjectName), ex);
-            _silentUpdateInProgress.Remove(pk);
-            return;
-         }
-
-         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
+         IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(pk);
+         await repo.Updater.SilentUpdate(contextProvider);
          _silentUpdateInProgress.Remove(pk);
+         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
       }
 
       private void scheduleSilentUpdate(ProjectKey pk)
@@ -468,15 +456,15 @@ namespace mrHelper.App.Forms
 
       private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
 
-      async private Task<bool> restoreChainOfMergedCommits(ILocalGitRepository repo, IEnumerable<string> heads)
+      async private Task<bool> fetchMissingCommits(ILocalGitRepository repo, IEnumerable<string> heads)
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, heads);
-         return await restoreChainOfMergedCommits();
+            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path));
+         return await fetchMissingCommits();
       }
 
-      async private Task<bool> restoreChainOfMergedCommits()
+      async private Task<bool> fetchMissingCommits()
       {
          enableControlsOnGitAsyncOperation(false, "restoring merged commits");
          try

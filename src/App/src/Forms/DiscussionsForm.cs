@@ -23,12 +23,17 @@ namespace mrHelper.App.Forms
       /// Throws:
       /// ArgumentException
       /// </summary>
-      internal DiscussionsForm(MergeRequestKey mrk, string mrTitle, User mergeRequestAuthor,
-         ILocalGitRepository repo, int diffContextDepth, ColorScheme colorScheme, IEnumerable<Discussion> discussions,
-         DiscussionManager manager, User currentUser, Func<MergeRequestKey, Task<ILocalGitRepository>> updateGit)
+      internal DiscussionsForm(
+         IDiscussionProvider provider,
+         IDiscussionEditorFactory editorFactory,
+         ILocalGitRepository repo,
+         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+         string mergeRequestTitle, User mergeRequestAuthor,
+         int diffContextDepth, ColorScheme colorScheme,
+         Func<MergeRequestKey, Task<ILocalGitRepository>> updateGit, Action onDiscussionModified)
       {
          _mergeRequestKey = mrk;
-         _mergeRequestTitle = mrTitle;
+         _mergeRequestTitle = mergeRequestTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
          _gitRepository = repo;
@@ -40,8 +45,10 @@ namespace mrHelper.App.Forms
 
          _colorScheme = colorScheme;
 
-         _manager = manager;
+         _factory = editorFactory;
+         _provider = provider;
          _updateGit = updateGit;
+         _onDiscussionModified = onDiscussionModified;
 
          _currentUser = currentUser;
          if (_currentUser.Id == 0)
@@ -239,7 +246,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _manager.GetDiscussionsAsync(_mergeRequestKey);
+            discussions = await _provider.GetDiscussionsAsync(_mergeRequestKey);
          }
          catch (DiscussionManagerException ex)
          {
@@ -340,9 +347,10 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            DiscussionEditor editor = _manager.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
-            DiscussionBox box = new DiscussionBox(discussion, editor, _mergeRequestAuthor, _currentUser,
-               _diffContextDepth, _gitRepository, _colorScheme,
+            DiscussionEditor editor = _factory.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
+            DiscussionBox box = new DiscussionBox(this, editor, _gitRepository, _currentUser,
+               _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
+               _diffContextDepth, _colorScheme,
                // pre-content-change
                (sender) =>
                {
@@ -355,11 +363,8 @@ namespace mrHelper.App.Forms
                   // 'lite' means that there were no a preceding PreContentChange event, so we did not suspend layout
                   updateLayout(null, true, lite);
                   updateSearch();
-                  _manager.CheckForUpdates(_mergeRequestKey,
-                     new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null);
-               },
-               sender => MostRecentFocusedDiscussionControl = sender,
-               this, _mergeRequestKey.ProjectKey)
+                  _onDiscussionModified?.Invoke();
+               }, sender => MostRecentFocusedDiscussionControl = sender)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -523,8 +528,10 @@ namespace mrHelper.App.Forms
       private readonly ColorScheme _colorScheme;
 
       private User _currentUser;
-      private readonly DiscussionManager _manager;
+      private readonly IDiscussionEditorFactory _factory;
+      private readonly IDiscussionProvider _provider;
       private readonly Func<MergeRequestKey, Task<ILocalGitRepository>> _updateGit;
+      private readonly Action _onDiscussionModified;
 
       private readonly DiscussionFilterPanel FilterPanel;
       private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences

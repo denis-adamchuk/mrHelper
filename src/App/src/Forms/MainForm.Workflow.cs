@@ -30,57 +30,32 @@ namespace mrHelper.App.Forms
    {
       private void subscribeToWorkflow()
       {
-         _workflowManager.PreLoadCurrentUser += onLoadCurrentUser;
-         _workflowManager.PostLoadCurrentUser += onCurrentUserLoaded;
-         _workflowManager.FailedLoadCurrentUser += onFailedLoadCurrentUser;
-
-         _workflowManager.PreLoadProjectMergeRequests += onLoadProjectMergeRequests;
-         _workflowManager.PostLoadProjectMergeRequests += onProjectMergeRequestsLoaded;
-         _workflowManager.FailedLoadProjectMergeRequests += onFailedLoadProjectMergeRequests;
-
-         _workflowManager.PreLoadSingleMergeRequest += onLoadSingleMergeRequest;
-         _workflowManager.PostLoadSingleMergeRequest += onSingleMergeRequestLoaded;
-         _workflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleMergeRequest;
+         _workflowManager.PreLoadMergeRequest += onLoadSingleMergeRequest;
+         _workflowManager.PostLoadMergeRequest += onSingleMergeRequestLoaded;
+         _workflowManager.FailedLoadMergeRequest += onFailedLoadSingleMergeRequest;
 
          _workflowManager.PreLoadComparableEntities += onLoadComparableEntities;
          _workflowManager.PostLoadComparableEntities += onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities +=  onFailedLoadComparableEntities;
 
-         _workflowManager.PostLoadLatestVersion += onLatestVersionLoaded;
+         _workflowManager.Connected += workflowManager_Connected;
       }
 
       private void unsubscribeFromWorkflow()
       {
-         _workflowManager.PreLoadCurrentUser -= onLoadCurrentUser;
-         _workflowManager.PostLoadCurrentUser -= onCurrentUserLoaded;
-         _workflowManager.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
-
-         _workflowManager.PreLoadProjectMergeRequests -= onLoadProjectMergeRequests;
-         _workflowManager.PostLoadProjectMergeRequests -= onProjectMergeRequestsLoaded;
-         _workflowManager.FailedLoadProjectMergeRequests -= onFailedLoadProjectMergeRequests;
-
-         _workflowManager.PreLoadSingleMergeRequest -= onLoadSingleMergeRequest;
-         _workflowManager.PostLoadSingleMergeRequest -= onSingleMergeRequestLoaded;
-         _workflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleMergeRequest;
+         _workflowManager.PreLoadMergeRequest -= onLoadSingleMergeRequest;
+         _workflowManager.PostLoadMergeRequest -= onSingleMergeRequestLoaded;
+         _workflowManager.FailedLoadMergeRequest -= onFailedLoadSingleMergeRequest;
 
          _workflowManager.PreLoadComparableEntities -= onLoadComparableEntities;
          _workflowManager.PostLoadComparableEntities -= onComparableEntitiesLoaded;
          _workflowManager.FailedLoadComparableEntities -=  onFailedLoadComparableEntities;
 
-         _workflowManager.PostLoadLatestVersion -= onLatestVersionLoaded;
+         _workflowManager.Connected -= workflowManager_Connected;
       }
 
       async private Task switchHostToSelected()
       {
-         // When this thing happens, everything reconnects. If there are some things at gitlab that user
-         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
-         // things, missed events are not desirable.
-         // TODO - Avoid using this method to refresh current host data in cases like project list change and other.
-         // See Reload List button handler for possible solution.
-
-         await disposeLocalGitRepositoryFactory();
-
          string hostName = getHostName();
          if (hostName != String.Empty)
          {
@@ -184,9 +159,18 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> startWorkflowAsync(string hostname)
       {
+         // When this thing happens, everything reconnects. If there are some things at gitlab that user
+         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
+         // things, missed events are not desirable.
+         // This is why "Update List" button implemented not by means of switchHostToSelected().
+
+         await disposeLocalGitRepositoryFactory();
+
          labelWorkflowStatus.Text = String.Empty;
 
          await _workflowManager.CancelAsync();
+         await _searchWorkflowManager.CancelAsync();
          if (hostname == String.Empty)
          {
             return false;
@@ -205,18 +189,10 @@ namespace mrHelper.App.Forms
          }
 
          disableAllUIControls(true);
-         if (!_currentUser.ContainsKey(hostname))
-         {
-            if (!await _workflowManager.LoadCurrentUserAsync(hostname))
-            {
-               return false;
-            }
-         }
-
+         disableAllSearchUIControls(true);
          buttonReloadList.Enabled = true;
          createListViewGroupsForProjects(listViewMergeRequests, hostname, enabledProjects);
 
-         Connected?.Invoke(hostname, _currentUser[hostname], enabledProjects);
          return await loadAllMergeRequests(hostname, enabledProjects);
       }
 
@@ -260,27 +236,6 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadCurrentUser(string hostname)
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Loading user from host {0}", hostname));
-      }
-
-      private void onFailedLoadCurrentUser()
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Failed to load a user"));
-      }
-
-      private void onCurrentUserLoaded(string hostname, User currentUser)
-      {
-         _currentUser.Add(hostname, currentUser);
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Current user details: Id: {0}, Name: {1}, Username: {2}",
-            currentUser.Id.ToString(), currentUser.Name, currentUser.Username));
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
       private void onLoadAllMergeRequests(IEnumerable<Project> projects)
       {
          disableAllUIControls(false);
@@ -288,35 +243,9 @@ namespace mrHelper.App.Forms
             "Loading merge requests of {0} project{1}...", projects.Count(), projects.Count() > 1 ? "s" : "");
       }
 
-      private void onLoadProjectMergeRequests(Project project)
-      {
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Loading merge requests of project {0}", project.Path_With_Namespace));
-      }
-
-      private void onFailedLoadProjectMergeRequests()
-      {
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Failed to load merge requests for one of projects"));
-      }
-
-      private void onProjectMergeRequestsLoaded(string hostname, Project project,
-         IEnumerable<MergeRequest> mergeRequests)
-      {
-         LoadedMergeRequests?.Invoke(hostname, project, mergeRequests);
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Project {0} loaded. Loaded {1} merge requests",
-           project.Path_With_Namespace, mergeRequests.Count()));
-
-         cleanupReviewedCommits(hostname, project.Path_With_Namespace, mergeRequests);
-      }
-
       private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
       {
          labelWorkflowStatus.Text = "Merge requests loaded";
-
-         LoadedProjects?.Invoke(hostname, projects);
 
          updateVisibleMergeRequests();
 
@@ -330,7 +259,13 @@ namespace mrHelper.App.Forms
 
          foreach (Project project in projects)
          {
-            scheduleSilentUpdate(new ProjectKey{ HostName = hostname, ProjectName = project.Path_With_Namespace });
+            ProjectKey projectKey = new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = project.Path_With_Namespace
+            };
+            scheduleSilentUpdate(projectKey);
+            cleanupReviewedCommits(projectKey, _mergeRequestCache?.GetMergeRequests(projectKey));
          }
       }
 
@@ -400,7 +335,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onComparableEntitiesLoadedCommon(hostname, projectname, mergeRequest, commits, listViewMergeRequests);
+         onComparableEntitiesLoadedCommon(mergeRequest, commits, listViewMergeRequests);
 
          scheduleSilentUpdate(new MergeRequestKey
          {
@@ -409,16 +344,14 @@ namespace mrHelper.App.Forms
          });
       }
 
-      private void onLatestVersionLoaded(string hostname, string projectname,
-         MergeRequest mergeRequest, GitLabSharp.Entities.Version version)
-      {
-         if (isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-         LoadedMergeRequestVersion?.Invoke(hostname, projectname, mergeRequest, version);
+      private void workflowManager_Connected(string hostname, User user, IEnumerable<Project> projects)
+      {
+         if (!_currentUser.ContainsKey(hostname))
+         {
+            _currentUser.Add(hostname, user);
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

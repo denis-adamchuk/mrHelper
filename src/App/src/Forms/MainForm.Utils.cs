@@ -11,7 +11,6 @@ using System.Drawing;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using static mrHelper.App.Helpers.ServiceManager;
-using static mrHelper.Client.Common.UserEvents;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
@@ -37,7 +36,7 @@ namespace mrHelper.App.Forms
       private MergeRequest? getMergeRequest(ListView proposedListView)
       {
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         ListView listView = proposedListView ?? currentListView;
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
@@ -50,7 +49,7 @@ namespace mrHelper.App.Forms
       private MergeRequestKey? getMergeRequestKey(ListView proposedListView)
       {
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView != null ? proposedListView : currentListView;
+         ListView listView = proposedListView ?? currentListView;
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
@@ -466,6 +465,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestFilterControls(enabled);
          enableMergeRequestSearchControls(enabled);
 
+         checkBoxShowVersions.Enabled = enabled;
          buttonReloadList.Enabled = enabled;
          _suppressExternalConnections = !enabled;
          _canSwitchTab = enabled;
@@ -686,7 +686,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private static CommitComboBoxItem getItem(Commit commit, int? index,
+      private static CommitComboBoxItem getItem(Commit commit,
          ECommitComboBoxItemStatus status, EComparableEntityType type)
       {
          Debug.Assert(type == EComparableEntityType.Commit);
@@ -729,19 +729,31 @@ namespace mrHelper.App.Forms
             return EComparableEntityType.Version;
          }
 
-         EComparableEntityType type = getType();
+         CommitComboBoxItem getCommitItem(object commit, int? index, ECommitComboBoxItemStatus status)
+         {
+            CommitComboBoxItem result = new CommitComboBoxItem();
+            if (commit is Commit c)
+            {
+               result = getItem(c, status, getType());
+            }
+            else if (commit is GitLabSharp.Entities.Version v)
+            {
+               result = getItem(v, index, status, getType());
+            }
+            return result;
+         }
 
          // Add latest commit
-         CommitComboBoxItem latestCommitItem = getItem((dynamic)(commits.First()), null,
-            ECommitComboBoxItemStatus.Latest, type);
+         CommitComboBoxItem latestCommitItem = getCommitItem(commits.First(), null, ECommitComboBoxItemStatus.Latest);
          comboBoxLatestCommit.Items.Add(latestCommitItem);
 
          // Add other commits
          int iCommit = commits.Count() - 1;
-         foreach (dynamic commit in commits.Skip(1))
+         foreach (object commit in commits.Skip(1))
          {
-            CommitComboBoxItem item = getItem(commit, iCommit--, ECommitComboBoxItemStatus.Normal, type);
-            if (type == EComparableEntityType.Commit
+            CommitComboBoxItem item = getCommitItem(commit, iCommit--, ECommitComboBoxItemStatus.Normal);
+
+            if (getType() == EComparableEntityType.Commit
              && comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
             {
                continue;
@@ -752,7 +764,7 @@ namespace mrHelper.App.Forms
 
          // Add target branch to the right combo-box
          CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch, null, String.Empty,
-            ECommitComboBoxItemStatus.Base, type);
+            ECommitComboBoxItemStatus.Base, getType());
          comboBoxEarliestCommit.Items.Add(baseCommitItem);
       }
 
@@ -772,22 +784,21 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<ILocalGitRepositoryFactory> getLocalGitRepositoryFactory(string localFolder)
+      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory(string localFolder)
       {
-         if (_gitClientFactory == null || _gitClientFactory.ParentFolder != localFolder)
+         if (_gitClientFactory == null)
          {
-            await disposeLocalGitRepositoryFactory();
-
             try
             {
-               _gitClientFactory = new LocalGitRepositoryFactory(localFolder,
-                  _mergeRequestCache.GetProjectWatcher(), this);
+               _gitClientFactory = new LocalGitRepositoryFactory(
+                  localFolder, this, Program.Settings.UseShallowClone);
             }
             catch (ArgumentException ex)
             {
                ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
             }
          }
+         Debug.Assert(_gitClientFactory.ParentFolder == localFolder);
          return _gitClientFactory;
       }
 
@@ -805,9 +816,9 @@ namespace mrHelper.App.Forms
       /// Make some checks and create a repository
       /// </summary>
       /// <returns>null if could not create a repository</returns>
-      async private Task<ILocalGitRepository> getRepository(ProjectKey key, bool showMessageBoxOnError)
+      private ILocalGitRepository getRepository(ProjectKey key, bool showMessageBoxOnError)
       {
-         ILocalGitRepositoryFactory factory = await getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
+         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
          if (factory == null)
          {
             return null;
@@ -906,11 +917,10 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(string hostname, string projectname, IEnumerable<MergeRequest> mergeRequests)
+      private void cleanupReviewedCommits(ProjectKey projectKey, IEnumerable<MergeRequest> mergeRequests)
       {
          IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(
-            (x) => x.ProjectKey.HostName == hostname
-                && x.ProjectKey.ProjectName == projectname
+            (x) => x.ProjectKey.Equals(projectKey)
                 && !mergeRequests.Any(y => x.IId == y.IId));
          foreach (MergeRequestKey key in toRemove.ToArray())
          {
@@ -1104,8 +1114,10 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void processUpdate(MergeRequestEvent e)
+      private void processUpdate(Client.Types.UserEvents.MergeRequestEvent e)
       {
+         scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
+
          updateVisibleMergeRequests();
 
          if (e.New)
@@ -1646,13 +1658,13 @@ namespace mrHelper.App.Forms
          bool mergeRequestUpdateFinished = false;
          bool discussionUpdateFinished = false;
 
-         Action onSingleUpdateFinished = () =>
+         void onSingleUpdateFinished()
          {
             if (mergeRequestUpdateFinished && discussionUpdateFinished)
             {
                onUpdateFinished?.Invoke();
             }
-         };
+         }
 
          _mergeRequestCache.CheckForUpdates(mrk, intervals,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
@@ -1803,7 +1815,7 @@ namespace mrHelper.App.Forms
             "[MainForm] Failed to load commits IsSearchMode={0}", isSearchMode().ToString()));
       }
 
-      private void onComparableEntitiesLoadedCommon(string hostname, string projectname, MergeRequest mergeRequest,
+      private void onComparableEntitiesLoadedCommon(MergeRequest mergeRequest,
          System.Collections.IEnumerable entities, ListView listView)
       {
          MergeRequestKey? mrk = getMergeRequestKey(listView);

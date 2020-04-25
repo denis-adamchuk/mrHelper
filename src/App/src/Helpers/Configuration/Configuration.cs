@@ -29,6 +29,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersions";
       private static readonly bool   ShowVersionsDefaultValue = false;
 
+      private static readonly string UseShallowCloneKeyName      = "UseShallowClone";
+      private static readonly bool   UseShallowCloneDefaultValue = false;
+
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
 
@@ -77,9 +80,6 @@ namespace mrHelper.App.Helpers
 
       private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
       private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
-
-      private static readonly string CreateMissingCommitsWhenCacheRevisionsKeyName        = "CreateMissingCommitsWhenCacheRevisionsInBackground";
-      private static readonly bool   CreateMissingCommitsWhenCacheRevisionsDefaultValue   = false;
 
       private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
       private static readonly bool   DisableSSLVerificationDefaultValue = true;
@@ -217,6 +217,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowVersionsDefaultValue;
          }
          set { setValue(ShowVersionsKeyName, boolToString(value)); }
+      }
+
+      public bool UseShallowClone
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               UseShallowCloneKeyName, boolToString(UseShallowCloneDefaultValue)),
+                  out bool result) ? result : UseShallowCloneDefaultValue;
+         }
+         set { setValue(UseShallowCloneKeyName, boolToString(value)); }
       }
 
       public bool AllowAuthorToTrackTime
@@ -424,8 +435,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName,
-                                     ListViewMergeRequestsColumnWidthsDefaultValue, value);
+            setStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName, value);
          }
       }
 
@@ -438,8 +448,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName,
-                                     ListViewMergeRequestsDisplayIndicesDefaultValue, value);
+            setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName, value);
          }
       }
 
@@ -453,8 +462,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName,
-                                     ListViewFoundMergeRequestsColumnWidthsDefaultValue, value);
+            setStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName, value);
          }
       }
 
@@ -467,8 +475,7 @@ namespace mrHelper.App.Helpers
          }
          set
          {
-            setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName,
-                                     ListViewFoundMergeRequestsDisplayIndicesDefaultValue, value);
+            setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName, value);
          }
       }
 
@@ -485,7 +492,7 @@ namespace mrHelper.App.Helpers
                item => item.Value);
       }
 
-      private void setStringToIntDictionary(string keyName, string defaultValue, Dictionary<string, int> value)
+      private void setStringToIntDictionary(string keyName, Dictionary<string, int> value)
       {
          setValue(keyName, dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
       }
@@ -579,17 +586,6 @@ namespace mrHelper.App.Helpers
                   out int result) ? result : CacheRevisionsPeriodMsDefaultValue;
          }
          set { setValue(CacheRevisionsPeriodMsKeyName, value.ToString()); }
-      }
-
-      public bool CreateMissingCommitsWhenCacheRevisionsInBackground
-      {
-         get
-         {
-            return bool.TryParse(getValue(
-               CreateMissingCommitsWhenCacheRevisionsKeyName, CreateMissingCommitsWhenCacheRevisionsDefaultValue.ToString()),
-                  out bool result) ? result : CreateMissingCommitsWhenCacheRevisionsDefaultValue;
-         }
-         set { setValue(CreateMissingCommitsWhenCacheRevisionsKeyName, value.ToString()); }
       }
 
       public bool DisableSSLVerification

@@ -1,20 +1,14 @@
 using System;
 using System.Linq;
-using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using GitLabSharp;
 using GitLabSharp.Entities;
-using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Workflow;
-using mrHelper.Client.Repository;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -22,21 +16,14 @@ namespace mrHelper.App.Forms
    {
       private void createSearchWorkflow()
       {
-         _searchWorkflowManager = new WorkflowManager(Program.Settings);
+         _searchWorkflowManager = new SearchWorkflowManager(Program.Settings);
       }
 
       private void subscribeToSearchWorkflow()
       {
-         _searchWorkflowManager.PreLoadCurrentUser += onLoadCurrentUser;
-         _searchWorkflowManager.PostLoadCurrentUser += onCurrentUserLoaded;
-         _searchWorkflowManager.FailedLoadCurrentUser += onFailedLoadCurrentUser;
-
-         _searchWorkflowManager.PostLoadProjectMergeRequests += onProjectSearchMergeRequestsLoaded;
-         _searchWorkflowManager.FailedLoadProjectMergeRequests += onFailedLoadProjectSearchMergeRequests;
-
-         _searchWorkflowManager.PreLoadSingleMergeRequest += onLoadSingleSearchMergeRequest;
-         _searchWorkflowManager.PostLoadSingleMergeRequest += onSingleSearchMergeRequestLoaded;
-         _searchWorkflowManager.FailedLoadSingleMergeRequest += onFailedLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PreLoadMergeRequest += onLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PostLoadMergeRequest += onSingleSearchMergeRequestLoaded;
+         _searchWorkflowManager.FailedLoadMergeRequest += onFailedLoadSingleSearchMergeRequest;
 
          _searchWorkflowManager.PreLoadComparableEntities += onLoadSearchComparableEntities;
          _searchWorkflowManager.PostLoadComparableEntities += onSearchComparableEntitiesLoaded;
@@ -45,16 +32,9 @@ namespace mrHelper.App.Forms
 
       private void unsubscribeFromSearchWorkflow()
       {
-         _searchWorkflowManager.PreLoadCurrentUser -= onLoadCurrentUser;
-         _searchWorkflowManager.PostLoadCurrentUser -= onCurrentUserLoaded;
-         _searchWorkflowManager.FailedLoadCurrentUser -= onFailedLoadCurrentUser;
-
-         _searchWorkflowManager.PostLoadProjectMergeRequests -= onProjectSearchMergeRequestsLoaded;
-         _searchWorkflowManager.FailedLoadProjectMergeRequests -= onFailedLoadProjectSearchMergeRequests;
-
-         _searchWorkflowManager.PreLoadSingleMergeRequest -= onLoadSingleSearchMergeRequest;
-         _searchWorkflowManager.PostLoadSingleMergeRequest -= onSingleSearchMergeRequestLoaded;
-         _searchWorkflowManager.FailedLoadSingleMergeRequest -= onFailedLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PreLoadMergeRequest -= onLoadSingleSearchMergeRequest;
+         _searchWorkflowManager.PostLoadMergeRequest -= onSingleSearchMergeRequestLoaded;
+         _searchWorkflowManager.FailedLoadMergeRequest -= onFailedLoadSingleSearchMergeRequest;
 
          _searchWorkflowManager.PreLoadComparableEntities -= onLoadSearchComparableEntities;
          _searchWorkflowManager.PostLoadComparableEntities -= onSearchComparableEntitiesLoaded;
@@ -150,14 +130,6 @@ namespace mrHelper.App.Forms
          }
 
          disableAllSearchUIControls(true);
-         if (!_currentUser.ContainsKey(hostname))
-         {
-            if (!await _searchWorkflowManager.LoadCurrentUserAsync(hostname))
-            {
-               return false;
-            }
-         }
-
          return await loadAllSearchMergeRequests(hostname, query, maxResults);
       }
 
@@ -165,12 +137,19 @@ namespace mrHelper.App.Forms
       {
          onLoadAllSearchMergeRequests();
 
-         if (!await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query, maxResults))
+         Dictionary<Project, IEnumerable<MergeRequest>> projectMergeRequests =
+            await _searchWorkflowManager.LoadAllMergeRequestsAsync(hostname, query, maxResults);
+         if (projectMergeRequests == null)
          {
             return false;
          }
 
-         onAllSearchMergeRequestsLoaded(hostname);
+         foreach (KeyValuePair<Project, IEnumerable<MergeRequest>> keyValuePair in projectMergeRequests)
+         {
+            onProjectSearchMergeRequestsLoaded(hostname, keyValuePair.Key, keyValuePair.Value);
+         }
+
+         onAllSearchMergeRequestsLoaded();
          return true;
       }
 
@@ -180,13 +159,6 @@ namespace mrHelper.App.Forms
       {
          listViewFoundMergeRequests.Items.Clear();
          labelWorkflowStatus.Text = "Search in progress";
-      }
-
-      private void onFailedLoadProjectSearchMergeRequests()
-      {
-         labelWorkflowStatus.Text = "Failed to load merge requests";
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] Failed to load merge requests"));
       }
 
       private void onProjectSearchMergeRequestsLoaded(string hostname, Project project,
@@ -203,7 +175,7 @@ namespace mrHelper.App.Forms
          fillListViewSearchMergeRequests(hostname, project, mergeRequests);
       }
 
-      private void onAllSearchMergeRequestsLoaded(string hostname)
+      private void onAllSearchMergeRequestsLoaded()
       {
          if (listViewFoundMergeRequests.Items.Count > 0)
          {
@@ -281,7 +253,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onComparableEntitiesLoadedCommon(hostname, projectname, mergeRequest, commits, listViewFoundMergeRequests);
+         onComparableEntitiesLoadedCommon(mergeRequest, commits, listViewFoundMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

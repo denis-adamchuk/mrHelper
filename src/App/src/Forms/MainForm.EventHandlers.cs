@@ -83,12 +83,10 @@ namespace mrHelper.App.Forms
       async private void ButtonDifftool_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await onLaunchDiffToolAsync(mrk, mergeRequest.State);
+         await onLaunchDiffToolAsync(mrk);
       }
 
       async private void ButtonAddComment_Click(object sender, EventArgs e)
@@ -597,6 +595,27 @@ namespace mrHelper.App.Forms
          }
       }
 
+      async private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
+      {
+         if (_loadingConfiguration)
+         {
+            return;
+         }
+
+         bool newValue = (sender as CheckBox).Checked;
+         if (newValue
+          && MessageBox.Show("This option is not expected to be set in most cases. Are you sure?",
+             "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+         {
+            return;
+         }
+
+         Program.Settings.UseShallowClone = newValue;
+
+         Trace.TraceInformation(String.Format("[MainForm] Emulating host switch to reload everything"));
+         await switchHostToSelected();
+      }
+
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
       {
          bool state = (sender as CheckBox).Checked;
@@ -811,7 +830,7 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(getMergeRequestKey(null).HasValue);
 
-         ILocalGitRepository repo = await getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
+         ILocalGitRepository repo = getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
          if (repo == null)
          {
             return;
