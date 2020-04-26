@@ -76,7 +76,7 @@ namespace mrHelper.GitClient
 
       public void checkStandardError(IEnumerable<string> stdErr)
       {
-         if (stdErr.Count() > 0 && stdErr.First().StartsWith("fatal:"))
+         if (stdErr.Any() && stdErr.First().StartsWith("fatal:"))
          {
             string reasons =
                "Possible reasons:\n"

@@ -301,7 +301,7 @@ namespace mrHelper.App.Controls
 
       private void onCreate()
       {
-         Debug.Assert(Discussion.Notes.Count() > 0);
+         Debug.Assert(Discussion.Notes.Any());
 
          DiscussionNote firstNote = Discussion.Notes.First();
 
@@ -842,7 +842,7 @@ namespace mrHelper.App.Controls
 
          DiscussionNote note = getNoteFromTextBox(textBox);
 
-         Debug.Assert(Discussion.Notes.Count() > 0);
+         Debug.Assert(Discussion.Notes.Any());
          textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
          updateTextboxHeight(textBox);
       }

@@ -282,6 +282,8 @@ namespace mrHelper.App.Forms
             ProjectName = project.Path_With_Namespace
          };
 
+         listViewFoundMergeRequests.BeginUpdate();
+
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
             ListViewItem item = addListViewMergeRequestItem(listViewFoundMergeRequests, projectKey);
@@ -290,6 +292,8 @@ namespace mrHelper.App.Forms
 
          int maxLineCount = 2;
          setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
+
+         listViewFoundMergeRequests.EndUpdate();
       }
    }
 }

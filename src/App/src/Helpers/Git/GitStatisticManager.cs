@@ -181,6 +181,7 @@ namespace mrHelper.App.Helpers
             Update?.Invoke();
          }
 
+         int updateCount = 0;
          foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
          {
             DiffStatisticKey key = keyValuePair.Key.IId;
@@ -223,7 +224,11 @@ namespace mrHelper.App.Helpers
             {
                DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, args);
                updateCachedStatistic(repo, key, latestChange, diffStat);
-               Update?.Invoke();
+               updateCount++;
+               if (updateCount % 2 == 0) // to reduce number of Update calls
+               {
+                  Update?.Invoke();
+               }
             }
          }
       }

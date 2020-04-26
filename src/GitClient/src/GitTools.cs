@@ -132,26 +132,6 @@ namespace mrHelper.GitClient
          }
       }
 
-      public static bool IsValidGitRepository(string path)
-      {
-         try
-         {
-            return Directory.Exists(path)
-               && ExternalProcess.Start("git", "rev-parse --is-inside-work-tree", true, path).StdErr.Count() == 0;
-         }
-         catch (Exception ex)
-         {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return false;
-            }
-            else
-            {
-               throw;
-            }
-         }
-      }
-
       async public static Task<bool> DoesEntityExistAtPathAsync(
          IExternalProcessManager operationManager, string path, string entity)
       {
@@ -171,6 +151,15 @@ namespace mrHelper.GitClient
 
       public static ProjectKey? GetRepositoryProjectKey(string path)
       {
+         if (_repositoryKeys.TryGetValue(path, out ProjectKey value))
+         {
+            if (Directory.Exists(path)) // silly check for bad cached path
+            {
+               return value;
+            }
+            _repositoryKeys.Remove(path);
+         }
+
          string repositoryName = getRepositoryName(path);
          if (String.IsNullOrWhiteSpace(repositoryName))
          {
@@ -188,11 +177,13 @@ namespace mrHelper.GitClient
                ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
 
             string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
-            return new ProjectKey
+            ProjectKey projectKey = new ProjectKey
             {
                HostName = hostname,
                ProjectName = project
             };
+            _repositoryKeys[path] = projectKey;
+            return projectKey;
          }
 
          return null;
@@ -230,6 +221,9 @@ namespace mrHelper.GitClient
       private static string GitRepositoryRegularExpression = @"(\w+://)?(.+@)*([\w\d\.]+)/*(.*)";
       private static readonly Regex gitRepo_re = new Regex(GitRepositoryRegularExpression,
          RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+      // optimization
+      private static Dictionary<string, ProjectKey> _repositoryKeys = new Dictionary<string, ProjectKey>();
    }
 }
 

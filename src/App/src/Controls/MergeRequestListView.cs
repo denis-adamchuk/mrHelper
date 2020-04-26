@@ -61,23 +61,19 @@ namespace mrHelper.App.Controls
          private readonly Func<string> _getUrl;
       }
 
+      protected override void OnMouseLeave(EventArgs e)
+      {
+         onLeave();
+         base.OnMouseLeave(e);
+      }
+
       protected override void OnMouseMove(MouseEventArgs e)
       {
          ListViewHitTestInfo hit = HitTest(e.Location);
 
          if (hit.Item == null || hit.SubItem == null)
          {
-            if (toolTipTimer.Enabled)
-            {
-               toolTipTimer.Stop();
-            }
-
-            if (!String.IsNullOrEmpty(toolTip.GetToolTip(this)))
-            {
-               toolTip.Hide(this);
-            }
-
-            lastHistTestInfo = null;
+            onLeave();
             return;
          }
 
@@ -119,6 +115,21 @@ namespace mrHelper.App.Controls
          }
 
          base.OnMouseMove(e);
+      }
+
+      private void onLeave()
+      {
+         if (toolTipTimer.Enabled)
+         {
+            toolTipTimer.Stop();
+         }
+
+         if (!String.IsNullOrEmpty(toolTip.GetToolTip(this)))
+         {
+            toolTip.Hide(this);
+         }
+
+         lastHistTestInfo = null;
       }
 
       private readonly ToolTip toolTip = new ToolTip();

@@ -747,6 +747,9 @@ namespace mrHelper.App.Forms
             return result;
          }
 
+         comboBoxEarliestCommit.BeginUpdate();
+         comboBoxLatestCommit.BeginUpdate();
+
          // Add latest commit
          CommitComboBoxItem latestCommitItem = getCommitItem(commits.First(), null, ECommitComboBoxItemStatus.Latest);
          comboBoxLatestCommit.Items.Add(latestCommitItem);
@@ -770,6 +773,9 @@ namespace mrHelper.App.Forms
          CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch, null, String.Empty,
             ECommitComboBoxItemStatus.Base, getType());
          comboBoxEarliestCommit.Items.Add(baseCommitItem);
+
+         comboBoxEarliestCommit.EndUpdate();
+         comboBoxLatestCommit.EndUpdate();
       }
 
       /// <summary>
@@ -934,6 +940,8 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
+         listViewMergeRequests.BeginUpdate();
+
          IEnumerable<ProjectKey> projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          foreach (ProjectKey projectKey in projectKeys)
          {
@@ -969,7 +977,8 @@ namespace mrHelper.App.Forms
          }
 
          recalcRowHeightForMergeRequestListView(listViewMergeRequests);
-         listViewMergeRequests.Invalidate();
+
+         listViewMergeRequests.EndUpdate();
 
          updateTrayIcon();
       }
