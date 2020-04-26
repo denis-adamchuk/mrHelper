@@ -58,7 +58,7 @@ namespace mrHelper.GitClient
       {
          Path = LocalGitRepositoryPathFinder.FindPath(parentFolder, projectKey);
 
-         if (useShallowClone && !GitTools.IsSingleCommitFetchSupported(Path))
+         if (useShallowClone && !GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
          {
             throw new ArgumentException("Cannot use shallow clone if single commit fetch is not supported");
          }
@@ -70,7 +70,7 @@ namespace mrHelper.GitClient
 
          LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
             ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
-            : (GitTools.IsSingleCommitFetchSupported(Path)
+            : (GitTools.IsSingleCommitFetchSupported(Path) //-V3022
                ? LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches
                : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithoutSingleCommitFetches);
          ExpectingClone = isEmptyFolder(Path);

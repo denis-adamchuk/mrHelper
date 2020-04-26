@@ -63,7 +63,7 @@ namespace mrHelper.GitClient
             _onProgressChange = onProgressChange;
          }
 
-         while (_updating)
+         while (_updating) //-V3120
          {
             await Task.Delay(50);
          }

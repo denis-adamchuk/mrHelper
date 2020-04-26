@@ -17,6 +17,7 @@
          {
             components.Dispose();
          }
+         toolTipTimer?.Dispose();
          base.Dispose(disposing);
       }
 

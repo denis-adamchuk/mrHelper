@@ -17,6 +17,7 @@
          {
             components.Dispose();
          }
+         _delayedInputTimer?.Dispose();
          base.Dispose(disposing);
       }
 

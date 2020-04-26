@@ -22,17 +22,17 @@ namespace mrHelper.App.Helpers
          _eventFilter = eventFilter;
 
          _mergeRequestProvider = mergeRequestProvider;
-         _mergeRequestProvider.MergeRequestEvent += notifyOnEvent;
+         _mergeRequestProvider.MergeRequestEvent += notifyOnMergeRequestEvent;
          _mergeRequestProvider = mergeRequestProvider;
 
          _discussionProvider = discussionProvider;
-         _discussionProvider.DiscussionEvent += notifyOnEvent;
+         _discussionProvider.DiscussionEvent += notifyOnDiscussionEvent;
       }
 
       public void Dispose()
       {
-         _mergeRequestProvider.MergeRequestEvent -= notifyOnEvent;
-         _discussionProvider.DiscussionEvent -= notifyOnEvent;
+         _mergeRequestProvider.MergeRequestEvent -= notifyOnMergeRequestEvent;
+         _discussionProvider.DiscussionEvent -= notifyOnDiscussionEvent;
       }
 
       private TrayIcon.BalloonText getBalloonText(MergeRequestEvent e)
@@ -117,16 +117,22 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void notifyOnEvent<EventT>(EventT e)
+      private void notifyOnMergeRequestEvent(MergeRequestEvent e)
       {
-         if ((e is DiscussionEvent   de && _eventFilter.NeedSuppressEvent(de))
-          || (e is MergeRequestEvent me && _eventFilter.NeedSuppressEvent(me)))
+         if (!_eventFilter.NeedSuppressEvent(e))
          {
-            return;
+            BalloonText balloonText = getBalloonText(e);
+            _trayIcon.ShowTooltipBalloon(balloonText);
          }
+      }
 
-         BalloonText balloonText = getBalloonText((dynamic)e);
-         _trayIcon.ShowTooltipBalloon(balloonText);
+      private void notifyOnDiscussionEvent(DiscussionEvent e)
+      {
+         if (!_eventFilter.NeedSuppressEvent(e))
+         {
+            BalloonText balloonText = getBalloonText(e);
+            _trayIcon.ShowTooltipBalloon(balloonText);
+         }
       }
 
       private static string getProjectName(ProjectKey projectKey)
