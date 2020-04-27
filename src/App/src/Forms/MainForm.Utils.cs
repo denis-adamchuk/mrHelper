@@ -467,7 +467,10 @@ namespace mrHelper.App.Forms
          enableMergeRequestSearchControls(enabled);
 
          checkBoxShowVersions.Enabled = enabled;
-         buttonReloadList.Enabled = enabled;
+         if (buttonReloadList.Text != "Updating...") // sorry
+         {
+            buttonReloadList.Enabled = enabled;
+         }
          _suppressExternalConnections = !enabled;
          _canSwitchTab = enabled;
 
