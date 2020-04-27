@@ -49,7 +49,7 @@ namespace mrHelper.GitClient
             return value;
          }
 
-         if (!((dynamic)arguments).IsValid())
+         if (_disabled || !((dynamic)arguments).IsValid())
          {
             return null;
          }

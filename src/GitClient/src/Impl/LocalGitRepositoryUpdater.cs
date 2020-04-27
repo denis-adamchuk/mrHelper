@@ -243,16 +243,29 @@ namespace mrHelper.GitClient
       {
          IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
 
+         bool cancelled = false;
          List<string> missingSha = new List<string>();
          await TaskUtils.RunConcurrentFunctionsAsync(goodSha,
             async x =>
             {
-               if (!await _localGitRepository.ContainsSHAAsync(x))
+               if (cancelled)
                {
-                  missingSha.Add(x);
+                  return;
+               }
+
+               try
+               {
+                  if (!await _localGitRepository.ContainsSHAAsync(x))
+                  {
+                     missingSha.Add(x);
+                  }
+               }
+               catch (OperationCancelledException)
+               {
+                  cancelled = true;
                }
             },
-            20, 50, null);
+            20, 50, () => cancelled);
 
          int iCommit = 0;
          foreach (string sha in missingSha)
