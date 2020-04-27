@@ -151,42 +151,37 @@ namespace mrHelper.GitClient
 
       public static ProjectKey? GetRepositoryProjectKey(string path)
       {
-         if (_repositoryKeys.TryGetValue(path, out ProjectKey value))
+         if (_repositoryKeys.TryGetValue(path, out ProjectKey? value))
          {
-            if (Directory.Exists(path)) // silly check for bad cached path
-            {
-               return value;
-            }
-            _repositoryKeys.Remove(path);
+            return value;
          }
 
+         _repositoryKeys.Add(path, null);
          string repositoryName = getRepositoryName(path);
-         if (String.IsNullOrWhiteSpace(repositoryName))
+         if (!String.IsNullOrWhiteSpace(repositoryName))
          {
-            return null;
-         }
-
-         Match m = gitRepo_re.Match(repositoryName);
-         if (m.Success && m.Groups.Count == 5 && m.Groups[3].Success && m.Groups[4].Success)
-         {
-            string hostname = StringUtils.GetHostWithPrefix(m.Groups[3].Value);
-
-            string gitSuffix = ".git";
-            int startIndex = m.Groups[4].Value.StartsWith(":") ? 1 : 0;
-            int endIndex = m.Groups[4].Value.EndsWith(gitSuffix)
-               ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
-
-            string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
-            ProjectKey projectKey = new ProjectKey
+            Match m = gitRepo_re.Match(repositoryName);
+            if (m.Success && m.Groups.Count == 5 && m.Groups[3].Success && m.Groups[4].Success)
             {
-               HostName = hostname,
-               ProjectName = project
-            };
-            _repositoryKeys[path] = projectKey;
-            return projectKey;
+               string hostname = StringUtils.GetHostWithPrefix(m.Groups[3].Value);
+
+               string gitSuffix = ".git";
+               int startIndex = m.Groups[4].Value.StartsWith(":") ? 1 : 0;
+               int endIndex = m.Groups[4].Value.EndsWith(gitSuffix)
+                  ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
+
+               string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
+               ProjectKey projectKey = new ProjectKey
+               {
+                  HostName = hostname,
+                  ProjectName = project
+               };
+
+               _repositoryKeys[path] = projectKey;
+            }
          }
 
-         return null;
+         return _repositoryKeys[path];
       }
 
       public static bool IsSingleCommitFetchSupported(string path)
@@ -223,7 +218,7 @@ namespace mrHelper.GitClient
          RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       // optimization
-      private static Dictionary<string, ProjectKey> _repositoryKeys = new Dictionary<string, ProjectKey>();
+      private static Dictionary<string, ProjectKey?> _repositoryKeys = new Dictionary<string, ProjectKey?>();
    }
 }
 

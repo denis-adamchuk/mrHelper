@@ -73,7 +73,9 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Changing host to {0}. Last selected project: {1}, IId: {2}",
-            hostName, projectname != String.Empty ? projectname : "N/A", iid != 0 ? iid.ToString() : "N/A"));
+            hostName != String.Empty ? hostName : "N/A",
+            projectname != String.Empty ? projectname : "N/A",
+            iid != 0 ? iid.ToString() : "N/A"));
 
          _suppressExternalConnections = true;
          try
@@ -168,6 +170,7 @@ namespace mrHelper.App.Forms
          await disposeLocalGitRepositoryFactory();
 
          labelWorkflowStatus.Text = String.Empty;
+         textBoxSearch.Enabled = false;
 
          await _workflowManager.CancelAsync();
          await _searchWorkflowManager.CancelAsync();
@@ -249,6 +252,7 @@ namespace mrHelper.App.Forms
 
          updateVisibleMergeRequests();
 
+         textBoxSearch.Enabled = true;
          buttonReloadList.Enabled = true;
 
          if (listViewMergeRequests.Items.Count > 0 || Program.Settings.CheckedLabelsFilter)
