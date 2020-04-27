@@ -144,42 +144,12 @@ namespace mrHelper.Common.Tools
                name, cmdName, (details.Length > 0 ? ": " : String.Empty), details.ToString());
          };
 
-         Progress<string> progress = new Progress<string>();
-
-         TaskCompletionSource<object> addStdHandler(
-            List<string> std, Action<DataReceivedEventHandler> addHandler, Action removeHandler)
-         {
-            TaskCompletionSource<object> tcsStd = new TaskCompletionSource<object>();
-            DataReceivedEventHandler onDataReceived = null;
-            onDataReceived = new DataReceivedEventHandler(
-               (sender, args) =>
-            {
-               if (args.Data != null)
-               {
-                  std?.Add(args.Data);
-                  (progress as IProgress<string>).Report(getStatus(arguments, args.Data));
-               }
-               else
-               {
-                  removeHandler();
-                  tcsStd.SetResult(null);
-               }
-            });
-
-            addHandler(onDataReceived);
-            return tcsStd;
-         }
-
-         TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
-         List<Task<object>> tasks = new List<Task<object>>{ tcs.Task };
-
          List<string> standardOutput = new List<string>();
-         tasks.Add(addStdHandler(standardOutput,
-            x => process.OutputDataReceived += x, () => process.CancelOutputRead()).Task);
-
          List<string> standardError = new List<string>();
-         tasks.Add(addStdHandler(standardError,
-            x => process.ErrorDataReceived += x, () => process.CancelErrorRead()).Task);
+         TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+         TaskCompletionSource<object> tcsStdOut = new TaskCompletionSource<object>();
+         TaskCompletionSource<object> tcsStdErr = new TaskCompletionSource<object>();
+         IEnumerable<Task<object>> tasks = new List<Task<object>>{ tcs.Task, tcsStdOut.Task, tcsStdErr.Task };
 
          EventHandler onExited = null;
          onExited = new EventHandler(
@@ -208,12 +178,33 @@ namespace mrHelper.Common.Tools
             OnProgressChange = onProgressChange
          };
 
-         progress.ProgressChanged += (sender, status) =>
+         void setStdHandler(TaskCompletionSource<object> tcsStd,
+            List<string> std, Action<DataReceivedEventHandler> addHandler, Action removeHandler)
          {
-            descriptor?.OnProgressChange?.Invoke(status);
-         };
+            DataReceivedEventHandler onDataReceived = new DataReceivedEventHandler(
+               (sender, args) =>
+            {
+               if (args.Data != null)
+               {
+                  std?.Add(args.Data);
+                  descriptor?.OnProgressChange?.Invoke(getStatus(arguments, args.Data));
+               }
+               else
+               {
+                  removeHandler();
+                  tcsStd.SetResult(null);
+               }
+            });
 
-         (progress as IProgress<string>).Report(getStatus(arguments, "in progress..."));
+            addHandler(onDataReceived);
+         }
+
+         setStdHandler(tcsStdOut, standardOutput,
+            x => process.OutputDataReceived += x, () => process.CancelOutputRead());
+         setStdHandler(tcsStdErr, standardError,
+            x => process.ErrorDataReceived += x, () => process.CancelErrorRead());
+
+         descriptor?.OnProgressChange?.Invoke(getStatus(arguments, "in progress..."));
 
          try
          {

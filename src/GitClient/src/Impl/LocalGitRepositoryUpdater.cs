@@ -63,6 +63,11 @@ namespace mrHelper.GitClient
             _onProgressChange = onProgressChange;
          }
 
+         if (_updateOperationDescriptor != null)
+         {
+            _updateOperationDescriptor.OnProgressChange = onProgressChange;
+         }
+
          while (_updating) //-V3120
          {
             await Task.Delay(50);
@@ -276,7 +281,7 @@ namespace mrHelper.GitClient
       private ExternalProcess.AsyncTaskDescriptor startUpdateOperation(string arguments, string path)
       {
          return _operationManager.CreateDescriptor("git", arguments, path,
-            (status) => _onProgressChange?.Invoke(status));
+            _onProgressChange == null ? null : new Action<string>(status => _onProgressChange?.Invoke(status)));
       }
 
       private async Task waitUpdateOperationAsync(
