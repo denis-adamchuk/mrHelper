@@ -408,53 +408,22 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      ProjectKey GetProjectKey(ProjectKey pk) => pk;
-      ProjectKey GetProjectKey(MergeRequestKey mrk) => mrk.ProjectKey;
-
-      async private Task performSilentUpdate<T>(T key)
+      async private Task performSilentUpdate(ProjectKey projectKey)
       {
-         ProjectKey pk = GetProjectKey((dynamic)key);
-
-         if (_silentUpdateInProgress.Contains(pk))
+         ILocalGitRepository repo = getRepository(projectKey, false);
+         if (repo != null && !repo.ExpectingClone)
          {
-            Trace.TraceInformation(String.Format(
-               "[MainForm] Silent update for {0} is skipped due to a concurrent silent update", pk.ProjectName));
-            return;
+            // Use local-based provider here because remote-based one looks an overkill.
+            // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
+            IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(projectKey);
+            await repo.Updater.SilentUpdate(contextProvider);
          }
-
-         _silentUpdateInProgress.Add(pk);
-
-         ILocalGitRepository repo = getRepository(pk, false);
-         if (repo == null || repo.ExpectingClone)
-         {
-            Trace.TraceInformation(String.Format("[MainForm] Cannot update git repository {0} silently: {1}",
-               pk.ProjectName, (repo == null ? "repo is null" : "must be cloned first")));
-            _silentUpdateInProgress.Remove(pk);
-            return;
-         }
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm] Going to update git repository {0} silently", pk.ProjectName));
-
-         // Use local-based provider here because remote-based one looks an overkill.
-         // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now.
-         IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(pk);
-         await repo.Updater.SilentUpdate(contextProvider);
-         _silentUpdateInProgress.Remove(pk);
-         Trace.TraceInformation(String.Format("[MainForm] Silent update of {0} finished", pk.ProjectName));
       }
 
       private void scheduleSilentUpdate(ProjectKey pk)
       {
          BeginInvoke(new Action(async () => await performSilentUpdate(pk)));
       }
-
-      private void scheduleSilentUpdate(MergeRequestKey mrk)
-      {
-         BeginInvoke(new Action(async () => await performSilentUpdate(mrk)));
-      }
-
-      private readonly HashSet<ProjectKey> _silentUpdateInProgress = new HashSet<ProjectKey>();
 
       async private Task<bool> fetchMissingCommits(ILocalGitRepository repo, IEnumerable<string> heads)
       {

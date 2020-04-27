@@ -1172,7 +1172,10 @@ namespace mrHelper.App.Forms
 
       private void processUpdate(Client.Types.UserEvents.MergeRequestEvent e)
       {
-         scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
+         if (e.New || e.Commits)
+         {
+            scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
+         }
 
          updateVisibleMergeRequests();
 
@@ -1805,7 +1808,7 @@ namespace mrHelper.App.Forms
             richTextBoxMergeRequestDescription.Text = "Loading...";
          }
 
-         Trace.TraceInformation(String.Format(
+         Debug.WriteLine(String.Format(
             "[MainForm] Loading merge request with IId {0} IsSearchMode={1}",
             mergeRequestIId.ToString(), isSearchMode().ToString()));
       }
@@ -1839,7 +1842,7 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", mergeRequest.IId);
 
-         Trace.TraceInformation(String.Format(
+         Debug.WriteLine(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
       }
 
@@ -1857,7 +1860,7 @@ namespace mrHelper.App.Forms
             disableComboBox(comboBoxEarliestCommit, String.Empty);
          }
 
-         Trace.TraceInformation(String.Format(
+         Debug.WriteLine(String.Format(
             "[MainForm] Loading commits IsSearchMode={0}", isSearchMode().ToString()));
       }
 
@@ -1903,7 +1906,7 @@ namespace mrHelper.App.Forms
 
          labelWorkflowStatus.Text = String.Format("Loaded {0} commits", count);
 
-         Trace.TraceInformation(String.Format(
+         Debug.WriteLine(String.Format(
             "[MainForm] Loaded {0} comparable entities IsSearchMode={1}", count, isSearchMode().ToString()));
       }
 

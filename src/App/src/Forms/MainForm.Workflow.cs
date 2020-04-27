@@ -337,11 +337,7 @@ namespace mrHelper.App.Forms
 
          onComparableEntitiesLoadedCommon(mergeRequest, commits, listViewMergeRequests);
 
-         scheduleSilentUpdate(new MergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
-            IId = mergeRequest.IId
-         });
+         scheduleSilentUpdate(new ProjectKey { HostName = hostname, ProjectName = projectname });
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -137,24 +137,27 @@ namespace mrHelper.GitClient
          if (context.Sha == null)
          {
             Debug.Assert(false);
-            Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
+            traceError("Unexpected project update content");
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (!context.Sha.Any() || context.LatestChange == DateTime.MinValue)
+         if (!context.Sha.Any())
          {
             // It is not always a problem. May happen when a MR is opened from Search tab
-            // for a project that is not added to the list.
-            Trace.TraceWarning("[LocalGitRepositoryUpdater] Repository will not be updated because of empty context");
+            // for a project that is not added to the list. Or when MR list is empty
+            // for a project.
+            traceDebug("Repository will not be updated because of empty context");
+            return;
          }
+
+         Debug.Assert(context.LatestChange != DateTime.MinValue);
 
          DateTime prevLatestTimeStamp = _lastestFullUpdateTimestamp;
          if (_localGitRepository.ExpectingClone)
          {
             await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
             _lastestFullUpdateTimestamp = context.LatestChange;
-            Trace.TraceInformation(String.Format(
-               "[LocalGitRepositoryUpdater] Repository cloned. Updating LatestChange timestamp to {0}",
+            traceInformation(String.Format("Repository cloned. Updating LatestChange timestamp to {0}",
                _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
             Cloned?.Invoke();
          }
@@ -166,20 +169,19 @@ namespace mrHelper.GitClient
                await fetchAsync(false);
             }
             _lastestFullUpdateTimestamp = context.LatestChange;
-            Trace.TraceInformation(String.Format(
-               "[LocalGitRepositoryUpdater] Repository {0} updated. Updating LatestChange timestamp to {1}",
+            traceInformation(String.Format("Repository {0} updated. Updating LatestChange timestamp to {1}",
                _updateMode == EUpdateMode.ShallowClone ? "not" : String.Empty,
                _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
          }
          else if (context.LatestChange == _lastestFullUpdateTimestamp)
          {
-            Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] Repository not updated"));
+            traceDebug("Repository not updated");
          }
          else if (context.LatestChange < _lastestFullUpdateTimestamp)
          {
             // This is not a problem and may happen when, for example, a Merge Request with the most newest
             // version has been closed.
-            Trace.TraceInformation("[LocalGitRepositoryUpdater] New LatestChange is older than a previous one");
+            traceInformation("New LatestChange is older than a previous one");
          }
 
          if (_updateMode != EUpdateMode.FullCloneWithoutSingleCommitFetches)
@@ -198,21 +200,19 @@ namespace mrHelper.GitClient
          if (context.Sha == null || !context.Sha.Any())
          {
             Debug.Assert(false);
-            Trace.TraceError("[LocalGitRepositoryUpdater] Unexpected project update content");
+            traceError("Unexpected project update content");
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
          if (_localGitRepository.ExpectingClone)
          {
-            Trace.TraceError(
-               "[LocalGitRepositoryUpdater] Partial updates cannot be applied to a not cloned repository");
+            traceError("Partial updates cannot be applied to a not cloned repository");
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
          if (_updateMode == EUpdateMode.FullCloneWithoutSingleCommitFetches)
          {
-            Trace.TraceError(
-               "[LocalGitRepositoryUpdater] Partial updates are not supported in this repository");
+            traceError("Partial updates are not supported in this repository");
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
@@ -278,8 +278,7 @@ namespace mrHelper.GitClient
 
          if (iCommit > 0)
          {
-            Trace.TraceInformation(String.Format(
-               "[LocalGitRepositoryUpdater] Fetched commits: {0}. Total: {1}", iCommit, goodSha.Count()));
+            traceInformation(String.Format("Fetched commits: {0}. Total: {1}", iCommit, goodSha.Count()));
             return true;
          }
          return false;
@@ -303,20 +302,14 @@ namespace mrHelper.GitClient
          try
          {
             _updateOperationDescriptor = descriptor;
-            Trace.TraceInformation(String.Format(
-               "[LocalGitRepositoryUpdater] START git with arguments \"{0}\" in \"{1}\" for {2}",
-               arguments,
-               _localGitRepository.Path,
-               _localGitRepository.ProjectKey.ProjectName));
+            traceInformation(String.Format("START git with arguments \"{0}\" in \"{1}\" for {2}",
+               arguments, _localGitRepository.Path, _localGitRepository.ProjectKey.ProjectName));
             await _operationManager.Wait(descriptor);
          }
          finally
          {
-            Trace.TraceInformation(String.Format(
-               "[LocalGitRepositoryUpdater] FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
-               arguments,
-               _localGitRepository.Path,
-               _localGitRepository.ProjectKey.ProjectName));
+            traceInformation(String.Format("FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
+               arguments, _localGitRepository.Path, _localGitRepository.ProjectKey.ProjectName));
             _updateOperationDescriptor = null;
          }
       }
@@ -340,6 +333,28 @@ namespace mrHelper.GitClient
             String.Format("origin {0}:refs/keep-around/{0}", sha),
             shallow ? "--depth=1" : String.Empty,
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
+      }
+      private void traceDebug(string message)
+      {
+         Debug.WriteLine(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
+            _localGitRepository.ProjectKey.ProjectName, message));
+      }
+
+      private void traceInformation(string message)
+      {
+         Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
+            _localGitRepository.ProjectKey.ProjectName, message));
+      }
+
+      private void traceWarning(string message)
+      {
+         Trace.TraceWarning(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
+            _localGitRepository.ProjectKey.ProjectName, message));
+      }
+      private void traceError(string message)
+      {
+         Trace.TraceError(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
+            _localGitRepository.ProjectKey.ProjectName, message));
       }
 
       private readonly ILocalGitRepository _localGitRepository;

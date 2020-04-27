@@ -167,7 +167,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format(
             "Search results for project {0} loaded", project.Path_With_Namespace);
 
-         Trace.TraceInformation(String.Format(
+         Debug.WriteLine(String.Format(
             "[MainForm.Search] Project {0} loaded. Loaded {1} merge requests",
            project.Path_With_Namespace, mergeRequests.Count()));
 

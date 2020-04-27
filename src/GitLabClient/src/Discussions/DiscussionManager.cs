@@ -436,8 +436,9 @@ namespace mrHelper.Client.Discussions
           && noteCount == _cachedDiscussions[mrk].NoteCount)
          {
             Debug.WriteLine(String.Format(
-               "[DiscussionManager] Discussions are up-to-date, "
-             + "remote time stamp {0}, cached time stamp {1}, note count {2}, resolved {3}, resolvable {4}",
+               "[DiscussionManager] Discussions are up-to-date (Project={0}, IId={1}), "
+             + "remote time stamp {2}, cached time stamp {3}, note count {4}, resolved {5}, resolvable {6}",
+               mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                mergeRequestUpdatedAt.ToLocalTime().ToString(),
                _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString(),
                noteCount,
@@ -448,8 +449,8 @@ namespace mrHelper.Client.Discussions
          if (_closed.Contains(mrk))
          {
             Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Will not update MR because it is closed: Host={0}, Project={1}, IId={2}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+               "[DiscussionManager] Will not update MR because it is closed: Project={0}, IId={1}",
+               mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _closed.Remove(mrk);
             return false;
          }
@@ -474,9 +475,9 @@ namespace mrHelper.Client.Discussions
                _cachedDiscussions[mrk].TimeStamp : new Nullable<DateTime>();
 
             Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Cached {0} discussions for MR: Host={1}, Project={2}, IId={3},"
-             + " cached time stamp {4} (was {5} before update), note count = {6}, resolved = {7}, resolvable = {8}",
-               discussions.Count(), mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
+               "[DiscussionManager] Cached {0} discussions for MR: Project={1}, IId={2},"
+             + " cached time stamp {3} (was {4} before update), note count = {5}, resolved = {6}, resolvable = {7}",
+               discussions.Count(), mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                latestNoteTimestamp.ToLocalTime().ToString(),
                prevUpdateTimestamp?.ToLocalTime().ToString() ?? "N/A",
                noteCount, resolvedDiscussionCount, resolvableDiscussionCount));
@@ -494,8 +495,8 @@ namespace mrHelper.Client.Discussions
          else
          {
             Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Will not cache MR because it is closed: Host={0}, Project={1}, IId={2}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+               "[DiscussionManager] Will not cache MR because it is closed: Project={0}, IId={1}",
+               mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _closed.Remove(mrk);
          }
       }
@@ -578,8 +579,8 @@ namespace mrHelper.Client.Discussions
                   };
 
                   Trace.TraceInformation(String.Format(
-                     "[DiscussionManager] Clean up closed MR: Host={0}, Project={1}, IId={2}",
-                     closedMRK.ProjectKey.HostName, closedMRK.ProjectKey.ProjectName, closedMRK.IId.ToString()));
+                     "[DiscussionManager] Clean up closed MR: Project={0}, IId={1}",
+                     closedMRK.ProjectKey.ProjectName, closedMRK.IId.ToString()));
                   _cachedDiscussions.Remove(closedMRK);
                   _closed.Add(closedMRK);
                }

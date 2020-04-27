@@ -97,7 +97,7 @@ namespace mrHelper.App.Helpers
          Debug.Assert(isConsistentState(repo));
          if (repo.Data == null || repo.ExpectingClone)
          {
-            Trace.TraceWarning(String.Format(
+            Debug.WriteLine(String.Format(
                "[GitDataUpdater] Update failed. Repository is not ready (Host={0}, Project={1})",
                repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
             return;
