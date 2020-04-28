@@ -531,11 +531,16 @@ namespace mrHelper.App.Forms
 
       private void onTrackedTimeManagerEvent(MergeRequestKey mrk)
       {
-         MergeRequestKey? currentMergeRequest = getMergeRequestKey(null);
-         if (currentMergeRequest.HasValue && currentMergeRequest.Value.Equals(mrk))
+         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
+         if (currentMergeRequestKey.HasValue && currentMergeRequestKey.Value.Equals(mrk))
          {
-            // change control enabled state
-            updateTotalTime(mrk);
+            MergeRequest? currentMergeRequest = getMergeRequest(null);
+            if (currentMergeRequest.HasValue)
+            {
+               // change control enabled state
+               updateTotalTime(currentMergeRequestKey,
+                  currentMergeRequest.Value.Author, currentMergeRequestKey.Value.ProjectKey.HostName);
+            }
          }
 
          // Update total time column in the table
