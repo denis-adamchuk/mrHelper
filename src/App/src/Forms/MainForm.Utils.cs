@@ -238,9 +238,12 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(comboBoxLatestCommit.Items.Count == comboBoxEarliestCommit.Items.Count);
-         Tuple<int, int> indices = getCommitIndices();
-         comboBoxLatestCommit.SelectedIndex = indices.Item1;
-         comboBoxEarliestCommit.SelectedIndex = indices.Item2;
+         if (comboBoxEarliestCommit.Items.Count > 0)
+         {
+            Tuple<int, int> indices = getCommitIndices();
+            comboBoxLatestCommit.SelectedIndex = indices.Item1;
+            comboBoxEarliestCommit.SelectedIndex = indices.Item2;
+         }
       }
 
       private HashSet<string> getReviewedCommits(MergeRequestKey mrk)
