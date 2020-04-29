@@ -78,7 +78,7 @@ namespace mrHelper.Client.MergeRequests
 
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _cache?.Details.GetVersions(mrk).LastOrDefault() ?? default(Version);
+         return _cache?.Details.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault() ?? default(Version);
       }
 
       public Version GetLatestVersion(ProjectKey projectKey)
