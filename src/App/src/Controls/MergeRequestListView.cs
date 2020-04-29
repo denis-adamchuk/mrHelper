@@ -24,9 +24,10 @@ namespace mrHelper.App.Controls
          {
             if (lastHistTestInfo == null
              || lastHistTestInfo.SubItem == null
-             || lastHistTestInfo.SubItem.Tag == null)
+             || lastHistTestInfo.SubItem.Tag == null
+             || lastHistTestInfo.Item == null
+             || lastHistTestInfo.Item.ListView == null)
             {
-               Debug.Assert(false);
                return;
             }
 
