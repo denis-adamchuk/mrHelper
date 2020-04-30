@@ -130,7 +130,7 @@ namespace mrHelper.App.Forms
 
          string projectname = projectKey.ProjectName;
          if (projectname != String.Empty &&
-            (!enabledProjects.Cast<Project>().Any((x) => (x.Path_With_Namespace == projectname))))
+            (!enabledProjects.Cast<Project>().Any(x => 0 == String.Compare(x.Path_With_Namespace, projectname, true))))
          {
             string message = String.Format("Project {0} is not in the list of enabled projects", projectname);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

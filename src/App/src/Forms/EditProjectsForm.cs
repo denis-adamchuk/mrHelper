@@ -136,7 +136,7 @@ namespace mrHelper.App.Forms
 
             if (listViewProjects.Items
                .Cast<ListViewItem>()
-               .Any(x => x.Text == projectName))
+               .Any(x => 0 == String.Compare(x.Text, projectName, true)))
             {
                MessageBox.Show(String.Format("Project {0} is already in the list", projectName),
                   "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);

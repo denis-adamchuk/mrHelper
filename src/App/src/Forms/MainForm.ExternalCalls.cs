@@ -319,7 +319,7 @@ namespace mrHelper.App.Forms
 
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
             mergeRequestUrl.Host, Program.Settings);
-         if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
+         if (!projects.Any(x => 0 == String.Compare(x.Item1, mergeRequestUrl.Project, true)))
          {
             if (!addMissingProject(mergeRequestUrl))
             {
@@ -327,7 +327,7 @@ namespace mrHelper.App.Forms
                return; // user decided to not add a missing project
             }
          }
-         else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
+         else if (projects.Where(x => 0 == String.Compare(x.Item1, mergeRequestUrl.Project, true)).First().Item2 == false)
          {
             if (!enableDisabledProject(mergeRequestUrl))
             {
@@ -358,12 +358,12 @@ namespace mrHelper.App.Forms
 
             IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
                mergeRequestUrl.Host, Program.Settings);
-            if (!projects.Any(x => x.Item1 == mergeRequestUrl.Project))
+            if (!projects.Any(x => 0 == String.Compare(x.Item1, mergeRequestUrl.Project, true)))
             {
                // This may happen if project list changed while we were in 'await'
                return;
             }
-            else if (projects.Where(x => x.Item1 == mergeRequestUrl.Project).First().Item2 == false)
+            else if (projects.Where(x => 0 == String.Compare(x.Item1, mergeRequestUrl.Project, true)).First().Item2 == false)
             {
                return; // project has just been disabled in restartWorkflowByUrl()
             }
