@@ -30,10 +30,7 @@ class CommandLineArgs:
       configHelp = 'Configuration filename with path'
       parser.add_argument('-c', '--config', dest='config', nargs=1, help=configHelp)
 
-      msiHelp = 'Create MSI (if not specified, creates a zip)'
-      parser.add_argument('-m', '--msi', action='store_true', help=msiHelp)
-
-      deployHelp = 'Deploy MSI to a shared location (requires -m)'
+      deployHelp = 'Deploy MSI to a shared location'
       parser.add_argument('-d', '--deploy', action='store_true', help=deployHelp)
 
       self.args = parser.parse_known_args(argv)[0]
@@ -55,9 +52,6 @@ class CommandLineArgs:
 
    def config(self):
       return self.args.config[0]
-
-   def msi(self):
-      return self.args.msi
 
    def push(self):
       return self.args.push
@@ -92,8 +86,14 @@ class ScriptConfigParser:
    def bin(self):
       return self.config.get('Path', 'Bin')
 
+   def msix_bin(self):
+      return self.config.get('Path', 'msix_Bin')
+
    def build_script(self):
       return self.config.get('Path', 'BuildScript')
+
+   def msix_build_script(self):
+      return self.config.get('Path', 'msix_BuildScript')
 
    def version_file(self):
       return self.config.get('Version', 'AssemblyInfo')
@@ -107,6 +107,15 @@ class ScriptConfigParser:
    def msi_target_name_template(self):
       return self.config.get('Installer', 'msi_target_name_template')
 
+   def msix_manifest(self):
+      return self.config.get('Installer', 'msix_manifest')
+
+   def msix_original_name(self):
+      return self.config.get('Installer', 'msix_original_name')
+
+   def msix_target_name_template(self):
+      return self.config.get('Installer', 'msix_target_name_template')
+
    def latest_version_filename(self):
       return self.config.get('Deploy', 'latest_version_filename')
 
@@ -117,11 +126,16 @@ class ScriptConfigParser:
       self._addOption('Path', 'repository', '.')
       self._addOption('Path', 'Extras', 'extras')
       self._addOption('Path', 'Bin', 'bin')
-      self._addOption('Path', 'BuildScript', 'build/build-release.bat')
+      self._addOption('Path', 'msix_Bin', 'bin')
+      self._addOption('Path', 'BuildScript', 'build/build-install.bat')
+      self._addOption('Path', 'msix_BuildScript', 'build/build-publish.bat')
       self._addOption('Version', 'AssemblyInfo', 'Properties/SharedAssemblyInfo.cs')
       self._addOption('Installer', 'project', '')
       self._addOption('Installer', 'msi_original_name', '')
       self._addOption('Installer', 'msi_target_name_template', '')
+      self._addOption('Installer', 'msix_manifest', '')
+      self._addOption('Installer', 'msix_original_name', '')
+      self._addOption('Installer', 'msix_target_name_template', '')
       self._addOption('Deploy', 'latest_version_filename', 'latest')
       self._addOption('Deploy', 'path', '')
 
@@ -138,9 +152,12 @@ class ScriptConfigParser:
       self._validatePathInConfig(self.config, 'Path', 'repository')
       self._validatePathInConfig(self.config, 'Path', 'Extras')
       self._validatePathInConfig(self.config, 'Path', 'Bin')
+      self._validatePathInConfig(self.config, 'Path', 'msix_Bin')
       self._validateFileInConfig(self.config, 'Path', 'BuildScript')
+      self._validateFileInConfig(self.config, 'Path', 'msix_BuildScript')
       self._validateFileInConfig(self.config, 'Version', 'AssemblyInfo')
       self._validateFileInConfig(self.config, 'Installer', 'project')
+      self._validateFileInConfig(self.config, 'Installer', 'msix_manifest')
       self._validatePathInConfig(self.config, 'Deploy', 'path')
 
    def _validatePathInConfig(self, config, section, option):
@@ -161,15 +178,20 @@ class PreBuilder:
    class Exception(RuntimeError):
       pass
 
-   def __init__(self, version, installer_project):
+   def __init__(self, version, installer_project, msix_manifest):
       self.version = version
 
       if not os.path.exists(installer_project) or not os.path.isfile(installer_project):
          raise self.Exception(f'Bad installer project file "{installer_project}"')
       self.installer_project = installer_project
 
+      if not os.path.exists(msix_manifest) or not os.path.isfile(msix_manifest):
+         raise self.Exception(f'Bad MSIX manifest file "{msix_manifest}"')
+      self.msix_manifest = msix_manifest
+
    def prebuild(self):
       self._write_version()
+      self._write_version_msix()
 
    def _write_version(self):
       version_rex = re.compile(r'(\s*\"ProductVersion\"\s*=\s*\"8)(?:\:[0-9\.]+\")')
@@ -188,6 +210,22 @@ class PreBuilder:
                lines.append(product_code_rex.sub(r'\1{{{0}}}\2'.format(guid), line))
             elif re.match(assembly_version_rex, line):
                lines.append(assembly_version_rex.sub(r'\1={0},\2'.format(self.version), line))
+            else:
+               lines.append(line)
+
+      with open(self.installer_project, 'w') as f:
+         for line in lines:
+            f.write(line)
+
+   def _write_version_msix(self):
+      identity_version_rex = re.compile(r'(\s*<Identity.*Version=)(?:\"[0-9\.]+\")(.*)')
+
+      lines = []
+      with open (self.msix_manifest, 'r') as f:
+         for line in f:
+            if re.match(identity_version_rex, line):
+               three_digit_version = self.version[:-2]
+               lines.append(identity_version_rex.sub(r'\1"{0}"\2'.format(three_digit_version), line))
             else:
                lines.append(line)
 
@@ -231,7 +269,7 @@ class Builder:
    class Exception(RuntimeError):
       pass
 
-   def __init__(self, version, version_file, script_file):
+   def __init__(self, version, version_file, script_file, msix_script_file):
       self.version = version
 
       if not os.path.exists(version_file) or not os.path.isfile(version_file):
@@ -242,9 +280,14 @@ class Builder:
          raise self.Exception(f'Bad build script "{script_file}"')
       self.script_file = script_file
 
+      if not os.path.exists(msix_script_file) or not os.path.isfile(msix_script_file):
+         raise self.Exception(f'Bad MSIX build script "{msix_script_file}"')
+      self.msix_script_file = msix_script_file
+
    def build(self):
       self._write_version()
-      return subprocess.call(f'call {self.script_file}', shell=True) == 0
+      r1 = subprocess.call(f'call {self.script_file}', shell=True) == 0
+      return False if r1 == False else subprocess.call(f'call {self.msix_script_file}', shell=True) == 0
 
    def _write_version(self):
       assembly_rex = re.compile(r'(\[assembly\:\s*\S*)(?:\"[0-9\.]+\")(\)\])')
@@ -263,51 +306,6 @@ class Builder:
       with open(self.version_file, 'w') as f:
          for line in lines:
             f.write(line)
-
-
-class PackageMaker:
-   """ PackageMaker - Creates a build package
-
-   """
-   class Exception(RuntimeError):
-      pass
-
-   def __init__(self, version, bin_path, extras_path):
-      self.version = version
-
-      if not os.path.exists(bin_path) or not os.path.isdir(bin_path):
-         raise self.Exception(f'Bad path to binaries "{bin_path}"')
-      self.bin_path = bin_path
-
-      if not os.path.exists(extras_path) or not os.path.isdir(extras_path):
-         raise self.Exception(f'Bad path to extras "{extras_path}"')
-      self.extras_path = extras_path
-
-   def make_package(self):
-      archive_name = f"mrHelper-{self.version}.bin.zip"
-
-      if os.path.exists(archive_name):
-         if os.path.isdir(archive_name):
-            raise self.Exception(f'Cannot create archive because directory "{archive_name}" exists')
-         elif os.path.isfile(archive_name):
-            raise self.Exception(f'Cannot create archive because file "{archive_name}" already exists')
-         else:
-            assert(False)
-
-      self._pack(archive_name, [self.bin_path, self.extras_path])
-      return archive_name
-
-   def _pack(self, archive_name, paths) :
-      with zipfile.ZipFile(archive_name, 'a', zipfile.ZIP_DEFLATED) as zip:
-         for path in paths:
-            if os.path.isdir(path):
-               for base, dirs, files in os.walk(path):
-                  for file in files:
-                     fn = os.path.join(base, file)
-                     zip.write(fn, file)
-            else :
-               assert os.path.isfile(path)
-               zip.write(path, os.path.split(path)[1])
 
 
 class RepositoryHelper:
@@ -375,7 +373,12 @@ class DeployHelper:
       if not os.path.exists(deploy_path) or not os.path.isdir(deploy_path):
          raise self.Exception(f'Bad path for deployment "{deploy_path}"')
 
-   def deploy(self, version, installer_filepath):
+   def deploy(self, version, installer_filepath, msix_installer_filepath):
+      dest_msi_filepath = _copy_to_remote(self, version, installer_filepath)
+      dest_msix_filepath = _copy_to_remote(self, version, msix_installer_filepath)
+      _update_version_information_at_remote(version, dest_msi_filepath, dest_msix_filepath);
+
+   def _copy_to_remote(self, version, installer_filepath):
       if not os.path.exists(installer_filepath) or not os.path.isfile(installer_filepath):
          raise self.Exception(f'Installer cannot be found at "{installer_filepath}"')
 
@@ -396,18 +399,24 @@ class DeployHelper:
          if os.path.isfile(dest_installer_filepath):
             os.remove(dest_installer_filepath)
          else:
-            raise self.Exception(f'Cannot copy installer to "{dest_installer_filepath}" because a directory with the same name already exists')
+            raise self.Exception(f'Cannot copy installer to "{dest_installer_filepath}" \
+                                   because a directory with the same name already exists')
       shutil.copyfile(installer_filepath, dest_installer_filepath)
+      return dest_installer_filepath
 
+   def _update_version_information_at_remote(self, version, dest_msi_filepath, dest_msi_filepath):
       with open(config.latest_version_filename(), 'w') as latestVersion:
-         latestVersion.write(self._get_json(args.version(), dest_installer_filepath))
+         latestVersion.write(self._get_json(args.version(), dest_msi_filepath, dest_msix_filepath))
       dest_latest_version_filename = os.path.join(self.deploy_path, config.latest_version_filename())
       shutil.copyfile(config.latest_version_filename(), dest_latest_version_filename)
       os.remove(config.latest_version_filename())
 
-   def _get_json(self, version, installer_filepath):
-      installer_path = installer_filepath.replace("\\", "/")
-      return f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{installer_path}" }}'
+   def _get_json(self, version, msi_filepath, msix_filepath):
+      msi_path = msi_filepath.replace("\\", "/")
+      msix_path = msix_filepath.replace("\\", "/")
+      return f'{{ "VersionNumber": "{version}", \
+                  "InstallerFilePath": "{msi_path}", \
+                  "XInstallerFilePath": "{msix_path}" }}'
 
 
 def get_status_message(succeeded, step_name, version_incremented, build_created, pushed, deploy):
@@ -429,24 +438,23 @@ try:
 
    config = ScriptConfigParser(args.config())
 
-   if args.msi():
-      prebuilder = PreBuilder(args.version(), config.installer_project())
-      prebuilder.prebuild()
+   prebuilder = PreBuilder(args.version(), config.installer_project())
+   prebuilder.prebuild()
 
    builder = Builder(args.version(), config.version_file(), config.build_script())
    builder.build()
 
-   if args.msi():
-      postbuilder = PostBuilder(args.version(), config.bin(), config.msi_original_name(), config.msi_target_name_template())
-      installer_filename = postbuilder.postbuild()
+   postbuilder = PostBuilder(args.version(), config.bin(), \
+      config.msi_original_name(), config.msi_target_name_template())
+   installer_filename = postbuilder.postbuild()
 
-      if args.deploy():
-         deployer = DeployHelper(config.deploy_path())
-         deployer.deploy(args.version(), installer_filename)
+   postbuilder = PostBuilder(args.version(), config.bin(), \
+      config.msix_original_name(), config.msix_target_name_template())
+   msix_installer_filename = postbuilder.postbuild()
 
-   if not args.msi():
-      maker = PackageMaker(args.version(), config.bin(), config.extras())
-      deploy_filelist.append(maker.make_package())
+   if args.deploy():
+      deployer = DeployHelper(config.deploy_path())
+      deployer.deploy(args.version(), installer_filename, msix_installer_filename)
 
    if args.push():
       repository = RepositoryHelper(config.repository())
@@ -463,8 +471,6 @@ except PreBuilder.Exception as e:
    handle_error(7, e, "post-build step", False, True, False, False)
 except Builder.Exception as e:
    handle_error(3, e, "preparing to build", False, False, False, False)
-except PackageMaker.Exception as e:
-   handle_error(4, e, "creating archive", True, False, False, False)
 except RepositoryHelper.Exception as e:
    handle_error(5, e, "working with git", True, True, False, False)
 except DeployHelper.Exception as e:
