@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.GitClient", "src\G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.InstallerCustomActions", "src\InstallerCustomActions\mrHelper.InstallerCustomActions.csproj", "{63D6B295-75AA-4C53-9EA4-F9FB632B9611}"
 EndProject
-Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "mrHelperPackage", "submodules\mrHelper.Install\appx\Package\mrHelper-Package.wapproj", "{C885EDB5-930E-4198-AC2A-938BDEBAA775}"
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "mrHelper-Package", "submodules\mrHelper.Install\appx\Package\mrHelper-Package.wapproj", "{C885EDB5-930E-4198-AC2A-938BDEBAA775}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.RevertMSI", "src\RevertMSI\mrHelper.RevertMSI.csproj", "{BFAF7A3C-3052-49A4-88A9-D5893CCF55DA}"
 EndProject
@@ -451,7 +451,6 @@ Global
 		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Debug|x86.ActiveCfg = Release|Any CPU
 		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Debug|x86.Build.0 = Release|Any CPU
 		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Install|Any CPU.ActiveCfg = Release|Any CPU
-		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Install|Any CPU.Build.0 = Release|Any CPU
 		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Install|ARM.ActiveCfg = Release|Any CPU
 		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Install|ARM.Build.0 = Release|Any CPU
 		{C885EDB5-930E-4198-AC2A-938BDEBAA775}.Install|ARM64.ActiveCfg = Release|Any CPU

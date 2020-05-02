@@ -224,12 +224,11 @@ class PreBuilder:
       with open (self.msix_manifest, 'r') as f:
          for line in f:
             if re.match(identity_version_rex, line):
-               three_digit_version = self.version[:-2]
-               lines.append(identity_version_rex.sub(r'\1"{0}"\2'.format(three_digit_version), line))
+               lines.append(identity_version_rex.sub(r'\1"{0}"\2'.format(self.version), line))
             else:
                lines.append(line)
 
-      with open(self.installer_project, 'w') as f:
+      with open(self.msix_manifest, 'w') as f:
          for line in lines:
             f.write(line)
 
@@ -258,6 +257,8 @@ class PostBuilder:
       msi_new_name = self.msi_target_name_template
       msi_new_name = msi_new_name.replace('{Version}', self.version)
       msi_new_path = os.path.join(self.bin_path, msi_new_name)
+      if os.path.exists(msi_new_path):
+         os.remove(msi_new_path)
       os.rename(self.msi_path, msi_new_path)
       return msi_new_path
 
@@ -374,9 +375,9 @@ class DeployHelper:
          raise self.Exception(f'Bad path for deployment "{deploy_path}"')
 
    def deploy(self, version, installer_filepath, msix_installer_filepath):
-      dest_msi_filepath = _copy_to_remote(self, version, installer_filepath)
-      dest_msix_filepath = _copy_to_remote(self, version, msix_installer_filepath)
-      _update_version_information_at_remote(version, dest_msi_filepath, dest_msix_filepath);
+      dest_msi_filepath = self._copy_to_remote(version, installer_filepath)
+      dest_msix_filepath = self._copy_to_remote(version, msix_installer_filepath)
+      self._update_version_information_at_remote(version, dest_msi_filepath, dest_msix_filepath);
 
    def _copy_to_remote(self, version, installer_filepath):
       if not os.path.exists(installer_filepath) or not os.path.isfile(installer_filepath):
@@ -404,7 +405,7 @@ class DeployHelper:
       shutil.copyfile(installer_filepath, dest_installer_filepath)
       return dest_installer_filepath
 
-   def _update_version_information_at_remote(self, version, dest_msi_filepath, dest_msi_filepath):
+   def _update_version_information_at_remote(self, version, dest_msi_filepath, dest_msix_filepath):
       with open(config.latest_version_filename(), 'w') as latestVersion:
          latestVersion.write(self._get_json(args.version(), dest_msi_filepath, dest_msix_filepath))
       dest_latest_version_filename = os.path.join(self.deploy_path, config.latest_version_filename())
@@ -414,9 +415,7 @@ class DeployHelper:
    def _get_json(self, version, msi_filepath, msix_filepath):
       msi_path = msi_filepath.replace("\\", "/")
       msix_path = msix_filepath.replace("\\", "/")
-      return f'{{ "VersionNumber": "{version}", \
-                  "InstallerFilePath": "{msi_path}", \
-                  "XInstallerFilePath": "{msix_path}" }}'
+      return f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{msi_path}", "XInstallerFilePath": "{msix_path}" }}'
 
 
 def get_status_message(succeeded, step_name, version_incremented, build_created, pushed, deploy):
@@ -438,17 +437,17 @@ try:
 
    config = ScriptConfigParser(args.config())
 
-   prebuilder = PreBuilder(args.version(), config.installer_project())
+   prebuilder = PreBuilder(args.version(), config.installer_project(), config.msix_manifest())
    prebuilder.prebuild()
 
-   builder = Builder(args.version(), config.version_file(), config.build_script())
+   builder = Builder(args.version(), config.version_file(), config.build_script(), config.msix_build_script())
    builder.build()
 
    postbuilder = PostBuilder(args.version(), config.bin(), \
       config.msi_original_name(), config.msi_target_name_template())
    installer_filename = postbuilder.postbuild()
 
-   postbuilder = PostBuilder(args.version(), config.bin(), \
+   postbuilder = PostBuilder(args.version(), config.msix_bin(), \
       config.msix_original_name(), config.msix_target_name_template())
    msix_installer_filename = postbuilder.postbuild()
 
