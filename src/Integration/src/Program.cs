@@ -21,12 +21,18 @@ namespace mrHelper.Integration
 
          if (args.Length < 1)
          {
-            Console.WriteLine("Usage: mrHelper.Integration InstallationDir");
+            Console.WriteLine("Usage: mrHelper.Integration [InstallationDir|-x]");
             return;
          }
 
          try
          {
+            if (args[0] == "-x")
+            {
+               UnregisterCustomProtocol();
+               return;
+            }
+
             char[] charsToTrim = { '"' };
             string path = args[0].Trim(charsToTrim);
             RegisterCustomProtocol(path);
@@ -59,10 +65,15 @@ namespace mrHelper.Integration
          string defaultIconString = String.Format("\"{0}\", 0", binaryFilePath);
          string commandString = String.Format("\"{0}\" \"%1\"", binaryFilePath);
 
-         CustomProtocol protocol = new CustomProtocol(Constants.CustomProtocolName,
-            "Merge Request Helper for GitLab link protocol",
+         CustomProtocol protocol = new CustomProtocol(Constants.CustomProtocolName);
+         protocol.RegisterInRegistry("Merge Request Helper for GitLab link protocol",
             new Dictionary<string, string>{ { "open", commandString } }, defaultIconString);
-         protocol.RegisterInRegistry();
+      }
+
+      static private void UnregisterCustomProtocol()
+      {
+         CustomProtocol protocol = new CustomProtocol(Constants.CustomProtocolName);
+         protocol.RemoveFromRegistry();
       }
    }
 }

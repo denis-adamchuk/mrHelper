@@ -223,8 +223,8 @@ namespace mrHelper.App.Forms
 
       private bool integrateInTools()
       {
-         string gitPath = AppFinder.GetInstallPath(new string[] { "Git version 2" });
-         if (String.IsNullOrEmpty(gitPath))
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
+         if (appInfo == null || String.IsNullOrEmpty(appInfo.InstallPath))
          {
             MessageBox.Show(
                "Git for Windows (version 2) is not installed. "
@@ -233,7 +233,7 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         string gitBinaryFolder = Path.Combine(gitPath, "bin");
+         string gitBinaryFolder = Path.Combine(appInfo.InstallPath, "bin");
          string pathEV = System.Environment.GetEnvironmentVariable("PATH");
          System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + gitBinaryFolder);
          Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
@@ -272,11 +272,38 @@ namespace mrHelper.App.Forms
          return true;
       }
 
+      private bool revertOldInstallations()
+      {
+         if (!_desktopBridgeHelpers.IsRunningAsUwp())
+         {
+            return true;
+         }
+
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
+         if (appInfo != null)
+         {
+            MessageBox.Show("We need to uninstall a previous version of the application on the first launch. "
+              + "It just takes a few seconds", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            string currentPackagePath = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
+            string revertMsiProjectFolder = "mrHelper.RevertMSI";
+            string revertMsiProjectName = "mrHelper.RevertMSI.exe";
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               FileName = System.IO.Path.Combine(currentPackagePath, revertMsiProjectFolder, revertMsiProjectName),
+               WorkingDirectory = System.IO.Path.Combine(currentPackagePath, revertMsiProjectFolder),
+               Verb = "runas", // revert implies work with registry
+            };
+            Process p = Process.Start(startInfo);
+            p.WaitForExit();
+            Trace.TraceInformation(String.Format("[MainForm] {0} exited with code {1}", revertMsiProjectName, p.ExitCode));
+         }
+
+         return true;
+      }
+
       async private Task initializeWork()
       {
-         cleanUpInstallers();
-         checkForApplicationUpdates();
-
          restoreState();
          prepareFormToStart();
 

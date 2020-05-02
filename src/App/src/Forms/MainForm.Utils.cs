@@ -1285,10 +1285,10 @@ namespace mrHelper.App.Forms
          });
       }
 
-      private void cleanUpInstallers()
+      private void cleanUpInstallers(string template)
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-         foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, "mrHelper.*.msi"))
+         foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, template))
          {
             try
             {

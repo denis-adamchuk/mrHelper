@@ -19,12 +19,13 @@ namespace mrHelper.DiffTool
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool)
       {
-         string toolpath = AppFinder.GetInstallPath(diffTool.GetToolRegistryNames());
-         if (!isInstalled(toolpath))
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(diffTool.GetToolRegistryNames());
+         if (appInfo == null || !isInstalled(appInfo.InstallPath))
          {
             throw new DiffToolNotInstalledException("Diff tool not installed");
          }
 
+         string toolpath = appInfo.InstallPath;
          Trace.TraceInformation(String.Format("Diff Tool installed at: {0}", toolpath));
 
          registerInGit(diffTool, GitDiffToolName, toolpath);

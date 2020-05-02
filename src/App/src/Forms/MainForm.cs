@@ -33,6 +33,8 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}",
+            _desktopBridgeHelpers.IsRunningAsUwp() ? "Yes" : "No"));
 
          _trayIcon = new TrayIcon(notifyIcon);
          _mergeRequestDescriptionMarkdownPipeline = MarkDownUtils.CreatePipeline();
@@ -92,6 +94,7 @@ namespace mrHelper.App.Forms
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
       private bool _canSwitchTab = true;
       private bool _notifyOnCommitChainCancelEnabled;
+      private DesktopBridge.Helpers _desktopBridgeHelpers = new DesktopBridge.Helpers();
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;

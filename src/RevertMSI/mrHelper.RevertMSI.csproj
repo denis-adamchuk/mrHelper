@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}</ProjectGuid>
+    <ProjectGuid>{BFAF7A3C-3052-49A4-88A9-D5893CCF55DA}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>mrHelper.Integration</RootNamespace>
-    <AssemblyName>mrHelper.Integration</AssemblyName>
+    <RootNamespace>mrHelper.RevertMSI</RootNamespace>
+    <AssemblyName>mrHelper.RevertMSI</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -35,11 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -53,18 +50,24 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\CustomProtocol.cs" />
     <Compile Include="src\Program.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
-      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
+      <Project>{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}</Project>
       <Name>mrHelper.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
-    <None Include="app.manifest" />
+    <PackageReference Include="DesktopBridge.Helpers">
+      <Version>1.2.2</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts">
+      <Version>10.0.17134.1000</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -6,3 +6,5 @@
 /bin/*
 /obj/*
 /packages/*
+/src/App/obj/*
+/src/RevertMSI/obj/*

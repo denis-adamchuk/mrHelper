@@ -1,29 +1,34 @@
 ﻿using Microsoft.Win32;
-using System;
 using System.Diagnostics;
 
 namespace mrHelper.Common.Tools
 {
    public static class AppFinder
    {
-      static public string GetInstallPath(string[] applicationNames)
+      public class AppInfo
+      {
+         public string InstallPath;
+         public string ProductCode;
+      }
+
+      static public AppInfo GetApplicationInfo(string[] applicationNames)
       {
          Debug.Assert(applicationNames != null);
          foreach (RegistryHive hive in new RegistryHive[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser })
          {
             foreach (RegistryView view in new RegistryView[] { RegistryView.Registry32, RegistryView.Registry64 })
             {
-               string installPath = findApplicationPath(hive, view, applicationNames);
-               if (!String.IsNullOrEmpty(installPath))
+               AppInfo appInfo = findApplication(hive, view, applicationNames);
+               if (appInfo != null)
                {
-                  return installPath;
+                  return appInfo;
                }
             }
          }
          return null;
       }
 
-      static private string findApplicationPath(RegistryHive hive, RegistryView view, string[] applicationNames)
+      static private AppInfo findApplication(RegistryHive hive, RegistryView view, string[] applicationNames)
       {
          var hklm = RegistryKey.OpenBaseKey(hive, view);
          var uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
@@ -35,7 +40,11 @@ namespace mrHelper.Common.Tools
             {
                if (displayName != null && displayName.ToString().Contains(appName))
                {
-                  return product.GetValue("InstallLocation").ToString();
+                  return new AppInfo
+                  {
+                     InstallPath = product.GetValue("InstallLocation").ToString(),
+                     ProductCode = productSubKey
+                  };
                }
             }
          }

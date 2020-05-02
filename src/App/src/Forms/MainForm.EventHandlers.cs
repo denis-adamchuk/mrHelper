@@ -30,11 +30,15 @@ namespace mrHelper.App.Forms
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
-         if (!integrateInTools())
+         if (!revertOldInstallations() || !integrateInTools())
          {
             doClose();
             return;
          }
+
+         cleanUpInstallers("mrHelper.*.msi");
+         cleanUpInstallers("mrHelper.*.appx");
+         checkForApplicationUpdates();
 
          await initializeWork();
       }
@@ -839,19 +843,27 @@ namespace mrHelper.App.Forms
 
          try
          {
-            string applicationPath = AppFinder.GetInstallPath(new string[] { "mrHelper" });
-            if (String.IsNullOrWhiteSpace(applicationPath))
+            if (_newVersionFilePath.EndsWith(".msi"))
             {
-               applicationPath = Application.StartupPath;
-               Trace.TraceInformation(String.Format(
-                  "[CheckForUpdates] Using Startup Path \"{0}\"", applicationPath));
+               AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
+               string applicationPath = appInfo == null ? String.Empty : appInfo.InstallPath;
+               if (String.IsNullOrWhiteSpace(applicationPath))
+               {
+                  applicationPath = Application.StartupPath;
+                  Trace.TraceInformation(String.Format(
+                     "[CheckForUpdates] Using Startup Path \"{0}\"", applicationPath));
+               }
+               else
+               {
+                  Trace.TraceInformation(String.Format(
+                     "[CheckForUpdates] Using Application Path \"{0}\"", applicationPath));
+               }
+               Process.Start(_newVersionFilePath, "TARGETDIR=" + StringUtils.EscapeSpaces(applicationPath));
             }
             else
             {
-               Trace.TraceInformation(String.Format(
-                  "[CheckForUpdates] Using Application Path \"{0}\"", applicationPath));
+               Process.Start(_newVersionFilePath);
             }
-            Process.Start(_newVersionFilePath, "TARGETDIR=" + StringUtils.EscapeSpaces(applicationPath));
          }
          catch (Exception ex)
          {
