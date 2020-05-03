@@ -1,8 +1,10 @@
 :: TODO All paths and file names shall be passed into the batch and not hard-coded here
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\Tools\VsDevCmd.bat"
+call ".\set-env.bat"
 
-makepri new /pr ..\submodules\mrHelper.Install\appx /cf ..\submodules\mrHelper.Install\appx\manual\priconfig.xml /mn ..\submodules\mrHelper.Install\appx\manual\AppxManifest.xml /of ..\submodules\mrHelper.Install\appx\manual\resources.pri /o
+msbuild /nologo /v:q /property:GenerateFullPaths=true /t:Build /p:Configuration="Release" /m:6 ../mrHelper.sln
+
+makepri new /pr ..\submodules\mrHelper.Install\appx\manual /cf ..\submodules\mrHelper.Install\appx\manual\priconfig.xml /mn ..\submodules\mrHelper.Install\appx\manual\AppxManifest.xml /of ..\submodules\mrHelper.Install\appx\manual\resources.pri /o
 
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 

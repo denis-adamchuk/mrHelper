@@ -8,3 +8,5 @@
 /packages/*
 /src/App/obj/*
 /src/RevertMSI/obj/*
+/build/set-env.bat
+
