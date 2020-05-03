@@ -84,10 +84,10 @@ class ScriptConfigParser:
       return self.config.get('Path', 'Extras')
 
    def bin(self):
-      return self.config.get('Path', 'Bin')
+      return self.config.get('Installer', 'Bin')
 
    def msix_bin(self):
-      return self.config.get('Path', 'msix_Bin')
+      return self.config.get('Installer', 'msix_Bin')
 
    def build_script(self):
       return self.config.get('Path', 'BuildScript')
@@ -98,20 +98,11 @@ class ScriptConfigParser:
    def version_file(self):
       return self.config.get('Version', 'AssemblyInfo')
 
-   def installer_project(self):
-      return self.config.get('Installer', 'project')
-
-   def msi_original_name(self):
-      return self.config.get('Installer', 'msi_original_name')
-
    def msi_target_name_template(self):
       return self.config.get('Installer', 'msi_target_name_template')
 
    def msix_manifest(self):
       return self.config.get('Installer', 'msix_manifest')
-
-   def msix_original_name(self):
-      return self.config.get('Installer', 'msix_original_name')
 
    def msix_target_name_template(self):
       return self.config.get('Installer', 'msix_target_name_template')
@@ -125,16 +116,13 @@ class ScriptConfigParser:
    def _initialize(self, filename):
       self._addOption('Path', 'repository', '.')
       self._addOption('Path', 'Extras', 'extras')
-      self._addOption('Path', 'Bin', 'bin')
-      self._addOption('Path', 'msix_Bin', 'bin')
+      self._addOption('Installer', 'Bin', 'bin')
+      self._addOption('Installer', 'msix_Bin', 'bin')
       self._addOption('Path', 'BuildScript', 'build/build-install.bat')
       self._addOption('Path', 'msix_BuildScript', 'build/build-publish.bat')
       self._addOption('Version', 'AssemblyInfo', 'Properties/SharedAssemblyInfo.cs')
-      self._addOption('Installer', 'project', '')
-      self._addOption('Installer', 'msi_original_name', '')
       self._addOption('Installer', 'msi_target_name_template', '')
       self._addOption('Installer', 'msix_manifest', '')
-      self._addOption('Installer', 'msix_original_name', '')
       self._addOption('Installer', 'msix_target_name_template', '')
       self._addOption('Deploy', 'latest_version_filename', 'latest')
       self._addOption('Deploy', 'path', '')
@@ -151,12 +139,11 @@ class ScriptConfigParser:
    def _validate(self):
       self._validatePathInConfig(self.config, 'Path', 'repository')
       self._validatePathInConfig(self.config, 'Path', 'Extras')
-      self._validatePathInConfig(self.config, 'Path', 'Bin')
-      self._validatePathInConfig(self.config, 'Path', 'msix_Bin')
+      self._validatePathInConfig(self.config, 'Installer', 'Bin')
+      self._validatePathInConfig(self.config, 'Installer', 'msix_Bin')
       self._validateFileInConfig(self.config, 'Path', 'BuildScript')
       self._validateFileInConfig(self.config, 'Path', 'msix_BuildScript')
       self._validateFileInConfig(self.config, 'Version', 'AssemblyInfo')
-      self._validateFileInConfig(self.config, 'Installer', 'project')
       self._validateFileInConfig(self.config, 'Installer', 'msix_manifest')
       self._validatePathInConfig(self.config, 'Deploy', 'path')
 
@@ -178,42 +165,36 @@ class PreBuilder:
    class Exception(RuntimeError):
       pass
 
-   def __init__(self, version, installer_project, msix_manifest):
+   def __init__(self, version, version_file, msix_manifest):
       self.version = version
 
-      if not os.path.exists(installer_project) or not os.path.isfile(installer_project):
-         raise self.Exception(f'Bad installer project file "{installer_project}"')
-      self.installer_project = installer_project
+      if not os.path.exists(version_file) or not os.path.isfile(version_file):
+         raise self.Exception(f'Bad file with versions "{version_file}"')
+      self.version_file = version_file
 
       if not os.path.exists(msix_manifest) or not os.path.isfile(msix_manifest):
          raise self.Exception(f'Bad MSIX manifest file "{msix_manifest}"')
       self.msix_manifest = msix_manifest
 
    def prebuild(self):
-      self._write_version()
+      self._write_version_code()
       self._write_version_msix()
 
-   def _write_version(self):
-      version_rex = re.compile(r'(\s*\"ProductVersion\"\s*=\s*\"8)(?:\:[0-9\.]+\")')
-      product_code_rex = re.compile(r'(\s*\"ProductCode\"\s*=\s*\"8:)(?:{[0-9A-F\-]+})(\")')
-      assembly_version_rex = re.compile(r'(\s*\"AssemblyAsmDisplayName\".*\"8:mrHelper.*Version)(?:=[0-9\.]+,)(.*)')
+   def _write_version_code(self):
+      assembly_rex = re.compile(r'(\[assembly\:\s*\S*)(?:\"[0-9\.]+\")(\)\])')
 
       lines = []
-      with open (self.installer_project, 'r') as f:
+      with open(self.version_file, 'r') as f:
          for line in f:
-            if re.match(version_rex, line):
-               three_digit_version = self.version[:-2]
-               lines.append(version_rex.sub(r'\1:{0}"'.format(three_digit_version), line))
-            elif re.match(product_code_rex, line):
-               guid = str(uuid.uuid4())
-               guid = guid.upper()
-               lines.append(product_code_rex.sub(r'\1{{{0}}}\2'.format(guid), line))
-            elif re.match(assembly_version_rex, line):
-               lines.append(assembly_version_rex.sub(r'\1={0},\2'.format(self.version), line))
+            if re.match(assembly_rex, line):
+               lines.append(assembly_rex.sub(r'\1"{0}"\2'.format(self.version), line))
             else:
                lines.append(line)
 
-      with open(self.installer_project, 'w') as f:
+      if len(lines) < 2:
+         raise self.Exception(f'Unexpected format of file "{self.version_file}"')
+
+      with open(self.version_file, 'w') as f:
          for line in lines:
             f.write(line)
 
@@ -233,80 +214,20 @@ class PreBuilder:
             f.write(line)
 
 
-class PostBuilder:
-   """ PostBuilder - Performs post-build steps
-
-   """
-   class Exception(RuntimeError):
-      pass
-
-   def __init__(self, version, bin_path, msi_name, msi_target_name_template):
-      self.version = version
-
-      msi_path = os.path.join(bin_path, msi_name)
-      if not os.path.exists(msi_path) or not os.path.isfile(msi_path):
-         raise self.Exception(f'Bad MSI file "{msi_path}"')
-      self.msi_path = msi_path
-      self.bin_path = bin_path
-      self.msi_target_name_template = msi_target_name_template
-
-   def postbuild(self):
-      return self._rename_msi()
-
-   def _rename_msi(self):
-      msi_new_name = self.msi_target_name_template
-      msi_new_name = msi_new_name.replace('{Version}', self.version)
-      msi_new_path = os.path.join(self.bin_path, msi_new_name)
-      if os.path.exists(msi_new_path):
-         os.remove(msi_new_path)
-      os.rename(self.msi_path, msi_new_path)
-      return msi_new_path
-
-
 class Builder:
-   """ Builder - Increments a version of application and runs build script
+   """ Builder - Runs build script
 
    """
    class Exception(RuntimeError):
       pass
 
-   def __init__(self, version, version_file, script_file, msix_script_file):
-      self.version = version
-
-      if not os.path.exists(version_file) or not os.path.isfile(version_file):
-         raise self.Exception(f'Bad file with versions "{version_file}"')
-      self.version_file = version_file
-
+   def build(self, script_file, arguments):
       if not os.path.exists(script_file) or not os.path.isfile(script_file):
          raise self.Exception(f'Bad build script "{script_file}"')
       self.script_file = script_file
 
-      if not os.path.exists(msix_script_file) or not os.path.isfile(msix_script_file):
-         raise self.Exception(f'Bad MSIX build script "{msix_script_file}"')
-      self.msix_script_file = msix_script_file
-
-   def build(self):
-      self._write_version()
-      r1 = subprocess.call(f'call {self.script_file}', shell=True) == 0
-      return False if r1 == False else subprocess.call(f'call {self.msix_script_file}', shell=True) == 0
-
-   def _write_version(self):
-      assembly_rex = re.compile(r'(\[assembly\:\s*\S*)(?:\"[0-9\.]+\")(\)\])')
-
-      lines = []
-      with open(self.version_file, 'r') as f:
-         for line in f:
-            if re.match(assembly_rex, line):
-               lines.append(assembly_rex.sub(r'\1"{0}"\2'.format(self.version), line))
-            else:
-               lines.append(line)
-
-      if len(lines) < 2:
-         raise self.Exception(f'Unexpected format of file "{self.version_file}"')
-
-      with open(self.version_file, 'w') as f:
-         for line in lines:
-            f.write(line)
+      if subprocess.call(f'call {self.script_file} {arguments}', shell=True) != 0:
+         raise self.Exception(f'Build failed')
 
 
 class RepositoryHelper:
@@ -437,23 +358,21 @@ try:
 
    config = ScriptConfigParser(args.config())
 
-   prebuilder = PreBuilder(args.version(), config.installer_project(), config.msix_manifest())
+   prebuilder = PreBuilder(args.version(), config.version_file(), config.msix_manifest())
    prebuilder.prebuild()
 
-   builder = Builder(args.version(), config.version_file(), config.build_script(), config.msix_build_script())
-   builder.build()
+   builder = Builder()
 
-   postbuilder = PostBuilder(args.version(), config.bin(), \
-      config.msi_original_name(), config.msi_target_name_template())
-   installer_filename = postbuilder.postbuild()
+   msi_filename = config.msi_target_name_template().replace("{Version}", args.version())
+   msix_filename = config.msix_target_name_template().replace("{Version}", args.version())
 
-   postbuilder = PostBuilder(args.version(), config.msix_bin(), \
-      config.msix_original_name(), config.msix_target_name_template())
-   msix_installer_filename = postbuilder.postbuild()
+   builder.build(config.build_script())
+   builder.build(config.msix_build_script(),\
+       os.path.join(config.msix_bin(), msix_filename) + " " + conig.msix_manifest())
 
    if args.deploy():
       deployer = DeployHelper(config.deploy_path())
-      deployer.deploy(args.version(), installer_filename, msix_installer_filename)
+      deployer.deploy(args.version(), msi_filename, msix_filename)
 
    if args.push():
       repository = RepositoryHelper(config.repository())

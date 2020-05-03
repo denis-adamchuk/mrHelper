@@ -36,7 +36,7 @@ namespace mrHelper.Integration
       public void RemoveFromRegistry()
       {
          RegistryKey hcr = Registry.ClassesRoot;
-         hcr.DeleteSubKeyTree(ProtocolName);
+         hcr.DeleteSubKeyTree(ProtocolName, false);
       }
    }
 }
