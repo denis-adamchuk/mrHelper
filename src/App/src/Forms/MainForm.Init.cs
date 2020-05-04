@@ -327,13 +327,20 @@ namespace mrHelper.App.Forms
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
-         _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+         if (_gitClientUpdater != null)
+         {
+            _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+         }
          unsubscribeFromWorkflowAndDependencies();
          unsubscribeFromSearchWorkflow();
 
          await finalizeCommitChainCreator();
          await disposeLocalGitRepositoryFactory();
-         await _workflowManager.CancelAsync();
+
+         if (_workflowManager != null)
+         {
+            await _workflowManager.CancelAsync();
+         }
 
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
@@ -480,14 +487,14 @@ namespace mrHelper.App.Forms
       private void disposeWorkflowDependencies()
       {
          _gitDataUpdater?.Dispose();
-         _gitStatManager.Dispose();
+         _gitStatManager?.Dispose();
 
          _timeTrackingManager?.Dispose();
-         _userNotifier.Dispose();
-         _eventFilter.Dispose();
-         _discussionManager.Dispose();
-         _mergeRequestCache.Dispose();
-         _expressionResolver.Dispose();
+         _userNotifier?.Dispose();
+         _eventFilter?.Dispose();
+         _discussionManager?.Dispose();
+         _mergeRequestCache?.Dispose();
+         _expressionResolver?.Dispose();
       }
 
       private void subscribeToWorkflowAndDependencies()
@@ -510,16 +517,29 @@ namespace mrHelper.App.Forms
       {
          unsubscribeFromWorkflow();
 
-         _mergeRequestCache.MergeRequestEvent -= processUpdate;
-         _gitStatManager.Update -= onGitStatisticManagerUpdate;
+         if (_mergeRequestCache != null)
+         {
+            _mergeRequestCache.MergeRequestEvent -= processUpdate;
+         }
 
-         _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
-         _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
-         _timeTrackingManager.FailedLoadTotalTime -= onFailedLoadTotalTime;
+         if (_gitStatManager != null)
+         {
+            _gitStatManager.Update -= onGitStatisticManagerUpdate;
+         }
 
-         _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
-         _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
-         _discussionManager.FailedLoadDiscussions -= onFailedLoadDiscussions;
+         if (_timeTrackingManager != null)
+         {
+            _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
+            _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
+            _timeTrackingManager.FailedLoadTotalTime -= onFailedLoadTotalTime;
+         }
+
+         if (_discussionManager != null)
+         {
+            _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
+            _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
+            _discussionManager.FailedLoadDiscussions -= onFailedLoadDiscussions;
+         }
       }
 
       private async Task finalizeCommitChainCreator()

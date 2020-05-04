@@ -43,6 +43,11 @@ namespace mrHelper.App.Forms
 
       private void unsubscribeFromWorkflow()
       {
+         if (_workflowManager == null)
+         {
+            return;
+         }
+
          _workflowManager.PreLoadMergeRequest -= onLoadSingleMergeRequest;
          _workflowManager.PostLoadMergeRequest -= onSingleMergeRequestLoaded;
          _workflowManager.FailedLoadMergeRequest -= onFailedLoadSingleMergeRequest;

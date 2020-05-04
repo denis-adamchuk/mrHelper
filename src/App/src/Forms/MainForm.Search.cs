@@ -32,6 +32,11 @@ namespace mrHelper.App.Forms
 
       private void unsubscribeFromSearchWorkflow()
       {
+         if (_searchWorkflowManager == null)
+         {
+            return;
+         }
+
          _searchWorkflowManager.PreLoadMergeRequest -= onLoadSingleSearchMergeRequest;
          _searchWorkflowManager.PostLoadMergeRequest -= onSingleSearchMergeRequestLoaded;
          _searchWorkflowManager.FailedLoadMergeRequest -= onFailedLoadSingleSearchMergeRequest;
