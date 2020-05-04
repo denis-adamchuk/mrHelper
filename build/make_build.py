@@ -366,9 +366,9 @@ try:
    msi_filename = config.msi_target_name_template().replace("{Version}", args.version())
    msix_filename = config.msix_target_name_template().replace("{Version}", args.version())
 
-   builder.build(config.build_script())
+   builder.build(config.build_script(), "")
    builder.build(config.msix_build_script(),\
-       os.path.join(config.msix_bin(), msix_filename) + " " + conig.msix_manifest())
+       os.path.join(config.msix_bin(), msix_filename) + " " + config.msix_manifest())
 
    if args.deploy():
       deployer = DeployHelper(config.deploy_path())

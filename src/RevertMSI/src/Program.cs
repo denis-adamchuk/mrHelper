@@ -59,6 +59,7 @@ namespace mrHelper.RevertMSI
 
          uninstall(appInfo);
          cleanupBinaries(appInfo);
+         cleanupShortcut(appInfo);
          removeProtocolFromRegistry();
       }
 
@@ -98,11 +99,28 @@ namespace mrHelper.RevertMSI
          }
       }
 
+      private static void cleanupShortcut(AppFinder.AppInfo appInfo)
+      {
+         string shortcutFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.Programs),
+               "mrHelper", "mrHelper.lnk");
+         try
+         {
+            System.IO.File.Delete(shortcutFilePath);
+         }
+         catch (Exception ex)
+         {
+            Trace.TraceError(String.Format(
+               "Could not delete shortcut. Exception message: {0}\nCallstack:\n{1}",
+               ex.Message, ex.StackTrace));
+         }
+      }
+
       private static void removeProtocolFromRegistry()
       {
          string currentPackagePath = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
-         string integrationProjectFolderName = "mrHelper.RevertMSI";
-         string integrationExecutableName = "mrHelper.RevertMSI.exe";
+         string integrationProjectFolderName = "mrHelper.Integration";
+         string integrationExecutableName = "mrHelper.Integration.exe";
          ProcessStartInfo startInfo = new ProcessStartInfo
          {
             FileName = System.IO.Path.Combine(currentPackagePath, integrationProjectFolderName, integrationExecutableName),
