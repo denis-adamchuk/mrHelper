@@ -1030,6 +1030,7 @@ namespace mrHelper.App.Forms
          updateTotalTime();
 
          updateTrayIcon();
+         updateBadge();
       }
 
       async private Task onStopTimer(bool send)
@@ -1104,6 +1105,7 @@ namespace mrHelper.App.Forms
          }
 
          updateTrayIcon();
+         updateBadge();
       }
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)

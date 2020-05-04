@@ -16,6 +16,7 @@ namespace mrHelper.Common.Constants
       public static string MoreLabelsHint = "See more labels in tooltip";
 
       public static string IconSchemeFileName = "icons.json";
+      public static string BadgeSchemeFileName = "badges.json";
       public static string ProjectListFileName = "projects.json";
 
       public static string TimeStampLogFilenameFormat = "yyyy_MM_dd_HHmmss";

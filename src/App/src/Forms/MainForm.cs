@@ -123,6 +123,7 @@ namespace mrHelper.App.Forms
       private IEnumerable<string> _keywords;
       private ColorScheme _colorScheme;
       private Dictionary<string, string> _iconScheme;
+      private Dictionary<string, string> _badgeScheme;
 
       private string _newVersionFilePath;
       private string _newVersionNumber;

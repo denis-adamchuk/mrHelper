@@ -314,6 +314,7 @@ namespace mrHelper.App.Forms
 
          initializeColorScheme();
          initializeIconScheme();
+         initializeBadgeScheme();
 
          await connectOnStartup();
       }

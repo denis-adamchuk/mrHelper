@@ -19,6 +19,8 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using static mrHelper.App.Controls.MergeRequestListView;
+using Windows.Data.Xml.Dom;
+using Windows.UI.Notifications;
 
 namespace mrHelper.App.Forms
 {
@@ -411,6 +413,26 @@ namespace mrHelper.App.Forms
          catch (Exception ex) // whatever de-deserialization exception
          {
             ExceptionHandlers.Handle("Cannot load icon scheme", ex);
+         }
+      }
+
+      private void initializeBadgeScheme()
+      {
+         if (!System.IO.File.Exists(Constants.BadgeSchemeFileName))
+         {
+            return;
+         }
+
+         try
+         {
+            _badgeScheme = JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+               Constants.BadgeSchemeFileName).ToDictionary(
+                  item => item.Key,
+                  item => item.Value.ToString());
+         }
+         catch (Exception ex) // whatever de-deserialization exception
+         {
+            ExceptionHandlers.Handle("Cannot load badge scheme", ex);
          }
       }
 
@@ -987,6 +1009,7 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.EndUpdate();
 
          updateTrayIcon();
+         updateBadge();
       }
 
       private ListViewItem addListViewMergeRequestItem(ListView listView, ProjectKey projectKey)
@@ -1312,7 +1335,7 @@ namespace mrHelper.App.Forms
       private void updateTrayIcon()
       {
          notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
-         if (_iconScheme == null || _iconScheme.Count == 0)
+         if (_iconScheme == null || !_iconScheme.Any())
          {
             return;
          }
@@ -1334,7 +1357,7 @@ namespace mrHelper.App.Forms
             if (_iconScheme.ContainsKey("Icon_Tracking"))
             {
                loadNotifyIconFromFile(_iconScheme["Icon_Tracking"]);
-            };
+            }
             return;
          }
 
@@ -1352,6 +1375,64 @@ namespace mrHelper.App.Forms
                break;
             }
          }
+      }
+
+      private void updateBadge()
+      {
+         if (_badgeScheme == null || !_badgeScheme.Any() || !_runningAsUwp)
+         {
+            return;
+         }
+
+         clearBadgeGlyph();
+
+         if (isTrackingTime())
+         {
+            if (_badgeScheme.ContainsKey("Badge_Tracking"))
+            {
+               setBadgeGlyph(_badgeScheme["Badge_Tracking"]);
+            }
+            return;
+         }
+
+         foreach (KeyValuePair<string, string> nameToFilename in _badgeScheme)
+         {
+            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
+            if (listViewMergeRequests.Items
+               .Cast<ListViewItem>()
+               .Select(x => x.Tag)
+               .Cast<FullMergeRequestKey>()
+               .Select(x => x.MergeRequest)
+               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
+            {
+               setBadgeGlyph(nameToFilename.Value);
+               break;
+            }
+         }
+      }
+
+      void clearBadgeGlyph()
+      {
+         BadgeUpdateManager.CreateBadgeUpdaterForApplication().Clear();
+      }
+
+      void setBadgeGlyph(string badgeGlyphValue)
+      {
+         // Get the blank badge XML payload for a badge glyph
+         XmlDocument badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeGlyph);
+
+         // Set the value of the badge in the XML to our glyph value
+         XmlElement badgeElement = badgeXml.SelectSingleNode("/badge") as XmlElement;
+         badgeElement.SetAttribute("value", badgeGlyphValue);
+
+         // Create the badge notification
+         BadgeNotification badge = new BadgeNotification(badgeXml);
+
+         // Create the badge updater for the application
+         BadgeUpdater badgeUpdater = BadgeUpdateManager.CreateBadgeUpdaterForApplication();
+
+         // And update the badge
+         badgeUpdater.Update(badge);
       }
 
       private void applyTheme(string theme)
