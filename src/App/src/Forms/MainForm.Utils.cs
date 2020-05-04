@@ -19,8 +19,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using static mrHelper.App.Controls.MergeRequestListView;
-using Windows.Data.Xml.Dom;
-using Windows.UI.Notifications;
 
 namespace mrHelper.App.Forms
 {
@@ -1009,7 +1007,7 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.EndUpdate();
 
          updateTrayIcon();
-         updateBadge();
+         updateTaskbarIcon();
       }
 
       private ListViewItem addListViewMergeRequestItem(ListView listView, ProjectKey projectKey)
@@ -1377,20 +1375,20 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void updateBadge()
+      private void updateTaskbarIcon()
       {
-         if (_badgeScheme == null || !_badgeScheme.Any() || !_runningAsUwp)
+         CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(null);
+         if (_badgeScheme == null || !_badgeScheme.Any())
          {
             return;
          }
-
-         clearBadgeGlyph();
 
          if (isTrackingTime())
          {
             if (_badgeScheme.ContainsKey("Badge_Tracking"))
             {
-               setBadgeGlyph(_badgeScheme["Badge_Tracking"]);
+               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
+                  Color.FromName(_badgeScheme["Badge_Tracking"]));
             }
             return;
          }
@@ -1405,34 +1403,11 @@ namespace mrHelper.App.Forms
                .Select(x => x.MergeRequest)
                .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
             {
-               setBadgeGlyph(nameToFilename.Value);
+               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
+                  Color.FromName(nameToFilename.Value));
                break;
             }
          }
-      }
-
-      void clearBadgeGlyph()
-      {
-         BadgeUpdateManager.CreateBadgeUpdaterForApplication().Clear();
-      }
-
-      void setBadgeGlyph(string badgeGlyphValue)
-      {
-         // Get the blank badge XML payload for a badge glyph
-         XmlDocument badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeGlyph);
-
-         // Set the value of the badge in the XML to our glyph value
-         XmlElement badgeElement = badgeXml.SelectSingleNode("/badge") as XmlElement;
-         badgeElement.SetAttribute("value", badgeGlyphValue);
-
-         // Create the badge notification
-         BadgeNotification badge = new BadgeNotification(badgeXml);
-
-         // Create the badge updater for the application
-         BadgeUpdater badgeUpdater = BadgeUpdateManager.CreateBadgeUpdaterForApplication();
-
-         // And update the badge
-         badgeUpdater.Update(badge);
       }
 
       private void applyTheme(string theme)

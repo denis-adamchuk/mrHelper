@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.WindowsAPICodePack.Taskbar;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -196,6 +197,40 @@ namespace mrHelper.CommonControls.Tools
             using (Brush brush = new SolidBrush(backColor))
             {
                GetGraphics((dynamic)e).FillRectangle(brush, bounds);
+            }
+         }
+      }
+
+      public static void SetOverlayEllipseIcon(Color? color)
+      {
+         if (Process.GetCurrentProcess().MainWindowHandle != IntPtr.Zero)
+         {
+            if (!color.HasValue)
+            {
+               TaskbarManager.Instance.SetOverlayIcon(null, "");
+               return;
+            }
+
+            // TODO - Add ref to gitextensions
+            const int imgDim = 32;
+            const int dotDim = 24;
+            const int pad = 2;
+            using (var bmp = new Bitmap(imgDim, imgDim))
+            {
+               using (var g = Graphics.FromImage(bmp))
+               {
+                  g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                  g.Clear(Color.Transparent);
+                  using (SolidBrush brush = new SolidBrush(color.Value))
+                  {
+                     g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
+                  }
+               }
+
+               using (var overlay = Icon.FromHandle(bmp.GetHicon()))
+               {
+                  TaskbarManager.Instance.SetOverlayIcon(overlay, "");
+               }
             }
          }
       }
