@@ -272,13 +272,9 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private bool revertOldInstallations()
+      [Conditional("DesktopUWP")]
+      private void revertOldInstallations()
       {
-         if (!_desktopBridgeHelpers.IsRunningAsUwp())
-         {
-            return true;
-         }
-
          AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
          if (appInfo != null)
          {
@@ -298,8 +294,6 @@ namespace mrHelper.App.Forms
             p.WaitForExit();
             Trace.TraceInformation(String.Format("[MainForm] {0} exited with code {1}", revertMsiProjectName, p.ExitCode));
          }
-
-         return true;
       }
 
       async private Task initializeWork()

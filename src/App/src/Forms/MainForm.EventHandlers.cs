@@ -30,7 +30,8 @@ namespace mrHelper.App.Forms
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
-         if (!revertOldInstallations() || !integrateInTools())
+         revertOldInstallations();
+         if (!integrateInTools())
          {
             doClose();
             return;

@@ -33,8 +33,16 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
-         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}",
-            _desktopBridgeHelpers.IsRunningAsUwp() ? "Yes" : "No"));
+
+         bool runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
+         string uwpMsg = runningAsUwp ? "Yes" : "No";
+#if DesktopUWP
+         Debug.Assert(runningAsUwp);
+         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}, defined DesktopUWP = Yes", uwpMsg));
+#else
+         Debug.Assert(!runningAsUwp);
+         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}, defined DesktopUWP = No", uwpMsg));
+#endif
 
          _trayIcon = new TrayIcon(notifyIcon);
          _mergeRequestDescriptionMarkdownPipeline = MarkDownUtils.CreatePipeline();
@@ -94,7 +102,6 @@ namespace mrHelper.App.Forms
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
       private bool _canSwitchTab = true;
       private bool _notifyOnCommitChainCancelEnabled;
-      private DesktopBridge.Helpers _desktopBridgeHelpers = new DesktopBridge.Helpers();
 
       private TimeTrackingManager _timeTrackingManager;
       private DiscussionManager _discussionManager;
