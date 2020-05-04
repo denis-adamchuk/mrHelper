@@ -43,6 +43,12 @@ namespace mrHelper.Common.Tools
 
          return supportedProtocolPrefix + host;
       }
+
+      public static string GetDefaultInstallLocation(string manufacturer)
+      {
+         return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            manufacturer, "mrHelper");
+      }
    }
 }
 

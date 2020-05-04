@@ -52,21 +52,27 @@ namespace mrHelper.RevertMSI
       private static void revert()
       {
          AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
-         if (appInfo == null)
+         if (appInfo != null)
          {
-            return;
+            uninstall(appInfo.ProductCode);
          }
 
-         uninstall(appInfo);
-         cleanupBinaries(appInfo);
-         cleanupShortcut(appInfo);
+         string defaultInstallLocation = StringUtils.GetDefaultInstallLocation(
+            Windows.ApplicationModel.Package.Current.PublisherDisplayName);
+         cleanupBinaries(appInfo == null ? defaultInstallLocation : appInfo.InstallPath);
+
+         string shortcutFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.Programs),
+               "mrHelper", "mrHelper.lnk");
+         cleanupShortcut(shortcutFilePath);
+
          removeProtocolFromRegistry();
       }
 
-      private static void uninstall(AppFinder.AppInfo appInfo)
+      private static void uninstall(string productCode)
       {
          string msiExecProcessName = "msiexec";
-         string arguments = String.Format("-quiet -x {0}", appInfo.ProductCode);
+         string arguments = String.Format("-quiet -x {0}", productCode);
          Process msiExecProcess = Process.Start(msiExecProcessName, arguments);
          msiExecProcess.WaitForExit();
          if (msiExecProcess.ExitCode != 0)
@@ -76,34 +82,37 @@ namespace mrHelper.RevertMSI
          }
       }
 
-      private static void cleanupBinaries(AppFinder.AppInfo appInfo)
+      private static void cleanupBinaries(string installLocation)
       {
-         string applicationPath = appInfo.InstallPath;
-         if (!String.IsNullOrWhiteSpace(applicationPath))
+         if (String.IsNullOrWhiteSpace(installLocation) || !Directory.Exists(installLocation))
          {
-            try
+            return;
+         }
+
+         try
+         {
+            IEnumerable<string> files = System.IO.Directory.EnumerateFiles(installLocation);
+            foreach (string file in files)
             {
-               IEnumerable<string> files = System.IO.Directory.EnumerateFiles(applicationPath);
-               foreach (string file in files)
-               {
-                  System.IO.File.Delete(System.IO.Path.Combine(applicationPath, file));
-               }
-               System.IO.Directory.Delete(applicationPath);
+               System.IO.File.Delete(System.IO.Path.Combine(installLocation, file));
             }
-            catch (Exception ex)
-            {
-               Trace.TraceError(String.Format(
-                  "Could not delete clean-up installation folder. Exception message: {0}\nCallstack:\n{1}",
-                  ex.Message, ex.StackTrace));
-            }
+            System.IO.Directory.Delete(installLocation);
+         }
+         catch (Exception ex)
+         {
+            Trace.TraceError(String.Format(
+               "Could not delete clean-up installation folder. Exception message: {0}\nCallstack:\n{1}",
+               ex.Message, ex.StackTrace));
          }
       }
 
-      private static void cleanupShortcut(AppFinder.AppInfo appInfo)
+      private static void cleanupShortcut(string shortcutFilePath)
       {
-         string shortcutFilePath = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.Programs),
-               "mrHelper", "mrHelper.lnk");
+         if (!File.Exists(shortcutFilePath))
+         {
+            return;
+         }
+
          try
          {
             System.IO.File.Delete(shortcutFilePath);
@@ -121,6 +130,7 @@ namespace mrHelper.RevertMSI
          string currentPackagePath = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
          string integrationProjectFolderName = "mrHelper.Integration";
          string integrationExecutableName = "mrHelper.Integration.exe";
+
          ProcessStartInfo startInfo = new ProcessStartInfo
          {
             FileName = System.IO.Path.Combine(currentPackagePath, integrationProjectFolderName, integrationExecutableName),
@@ -128,8 +138,10 @@ namespace mrHelper.RevertMSI
             Arguments = "-x",
             Verb = "runas", // revert implies work with registry
          };
+
          Process integrationProcess = Process.Start(startInfo);
          integrationProcess.WaitForExit();
+
          if (integrationProcess.ExitCode != 0)
          {
             Trace.TraceWarning(String.Format("{0} exited with code {1}",

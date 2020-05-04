@@ -272,14 +272,15 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      [Conditional("DesktopUWP")]
       private void revertOldInstallations()
       {
+         string defaultInstallLocation = StringUtils.GetDefaultInstallLocation(
+            Windows.ApplicationModel.Package.Current.PublisherDisplayName);
          AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
-         if (appInfo != null)
+         if (appInfo != null || Directory.Exists(defaultInstallLocation))
          {
-            MessageBox.Show("We need to uninstall a previous version of the application on the first launch. "
-              + "It just takes a few seconds", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("mrHelper needs to uninstall an old version of itself on this launch. "
+              + "It takes a few seconds, please wait...", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             string currentPackagePath = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
             string revertMsiProjectFolder = "mrHelper.RevertMSI";

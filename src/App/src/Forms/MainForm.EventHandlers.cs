@@ -30,7 +30,11 @@ namespace mrHelper.App.Forms
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
-         revertOldInstallations();
+         if (_runningAsUwp)
+         {
+            revertOldInstallations();
+         }
+
          if (!integrateInTools())
          {
             doClose();
