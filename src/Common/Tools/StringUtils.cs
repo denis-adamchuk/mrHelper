@@ -49,6 +49,12 @@ namespace mrHelper.Common.Tools
          return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
             manufacturer, "mrHelper");
       }
+
+      public static string GetShortcutFilePath()
+      {
+         return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs),
+            "mrHelper", "mrHelper.lnk");
+      }
    }
 }
 

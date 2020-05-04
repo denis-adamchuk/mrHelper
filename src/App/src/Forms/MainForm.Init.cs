@@ -277,7 +277,9 @@ namespace mrHelper.App.Forms
          string defaultInstallLocation = StringUtils.GetDefaultInstallLocation(
             Windows.ApplicationModel.Package.Current.PublisherDisplayName);
          AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
-         if (appInfo != null || Directory.Exists(defaultInstallLocation))
+         if (appInfo != null
+          || Directory.Exists(defaultInstallLocation)
+          || System.IO.File.Exists(StringUtils.GetShortcutFilePath()))
          {
             MessageBox.Show("mrHelper needs to uninstall an old version of itself on this launch. "
               + "It takes a few seconds, please wait...", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);

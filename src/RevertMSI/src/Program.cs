@@ -61,10 +61,7 @@ namespace mrHelper.RevertMSI
             Windows.ApplicationModel.Package.Current.PublisherDisplayName);
          cleanupBinaries(appInfo == null ? defaultInstallLocation : appInfo.InstallPath);
 
-         string shortcutFilePath = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.Programs),
-               "mrHelper", "mrHelper.lnk");
-         cleanupShortcut(shortcutFilePath);
+         cleanupShortcut(StringUtils.GetShortcutFilePath());
 
          removeProtocolFromRegistry();
       }
