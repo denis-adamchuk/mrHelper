@@ -207,17 +207,18 @@ namespace mrHelper.CommonControls.Tools
          {
             if (!color.HasValue)
             {
-               TaskbarManager.Instance.SetOverlayIcon(null, "");
+               TaskbarManager.Instance.SetOverlayIcon(null, String.Empty);
                return;
             }
 
-            // TODO - Add ref to gitextensions
+            // Took an idea from
+            // https://github.com/gitextensions/gitextensions/blob/master/GitUI/CommandsDialogs/FormBrowse.cs#L376
             const int imgDim = 32;
             const int dotDim = 24;
             const int pad = 2;
-            using (var bmp = new Bitmap(imgDim, imgDim))
+            using (Bitmap bmp = new Bitmap(imgDim, imgDim))
             {
-               using (var g = Graphics.FromImage(bmp))
+               using (Graphics g = Graphics.FromImage(bmp))
                {
                   g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                   g.Clear(Color.Transparent);
@@ -227,9 +228,9 @@ namespace mrHelper.CommonControls.Tools
                   }
                }
 
-               using (var overlay = Icon.FromHandle(bmp.GetHicon()))
+               using (Icon overlay = Icon.FromHandle(bmp.GetHicon()))
                {
-                  TaskbarManager.Instance.SetOverlayIcon(overlay, "");
+                  TaskbarManager.Instance.SetOverlayIcon(overlay, String.Empty);
                }
             }
          }
