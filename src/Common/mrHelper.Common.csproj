@@ -47,6 +47,11 @@
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DesktopBridge.Helpers">
+      <Version>1.2.2</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>

@@ -21,15 +21,18 @@ namespace mrHelper.Common.Tools
    {
       public static void Send(string logarchivepath, string sender, string recipient, string body, string subject)
       {
-         try
+         if (!new DesktopBridge.Helpers().IsRunningAsUwp())
          {
-            sendFromOutlook(logarchivepath, recipient, body, subject);
-            return;
-         }
-         catch (EMailSenderException ex)
-         {
-            // not a fatal exception
-            ExceptionHandlers.Handle("Cannot send e-mail from Outlook application", ex);
+            try
+            {
+               sendFromOutlook(logarchivepath, recipient, body, subject);
+               return;
+            }
+            catch (EMailSenderException ex)
+            {
+               // not a fatal exception
+               ExceptionHandlers.Handle("Cannot send e-mail from Outlook application", ex);
+            }
          }
 
          try
