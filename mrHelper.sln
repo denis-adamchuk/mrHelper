@@ -25,8 +25,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CommonNative", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.GitClient", "src\GitClient\mrHelper.GitClient.csproj", "{D75B7B19-B06B-42E9-9363-437F5640A045}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.InstallerCustomActions", "src\InstallerCustomActions\mrHelper.InstallerCustomActions.csproj", "{63D6B295-75AA-4C53-9EA4-F9FB632B9611}"
-EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "mrHelper-Package", "submodules\mrHelper.Install\msix\Package\mrHelper-Package.wapproj", "{C885EDB5-930E-4198-AC2A-938BDEBAA775}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.RevertMSI", "src\RevertMSI\mrHelper.RevertMSI.csproj", "{BFAF7A3C-3052-49A4-88A9-D5893CCF55DA}"
