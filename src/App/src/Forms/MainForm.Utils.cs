@@ -1306,7 +1306,7 @@ namespace mrHelper.App.Forms
          });
       }
 
-      private void cleanUpInstallers(string template)
+      private void cleanUpTempFolder(string template)
       {
          string tempFolder = Environment.GetEnvironmentVariable("TEMP");
          foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, template))
@@ -1317,7 +1317,7 @@ namespace mrHelper.App.Forms
             }
             catch (Exception ex)
             {
-               ExceptionHandlers.Handle(String.Format("Cannot delete installer \"{0}\"", f), ex);
+               ExceptionHandlers.Handle(String.Format("Cannot delete file \"{0}\"", f), ex);
             }
          }
       }

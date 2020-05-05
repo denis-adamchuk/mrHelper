@@ -357,6 +357,7 @@ namespace mrHelper.App.Forms
          {
             _currentUser.Add(hostname, user);
          }
+         Program.FeedbackReporter.SetUserEMail(user.EMail);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,11 @@ namespace mrHelper.App.Helpers
          _logPath = logPath;
       }
 
+      public void SetUserEMail(string email)
+      {
+         _email = email;
+      }
+
       public void SendEMail(string subject, string body, string recipient, string logarchivename)
       {
          string logarchivepath = String.IsNullOrEmpty(logarchivename) ?
@@ -49,7 +54,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            EMailSender.Send(logarchivepath, recipient, body, subject);
+            EMailSender.Send(logarchivepath, _email, recipient, body, subject);
          }
          catch (Exception ex)
          {
@@ -78,6 +83,7 @@ namespace mrHelper.App.Helpers
       private readonly string _logPath;
       private readonly Action _preCollectLogFiles;
       private readonly Action _postCollectLogFiles;
+      private string _email;
    }
 }
 

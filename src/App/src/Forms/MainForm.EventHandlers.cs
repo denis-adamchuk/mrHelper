@@ -41,8 +41,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         cleanUpInstallers("mrHelper.*.msi");
-         cleanUpInstallers("mrHelper.*.msix");
+         cleanUpTempFolder("mrHelper.*.msi");
+         cleanUpTempFolder("mrHelper.*.msix");
+         cleanUpTempFolder("mrHelper.logs.*.zip");
          checkForApplicationUpdates();
 
          await initializeWork();
