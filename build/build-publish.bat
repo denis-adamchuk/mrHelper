@@ -20,7 +20,7 @@ For %%A in ("%manifest_path%") do (
 @set resources_pri_path=%root_folder%resources.pri
 @set package_map_path=%root_folder%package.map.txt
 
-msbuild /nologo /v:q /p:GenerateFullPaths=true /t:Build /p:Configuration="Release" /m:6 ../mrHelper.sln
+call .\build-release.bat
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 makepri new /pr %root_folder% /cf %priconfig_path% /mn %manifest_path% /of %resources_pri_path% /o
