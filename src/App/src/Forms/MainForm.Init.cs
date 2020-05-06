@@ -244,9 +244,13 @@ namespace mrHelper.App.Forms
          IIntegratedDiffTool diffTool = new BC3Tool();
          DiffToolIntegration integration = new DiffToolIntegration();
 
+         string self = _runningAsUwp
+            ? Constants.UWP_Launcher_Name
+            : Process.GetCurrentProcess().MainModule.FileName;
+
          try
          {
-            integration.Integrate(diffTool);
+            integration.Integrate(diffTool, self);
          }
          catch (Exception ex)
          {

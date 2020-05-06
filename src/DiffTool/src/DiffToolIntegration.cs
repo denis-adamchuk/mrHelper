@@ -17,7 +17,7 @@ namespace mrHelper.DiffTool
       /// Throws DiffToolNotInstalledException if diff tool is not installed
       /// Throws DiffToolIntegrationException if integration failed
       /// </summary>
-      public void Integrate(IIntegratedDiffTool diffTool)
+      public void Integrate(IIntegratedDiffTool diffTool, string self)
       {
          AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(diffTool.GetToolRegistryNames());
          if (appInfo == null || !isInstalled(appInfo.InstallPath))
@@ -32,7 +32,7 @@ namespace mrHelper.DiffTool
 
          try
          {
-            registerInTool(diffTool);
+            registerInTool(diffTool, self);
          }
          catch (DiffToolIntegrationException)
          {
@@ -58,11 +58,11 @@ namespace mrHelper.DiffTool
       /// <summary>
       /// Throws DiffToolIntegrationException if integration failed
       /// </summary>
-      private void registerInTool(IIntegratedDiffTool diffTool)
+      private void registerInTool(IIntegratedDiffTool diffTool, string self)
       {
          try
          {
-            diffTool.PatchToolConfig(Process.GetCurrentProcess().MainModule.FileName + " diff");
+            diffTool.PatchToolConfig(self + " diff");
          }
          catch (DiffToolIntegrationException)
          {

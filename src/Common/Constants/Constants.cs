@@ -9,6 +9,7 @@ namespace mrHelper.Common.Constants
    public static class Constants
    {
       public static string CustomProtocolName = "mrhelper";
+      public static string UWP_Launcher_Name = "mrHelper.Launcher.exe";
       public static string MainWindowCaption  = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start New Thread";
 
