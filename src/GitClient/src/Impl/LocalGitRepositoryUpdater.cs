@@ -58,6 +58,9 @@ namespace mrHelper.GitClient
             return;
          }
 
+         IProjectUpdateContext context = await contextProvider.GetContext();
+         bool needUpdate = isUpdateNeeded(context, _updatingContext);
+
          if (onProgressChange != null)
          {
             _onProgressChange = onProgressChange;
@@ -68,20 +71,22 @@ namespace mrHelper.GitClient
             _updateOperationDescriptor.OnProgressChange = onProgressChange;
          }
 
-         while (_updating) //-V3120
+         while (_updatingContext != null) //-V3120
          {
             await Task.Delay(50);
          }
 
-         _updating = true;
-         try
+         if (needUpdate)
          {
-            IProjectUpdateContext context = await contextProvider.GetContext();
-            await processContext(context);
-         }
-         finally
-         {
-            _updating = false;
+            _updatingContext = context;
+            try
+            {
+               await processContext(context);
+            }
+            finally
+            {
+               _updatingContext = null;
+            }
          }
 
          _onProgressChange = null;
@@ -314,6 +319,46 @@ namespace mrHelper.GitClient
          }
       }
 
+      private static bool isUpdateNeeded(IProjectUpdateContext proposed, IProjectUpdateContext updating)
+      {
+         if (updating == null)
+         {
+            return proposed != null;
+         }
+
+         if (proposed == null)
+         {
+            return updating != null;
+         }
+
+         if (updating is FullUpdateContext fullUpdating)
+         {
+            if (proposed is PartialUpdateContext)
+            {
+               return true;
+            }
+
+            FullUpdateContext fullProposed = proposed as FullUpdateContext;
+            return fullProposed.LatestChange  > fullUpdating.LatestChange
+               || (fullProposed.LatestChange == fullUpdating.LatestChange
+                  && !areEqualShaCollections(fullProposed.Sha, fullUpdating.Sha));
+         }
+
+         PartialUpdateContext partialUpdating = updating as PartialUpdateContext;
+         if (proposed is FullUpdateContext)
+         {
+            return true;
+         }
+
+         PartialUpdateContext partialProposed = proposed as PartialUpdateContext;
+         return !areEqualShaCollections(partialProposed.Sha, partialUpdating.Sha);
+      }
+
+      private static bool areEqualShaCollections(IEnumerable<string> a, IEnumerable<string> b)
+      {
+         return Enumerable.SequenceEqual(a.Distinct().OrderBy(x => x), b.Distinct().OrderBy(x => x));
+      }
+
       private static string getCloneArguments(bool shallow)
       {
          return String.Format(" --progress {0} --no-tags"
@@ -351,6 +396,7 @@ namespace mrHelper.GitClient
          Trace.TraceWarning(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
             _localGitRepository.ProjectKey.ProjectName, message));
       }
+
       private void traceError(string message)
       {
          Trace.TraceError(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
@@ -363,7 +409,7 @@ namespace mrHelper.GitClient
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
 
-      private bool _updating = false;
+      private IProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
       private DateTime _lastestFullUpdateTimestamp = DateTime.MinValue;
    }
