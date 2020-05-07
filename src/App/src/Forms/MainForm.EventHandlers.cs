@@ -18,6 +18,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
+using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -721,26 +722,26 @@ namespace mrHelper.App.Forms
 
       private void textBoxLabels_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxLabelsUpdate();
+         onTextBoxDisplayFilterUpdate();
       }
 
       private void textBoxLabels_Leave(object sender, EventArgs e)
       {
-         onTextBoxLabelsUpdate();
+         onTextBoxDisplayFilterUpdate();
       }
 
-      private void onTextBoxLabelsUpdate()
+      private void onTextBoxDisplayFilterUpdate()
       {
-         Program.Settings.LastUsedLabels = textBoxLabels.Text;
+         Program.Settings.DisplayFilter = textBoxDisplayFilter.Text;
          if (_mergeRequestFilter != null)
          {
             _mergeRequestFilter.Filter = createMergeRequestFilterState();
          }
       }
 
-      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxDisplayFilter_CheckedChanged(object sender, EventArgs e)
       {
-         Program.Settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+         Program.Settings.DisplayFilterEnabled = (sender as CheckBox).Checked;
          if (_mergeRequestFilter != null)
          {
             _mergeRequestFilter.Filter = createMergeRequestFilterState();
@@ -1228,20 +1229,57 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         using (EditProjectsForm form = new EditProjectsForm(projects, host))
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm(projects,
+            new EditProjectsListViewCallback(host)))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
                return;
             }
 
-            if (!Enumerable.SequenceEqual(projects, form.Projects))
+            if (!Enumerable.SequenceEqual(projects, form.Items))
             {
-               ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
+               ConfigurationHelper.SetProjectsForHost(host, form.Items, Program.Settings);
                updateProjectsListView();
 
-               Trace.TraceInformation(String.Format("[MainForm] Reloading merge request list after project list change"));
-               await switchHostToSelected();
+               if (radioButtonSelectByProjects.Checked)
+               {
+                  Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
+                  await switchHostToSelected();
+               }
+            }
+         }
+      }
+
+      async private void buttonEditLabels_Click(object sender, EventArgs e)
+      {
+         string host = getHostName();
+         if (host == String.Empty)
+         {
+            return;
+         }
+
+         IEnumerable<Tuple<string, bool>> labels = ConfigurationHelper.GetLabelsForHost(host, Program.Settings);
+         Debug.Assert(labels != null);
+
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm(labels,
+            new EditLabelListViewCallback(host)))
+         {
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+               return;
+            }
+
+            if (!Enumerable.SequenceEqual(labels, form.Items))
+            {
+               ConfigurationHelper.SetLabelsForHost(host, form.Items, Program.Settings);
+               updateLabelsListView();
+
+               if (radioButtonSelectByLabels.Checked)
+               {
+                  Trace.TraceInformation("[MainForm] Reloading merge request list after label list change");
+                  await switchHostToSelected();
+               }
             }
          }
       }
@@ -1274,6 +1312,11 @@ namespace mrHelper.App.Forms
          {
             e.Cancel = true;
          }
+      }
+
+      private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      {
+
       }
 
       protected override void OnFontChanged(EventArgs e)

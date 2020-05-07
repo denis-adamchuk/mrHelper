@@ -260,7 +260,7 @@ namespace mrHelper.App.Forms
          textBoxSearch.Enabled = true;
          buttonReloadList.Enabled = true;
 
-         if (listViewMergeRequests.Items.Count > 0 || Program.Settings.CheckedLabelsFilter)
+         if (listViewMergeRequests.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
          {
             enableMergeRequestFilterControls(true);
             enableListView(listViewMergeRequests);

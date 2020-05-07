@@ -99,21 +99,23 @@
     <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
       <DependentUpon>MergeRequestListView.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\AddProjectForm.cs">
+    <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\AddProjectForm.Designer.cs">
-      <DependentUpon>AddProjectForm.cs</DependentUpon>
+    <Compile Include="src\Forms\AddItemForm.Designer.cs">
+      <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\EditProjectsForm.cs">
+    <Compile Include="src\Forms\EditOrderedListViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\EditProjectsForm.Designer.cs">
-      <DependentUpon>EditProjectsForm.cs</DependentUpon>
+    <Compile Include="src\Forms\EditOrderedListViewForm.Designer.cs">
+      <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\CustomFontForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback - Copy.cs" />
+    <Compile Include="src\Forms\Helpers\EditLabelListViewCallback.cs" />
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -220,11 +222,11 @@
     <EmbeddedResource Include="src\Controls\DiscussionSortPanel.resx">
       <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\AddProjectForm.resx">
-      <DependentUpon>AddProjectForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\AddItemForm.resx">
+      <DependentUpon>AddItemForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\EditProjectsForm.resx">
-      <DependentUpon>EditProjectsForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\EditOrderedListViewForm.resx">
+      <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>

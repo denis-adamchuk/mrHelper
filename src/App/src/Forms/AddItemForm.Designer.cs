@@ -2,7 +2,7 @@
 
 namespace mrHelper.App.Forms
 {
-   partial class AddProjectForm
+   partial class AddItemForm
    {
       /// <summary>
       /// Required designer variable.
@@ -32,7 +32,7 @@ namespace mrHelper.App.Forms
       {
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.textBoxProjectName = new System.Windows.Forms.TextBox();
+         this.textBox = new System.Windows.Forms.TextBox();
          this.label1 = new System.Windows.Forms.Label();
          this.SuspendLayout();
          // 
@@ -58,11 +58,11 @@ namespace mrHelper.App.Forms
          // 
          // textBoxProjectName
          // 
-         this.textBoxProjectName.Location = new System.Drawing.Point(12, 27);
-         this.textBoxProjectName.Name = "textBoxProjectName";
-         this.textBoxProjectName.Size = new System.Drawing.Size(227, 20);
-         this.textBoxProjectName.TabIndex = 0;
-         this.textBoxProjectName.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
+         this.textBox.Location = new System.Drawing.Point(12, 27);
+         this.textBox.Name = "textBoxProjectName";
+         this.textBox.Size = new System.Drawing.Size(227, 20);
+         this.textBox.TabIndex = 0;
+         this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
          // label1
          // 
@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
          this.ClientSize = new System.Drawing.Size(251, 94);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
-         this.Controls.Add(this.textBoxProjectName);
+         this.Controls.Add(this.textBox);
          this.Controls.Add(this.label1);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.MaximizeBox = false;
@@ -97,7 +97,7 @@ namespace mrHelper.App.Forms
       #endregion
 
       private System.Windows.Forms.Label label1;
-      private System.Windows.Forms.TextBox textBoxProjectName;
+      private System.Windows.Forms.TextBox textBox;
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.Button buttonOK;
    }

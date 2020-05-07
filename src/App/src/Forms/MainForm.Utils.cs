@@ -505,8 +505,8 @@ namespace mrHelper.App.Forms
 
       private void enableMergeRequestFilterControls(bool enabled)
       {
-         checkBoxLabels.Enabled = enabled;
-         textBoxLabels.Enabled = enabled;
+         checkBoxDisplayFilter.Enabled = enabled;
+         textBoxDisplayFilter.Enabled = enabled;
       }
 
       private void enableMergeRequestSearchControls(bool enabled)
@@ -1451,11 +1451,21 @@ namespace mrHelper.App.Forms
          disableListView(listViewFoundMergeRequests, true);
       }
 
+      private void updateLabelsListView()
+      {
+         listViewLabels.Items.Clear();
+
+         ConfigurationHelper.GetEnabledLabels(getHostName(), Program.Settings)
+            .ToList()
+            .ForEach(x => listViewLabels.Items.Add(x));
+      }
+
       private void updateProjectsListView()
       {
          listViewProjects.Items.Clear();
 
-         Program.Settings.GetEnabledProjects(getHostName())
+         ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings)
+            .Select(x => x.Path_With_Namespace)
             .ToList()
             .ForEach(x => listViewProjects.Items.Add(x));
       }
@@ -1554,11 +1564,11 @@ namespace mrHelper.App.Forms
          return Math.Max(
             calcHorzDistance(null, tabControlMode)
           + calcHorzDistance(null, groupBoxSelectMergeRequest)
-          + calcHorzDistance(null, checkBoxLabels)
-          + checkBoxLabels.MinimumSize.Width
-          + calcHorzDistance(checkBoxLabels, textBoxLabels)
+          + calcHorzDistance(null, checkBoxDisplayFilter)
+          + checkBoxDisplayFilter.MinimumSize.Width
+          + calcHorzDistance(checkBoxDisplayFilter, textBoxDisplayFilter)
           + 100 /* cannot use textBoxLabels.MinimumSize.Width, see 9b65d7413c */
-          + calcHorzDistance(textBoxLabels, buttonReloadList, true)
+          + calcHorzDistance(textBoxDisplayFilter, buttonReloadList, true)
           + buttonReloadList.Size.Width
           + calcHorzDistance(buttonReloadList, null)
           + calcHorzDistance(groupBoxSelectMergeRequest, null),
@@ -2050,8 +2060,8 @@ namespace mrHelper.App.Forms
       {
          return new MergeRequestFilterState
          {
-            Keywords = ConfigurationHelper.GetLabels(Program.Settings),
-            Enabled = Program.Settings.CheckedLabelsFilter
+            Keywords = ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
+            Enabled = Program.Settings.DisplayFilterEnabled
          };
       }
    }

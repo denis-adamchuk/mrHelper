@@ -135,6 +135,12 @@ namespace mrHelper.App.Helpers
       private static readonly string VisualThemeNameDefaultValue  =
          Constants.DefaultThemeName;
 
+      private static readonly string MergeRequestSelectingModeKeyName      = "MergeRequestSelectingMode";
+      private static readonly string MergeRequestSelectingModeDefaultValue = "Projects";
+
+      private static readonly string SelectedLabelsKeyName      = "SelectedLabels";
+      private static readonly string SelectedLabelsDefaultValue = String.Empty;
+
       private static readonly string SelectedProjectsKeyName      = "SelectedProjects";
       private static readonly string SelectedProjectsDefaultValue = String.Empty;
 
@@ -241,7 +247,7 @@ namespace mrHelper.App.Helpers
          set { setValue(AllowAuthorToTrackTimeKeyName, boolToString(value)); }
       }
 
-      public bool CheckedLabelsFilter
+      public bool DisplayFilterEnabled
       {
          get
          {
@@ -252,7 +258,7 @@ namespace mrHelper.App.Helpers
          set { setValue(CheckedLabelsFilterKeyName, boolToString(value)); }
       }
 
-      public string LastUsedLabels
+      public string DisplayFilter
       {
          get { return getValue(LastUsedLabelsKeyName, LastUsedLabelsDefaultValue); }
          set { setValue(LastUsedLabelsKeyName, value); }
@@ -597,6 +603,24 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : DisableSSLVerificationDefaultValue;
          }
          set { setValue(DisableSSLVerificationKeyName, boolToString(value)); }
+      }
+
+      public string MergeRequestSelectingMode
+      {
+         get { return getValue(MergeRequestSelectingModeKeyName, MergeRequestSelectingModeDefaultValue); }
+         set { setValue(MergeRequestSelectingModeKeyName, value); }
+      }
+
+      public Dictionary<string, string> SelectedLabels
+      {
+         get
+         {
+            return stringToDictionary(getValue(SelectedLabelsKeyName, SelectedLabelsDefaultValue));
+         }
+         set
+         {
+            setValue(SelectedLabelsKeyName, dictionaryToString(value));
+         }
       }
 
       public bool HasSelectedProjects()

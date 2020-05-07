@@ -18,6 +18,7 @@ using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
+using Windows.Devices.Radios;
 
 namespace mrHelper.App.Forms
 {
@@ -140,8 +141,8 @@ namespace mrHelper.App.Forms
          }
 
          textBoxLocalGitFolder.Text = Program.Settings.LocalGitFolder;
-         checkBoxLabels.Checked = Program.Settings.CheckedLabelsFilter;
-         textBoxLabels.Text = Program.Settings.LastUsedLabels;
+         checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
+         textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
@@ -160,6 +161,11 @@ namespace mrHelper.App.Forms
          checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
          checkBoxShowServiceNotifications.Checked = Program.Settings.Notifications_Service;
+
+         if (Program.Settings.MergeRequestSelectingMode == "Projects")
+         {
+            radioButtonSelectByProjects.Checked = true;
+         }
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
          {

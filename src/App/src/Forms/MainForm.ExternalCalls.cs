@@ -185,7 +185,7 @@ namespace mrHelper.App.Forms
             IId = mergeRequestUrl.IId
          };
 
-         checkBoxLabels.Checked = false;
+         checkBoxDisplayFilter.Checked = false;
          return true;
       }
 
