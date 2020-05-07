@@ -21,6 +21,14 @@ namespace mrHelper.GitClient
       }
    }
 
+   public class NotEmptyDirectoryException : RepositoryUpdateException
+   {
+      public NotEmptyDirectoryException(string path, Exception innerException)
+         : base(path, innerException)
+      {
+      }
+   }
+
    public class UpdateCancelledException : RepositoryUpdateException
    {
       public UpdateCancelledException()

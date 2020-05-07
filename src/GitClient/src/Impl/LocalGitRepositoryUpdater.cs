@@ -133,6 +133,12 @@ namespace mrHelper.GitClient
             {
                throw new SecurityException(ex);
             }
+            else if (ex is GitCallFailedException gfex2
+                  && gfex2.InnerException is ExternalProcessFailureException pfex2
+                  && String.Join("\n", pfex2.Errors).Contains("already exists and is not an empty directory"))
+            {
+               throw new NotEmptyDirectoryException(_localGitRepository.Path, ex);
+            }
             throw new RepositoryUpdateException("Cannot update git repository", ex);
          }
       }
@@ -151,38 +157,35 @@ namespace mrHelper.GitClient
             // It is not always a problem. May happen when a MR is opened from Search tab
             // for a project that is not added to the list. Or when MR list is empty
             // for a project.
-            traceDebug("Repository will not be updated because of empty context");
-            return;
+            traceDebug("Empty context");
          }
 
-         Debug.Assert(context.LatestChange != DateTime.MinValue);
-
-         DateTime prevLatestTimeStamp = _lastestFullUpdateTimestamp;
+         DateTime prevLatestTimeStamp = _latestFullUpdateTimestamp;
          if (_localGitRepository.ExpectingClone)
          {
             await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
-            _lastestFullUpdateTimestamp = context.LatestChange;
+            _latestFullUpdateTimestamp = context.LatestChange;
             traceInformation(String.Format("Repository cloned. Updating LatestChange timestamp to {0}",
-               _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
+               _latestFullUpdateTimestamp.ToLocalTime().ToString()));
             Cloned?.Invoke();
          }
 
-         if (context.LatestChange > _lastestFullUpdateTimestamp)
+         if (context.LatestChange > _latestFullUpdateTimestamp)
          {
             if (_updateMode != EUpdateMode.ShallowClone)
             {
                await fetchAsync(false);
             }
-            _lastestFullUpdateTimestamp = context.LatestChange;
+            _latestFullUpdateTimestamp = context.LatestChange;
             traceInformation(String.Format("Repository {0} updated. Updating LatestChange timestamp to {1}",
                _updateMode == EUpdateMode.ShallowClone ? "not" : String.Empty,
-               _lastestFullUpdateTimestamp.ToLocalTime().ToString()));
+               _latestFullUpdateTimestamp.ToLocalTime().ToString()));
          }
-         else if (context.LatestChange == _lastestFullUpdateTimestamp)
+         else if (context.LatestChange == _latestFullUpdateTimestamp)
          {
             traceDebug("Repository not updated");
          }
-         else if (context.LatestChange < _lastestFullUpdateTimestamp)
+         else if (context.LatestChange < _latestFullUpdateTimestamp)
          {
             // This is not a problem and may happen when, for example, a Merge Request with the most newest
             // version has been closed.
@@ -194,7 +197,7 @@ namespace mrHelper.GitClient
             await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone);
          }
 
-         if (_lastestFullUpdateTimestamp != prevLatestTimeStamp)
+         if (_latestFullUpdateTimestamp != prevLatestTimeStamp)
          {
             Updated?.Invoke();
          }
@@ -361,24 +364,28 @@ namespace mrHelper.GitClient
 
       private static string getCloneArguments(bool shallow)
       {
-         return String.Format(" --progress {0} --no-tags"
-              + " -c credential.helper=manager -c credential.interactive=auto -c credential.modalPrompt=true",
-              shallow ? "--depth=1" : String.Empty);
+         return String.Format(" --progress {0} {1} {2}",
+           shallow ? "--depth=1" : String.Empty,
+           GitTools.SupportsFetchNoTags() ? "--no-tags" : String.Empty,
+           "-c credential.helper=manager -c credential.interactive=auto -c credential.modalPrompt=true");
       }
 
       private static string getFetchArguments(string sha, bool shallow)
       {
          if (sha == null)
          {
-            return String.Format(" --progress --no-tags {0}",
+            return String.Format(" --progress {0} {1}",
+               GitTools.SupportsFetchNoTags() ? "--no-tags" : String.Empty,
                GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
          }
 
-         return String.Format(" --progress {0} --no-tags {1} {2}",
+         return String.Format(" --progress {0} {1} {2} {3}",
             String.Format("origin {0}:refs/keep-around/{0}", sha),
             shallow ? "--depth=1" : String.Empty,
+            GitTools.SupportsFetchNoTags() ? "--no-tags" : String.Empty,
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
       }
+
       private void traceDebug(string message)
       {
          Debug.WriteLine(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
@@ -411,7 +418,7 @@ namespace mrHelper.GitClient
 
       private IProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
-      private DateTime _lastestFullUpdateTimestamp = DateTime.MinValue;
+      private DateTime _latestFullUpdateTimestamp = DateTime.MinValue;
    }
 }
 

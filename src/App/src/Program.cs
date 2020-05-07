@@ -70,6 +70,7 @@ namespace mrHelper.App
             FeedbackReporter = new FeedbackReporter(
                () =>
             {
+               listener.Flush();
                listener.Close();
                Trace.Listeners.Remove(listener);
             },

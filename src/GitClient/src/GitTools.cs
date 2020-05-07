@@ -95,6 +95,20 @@ namespace mrHelper.GitClient
             new Regex(@"git version (?'major'\d+).(?'minor'\d+).(?'build'\d+)");
       }
 
+      public static bool SupportsFetchNoTags()
+      {
+         try
+         {
+            Version version = GitVersionAccessor.GetVersion();
+            return version.Major > 2 || (version.Major == 2 && version.Minor >= 14);
+         }
+         catch (GitVersionAccessor.UnknownVersionException ex)
+         {
+            ExceptionHandlers.Handle("Cannot detect git version", ex);
+         }
+         return false;
+      }
+
       public static bool SupportsFetchAutoGC()
       {
          try

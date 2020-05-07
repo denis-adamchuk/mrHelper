@@ -96,6 +96,15 @@ namespace mrHelper.App.Helpers
                throw new InteractiveUpdateCancelledException();
             }
 
+            if (ex is NotEmptyDirectoryException)
+            {
+               InitializationStatusChange?.Invoke("Cannot clone due to bad directory");
+               MessageBox.Show(String.Format("git reports that \"{0}\" already exists and is not empty. "
+                  + "Please delete this directory and try again.", ex.OriginalMessage), "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               throw new InteractiveUpdateCancelledException();
+            }
+
             InitializationStatusChange?.Invoke("Git repository update failed");
             throw new InteractiveUpdateFailed("Cannot update repository", ex);
          }
