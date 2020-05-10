@@ -474,9 +474,9 @@ namespace mrHelper.App.Forms
 
       private void createWorkflowAndDependencies()
       {
-         _workflowManager = new WorkflowManager(Program.Settings);
+         _workflowManager = new WorkflowManagerDEPRECQATED(Program.Settings);
          _expressionResolver = new ExpressionResolver(_workflowManager);
-         _mergeRequestCache = new MergeRequestCache(_workflowManager, _workflowManager, _workflowManager,
+         _mergeRequestCache = new MergeRequestManager(_workflowManager, _workflowManager, _workflowManager,
             this, Program.Settings, Program.Settings.AutoUpdatePeriodMs);
          _discussionManager = new DiscussionManager(Program.Settings, _workflowManager, _mergeRequestCache,
             this, _keywords, Program.Settings.AutoUpdatePeriodMs, _mergeRequestFilter);

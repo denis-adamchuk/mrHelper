@@ -429,7 +429,8 @@ namespace mrHelper.App.Forms
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path));
+            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path),
+            _gitlabFacade.RepositoryManager);
          return await fetchMissingCommits();
       }
 

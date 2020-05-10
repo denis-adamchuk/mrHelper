@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
          IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         ICachedMergeRequestProvider mergeRequestProvider,
+         IMergeRequestManager mergeRequestProvider,
          IDiscussionProvider discussionProvider,
          IProjectUpdateContextProviderFactory contextProviderFactory,
          int autoUpdatePeriodMs,
@@ -417,7 +417,7 @@ namespace mrHelper.App.Helpers
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
       private readonly IDiscussionProvider _discussionProvider;
 
-      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly IMergeRequestManager _mergeRequestProvider;
       private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly MergeRequestFilter _mergeRequestFilter;
 

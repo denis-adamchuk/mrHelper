@@ -12,7 +12,7 @@ namespace mrHelper.App.Helpers
    internal class EventFilter : IDisposable
    {
       internal EventFilter(UserDefinedSettings settings, IWorkflowEventNotifier workflowEventNotifier,
-         ICachedMergeRequestProvider mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
+         IMergeRequestManager mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
       {
          _settings = settings;
          _mergeRequestProvider = mergeRequestProvider;
@@ -122,7 +122,7 @@ namespace mrHelper.App.Helpers
 
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
-      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly IMergeRequestManager _mergeRequestProvider;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly MergeRequestFilter _mergeRequestFilter;
    }

@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
          IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         ICachedMergeRequestProvider mergeRequestProvider,
+         IMergeRequestManager mergeRequestProvider,
          IProjectUpdateContextProviderFactory contextProviderFactory)
       {
          _workflowEventNotifier = workflowEventNotifier;
@@ -410,7 +410,7 @@ namespace mrHelper.App.Helpers
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
 
-      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
+      private readonly IMergeRequestManager _mergeRequestProvider;
       private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;

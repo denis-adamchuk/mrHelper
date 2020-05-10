@@ -13,6 +13,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitClient;
 using mrHelper.CustomActions;
+using mrHelper.Client;
 
 namespace mrHelper.App.Forms
 {
@@ -97,8 +98,6 @@ namespace mrHelper.App.Forms
       private bool _notifyOnCommitChainCancelEnabled;
       private readonly bool _runningAsUwp = false;
 
-      private TimeTrackingManager _timeTrackingManager;
-      private DiscussionManager _discussionManager;
       private LocalGitRepositoryFactory _gitClientFactory;
       private GitInteractiveUpdater _gitClientUpdater;
       private GitDataUpdater _gitDataUpdater;
@@ -107,13 +106,15 @@ namespace mrHelper.App.Forms
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
       private CommitChainCreator _commitChainCreator;
+      private GitLabClientManager _gitlabClientManager;
+      private IGitLabFacade _gitlabFacade;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
-      private WorkflowManager _workflowManager;
+      private WorkflowManagerDEPRECQATED _workflowManager;
       private ExpressionResolver _expressionResolver;
       private TimeTracker _timeTracker;
 
@@ -166,7 +167,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private MergeRequestCache _mergeRequestCache;
+      private MergeRequestManager _mergeRequestCache;
       private MergeRequestFilter _mergeRequestFilter;
 
       private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();

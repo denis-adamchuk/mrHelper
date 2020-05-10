@@ -22,6 +22,7 @@
 
    public enum EComparableEntityType
    {
+      None,
       Commit,
       Version
    }

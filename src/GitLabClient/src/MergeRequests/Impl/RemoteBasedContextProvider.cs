@@ -16,11 +16,11 @@ namespace mrHelper.Client.MergeRequests
    public class RemoteBasedContextProvider : IProjectUpdateContextProvider
    {
       internal RemoteBasedContextProvider(IEnumerable<Version> localVersions,
-         MergeRequestKey mrk, UpdateOperator updateOperator)
+         MergeRequestKey mrk, Workflow.WorkflowDataOperator op)
       {
          _localVersions = localVersions;
          _mergeRequestKey = mrk;
-         _operator = updateOperator;
+         _operator = op;
       }
 
       async public Task<IProjectUpdateContext> GetContext()
@@ -30,7 +30,8 @@ namespace mrHelper.Client.MergeRequests
 
          try
          {
-            IEnumerable<Version> remoteVersions = await _operator.GetVersionsAsync(_mergeRequestKey);
+            IEnumerable<Version> remoteVersions = await _operator.GetVersionsAsync(
+               _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId);
             allVersions.AddRange(remoteVersions);
          }
          catch (OperatorException ex)
@@ -61,7 +62,7 @@ namespace mrHelper.Client.MergeRequests
       private readonly IEnumerable<Version> _localVersions;
       private readonly MergeRequestKey _mergeRequestKey;
 
-      private readonly UpdateOperator _operator;
+      private readonly Workflow.WorkflowDataOperator _operator;
    }
 }
 

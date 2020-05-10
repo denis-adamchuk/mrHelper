@@ -6,11 +6,24 @@ using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Discussions
 {
+   public struct DiscussionCount
+   {
+      public enum EStatus
+      {
+         NotAvailable,
+         Loading,
+         Ready
+      }
+
+      public int? Resolvable;
+      public int? Resolved;
+      public EStatus Status;
+   }
+
    public interface IDiscussionProvider
    {
       Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk);
-
-      event Action<UserEvents.DiscussionEvent> DiscussionEvent;
+      DiscussionCount GetDiscussionCount(MergeRequestKey mrk);
    }
 }
 
