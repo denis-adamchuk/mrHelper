@@ -7,7 +7,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
 using mrHelper.Common.Tools;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 
 namespace mrHelper.Client.Discussions
 {
@@ -15,35 +15,25 @@ namespace mrHelper.Client.Discussions
    /// Parses discussion threads and notifies about some events found in them
    /// TODO Clean up merged/closed merge requests
    /// </summary>
-   internal class DiscussionParser :
-      IDisposable,
-      IWorkflowEventListener,
-      IDiscussionLoaderListenerInternal
+   internal class DiscussionParser : IDisposable
    {
-      internal DiscussionParser(
-         INotifier<IWorkflowEventListener> workflowEventNotifier,
-         INotifier<IDiscussionLoaderListenerInternal> discussionLoaderNotifier,
-         IEnumerable<string> keywords)
+      internal DiscussionParser(IDiscussionCacheInternal discussionCache, IEnumerable<string> keywords, User user)
       {
          _keywords = keywords;
+         _currentUser = user;
 
-         _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.AddListener(this);
-
-         _discussionLoaderNotifier = discussionLoaderNotifier;
-         _discussionLoaderNotifier.AddListener(this);
+         _discussionCache = discussionCache;
+         _discussionCache.DiscussionsLoadedInternal += onDiscussionsLoaded;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.RemoveListener(this);
-
-         _discussionLoaderNotifier.RemoveListener(this);
+         _discussionCache.DiscussionsLoadedInternal -= onDiscussionsLoaded;
       }
 
       internal event Action<UserEvents.DiscussionEvent, DateTime, EDiscussionUpdateType> DiscussionEvent;
 
-      public void OnPostLoadDiscussionsInternal(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+      private void onDiscussionsLoaded(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          EDiscussionUpdateType type)
       {
          if (discussions.Count() == 0)
@@ -96,26 +86,12 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      public void PreLoadWorkflow(string hostname,
-         ILoader<IMergeRequestListLoaderListener> mergeRequestListLoaderListener,
-         ILoader<IVersionLoaderListener> versionLoaderListener)
-      {
-         _latestParsingTime.Clear();
-      }
-
-      public void PostLoadWorkflow(string hostname, User user, IWorkflowContext context, IGitLabFacade facade)
-      {
-         Debug.Assert(!_latestParsingTime.Any());
-         _currentUser = user;
-      }
-
       private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =
          new Dictionary<MergeRequestKey, DateTime>();
       private User _currentUser;
       private readonly IEnumerable<string> _keywords;
 
-      private readonly INotifier<IDiscussionLoaderListenerInternal> _discussionLoaderNotifier;
-      private readonly INotifier<IWorkflowEventListener> _workflowEventNotifier;
+      private readonly IDiscussionCacheInternal _discussionCache;
    }
 }
 

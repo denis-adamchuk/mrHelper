@@ -13,8 +13,8 @@ namespace mrHelper.App.Helpers
    internal class UserNotifier : IDisposable
    {
       internal UserNotifier(
-         IMergeRequestManager mergeRequestProvider,
-         IDiscussionProvider discussionProvider,
+         IMergeRequestCache mergeRequestProvider,
+         IDiscussionLoader discussionProvider,
          EventFilter eventFilter,
          TrayIcon trayIcon)
       {
@@ -144,7 +144,7 @@ namespace mrHelper.App.Helpers
 
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
-      private readonly IMergeRequestManager _mergeRequestProvider;
-      private readonly IDiscussionProvider _discussionProvider;
+      private readonly IMergeRequestCache _mergeRequestProvider;
+      private readonly IDiscussionLoader _discussionProvider;
    }
 }

@@ -11,7 +11,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitClient;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Discussions;
 
@@ -26,8 +26,8 @@ namespace mrHelper.App.Helpers
          IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         IMergeRequestManager mergeRequestProvider,
-         IDiscussionProvider discussionProvider,
+         IMergeRequestCache mergeRequestProvider,
+         IDiscussionLoader discussionProvider,
          IProjectUpdateContextProviderFactory contextProviderFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
@@ -210,7 +210,7 @@ namespace mrHelper.App.Helpers
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionProvider.GetDiscussionsAsync(mrk);
+            discussions = await _discussionProvider.LoadDiscussions(mrk);
          }
          catch (DiscussionManagerException ex)
          {
@@ -415,9 +415,9 @@ namespace mrHelper.App.Helpers
 
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
-      private readonly IDiscussionProvider _discussionProvider;
+      private readonly IDiscussionLoader _discussionProvider;
 
-      private readonly IMergeRequestManager _mergeRequestProvider;
+      private readonly IMergeRequestCache _mergeRequestProvider;
       private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly MergeRequestFilter _mergeRequestFilter;
 

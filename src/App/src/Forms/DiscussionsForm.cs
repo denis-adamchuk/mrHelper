@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         IDiscussionProvider provider,
+         IDiscussionLoader provider,
          IDiscussionEditorFactory editorFactory,
          ILocalGitRepository repo,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
@@ -246,7 +246,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _provider.GetDiscussionsAsync(_mergeRequestKey);
+            discussions = await _provider.LoadDiscussions(_mergeRequestKey);
          }
          catch (DiscussionManagerException ex)
          {
@@ -529,7 +529,7 @@ namespace mrHelper.App.Forms
 
       private User _currentUser;
       private readonly IDiscussionEditorFactory _factory;
-      private readonly IDiscussionProvider _provider;
+      private readonly IDiscussionLoader _provider;
       private readonly Func<MergeRequestKey, Task<ILocalGitRepository>> _updateGit;
       private readonly Action _onDiscussionModified;
 

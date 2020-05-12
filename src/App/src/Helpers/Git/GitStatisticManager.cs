@@ -10,7 +10,7 @@ using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
          IWorkflowEventNotifier workflowEventNotifier,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         IMergeRequestManager mergeRequestProvider,
+         IMergeRequestCache mergeRequestProvider,
          IProjectUpdateContextProviderFactory contextProviderFactory)
       {
          _workflowEventNotifier = workflowEventNotifier;
@@ -410,7 +410,7 @@ namespace mrHelper.App.Helpers
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
 
-      private readonly IMergeRequestManager _mergeRequestProvider;
+      private readonly IMergeRequestCache _mergeRequestProvider;
       private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;

@@ -8,7 +8,7 @@ using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 

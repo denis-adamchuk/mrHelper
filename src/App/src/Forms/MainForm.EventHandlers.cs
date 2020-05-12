@@ -165,7 +165,7 @@ namespace mrHelper.App.Forms
                   {
                      await _timeTrackingManager.AddSpanAsync(add, diff, mrk);
                   }
-                  catch (TimeTrackingManagerException ex)
+                  catch (TimeTrackingException ex)
                   {
                      string message = "Cannot edit total tracked time";
                      ExceptionHandlers.Handle(message, ex);
@@ -1061,7 +1061,7 @@ namespace mrHelper.App.Forms
                string status = String.Format("Tracked time {0} sent successfully", duration);
                try
                {
-                  await timeTracker.StopAsync();
+                  await timeTracker.Stop();
                }
                catch (TimeTrackerException ex)
                {

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using static mrHelper.Client.Types.UserEvents;
 
 namespace mrHelper.App.Helpers
@@ -12,7 +12,7 @@ namespace mrHelper.App.Helpers
    internal class EventFilter : IDisposable
    {
       internal EventFilter(UserDefinedSettings settings, IWorkflowEventNotifier workflowEventNotifier,
-         IMergeRequestManager mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
+         IMergeRequestCache mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
       {
          _settings = settings;
          _mergeRequestProvider = mergeRequestProvider;
@@ -122,7 +122,7 @@ namespace mrHelper.App.Helpers
 
       private readonly UserDefinedSettings _settings;
       private User? _currentUser;
-      private readonly IMergeRequestManager _mergeRequestProvider;
+      private readonly IMergeRequestCache _mergeRequestProvider;
       private readonly IWorkflowEventNotifier _workflowEventNotifier;
       private readonly MergeRequestFilter _mergeRequestFilter;
    }

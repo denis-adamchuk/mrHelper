@@ -9,7 +9,7 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;

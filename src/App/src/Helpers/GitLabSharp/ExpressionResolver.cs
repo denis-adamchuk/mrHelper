@@ -1,5 +1,5 @@
 ﻿using GitLabSharp.Entities;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using System;
 using System.Collections.Generic;
 

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
@@ -27,21 +27,22 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    internal class DiscussionManager :
       IDisposable,
-      IWorkflowEventListener,
-      IDiscussionManager,
-      IMergeRequestEventListener
+      IDiscussionCacheInternal
    {
-      internal DiscussionManager(GitLabClientContext clientContext, IWorkflowLoader workflowLoader)
+      internal DiscussionManager(GitLabClientContext clientContext, User user, IMergeRequestCache mergeRequestCache)
       {
          _operator = new DiscussionOperator(clientContext.HostProperties);
 
-         _parser = new DiscussionParser(workflowLoader.GetNotifier(), _notifierInternal, clientContext.Keywords);
+         _parser = new DiscussionParser(this, clientContext.Keywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;
 
          _mergeRequestFilter = clientContext.MergeRequestFilter;
 
-         _workflowEventNotifier = workflowLoader.GetNotifier();
-         _workflowEventNotifier.AddListener(this);
+         _reconnect = true;
+         _currentUser = user;
+         _mergeRequestCache = mergeRequestCache;
+         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
+            EDiscussionUpdateType.InitialSnapshot);
 
          _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -51,8 +52,6 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
-         _workflowEventNotifier.RemoveListener(this);
-
          _parser.DiscussionEvent -= onDiscussionParserEvent;
          _parser.Dispose();
 
@@ -67,9 +66,11 @@ namespace mrHelper.Client.Discussions
          _oneShotTimers.Clear();
       }
 
-      public INotifier<IDiscussionLoaderListener> GetNotifier() => _notifier;
+      public event Action<MergeRequestKey> DiscussionsLoading;
+      public event Action<MergeRequestKey, IEnumerable<Discussion>> DiscussionsLoaded;
 
-      INotifier<IDiscussionEventListener> ILoader<IDiscussionEventListener>.GetNotifier() => _eventNotifier;
+      public event Action<UserEvents.DiscussionEvent> DiscussionEvent;
+      public event Action<MergeRequestKey, IEnumerable<Discussion>, EDiscussionUpdateType> DiscussionsLoadedInternal;
 
       public DiscussionCount GetDiscussionCount(MergeRequestKey mrk)
       {
@@ -96,7 +97,7 @@ namespace mrHelper.Client.Discussions
          };
       }
 
-      async public Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      async public Task<IEnumerable<Discussion>> LoadDiscussions(MergeRequestKey mrk)
       {
          if (isUpdating(mrk))
          {
@@ -111,7 +112,7 @@ namespace mrHelper.Client.Discussions
          }
          catch (OperatorException ex)
          {
-            throw new DiscussionManagerException(String.Format(
+            throw new DiscussionCacheException(String.Format(
                "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
          }
@@ -147,12 +148,13 @@ namespace mrHelper.Client.Discussions
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public void CheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          foreach (int interval in intervals)
          {
             enqueueOneShotTimer(mrk, interval, onUpdateFinished);
          }
+         return null;
       }
 
       private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
@@ -325,12 +327,11 @@ namespace mrHelper.Client.Discussions
             try
             {
                _loading.Add(mrk);
-               _notifier.OnPreLoadDiscussions(mrk);
+               DiscussionsLoading?.Invoke(mrk);
                discussions = await _operator.GetDiscussionsAsync(mrk);
             }
             catch (OperatorException)
             {
-               _notifier.OnFailedLoadDiscussions(mrk);
                throw;
             }
             finally
@@ -342,8 +343,8 @@ namespace mrHelper.Client.Discussions
             {
                cacheDiscussions(mrk, discussions);
             }
-            _notifier.OnPostLoadDiscussions(mrk, discussions);
-            _notifierInternal.OnPostLoadDiscussionsInternal(mrk, discussions, type);
+            DiscussionsLoaded?.Invoke(mrk, discussions);
+            DiscussionsLoadedInternal?.Invoke(mrk, discussions, type);
          }
          finally
          {
@@ -491,7 +492,7 @@ namespace mrHelper.Client.Discussions
 
             case EDiscussionUpdateType.NewMergeRequest:
                // Notify about whatever is found in a new merge request
-               _eventNotifier.OnDiscussionEvent(e);
+               DiscussionEvent?.Invoke(e);
                return;
 
             case EDiscussionUpdateType.PeriodicUpdate:
@@ -499,7 +500,7 @@ namespace mrHelper.Client.Discussions
                if (_cachedDiscussions.TryGetValue(e.MergeRequestKey, out CachedDiscussions cached)
                  && cached.PrevTimeStamp.HasValue && eventTimestamp > cached.PrevTimeStamp.Value)
                {
-                  _eventNotifier.OnDiscussionEvent(e);
+                  DiscussionEvent?.Invoke(e);
                }
                return;
          }
@@ -571,9 +572,9 @@ namespace mrHelper.Client.Discussions
       {
          List<MergeRequestKey> matchingFilterList = new List<MergeRequestKey>();
          List<MergeRequestKey> nonMatchingFilterList = new List<MergeRequestKey>();
-         foreach (ProjectKey projectKey in _mergeRequestManager.GetProjects())
+         foreach (ProjectKey projectKey in _mergeRequestCache.GetProjects())
          {
-            matchingFilterList.AddRange(_mergeRequestManager.GetMergeRequests(projectKey)
+            matchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
                .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
                .Select(x => new MergeRequestKey
                   {
@@ -582,7 +583,7 @@ namespace mrHelper.Client.Discussions
                   })
                .ToList());
 
-            nonMatchingFilterList.AddRange(_mergeRequestManager.GetMergeRequests(projectKey)
+            nonMatchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
                .Where(x => !_mergeRequestFilter.DoesMatchFilter(x))
                .Select(x => new MergeRequestKey
                   {
@@ -595,36 +596,10 @@ namespace mrHelper.Client.Discussions
          nonMatchingFilter = nonMatchingFilterList;
       }
 
-      public void PostLoadWorkflow(string hostname, User user, IWorkflowContext context, IGitLabFacade facade)
-      {
-         Trace.TraceInformation(String.Format("[DiscussionManager] Connected to {0}", hostname));
-
-         _currentUser = user;
-         _mergeRequestManager = facade.MergeRequestManager;
-         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
-            EDiscussionUpdateType.InitialSnapshot);
-      }
-
-      public void PreLoadWorkflow(string hostname,
-         ILoader<IMergeRequestListLoaderListener> mergeRequestListLoader,
-         ILoader<IVersionLoaderListener> versionLoader)
-      {
-         Trace.TraceInformation(String.Format("[DiscussionManager] Connecting to {0}", hostname));
-
-         _reconnect = true;
-         _scheduledUpdates.Clear();
-         clearCache();
-      }
-
-      private IMergeRequestManager _mergeRequestManager;
+      private IMergeRequestCache _mergeRequestCache;
       private readonly MergeRequestFilter _mergeRequestFilter;
 
-      private readonly DiscussionLoaderNotifier _notifier = new DiscussionLoaderNotifier();
-      private readonly DiscussionEventNotifier _eventNotifier = new DiscussionEventNotifier();
-      private readonly DiscussionLoaderNotifierInternal _notifierInternal =
-         new DiscussionLoaderNotifierInternal();
       private readonly DiscussionParser _parser;
-      private readonly INotifier<IWorkflowEventListener> _workflowEventNotifier;
 
       private readonly System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();

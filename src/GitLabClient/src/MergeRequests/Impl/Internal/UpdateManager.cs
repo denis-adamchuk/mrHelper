@@ -6,38 +6,32 @@ using System.Threading.Tasks;
 using mrHelper.Client.Common;
 using mrHelper.Client.Types;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 
 namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
    /// Manages updates
    /// </summary>
-   internal class UpdateManager :
-      IDisposable,
-      ILoader<IMergeRequestEventListener>,
-      ILoader<IMergeRequestListLoaderListener>,
-      ILoader<IMergeRequestLoaderListener>,
-      ILoader<IVersionLoaderListener>
+   internal class UpdateManager : IDisposable
    {
       internal UpdateManager(
          GitLabClientContext clientContext,
          string hostname,
-         IWorkflowContext context,
-         IWorkflowDetailsCacheReader cache)
+         ISessionContext context,
+         InternalCacheUpdater cacheUpdater)
       {
          // We don't need to toggle these callbacks during updates
          clientContext.OnNotFoundProject = null;
          clientContext.OnForbiddenProject = null;
 
-         WorkflowDataOperator updateOperator = new WorkflowDataOperator(
+         SessionOperator updateOperator = new SessionOperator(
             hostname, clientContext.HostProperties.GetAccessToken(hostname));
-         _versionLoader = new VersionLoader(updateOperator);
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            clientContext, updateOperator, context, _versionLoader);
-         _mergeRequestLoader = new MergeRequestLoader(updateOperator, _versionLoader);
+            clientContext, updateOperator, context, cacheUpdater);
+         _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
 
-         _cache = cache;
+         _cache = cacheUpdater.Cache;
          _context = context;
 
          _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
@@ -45,6 +39,8 @@ namespace mrHelper.Client.MergeRequests
          _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
          _timer.Start();
       }
+
+      public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
 
       public void Dispose()
       {
@@ -59,17 +55,6 @@ namespace mrHelper.Client.MergeRequests
          }
          _oneShotTimers.Clear();
       }
-
-      public INotifier<IMergeRequestEventListener> GetNotifier() => _eventNotifier;
-
-      INotifier<IMergeRequestListLoaderListener> ILoader<IMergeRequestListLoaderListener>.GetNotifier() =>
-         _mergeRequestListLoader.GetNotifier();
-
-      INotifier<IMergeRequestLoaderListener> ILoader<IMergeRequestLoaderListener>.GetNotifier() =>
-         _mergeRequestLoader.GetNotifier();
-
-      INotifier<IVersionLoaderListener> ILoader<IVersionLoaderListener>.GetNotifier() =>
-         _versionLoader.GetNotifier();
 
       public void RequestOneShotUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
@@ -101,7 +86,7 @@ namespace mrHelper.Client.MergeRequests
 
             if (updates != null)
             {
-               updates.ToList().ForEach(x => _eventNotifier.OnMergeRequestEvent(x));
+               updates.ToList().ForEach(x => MergeRequestEvent?.Invoke(x));
             }
 
             onUpdateFinished?.Invoke();
@@ -122,7 +107,7 @@ namespace mrHelper.Client.MergeRequests
 
          if (updates != null)
          {
-            updates.ToList().ForEach(x => _eventNotifier.OnMergeRequestEvent(x));
+            updates.ToList().ForEach(x => MergeRequestEvent?.Invoke(x));
          }
       }
 
@@ -133,12 +118,12 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
-         IWorkflowDetails oldDetails = _cache.Details.Clone();
+         IInternalCache oldDetails = _cache.Clone();
 
          try
          {
             _updating = true;
-            await _mergeRequestLoader.LoadMergeRequest(mrk, EComparableEntityType.None);
+            await _mergeRequestLoader.LoadMergeRequest(mrk);
          }
          catch (WorkflowException ex)
          {
@@ -150,7 +135,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = false;
          }
 
-         IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache.Details);
+         IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
 
          int legalUpdates = updates.Count(x => x.Labels);
          Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
@@ -170,7 +155,7 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
-         IWorkflowDetails oldDetails = _cache.Details.Clone();
+         IInternalCache oldDetails = _cache.Clone();
 
          try
          {
@@ -186,7 +171,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = false;
          }
 
-         IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache.Details);
+         IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
 
          Trace.TraceInformation(
             String.Format(
@@ -202,13 +187,11 @@ namespace mrHelper.Client.MergeRequests
       private System.Timers.Timer _timer;
       private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
-      private readonly IWorkflowContext _context;
+      private readonly ISessionContext _context;
       private readonly IMergeRequestListLoader _mergeRequestListLoader;
       private readonly IMergeRequestLoader _mergeRequestLoader;
-      private readonly IVersionLoader _versionLoader;
-      private readonly IWorkflowDetailsCacheReader _cache;
-      private readonly WorkflowDetailsChecker _checker = new WorkflowDetailsChecker();
-      private readonly MergeRequestEventNotifier _eventNotifier = new MergeRequestEventNotifier();
+      private readonly IInternalCache _cache;
+      private readonly InternalMergeRequestCacheComparator _checker = new InternalMergeRequestCacheComparator();
 
       private bool _updating; /// prevents re-entrance in timer updates
    }

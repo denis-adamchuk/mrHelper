@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
-using mrHelper.Common.Interfaces;
 using mrHelper.Client.Common;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
+using mrHelper.Client.Discussions;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -18,33 +18,32 @@ namespace mrHelper.Client.TimeTracking
    /// </summary>
    internal class TimeTrackingManager :
       IDisposable,
-      IWorkflowEventListener,
-      IDiscussionLoaderListener,
-      ITimeTrackingManager
+      ITotalTimeCache
    {
-      public TimeTrackingManager(GitLabClientContext clientContext, IWorkflowLoader workflowLoader)
+      public TimeTrackingManager(GitLabClientContext clientContext, User user, IDiscussionLoader discussionLoader)
       {
          _operator = new TimeTrackingOperator(clientContext.HostProperties);
+         _currentUser = user;
 
-         _workflowEventNotifier = workflowLoader.GetNotifier();
-         _workflowEventNotifier.AddListener(this);
+         _discussionLoader = discussionLoader;
+         _discussionLoader.DiscussionsLoading += preProcessDiscussions;
+         _discussionLoader.DiscussionsLoaded += processDiscussions;
       }
+
+      public event Action<MergeRequestKey, TimeSpan> TotalTimeLoaded;
 
       public void Dispose()
       {
-         _workflowEventNotifier.RemoveListener(this);
-
-         _discussionLoaderNotifier?.RemoveListener(this);
+         _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
+         _discussionLoader.DiscussionsLoaded -= processDiscussions;
       }
-
-      public INotifier<ITimeTrackingLoaderListener> GetNotifier() => _notifier;
 
       public TimeSpan? GetTotalTime(MergeRequestKey mrk)
       {
          return _times.ContainsKey(mrk) ? _times[mrk] : new Nullable<TimeSpan>();
       }
 
-      async public Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
+      async public Task AddSpan(bool add, TimeSpan span, MergeRequestKey mrk)
       {
          try
          {
@@ -52,7 +51,7 @@ namespace mrHelper.Client.TimeTracking
          }
          catch (OperatorException ex)
          {
-            throw new TimeTrackingManagerException("Cannot add a span", ex);
+            throw new TimeTrackingException("Cannot add a span", ex);
          }
 
          if (!_times.ContainsKey(mrk))
@@ -115,56 +114,21 @@ namespace mrHelper.Client.TimeTracking
          }
 
          _times[mrk] = span;
-         _notifier.OnPostLoadTotalTime(mrk, span);
+         TotalTimeLoaded?.Invoke(mrk, span);
       }
 
-      public void OnPreLoadDiscussions(MergeRequestKey mrk)
+      public void preProcessDiscussions(MergeRequestKey mrk)
       {
          // TODO TimeSpan.MinValue is a bad design decision, consider implementing States
          // by analogy with DiscussionManager.GetDiscussionCount()
          _times[mrk] = TimeSpan.MinValue;
-         _notifier.OnPreLoadTotalTime(mrk);
-      }
-
-      public void OnPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
-      {
-         processDiscussions(mrk, discussions);
-      }
-
-      public void OnFailedLoadDiscussions(MergeRequestKey mrk)
-      {
-         if (_times.ContainsKey(mrk))
-         {
-            _times.Remove(mrk);
-         }
-         _notifier.OnFailedLoadTotalTime(mrk);
-      }
-
-      public void PreLoadWorkflow(string hostname,
-         ILoader<IMergeRequestListLoaderListener> mergeRequestListLoaderListener,
-         ILoader<IVersionLoaderListener> versionLoaderListener)
-      {
-         _times.Clear();
-
-         _discussionLoaderNotifier.RemoveListener(this);
-         _discussionLoaderNotifier = null;
-      }
-
-      public void PostLoadWorkflow(string hostname, User user, IWorkflowContext context, IGitLabFacade facade)
-      {
-         _currentUser = user;
-
-         _discussionLoaderNotifier = (facade.DiscussionManager as ILoader<IDiscussionLoaderListener>).GetNotifier();
-         _discussionLoaderNotifier.AddListener(this);
       }
 
       private readonly TimeTrackingOperator _operator;
       private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
          new Dictionary<MergeRequestKey, TimeSpan>();
       private User _currentUser;
-      private INotifier<IDiscussionLoaderListener> _discussionLoaderNotifier;
-      private readonly INotifier<IWorkflowEventListener> _workflowEventNotifier;
-      private readonly TimeTrackingLoaderNotifier _notifier = new TimeTrackingLoaderNotifier();
+      private IDiscussionLoader _discussionLoader;
    }
 }
 
