@@ -106,7 +106,7 @@ namespace mrHelper.Client.Discussions
       }
 
       private readonly DiscussionOperator _operator;
-      private MergeRequestKey _mergeRequestKey;
+      private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _discussionId;
       private readonly Action _onDiscussionResolved;
    }

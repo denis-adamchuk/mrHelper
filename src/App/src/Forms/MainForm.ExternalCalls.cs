@@ -118,7 +118,7 @@ namespace mrHelper.App.Forms
       private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
       {
          string exceptionMessage = ex != null ? ex.Message : String.Empty;
-         if (ex is WorkflowException wfex)
+         if (ex is SessionException wfex)
          {
             exceptionMessage = wfex.UserMessage;
          }
@@ -153,7 +153,7 @@ namespace mrHelper.App.Forms
             {
                reportErrorOnConnect(url, String.Empty, ex, true);
             }
-            else if (ex is WorkflowException)
+            else if (ex is SessionException)
             {
                reportErrorOnConnect(url, String.Empty, ex, true);
             }
@@ -253,7 +253,7 @@ namespace mrHelper.App.Forms
             {
                reportErrorOnConnect(url, String.Empty, ex, true);
             }
-            else if (ex is WorkflowException)
+            else if (ex is SessionException)
             {
                reportErrorOnConnect(url, String.Empty, ex, true);
             }

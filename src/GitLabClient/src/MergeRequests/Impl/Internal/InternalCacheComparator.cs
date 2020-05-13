@@ -10,7 +10,7 @@ using Version = GitLabSharp.Entities.Version;
 namespace mrHelper.Client.MergeRequests
 {
    /// <summary>
-   /// Checks WorkflowDetails for updates
+   /// Checks IInternalCache for updates
    /// </summary>
    internal class InternalMergeRequestCacheComparator
    {
@@ -34,7 +34,7 @@ namespace mrHelper.Client.MergeRequests
       }
 
       /// <summary>
-      /// Compares WorkflowDetails
+      /// Compares IInternalCache objects
       /// </summary>
       internal IEnumerable<UserEvents.MergeRequestEvent> CheckForUpdates(
          IInternalCache oldDetails, IInternalCache newDetails)
@@ -44,7 +44,7 @@ namespace mrHelper.Client.MergeRequests
       }
 
       /// <summary>
-      /// Calculate difference between two WorkflowDetails objects
+      /// Calculate difference between two IInternalCache objects
       /// </summary>
       private TwoListDifference<MergeRequestWithProject> getMergeRequestDiff(
          IInternalCache oldDetails, IInternalCache newDetails)

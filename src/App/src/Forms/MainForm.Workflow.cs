@@ -90,12 +90,12 @@ namespace mrHelper.App.Forms
          catch (Exception ex)
          {
             _suppressExternalConnections = false;
-            if (ex is WorkflowException || ex is UnknownHostException || ex is NoProjectsException)
+            if (ex is SessionException || ex is UnknownHostException || ex is NoProjectsException)
             {
                disableAllUIControls(true);
                ExceptionHandlers.Handle("Cannot switch host", ex);
                string message = ex.Message;
-               if (ex is WorkflowException wx)
+               if (ex is SessionException wx)
                {
                   message = wx.UserMessage;
                }
@@ -149,7 +149,7 @@ namespace mrHelper.App.Forms
                projectKey.HostName, projectKey.ProjectName, mergeRequestIId,
                showVersions ? EComparableEntityType.Version : EComparableEntityType.Commit);
          }
-         catch (WorkflowException ex)
+         catch (SessionException ex)
          {
             ExceptionHandlers.Handle("Cannot switch merge request", ex);
             MessageBox.Show(ex.UserMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

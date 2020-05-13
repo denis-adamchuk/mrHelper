@@ -27,7 +27,7 @@ namespace mrHelper.Client.MergeRequests
          if (mergeRequests.Count() != previouslyCachedMergeRequests.Count())
          {
             Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
+               "[InternalCacheUpdater] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                key.ProjectName, key.HostName, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
          }
 
@@ -49,13 +49,13 @@ namespace mrHelper.Client.MergeRequests
          if (oldLatestCommit.Created_At > newLatestCommit.Created_At)
          {
             Debug.Assert(false);
-            Trace.TraceWarning("[WorkflowDetailsCache] Latest commit is older than a previous one");
+            Trace.TraceWarning("[InternalCacheUpdater] Latest commit is older than a previous one");
          }
 
          if (newLatestCommit.Created_At != oldLatestCommit.Created_At)
          {
             Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] Latest commit of merge request with IId {0} has timestamp {1} (was {2} before update)",
+               "[InternalCacheUpdater] Latest commit of merge request with IId {0} has timestamp {1} (was {2} before update)",
                mrk.IId,
                newLatestCommit.Created_At.ToLocalTime().ToString(),
                oldLatestCommit.Created_At.ToLocalTime().ToString()));
@@ -77,13 +77,13 @@ namespace mrHelper.Client.MergeRequests
          if (oldLatestVersion.Created_At > newLatestVersion.Created_At)
          {
             Debug.Assert(false);
-            Trace.TraceWarning("[WorkflowDetailsCache] Latest version is older than a previous one");
+            Trace.TraceWarning("[InternalCacheUpdater] Latest version is older than a previous one");
          }
 
          if (newLatestVersion.Created_At != oldLatestVersion.Created_At)
          {
             Debug.WriteLine(String.Format(
-               "[WorkflowDetailsCache] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
+               "[InternalCacheUpdater] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
                mrk.IId,
                newLatestVersion.Created_At.ToLocalTime().ToString(),
                oldLatestVersion.Created_At.ToLocalTime().ToString()));

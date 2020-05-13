@@ -31,25 +31,18 @@ namespace mrHelper.Client.Session
 
       public ITotalTimeCache TotalTimeCache => _timeTrackingManager;
 
-      public ITimeTracker GetTimeTracker(MergeRequestKey mrk)
-      {
-         return _timeTrackingManager.GetTracker(mrk);
-      }
+      public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>
+         _timeTrackingManager?.GetTracker(mrk);
 
-      public IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
-      {
-         return _discussionManager.GetDiscussionEditor(mrk, discussionId);
-      }
+      public IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId) =>
+         _discussionManager?.GetDiscussionEditor(mrk, discussionId);
 
-      public IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk)
-      {
-         return _discussionManager.GetDiscussionCreator(mrk);
-      }
+      public IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk) =>
+         _discussionManager?.GetDiscussionCreator(mrk);
 
       private MergeRequestManager _mergeRequestManager;
       private DiscussionManager _discussionManager;
       private TimeTrackingManager _timeTrackingManager;
-
    }
 }
 

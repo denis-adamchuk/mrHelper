@@ -16,9 +16,9 @@ namespace mrHelper.Client.Session
          {
             listLoader = new ProjectBasedMergeRequestLoader(clientContext, op, versionLoader, cache);
          }
-         else if (context is LabelBasedContext)
+         else if (context is SearchBasedContext)
          {
-            listLoader = new LabelBasedMergeRequestLoader(clientContext, op, versionLoader, cache);
+            listLoader = new SearchBasedMergeRequestLoader(clientContext, op, versionLoader, cache);
          }
          return listLoader;
       }

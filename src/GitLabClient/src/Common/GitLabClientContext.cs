@@ -10,12 +10,11 @@ namespace mrHelper.Client.Common
    {
       public ISynchronizeInvoke SynchronizeInvoke;
       public IHostProperties HostProperties;
-      public MergeRequestFilter MergeRequestFilter;
-      public IEnumerable<string> Keywords;
+      public IMergeRequestFilterChecker MergeRequestFilterChecker;
+      public IEnumerable<string> DiscussionKeywords;
       public int AutoUpdatePeriodMs;
       public Action<ProjectKey> OnForbiddenProject;
       public Action<ProjectKey> OnNotFoundProject;
-      public int MaxSearchResults;
    }
 }
 

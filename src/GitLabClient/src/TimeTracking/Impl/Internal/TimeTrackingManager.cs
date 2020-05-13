@@ -127,8 +127,8 @@ namespace mrHelper.Client.TimeTracking
       private readonly TimeTrackingOperator _operator;
       private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
          new Dictionary<MergeRequestKey, TimeSpan>();
-      private User _currentUser;
-      private IDiscussionLoader _discussionLoader;
+      private readonly User _currentUser;
+      private readonly IDiscussionLoader _discussionLoader;
    }
 }
 

@@ -33,10 +33,10 @@ namespace mrHelper.Client.Discussions
       {
          _operator = new DiscussionOperator(clientContext.HostProperties);
 
-         _parser = new DiscussionParser(this, clientContext.Keywords, user);
+         _parser = new DiscussionParser(this, clientContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;
 
-         _mergeRequestFilter = clientContext.MergeRequestFilter;
+         _mergeRequestFilterChecker = clientContext.MergeRequestFilterChecker;
 
          _reconnect = true;
          _currentUser = user;
@@ -575,7 +575,7 @@ namespace mrHelper.Client.Discussions
          foreach (ProjectKey projectKey in _mergeRequestCache.GetProjects())
          {
             matchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
-               .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
+               .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
                .Select(x => new MergeRequestKey
                   {
                      ProjectKey = projectKey,
@@ -584,7 +584,7 @@ namespace mrHelper.Client.Discussions
                .ToList());
 
             nonMatchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
-               .Where(x => !_mergeRequestFilter.DoesMatchFilter(x))
+               .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
                .Select(x => new MergeRequestKey
                   {
                      ProjectKey = projectKey,
@@ -596,16 +596,15 @@ namespace mrHelper.Client.Discussions
          nonMatchingFilter = nonMatchingFilterList;
       }
 
-      private IMergeRequestCache _mergeRequestCache;
-      private readonly MergeRequestFilter _mergeRequestFilter;
+      private readonly User _currentUser;
+      private readonly IMergeRequestCache _mergeRequestCache;
+      private readonly IMergeRequestFilterChecker _mergeRequestFilterChecker;
 
       private readonly DiscussionParser _parser;
+      private readonly DiscussionOperator _operator;
 
       private readonly System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
-
-      private readonly DiscussionOperator _operator;
-      private User _currentUser;
 
       private struct CachedDiscussions
       {

@@ -11,7 +11,7 @@ using mrHelper.Common.Interfaces;
 namespace mrHelper.Client.Session
 {
    /// <summary>
-   /// Implements Workflow-related interaction with GitLab
+   /// Implements Session-related interaction with GitLab
    /// </summary>
    internal class SessionOperator
    {

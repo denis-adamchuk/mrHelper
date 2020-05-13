@@ -12,7 +12,7 @@ namespace mrHelper.Client.Types
       public bool Enabled;
    }
 
-   public class MergeRequestFilter
+   public class MergeRequestFilter : IMergeRequestFilterChecker
    {
       public MergeRequestFilter(MergeRequestFilterState initialState)
       {

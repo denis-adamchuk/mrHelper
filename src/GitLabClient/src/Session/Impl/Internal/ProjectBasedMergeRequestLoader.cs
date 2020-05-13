@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
@@ -14,14 +15,14 @@ namespace mrHelper.Client.Session
 {
    internal class ProjectBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
    {
-      public ProjectBasedMergeRequestLoader(
-         GitLabClientContext clientContext, SessionOperator op, IVersionLoader versionLoader, InternalCacheUpdater cache)
+      public ProjectBasedMergeRequestLoader(GitLabClientContext clientContext, SessionOperator op,
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater)
          : base(op)
       {
+         _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
          _onForbiddenProject = clientContext.OnForbiddenProject;
          _onNotFoundProject = clientContext.OnNotFoundProject;
-         _cache = cache;
       }
 
       async public Task<bool> Load(ISessionContext context)
@@ -42,7 +43,7 @@ namespace mrHelper.Client.Session
                   cancelled = true;
                }
             }
-            catch (WorkflowException ex)
+            catch (SessionException ex)
             {
                exception = ex;
                cancelled = true;
@@ -70,7 +71,7 @@ namespace mrHelper.Client.Session
                      Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
                }
             }
-            catch (WorkflowException ex)
+            catch (SessionException ex)
             {
                if (isForbiddenProjectException(ex))
                {
@@ -87,8 +88,10 @@ namespace mrHelper.Client.Session
             }
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(
-            (context as ProjectBasedContext).Projects, x => loadProject(x),
+         Debug.Assert(context is ProjectBasedContext);
+         ProjectBasedContext pbc = context as ProjectBasedContext;
+
+         await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
             Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
          if (!cancelled)
          {
@@ -116,27 +119,27 @@ namespace mrHelper.Client.Session
          {
             string cancelMessage = String.Format("Cancelled loading merge requests for project \"{0}\"", projectName);
             string errorMessage = String.Format("Cannot load project \"{0}\"", projectName);
-            handleOperatorException(ex, cancelMessage, errorMessage, null);
+            handleOperatorException(ex, cancelMessage, errorMessage);
             return null;
          }
 
-         _cache.UpdateMergeRequests(project, mergeRequests);
+         _cacheUpdater.UpdateMergeRequests(project, mergeRequests);
          return mergeRequests;
       }
 
-      private static bool isForbiddenProjectException(WorkflowException ex)
+      private static bool isForbiddenProjectException(SessionException ex)
       {
          System.Net.HttpWebResponse response = getWebResponse(ex);
          return response != null ? response.StatusCode == System.Net.HttpStatusCode.Forbidden : false;
       }
 
-      private static bool isNotFoundProjectException(WorkflowException ex)
+      private static bool isNotFoundProjectException(SessionException ex)
       {
          System.Net.HttpWebResponse response = getWebResponse(ex);
          return response != null ? response.StatusCode == System.Net.HttpStatusCode.NotFound : false;
       }
 
-      private static System.Net.HttpWebResponse getWebResponse(WorkflowException ex)
+      private static System.Net.HttpWebResponse getWebResponse(SessionException ex)
       {
          if (ex.InnerException?.InnerException is GitLabRequestException rx)
          {
@@ -152,7 +155,7 @@ namespace mrHelper.Client.Session
       private readonly IVersionLoader _versionLoader;
       private readonly Action<ProjectKey> _onForbiddenProject;
       private readonly Action<ProjectKey> _onNotFoundProject;
-      private readonly InternalCacheUpdater _cache;
+      private readonly InternalCacheUpdater _cacheUpdater;
    }
 }
 

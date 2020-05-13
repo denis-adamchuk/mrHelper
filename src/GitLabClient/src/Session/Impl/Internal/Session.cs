@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
@@ -24,9 +23,10 @@ namespace mrHelper.Client.Session
       {
          await Stop();
 
-         _operator = new SessionOperator(hostname, _clientContext.HostProperties.GetAccessToken(hostname));
+         SessionOperator op = new SessionOperator(
+            hostname, _clientContext.HostProperties.GetAccessToken(hostname));
 
-         User? currentUser = await loadCurrentUserAsync(hostname);
+         User? currentUser = await new CurrentUserLoader(op).Load(hostname);
          if (!currentUser.HasValue)
          {
             return false;
@@ -35,13 +35,14 @@ namespace mrHelper.Client.Session
          InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
          IMergeRequestListLoader mergeRequestListLoader =
             MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-               _clientContext, _operator, context, cacheUpdater);
+               _clientContext, op, context, cacheUpdater);
 
          Starting?.Invoke(hostname);
 
          if (await mergeRequestListLoader.Load(context))
          {
-            _internal = createWorkflow(cacheUpdater, hostname, currentUser.Value, context);
+            _operator = op;
+            _internal = createSessionInternal(cacheUpdater, hostname, currentUser.Value, context);
             Started?.Invoke(hostname, currentUser.Value, context, this);
             return true;
          }
@@ -76,33 +77,11 @@ namespace mrHelper.Client.Session
 
       public ITotalTimeCache TotalTimeCache => _internal?.TotalTimeCache;
 
-      async private Task<User?> loadCurrentUserAsync(string hostName)
-      {
-         try
-         {
-            return await _operator.GetCurrentUserAsync();
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading current user from host \"{0}\"", hostName);
-            string errorMessage = String.Format("Cannot load user from host \"{0}\"", hostName);
-
-            bool cancelled = ex.InnerException is GitLabSharp.GitLabClientCancelled;
-            if (cancelled)
-            {
-               Trace.TraceInformation(String.Format("[WorkflowLoader] {0}", cancelMessage));
-               return null;
-            }
-
-            throw new WorkflowException(errorMessage, ex);
-         }
-      }
-
-      private SessionInternal createWorkflow(InternalCacheUpdater cacheUpdater,
+      private SessionInternal createSessionInternal(InternalCacheUpdater cacheUpdater,
          string hostname, User user, ISessionContext context)
       {
          MergeRequestManager mergeRequestManager =
-            new MergeRequestManager(_clientContext, this, cacheUpdater, hostname, context);
+            new MergeRequestManager(_clientContext, cacheUpdater, hostname, context);
          DiscussionManager discussionManager =
             new DiscussionManager(_clientContext, user, mergeRequestManager);
          TimeTrackingManager timeTrackingManager =

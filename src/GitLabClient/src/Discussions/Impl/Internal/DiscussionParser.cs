@@ -86,11 +86,8 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      private readonly Dictionary<MergeRequestKey, DateTime> _latestParsingTime =
-         new Dictionary<MergeRequestKey, DateTime>();
-      private User _currentUser;
+      private readonly User _currentUser;
       private readonly IEnumerable<string> _keywords;
-
       private readonly IDiscussionCacheInternal _discussionCache;
    }
 }

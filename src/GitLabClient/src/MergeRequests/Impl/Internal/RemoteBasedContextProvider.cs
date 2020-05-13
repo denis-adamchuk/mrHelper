@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
+using mrHelper.Client.Session;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using Version = GitLabSharp.Entities.Version;
@@ -16,7 +17,7 @@ namespace mrHelper.Client.MergeRequests
    internal class RemoteBasedContextProvider : IProjectUpdateContextProvider
    {
       internal RemoteBasedContextProvider(IEnumerable<Version> localVersions,
-         MergeRequestKey mrk, Session.SessionOperator op)
+         MergeRequestKey mrk, SessionOperator op)
       {
          _localVersions = localVersions;
          _mergeRequestKey = mrk;
@@ -59,10 +60,9 @@ namespace mrHelper.Client.MergeRequests
             _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId);
       }
 
+      private readonly SessionOperator _operator;
       private readonly IEnumerable<Version> _localVersions;
       private readonly MergeRequestKey _mergeRequestKey;
-
-      private readonly Session.SessionOperator _operator;
    }
 }
 

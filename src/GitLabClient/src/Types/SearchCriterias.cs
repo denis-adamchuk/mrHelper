@@ -19,12 +19,5 @@
    {
       public string Text;
    }
-
-   public enum EComparableEntityType
-   {
-      None,
-      Commit,
-      Version
-   }
 }
 

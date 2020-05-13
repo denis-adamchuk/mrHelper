@@ -10,10 +10,10 @@ namespace mrHelper.Client.Session
 {
    internal class VersionLoader : BaseSessionLoader, IVersionLoader
    {
-      internal VersionLoader(SessionOperator op, InternalCacheUpdater cache)
+      internal VersionLoader(SessionOperator op, InternalCacheUpdater cacheUpdater)
          : base(op)
       {
-         _cache = cache;
+         _cacheUpdater = cacheUpdater;
       }
 
       async public Task<bool> LoadCommitsAsync(MergeRequestKey mrk)
@@ -29,10 +29,10 @@ namespace mrHelper.Client.Session
                mrk.IId);
             string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
                mrk.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, null);
+            handleOperatorException(ex, cancelMessage, errorMessage);
             return false;
          }
-         _cache.UpdateCommits(mrk, commits);
+         _cacheUpdater.UpdateCommits(mrk, commits);
          return true;
       }
 
@@ -49,14 +49,14 @@ namespace mrHelper.Client.Session
                mrk.IId);
             string errorMessage = String.Format("Cannot load versions for merge request with IId {0}",
                mrk.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, null);
+            handleOperatorException(ex, cancelMessage, errorMessage);
             return false;
          }
-         _cache.UpdateVersions(mrk, versions);
+         _cacheUpdater.UpdateVersions(mrk, versions);
          return true;
       }
 
-      private readonly InternalCacheUpdater _cache;
+      private readonly InternalCacheUpdater _cacheUpdater;
    }
 }
 

@@ -1,8 +1,5 @@
 using System;
-using System.Linq;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using mrHelper.Client.Common;
@@ -10,9 +7,9 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Session
 {
-   public class WorkflowException : ExceptionEx
+   public class SessionException : ExceptionEx
    {
-      internal WorkflowException(string message, Exception innerException)
+      internal SessionException(string message, Exception innerException)
          : base(message, innerException) {}
 
       public string UserMessage
@@ -40,8 +37,6 @@ namespace mrHelper.Client.Session
    }
 
    /// <summary>
-   /// Supports chains of actions (loading a merge request also loads its versions or commits)
-   /// Each action toggles Pre-{Action}-Event and either Post-{Action}-Event or Failed-{Action}-Event
    /// </summary>
    internal class BaseSessionLoader
    {
@@ -50,27 +45,15 @@ namespace mrHelper.Client.Session
          _operator = op;
       }
 
-      async public Task CancelAsync()
-      {
-         if (_operator != null)
-         {
-            await _operator.CancelAsync();
-         }
-      }
-
-      internal void handleOperatorException(OperatorException ex, string cancelMessage, string errorMessage,
-         IEnumerable<Action> failureActions)
+      internal void handleOperatorException(OperatorException ex, string cancelMessage, string errorMessage)
       {
          bool cancelled = ex.InnerException is GitLabClientCancelled;
          if (cancelled)
          {
-            Trace.TraceInformation(String.Format("[BaseWorkflowLoader] {0}", cancelMessage));
+            Trace.TraceInformation(String.Format("[BaseSessionLoader] {0}", cancelMessage));
             return;
          }
-
-         failureActions?.ToList().ForEach(x => x?.Invoke());
-
-         throw new WorkflowException(errorMessage, ex);
+         throw new SessionException(errorMessage, ex);
       }
 
       internal SessionOperator _operator;

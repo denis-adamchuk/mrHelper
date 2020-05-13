@@ -11,12 +11,11 @@ namespace mrHelper.Client.Session
 {
    internal class MergeRequestLoader : BaseSessionLoader, IMergeRequestLoader
    {
-      internal MergeRequestLoader(SessionOperator op, InternalCacheUpdater cache)
+      internal MergeRequestLoader(SessionOperator op, InternalCacheUpdater cacheUpdater)
          : base(op)
       {
-         _versionLoader = new VersionLoader(op, cache);
-         _operator = op;
-         _cache = cache;
+         _cacheUpdater = cacheUpdater;
+         _versionLoader = new VersionLoader(op, cacheUpdater);
       }
 
       async public Task<bool> LoadMergeRequest(MergeRequestKey mrk)
@@ -30,23 +29,24 @@ namespace mrHelper.Client.Session
          try
          {
             SearchByIId searchByIId = new SearchByIId { ProjectName = mrk.ProjectKey.ProjectName, IId = mrk.IId };
-            IEnumerable<MergeRequest> mergeRequests = await _operator.SearchMergeRequestsAsync(searchByIId, null, true);
+            IEnumerable<MergeRequest> mergeRequests =
+               await _operator.SearchMergeRequestsAsync(searchByIId, null, true /* TODO only open */);
             mergeRequest = mergeRequests.FirstOrDefault();
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mrk.IId);
             string errorMessage = String.Format("Cannot load merge request with IId {0}", mrk.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage, null);
+            handleOperatorException(ex, cancelMessage, errorMessage);
             return false;
          }
 
-         _cache.UpdateMergeRequest(mrk, mergeRequest);
+         _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
          return await _versionLoader.LoadVersionsAsync(mrk) && await _versionLoader.LoadCommitsAsync(mrk);
       }
 
       private readonly IVersionLoader _versionLoader;
-      private readonly InternalCacheUpdater _cache;
+      private readonly InternalCacheUpdater _cacheUpdater;
    }
 }
 

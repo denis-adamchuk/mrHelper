@@ -466,7 +466,7 @@ namespace mrHelper.App.Forms
                await switchHostToSelected();
             }
          }
-         catch (WorkflowException ex)
+         catch (SessionException ex)
          {
             MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }

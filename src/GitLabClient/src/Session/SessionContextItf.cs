@@ -10,9 +10,11 @@ namespace mrHelper.Client.Session
       public IEnumerable<ProjectKey> Projects;
    }
 
-   public class LabelBasedContext : ISessionContext
+   public class SearchBasedContext : ISessionContext
    {
-      public object Search;
+      public object SearchCriteria;
+      public int MaxSearchResults;
+      public bool OnlyOpen;
    }
 }
 

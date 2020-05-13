@@ -15,12 +15,8 @@ namespace mrHelper.Client.MergeRequests
       IMergeRequestCache,
       IProjectUpdateContextProviderFactory
    {
-      internal MergeRequestManager(
-         GitLabClientContext clientContext,
-         ISession workflowLoader,
-         InternalCacheUpdater cache,
-         string hostname,
-         ISessionContext context)
+      internal MergeRequestManager(GitLabClientContext clientContext, InternalCacheUpdater cache,
+         string hostname, ISessionContext context)
       {
          _clientContext = clientContext;
          _cache = cache;
@@ -38,12 +34,12 @@ namespace mrHelper.Client.MergeRequests
 
       public IEnumerable<ProjectKey> GetProjects()
       {
-         return _cache?.Cache.GetProjects();
+         return _cache.Cache.GetProjects();
       }
 
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
-         return _cache?.Cache.GetMergeRequests(projectKey);
+         return _cache.Cache.GetMergeRequests(projectKey);
       }
 
       public MergeRequest? GetMergeRequest(MergeRequestKey mrk)
@@ -67,7 +63,7 @@ namespace mrHelper.Client.MergeRequests
 
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _cache?.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault() ?? default(Version);
+         return _cache.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
       }
 
       public Version GetLatestVersion(ProjectKey projectKey)
@@ -78,19 +74,16 @@ namespace mrHelper.Client.MergeRequests
       private IEnumerable<Version> getAllVersions(ProjectKey projectKey)
       {
          List<Version> versions = new List<Version>();
-         if (_cache != null)
+         foreach (MergeRequest mergeRequest in _cache.Cache.GetMergeRequests(projectKey))
          {
-            foreach (MergeRequest mergeRequest in _cache.Cache.GetMergeRequests(projectKey))
+            MergeRequestKey mrk = new MergeRequestKey
             {
-               MergeRequestKey mrk = new MergeRequestKey
-               {
-                  ProjectKey = projectKey,
-                  IId = mergeRequest.IId
-               };
-               foreach (Version version in _cache.Cache.GetVersions(mrk))
-               {
-                  versions.Add(version);
-               }
+               ProjectKey = projectKey,
+               IId = mergeRequest.IId
+            };
+            foreach (Version version in _cache.Cache.GetVersions(mrk))
+            {
+               versions.Add(version);
             }
          }
          return versions;
@@ -101,7 +94,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
-         _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
+         _updateManager.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
          return null;
       }
 

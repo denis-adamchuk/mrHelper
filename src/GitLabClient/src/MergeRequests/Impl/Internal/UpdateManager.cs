@@ -15,11 +15,8 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class UpdateManager : IDisposable
    {
-      internal UpdateManager(
-         GitLabClientContext clientContext,
-         string hostname,
-         ISessionContext context,
-         InternalCacheUpdater cacheUpdater)
+      internal UpdateManager(GitLabClientContext clientContext, string hostname,
+         ISessionContext context, InternalCacheUpdater cacheUpdater)
       {
          // We don't need to toggle these callbacks during updates
          clientContext.OnNotFoundProject = null;
@@ -125,7 +122,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = true;
             await _mergeRequestLoader.LoadMergeRequest(mrk);
          }
-         catch (WorkflowException ex)
+         catch (SessionException ex)
          {
             ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
             return null;
@@ -162,7 +159,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = true;
             await _mergeRequestListLoader.Load(_context);
          }
-         catch (WorkflowException ex)
+         catch (SessionException ex)
          {
             ExceptionHandlers.Handle("Cannot update merge requests on timer", ex);
          }
@@ -191,7 +188,8 @@ namespace mrHelper.Client.MergeRequests
       private readonly IMergeRequestListLoader _mergeRequestListLoader;
       private readonly IMergeRequestLoader _mergeRequestLoader;
       private readonly IInternalCache _cache;
-      private readonly InternalMergeRequestCacheComparator _checker = new InternalMergeRequestCacheComparator();
+      private readonly InternalMergeRequestCacheComparator _checker =
+         new InternalMergeRequestCacheComparator();
 
       private bool _updating; /// prevents re-entrance in timer updates
    }

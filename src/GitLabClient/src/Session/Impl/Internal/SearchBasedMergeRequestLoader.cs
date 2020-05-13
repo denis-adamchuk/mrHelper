@@ -11,21 +11,19 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.Client.Session
 {
-   internal class LabelBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
+   internal class SearchBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
    {
-      internal LabelBasedMergeRequestLoader(GitLabClientContext clientContext, SessionOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cache)
+      internal SearchBasedMergeRequestLoader(GitLabClientContext clientContext, SessionOperator op,
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater)
          : base(op)
       {
+         _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
-         _maxResults = clientContext.MaxSearchResults;
-         _cache = cache;
       }
 
       async public Task<bool> Load(ISessionContext context)
       {
-         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
-            await loadMergeRequestsAsync(context, _maxResults);
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync(context);
          if (mergeRequests == null)
          {
             return false; // cancelled
@@ -47,7 +45,7 @@ namespace mrHelper.Client.Session
                   cancelled = true;
                }
             }
-            catch (WorkflowException ex)
+            catch (SessionException ex)
             {
                exception = ex;
                cancelled = true;
@@ -61,7 +59,7 @@ namespace mrHelper.Client.Session
                break;
             }
 
-            _cache.UpdateMergeRequests(kv.Key, kv.Value);
+            _cacheUpdater.UpdateMergeRequests(kv.Key, kv.Value);
 
             await TaskUtils.RunConcurrentFunctionsAsync(kv.Value,
                x => loadVersionsLocal(new MergeRequestKey { IId = x.IId, ProjectKey = kv.Key }),
@@ -79,19 +77,20 @@ namespace mrHelper.Client.Session
          return false;
       }
 
-      async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(
-         object search, int? maxResults)
+      async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(ISessionContext context)
       {
+         SearchBasedContext sbc = (context as SearchBasedContext);
+         object search = sbc.SearchCriteria;
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            mergeRequests = await _operator.SearchMergeRequestsAsync(search, maxResults, false);
+            mergeRequests = await _operator.SearchMergeRequestsAsync(search, sbc.MaxSearchResults, sbc.OnlyOpen);
          }
          catch (OperatorException ex)
          {
             string cancelMessage = String.Format("Cancelled loading merge requests with search string \"{0}\"", search);
             string errorMessage = String.Format("Cannot load merge requests with search string \"{0}\"", search);
-            handleOperatorException(ex, cancelMessage, errorMessage, null);
+            handleOperatorException(ex, cancelMessage, errorMessage);
             return null;
          }
 
@@ -149,14 +148,13 @@ namespace mrHelper.Client.Session
          {
             string cancelMessage = String.Format("Cancelled resolving project with Id \"{0}\"", projectId);
             string errorMessage = String.Format("Cannot load project with Id \"{0}\"", projectId);
-            handleOperatorException(ex, cancelMessage, errorMessage, null);
+            handleOperatorException(ex, cancelMessage, errorMessage);
          }
          return null;
       }
 
-      private readonly int _maxResults;
       private readonly IVersionLoader _versionLoader;
-      private readonly InternalCacheUpdater _cache;
+      private readonly InternalCacheUpdater _cacheUpdater;
    }
 }
 
