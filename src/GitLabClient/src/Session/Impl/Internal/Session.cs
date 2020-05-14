@@ -35,7 +35,7 @@ namespace mrHelper.Client.Session
          InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
          IMergeRequestListLoader mergeRequestListLoader =
             MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-               _clientContext, op, context, cacheUpdater);
+               _clientContext, op, context, cacheUpdater, true);
 
          Starting?.Invoke(hostname);
 
@@ -77,13 +77,16 @@ namespace mrHelper.Client.Session
 
       public ITotalTimeCache TotalTimeCache => _internal?.TotalTimeCache;
 
+      public IProjectUpdateContextProviderFactory UpdateContextProviderFactory =>
+         _internal?.UpdateContextProviderFactory;
+
       private SessionInternal createSessionInternal(InternalCacheUpdater cacheUpdater,
          string hostname, User user, ISessionContext context)
       {
          MergeRequestManager mergeRequestManager =
             new MergeRequestManager(_clientContext, cacheUpdater, hostname, context);
          DiscussionManager discussionManager =
-            new DiscussionManager(_clientContext, user, mergeRequestManager);
+            new DiscussionManager(_clientContext, user, mergeRequestManager, context);
          TimeTrackingManager timeTrackingManager =
             new TimeTrackingManager(_clientContext, user, discussionManager);
          return new SessionInternal(mergeRequestManager, discussionManager, timeTrackingManager);

@@ -23,12 +23,9 @@ namespace mrHelper.App.Helpers
    internal class GitDataUpdater : IDisposable
    {
       internal GitDataUpdater(
-         IWorkflowEventNotifier workflowEventNotifier,
+         ISession session,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         IMergeRequestCache mergeRequestProvider,
-         IDiscussionLoader discussionProvider,
-         IProjectUpdateContextProviderFactory contextProviderFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
       {
@@ -37,15 +34,12 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException("Bad auto-update period specified");
          }
 
-         _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connecting += onConnecting;
-         _workflowEventNotifier.Connected += onConnected;
+         _session = session;
+         _session.Starting += onSessionStarting;
+         _session.Started += onSessionStarted;
 
          _factoryAccessor = factoryAccessor;
-         _mergeRequestProvider = mergeRequestProvider;
-         _discussionProvider = discussionProvider;
          _mergeRequestFilter = mergeRequestFilter;
-         _contextProviderFactory = contextProviderFactory;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -55,8 +49,8 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connecting -= onConnecting;
-         _workflowEventNotifier.Connected -= onConnected;
+         _session.Starting -= onSessionStarting;
+         _session.Started -= onSessionStarted;
 
          _timer?.Stop();
          _timer?.Dispose();
@@ -131,7 +125,7 @@ namespace mrHelper.App.Helpers
 
       private async Task doUpdateGitDataAsync(ILocalGitRepository repo)
       {
-         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestProvider.GetMergeRequests(repo.ProjectKey)
+         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
             .Select(x => new MergeRequestKey
             {
@@ -210,9 +204,9 @@ namespace mrHelper.App.Helpers
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionProvider.LoadDiscussions(mrk);
+            discussions = await _discussionCache.LoadDiscussions(mrk);
          }
-         catch (DiscussionManagerException ex)
+         catch (DiscussionCacheException ex)
          {
             ExceptionHandlers.Handle("Cannot load discussions from GitLab", ex);
             return null;
@@ -331,22 +325,20 @@ namespace mrHelper.App.Helpers
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
-      private void onConnecting(string hostname)
+      private void onSessionStarting(string hostname)
       {
          unsubscribeFromAll();
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
       {
-         Debug.Assert(!_connected.Any());
-         foreach (Project project in projects)
-         {
-            ProjectKey key = new ProjectKey
-            {
-               HostName = hostname,
-               ProjectName = project.Path_With_Namespace
-            };
+         _mergeRequestCache = _session.MergeRequestCache;
+         _discussionCache = _session.DiscussionCache;
+         _contextProviderFactory = _session.UpdateContextProviderFactory;
 
+         Debug.Assert(!_connected.Any());
+         foreach (ProjectKey key in _mergeRequestCache.GetProjects())
+         {
             ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
             if (repo != null && !isConnected(repo))
             {
@@ -413,13 +405,13 @@ namespace mrHelper.App.Helpers
       private readonly Dictionary<MergeRequestKey, DateTime> _latestChanges =
          new Dictionary<MergeRequestKey, DateTime>();
 
-      private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private readonly ISession _session;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
-      private readonly IDiscussionLoader _discussionProvider;
-
-      private readonly IMergeRequestCache _mergeRequestProvider;
-      private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly MergeRequestFilter _mergeRequestFilter;
+
+      private IDiscussionCache _discussionCache;
+      private IMergeRequestCache _mergeRequestCache;
+      private IProjectUpdateContextProviderFactory _contextProviderFactory;
 
       private readonly System.Timers.Timer _timer;
 

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -9,6 +10,8 @@ namespace mrHelper.Client.TimeTracking
       Task Stop();
 
       void Cancel();
+
+      TimeSpan Elapsed { get; }
    }
 }
 

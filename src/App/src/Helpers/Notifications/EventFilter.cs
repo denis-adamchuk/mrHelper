@@ -11,21 +11,19 @@ namespace mrHelper.App.Helpers
 {
    internal class EventFilter : IDisposable
    {
-      internal EventFilter(UserDefinedSettings settings, IWorkflowEventNotifier workflowEventNotifier,
-         IMergeRequestCache mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
+      internal EventFilter(UserDefinedSettings settings, ISession session, MergeRequestFilter mergeRequestFilter)
       {
          _settings = settings;
-         _mergeRequestProvider = mergeRequestProvider;
 
-         _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _session = session;
+         _session.Started += onSessionStarted;
 
          _mergeRequestFilter = mergeRequestFilter;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _session.Started -= onSessionStarted;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -43,7 +41,7 @@ namespace mrHelper.App.Helpers
 
       internal bool NeedSuppressEvent(DiscussionEvent e)
       {
-         MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
+         MergeRequest? mergeRequest = _mergeRequestCache?.GetMergeRequest(e.MergeRequestKey);
          if (!mergeRequest.HasValue)
          {
             return true;
@@ -115,15 +113,17 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
       {
          _currentUser = user;
+         _mergeRequestCache = session.MergeRequestCache;
       }
 
-      private readonly UserDefinedSettings _settings;
       private User? _currentUser;
-      private readonly IMergeRequestCache _mergeRequestProvider;
-      private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private IMergeRequestCache _mergeRequestCache;
+
+      private readonly UserDefinedSettings _settings;
+      private readonly ISession _session;
       private readonly MergeRequestFilter _mergeRequestFilter;
    }
 }

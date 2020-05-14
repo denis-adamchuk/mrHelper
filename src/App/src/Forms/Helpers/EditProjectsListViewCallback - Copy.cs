@@ -10,9 +10,10 @@ namespace mrHelper.App.Forms.Helpers
 {
    public class EditProjectsListViewCallback : IEditOrderedListViewCallback
    {
-      public EditProjectsListViewCallback(string hostname)
+      public EditProjectsListViewCallback(string hostname, ISearchManager searchManager)
       {
          _hostname = hostname;
+         _searchManager = searchManager;
       }
 
       public async Task<bool> CanAddItem(string item, IEnumerable<string> currentItems)
@@ -24,12 +25,10 @@ namespace mrHelper.App.Forms.Helpers
             return false;
          }
 
-         SearchManager searchManager = new SearchManager(Program.Settings);
-
          int slashIndex = item.IndexOf('/');
          if (item.IndexOf(" ", 0, slashIndex) != -1)
          {
-            User? user = await searchManager.SearchUserAsync(_hostname, item.Substring(0, slashIndex));
+            User? user = await _searchManager.SearchUserAsync(_hostname, item.Substring(0, slashIndex));
             if (user == null)
             {
                MessageBox.Show("Project name has a space and looks like a name of a user but there is no such user",
@@ -47,7 +46,7 @@ namespace mrHelper.App.Forms.Helpers
             return false;
          }
 
-         Project? project = await searchManager.SearchProjectAsync(_hostname, item);
+         Project? project = await _searchManager.SearchProjectAsync(_hostname, item);
          if (project == null)
          {
             MessageBox.Show(String.Format("There is no project {0} at {1}", item, _hostname),
@@ -58,7 +57,8 @@ namespace mrHelper.App.Forms.Helpers
          return true;
       }
 
-      private string _hostname;
+      private readonly string _hostname;
+      private readonly ISearchManager _searchManager;
    }
 }
 

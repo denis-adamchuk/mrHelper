@@ -22,27 +22,21 @@ namespace mrHelper.App.Helpers
    /// </summary>
    internal class GitStatisticManager : IDisposable
    {
-      internal GitStatisticManager(
-         IWorkflowEventNotifier workflowEventNotifier,
-         ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         IMergeRequestCache mergeRequestProvider,
-         IProjectUpdateContextProviderFactory contextProviderFactory)
+      internal GitStatisticManager(ISession session, ISynchronizeInvoke synchronizeInvoke,
+         ILocalGitRepositoryFactoryAccessor factoryAccessor)
       {
-         _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connecting += onConnecting;
-         _workflowEventNotifier.Connected += onConnected;
+         _session = session;
+         _session.Starting += onSessionStarting;
+         _session.Started += onSessionStarted;
 
          _factoryAccessor = factoryAccessor;
          _synchronizeInvoke = synchronizeInvoke;
-         _mergeRequestProvider = mergeRequestProvider;
-         _contextProviderFactory = contextProviderFactory;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connecting -= onConnecting;
-         _workflowEventNotifier.Connected -= onConnected;
+         _session.Starting -= onSessionStarting;
+         _session.Started -= onSessionStarted;
 
          unsubscribeFromAll();
       }
@@ -145,11 +139,11 @@ namespace mrHelper.App.Helpers
          // Use locally cached information for the whole Project because it is always not less
          // than the latest version of any merge request that we have locally.
          // This allows to guarantee that each MR is processed once and not on each git repository update.
-         DateTime latestChange = _mergeRequestProvider.GetLatestVersion(repo.ProjectKey).Created_At;
+         DateTime latestChange = _mergeRequestCache.GetLatestVersion(repo.ProjectKey).Created_At;
 
          Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
-         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestProvider.GetMergeRequests(repo.ProjectKey)
+         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Select(x => new MergeRequestKey
             {
                ProjectKey = repo.ProjectKey,
@@ -158,7 +152,7 @@ namespace mrHelper.App.Helpers
 
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
-            Version version = _mergeRequestProvider.GetLatestVersion(mrk);
+            Version version = _mergeRequestCache.GetLatestVersion(mrk);
 
             if (version.Created_At <= prevLatestChange || version.Created_At > latestChange)
             {
@@ -308,22 +302,19 @@ namespace mrHelper.App.Helpers
          unsubscribeFromOne(repo);
       }
 
-      private void onConnecting(string hostname)
+      private void onSessionStarting(string hostname)
       {
          unsubscribeFromAll();
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
       {
-         Debug.Assert(!_gitStatistic.Any());
-         foreach (Project project in projects)
-         {
-            ProjectKey key = new ProjectKey
-            {
-               HostName = hostname,
-               ProjectName = project.Path_With_Namespace
-            };
+         _mergeRequestCache = _session.MergeRequestCache;
+         _contextProviderFactory = _session.UpdateContextProviderFactory;
 
+         Debug.Assert(!_gitStatistic.Any());
+         foreach (ProjectKey key in _mergeRequestCache.GetProjects())
+         {
             ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
             if (repo != null && !isConnected(repo))
             {
@@ -407,11 +398,11 @@ namespace mrHelper.App.Helpers
       private readonly Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
          new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
 
-      private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private readonly ISession _session;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
 
-      private readonly IMergeRequestCache _mergeRequestProvider;
-      private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
+      private IMergeRequestCache _mergeRequestCache;
+      private IProjectUpdateContextProviderFactory _contextProviderFactory;
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
    }

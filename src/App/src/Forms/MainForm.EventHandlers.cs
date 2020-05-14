@@ -163,7 +163,7 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     await _timeTrackingManager.AddSpanAsync(add, diff, mrk);
+                     await getCurrentSession()?.TotalTimeCache?.AddSpan(add, diff, mrk);
                   }
                   catch (TimeTrackingException ex)
                   {
@@ -338,7 +338,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void ListViewMergeRequests_ItemSelectionChanged(
+      private void ListViewMergeRequests_ItemSelectionChanged(
          object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
@@ -346,26 +346,35 @@ namespace mrHelper.App.Forms
 
          bool showVersions = checkBoxShowVersions.Checked;
 
+         MergeRequestKey mrk = new MergeRequestKey
+         {
+            ProjectKey = default(ProjectKey),
+            IId = 0
+         };
+
          // had to use this hack, because it is not possible to prevent deselecting a row
          // on a click on empty area in ListView
          if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
          {
-            await switchMergeRequestByUserAsync(default(ProjectKey), 0, showVersions);
+            switchMergeRequestByUser(mrk, showVersions);
             return;
          }
 
          if (listView == listViewFoundMergeRequests && listView.SelectedItems.Count < 1)
          {
-            await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0, showVersions);
+            switchSearchMergeRequestByUser(mrk, showVersions);
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
+         mrk.ProjectKey = key.ProjectKey;
+         mrk.IId = key.MergeRequest.IId;
+
          if (listView == listViewFoundMergeRequests)
          {
-            await switchSearchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId, showVersions);
+            switchSearchMergeRequestByUser(mrk, showVersions);
          }
-         else if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId, showVersions))
+         else if (switchMergeRequestByUser(mrk, showVersions))
          {
             if (!isSearchMode())
             {
@@ -971,12 +980,6 @@ namespace mrHelper.App.Forms
          e.Value = item.Host;
       }
 
-      private static void formatProjectsListItem(ListControlConvertEventArgs e)
-      {
-         Project item = (Project)(e.ListItem);
-         e.Value = item.Path_With_Namespace;
-      }
-
       private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
       {
          Program.Settings.Update();
@@ -1025,7 +1028,7 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTracker = _timeTrackingManager.GetTracker(getMergeRequestKey(null).Value);
+         _timeTracker = getCurrentSession().GetTimeTracker(getMergeRequestKey(null).Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -1046,7 +1049,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Stop();
 
          // Reset member right now to not send tracked time again on re-entrance
-         TimeTracker timeTracker = _timeTracker;
+         ITimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
 
          // Stop stopwatch and send tracked time
@@ -1230,7 +1233,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(projects != null);
 
          using (EditOrderedListViewForm form = new EditOrderedListViewForm(projects,
-            new EditProjectsListViewCallback(host)))
+            new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager)))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {

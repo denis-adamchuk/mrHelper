@@ -15,12 +15,13 @@ namespace mrHelper.Client.MergeRequests
       IMergeRequestCache,
       IProjectUpdateContextProviderFactory
    {
-      internal MergeRequestManager(GitLabClientContext clientContext, InternalCacheUpdater cache,
+      internal MergeRequestManager(GitLabClientContext clientContext, InternalCacheUpdater cacheUpdater,
          string hostname, ISessionContext context)
       {
          _clientContext = clientContext;
-         _cache = cache;
-         _updateManager = new UpdateManager(_clientContext, hostname, context, _cache);
+         _cacheUpdater = cacheUpdater;
+
+         _updateManager = new UpdateManager(_clientContext, hostname, context, _cacheUpdater);
          _updateManager.MergeRequestEvent += onUpdate;
       }
 
@@ -34,12 +35,12 @@ namespace mrHelper.Client.MergeRequests
 
       public IEnumerable<ProjectKey> GetProjects()
       {
-         return _cache.Cache.GetProjects();
+         return _cacheUpdater.Cache.GetProjects();
       }
 
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey projectKey)
       {
-         return _cache.Cache.GetMergeRequests(projectKey);
+         return _cacheUpdater.Cache.GetMergeRequests(projectKey);
       }
 
       public MergeRequest? GetMergeRequest(MergeRequestKey mrk)
@@ -63,7 +64,7 @@ namespace mrHelper.Client.MergeRequests
 
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
-         return _cache.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
+         return _cacheUpdater.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
       }
 
       public Version GetLatestVersion(ProjectKey projectKey)
@@ -71,17 +72,27 @@ namespace mrHelper.Client.MergeRequests
          return getAllVersions(projectKey).OrderBy(x => x.Created_At).LastOrDefault();
       }
 
+      public IEnumerable<GitLabSharp.Entities.Version> GetVersions(MergeRequestKey mrk)
+      {
+         return _cacheUpdater.Cache.GetVersions(mrk);
+      }
+
+      public IEnumerable<GitLabSharp.Entities.Commit> GetCommits(MergeRequestKey mrk)
+      {
+         return _cacheUpdater.Cache.GetCommits(mrk);
+      }
+
       private IEnumerable<Version> getAllVersions(ProjectKey projectKey)
       {
          List<Version> versions = new List<Version>();
-         foreach (MergeRequest mergeRequest in _cache.Cache.GetMergeRequests(projectKey))
+         foreach (MergeRequest mergeRequest in _cacheUpdater.Cache.GetMergeRequests(projectKey))
          {
             MergeRequestKey mrk = new MergeRequestKey
             {
                ProjectKey = projectKey,
                IId = mergeRequest.IId
             };
-            foreach (Version version in _cache.Cache.GetVersions(mrk))
+            foreach (Version version in _cacheUpdater.Cache.GetVersions(mrk))
             {
                versions.Add(version);
             }
@@ -103,7 +114,7 @@ namespace mrHelper.Client.MergeRequests
          MergeRequestEvent?.Invoke(e);
       }
 
-      private readonly InternalCacheUpdater _cache;
+      private readonly InternalCacheUpdater _cacheUpdater;
       private readonly UpdateManager _updateManager;
       private readonly GitLabClientContext _clientContext;
    }

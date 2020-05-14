@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         disposeWorkflowDependencies();
+         disposeLiveSessionDependencies();
 
          _checkForUpdatesTimer?.Stop();
          _checkForUpdatesTimer?.Dispose();

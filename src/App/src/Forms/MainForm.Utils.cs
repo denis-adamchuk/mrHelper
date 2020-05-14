@@ -19,6 +19,8 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using static mrHelper.App.Controls.MergeRequestListView;
+using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Session;
 
 namespace mrHelper.App.Forms
 {
@@ -57,6 +59,11 @@ namespace mrHelper.App.Forms
             return new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId };
          }
          return null;
+      }
+
+      private ISession getCurrentSession()
+      {
+         return isSearchMode() ? _searchSession : _liveSession;
       }
 
       /// <summary>
@@ -134,23 +141,20 @@ namespace mrHelper.App.Forms
          onHostSelected();
       }
 
-      private void createListViewGroupsForProjects(ListView listView,
-         string hostname, IEnumerable<Project> projects)
+      private void createListViewGroupsForProjects(ListView listView, IEnumerable<ProjectKey> projects)
       {
          listView.Items.Clear();
          listView.Groups.Clear();
-         foreach (Project project in projects)
+         foreach (ProjectKey projectKey in projects)
          {
-            createListViewGroupForProject(listView, hostname, project);
+            createListViewGroupForProject(listView, projectKey);
          }
       }
 
-      private void createListViewGroupForProject(ListView listView,
-         string hostname, Project project)
+      private void createListViewGroupForProject(ListView listView, ProjectKey projectKey)
       {
-         ListViewGroup group = listView.Groups.Add(
-            project.Path_With_Namespace, project.Path_With_Namespace);
-         group.Tag = new ProjectKey { HostName = hostname, ProjectName = project.Path_With_Namespace };
+         ListViewGroup group = listView.Groups.Add(projectKey.ProjectName, projectKey.ProjectName);
+         group.Tag = projectKey;
       }
 
       private bool selectMergeRequest(ListView listView, string projectname, int iid, bool exact)
@@ -592,7 +596,7 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         return _timeTrackingManager.GetTotalTime(mrk.Value);
+         return getCurrentSession()?.TotalTimeCache?.GetTotalTime(mrk.Value);
       }
 
       private string convertTotalTimeToText(TimeSpan? span, bool isTimeTrackingAllowed)
@@ -630,21 +634,21 @@ namespace mrHelper.App.Forms
 
       private string getDiscussionCount(MergeRequestKey mrk)
       {
-         if (_discussionManager == null)
+         if (getCurrentSession()?.DiscussionCache == null)
          {
             return "N/A";
          }
 
-         DiscussionManager.DiscussionCount dc = _discussionManager.GetDiscussionCount(mrk);
+         DiscussionCount dc = getCurrentSession().DiscussionCache.GetDiscussionCount(mrk);
          switch (dc.Status)
          {
-            case DiscussionManager.DiscussionCount.EStatus.NotAvailable:
+            case DiscussionCount.EStatus.NotAvailable:
                return "N/A";
 
-            case DiscussionManager.DiscussionCount.EStatus.Loading:
+            case DiscussionCount.EStatus.Loading:
                return "Loading...";
 
-            case DiscussionManager.DiscussionCount.EStatus.Ready:
+            case DiscussionCount.EStatus.Ready:
                return String.Format("{0} / {1}", dc.Resolved.Value, dc.Resolvable.Value);
          }
 
@@ -915,15 +919,14 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         DiscussionManager.DiscussionCount dc = _discussionManager.GetDiscussionCount(
+         DiscussionCount dc = getCurrentSession()?.DiscussionCache?.GetDiscussionCount(
             new MergeRequestKey
             {
                IId = fmk.MergeRequest.IId,
                ProjectKey = fmk.ProjectKey
-            });
+            }) ?? default(DiscussionCount);
 
-         if (dc.Status != DiscussionManager.DiscussionCount.EStatus.Ready
-          || dc.Resolvable == null || dc.Resolved == null)
+         if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
          {
             return Color.Black;
          }
@@ -966,12 +969,19 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
+         IMergeRequestCache mergeRequestCache = getCurrentSession()?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return;
+         }
+
          listViewMergeRequests.BeginUpdate();
 
-         IEnumerable<ProjectKey> projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
+         IEnumerable<ProjectKey> projectKeys =
+            listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          foreach (ProjectKey projectKey in projectKeys)
          {
-            foreach (MergeRequest mergeRequest in _mergeRequestCache.GetMergeRequests(projectKey))
+            foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
             {
                MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
                int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
@@ -995,8 +1005,8 @@ namespace mrHelper.App.Forms
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
-            if (!_mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
-               || !_mergeRequestFilter.DoesMatchFilter(fmk.MergeRequest))
+            if (!mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
+             || !_mergeRequestFilter.DoesMatchFilter(fmk.MergeRequest))
             {
                listViewMergeRequests.Items.RemoveAt(index);
             }
@@ -1021,7 +1031,7 @@ namespace mrHelper.App.Forms
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         MergeRequest? mergeRequest = _mergeRequestCache.GetMergeRequest(mrk);
+         MergeRequest? mergeRequest = getCurrentSession()?.MergeRequestCache?.GetMergeRequest(mrk);
          if (!mergeRequest.HasValue)
          {
             Trace.TraceError(String.Format("[MainForm] setListViewItemTag() cannot find MR with IId {0}", mrk.IId));
@@ -1797,9 +1807,9 @@ namespace mrHelper.App.Forms
             }
          }
 
-         _mergeRequestCache.CheckForUpdates(mrk, intervals,
+         getCurrentSession()?.MergeRequestCache?.RequestUpdate(mrk, intervals,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
-         _discussionManager.CheckForUpdates(mrk, intervals,
+         getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk, intervals,
             () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
       }
 
@@ -1885,23 +1895,14 @@ namespace mrHelper.App.Forms
             mergeRequestIId.ToString(), isSearchMode().ToString()));
       }
 
-      private void onFailedLoadSingleMergeRequestCommon()
-      {
-         richTextBoxMergeRequestDescription.Text = String.Empty;
-         labelWorkflowStatus.Text = "Failed to load merge request";
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm] Failed to load merge request IsSearchMode={0}", isSearchMode().ToString()));
-      }
-
-      private void onSingleMergeRequestLoadedCommon(string hostname, string projectname, MergeRequest mergeRequest)
+      private void onSingleMergeRequestLoadedCommon(ProjectKey projectKey, MergeRequest mergeRequest)
       {
          Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
 
          enableMergeRequestActions(true);
          FullMergeRequestKey fmk = new FullMergeRequestKey
          {
-            ProjectKey = new ProjectKey { HostName = hostname, ProjectName = projectname },
+            ProjectKey = projectKey,
             MergeRequest = mergeRequest
          };
          updateMergeRequestDetails(fmk);
@@ -1910,7 +1911,7 @@ namespace mrHelper.App.Forms
             {
                ProjectKey = fmk.ProjectKey,
                IId = fmk.MergeRequest.IId
-            }, mergeRequest.Author, hostname);
+            }, mergeRequest.Author, projectKey.HostName);
 
          labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", mergeRequest.IId);
 
@@ -1918,36 +1919,8 @@ namespace mrHelper.App.Forms
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
       }
 
-      private void onLoadComparableEntitiesCommon(ListView listView)
-      {
-         enableCommitActions(false, null, default(User));
-         if (listView.SelectedItems.Count != 0)
-         {
-            disableComboBox(comboBoxLatestCommit, "Loading...");
-            disableComboBox(comboBoxEarliestCommit, "Loading...");
-         }
-         else
-         {
-            disableComboBox(comboBoxLatestCommit, String.Empty);
-            disableComboBox(comboBoxEarliestCommit, String.Empty);
-         }
-
-         Debug.WriteLine(String.Format(
-            "[MainForm] Loading commits IsSearchMode={0}", isSearchMode().ToString()));
-      }
-
-      private void onFailedLoadComparableEntitiesCommon()
-      {
-         disableComboBox(comboBoxLatestCommit, String.Empty);
-         disableComboBox(comboBoxEarliestCommit, String.Empty);
-         labelWorkflowStatus.Text = "Failed to load commits";
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm] Failed to load commits IsSearchMode={0}", isSearchMode().ToString()));
-      }
-
-      private void onComparableEntitiesLoadedCommon(MergeRequest mergeRequest,
-         System.Collections.IEnumerable entities, ListView listView)
+      private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
+         MergeRequest mergeRequest, System.Collections.IEnumerable entities, ListView listView)
       {
          MergeRequestKey? mrk = getMergeRequestKey(listView);
 
@@ -1959,7 +1932,7 @@ namespace mrHelper.App.Forms
             enableComboBox(comboBoxEarliestCommit);
 
             addCommitsToComboBoxes(comboBoxLatestCommit, comboBoxEarliestCommit, objects,
-               mergeRequest.Diff_Refs.Base_SHA, mergeRequest.Target_Branch);
+               latestVersion.Base_Commit_SHA, mergeRequest.Target_Branch);
             selectNotReviewedCommits(listView == listViewFoundMergeRequests,
                comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
 

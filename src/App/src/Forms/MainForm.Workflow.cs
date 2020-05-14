@@ -11,6 +11,8 @@ using mrHelper.Client.Types;
 using mrHelper.Client.Session;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Client.MergeRequests;
+using System.Collections;
 
 namespace mrHelper.App.Forms
 {
@@ -28,37 +30,6 @@ namespace mrHelper.App.Forms
 
    internal partial class MainForm
    {
-      private void subscribeToWorkflow()
-      {
-         _workflowManager.PreLoadMergeRequest += onLoadSingleMergeRequest;
-         _workflowManager.PostLoadMergeRequest += onSingleMergeRequestLoaded;
-         _workflowManager.FailedLoadMergeRequest += onFailedLoadSingleMergeRequest;
-
-         _workflowManager.PreLoadComparableEntities += onLoadComparableEntities;
-         _workflowManager.PostLoadComparableEntities += onComparableEntitiesLoaded;
-         _workflowManager.FailedLoadComparableEntities +=  onFailedLoadComparableEntities;
-
-         _workflowManager.Connected += workflowManager_Connected;
-      }
-
-      private void unsubscribeFromWorkflow()
-      {
-         if (_workflowManager == null)
-         {
-            return;
-         }
-
-         _workflowManager.PreLoadMergeRequest -= onLoadSingleMergeRequest;
-         _workflowManager.PostLoadMergeRequest -= onSingleMergeRequestLoaded;
-         _workflowManager.FailedLoadMergeRequest -= onFailedLoadSingleMergeRequest;
-
-         _workflowManager.PreLoadComparableEntities -= onLoadComparableEntities;
-         _workflowManager.PostLoadComparableEntities -= onComparableEntitiesLoaded;
-         _workflowManager.FailedLoadComparableEntities -=  onFailedLoadComparableEntities;
-
-         _workflowManager.Connected -= workflowManager_Connected;
-      }
-
       async private Task switchHostToSelected()
       {
          string hostName = getHostName();
@@ -115,25 +86,21 @@ namespace mrHelper.App.Forms
             && selectMergeRequest(listViewMergeRequests, projectname, iid, false);
       }
 
-      async private Task<bool> switchMergeRequestByUserAsync(ProjectKey projectKey, int mergeRequestIId,
-         bool showVersions)
+      private bool switchMergeRequestByUser(MergeRequestKey mrk, bool showVersions)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
-            mergeRequestIId.ToString()));
+            mrk.IId.ToString()));
 
-         if (mergeRequestIId == 0)
+         if (mrk.IId == 0)
          {
             onLoadSingleMergeRequest(0);
-            await _workflowManager.CancelAsync();
             return false;
          }
 
-         await _workflowManager.CancelAsync();
-
          IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
-            projectKey.HostName, Program.Settings);
+            mrk.ProjectKey.HostName, Program.Settings);
 
-         string projectname = projectKey.ProjectName;
+         string projectname = mrk.ProjectKey.ProjectName;
          if (projectname != String.Empty &&
             (!enabledProjects.Cast<Project>().Any(x => 0 == String.Compare(x.Path_With_Namespace, projectname, true))))
          {
@@ -145,14 +112,17 @@ namespace mrHelper.App.Forms
          _suppressExternalConnections = true;
          try
          {
-            return await _workflowManager.LoadMergeRequestAsync(
-               projectKey.HostName, projectKey.ProjectName, mergeRequestIId,
-               showVersions ? EComparableEntityType.Version : EComparableEntityType.Commit);
-         }
-         catch (SessionException ex)
-         {
-            ExceptionHandlers.Handle("Cannot switch merge request", ex);
-            MessageBox.Show(ex.UserMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            IMergeRequestCache cache = _liveSession.MergeRequestCache;
+            MergeRequest? mergeRequest = cache.GetMergeRequest(mrk);
+            if (mergeRequest.HasValue)
+            {
+               onLoadSingleMergeRequest(mrk.IId);
+               onSingleMergeRequestLoaded(mrk.ProjectKey, mergeRequest.Value);
+
+               GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
+               onComparableEntitiesLoaded(latestVersion, mergeRequest.Value,
+                  showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
+            }
          }
          finally
          {
@@ -177,8 +147,8 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
          textBoxSearch.Enabled = false;
 
-         await _workflowManager.CancelAsync();
-         await _searchWorkflowManager.CancelAsync();
+         await _liveSession.Stop();
+         await _searchSession.Stop();
          if (hostname == String.Empty)
          {
             return false;
@@ -189,8 +159,13 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
-            hostname, Program.Settings);
+         IEnumerable<ProjectKey> enabledProjects =
+            ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings)
+            .Select(x => new ProjectKey
+            {
+               HostName = hostname,
+               ProjectName = x.Path_With_Namespace
+            });
          if (enabledProjects.Count() == 0)
          {
             throw new NoProjectsException(hostname);
@@ -199,17 +174,23 @@ namespace mrHelper.App.Forms
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
          buttonReloadList.Enabled = true;
-         createListViewGroupsForProjects(listViewMergeRequests, hostname, enabledProjects);
+         createListViewGroupsForProjects(listViewMergeRequests, enabledProjects);
 
          return await loadAllMergeRequests(hostname, enabledProjects);
       }
 
-      async private Task<bool> loadAllMergeRequests(string hostname, IEnumerable<Project> enabledProjects)
+      async private Task<bool> loadAllMergeRequests(string hostname, IEnumerable<ProjectKey> enabledProjects)
       {
          onLoadAllMergeRequests(enabledProjects);
 
-         if (!await _workflowManager.LoadAllMergeRequestsAsync(
-            hostname, enabledProjects, (x, y) => onForbiddenProject(x, y), (x, y) => onNotFoundProject(x, y)))
+         ISessionContext sessionContext = new ProjectBasedContext
+         {
+            Projects = enabledProjects.ToArray(),
+            OnForbiddenProject = onForbiddenProject,
+            OnNotFoundProject = onNotFoundProject
+         };
+
+         if (!await _liveSession.Start(hostname, sessionContext))
          {
             return false;
          }
@@ -218,40 +199,40 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private void onForbiddenProject(string hostname, string projectname)
+      private void onForbiddenProject(ProjectKey projectKey)
       {
          string message = String.Format(
             "You don't have access to project {0} at {1}. "
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
-            projectname, hostname);
+            projectKey.ProjectName, projectKey.HostName);
          MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
          Trace.TraceInformation("[MainForm.Workflow] Forbidden project. User notified that project will be disabled");
 
-         changeProjectEnabledState(hostname, projectname, false);
+         changeProjectEnabledState(projectKey.HostName, projectKey.ProjectName, false);
       }
 
-      private void onNotFoundProject(string hostname, string projectname)
+      private void onNotFoundProject(ProjectKey projectKey)
       {
          string message = String.Format(
             "There is no project {0} at {1}. "
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
-            projectname, hostname);
+            projectKey.ProjectName, projectKey.HostName);
          MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
          Trace.TraceInformation("[MainForm.Workflow] Project not found. User notified that project will be disabled");
 
-         changeProjectEnabledState(hostname, projectname, false);
+         changeProjectEnabledState(projectKey.HostName, projectKey.ProjectName, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllMergeRequests(IEnumerable<Project> projects)
+      private void onLoadAllMergeRequests(IEnumerable<ProjectKey> projects)
       {
          disableAllUIControls(false);
          labelWorkflowStatus.Text = String.Format(
             "Loading merge requests of {0} project{1}...", projects.Count(), projects.Count() > 1 ? "s" : "");
       }
 
-      private void onAllMergeRequestsLoaded(string hostname, IEnumerable<Project> projects)
+      private void onAllMergeRequestsLoaded(string hostname, IEnumerable<ProjectKey> projects)
       {
          labelWorkflowStatus.Text = "Merge requests loaded";
 
@@ -266,15 +247,10 @@ namespace mrHelper.App.Forms
             enableListView(listViewMergeRequests);
          }
 
-         foreach (Project project in projects)
+         foreach (ProjectKey projectKey in projects)
          {
-            ProjectKey projectKey = new ProjectKey
-            {
-               HostName = hostname,
-               ProjectName = project.Path_With_Namespace
-            };
             scheduleSilentUpdate(projectKey);
-            cleanupReviewedCommits(projectKey, _mergeRequestCache?.GetMergeRequests(projectKey));
+            cleanupReviewedCommits(projectKey, getCurrentSession()?.MergeRequestCache?.GetMergeRequests(projectKey));
          }
       }
 
@@ -291,7 +267,7 @@ namespace mrHelper.App.Forms
          onLoadSingleMergeRequestCommon(mergeRequestIId);
       }
 
-      private void onFailedLoadSingleMergeRequest()
+      private void onSingleMergeRequestLoaded(ProjectKey projectKey, MergeRequest mergeRequest)
       {
          if (isSearchMode())
          {
@@ -299,10 +275,11 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onFailedLoadSingleMergeRequestCommon();
+         onSingleMergeRequestLoadedCommon(projectKey, mergeRequest);
       }
 
-      private void onSingleMergeRequestLoaded(string hostname, string projectname, MergeRequest mergeRequest)
+      private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
+         MergeRequest mergeRequest, IEnumerable entities)
       {
          if (isSearchMode())
          {
@@ -310,48 +287,12 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(hostname, projectname, mergeRequest);
-      }
-
-      private void onLoadComparableEntities()
-      {
-         if (isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onLoadComparableEntitiesCommon(listViewMergeRequests);
-      }
-
-      private void onFailedLoadComparableEntities()
-      {
-         if (isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onFailedLoadComparableEntitiesCommon();
-      }
-
-      private void onComparableEntitiesLoaded(string hostname, string projectname, MergeRequest mergeRequest,
-         System.Collections.IEnumerable commits)
-      {
-         if (isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onComparableEntitiesLoadedCommon(mergeRequest, commits, listViewMergeRequests);
-
-         scheduleSilentUpdate(new ProjectKey { HostName = hostname, ProjectName = projectname });
+         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, entities, listViewMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void workflowManager_Connected(string hostname, User user, IEnumerable<Project> projects)
+      private void liveSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
       {
          if (!_currentUser.ContainsKey(hostname))
          {

@@ -19,6 +19,8 @@ using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 using Windows.Devices.Radios;
+using mrHelper.Client.Common;
+using System.Runtime.InteropServices;
 
 namespace mrHelper.App.Forms
 {
@@ -314,12 +316,12 @@ namespace mrHelper.App.Forms
          restoreState();
          prepareFormToStart();
 
+         createGitLabClientManager();
          _gitClientUpdater = new GitInteractiveUpdater();
-         createWorkflowAndDependencies();
-         createSearchWorkflow();
+         createLiveSessionAndDependencies();
+         createSearchSession();
 
-         subscribeToWorkflowAndDependencies();
-         subscribeToSearchWorkflow();
+         subscribeToLiveSessionAndDependencies();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
 
          initializeColorScheme();
@@ -327,6 +329,19 @@ namespace mrHelper.App.Forms
          initializeBadgeScheme();
 
          await connectOnStartup();
+      }
+
+      private void createGitLabClientManager()
+      {
+         GitLabClientContext clientContext = new GitLabClientContext
+         {
+            SynchronizeInvoke = this,
+            HostProperties = Program.Settings,
+            MergeRequestFilterChecker = _mergeRequestFilter,
+            DiscussionKeywords = _keywords.ToArray(),
+            AutoUpdatePeriodMs = Program.Settings.AutoUpdatePeriodMs
+         };
+         _gitlabClientManager = new Client.Common.GitLabClientManager(clientContext);
       }
 
       async private Task finalizeWork()
@@ -339,15 +354,14 @@ namespace mrHelper.App.Forms
          {
             _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
          }
-         unsubscribeFromWorkflowAndDependencies();
-         unsubscribeFromSearchWorkflow();
+         unsubscribeFromLiveSessionAndDependencies();
 
          await finalizeCommitChainCreator();
          await disposeLocalGitRepositoryFactory();
 
-         if (_workflowManager != null)
+         if (_liveSession != null)
          {
-            await _workflowManager.CancelAsync();
+            await _liveSession.Stop();
          }
 
          saveState();
@@ -472,62 +486,74 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createWorkflowAndDependencies()
+      private void createLiveSessionAndDependencies()
       {
-         _workflowManager = new WorkflowManagerDEPRECQATED(Program.Settings);
-         _expressionResolver = new ExpressionResolver(_workflowManager);
-         _mergeRequestCache = new MergeRequestManager(_workflowManager, _workflowManager, _workflowManager,
-            this, Program.Settings, Program.Settings.AutoUpdatePeriodMs);
-         _discussionManager = new DiscussionManager(Program.Settings, _workflowManager, _mergeRequestCache,
-            this, _keywords, Program.Settings.AutoUpdatePeriodMs, _mergeRequestFilter);
-         _eventFilter = new EventFilter(Program.Settings, _workflowManager, _mergeRequestCache, _mergeRequestFilter);
-         _userNotifier = new UserNotifier(_mergeRequestCache, _discussionManager, _eventFilter,
-            _trayIcon);
-         _timeTrackingManager = new TimeTrackingManager(Program.Settings, _workflowManager, _discussionManager);
+         _liveSession = _gitlabClientManager.SessionManager.CreateSession();
+         _expressionResolver = new ExpressionResolver(_liveSession);
+         _eventFilter = new EventFilter(Program.Settings, _liveSession, _mergeRequestFilter);
+         _userNotifier = new UserNotifier(_liveSession, _eventFilter, _trayIcon);
 
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
-            ? new GitDataUpdater(_workflowManager, this, this, _mergeRequestCache,
-               _discussionManager, _mergeRequestCache, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
+            ? new GitDataUpdater(_liveSession, this, this, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
-         _gitStatManager = new GitStatisticManager(_workflowManager, this, this,_mergeRequestCache, _mergeRequestCache);
+         _gitStatManager = new GitStatisticManager(_liveSession, this, this);
       }
 
-      private void disposeWorkflowDependencies()
+      private void createSearchSession()
+      {
+         _searchSession = _gitlabClientManager.SessionManager.CreateSession();
+      }
+
+      private void disposeLiveSessionDependencies()
       {
          _gitDataUpdater?.Dispose();
          _gitStatManager?.Dispose();
 
-         _timeTrackingManager?.Dispose();
          _userNotifier?.Dispose();
          _eventFilter?.Dispose();
-         _discussionManager?.Dispose();
-         _mergeRequestCache?.Dispose();
          _expressionResolver?.Dispose();
       }
 
-      private void subscribeToWorkflowAndDependencies()
+      private void subscribeToLiveSessionAndDependencies()
       {
-         subscribeToWorkflow();
+         if (_liveSession != null)
+         {
+            _liveSession.Started += liveSessionStarted;
+         }
 
-         _mergeRequestCache.MergeRequestEvent += processUpdate;
-         _gitStatManager.Update += onGitStatisticManagerUpdate;
+         if (_liveSession?.MergeRequestCache != null)
+         {
+            _liveSession.MergeRequestCache.MergeRequestEvent += processUpdate;
+         }
 
-         _timeTrackingManager.PreLoadTotalTime += onPreLoadTrackedTime;
-         _timeTrackingManager.PostLoadTotalTime += onPostLoadTrackedTime;
-         _timeTrackingManager.FailedLoadTotalTime += onFailedLoadTotalTime;
+         if (_gitStatManager != null)
+         {
+            _gitStatManager.Update += onGitStatisticManagerUpdate;
+         }
 
-         _discussionManager.PreLoadDiscussions += onPreLoadDiscussions;
-         _discussionManager.PostLoadDiscussions += onPostLoadDiscussions;
-         _discussionManager.FailedLoadDiscussions += onFailedLoadDiscussions;
+         if (_liveSession?.TotalTimeCache != null)
+         {
+            _liveSession.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            _liveSession.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+         }
+
+         if (_liveSession?.DiscussionCache != null)
+         {
+            _liveSession.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
+            _liveSession.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
+         }
       }
 
-      private void unsubscribeFromWorkflowAndDependencies()
+      private void unsubscribeFromLiveSessionAndDependencies()
       {
-         unsubscribeFromWorkflow();
-
-         if (_mergeRequestCache != null)
+         if (_liveSession != null)
          {
-            _mergeRequestCache.MergeRequestEvent -= processUpdate;
+            _liveSession.Started -= liveSessionStarted;
+         }
+
+         if (_liveSession?.MergeRequestCache != null)
+         {
+            _liveSession.MergeRequestCache.MergeRequestEvent -= processUpdate;
          }
 
          if (_gitStatManager != null)
@@ -535,18 +561,16 @@ namespace mrHelper.App.Forms
             _gitStatManager.Update -= onGitStatisticManagerUpdate;
          }
 
-         if (_timeTrackingManager != null)
+         if (_liveSession?.TotalTimeCache != null)
          {
-            _timeTrackingManager.PreLoadTotalTime -= onPreLoadTrackedTime;
-            _timeTrackingManager.PostLoadTotalTime -= onPostLoadTrackedTime;
-            _timeTrackingManager.FailedLoadTotalTime -= onFailedLoadTotalTime;
+            _liveSession.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            _liveSession.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
          }
 
-         if (_discussionManager != null)
+         if (_liveSession?.DiscussionCache != null)
          {
-            _discussionManager.PreLoadDiscussions -= onPreLoadDiscussions;
-            _discussionManager.PostLoadDiscussions -= onPostLoadDiscussions;
-            _discussionManager.FailedLoadDiscussions -= onFailedLoadDiscussions;
+            _liveSession.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
+            _liveSession.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
       }
 
@@ -579,11 +603,6 @@ namespace mrHelper.App.Forms
          onTrackedTimeManagerEvent(mrk);
       }
 
-      private void onFailedLoadTotalTime(MergeRequestKey mrk)
-      {
-         onTrackedTimeManagerEvent(mrk);
-      }
-
       private void onTrackedTimeManagerEvent(MergeRequestKey mrk)
       {
          MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
@@ -608,11 +627,6 @@ namespace mrHelper.App.Forms
       }
 
       private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
-      {
-         onDiscussionManagerEvent();
-      }
-
-      private void onFailedLoadDiscussions(MergeRequestKey mrk)
       {
          onDiscussionManagerEvent();
       }

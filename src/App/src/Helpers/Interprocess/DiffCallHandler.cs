@@ -11,17 +11,17 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.GitClient;
+using mrHelper.Client.Session;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
-         IDiscussionCreatorFactory creatorFactory)
+      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot, ISession session)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
-         _creatorFactory = creatorFactory;
+         _session = session;
       }
 
       async public Task HandleAsync(IGitRepository gitRepository)
@@ -181,7 +181,7 @@ namespace mrHelper.App.Interprocess
             ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
             IId = snapshot.MergeRequestIId
          };
-         DiscussionCreator creator = _creatorFactory.GetDiscussionCreator(mergeRequestKey);
+         IDiscussionCreator creator = _session.GetDiscussionCreator(mergeRequestKey);
 
          try
          {
@@ -225,7 +225,7 @@ namespace mrHelper.App.Interprocess
 
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
-      private readonly IDiscussionCreatorFactory _creatorFactory;
+      private readonly ISession _session;
    }
 }
 

@@ -15,7 +15,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
-using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -29,10 +28,11 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
 
-         if (state != "opened")
+         if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            _discussionManager.CheckForUpdates(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
+            _searchSession.DiscussionCache.RequestUpdate(
+               mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
@@ -42,7 +42,8 @@ namespace mrHelper.App.Forms
             try
             {
                // Using remote-based provider as there are might be discussions from other users on newer commits
-               IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetRemoteBasedContextProvider(mrk);
+               IProjectUpdateContextProvider contextProvider =
+                  getCurrentSession()?.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -121,7 +122,7 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(_discussionManager, _discussionManager, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(getCurrentSession(), repo,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key) =>
@@ -133,7 +134,7 @@ namespace mrHelper.App.Forms
                   {
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =
-                        _mergeRequestCache.GetRemoteBasedContextProvider(key);
+                        getCurrentSession()?.MergeRequestCache?.GetRemoteBasedContextProvider(key);
                      await updatingRepo.Updater.SilentUpdate(contextProvider);
                      return updatingRepo;
                   }
@@ -150,7 +151,7 @@ namespace mrHelper.App.Forms
                }
                return null;
             },
-            () => _discussionManager.CheckForUpdates(mrk,
+            () => getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
@@ -215,7 +216,7 @@ namespace mrHelper.App.Forms
                // because user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version (this is possible for Open MR only)
                IProjectUpdateContextProvider contextProvider =
-                  _mergeRequestCache.GetLocalBasedContextProvider(mrk.ProjectKey);
+                  getCurrentSession()?.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -319,7 +320,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
+               IDiscussionCreator creator = getCurrentSession()?.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Adding a comment...";
                try
@@ -352,7 +353,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
+               IDiscussionCreator creator = getCurrentSession()?.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
@@ -368,7 +369,8 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
+               getCurrentSession()?.DiscussionCache?.RequestUpdate(
+                  mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
             }
          }
       }
@@ -394,9 +396,9 @@ namespace mrHelper.App.Forms
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionManager.GetDiscussionsAsync(mrk);
+            discussions = await getCurrentSession()?.DiscussionCache?.LoadDiscussions(mrk);
          }
-         catch (DiscussionManagerException ex)
+         catch (DiscussionCacheException ex)
          {
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
@@ -415,7 +417,8 @@ namespace mrHelper.App.Forms
          {
             // Use local-based provider here because remote-based one looks an overkill.
             // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
-            IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(projectKey);
+            IProjectUpdateContextProvider contextProvider =
+               getCurrentSession()?.MergeRequestCache?.GetLocalBasedContextProvider(projectKey);
             await repo.Updater.SilentUpdate(contextProvider);
          }
       }
@@ -430,7 +433,7 @@ namespace mrHelper.App.Forms
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
             onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path),
-            _gitlabFacade.RepositoryManager);
+            _gitlabClientManager.RepositoryManager);
          return await fetchMissingCommits();
       }
 

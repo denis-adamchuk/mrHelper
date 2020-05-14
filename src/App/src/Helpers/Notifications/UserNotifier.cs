@@ -4,6 +4,7 @@ using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Session;
 using mrHelper.Common.Interfaces;
 using static mrHelper.App.Helpers.TrayIcon;
 using static mrHelper.Client.Types.UserEvents;
@@ -12,27 +13,39 @@ namespace mrHelper.App.Helpers
 {
    internal class UserNotifier : IDisposable
    {
-      internal UserNotifier(
-         IMergeRequestCache mergeRequestProvider,
-         IDiscussionLoader discussionProvider,
-         EventFilter eventFilter,
-         TrayIcon trayIcon)
+      internal UserNotifier(ISession session, EventFilter eventFilter, TrayIcon trayIcon)
       {
          _trayIcon = trayIcon;
          _eventFilter = eventFilter;
 
-         _mergeRequestProvider = mergeRequestProvider;
-         _mergeRequestProvider.MergeRequestEvent += notifyOnMergeRequestEvent;
-         _mergeRequestProvider = mergeRequestProvider;
+         _session = session;
+         _session.Started += onSessionStarted;
+      }
 
-         _discussionProvider = discussionProvider;
-         _discussionProvider.DiscussionEvent += notifyOnDiscussionEvent;
+      private void onSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
+      {
+         if (_mergeRequestCache != null)
+         {
+            _mergeRequestCache.MergeRequestEvent -= notifyOnMergeRequestEvent;
+         }
+
+         if (_discussionCache != null)
+         {
+            _discussionCache.DiscussionEvent -= notifyOnDiscussionEvent;
+         }
+
+         _mergeRequestCache = _session.MergeRequestCache;
+         _mergeRequestCache.MergeRequestEvent += notifyOnMergeRequestEvent;
+
+         _discussionCache = _session.DiscussionCache;
+         _discussionCache.DiscussionEvent += notifyOnDiscussionEvent;
       }
 
       public void Dispose()
       {
-         _mergeRequestProvider.MergeRequestEvent -= notifyOnMergeRequestEvent;
-         _discussionProvider.DiscussionEvent -= notifyOnDiscussionEvent;
+         _session.Started -= onSessionStarted;
+         _mergeRequestCache.MergeRequestEvent -= notifyOnMergeRequestEvent;
+         _discussionCache.DiscussionEvent -= notifyOnDiscussionEvent;
       }
 
       private TrayIcon.BalloonText getBalloonText(MergeRequestEvent e)
@@ -76,7 +89,7 @@ namespace mrHelper.App.Helpers
 
       private BalloonText getBalloonText(DiscussionEvent e)
       {
-         MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
+         MergeRequest? mergeRequest = _session?.MergeRequestCache?.GetMergeRequest(e.MergeRequestKey);
          string projectName = getProjectName(e.MergeRequestKey.ProjectKey);
          string title = String.Format("{0}: Discussion Event", projectName);
 
@@ -142,9 +155,11 @@ namespace mrHelper.App.Helpers
          return projectName;
       }
 
+      private IMergeRequestCache _mergeRequestCache;
+      private IDiscussionCache _discussionCache;
+
+      private readonly ISession _session;
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
-      private readonly IMergeRequestCache _mergeRequestProvider;
-      private readonly IDiscussionLoader _discussionProvider;
    }
 }

@@ -16,17 +16,19 @@ namespace mrHelper.Client.Session
    internal class ProjectBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
    {
       public ProjectBasedMergeRequestLoader(GitLabClientContext clientContext, SessionOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater)
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, bool needRaiseCallbacks)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
-         _onForbiddenProject = clientContext.OnForbiddenProject;
-         _onNotFoundProject = clientContext.OnNotFoundProject;
+         _needRaiseCallbacks = needRaiseCallbacks;
       }
 
       async public Task<bool> Load(ISessionContext context)
       {
+         Debug.Assert(context is ProjectBasedContext);
+         ProjectBasedContext pbc = (ProjectBasedContext)context;
+
          Exception exception = null;
          bool cancelled = false;
          async Task loadVersionsLocal(MergeRequestKey mrk)
@@ -75,21 +77,24 @@ namespace mrHelper.Client.Session
             {
                if (isForbiddenProjectException(ex))
                {
-                  _onForbiddenProject?.Invoke(project);
+                  if (_needRaiseCallbacks)
+                  {
+                     pbc.OnForbiddenProject?.Invoke(project);
+                  }
                   return;
                }
                else if (isNotFoundProjectException(ex))
                {
-                  _onNotFoundProject?.Invoke(project);
+                  if (_needRaiseCallbacks)
+                  {
+                     pbc.OnNotFoundProject?.Invoke(project);
+                  }
                   return;
                }
                exception = ex;
                cancelled = true;
             }
          }
-
-         Debug.Assert(context is ProjectBasedContext);
-         ProjectBasedContext pbc = context as ProjectBasedContext;
 
          await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
             Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
@@ -152,9 +157,8 @@ namespace mrHelper.Client.Session
          return null;
       }
 
+      private readonly bool _needRaiseCallbacks;
       private readonly IVersionLoader _versionLoader;
-      private readonly Action<ProjectKey> _onForbiddenProject;
-      private readonly Action<ProjectKey> _onNotFoundProject;
       private readonly InternalCacheUpdater _cacheUpdater;
    }
 }

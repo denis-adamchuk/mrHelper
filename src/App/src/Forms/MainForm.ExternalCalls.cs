@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
          DiffCallHandler handler;
          try
          {
-            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, _discussionManager);
+            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, getCurrentSession());
          }
          catch (ArgumentException ex)
          {
@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
             ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
             IId = snapshot.MergeRequestIId
          };
-         _discussionManager.CheckForUpdates(mrk,
+         getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk,
             new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
       }
 
@@ -296,8 +296,7 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
-         SearchManager searchManager = new SearchManager(Program.Settings);
-         MergeRequest? mergeRequest = await searchManager.SearchMergeRequestAsync(
+         MergeRequest? mergeRequest = await _gitlabClientManager?.SearchManager?.SearchMergeRequestAsync(
             mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
          if (mergeRequest == null)
          {
@@ -347,7 +346,7 @@ namespace mrHelper.App.Forms
             ProjectName = mergeRequestUrl.Project
          };
 
-         if (!_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
+         if (!_liveSession.MergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
          {
             // We need to restart the workflow here because we possibly have an outdated list
             // of merge requests in the cache
@@ -381,7 +380,7 @@ namespace mrHelper.App.Forms
             {
                // We could not select MR, but let's check if it is cached or not.
 
-               if (_mergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
+               if (_liveSession.MergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
                {
                   // If it is cached, it is probably hidden by filters and user might want to un-hide it.
                   if (!unhideFilteredMergeRequest(mergeRequestUrl))

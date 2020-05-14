@@ -136,7 +136,7 @@ namespace mrHelper.App.Helpers
          Constants.DefaultThemeName;
 
       private static readonly string MergeRequestSelectingModeKeyName      = "MergeRequestSelectingMode";
-      private static readonly string MergeRequestSelectingModeDefaultValue = "Projects";
+      private static readonly string MergeRequestSelectingModeDefaultValue = "Projects"; // TODO - Change this!
 
       private static readonly string SelectedLabelsKeyName      = "SelectedLabels";
       private static readonly string SelectedLabelsDefaultValue = String.Empty;

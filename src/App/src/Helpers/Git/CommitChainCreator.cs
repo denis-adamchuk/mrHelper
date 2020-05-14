@@ -34,6 +34,7 @@ namespace mrHelper.App.Helpers
          _repo = repo;
          _headShas = headShas;
          _singleCommitFetchSupported = singleCommitFetchSupported;
+         _repositoryManager = repositoryManager;
       }
 
       async public Task<bool> CreateChainAsync()

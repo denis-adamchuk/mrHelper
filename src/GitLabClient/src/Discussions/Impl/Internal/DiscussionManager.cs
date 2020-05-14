@@ -1,18 +1,17 @@
 using System;
 using System.Linq;
 using System.Diagnostics;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.Client.Session;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
+using mrHelper.Client.Session;
 
 namespace mrHelper.Client.Discussions
 {
@@ -29,7 +28,8 @@ namespace mrHelper.Client.Discussions
       IDisposable,
       IDiscussionCacheInternal
    {
-      internal DiscussionManager(GitLabClientContext clientContext, User user, IMergeRequestCache mergeRequestCache)
+      internal DiscussionManager(GitLabClientContext clientContext,
+         User user, IMergeRequestCache mergeRequestCache, ISessionContext sessionContext)
       {
          _operator = new DiscussionOperator(clientContext.HostProperties);
 
@@ -38,16 +38,19 @@ namespace mrHelper.Client.Discussions
 
          _mergeRequestFilterChecker = clientContext.MergeRequestFilterChecker;
 
-         _reconnect = true;
          _currentUser = user;
          _mergeRequestCache = mergeRequestCache;
-         scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
-            EDiscussionUpdateType.InitialSnapshot);
 
-         _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
-         _timer.Elapsed += onTimer;
-         _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
-         _timer.Start();
+         if (sessionContext.AreDiscussionUpdatesEnable())
+         {
+            scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
+               EDiscussionUpdateType.InitialSnapshot);
+
+            _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
+            _timer.Elapsed += onTimer;
+            _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
+            _timer.Start();
+         }
       }
 
       public void Dispose()
@@ -263,6 +266,11 @@ namespace mrHelper.Client.Discussions
 
       private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, EDiscussionUpdateType type)
       {
+         if (type == EDiscussionUpdateType.InitialSnapshot)
+         {
+            _reconnect = true;
+         }
+
          _scheduledUpdates.Enqueue(new ScheduledUpdate
          {
             MergeRequests = keys?.ToArray(), // make a copy just in case

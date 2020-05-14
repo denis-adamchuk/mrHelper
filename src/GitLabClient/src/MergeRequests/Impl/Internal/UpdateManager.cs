@@ -18,23 +18,22 @@ namespace mrHelper.Client.MergeRequests
       internal UpdateManager(GitLabClientContext clientContext, string hostname,
          ISessionContext context, InternalCacheUpdater cacheUpdater)
       {
-         // We don't need to toggle these callbacks during updates
-         clientContext.OnNotFoundProject = null;
-         clientContext.OnForbiddenProject = null;
-
          SessionOperator updateOperator = new SessionOperator(
             hostname, clientContext.HostProperties.GetAccessToken(hostname));
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            clientContext, updateOperator, context, cacheUpdater);
+            clientContext, updateOperator, context, cacheUpdater, false);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
 
          _cache = cacheUpdater.Cache;
          _context = context;
 
-         _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
-         _timer.Elapsed += onTimer;
-         _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
-         _timer.Start();
+         if (context.AreMergeRequestUpdatesEnabled())
+         {
+            _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
+            _timer.Elapsed += onTimer;
+            _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
+            _timer.Start();
+         }
       }
 
       public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
@@ -43,7 +42,6 @@ namespace mrHelper.Client.MergeRequests
       {
          _timer?.Stop();
          _timer?.Dispose();
-         _timer = null;
 
          foreach (System.Timers.Timer timer in _oneShotTimers)
          {

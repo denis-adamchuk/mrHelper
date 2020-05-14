@@ -14,6 +14,7 @@ using mrHelper.Common.Tools;
 using mrHelper.GitClient;
 using mrHelper.CustomActions;
 using mrHelper.Client;
+using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -106,19 +107,18 @@ namespace mrHelper.App.Forms
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
       private CommitChainCreator _commitChainCreator;
-      private GitLabClientManager _gitlabClientManager;
-      private IGitLabFacade _gitlabFacade;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
-      private WorkflowManagerDEPRECQATED _workflowManager;
       private ExpressionResolver _expressionResolver;
-      private TimeTracker _timeTracker;
 
-      private SearchWorkflowManager _searchWorkflowManager;
+      private ISession _liveSession;
+      private ISession _searchSession;
+      private ITimeTracker _timeTracker;
+      private GitLabClientManager _gitlabClientManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;
@@ -146,6 +146,12 @@ namespace mrHelper.App.Forms
          Latest
       }
 
+      public enum EComparableEntityType
+      {
+         Commit,
+         Version
+      }
+
       private struct CommitComboBoxItem
       {
          internal string SHA { get; }
@@ -167,7 +173,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private MergeRequestManager _mergeRequestCache;
       private MergeRequestFilter _mergeRequestFilter;
 
       private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();
