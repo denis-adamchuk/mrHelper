@@ -39,7 +39,7 @@ namespace mrHelper.App.Controls
          };
       }
 
-      public struct ListViewSubItemInfo
+      public class ListViewSubItemInfo
       {
          public ListViewSubItemInfo(Func<bool, string> getText, Func<string> getUrl)
          {

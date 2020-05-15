@@ -8,8 +8,14 @@ namespace mrHelper.Client.Types
 {
    public struct MergeRequestFilterState
    {
-      public string[] Keywords;
-      public bool Enabled;
+      public MergeRequestFilterState(string[] keywords, bool enabled)
+      {
+         Keywords = keywords;
+         Enabled = enabled;
+      }
+
+      public string[] Keywords { get; }
+      public bool Enabled { get; }
    }
 
    public class MergeRequestFilter : IMergeRequestFilterChecker

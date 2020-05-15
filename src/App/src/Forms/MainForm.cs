@@ -133,10 +133,16 @@ namespace mrHelper.App.Forms
          Interval = Constants.CheckForUpdatesTimerInterval
       };
 
-      private struct HostComboBoxItem
+      private class HostComboBoxItem
       {
-         internal string Host;
-         internal string AccessToken;
+         public HostComboBoxItem(string host, string accessToken)
+         {
+            Host = host;
+            AccessToken = accessToken;
+         }
+
+         internal string Host { get; }
+         internal string AccessToken { get; }
       }
 
       private enum ECommitComboBoxItemStatus
@@ -152,7 +158,7 @@ namespace mrHelper.App.Forms
          Version
       }
 
-      private struct CommitComboBoxItem
+      private class CommitComboBoxItem
       {
          internal string SHA { get; }
          internal string Text { get; }

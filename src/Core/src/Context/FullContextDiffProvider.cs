@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Core.Context
 {
@@ -14,8 +13,14 @@ namespace mrHelper.Core.Context
    /// </summary>
    public struct FullContextDiff
    {
-      public SparsedList<string> Left;
-      public SparsedList<string> Right;
+      public FullContextDiff(SparsedList<string> left, SparsedList<string> right)
+      {
+         Left = left;
+         Right = right;
+      }
+
+      public SparsedList<string> Left { get; }
+      public SparsedList<string> Right { get; }
    }
 
    /// <summary>
@@ -35,27 +40,12 @@ namespace mrHelper.Core.Context
       public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
       {
-         FullContextDiff fullContextDiff = new FullContextDiff
-         {
-            Left = new SparsedList<string>(),
-            Right = new SparsedList<string>()
-         };
+         FullContextDiff fullContextDiff = new FullContextDiff(new SparsedList<string>(), new SparsedList<string>());
 
-         GitDiffArguments arguments = new GitDiffArguments
-         {
-            Mode = GitDiffArguments.DiffMode.Context,
-            CommonArgs = new GitDiffArguments.CommonArguments
-            {
-               Sha1 = leftSHA,
-               Sha2 = rightSHA,
-               Filename1 = leftFileName,
-               Filename2 = rightFileName,
-            },
-            SpecialArgs = new GitDiffArguments.DiffContextArguments
-            {
-               Context = Constants.FullContextSize
-            }
-         };
+         GitDiffArguments arguments = new GitDiffArguments(
+            GitDiffArguments.DiffMode.Context,
+            new GitDiffArguments.CommonArguments(leftSHA, rightSHA, leftFileName, rightFileName, null),
+            new GitDiffArguments.DiffContextArguments(Constants.FullContextSize));
 
          IEnumerable<string> fullDiff;
          try

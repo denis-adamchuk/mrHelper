@@ -104,9 +104,9 @@ namespace mrHelper.App.Forms
       async private void ButtonAddComment_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
+         Debug.Assert(getMergeRequest(null) != null);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
          await onAddCommentAsync(mrk, mergeRequest.Title);
@@ -115,9 +115,9 @@ namespace mrHelper.App.Forms
       async private void ButtonNewDiscussion_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
+         Debug.Assert(getMergeRequest(null) != null);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
          await onNewDiscussionAsync(mrk, mergeRequest.Title);
@@ -147,8 +147,8 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequestKey(null).HasValue);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         Debug.Assert(getMergeRequest(null).HasValue);
-         MergeRequest mr = getMergeRequest(null).Value;
+         Debug.Assert(getMergeRequest(null) != null);
+         MergeRequest mr = getMergeRequest(null);
 
          TimeSpan oldSpan = getTotalTime(mrk) ?? TimeSpan.Zero;
 
@@ -346,29 +346,22 @@ namespace mrHelper.App.Forms
 
          bool showVersions = checkBoxShowVersions.Checked;
 
-         MergeRequestKey mrk = new MergeRequestKey
-         {
-            ProjectKey = default(ProjectKey),
-            IId = 0
-         };
-
          // had to use this hack, because it is not possible to prevent deselecting a row
          // on a click on empty area in ListView
          if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
          {
-            switchMergeRequestByUser(mrk, showVersions);
+            switchMergeRequestByUser(default(MergeRequestKey), showVersions);
             return;
          }
 
          if (listView == listViewFoundMergeRequests && listView.SelectedItems.Count < 1)
          {
-            switchSearchMergeRequestByUser(mrk, showVersions);
+            switchSearchMergeRequestByUser(default(MergeRequestKey), showVersions);
             return;
          }
 
          FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         mrk.ProjectKey = key.ProjectKey;
-         mrk.IId = key.MergeRequest.IId;
+         MergeRequestKey mrk = new MergeRequestKey(key.ProjectKey, key.MergeRequest.IId);
 
          if (listView == listViewFoundMergeRequests)
          {
@@ -804,9 +797,9 @@ namespace mrHelper.App.Forms
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
+         Debug.Assert(getMergeRequest(null) != null);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
          await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.State);
@@ -992,7 +985,7 @@ namespace mrHelper.App.Forms
             // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
             // so it's only shown once in a lifetime
             _trayIcon.ShowTooltipBalloon(
-               new TrayIcon.BalloonText { Title = "Information", Text = "I will now live in your tray" });
+               new TrayIcon.BalloonText("Information", "I will now live in your tray"));
             _requireShowingTooltipOnHideToTray = false;
          }
          Hide();
@@ -1092,10 +1085,10 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
          // Show actual merge request details
-         bool isMergeRequestSelected = getMergeRequest(null).HasValue && getMergeRequestKey(null).HasValue;
+         bool isMergeRequestSelected = getMergeRequest(null) != null && getMergeRequestKey(null).HasValue;
          if (isMergeRequestSelected)
          {
-            MergeRequest mergeRequest = getMergeRequest(null).Value;
+            MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey, mergeRequest.Author);
@@ -1151,11 +1144,7 @@ namespace mrHelper.App.Forms
                   string host = splitted[0];
                   string projectName = splitted[1];
                   int iid = int.Parse(splitted[2]);
-                  return new MergeRequestKey
-                  {
-                     ProjectKey = new ProjectKey { HostName = host, ProjectName = projectName },
-                     IId = iid
-                  };
+                  return new MergeRequestKey(new ProjectKey(host, projectName), iid);
                },
                item =>
                {
@@ -1187,11 +1176,7 @@ namespace mrHelper.App.Forms
                   string hostname2 = splitted[0];
                   string projectname = splitted[1];
                   int iid = int.Parse((string)item.Value);
-                  return new MergeRequestKey
-                  {
-                     ProjectKey = new ProjectKey { HostName = hostname2, ProjectName = projectname },
-                     IId = iid
-                  };
+                  return new MergeRequestKey(new ProjectKey(hostname2, projectname), iid);
                });
          }
       }
@@ -1363,10 +1348,10 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText
-         {
-            Title = "System DPI has changed",
-            Text = "It is recommended to restart application to update layout"
-         });
+         (
+            "System DPI has changed",
+            "It is recommended to restart application to update layout"
+         ));
       }
    }
 }

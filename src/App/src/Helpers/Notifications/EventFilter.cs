@@ -28,21 +28,33 @@ namespace mrHelper.App.Helpers
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
       {
+         if (_currentUser == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
          return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
-            || (isServiceEvent(mergeRequest)                                    && !_settings.Notifications_Service)
-            || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
-            || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
-            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !_settings.Notifications_UpdatedMergeRequests)
-            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
-            || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest        && !_settings.Notifications_MergedMergeRequests));
+            || (isServiceEvent(mergeRequest)                                 && !_settings.Notifications_Service)
+            || (isCurrentUserActivity(_currentUser, mergeRequest)            && !_settings.Notifications_MyActivity)
+            || (e.EventType == MergeRequestEvent.Type.NewMergeRequest        && !_settings.Notifications_NewMergeRequests)
+            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !_settings.Notifications_UpdatedMergeRequests)
+            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
+            || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest     && !_settings.Notifications_MergedMergeRequests));
       }
 
       internal bool NeedSuppressEvent(DiscussionEvent e)
       {
-         MergeRequest? mergeRequest = _mergeRequestCache?.GetMergeRequest(e.MergeRequestKey);
-         if (!mergeRequest.HasValue)
+         if (_currentUser == null || _mergeRequestCache == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
+         MergeRequest mergeRequest = _mergeRequestCache.GetMergeRequest(e.MergeRequestKey);
+         if (mergeRequest == null)
          {
             return true;
          }
@@ -57,9 +69,9 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest.Value)
+         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
             || (isServiceEvent(e)                                         && !_settings.Notifications_Service)
-            || (isCurrentUserActivity(_currentUser ?? new User(), e)      && !_settings.Notifications_MyActivity)
+            || (isCurrentUserActivity(_currentUser, e)                    && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads    && !_settings.Notifications_AllThreadsResolved)
             || (e.EventType == DiscussionEvent.Type.Keyword               && !_settings.Notifications_Keywords));
       }
@@ -119,7 +131,7 @@ namespace mrHelper.App.Helpers
          _mergeRequestCache = session.MergeRequestCache;
       }
 
-      private User? _currentUser;
+      private User _currentUser;
       private IMergeRequestCache _mergeRequestCache;
 
       private readonly UserDefinedSettings _settings;

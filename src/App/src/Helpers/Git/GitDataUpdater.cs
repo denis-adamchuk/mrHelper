@@ -127,11 +127,7 @@ namespace mrHelper.App.Helpers
       {
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
-            .Select(x => new MergeRequestKey
-            {
-               ProjectKey = repo.ProjectKey,
-               IId = x.IId
-            });
+            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId));
 
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
@@ -247,54 +243,42 @@ namespace mrHelper.App.Helpers
                PositionConverter.Convert(discussion.Notes.First().Position);
 
             diffArgs.Add(new GitDiffArguments
-            {
-               Mode = GitDiffArguments.DiffMode.Context,
-               CommonArgs = new GitDiffArguments.CommonArguments
-               {
-                  Sha1 = position.Refs.LeftSHA,
-                  Sha2 = position.Refs.RightSHA,
-                  Filename1 = position.LeftPath,
-                  Filename2 = position.RightPath,
-               },
-               SpecialArgs = new GitDiffArguments.DiffContextArguments
-               {
-                  Context = 0
-               }
-            });
+            (
+               GitDiffArguments.DiffMode.Context,
+               new GitDiffArguments.CommonArguments
+               (
+                  position.Refs.LeftSHA,
+                  position.Refs.RightSHA,
+                  position.LeftPath,
+                  position.RightPath,
+                  null
+               ),
+               new GitDiffArguments.DiffContextArguments(0)
+            ));
 
             diffArgs.Add(new GitDiffArguments
-            {
-               Mode = GitDiffArguments.DiffMode.Context,
-               CommonArgs = new GitDiffArguments.CommonArguments
-               {
-                  Sha1 = position.Refs.LeftSHA,
-                  Sha2 = position.Refs.RightSHA,
-                  Filename1 = position.LeftPath,
-                  Filename2 = position.RightPath,
-               },
-               SpecialArgs = new GitDiffArguments.DiffContextArguments
-               {
-                  Context = Constants.FullContextSize
-               }
-            });
+            (
+               GitDiffArguments.DiffMode.Context,
+               new GitDiffArguments.CommonArguments
+               (
+                  position.Refs.LeftSHA,
+                  position.Refs.RightSHA,
+                  position.LeftPath,
+                  position.RightPath,
+                  null
+               ),
+               new GitDiffArguments.DiffContextArguments(Constants.FullContextSize)
+            ));
 
             // the same condition as in EnhancedContextMaker and SimpleContextMaker,
             // which are consumers of the cache
             if (position.RightLine != null)
             {
-               revisionArgs.Add(new GitShowRevisionArguments
-               {
-                  Filename = position.RightPath,
-                  Sha = position.Refs.RightSHA
-               });
+               revisionArgs.Add(new GitShowRevisionArguments(position.RightPath, position.Refs.RightSHA));
             }
             else
             {
-               revisionArgs.Add(new GitShowRevisionArguments
-               {
-                  Filename = position.LeftPath,
-                  Sha = position.Refs.LeftSHA
-               });
+               revisionArgs.Add(new GitShowRevisionArguments(position.LeftPath, position.Refs.LeftSHA));
             }
          }
       }
@@ -339,7 +323,7 @@ namespace mrHelper.App.Helpers
          Debug.Assert(!_connected.Any());
          foreach (ProjectKey key in _mergeRequestCache.GetProjects())
          {
-            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key);
             if (repo != null && !isConnected(repo))
             {
                _connected.Add(repo);

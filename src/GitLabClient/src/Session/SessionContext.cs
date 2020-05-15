@@ -45,14 +45,26 @@ namespace mrHelper.Client.Session
 
    public class ProjectBasedContext
    {
-      public IEnumerable<ProjectKey> Projects;
+      public ProjectBasedContext(IEnumerable<ProjectKey> projects)
+      {
+         Projects = projects;
+      }
+
+      public IEnumerable<ProjectKey> Projects { get; }
    }
 
    public class SearchBasedContext
    {
-      public object SearchCriteria;
-      public int? MaxSearchResults;
-      public bool OnlyOpen;
+      public SearchBasedContext(object searchCriteria, int? maxSearchResults, bool onlyOpen)
+      {
+         SearchCriteria = searchCriteria;
+         MaxSearchResults = maxSearchResults;
+         OnlyOpen = onlyOpen;
+      }
+
+      public object SearchCriteria { get; }
+      public int? MaxSearchResults { get; }
+      public bool OnlyOpen { get; }
    }
 }
 

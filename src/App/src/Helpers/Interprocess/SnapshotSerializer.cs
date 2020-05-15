@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Web.Script.Serialization;
 
 namespace mrHelper.App.Interprocess
 {
@@ -15,8 +14,7 @@ namespace mrHelper.App.Interprocess
       /// </summary>
       public void SerializeToDisk(Snapshot snapshot, int pid)
       {
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-         string json = serializer.Serialize(snapshot);
+         string json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot);
          string filename = String.Format("mrHelper.snapshot.{0}.json", pid);
          System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, filename), json);
       }
@@ -37,8 +35,7 @@ namespace mrHelper.App.Interprocess
 
          string jsonStr = System.IO.File.ReadAllText(fullSnapshotName);
 
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-         return serializer.Deserialize<Snapshot>(jsonStr);
+         return Newtonsoft.Json.JsonConvert.DeserializeObject<Snapshot>(jsonStr);
       }
 
       /// <summary>

@@ -13,14 +13,9 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Session;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.TimeTracking;
-using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
-using Windows.Devices.Radios;
 using mrHelper.Client.Common;
-using System.Runtime.InteropServices;
 
 namespace mrHelper.App.Forms
 {
@@ -334,13 +329,7 @@ namespace mrHelper.App.Forms
       private void createGitLabClientManager()
       {
          GitLabClientContext clientContext = new GitLabClientContext
-         {
-            SynchronizeInvoke = this,
-            HostProperties = Program.Settings,
-            MergeRequestFilterChecker = _mergeRequestFilter,
-            DiscussionKeywords = _keywords.ToArray(),
-            AutoUpdatePeriodMs = Program.Settings.AutoUpdatePeriodMs
-         };
+            (this, Program.Settings, _mergeRequestFilter, _keywords.ToArray(), Program.Settings.AutoUpdatePeriodMs);
          _gitlabClientManager = new Client.Common.GitLabClientManager(clientContext);
       }
 
@@ -608,12 +597,12 @@ namespace mrHelper.App.Forms
          MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
          if (currentMergeRequestKey.HasValue && currentMergeRequestKey.Value.Equals(mrk))
          {
-            MergeRequest? currentMergeRequest = getMergeRequest(null);
-            if (currentMergeRequest.HasValue)
+            MergeRequest currentMergeRequest = getMergeRequest(null);
+            if (currentMergeRequest != null)
             {
                // change control enabled state
                updateTotalTime(currentMergeRequestKey,
-                  currentMergeRequest.Value.Author, currentMergeRequestKey.Value.ProjectKey.HostName);
+                  currentMergeRequest.Author, currentMergeRequestKey.Value.ProjectKey.HostName);
             }
          }
 

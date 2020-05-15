@@ -28,7 +28,7 @@ namespace mrHelper.App.Forms.Helpers
          int slashIndex = item.IndexOf('/');
          if (item.IndexOf(" ", 0, slashIndex) != -1)
          {
-            User? user = await _searchManager.SearchUserAsync(_hostname, item.Substring(0, slashIndex));
+            User user = await _searchManager.SearchUserAsync(_hostname, item.Substring(0, slashIndex));
             if (user == null)
             {
                MessageBox.Show("Project name has a space and looks like a name of a user but there is no such user",
@@ -36,7 +36,7 @@ namespace mrHelper.App.Forms.Helpers
                return false;
             }
 
-            item = user.Value.Username + item.Substring(slashIndex);
+            item = user.Username + item.Substring(slashIndex);
          }
 
          if (currentItems.Any(x => 0 == String.Compare(x, item, true)))
@@ -46,7 +46,7 @@ namespace mrHelper.App.Forms.Helpers
             return false;
          }
 
-         Project? project = await _searchManager.SearchProjectAsync(_hostname, item);
+         Project project = await _searchManager.SearchProjectAsync(_hostname, item);
          if (project == null)
          {
             MessageBox.Show(String.Format("There is no project {0} at {1}", item, _hostname),

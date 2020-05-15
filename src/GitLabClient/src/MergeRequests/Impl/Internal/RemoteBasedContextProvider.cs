@@ -47,11 +47,7 @@ namespace mrHelper.Client.MergeRequests
             shas.Add(version.Head_Commit_SHA);
          }
 
-         return new FullUpdateContext
-         {
-            LatestChange = allVersions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
-            Sha = shas
-         };
+         return new FullUpdateContext(allVersions.OrderBy(x => x.Created_At).LastOrDefault().Created_At, shas);
       }
 
       public override string ToString()

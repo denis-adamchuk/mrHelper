@@ -467,12 +467,9 @@ namespace mrHelper.App.Forms
          {
             Control startControl = MostRecentFocusedDiscussionControl ?? ActiveControl;
 
-            TextSearchResult current = new TextSearchResult
-            {
-               Control = startControl,
-               InsideControlPosition = ((startControl as TextBox)?.SelectionStart ?? 0)
-                          + (forward ? ((startControl as TextBox)?.SelectionLength ?? 0) : 0)
-            };
+            TextSearchResult current = new TextSearchResult(startControl,
+               ((startControl as TextBox)?.SelectionStart ?? 0)
+              + (forward ? ((startControl as TextBox)?.SelectionLength ?? 0) : 0));
 
             highlightSearchResult(forward ? TextSearch.FindNext(current) : TextSearch.FindPrev(current));
          }

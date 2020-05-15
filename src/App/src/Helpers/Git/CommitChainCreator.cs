@@ -114,9 +114,9 @@ namespace mrHelper.App.Helpers
 
                Trace.TraceInformation(String.Format(
                   "[CommitChainCreator] Creating branch {0} at GitLab", getFakeSha(sha)));
-               Branch? branch = await _repositoryManager.CreateNewBranch(
+               Branch branch = await _repositoryManager.CreateNewBranch(
                   _repo.ProjectKey, getFakeSha(sha), sha);
-               Debug.Assert(branch.HasValue); // it is not possible to cancel it
+               Debug.Assert(branch != null); // it is not possible to cancel it
             }
             await TaskUtils.RunConcurrentFunctionsAsync(shas, x => createBranch(x),
                Constants.BranchInBatch, Constants.BranchInterBatchDelay, null);

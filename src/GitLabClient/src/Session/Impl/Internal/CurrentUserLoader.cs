@@ -12,7 +12,7 @@ namespace mrHelper.Client.Session
       {
       }
 
-      async public Task<User?> Load(string hostName)
+      async public Task<User> Load(string hostName)
       {
          try
          {

@@ -25,13 +25,12 @@ namespace mrHelper.Client.Session
 
       async private Task<bool> loadMergeRequestAsync(MergeRequestKey mrk)
       {
-         MergeRequest mergeRequest = new MergeRequest();
          try
          {
             SearchByIId searchByIId = new SearchByIId { ProjectName = mrk.ProjectKey.ProjectName, IId = mrk.IId };
             IEnumerable<MergeRequest> mergeRequests =
                await _operator.SearchMergeRequestsAsync(searchByIId, null, false);
-            mergeRequest = mergeRequests.FirstOrDefault();
+            _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.FirstOrDefault());
          }
          catch (OperatorException ex)
          {
@@ -41,7 +40,6 @@ namespace mrHelper.Client.Session
             return false;
          }
 
-         _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
          return await _versionLoader.LoadVersionsAsync(mrk) && await _versionLoader.LoadCommitsAsync(mrk);
       }
 

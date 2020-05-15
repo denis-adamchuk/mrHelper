@@ -36,7 +36,7 @@ namespace mrHelper.App.Forms
          return tabControlMode.SelectedTab == tabPageSearch;
       }
 
-      private MergeRequest? getMergeRequest(ListView proposedListView)
+      private MergeRequest getMergeRequest(ListView proposedListView)
       {
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
          ListView listView = proposedListView ?? currentListView;
@@ -56,7 +56,7 @@ namespace mrHelper.App.Forms
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
-            return new MergeRequestKey { ProjectKey = fmk.ProjectKey, IId = fmk.MergeRequest.IId };
+            return new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          }
          return null;
       }
@@ -92,11 +92,7 @@ namespace mrHelper.App.Forms
          {
             if (!comboBoxHost.Items.Cast<HostComboBoxItem>().Any(x => x.Host == item.Text))
             {
-               HostComboBoxItem hostItem = new HostComboBoxItem
-               {
-                  Host = item.Text,
-                  AccessToken = item.SubItems[1].Text
-               };
+               HostComboBoxItem hostItem = new HostComboBoxItem(item.Text, item.SubItems[1].Text);
                comboBoxHost.Items.Add(hostItem);
             }
          }
@@ -622,7 +618,7 @@ namespace mrHelper.App.Forms
 
       private bool isTimeTrackingAllowed(User mergeRequestAuthor, string hostname)
       {
-         if (mergeRequestAuthor.Id == default(User).Id || String.IsNullOrWhiteSpace(hostname))
+         if (mergeRequestAuthor == null || String.IsNullOrWhiteSpace(hostname))
          {
             return true;
          }
@@ -765,16 +761,15 @@ namespace mrHelper.App.Forms
 
          CommitComboBoxItem getCommitItem(object commit, int? index, ECommitComboBoxItemStatus status)
          {
-            CommitComboBoxItem result = new CommitComboBoxItem();
             if (commit is Commit c)
             {
-               result = getItem(c, status, getType());
+               return getItem(c, status, getType());
             }
             else if (commit is GitLabSharp.Entities.Version v)
             {
-               result = getItem(v, index, status, getType());
+               return getItem(v, index, status, getType());
             }
-            return result;
+            return null;
          }
 
          comboBoxEarliestCommit.BeginUpdate();
@@ -864,7 +859,7 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         ILocalGitRepository repo = factory.GetRepository(key.HostName, key.ProjectName);
+         ILocalGitRepository repo = factory.GetRepository(key);
          if (repo == null && showMessageBoxOnError)
          {
             MessageBox.Show(String.Format(
@@ -920,11 +915,7 @@ namespace mrHelper.App.Forms
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
          DiscussionCount dc = getCurrentSession()?.DiscussionCache?.GetDiscussionCount(
-            new MergeRequestKey
-            {
-               IId = fmk.MergeRequest.IId,
-               ProjectKey = fmk.ProjectKey
-            }) ?? default(DiscussionCount);
+            new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
 
          if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
          {
@@ -983,7 +974,7 @@ namespace mrHelper.App.Forms
          {
             foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
             {
-               MergeRequestKey mrk = new MergeRequestKey { ProjectKey = projectKey, IId = mergeRequest.IId };
+               MergeRequestKey mrk = new MergeRequestKey(projectKey, mergeRequest.IId);
                int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
                   x =>
                {
@@ -1031,30 +1022,22 @@ namespace mrHelper.App.Forms
 
       private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
       {
-         MergeRequest? mergeRequest = getCurrentSession()?.MergeRequestCache?.GetMergeRequest(mrk);
-         if (!mergeRequest.HasValue)
+         MergeRequest mergeRequest = getCurrentSession()?.MergeRequestCache?.GetMergeRequest(mrk);
+         if (mergeRequest == null)
          {
             Trace.TraceError(String.Format("[MainForm] setListViewItemTag() cannot find MR with IId {0}", mrk.IId));
             Debug.Assert(false);
             return;
          }
 
-         setListViewItemTag(item, mrk.ProjectKey, mergeRequest.Value);
+         setListViewItemTag(item, mrk.ProjectKey, mergeRequest);
       }
 
       private void setListViewItemTag(ListViewItem item, ProjectKey projectKey, MergeRequest mr)
       {
-         MergeRequestKey mrk = new MergeRequestKey
-         {
-            ProjectKey = projectKey,
-            IId = mr.IId
-         };
+         MergeRequestKey mrk = new MergeRequestKey(projectKey, mr.IId);
+         FullMergeRequestKey fmk = new FullMergeRequestKey(mrk.ProjectKey, mr);
 
-         FullMergeRequestKey fmk = new FullMergeRequestKey
-         {
-            ProjectKey = mrk.ProjectKey,
-            MergeRequest = mr
-         };
          item.Tag = fmk;
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
@@ -1218,11 +1201,8 @@ namespace mrHelper.App.Forms
 
          if (e.New)
          {
-            MergeRequestKey mrk = new MergeRequestKey
-            {
-               ProjectKey = e.FullMergeRequestKey.ProjectKey,
-               IId = e.FullMergeRequestKey.MergeRequest.IId
-            };
+            MergeRequestKey mrk = new MergeRequestKey(
+               e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
             enqueueCheckForUpdates(mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
@@ -1264,33 +1244,33 @@ namespace mrHelper.App.Forms
             _checkForUpdatesTimer.Start();
          }
 
-         LatestVersionInformation? info = Program.ServiceManager.GetLatestVersionInfo();
-         if (!info.HasValue
-           || String.IsNullOrEmpty(info.Value.VersionNumber)
-           || info.Value.VersionNumber == Application.ProductVersion
-           || (!String.IsNullOrEmpty(_newVersionNumber) && info.Value.VersionNumber == _newVersionNumber))
+         LatestVersionInformation info = Program.ServiceManager.GetLatestVersionInfo();
+         if (info == null
+           || String.IsNullOrEmpty(info.VersionNumber)
+           || info.VersionNumber == Application.ProductVersion
+           || (!String.IsNullOrEmpty(_newVersionNumber) && info.VersionNumber == _newVersionNumber))
          {
             return;
          }
 
-         Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info.Value.VersionNumber));
+         Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info.VersionNumber));
 
-         if (String.IsNullOrEmpty(info.Value.InstallerFilePath) || !System.IO.File.Exists(info.Value.InstallerFilePath))
+         if (String.IsNullOrEmpty(info.InstallerFilePath) || !System.IO.File.Exists(info.InstallerFilePath))
          {
             Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
-               info.Value.InstallerFilePath));
+               info.InstallerFilePath));
             return;
          }
 
          Task.Run(
             () =>
          {
-            if (!info.HasValue)
+            if (info == null)
             {
                return;
             }
 
-            string filename = Path.GetFileName(info.Value.InstallerFilePath);
+            string filename = Path.GetFileName(info.InstallerFilePath);
             string tempFolder = Environment.GetEnvironmentVariable("TEMP");
             string destFilePath = Path.Combine(tempFolder, filename);
 
@@ -1298,7 +1278,7 @@ namespace mrHelper.App.Forms
 
             try
             {
-               System.IO.File.Copy(info.Value.InstallerFilePath, destFilePath);
+               System.IO.File.Copy(info.InstallerFilePath, destFilePath);
             }
             catch (Exception ex)
             {
@@ -1307,7 +1287,7 @@ namespace mrHelper.App.Forms
             }
 
             _newVersionFilePath = destFilePath;
-            _newVersionNumber = info.Value.VersionNumber;
+            _newVersionNumber = info.VersionNumber;
             BeginInvoke(new Action(() =>
             {
                linkLabelNewVersion.Visible = true;
@@ -1897,21 +1877,15 @@ namespace mrHelper.App.Forms
 
       private void onSingleMergeRequestLoadedCommon(ProjectKey projectKey, MergeRequest mergeRequest)
       {
-         Debug.Assert(mergeRequest.Id != default(MergeRequest).Id);
+         Debug.Assert(mergeRequest != null);
 
          enableMergeRequestActions(true);
-         FullMergeRequestKey fmk = new FullMergeRequestKey
-         {
-            ProjectKey = projectKey,
-            MergeRequest = mergeRequest
-         };
+
+         FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
          updateMergeRequestDetails(fmk);
          updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey, mergeRequest.Author);
-         updateTotalTime(new MergeRequestKey
-            {
-               ProjectKey = fmk.ProjectKey,
-               IId = fmk.MergeRequest.IId
-            }, mergeRequest.Author, projectKey.HostName);
+         updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
+            mergeRequest.Author, projectKey.HostName);
 
          labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", mergeRequest.IId);
 
@@ -2032,10 +2006,10 @@ namespace mrHelper.App.Forms
       private MergeRequestFilterState createMergeRequestFilterState()
       {
          return new MergeRequestFilterState
-         {
-            Keywords = ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
-            Enabled = Program.Settings.DisplayFilterEnabled
-         };
+         (
+            ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
+            Program.Settings.DisplayFilterEnabled
+         );
       }
    }
 }

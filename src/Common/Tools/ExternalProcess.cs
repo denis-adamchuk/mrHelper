@@ -12,9 +12,16 @@ namespace mrHelper.Common.Tools
    {
       public class Result
       {
-         public int ExitCode;
-         public IEnumerable<string> StdOut;
-         public IEnumerable<string> StdErr;
+         public Result(int exitCode, IEnumerable<string> stdOut, IEnumerable<string> stdErr)
+         {
+            ExitCode = exitCode;
+            StdOut = stdOut;
+            StdErr = stdErr;
+         }
+
+         public int ExitCode { get; }
+         public IEnumerable<string> StdOut { get; }
+         public IEnumerable<string> StdErr { get; }
       };
 
       /// <summary>
@@ -94,12 +101,7 @@ namespace mrHelper.Common.Tools
                throw new ExternalProcessFailureException(name, arguments, exitcode, standardError.ToArray());
             }
 
-            return new Result
-            {
-               ExitCode = process.HasExited ? -1 : process.Id,
-               StdOut = standardOutput,
-               StdErr = standardError
-            };
+            return new Result(process.HasExited ? -1 : process.Id, standardOutput, standardError);
          }
       }
 

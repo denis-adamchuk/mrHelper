@@ -27,11 +27,7 @@ namespace mrHelper.Client.TimeTracking
          {
             await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).AddSpentTimeAsync(
-                  new AddSpentTimeParameters
-                  {
-                     Add = add,
-                     Span = span
-                  }));
+                  new AddSpentTimeParameters(add, span)));
          }
          catch (Exception ex)
          {

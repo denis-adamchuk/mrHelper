@@ -16,21 +16,28 @@ namespace mrHelper.Client.MergeRequests
    {
       private struct TwoListDifference<T>
       {
-         public List<T> FirstOnly;
-         public List<T> SecondOnly;
-         public List<Tuple<T, T>> Common;
+         public TwoListDifference(List<T> firstOnly, List<T> secondOnly, List<Tuple<T, T>> common)
+         {
+            FirstOnly = firstOnly;
+            SecondOnly = secondOnly;
+            Common = common;
+         }
+
+         public List<T> FirstOnly { get; }
+         public List<T> SecondOnly { get; }
+         public List<Tuple<T, T>> Common { get; }
       }
 
       private struct MergeRequestWithProject
       {
-         public MergeRequest MergeRequest;
-         public ProjectKey Project;
-
          public MergeRequestWithProject(MergeRequest mergeRequest, ProjectKey project)
          {
             MergeRequest = mergeRequest;
             Project = project;
          }
+
+         public MergeRequest MergeRequest { get; }
+         public ProjectKey Project { get; }
       }
 
       /// <summary>
@@ -50,11 +57,11 @@ namespace mrHelper.Client.MergeRequests
          IInternalCache oldDetails, IInternalCache newDetails)
       {
          TwoListDifference<MergeRequestWithProject> diff = new TwoListDifference<MergeRequestWithProject>
-         {
-            FirstOnly = new List<MergeRequestWithProject>(),
-            SecondOnly = new List<MergeRequestWithProject>(),
-            Common = new List<Tuple<MergeRequestWithProject, MergeRequestWithProject>>()
-         };
+         (
+            new List<MergeRequestWithProject>(),
+            new List<MergeRequestWithProject>(),
+            new List<Tuple<MergeRequestWithProject, MergeRequestWithProject>>()
+         );
 
          HashSet<ProjectKey> projectKeys = oldDetails.GetProjects().Concat(newDetails.GetProjects()).ToHashSet();
 
@@ -115,45 +122,25 @@ namespace mrHelper.Client.MergeRequests
 
          foreach (MergeRequestWithProject mergeRequest in diff.SecondOnly)
          {
-            FullMergeRequestKey fmk = new FullMergeRequestKey
-            {
-               ProjectKey = mergeRequest.Project,
-               MergeRequest = mergeRequest.MergeRequest
-            };
+            FullMergeRequestKey fmk = new FullMergeRequestKey(mergeRequest.Project, mergeRequest.MergeRequest);
 
-            updates.Add(new UserEvents.MergeRequestEvent
-               {
-                  FullMergeRequestKey = fmk,
-                  EventType = UserEvents.MergeRequestEvent.Type.NewMergeRequest,
-                  Scope = null
-               });
+            updates.Add(new UserEvents.MergeRequestEvent(
+               fmk, UserEvents.MergeRequestEvent.Type.NewMergeRequest, null));
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
          {
-            FullMergeRequestKey fmk = new FullMergeRequestKey
-            {
-               ProjectKey = mergeRequest.Project,
-               MergeRequest = mergeRequest.MergeRequest
-            };
+            FullMergeRequestKey fmk = new FullMergeRequestKey(mergeRequest.Project, mergeRequest.MergeRequest);
 
-            updates.Add(new UserEvents.MergeRequestEvent
-               {
-                  FullMergeRequestKey = fmk,
-                  EventType = UserEvents.MergeRequestEvent.Type.ClosedMergeRequest,
-                  Scope = null
-               });
+            updates.Add(new UserEvents.MergeRequestEvent(
+               fmk, UserEvents.MergeRequestEvent.Type.ClosedMergeRequest, null));
          }
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
          {
             Debug.Assert(mrPair.Item1.MergeRequest.Id == mrPair.Item2.MergeRequest.Id);
 
-            MergeRequestKey mergeRequestKey = new MergeRequestKey
-            {
-               ProjectKey = mrPair.Item2.Project,
-               IId = mrPair.Item2.MergeRequest.IId
-            };
+            MergeRequestKey mergeRequestKey = new MergeRequestKey(mrPair.Item2.Project, mrPair.Item2.MergeRequest.IId);
 
             IEnumerable<Version> oldVersions = oldDetails.GetVersions(mergeRequestKey);
             IEnumerable<Version> newVersions = newDetails.GetVersions(mergeRequestKey);
@@ -171,23 +158,12 @@ namespace mrHelper.Client.MergeRequests
 
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
-               FullMergeRequestKey fmk = new FullMergeRequestKey
-               {
-                  ProjectKey = mergeRequestKey.ProjectKey,
-                  MergeRequest = mrPair.Item2.MergeRequest
-               };
+               FullMergeRequestKey fmk = new FullMergeRequestKey(
+                  mergeRequestKey.ProjectKey, mrPair.Item2.MergeRequest);
 
-               updates.Add(new UserEvents.MergeRequestEvent
-                  {
-                     FullMergeRequestKey = fmk,
-                     EventType = UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
-                     Scope = new UserEvents.MergeRequestEvent.UpdateScope
-                     {
-                        Commits = commitsUpdated,
-                        Labels = labelsUpdated,
-                        Details = detailsUpdated
-                     }
-                  });
+               updates.Add(new UserEvents.MergeRequestEvent(
+                  fmk, UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
+                  new UserEvents.MergeRequestEvent.UpdateScope(commitsUpdated, labelsUpdated, detailsUpdated)));
             }
          }
 

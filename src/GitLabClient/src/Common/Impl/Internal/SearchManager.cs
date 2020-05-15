@@ -16,7 +16,7 @@ namespace mrHelper.Client.Common
          _settings = settings;
       }
 
-      async public Task<MergeRequest?> SearchMergeRequestAsync(
+      async public Task<MergeRequest> SearchMergeRequestAsync(
          string hostname, string projectName, int mergeRequestIId)
       {
          GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
@@ -25,7 +25,7 @@ namespace mrHelper.Client.Common
             SearchByIId searchByIId = new SearchByIId { ProjectName = projectName, IId = mergeRequestIId };
             IEnumerable<MergeRequest> mergeRequests =
                await CommonOperator.SearchMergeRequestsAsync(client, searchByIId, null, true);
-            return mergeRequests.Any() ? mergeRequests.First() : new Nullable<MergeRequest>();
+            return mergeRequests.Any() ? mergeRequests.First() : null;
          }
          catch (OperatorException)
          {
@@ -33,13 +33,13 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async public Task<User?> SearchUserAsync(string hostname, string name)
+      async public Task<User> SearchUserAsync(string hostname, string name)
       {
          GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
          try
          {
             IEnumerable<User> users = await CommonOperator.SearchUserAsync(client, name);
-            return users.Any() ? users.First() : new Nullable<User>();
+            return users.Any() ? users.First() : null;
          }
          catch (OperatorException)
          {
@@ -47,7 +47,7 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async public Task<Project?> SearchProjectAsync(string hostname, string projectname)
+      async public Task<Project> SearchProjectAsync(string hostname, string projectname)
       {
          GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
          try

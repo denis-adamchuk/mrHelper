@@ -16,11 +16,18 @@ namespace mrHelper.App.Helpers
             .ToArray();
       }
 
+      // TODO
 #pragma warning disable 0649
       public struct HostInProjectsFile
       {
-         public string Name;
-         public IEnumerable<Project> Projects;
+         public HostInProjectsFile(string name, IEnumerable<Project> projects)
+         {
+            Name = name;
+            Projects = projects;
+         }
+
+         public string Name { get; }
+         public IEnumerable<Project> Projects { get; }
       }
 #pragma warning restore 0649
 
@@ -73,7 +80,7 @@ namespace mrHelper.App.Helpers
          return projects
             .Where(x => x.Item2)
             .Select(x => x.Item1)
-            .Select(x => new Project { Path_With_Namespace = x });
+            .Select(x => new Project(x));
       }
 
       public static IEnumerable<string> GetEnabledLabels(string hostname, UserDefinedSettings settings)

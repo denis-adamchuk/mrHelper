@@ -7,6 +7,13 @@ namespace mrHelper.Client.Discussions
 {
    public struct DiscussionCount
    {
+      public DiscussionCount(int? resolvable, int? resolved, EStatus status)
+      {
+         Resolvable = resolvable;
+         Resolved = resolved;
+         Status = status;
+      }
+
       public enum EStatus
       {
          NotAvailable,
@@ -14,9 +21,9 @@ namespace mrHelper.Client.Discussions
          Ready
       }
 
-      public int? Resolvable;
-      public int? Resolved;
-      public EStatus Status;
+      public int? Resolvable { get; }
+      public int? Resolved { get; }
+      public EStatus Status { get; }
    }
 
    public class DiscussionCacheException : ExceptionEx

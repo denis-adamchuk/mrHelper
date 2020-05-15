@@ -12,7 +12,7 @@ namespace mrHelper.Client.Repository
          _settings = settings;
       }
 
-      async public Task<Comparison?> Compare(ProjectKey projectKey, string from, string to)
+      async public Task<Comparison> Compare(ProjectKey projectKey, string from, string to)
       {
          _operator = new RepositoryOperator(projectKey.HostName,
             _settings.GetAccessToken(projectKey.HostName));
@@ -30,7 +30,7 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      async public Task<File?> LoadFile(ProjectKey projectKey, string filename, string sha)
+      async public Task<File> LoadFile(ProjectKey projectKey, string filename, string sha)
       {
          _operator = new RepositoryOperator(projectKey.HostName,
             _settings.GetAccessToken(projectKey.HostName));
@@ -48,7 +48,7 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      async public Task<Commit?> LoadCommit(ProjectKey projectKey, string sha)
+      async public Task<Commit> LoadCommit(ProjectKey projectKey, string sha)
       {
          _operator = new RepositoryOperator(projectKey.HostName,
             _settings.GetAccessToken(projectKey.HostName));
@@ -66,7 +66,7 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      async public Task<Branch?> CreateNewBranch(ProjectKey projectKey, string name, string sha)
+      async public Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha)
       {
          _operator = new RepositoryOperator(projectKey.HostName,
             _settings.GetAccessToken(projectKey.HostName));

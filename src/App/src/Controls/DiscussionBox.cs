@@ -269,7 +269,7 @@ namespace mrHelper.App.Controls
          }
 
          DiscussionNote note = getNoteFromTextBox(textBox);
-         Debug.Assert(note.Resolvable);
+         Debug.Assert(note == null || note.Resolvable);
 
          await onToggleResolveNoteAsync(note);
       }
@@ -460,6 +460,10 @@ namespace mrHelper.App.Controls
 
       private bool canBeModified(DiscussionNote note)
       {
+         if (note == null)
+         {
+            return false;
+         }
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
@@ -513,15 +517,15 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote? note)
+      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote note)
       {
          textBox.Tag = note;
 
-         if (note.HasValue)
+         if (note != null)
          {
-            string body = getNoteTooltipHtml(note.Value)
+            string body = getNoteTooltipHtml(note)
                         + "<br><br>"
-                        + MarkDownUtils.ConvertToHtml(note.Value.Body, _imagePath,
+                        + MarkDownUtils.ConvertToHtml(note.Body, _imagePath,
                            _specialDiscussionNoteMarkdownPipeline);
             _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
          }
@@ -841,6 +845,10 @@ namespace mrHelper.App.Controls
          stopEdit(textBox);
 
          DiscussionNote note = getNoteFromTextBox(textBox);
+         if (note == null)
+         {
+            return;
+         }
 
          Debug.Assert(Discussion.Notes.Any());
          textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
@@ -851,9 +859,10 @@ namespace mrHelper.App.Controls
       {
          stopEdit(textBox);
 
-         DiscussionNote note = getNoteFromTextBox(textBox);
-         if (textBox.Text == note.Body)
+         DiscussionNote cachedNote = getNoteFromTextBox(textBox);
+         if (cachedNote == null || textBox.Text == cachedNote.Body)
          {
+            // TextBox.Tag is equal to TextBox.Text ==> text was not changed
             return;
          }
 
@@ -865,15 +874,14 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         note.Body = textBox.Text;
-
          Color oldColor = textBox.BackColor;
          ContextMenu oldMenu = textBox.ContextMenu;
          disableTextBox(textBox); // let's make a visual effect similar to other modifications
 
+         DiscussionNote note;
          try
          {
-            note = await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
+            note = await _editor.ModifyNoteBodyAsync(cachedNote.Id, textBox.Text);
          }
          catch (DiscussionEditorException ex)
          {
@@ -895,6 +903,11 @@ namespace mrHelper.App.Controls
 
       async private Task onDeleteNoteAsync(DiscussionNote note)
       {
+         if (note == null)
+         {
+            return;
+         }
+
          disableAllTextBoxes();
 
          try
@@ -914,6 +927,11 @@ namespace mrHelper.App.Controls
 
       async private Task onToggleResolveNoteAsync(DiscussionNote note)
       {
+         if (note == null)
+         {
+            return;
+         }
+
          disableAllTextBoxes();
 
          try
@@ -972,7 +990,7 @@ namespace mrHelper.App.Controls
          disableTextBox(_textboxFilename as TextBox);
       }
 
-      async private Task refreshDiscussion(Discussion? discussion = null)
+      async private Task refreshDiscussion(Discussion discussion = null)
       {
          if (Parent == null)
          {
@@ -1055,7 +1073,7 @@ namespace mrHelper.App.Controls
                if (textBox != null)
                {
                   DiscussionNote note = getNoteFromTextBox(textBox as TextBox);
-                  if (note.Resolvable && !note.Resolved)
+                  if (note != null && note.Resolvable && !note.Resolved)
                   {
                      result = false;
                   }
@@ -1081,8 +1099,7 @@ namespace mrHelper.App.Controls
 
       private DiscussionNote getNoteFromTextBox(TextBox textBox)
       {
-         return (textBox == null || textBox.Tag == null)
-            ? default(DiscussionNote) : (DiscussionNote)(textBox.Tag);
+         return (textBox == null || textBox.Tag == null) ? null : (DiscussionNote)(textBox.Tag);
       }
 
       private TextBox getEditingTextBox()

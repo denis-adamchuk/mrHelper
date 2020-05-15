@@ -22,8 +22,14 @@ namespace mrHelper.App.Helpers
 
       internal struct BalloonText
       {
-         public string Title;
-         public string Text;
+         public BalloonText(string title, string text)
+         {
+            Title = title;
+            Text = text;
+         }
+
+         public string Title { get; }
+         public string Text { get; }
       }
 
       internal void ShowTooltipBalloon(BalloonText balloonText)
@@ -33,7 +39,7 @@ namespace mrHelper.App.Helpers
          _notifyIcon.ShowBalloonTip(notifyTooltipTimeout);
 
          Trace.TraceInformation(String.Format("Tooltip: Title \"{0}\" Text \"{1}\"",
-            balloonText.Title, balloonText.Text)); 
+            balloonText.Title, balloonText.Text));
       }
 
       private readonly NotifyIcon _notifyIcon;

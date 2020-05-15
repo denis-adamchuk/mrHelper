@@ -29,24 +29,29 @@ namespace mrHelper.App.Helpers
    /// </summary>
    public struct DiscussionFilterState
    {
-      public bool ByCurrentUserOnly;
-      public bool ServiceMessages;
-      public bool SystemNotes;
-      public FilterByAnswers ByAnswers;
-      public FilterByResolution ByResolution;
+      public DiscussionFilterState(bool byCurrentUserOnly, bool serviceMessages, bool systemNotes,
+         FilterByAnswers byAnswers, FilterByResolution byResolution)
+      {
+         ByCurrentUserOnly = byCurrentUserOnly;
+         ServiceMessages = serviceMessages;
+         SystemNotes = systemNotes;
+         ByAnswers = byAnswers;
+         ByResolution = byResolution;
+      }
+
+      public bool ByCurrentUserOnly { get; }
+      public bool ServiceMessages { get; }
+      public bool SystemNotes { get; }
+      public FilterByAnswers ByAnswers { get; }
+      public FilterByResolution ByResolution { get; }
 
       static public DiscussionFilterState AllExceptSystem
       {
          get
          {
-            return new DiscussionFilterState
-            {
-               ByCurrentUserOnly = false,
-               ServiceMessages = true,
-               SystemNotes = false,
-               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
-            };
+            return new DiscussionFilterState(false, true, false,
+               FilterByAnswers.Answered | FilterByAnswers.Unanswered,
+               FilterByResolution.Resolved | FilterByResolution.NotResolved);
          }
       }
 
@@ -54,14 +59,9 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-            return new DiscussionFilterState
-            {
-               ByCurrentUserOnly = false,
-               ServiceMessages = false,
-               SystemNotes = false,
-               ByAnswers = FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               ByResolution = FilterByResolution.Resolved | FilterByResolution.NotResolved
-            };
+            return new DiscussionFilterState(false, false, false,
+               FilterByAnswers.Answered | FilterByAnswers.Unanswered,
+               FilterByResolution.Resolved | FilterByResolution.NotResolved);
          }
       }
    }

@@ -52,10 +52,7 @@ namespace mrHelper.CustomActions
          await client.RunAsync(async (gitlab) =>
             await gitlab.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.
                Get(_callback.GetCurrentMergeRequestIId()).
-                  Notes.CreateNewTaskAsync(new CreateNewNoteParameters
-                  {
-                     Body = _body
-                  }));
+                  Notes.CreateNewTaskAsync(new CreateNewNoteParameters(_body)));
       }
 
       private readonly ICommandCallback _callback;

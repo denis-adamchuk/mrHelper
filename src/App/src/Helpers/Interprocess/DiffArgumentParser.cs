@@ -30,17 +30,17 @@ namespace mrHelper.App.Interprocess
          if (arguments[4] != String.Empty)
          {
             // Expected arguments (when comparing two files):
-            // (0) Current-pane file name with path 
-            // (1) Current-pane line number 
-            // (2) Next-pane file name with path 
+            // (0) Current-pane file name with path
+            // (1) Current-pane line number
+            // (2) Next-pane file name with path
             _arguments = new string[3];
             Array.Copy(arguments, 2, _arguments, 0, 3);
          }
          else
          {
             // Expected arguments (when a single file is opened in a diff tool):
-            // (0) Current-pane file name with path 
-            // (1) Current-pane line number 
+            // (0) Current-pane file name with path
+            // (1) Current-pane line number
             _arguments = new string[2];
             Array.Copy(arguments, 2, _arguments, 0, 2);
          }
@@ -64,13 +64,8 @@ namespace mrHelper.App.Interprocess
          bool isLeftSide = groupCollection[1].Value == "left";
          string currentFileName = groupCollection[2].Value;
          string nextFileName = _arguments.Length > 2 ? parsePath(tempFolder, _arguments[2])[2].Value : String.Empty;
-         return new MatchInfo
-         {
-            IsLeftSideLineNumber = isLeftSide,
-            LeftFileName = isLeftSide ? currentFileName : nextFileName,
-            RightFileName = isLeftSide ? nextFileName : currentFileName,
-            LineNumber = currentLineNumber
-         };
+         return new MatchInfo(isLeftSide ? currentFileName : nextFileName,
+            isLeftSide ? nextFileName : currentFileName, currentLineNumber, isLeftSide);
       }
 
       static private GroupCollection parsePath(string tempFolder, string fullFileName)

@@ -65,7 +65,7 @@ namespace mrHelper.Client.Session
             _cacheUpdater.UpdateMergeRequests(kv.Key, kv.Value);
 
             await TaskUtils.RunConcurrentFunctionsAsync(kv.Value,
-               x => loadVersionsLocal(new MergeRequestKey { IId = x.IId, ProjectKey = kv.Key }),
+               x => loadVersionsLocal(new MergeRequestKey(kv.Key, x.IId)),
                Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
          }
          if (!cancelled)

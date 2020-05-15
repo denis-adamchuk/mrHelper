@@ -43,11 +43,11 @@ namespace mrHelper.Client.MergeRequests
          return _cacheUpdater.Cache.GetMergeRequests(projectKey);
       }
 
-      public MergeRequest? GetMergeRequest(MergeRequestKey mrk)
+      public MergeRequest GetMergeRequest(MergeRequestKey mrk)
       {
          IEnumerable<MergeRequest> mergeRequests = GetMergeRequests(mrk.ProjectKey);
          MergeRequest result = mergeRequests.FirstOrDefault(x => x.IId == mrk.IId);
-         return result.Id == default(MergeRequest).Id ? new MergeRequest?() : result;
+         return result == null ? new MergeRequest() : result;
       }
 
       public IProjectUpdateContextProvider GetLocalBasedContextProvider(ProjectKey projectKey)
@@ -87,11 +87,7 @@ namespace mrHelper.Client.MergeRequests
          List<Version> versions = new List<Version>();
          foreach (MergeRequest mergeRequest in _cacheUpdater.Cache.GetMergeRequests(projectKey))
          {
-            MergeRequestKey mrk = new MergeRequestKey
-            {
-               ProjectKey = projectKey,
-               IId = mergeRequest.IId
-            };
+            MergeRequestKey mrk = new MergeRequestKey(projectKey, mergeRequest.IId);
             foreach (Version version in _cacheUpdater.Cache.GetVersions(mrk))
             {
                versions.Add(version);

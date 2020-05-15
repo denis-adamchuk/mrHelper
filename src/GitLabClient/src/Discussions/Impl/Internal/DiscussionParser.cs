@@ -1,13 +1,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics;
 using GitLabSharp.Entities;
-using mrHelper.Common.Constants;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.Common.Tools;
-using mrHelper.Client.Session;
 
 namespace mrHelper.Client.Discussions
 {
@@ -47,21 +43,17 @@ namespace mrHelper.Client.Discussions
             {
                if (note.System && note.Body == "resolved all threads")
                {
-                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
-                  {
-                     EventType = UserEvents.DiscussionEvent.Type.ResolvedAllThreads,
-                     Details = note.Author,
-                     MergeRequestKey = mrk
-                  }, note.Updated_At, type);
+                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent(
+                     mrk, UserEvents.DiscussionEvent.Type.ResolvedAllThreads,
+                        note.Author),
+                     note.Updated_At, type);
                }
                else if (Helpers.IsUserMentioned(note.Body, _currentUser))
                {
-                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
-                  {
-                     EventType = UserEvents.DiscussionEvent.Type.MentionedCurrentUser,
-                     Details = note.Author,
-                     MergeRequestKey = mrk
-                  }, note.Updated_At, type);
+                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent(
+                     mrk, UserEvents.DiscussionEvent.Type.MentionedCurrentUser,
+                        note.Author),
+                     note.Updated_At, type);
                }
                else if (_keywords != null)
                {
@@ -69,16 +61,10 @@ namespace mrHelper.Client.Discussions
                   {
                      if (note.Body.Trim().StartsWith(keyword, StringComparison.CurrentCultureIgnoreCase))
                      {
-                        DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent
-                        {
-                           EventType = UserEvents.DiscussionEvent.Type.Keyword,
-                           Details = new UserEvents.DiscussionEvent.KeywordDescription
-                           {
-                              Keyword = keyword,
-                              Author = note.Author
-                           },
-                           MergeRequestKey = mrk
-                        }, note.Updated_At, type);
+                        DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent(
+                           mrk, UserEvents.DiscussionEvent.Type.Keyword,
+                              new UserEvents.DiscussionEvent.KeywordDescription(keyword, note.Author)),
+                           note.Updated_At, type);
                      }
                   }
                }

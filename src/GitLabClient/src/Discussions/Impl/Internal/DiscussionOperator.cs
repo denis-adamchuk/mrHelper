@@ -30,8 +30,7 @@ namespace mrHelper.Client.Discussions
          {
             IEnumerable<Note> notes = (IEnumerable<Note>)(await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Notes.LoadTaskAsync(new PageFilter { PerPage = 1, PageNumber = 1 },
-                                      new SortFilter { Ascending = false, OrderBy = "updated_at" })));
+                  Notes.LoadTaskAsync(new PageFilter(1, 1), new SortFilter(false, "updated_at"))));
             return notes.Any() ? notes.First() : new Note();
          }
          catch (Exception ex)
@@ -116,10 +115,7 @@ namespace mrHelper.Client.Discussions
             await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Discussions.Get(discussionId).CreateNewNoteTaskAsync(
-                     new CreateNewNoteParameters
-                     {
-                        Body = body
-                     }));
+                     new CreateNewNoteParameters(body)));
          }
          catch (Exception ex)
          {
@@ -141,11 +137,8 @@ namespace mrHelper.Client.Discussions
             return (DiscussionNote)await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
-                     new ModifyDiscussionNoteParameters
-                     {
-                        Type = ModifyDiscussionNoteParameters.ModificationType.Body,
-                        Body = body
-                     }));
+                     new ModifyDiscussionNoteParameters(
+                        ModifyDiscussionNoteParameters.ModificationType.Body, body, false)));
          }
          catch (Exception ex)
          {
@@ -188,11 +181,8 @@ namespace mrHelper.Client.Discussions
             await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
-                     new ModifyDiscussionNoteParameters
-                     {
-                        Type = ModifyDiscussionNoteParameters.ModificationType.Resolved,
-                        Resolved = resolved
-                     }));
+                     new ModifyDiscussionNoteParameters(
+                        ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolved)));
          }
          catch (Exception ex)
          {
@@ -214,10 +204,7 @@ namespace mrHelper.Client.Discussions
             return (Discussion)await client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                   Discussions.Get(discussionId).ResolveTaskAsync(
-                     new ResolveThreadParameters
-                     {
-                        Resolve = resolved
-                     }));
+                     new ResolveThreadParameters(resolved)));
          }
          catch (Exception ex)
          {

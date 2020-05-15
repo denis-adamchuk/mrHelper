@@ -10,7 +10,7 @@ namespace mrHelper.Client.Common
    {
       public static bool IsUserMentioned(string text, User user)
       {
-         if (user.Id == (default(User)).Id)
+         if (user == null)
          {
             Debug.Assert(false);
             return false;

@@ -26,11 +26,8 @@ namespace mrHelper.Client.MergeRequests
             shas.Add(version.Head_Commit_SHA);
          }
 
-         FullUpdateContext update = new FullUpdateContext
-         {
-            LatestChange = _versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At,
-            Sha = shas
-         };
+         FullUpdateContext update = new FullUpdateContext(
+            _versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At, shas);
          return Task.FromResult(update as IProjectUpdateContext);
       }
 

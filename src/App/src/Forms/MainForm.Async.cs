@@ -325,7 +325,7 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = "Adding a comment...";
                try
                {
-                  await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
+                  await creator.CreateNoteAsync(new CreateNewNoteParameters(form.Body));
                }
                catch (DiscussionCreatorException)
                {
@@ -358,7 +358,7 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
                {
-                  await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body }, false);
+                  await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
                }
                catch (DiscussionCreatorException)
                {
@@ -377,14 +377,15 @@ namespace mrHelper.App.Forms
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA)
       {
-         Snapshot snapshot;
-         snapshot.AccessToken = GetCurrentAccessToken();
-         snapshot.Refs.LeftSHA = leftSHA;     // Base commit SHA in the source branch
-         snapshot.Refs.RightSHA = rightSHA;   // SHA referencing HEAD of this merge request
-         snapshot.Host = GetCurrentHostName();
-         snapshot.MergeRequestIId = GetCurrentMergeRequestIId();
-         snapshot.Project = GetCurrentProjectName();
-         snapshot.TempFolder = textBoxLocalGitFolder.Text;
+         // leftSHA - Base commit SHA in the source branch
+         // rightSHA - SHA referencing HEAD of this merge request
+         Snapshot snapshot = new Snapshot(
+            GetCurrentMergeRequestIId(),
+            GetCurrentHostName(),
+            GetCurrentAccessToken(),
+            GetCurrentProjectName(),
+            new Core.Matching.DiffRefs(leftSHA, rightSHA),
+            textBoxLocalGitFolder.Text);
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.SerializeToDisk(snapshot, pid);

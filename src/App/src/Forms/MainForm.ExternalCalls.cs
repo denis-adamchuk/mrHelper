@@ -64,7 +64,8 @@ namespace mrHelper.App.Forms
          IGitRepository gitRepository = null;
          if (_gitClientFactory != null && _gitClientFactory.ParentFolder == snapshot.TempFolder)
          {
-            gitRepository = _gitClientFactory.GetRepository(snapshot.Host, snapshot.Project);
+            ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+            gitRepository = _gitClientFactory.GetRepository(projectKey);
          }
 
          try
@@ -77,11 +78,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         MergeRequestKey mrk = new MergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
-            IId = snapshot.MergeRequestIId
-         };
+         MergeRequestKey mrk = new MergeRequestKey(
+            new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
          getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk,
             new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
       }
@@ -178,12 +176,8 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         _lastMergeRequestsByHosts[mergeRequestUrl.Host] =
-            new MergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = mergeRequestUrl.Host, ProjectName = mergeRequestUrl.Project },
-            IId = mergeRequestUrl.IId
-         };
+         _lastMergeRequestsByHosts[mergeRequestUrl.Host] = new MergeRequestKey(
+            new ProjectKey(mergeRequestUrl.Host, mergeRequestUrl.Project), mergeRequestUrl.IId);
 
          checkBoxDisplayFilter.Checked = false;
          return true;
@@ -275,8 +269,9 @@ namespace mrHelper.App.Forms
          UrlParser.ParsedMergeRequestUrl mergeRequestUrl;
          try
          {
-            mergeRequestUrl = UrlParser.ParseMergeRequestUrl(url);
-            mergeRequestUrl.Host = StringUtils.GetHostWithPrefix(mergeRequestUrl.Host);
+            UrlParser.ParsedMergeRequestUrl originalParsed = UrlParser.ParseMergeRequestUrl(url);
+            mergeRequestUrl = new UrlParser.ParsedMergeRequestUrl(
+               StringUtils.GetHostWithPrefix(originalParsed.Host), originalParsed.Project, originalParsed.IId);
          }
          catch (Exception ex)
          {
@@ -296,7 +291,7 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
-         MergeRequest? mergeRequest = await _gitlabClientManager?.SearchManager?.SearchMergeRequestAsync(
+         MergeRequest mergeRequest = await _gitlabClientManager?.SearchManager?.SearchMergeRequestAsync(
             mergeRequestUrl.Host, mergeRequestUrl.Project, mergeRequestUrl.IId);
          if (mergeRequest == null)
          {
@@ -310,7 +305,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (mergeRequest.Value.State != "opened")
+         if (mergeRequest.State != "opened")
          {
             await openUrlAtSearchTab(mergeRequestUrl, url);
             return;
@@ -340,11 +335,7 @@ namespace mrHelper.App.Forms
 
       async private Task openUrlAtLiveTab(UrlParser.ParsedMergeRequestUrl mergeRequestUrl, string url)
       {
-         ProjectKey projectKey = new ProjectKey
-         {
-            HostName = mergeRequestUrl.Host,
-            ProjectName = mergeRequestUrl.Project
-         };
+         ProjectKey projectKey = new ProjectKey(mergeRequestUrl.Host, mergeRequestUrl.Project);
 
          if (!_liveSession.MergeRequestCache.GetMergeRequests(projectKey).Any(x => x.IId == mergeRequestUrl.IId))
          {

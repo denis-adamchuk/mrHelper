@@ -68,7 +68,7 @@ namespace mrHelper.Client.Discussions
             return false;
          }
 
-         if (!parameters.Position.HasValue)
+         if (parameters.Position == null)
          {
             Trace.TraceWarning("[DiscussionCreator] Unexpected situation at GitLab");
             return false;
@@ -108,12 +108,12 @@ namespace mrHelper.Client.Discussions
 
       async private Task<bool> createMergeRequestWithoutPosition(NewDiscussionParameters parameters)
       {
-         Debug.Assert(parameters.Position.HasValue);
+         Debug.Assert(parameters.Position != null);
 
          Trace.TraceInformation("[DicsussionCreator] Reporting a discussion without Position (fallback)");
 
-         parameters.Body = getFallbackInfo(parameters.Position.Value) + "<br>" + parameters.Body;
-         parameters.Position = null;
+         NewDiscussionParameters newDiscussionParameters = new NewDiscussionParameters(
+            getFallbackInfo(parameters.Position.Value) + "<br>" + parameters.Body, null);
 
          try
          {
@@ -137,7 +137,7 @@ namespace mrHelper.Client.Discussions
 
       async private Task deleteMostRecentNote(NewDiscussionParameters parameters)
       {
-         Debug.Assert(parameters.Position.HasValue);
+         Debug.Assert(parameters.Position != null);
 
          Trace.TraceInformation("[DicsussionCreator] Looking up for a note with bad position...");
 

@@ -34,7 +34,7 @@ namespace mrHelper.Client.Common
                      : (BaseMergeRequestAccessor)gitlab.MergeRequests;
                   if (maxResults.HasValue)
                   {
-                     PageFilter pageFilter = new PageFilter { PageNumber = 1, PerPage = maxResults.Value };
+                     PageFilter pageFilter = new PageFilter(maxResults.Value, 1);
                      return await accessor.LoadTaskAsync(convertSearchToFilter(search, onlyOpen), pageFilter);
                   }
                   return await accessor.LoadAllTaskAsync(convertSearchToFilter(search, onlyOpen));
@@ -66,7 +66,7 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async internal static Task<Project?> SearchProjectAsync(GitLabClient client, string projectname)
+      async internal static Task<Project> SearchProjectAsync(GitLabClient client, string projectname)
       {
          try
          {
@@ -93,27 +93,23 @@ namespace mrHelper.Client.Common
 
          if (search is Types.SearchByIId sbi)
          {
-            return new MergeRequestsFilter
-               { WIP = wipFilter, State = stateFilter, IIds = new int[] { sbi.IId } };
+            return new MergeRequestsFilter(null, wipFilter, stateFilter, false, null, null, new int[] { sbi.IId });
          }
          else if (search is Types.SearchByProject sbp)
          {
-            return new MergeRequestsFilter
-               { WIP = wipFilter, State = stateFilter };
+            return new MergeRequestsFilter(null, wipFilter, stateFilter, false, null, null, null);
          }
          else if (search is Types.SearchByTargetBranch sbt)
          {
-            return new MergeRequestsFilter
-               { WIP = wipFilter, State = stateFilter, TargetBranch = sbt.TargetBranchName };
+            return new MergeRequestsFilter(null, wipFilter, stateFilter, false, null, sbt.TargetBranchName, null);
          }
          else if (search is Types.SearchByText sbtxt)
          {
-            return new MergeRequestsFilter
-               { WIP = wipFilter, State = stateFilter, Search = sbtxt.Text };
+            return new MergeRequestsFilter(null, wipFilter, stateFilter, false, sbtxt.Text, null, null);
          }
 
          Debug.Assert(false);
-         return new MergeRequestsFilter{};
+         return default(MergeRequestsFilter);
       }
    }
 }

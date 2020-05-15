@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -185,13 +184,7 @@ namespace mrHelper.GitClient
                   ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
 
                string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
-               ProjectKey projectKey = new ProjectKey
-               {
-                  HostName = hostname,
-                  ProjectName = project
-               };
-
-               _repositoryKeys[path] = projectKey;
+               _repositoryKeys[path] = new ProjectKey(hostname, project);
             }
          }
 

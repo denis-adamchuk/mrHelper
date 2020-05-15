@@ -8,11 +8,25 @@ namespace mrHelper.Client.Common
 {
    public class GitLabClientContext
    {
-      public ISynchronizeInvoke SynchronizeInvoke;
-      public IHostProperties HostProperties;
-      public IMergeRequestFilterChecker MergeRequestFilterChecker;
-      public IEnumerable<string> DiscussionKeywords;
-      public int AutoUpdatePeriodMs;
+      public GitLabClientContext(
+         ISynchronizeInvoke synchronizeInvoke,
+         IHostProperties hostProperties,
+         IMergeRequestFilterChecker mergeRequestFilterChecker,
+         IEnumerable<string> discussionKeywords,
+         int autoUpdatePeriodMs)
+      {
+         SynchronizeInvoke = synchronizeInvoke;
+         HostProperties = hostProperties;
+         MergeRequestFilterChecker = mergeRequestFilterChecker;
+         DiscussionKeywords = discussionKeywords;
+         AutoUpdatePeriodMs = autoUpdatePeriodMs;
+      }
+
+      public ISynchronizeInvoke SynchronizeInvoke { get; }
+      public IHostProperties HostProperties { get; }
+      public IMergeRequestFilterChecker MergeRequestFilterChecker { get; }
+      public IEnumerable<string> DiscussionKeywords { get; }
+      public int AutoUpdatePeriodMs { get; }
    }
 }
 

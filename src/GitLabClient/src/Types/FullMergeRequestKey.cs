@@ -5,8 +5,14 @@ namespace mrHelper.Client.Types
 {
    public struct FullMergeRequestKey
    {
-      public ProjectKey ProjectKey;
-      public MergeRequest MergeRequest;
+      public FullMergeRequestKey(ProjectKey projectKey, MergeRequest mergeRequest)
+      {
+         ProjectKey = projectKey;
+         MergeRequest = mergeRequest;
+      }
+
+      public ProjectKey ProjectKey { get; }
+      public MergeRequest MergeRequest { get; }
    }
 }
 

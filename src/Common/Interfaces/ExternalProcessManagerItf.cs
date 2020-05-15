@@ -1,7 +1,6 @@
-using mrHelper.Common.Tools;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Common.Interfaces
 {

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
 
@@ -30,16 +26,10 @@ namespace mrHelper.Core.Git
       /// </summary>
       public string IsRenamed(string leftcommit, string rightcommit, string filename, bool leftsidename, out bool moved)
       {
-         GitDiffArguments arguments = new GitDiffArguments
-         {
-            Mode = GitDiffArguments.DiffMode.NumStat,
-            CommonArgs = new GitDiffArguments.CommonArguments
-            {
-               Sha1 = leftcommit,
-               Sha2 = rightcommit,
-               Filter = "R"
-            }
-         };
+         GitDiffArguments arguments = new GitDiffArguments(
+            GitDiffArguments.DiffMode.NumStat,
+            new GitDiffArguments.CommonArguments(leftcommit, rightcommit, null, null, "R"),
+            null);
 
          IEnumerable<string> renames;
          try

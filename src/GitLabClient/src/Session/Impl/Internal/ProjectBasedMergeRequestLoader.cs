@@ -70,7 +70,7 @@ namespace mrHelper.Client.Session
                else
                {
                   await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests,
-                     x => loadVersionsLocal(new MergeRequestKey { IId = x.IId, ProjectKey = project }),
+                     x => loadVersionsLocal(new MergeRequestKey(project, x.IId)),
                      Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
                }
             }

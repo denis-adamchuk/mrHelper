@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Web.Script.Serialization;
 
 namespace mrHelper.Common.Tools
 {
@@ -26,14 +24,12 @@ namespace mrHelper.Common.Tools
 
       internal PersistentState(string json)
       {
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-         _state = serializer.Deserialize<Dictionary<string, object>>(json);
+         _state = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
       }
 
       internal string ToJson()
       {
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-         return serializer.Serialize(_state);
+         return Newtonsoft.Json.JsonConvert.SerializeObject(_state);
       }
 
       private readonly Dictionary<string, object> _state = new Dictionary<string, object>();

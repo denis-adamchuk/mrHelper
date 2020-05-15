@@ -144,11 +144,7 @@ namespace mrHelper.App.Helpers
          Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
-            .Select(x => new MergeRequestKey
-            {
-               ProjectKey = repo.ProjectKey,
-               IId = x.IId
-            });
+            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId));
 
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
@@ -188,14 +184,16 @@ namespace mrHelper.App.Helpers
             }
 
             GitDiffArguments args = new GitDiffArguments
-            {
-               Mode = GitDiffArguments.DiffMode.ShortStat,
-               CommonArgs = new GitDiffArguments.CommonArguments
-               {
-                  Sha1 = keyValuePair.Value.Base_Commit_SHA,
-                  Sha2 = keyValuePair.Value.Head_Commit_SHA
-               }
-            };
+            (
+               GitDiffArguments.DiffMode.ShortStat,
+               new GitDiffArguments.CommonArguments
+               (
+                  keyValuePair.Value.Base_Commit_SHA,
+                  keyValuePair.Value.Head_Commit_SHA,
+                  null, null, null
+               ),
+               null
+            );
 
             bool success = true;
             try
@@ -238,15 +236,8 @@ namespace mrHelper.App.Helpers
          _gitStatistic[repo].Statistic[key] = diffStat;
 
          Dictionary<DiffStatisticKey, DiffStatistic?> repositoryStatistic = _gitStatistic[repo].Statistic;
-         _gitStatistic[repo] = new LocalGitRepositoryStatistic
-         {
-            Statistic = repositoryStatistic,
-            State = new RepositoryState
-            {
-               IsCloned = true,
-               LatestChange = latestChange
-            }
-         };
+         _gitStatistic[repo] = new LocalGitRepositoryStatistic(
+            new RepositoryState(true, latestChange), repositoryStatistic);
       }
 
       private static readonly Regex gitDiffStatRe =
@@ -315,18 +306,12 @@ namespace mrHelper.App.Helpers
          Debug.Assert(!_gitStatistic.Any());
          foreach (ProjectKey key in _mergeRequestCache.GetProjects())
          {
-            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key);
             if (repo != null && !isConnected(repo))
             {
-               _gitStatistic.Add(repo, new LocalGitRepositoryStatistic()
-               {
-                  State = new RepositoryState
-                  {
-                     LatestChange = DateTime.MinValue,
-                     IsCloned = !repo.ExpectingClone
-                  },
-                  Statistic = new Dictionary<DiffStatisticKey, DiffStatistic?>()
-               });
+               _gitStatistic.Add(repo, new LocalGitRepositoryStatistic(
+                  new RepositoryState(!repo.ExpectingClone, DateTime.MinValue),
+                  new Dictionary<DiffStatisticKey, DiffStatistic?>()));
 
                Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
                   repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
@@ -364,8 +349,14 @@ namespace mrHelper.App.Helpers
 
       internal struct RepositoryState
       {
-         internal bool IsCloned;
-         internal DateTime LatestChange;
+         public RepositoryState(bool isCloned, DateTime latestChange)
+         {
+            IsCloned = isCloned;
+            LatestChange = latestChange;
+         }
+
+         internal bool IsCloned { get; }
+         internal DateTime LatestChange { get; }
       }
 
       internal struct DiffStatistic
@@ -390,8 +381,14 @@ namespace mrHelper.App.Helpers
 
       private struct LocalGitRepositoryStatistic
       {
-         internal RepositoryState State;
-         internal Dictionary<DiffStatisticKey, DiffStatistic?> Statistic;
+         public LocalGitRepositoryStatistic(RepositoryState state, Dictionary<int, DiffStatistic?> statistic)
+         {
+            State = state;
+            Statistic = statistic;
+         }
+
+         internal RepositoryState State { get; }
+         internal Dictionary<DiffStatisticKey, DiffStatistic?> Statistic { get; }
       }
 
       private readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();

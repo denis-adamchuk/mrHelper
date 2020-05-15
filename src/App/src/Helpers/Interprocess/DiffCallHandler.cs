@@ -37,9 +37,11 @@ namespace mrHelper.App.Interprocess
             "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
+         ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
+
          LocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(
             _snapshot.TempFolder, null, Program.Settings.UseShallowClone);
-         ILocalGitRepository tempRepository = factory.GetRepository(_snapshot.Host, _snapshot.Project);
+         ILocalGitRepository tempRepository = factory.GetRepository(projectKey);
          if (tempRepository == null)
          {
             Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
@@ -55,10 +57,7 @@ namespace mrHelper.App.Interprocess
          FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
          LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
 
-         DiffPosition position = new DiffPosition
-         {
-            Refs = _snapshot.Refs
-         };
+         DiffPosition position = new DiffPosition(null, null, null, null, _snapshot.Refs);
 
          try
          {
@@ -170,17 +169,11 @@ namespace mrHelper.App.Interprocess
             return;
          }
 
-         NewDiscussionParameters parameters = new NewDiscussionParameters
-         {
-            Body = body,
-            Position = includeContext ? createPositionParameters(position) : new Nullable<PositionParameters>()
-         };
+         NewDiscussionParameters parameters = new NewDiscussionParameters(
+            body, includeContext ? createPositionParameters(position) : new Nullable<PositionParameters>());
 
-         MergeRequestKey mergeRequestKey = new MergeRequestKey
-         {
-            ProjectKey = new ProjectKey { HostName = snapshot.Host, ProjectName = snapshot.Project },
-            IId = snapshot.MergeRequestIId
-         };
+         MergeRequestKey mergeRequestKey = new MergeRequestKey(
+            new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
          IDiscussionCreator creator = _session.GetDiscussionCreator(mergeRequestKey);
 
          try
@@ -211,16 +204,8 @@ namespace mrHelper.App.Interprocess
 
       private static PositionParameters createPositionParameters(DiffPosition position)
       {
-         return new PositionParameters
-         {
-            OldPath = position.LeftPath,
-            OldLine = position.LeftLine,
-            NewPath = position.RightPath,
-            NewLine = position.RightLine,
-            BaseSHA = position.Refs.LeftSHA,
-            HeadSHA = position.Refs.RightSHA,
-            StartSHA = position.Refs.LeftSHA
-         };
+         return new PositionParameters(position.LeftPath, position.RightPath, position.LeftLine,
+            position.RightLine, position.Refs.LeftSHA, position.Refs.RightSHA, position.Refs.LeftSHA);
       }
 
       private readonly MatchInfo _matchInfo;

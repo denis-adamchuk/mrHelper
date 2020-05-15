@@ -26,8 +26,8 @@ namespace mrHelper.Client.Session
          SessionOperator op = new SessionOperator(
             hostname, _clientContext.HostProperties.GetAccessToken(hostname));
 
-         User? currentUser = await new CurrentUserLoader(op).Load(hostname);
-         if (!currentUser.HasValue)
+         User currentUser = await new CurrentUserLoader(op).Load(hostname);
+         if (currentUser == null)
          {
             return false;
          }
@@ -41,8 +41,8 @@ namespace mrHelper.Client.Session
          if (await mergeRequestListLoader.Load())
          {
             _operator = op;
-            _internal = createSessionInternal(cacheUpdater, hostname, currentUser.Value, context);
-            Started?.Invoke(hostname, currentUser.Value, context, this);
+            _internal = createSessionInternal(cacheUpdater, hostname, currentUser, context);
+            Started?.Invoke(hostname, currentUser, context, this);
             return true;
          }
 

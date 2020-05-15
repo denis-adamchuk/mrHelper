@@ -23,11 +23,7 @@ namespace mrHelper.Client.Repository
          {
             return (Comparison)(await _client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(projectname).Repository.CompareAsync(
-                  new CompareParameters
-                  {
-                     From = from,
-                     To = to
-                  })));
+                  new CompareParameters(from, to))));
          }
          catch (Exception ex)
          {
@@ -81,11 +77,7 @@ namespace mrHelper.Client.Repository
          {
             return (Branch)(await _client.RunAsync(async (gitlab) =>
                await gitlab.Projects.Get(projectname).Repository.Branches.
-                  CreateNewTaskAsync(new CreateNewBranchParameters
-                  {
-                     Name = name,
-                     Ref = sha
-                  })));
+                  CreateNewTaskAsync(new CreateNewBranchParameters(name, sha))));
          }
          catch (Exception ex)
          {

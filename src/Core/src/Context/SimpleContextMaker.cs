@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Core.Context
 {
@@ -45,11 +44,7 @@ namespace mrHelper.Core.Context
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
-         GitShowRevisionArguments arguments = new GitShowRevisionArguments
-         {
-            Filename = filename,
-            Sha = sha
-         };
+         GitShowRevisionArguments arguments = new GitShowRevisionArguments(filename, sha);
 
          IEnumerable<string> gitResult;
          try
@@ -82,53 +77,32 @@ namespace mrHelper.Core.Context
       private DiffContext createDiffContext(int linenumber, IEnumerable<string> contents, bool isRightSideContext,
          ContextDepth depth)
       {
-         DiffContext diffContext = new DiffContext
-         {
-            Lines = new List<DiffContext.Line>()
-         };
-
          int startLineNumber = Math.Max(1, linenumber - depth.Up);
+         int selectedIndex = linenumber - startLineNumber;
+         List<DiffContext.Line> lines = new List<DiffContext.Line>();
+
          IEnumerable<string> shiftedContents = contents.Skip(startLineNumber - 1);
          foreach (string text in shiftedContents)
          {
-            diffContext.Lines.Add(getContextLine(startLineNumber + diffContext.Lines.Count, isRightSideContext, text));
-            if (diffContext.Lines.Count == depth.Size + 1)
+            lines.Add(getContextLine(startLineNumber + lines.Count, isRightSideContext, text));
+            if (lines.Count == depth.Size + 1)
             {
                break;
             }
          }
 
          // zero-based index of a selected line in DiffContext.Lines
-         diffContext.SelectedIndex = linenumber - startLineNumber;
-         return diffContext;
+         return new DiffContext(lines, selectedIndex);
       }
 
       // linenumber is one-based
       private static DiffContext.Line getContextLine(int linenumber, bool isRightSideContext, string text)
       {
-         DiffContext.Line line = new DiffContext.Line
-         {
-            Text = text
-         };
-
-         DiffContext.Line.Side side = new DiffContext.Line.Side
-         {
-            Number = linenumber,
-
-            // this 'maker' cannot distinguish between modified and unmodified lines
-            State = DiffContext.Line.State.Changed
-         };
-
-         if (isRightSideContext)
-         {
-            line.Right = side;
-         }
-         else
-         {
-            line.Left = side;
-         }
-
-         return line;
+         // this 'maker' cannot distinguish between modified and unmodified lines
+         DiffContext.Line.Side side = new DiffContext.Line.Side(linenumber, DiffContext.Line.State.Changed);
+         return new DiffContext.Line(text,
+            isRightSideContext ? new Nullable<DiffContext.Line.Side>() : side,
+            isRightSideContext ? side : new Nullable<DiffContext.Line.Side>());
       }
 
       private readonly IGitRepository _gitRepository;

@@ -29,13 +29,22 @@ namespace mrHelper.Core.Matching
    ///   RightLine = line number in the right-side file
    /// Refs is just a pair of SHAs that correspond to this diff
    /// </summary>
-   public struct DiffPosition
+   public class DiffPosition
    {
-      public string LeftPath;
-      public string RightPath;
-      public string LeftLine;
-      public string RightLine;
-      public DiffRefs Refs;
+      public DiffPosition(string leftPath, string rightPath, string leftLine, string rightLine, DiffRefs refs)
+      {
+         LeftPath = leftPath;
+         RightPath = rightPath;
+         LeftLine = leftLine;
+         RightLine = rightLine;
+         Refs = refs;
+      }
+
+      public string LeftPath { get; }
+      public string RightPath { get; }
+      public string LeftLine { get; }
+      public string RightLine { get; }
+      public DiffRefs Refs { get; }
 
       new public string ToString()
       {

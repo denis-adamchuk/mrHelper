@@ -12,8 +12,21 @@ namespace mrHelper.Core.Context
    /// </summary>
    public struct DiffContext
    {
+      public DiffContext(IEnumerable<Line> lines, int selectedIndex)
+      {
+         Lines = lines;
+         SelectedIndex = selectedIndex;
+      }
+
       public struct Line
       {
+         public Line(string text, Side? left, Side? right)
+         {
+            Text = text;
+            Left = left;
+            Right = right;
+         }
+
          public enum State
          {
             Changed,
@@ -22,8 +35,14 @@ namespace mrHelper.Core.Context
 
          public struct Side
          {
-            public int Number;
-            public State State;
+            public Side(int number, State state)
+            {
+               Number = number;
+               State = state;
+            }
+
+            public int Number { get; }
+            public State State { get; }
 
             new public string ToString()
             {
@@ -37,20 +56,20 @@ namespace mrHelper.Core.Context
                Text, (Left?.ToString() ?? "null"), (Right?.ToString() ?? "null"));
          }
 
-         public string Text;
-         public Side? Left;
-         public Side? Right;
+         public string Text { get; }
+         public Side? Left { get; }
+         public Side? Right { get; }
       }
 
-      public List<Line> Lines;
+      public IEnumerable<Line> Lines { get; }
 
-      public int SelectedIndex;
+      public int SelectedIndex { get; }
    }
 
    public struct ContextDepth
    {
-      public int Up;
-      public int Down;
+      public int Up { get; }
+      public int Down { get; }
 
       public int Size
       {

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Web.Script.Serialization;
 
 namespace mrHelper.Common.Tools
 {
@@ -9,9 +7,6 @@ namespace mrHelper.Common.Tools
    {
       /// <summary>
       /// Loads a list from file with JSON format
-      /// Throws ArgumentException
-      /// Throws ArgumentNullException
-      /// Throws InvalidOperationException
       /// </summary>
       static public T LoadFromFile<T>(string filename)
       {
@@ -19,19 +14,7 @@ namespace mrHelper.Common.Tools
 
          string json = System.IO.File.ReadAllText(filename);
 
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
-
-         T items;
-         try
-         {
-            items = serializer.Deserialize<T>(json);
-         }
-         catch (Exception) // whatever de-serialization exception
-         {
-            throw;
-         }
-
-         return items;
+         return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
       }
    }
 }

@@ -15,7 +15,7 @@ namespace mrHelper.App.Helpers
 
       public Task<IProjectUpdateContext> GetContext()
       {
-         return Task.FromResult((new PartialUpdateContext { Sha = _shas }) as IProjectUpdateContext);
+         return Task.FromResult((new PartialUpdateContext(_shas)) as IProjectUpdateContext);
       }
 
       public override string ToString()

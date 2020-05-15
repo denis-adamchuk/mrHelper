@@ -66,14 +66,14 @@ namespace mrHelper.App.Forms
          try
          {
             IMergeRequestCache cache = _searchSession.MergeRequestCache;
-            MergeRequest? mergeRequest = cache.GetMergeRequest(mrk);
-            if (mergeRequest.HasValue)
+            MergeRequest mergeRequest = cache.GetMergeRequest(mrk);
+            if (mergeRequest != null)
             {
                onLoadSingleSearchMergeRequest(mrk.IId);
-               onSingleSearchMergeRequestLoaded(mrk.ProjectKey, mergeRequest.Value);
+               onSingleSearchMergeRequestLoaded(mrk.ProjectKey, mergeRequest);
 
                GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-               onSearchComparableEntitiesLoaded(latestVersion, mergeRequest.Value,
+               onSearchComparableEntitiesLoaded(latestVersion, mergeRequest,
                   showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
             }
          }
@@ -119,12 +119,7 @@ namespace mrHelper.App.Forms
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(null, null),
             new SessionUpdateRules(false, false),
-            new SearchBasedContext
-            {
-               SearchCriteria = query,
-               MaxSearchResults = maxResults,
-               OnlyOpen = false
-            });
+            new SearchBasedContext(query, maxResults, false));
 
          if (!await _searchSession.Start(hostname, sessionContext))
          {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -65,10 +66,9 @@ namespace mrHelper.Core.Context
          bool highlightSelected = ctx.Lines.Count() > 1;
          StringBuilder body = new StringBuilder();
 
-         for (int iLine = 0; iLine < ctx.Lines.Count(); ++iLine)
+         int iLine = 0;
+         foreach (DiffContext.Line line in ctx.Lines)
          {
-            DiffContext.Line line = ctx.Lines[iLine];
-
             body.Append("<tr");
             body.Append((iLine == ctx.SelectedIndex && highlightSelected ? " class=\"selected\"" : ""));
             body.Append(">");
@@ -84,6 +84,8 @@ namespace mrHelper.Core.Context
             body.Append(getCode(line));
             body.Append("</td>");
             body.Append("</tr>");
+
+            ++iLine;
          }
          return body.ToString();
       }

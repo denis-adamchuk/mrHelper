@@ -1,6 +1,6 @@
-﻿using mrHelper.App.Helpers;
-using System;
+﻿using System;
 using System.Windows.Forms;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Controls
 {
@@ -32,12 +32,12 @@ namespace mrHelper.App.Controls
 
       private void ButtonFind_Click(object sender, EventArgs e)
       {
-         _onFind(new SearchQuery { Text = textBoxSearch.Text, CaseSensitive = checkBoxCaseSensitive.Checked }, true);
+         _onFind(new SearchQuery(textBoxSearch.Text, checkBoxCaseSensitive.Checked), true);
       }
 
       private void buttonFindPrev_Click(object sender, EventArgs e)
       {
-         _onFind(new SearchQuery { Text = textBoxSearch.Text, CaseSensitive = checkBoxCaseSensitive.Checked }, false);
+         _onFind(new SearchQuery(textBoxSearch.Text, checkBoxCaseSensitive.Checked), false);
       }
 
       private void textBoxSearch_TextChanged(object sender, EventArgs e)

@@ -113,14 +113,14 @@ namespace mrHelper.App.Forms
          try
          {
             IMergeRequestCache cache = _liveSession.MergeRequestCache;
-            MergeRequest? mergeRequest = cache.GetMergeRequest(mrk);
-            if (mergeRequest.HasValue)
+            MergeRequest mergeRequest = cache.GetMergeRequest(mrk);
+            if (mergeRequest != null)
             {
                onLoadSingleMergeRequest(mrk.IId);
-               onSingleMergeRequestLoaded(mrk.ProjectKey, mergeRequest.Value);
+               onSingleMergeRequestLoaded(mrk.ProjectKey, mergeRequest);
 
                GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-               onComparableEntitiesLoaded(latestVersion, mergeRequest.Value,
+               onComparableEntitiesLoaded(latestVersion, mergeRequest,
                   showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
             }
          }
@@ -161,11 +161,7 @@ namespace mrHelper.App.Forms
 
          IEnumerable<ProjectKey> enabledProjects =
             ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings)
-            .Select(x => new ProjectKey
-            {
-               HostName = hostname,
-               ProjectName = x.Path_With_Namespace
-            });
+            .Select(x => new ProjectKey(hostname, x.Path_With_Namespace));
          if (enabledProjects.Count() == 0)
          {
             throw new NoProjectsException(hostname);
@@ -186,10 +182,7 @@ namespace mrHelper.App.Forms
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(onForbiddenProject, onNotFoundProject),
             new SessionUpdateRules(true, true),
-            new ProjectBasedContext
-            {
-               Projects = enabledProjects.ToArray(),
-            });
+            new ProjectBasedContext(enabledProjects.ToArray()));
 
          if (!await _liveSession.Start(hostname, sessionContext))
          {

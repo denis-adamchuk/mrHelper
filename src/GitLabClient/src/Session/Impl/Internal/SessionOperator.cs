@@ -50,11 +50,7 @@ namespace mrHelper.Client.Session
          try
          {
             Project p = (Project)(await client.RunAsync(async (gl) => await gl.Projects.Get(projectName).LoadTaskAsync()));
-            return new ProjectKey
-            {
-               HostName = _host,
-               ProjectName = p.Path_With_Namespace
-            };
+            return new ProjectKey(_host, p.Path_With_Namespace);
          }
          catch (Exception ex)
          {

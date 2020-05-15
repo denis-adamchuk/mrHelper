@@ -43,13 +43,13 @@ namespace mrHelper.Client.Discussions
 
          if (sessionContext.UpdateRules.UpdateDiscussions)
          {
-            scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
-               EDiscussionUpdateType.InitialSnapshot);
-
             _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
             _timer.Elapsed += onTimer;
             _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
             _timer.Start();
+
+            scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
+               EDiscussionUpdateType.InitialSnapshot);
          }
       }
 
@@ -92,12 +92,7 @@ namespace mrHelper.Client.Discussions
             resolved = _cachedDiscussions[mrk].ResolvedDiscussionCount;
          }
 
-         return new DiscussionCount
-         {
-            Resolvable = resolvable,
-            Resolved = resolved,
-            Status = status
-         };
+         return new DiscussionCount(resolvable, resolved, status);
       }
 
       async public Task<IEnumerable<Discussion>> LoadDiscussions(MergeRequestKey mrk)
@@ -176,7 +171,7 @@ namespace mrHelper.Client.Discussions
 
          timer.Elapsed += (s, e) =>
          {
-            if (mrk.HasValue)
+            if (mrk != null)
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
@@ -271,11 +266,8 @@ namespace mrHelper.Client.Discussions
             _reconnect = true;
          }
 
-         _scheduledUpdates.Enqueue(new ScheduledUpdate
-         {
-            MergeRequests = keys?.ToArray(), // make a copy just in case
-            Type = type
-         });
+         // make a copy of `keys` just in case
+         _scheduledUpdates.Enqueue(new ScheduledUpdate(keys?.ToArray(), type));
 
          _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
          {
@@ -362,7 +354,7 @@ namespace mrHelper.Client.Discussions
 
       async private Task waitForUpdateCompetion(MergeRequestKey? mrk)
       {
-         if (mrk.HasValue)
+         if (mrk != null)
          {
             if (_updating.Contains(mrk.Value))
             {
@@ -451,15 +443,9 @@ namespace mrHelper.Client.Discussions
                prevUpdateTimestamp?.ToLocalTime().ToString() ?? "N/A",
                noteCount, resolvedDiscussionCount, resolvableDiscussionCount));
 
-            _cachedDiscussions[mrk] = new CachedDiscussions
-            {
-               PrevTimeStamp = prevUpdateTimestamp,
-               TimeStamp = latestNoteTimestamp,
-               NoteCount = noteCount,
-               Discussions = discussions.ToArray(),
-               ResolvableDiscussionCount = resolvableDiscussionCount,
-               ResolvedDiscussionCount = resolvedDiscussionCount
-            };
+            _cachedDiscussions[mrk] = new CachedDiscussions(
+               prevUpdateTimestamp, latestNoteTimestamp, noteCount,
+               discussions.ToArray(), resolvableDiscussionCount, resolvedDiscussionCount);
          }
          else
          {
@@ -524,11 +510,10 @@ namespace mrHelper.Client.Discussions
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Scheduling update of discussions for a new merge request with IId {0}",
                   e.FullMergeRequestKey.MergeRequest.IId));
-               MergeRequestKey mrk = new MergeRequestKey
-               {
-                  ProjectKey = e.FullMergeRequestKey.ProjectKey,
-                  IId = e.FullMergeRequestKey.MergeRequest.IId
-               };
+
+               MergeRequestKey mrk = new MergeRequestKey(
+                  e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
+
                if (_closed.Contains(mrk))
                {
                   Trace.TraceInformation(String.Format(
@@ -541,11 +526,8 @@ namespace mrHelper.Client.Discussions
 
             case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
                {
-                  MergeRequestKey closedMRK = new MergeRequestKey
-                  {
-                     ProjectKey = e.FullMergeRequestKey.ProjectKey,
-                     IId = e.FullMergeRequestKey.MergeRequest.IId
-                  };
+               MergeRequestKey closedMRK = new MergeRequestKey(
+                  e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
                   Trace.TraceInformation(String.Format(
                      "[DiscussionManager] Clean up closed MR: Project={0}, IId={1}",
@@ -584,20 +566,12 @@ namespace mrHelper.Client.Discussions
          {
             matchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
                .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
-               .Select(x => new MergeRequestKey
-                  {
-                     ProjectKey = projectKey,
-                     IId = x.IId
-                  })
+               .Select(x => new MergeRequestKey(projectKey, x.IId))
                .ToList());
 
             nonMatchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
                .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
-               .Select(x => new MergeRequestKey
-                  {
-                     ProjectKey = projectKey,
-                     IId = x.IId
-                  })
+               .Select(x => new MergeRequestKey(projectKey, x.IId))
                .ToList());
          }
          matchingFilter = matchingFilterList;
@@ -614,14 +588,25 @@ namespace mrHelper.Client.Discussions
       private readonly System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
-      private struct CachedDiscussions
+      private class CachedDiscussions
       {
-         public DateTime? PrevTimeStamp;
-         public DateTime TimeStamp;
-         public int NoteCount;
-         public int ResolvableDiscussionCount;
-         public int ResolvedDiscussionCount;
-         public IEnumerable<Discussion> Discussions;
+         public CachedDiscussions(DateTime? prevTimeStamp, DateTime timeStamp, int noteCount,
+            IEnumerable<Discussion> discussions, int resolvableDiscussionCount, int resolvedDiscussionCount)
+         {
+            PrevTimeStamp = prevTimeStamp;
+            TimeStamp = timeStamp;
+            NoteCount = noteCount;
+            Discussions = discussions;
+            ResolvableDiscussionCount = resolvableDiscussionCount;
+            ResolvedDiscussionCount = resolvedDiscussionCount;
+         }
+
+         public DateTime? PrevTimeStamp { get; }
+         public DateTime TimeStamp { get; }
+         public int NoteCount { get; }
+         public IEnumerable<Discussion> Discussions { get; }
+         public int ResolvableDiscussionCount { get; }
+         public int ResolvedDiscussionCount { get; }
       }
 
       private readonly Dictionary<MergeRequestKey, CachedDiscussions> _cachedDiscussions =
@@ -652,8 +637,15 @@ namespace mrHelper.Client.Discussions
 
       private struct ScheduledUpdate
       {
-         internal IEnumerable<MergeRequestKey> MergeRequests;
-         internal EDiscussionUpdateType Type;
+         internal ScheduledUpdate(IEnumerable<MergeRequestKey> mergeRequests,
+            EDiscussionUpdateType type)
+         {
+            MergeRequests = mergeRequests;
+            Type = type;
+         }
+
+         internal IEnumerable<MergeRequestKey> MergeRequests { get; }
+         internal EDiscussionUpdateType Type { get; }
       }
 
       /// <summary>

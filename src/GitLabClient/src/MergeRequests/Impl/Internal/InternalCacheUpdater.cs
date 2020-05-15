@@ -46,19 +46,11 @@ namespace mrHelper.Client.MergeRequests
 
          _cache.SetCommits(mrk, commits);
 
-         if (oldLatestCommit.Created_At > newLatestCommit.Created_At)
+         if (oldLatestCommit != null && newLatestCommit != null
+          && oldLatestCommit.Created_At > newLatestCommit.Created_At)
          {
             Debug.Assert(false);
             Trace.TraceWarning("[InternalCacheUpdater] Latest commit is older than a previous one");
-         }
-
-         if (newLatestCommit.Created_At != oldLatestCommit.Created_At)
-         {
-            Debug.WriteLine(String.Format(
-               "[InternalCacheUpdater] Latest commit of merge request with IId {0} has timestamp {1} (was {2} before update)",
-               mrk.IId,
-               newLatestCommit.Created_At.ToLocalTime().ToString(),
-               oldLatestCommit.Created_At.ToLocalTime().ToString()));
          }
       }
 
@@ -74,19 +66,11 @@ namespace mrHelper.Client.MergeRequests
 
          _cache.SetVersions(mrk, versions);
 
-         if (oldLatestVersion.Created_At > newLatestVersion.Created_At)
+         if (oldLatestVersion != null && newLatestVersion != null
+          && oldLatestVersion.Created_At > newLatestVersion.Created_At)
          {
             Debug.Assert(false);
             Trace.TraceWarning("[InternalCacheUpdater] Latest version is older than a previous one");
-         }
-
-         if (newLatestVersion.Created_At != oldLatestVersion.Created_At)
-         {
-            Debug.WriteLine(String.Format(
-               "[InternalCacheUpdater] Latest version of merge request with IId {0} has timestamp {1} (was {2} before update)",
-               mrk.IId,
-               newLatestVersion.Created_At.ToLocalTime().ToString(),
-               oldLatestVersion.Created_At.ToLocalTime().ToString()));
          }
       }
 
@@ -107,7 +91,7 @@ namespace mrHelper.Client.MergeRequests
          {
             if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
             {
-               _cache.CleanupVersions(new MergeRequestKey { ProjectKey = key, IId = mergeRequest.IId });
+               _cache.CleanupVersions(new MergeRequestKey(key, mergeRequest.IId));
             }
          }
       }
