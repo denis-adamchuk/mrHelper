@@ -98,7 +98,7 @@
     <Compile Include="src\Session\Impl\Internal\ProjectBasedMergeRequestLoader.cs" />
     <Compile Include="src\Session\Impl\Internal\VersionLoader.cs" />
     <Compile Include="src\Session\Impl\Internal\Interfaces\VersionLoaderItf.cs" />
-    <Compile Include="src\Session\SessionContextItf.cs" />
+    <Compile Include="src\Session\SessionContext.cs" />
     <Compile Include="src\Session\Impl\Internal\BaseSessionLoader.cs" />
     <Compile Include="src\Session\Impl\Internal\SessionOperator.cs" />
     <Compile Include="src\Session\SessionItf.cs" />

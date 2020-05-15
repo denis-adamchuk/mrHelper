@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
@@ -13,17 +14,19 @@ namespace mrHelper.Client.Session
 {
    internal class SearchBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
    {
-      internal SearchBasedMergeRequestLoader(GitLabClientContext clientContext, SessionOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater)
+      internal SearchBasedMergeRequestLoader(SessionOperator op,
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, SessionContext sessionContext)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
+         _sessionContext = sessionContext;
+         Debug.Assert(_sessionContext.CustomData is ProjectBasedContext);
       }
 
-      async public Task<bool> Load(ISessionContext context)
+      async public Task<bool> Load()
       {
-         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync(context);
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
          if (mergeRequests == null)
          {
             return false; // cancelled
@@ -77,9 +80,9 @@ namespace mrHelper.Client.Session
          return false;
       }
 
-      async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync(ISessionContext context)
+      async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
-         SearchBasedContext sbc = (context as SearchBasedContext);
+         SearchBasedContext sbc = (SearchBasedContext)_sessionContext.CustomData;
          object search = sbc.SearchCriteria;
          IEnumerable<MergeRequest> mergeRequests;
          try
@@ -155,6 +158,7 @@ namespace mrHelper.Client.Session
 
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
+      private readonly SessionContext _sessionContext;
    }
 }
 

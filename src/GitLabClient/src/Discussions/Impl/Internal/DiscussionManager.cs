@@ -29,7 +29,7 @@ namespace mrHelper.Client.Discussions
       IDiscussionCacheInternal
    {
       internal DiscussionManager(GitLabClientContext clientContext,
-         User user, IMergeRequestCache mergeRequestCache, ISessionContext sessionContext)
+         User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext)
       {
          _operator = new DiscussionOperator(clientContext.HostProperties);
 
@@ -41,7 +41,7 @@ namespace mrHelper.Client.Discussions
          _currentUser = user;
          _mergeRequestCache = mergeRequestCache;
 
-         if (sessionContext.AreDiscussionUpdatesEnable())
+         if (sessionContext.UpdateRules.UpdateDiscussions)
          {
             scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
                EDiscussionUpdateType.InitialSnapshot);

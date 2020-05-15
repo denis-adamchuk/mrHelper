@@ -6,21 +6,20 @@ namespace mrHelper.Client.Session
    internal static class MergeRequestListLoaderFactory
    {
       internal static IMergeRequestListLoader CreateMergeRequestListLoader(
-         GitLabClientContext clientContext, SessionOperator op,
-         ISessionContext context, InternalCacheUpdater cache, bool needRaiseCallbacks)
+         SessionOperator op, SessionContext context, InternalCacheUpdater cache)
       {
          IVersionLoader versionLoader = new VersionLoader(op, cache);
 
          IMergeRequestListLoader listLoader = null;
-         if (context is ProjectBasedContext)
+         if (context.CustomData is ProjectBasedContext)
          {
             listLoader = new ProjectBasedMergeRequestLoader(
-               clientContext, op, versionLoader, cache, needRaiseCallbacks);
+               op, versionLoader, cache, context);
          }
-         else if (context is SearchBasedContext)
+         else if (context.CustomData is SearchBasedContext)
          {
             listLoader = new SearchBasedMergeRequestLoader(
-               clientContext, op, versionLoader, cache);
+               op, versionLoader, cache, context);
          }
          return listLoader;
       }

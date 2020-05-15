@@ -10,7 +10,7 @@ namespace mrHelper.Client.Session
 {
    public interface ISession
    {
-      Task<bool> Start(string hostname, ISessionContext context);
+      Task<bool> Start(string hostname, SessionContext context);
       Task Stop();
 
       IMergeRequestCache MergeRequestCache { get; }
@@ -23,7 +23,7 @@ namespace mrHelper.Client.Session
       IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk);
 
       event Action<string> Starting;
-      event Action<string, User, ISessionContext, ISession> Started;
+      event Action<string, User, SessionContext, ISession> Started;
    }
 }
 

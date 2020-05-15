@@ -17,9 +17,9 @@ namespace mrHelper.Client.Session
       }
 
       public event Action<string> Starting;
-      public event Action<string, User, ISessionContext, ISession> Started;
+      public event Action<string, User, SessionContext, ISession> Started;
 
-      async public Task<bool> Start(string hostname, ISessionContext context)
+      async public Task<bool> Start(string hostname, SessionContext context)
       {
          await Stop();
 
@@ -34,12 +34,11 @@ namespace mrHelper.Client.Session
 
          InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
          IMergeRequestListLoader mergeRequestListLoader =
-            MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-               _clientContext, op, context, cacheUpdater, true);
+            MergeRequestListLoaderFactory.CreateMergeRequestListLoader(op, context, cacheUpdater);
 
          Starting?.Invoke(hostname);
 
-         if (await mergeRequestListLoader.Load(context))
+         if (await mergeRequestListLoader.Load())
          {
             _operator = op;
             _internal = createSessionInternal(cacheUpdater, hostname, currentUser.Value, context);
@@ -81,7 +80,7 @@ namespace mrHelper.Client.Session
          _internal?.UpdateContextProviderFactory;
 
       private SessionInternal createSessionInternal(InternalCacheUpdater cacheUpdater,
-         string hostname, User user, ISessionContext context)
+         string hostname, User user, SessionContext context)
       {
          MergeRequestManager mergeRequestManager =
             new MergeRequestManager(_clientContext, cacheUpdater, hostname, context);

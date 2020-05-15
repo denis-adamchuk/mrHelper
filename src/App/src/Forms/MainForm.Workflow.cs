@@ -183,12 +183,13 @@ namespace mrHelper.App.Forms
       {
          onLoadAllMergeRequests(enabledProjects);
 
-         ISessionContext sessionContext = new ProjectBasedContext
-         {
-            Projects = enabledProjects.ToArray(),
-            OnForbiddenProject = onForbiddenProject,
-            OnNotFoundProject = onNotFoundProject
-         };
+         SessionContext sessionContext = new SessionContext(
+            new SessionCallbacks(onForbiddenProject, onNotFoundProject),
+            new SessionUpdateRules(true, true),
+            new ProjectBasedContext
+            {
+               Projects = enabledProjects.ToArray(),
+            });
 
          if (!await _liveSession.Start(hostname, sessionContext))
          {
@@ -292,7 +293,7 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void liveSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
+      private void liveSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
       {
          if (!_currentUser.ContainsKey(hostname))
          {

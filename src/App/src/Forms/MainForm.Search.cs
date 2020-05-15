@@ -116,12 +116,15 @@ namespace mrHelper.App.Forms
       {
          onLoadAllSearchMergeRequests();
 
-         ISessionContext sessionContext = new SearchBasedContext
-         {
-            SearchCriteria = query,
-            MaxSearchResults = maxResults,
-            OnlyOpen = false
-         };
+         SessionContext sessionContext = new SessionContext(
+            new SessionCallbacks(null, null),
+            new SessionUpdateRules(false, false),
+            new SearchBasedContext
+            {
+               SearchCriteria = query,
+               MaxSearchResults = maxResults,
+               OnlyOpen = false
+            });
 
          if (!await _searchSession.Start(hostname, sessionContext))
          {

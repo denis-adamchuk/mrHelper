@@ -307,7 +307,7 @@ namespace mrHelper.App.Helpers
          unsubscribeFromAll();
       }
 
-      private void onSessionStarted(string hostname, User user, ISessionContext sessionContext, ISession session)
+      private void onSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
       {
          _mergeRequestCache = _session.MergeRequestCache;
          _contextProviderFactory = _session.UpdateContextProviderFactory;

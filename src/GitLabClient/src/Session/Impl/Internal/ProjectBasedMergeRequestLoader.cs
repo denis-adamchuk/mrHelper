@@ -15,19 +15,20 @@ namespace mrHelper.Client.Session
 {
    internal class ProjectBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
    {
-      public ProjectBasedMergeRequestLoader(GitLabClientContext clientContext, SessionOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, bool needRaiseCallbacks)
+      public ProjectBasedMergeRequestLoader(SessionOperator op,
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater,
+         SessionContext sessionContext)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
-         _needRaiseCallbacks = needRaiseCallbacks;
+         _sessionContext = sessionContext;
+         Debug.Assert(_sessionContext.CustomData is ProjectBasedContext);
       }
 
-      async public Task<bool> Load(ISessionContext context)
+      async public Task<bool> Load()
       {
-         Debug.Assert(context is ProjectBasedContext);
-         ProjectBasedContext pbc = (ProjectBasedContext)context;
+         ProjectBasedContext pbc = (ProjectBasedContext)_sessionContext.CustomData;
 
          Exception exception = null;
          bool cancelled = false;
@@ -77,18 +78,12 @@ namespace mrHelper.Client.Session
             {
                if (isForbiddenProjectException(ex))
                {
-                  if (_needRaiseCallbacks)
-                  {
-                     pbc.OnForbiddenProject?.Invoke(project);
-                  }
+                  _sessionContext.Callbacks.OnForbiddenProject?.Invoke(project);
                   return;
                }
                else if (isNotFoundProjectException(ex))
                {
-                  if (_needRaiseCallbacks)
-                  {
-                     pbc.OnNotFoundProject?.Invoke(project);
-                  }
+                  _sessionContext.Callbacks.OnNotFoundProject?.Invoke(project);
                   return;
                }
                exception = ex;
@@ -157,9 +152,9 @@ namespace mrHelper.Client.Session
          return null;
       }
 
-      private readonly bool _needRaiseCallbacks;
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
+      private readonly SessionContext _sessionContext;
    }
 }
 

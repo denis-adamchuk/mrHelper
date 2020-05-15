@@ -16,7 +16,7 @@ namespace mrHelper.Client.MergeRequests
       IProjectUpdateContextProviderFactory
    {
       internal MergeRequestManager(GitLabClientContext clientContext, InternalCacheUpdater cacheUpdater,
-         string hostname, ISessionContext context)
+         string hostname, SessionContext context)
       {
          _clientContext = clientContext;
          _cacheUpdater = cacheUpdater;

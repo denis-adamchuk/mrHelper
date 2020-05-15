@@ -16,18 +16,18 @@ namespace mrHelper.Client.MergeRequests
    internal class UpdateManager : IDisposable
    {
       internal UpdateManager(GitLabClientContext clientContext, string hostname,
-         ISessionContext context, InternalCacheUpdater cacheUpdater)
+         SessionContext context, InternalCacheUpdater cacheUpdater)
       {
          SessionOperator updateOperator = new SessionOperator(
             hostname, clientContext.HostProperties.GetAccessToken(hostname));
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            clientContext, updateOperator, context, cacheUpdater, false);
+            updateOperator, context, cacheUpdater);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
 
          _cache = cacheUpdater.Cache;
          _context = context;
 
-         if (context.AreMergeRequestUpdatesEnabled())
+         if (context.UpdateRules.UpdateMergeRequests)
          {
             _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
             _timer.Elapsed += onTimer;
@@ -155,7 +155,7 @@ namespace mrHelper.Client.MergeRequests
          try
          {
             _updating = true;
-            await _mergeRequestListLoader.Load(_context);
+            await _mergeRequestListLoader.Load();
          }
          catch (SessionException ex)
          {
@@ -182,7 +182,7 @@ namespace mrHelper.Client.MergeRequests
       private System.Timers.Timer _timer;
       private List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
-      private readonly ISessionContext _context;
+      private readonly SessionContext _context;
       private readonly IMergeRequestListLoader _mergeRequestListLoader;
       private readonly IMergeRequestLoader _mergeRequestLoader;
       private readonly IInternalCache _cache;
