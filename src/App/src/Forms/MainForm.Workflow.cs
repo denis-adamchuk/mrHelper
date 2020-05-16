@@ -86,50 +86,40 @@ namespace mrHelper.App.Forms
             && selectMergeRequest(listViewMergeRequests, projectname, iid, false);
       }
 
-      private bool switchMergeRequestByUser(MergeRequestKey mrk, bool showVersions)
+      private void switchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)
       {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
-            mrk.IId.ToString()));
+         Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 
-         if (mrk.IId == 0)
-         {
-            onLoadSingleMergeRequest(0);
-            return false;
-         }
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
+            fmk.MergeRequest.IId.ToString()));
 
          IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
-            mrk.ProjectKey.HostName, Program.Settings);
+            fmk.ProjectKey.HostName, Program.Settings);
 
-         string projectname = mrk.ProjectKey.ProjectName;
+         string projectname = fmk.ProjectKey.ProjectName;
          if (projectname != String.Empty &&
             (!enabledProjects.Cast<Project>().Any(x => 0 == String.Compare(x.Path_With_Namespace, projectname, true))))
          {
             string message = String.Format("Project {0} is not in the list of enabled projects", projectname);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
+            return;
          }
 
          _suppressExternalConnections = true;
          try
          {
-            IMergeRequestCache cache = _liveSession.MergeRequestCache;
-            MergeRequest mergeRequest = cache.GetMergeRequest(mrk);
-            if (mergeRequest != null)
-            {
-               onLoadSingleMergeRequest(mrk.IId);
-               onSingleMergeRequestLoaded(mrk.ProjectKey, mergeRequest);
+            onSingleMergeRequestLoaded(fmk);
 
-               GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-               onComparableEntitiesLoaded(latestVersion, mergeRequest,
-                  showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
-            }
+            IMergeRequestCache cache = _liveSession.MergeRequestCache;
+            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
+            onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
+               showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
          }
          finally
          {
             _suppressExternalConnections = false;
          }
-
-         return false;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -250,7 +240,7 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadSingleMergeRequest(int mergeRequestIId)
+      private void onSingleMergeRequestLoaded(FullMergeRequestKey fmk)
       {
          if (isSearchMode())
          {
@@ -258,18 +248,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onLoadSingleMergeRequestCommon(mergeRequestIId);
-      }
-
-      private void onSingleMergeRequestLoaded(ProjectKey projectKey, MergeRequest mergeRequest)
-      {
-         if (isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onSingleMergeRequestLoadedCommon(projectKey, mergeRequest);
+         onSingleMergeRequestLoadedCommon(fmk);
       }
 
       private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
@@ -286,8 +265,15 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      private void liveSessionStarting(string hostname)
+      {
+         unsubscribeFromLiveSessionContent();
+      }
+
       private void liveSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
       {
+         subscribeToLiveSessionContent();
+
          if (!_currentUser.ContainsKey(hostname))
          {
             _currentUser.Add(hostname, user);

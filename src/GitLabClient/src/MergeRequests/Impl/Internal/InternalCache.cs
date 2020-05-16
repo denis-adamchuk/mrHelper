@@ -19,6 +19,10 @@ namespace mrHelper.Client.MergeRequests
 
       private InternalCache(InternalCache details)
       {
+         _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
+         _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
+         _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
+
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in details._mergeRequests)
          {
             SetMergeRequests(kv.Key, kv.Value.ToArray()); // make a copy

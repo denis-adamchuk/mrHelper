@@ -51,43 +51,28 @@ namespace mrHelper.App.Forms
             && selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
       }
 
-      private bool switchSearchMergeRequestByUser(MergeRequestKey mrk, bool showVersions)
+      private void switchSearchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)
       {
-         Trace.TraceInformation(String.Format("[MainForm.Search] User requested to change merge request to IId {0}",
-            mrk.IId.ToString()));
+         Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 
-         if (mrk.IId == 0)
-         {
-            onLoadSingleSearchMergeRequest(0);
-            return false;
-         }
+         Trace.TraceInformation(String.Format("[MainForm.Search] User requested to change merge request to IId {0}",
+            fmk.MergeRequest.IId.ToString()));
 
          _suppressExternalConnections = true;
          try
          {
-            IMergeRequestCache cache = _searchSession.MergeRequestCache;
-            MergeRequest mergeRequest = cache.GetMergeRequest(mrk);
-            if (mergeRequest != null)
-            {
-               onLoadSingleSearchMergeRequest(mrk.IId);
-               onSingleSearchMergeRequestLoaded(mrk.ProjectKey, mergeRequest);
+            onSingleSearchMergeRequestLoaded(fmk);
 
-               GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-               onSearchComparableEntitiesLoaded(latestVersion, mergeRequest,
-                  showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
-            }
-         }
-         catch (SessionException ex)
-         {
-            ExceptionHandlers.Handle("Cannot switch merge request", ex);
-            MessageBox.Show(ex.UserMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            IMergeRequestCache cache = _liveSession.MergeRequestCache;
+            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
+            onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
+               showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
          }
          finally
          {
             _suppressExternalConnections = false;
          }
-
-         return false;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +157,7 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadSingleSearchMergeRequest(int mergeRequestIId)
+      private void onSingleSearchMergeRequestLoaded(FullMergeRequestKey fmk)
       {
          if (!isSearchMode())
          {
@@ -180,18 +165,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onLoadSingleMergeRequestCommon(mergeRequestIId);
-      }
-
-      private void onSingleSearchMergeRequestLoaded(ProjectKey projectKey, MergeRequest mergeRequest)
-      {
-         if (!isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onSingleMergeRequestLoadedCommon(projectKey, mergeRequest);
+         onSingleMergeRequestLoadedCommon(fmk);
       }
 
       private void onSearchComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,

@@ -56,6 +56,8 @@ namespace mrHelper.App.Forms
 
          buttonTimeTrackingCancel.ConfirmationCondition = () => true;
          buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
+
+         listViewMergeRequests.Deselected += ListViewMergeRequests_Deselected;
       }
 
       public string GetCurrentHostName()

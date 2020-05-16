@@ -27,16 +27,15 @@ namespace mrHelper.Client.MergeRequests
             return;
          }
 
-         IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(key);
          _cache.SetMergeRequests(key, mergeRequests);
 
-         if (mergeRequests.Count() != previouslyCachedMergeRequests.Count())
+         IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(key);
+         if (previouslyCachedMergeRequests != null && mergeRequests.Count() != previouslyCachedMergeRequests.Count())
          {
             Debug.WriteLine(String.Format(
                "[InternalCacheUpdater] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                key.ProjectName, key.HostName, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
          }
-
          cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
       }
 
@@ -45,16 +44,17 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateCommits(MergeRequestKey mrk, IEnumerable<Commit> commits)
       {
-         if (commits == null || !commits.Any() || _cache.GetCommits(mrk) == null || !_cache.GetCommits(mrk).Any())
+         if (commits == null)
          {
             Debug.Assert(false);
             return;
          }
 
+         _cache.SetCommits(mrk, commits);
+
+#if DEBUG
          Commit oldLatestCommit = _cache.GetCommits(mrk).OrderBy(x => x.Created_At).LastOrDefault();
          Commit newLatestCommit = commits.OrderBy(x => x.Created_At).LastOrDefault();
-
-         _cache.SetCommits(mrk, commits);
 
          if (oldLatestCommit != null && newLatestCommit != null
           && oldLatestCommit.Created_At > newLatestCommit.Created_At)
@@ -62,6 +62,7 @@ namespace mrHelper.Client.MergeRequests
             Debug.Assert(false);
             Trace.TraceWarning("[InternalCacheUpdater] Latest commit is older than a previous one");
          }
+#endif
       }
 
       /// <summary>
@@ -69,16 +70,17 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateVersions(MergeRequestKey mrk, IEnumerable<Version> versions)
       {
-         if (versions == null || !versions.Any() || _cache.GetVersions(mrk) == null || !_cache.GetVersions(mrk).Any())
+         if (versions == null)
          {
             Debug.Assert(false);
             return;
          }
 
+         _cache.SetVersions(mrk, versions);
+
+#if DEBUG
          Version oldLatestVersion = _cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
          Version newLatestVersion = versions.OrderBy(x => x.Created_At).LastOrDefault();
-
-         _cache.SetVersions(mrk, versions);
 
          if (oldLatestVersion != null && newLatestVersion != null
           && oldLatestVersion.Created_At > newLatestVersion.Created_At)
@@ -86,6 +88,7 @@ namespace mrHelper.Client.MergeRequests
             Debug.Assert(false);
             Trace.TraceWarning("[InternalCacheUpdater] Latest version is older than a previous one");
          }
+#endif
       }
 
       /// <summary>
@@ -107,11 +110,14 @@ namespace mrHelper.Client.MergeRequests
       private void cleanupOldRecords(ProjectKey key,
          IEnumerable<MergeRequest> oldRecords, IEnumerable<MergeRequest> newRecords)
       {
-         foreach (MergeRequest mergeRequest in oldRecords)
+         if (oldRecords != null)
          {
-            if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
+            foreach (MergeRequest mergeRequest in oldRecords)
             {
-               _cache.CleanupVersions(new MergeRequestKey(key, mergeRequest.IId));
+               if (!newRecords.Any((x) => x.Id == mergeRequest.Id))
+               {
+                  _cache.CleanupVersions(new MergeRequestKey(key, mergeRequest.IId));
+               }
             }
          }
       }

@@ -312,12 +312,14 @@ namespace mrHelper.App.Forms
          prepareFormToStart();
 
          createGitLabClientManager();
-         _gitClientUpdater = new GitInteractiveUpdater();
          createLiveSessionAndDependencies();
          createSearchSession();
 
-         subscribeToLiveSessionAndDependencies();
+         subscribeToLiveSession();
+
+         _gitClientUpdater = new GitInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
+         _gitStatManager.Update += onGitStatisticManagerUpdate;
 
          initializeColorScheme();
          initializeIconScheme();
@@ -339,11 +341,11 @@ namespace mrHelper.App.Forms
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
-         if (_gitClientUpdater != null)
-         {
-            _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
-         }
-         unsubscribeFromLiveSessionAndDependencies();
+         _gitStatManager.Update -= onGitStatisticManagerUpdate;
+         _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+
+         unsubscribeFromLiveSessionContent();
+         unsubscribeFromLiveSession();
 
          await finalizeCommitChainCreator();
          await disposeLocalGitRepositoryFactory();
@@ -503,21 +505,20 @@ namespace mrHelper.App.Forms
          _expressionResolver?.Dispose();
       }
 
-      private void subscribeToLiveSessionAndDependencies()
+      private void subscribeToLiveSession()
       {
          if (_liveSession != null)
          {
+            _liveSession.Starting += liveSessionStarting;
             _liveSession.Started += liveSessionStarted;
          }
+      }
 
+      private void subscribeToLiveSessionContent()
+      {
          if (_liveSession?.MergeRequestCache != null)
          {
             _liveSession.MergeRequestCache.MergeRequestEvent += processUpdate;
-         }
-
-         if (_gitStatManager != null)
-         {
-            _gitStatManager.Update += onGitStatisticManagerUpdate;
          }
 
          if (_liveSession?.TotalTimeCache != null)
@@ -533,21 +534,20 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void unsubscribeFromLiveSessionAndDependencies()
+      private void unsubscribeFromLiveSession()
       {
          if (_liveSession != null)
          {
+            _liveSession.Starting -= liveSessionStarting;
             _liveSession.Started -= liveSessionStarted;
          }
+      }
 
+      private void unsubscribeFromLiveSessionContent()
+      {
          if (_liveSession?.MergeRequestCache != null)
          {
             _liveSession.MergeRequestCache.MergeRequestEvent -= processUpdate;
-         }
-
-         if (_gitStatManager != null)
-         {
-            _gitStatManager.Update -= onGitStatisticManagerUpdate;
          }
 
          if (_liveSession?.TotalTimeCache != null)

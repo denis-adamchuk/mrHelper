@@ -19,6 +19,8 @@ using mrHelper.GitClient;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.App.Forms.Helpers;
+using Newtonsoft.Json.Linq;
+using System.Timers;
 
 namespace mrHelper.App.Forms
 {
@@ -338,49 +340,30 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void ListViewMergeRequests_Deselected(object sender)
+      {
+         ListView listView = (sender as ListView);
+         Debug.Assert(listView.SelectedItems.Count < 1);
+
+         disableCommonUIControls();
+      }
+
       private void ListViewMergeRequests_ItemSelectionChanged(
          object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
-         listView.Refresh();
+         Debug.Assert(listView.SelectedItems.Count > 0);
 
-         bool showVersions = checkBoxShowVersions.Checked;
+         FullMergeRequestKey fmk = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
 
-         // had to use this hack, because it is not possible to prevent deselecting a row
-         // on a click on empty area in ListView
-         if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
+         if (isSearchMode())
          {
-            switchMergeRequestByUser(default(MergeRequestKey), showVersions);
-            return;
+            switchSearchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
          }
-
-         if (listView == listViewFoundMergeRequests && listView.SelectedItems.Count < 1)
+         else
          {
-            switchSearchMergeRequestByUser(default(MergeRequestKey), showVersions);
-            return;
-         }
-
-         FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         MergeRequestKey mrk = new MergeRequestKey(key.ProjectKey, key.MergeRequest.IId);
-
-         if (listView == listViewFoundMergeRequests)
-         {
-            switchSearchMergeRequestByUser(mrk, showVersions);
-         }
-         else if (switchMergeRequestByUser(mrk, showVersions))
-         {
-            if (!isSearchMode())
-            {
-               if (!getMergeRequestKey(listViewMergeRequests).HasValue)
-               {
-                  Debug.Assert(false);
-                  Trace.TraceError("Bad MRK in ListViewMergeRequests_ItemSelectionChanged");
-                  return;
-               }
-
-               _lastMergeRequestsByHosts[key.ProjectKey.HostName] =
-                  getMergeRequestKey(listViewMergeRequests).Value;
-            }
+            switchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
+            _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
          }
       }
 
@@ -1131,7 +1114,9 @@ namespace mrHelper.App.Forms
             _initialHostName = hostname;
          }
 
-         Dictionary<string, object> reviewedCommits = (Dictionary<string, object>)reader.Get("ReviewedCommits");
+         JObject reviewedCommitsObj = (JObject)reader.Get("ReviewedCommits");
+         Dictionary<string, object> reviewedCommits =
+            reviewedCommitsObj.ToObject<Dictionary<string, object>>();
          if (reviewedCommits != null)
          {
             _reviewedCommits = reviewedCommits.ToDictionary(
@@ -1149,7 +1134,7 @@ namespace mrHelper.App.Forms
                item =>
                {
                   HashSet<string> commits = new HashSet<string>();
-                  foreach (string commit in (ArrayList)item.Value)
+                  foreach (string commit in (JArray)item.Value)
                   {
                      commits.Add(commit);
                   }
@@ -1157,8 +1142,9 @@ namespace mrHelper.App.Forms
                });
          }
 
+         JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");
          Dictionary<string, object> lastMergeRequestsByHosts =
-            (Dictionary<string, object>)reader.Get("MergeRequestsByHosts");
+            lastMergeRequestsByHostsObj.ToObject<Dictionary<string, object>>();
          if (lastMergeRequestsByHosts != null)
          {
             _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(

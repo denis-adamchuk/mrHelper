@@ -698,15 +698,15 @@ namespace mrHelper.App.Forms
 
       private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
       {
-         if (author == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
          if (!enabled)
          {
             foreach (Control control in groupBoxActions.Controls) control.Enabled = false;
+            return;
+         }
+
+         if (author == null)
+         {
+            Debug.Assert(false);
             return;
          }
 
@@ -1838,22 +1838,9 @@ namespace mrHelper.App.Forms
 
       private void onLoadSingleMergeRequestCommon(int mergeRequestIId)
       {
-         string message = mergeRequestIId != 0
-            ? String.Format("Loading merge request with IId {0}...", mergeRequestIId)
-            : String.Empty;
-         labelWorkflowStatus.Text = message;
-
-         enableMergeRequestActions(false);
-         enableCommitActions(false, null, null);
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-         updateTotalTime(null, null, null);
-         disableComboBox(comboBoxLatestCommit, String.Empty);
-         disableComboBox(comboBoxEarliestCommit, String.Empty);
-
-         if (mergeRequestIId != 0)
+         if (mergeRequestIId == 0)
          {
-            richTextBoxMergeRequestDescription.Text = "Loading...";
+            disableCommonUIControls();
          }
 
          Debug.WriteLine(String.Format(
@@ -1861,19 +1848,18 @@ namespace mrHelper.App.Forms
             mergeRequestIId.ToString(), isSearchMode().ToString()));
       }
 
-      private void onSingleMergeRequestLoadedCommon(ProjectKey projectKey, MergeRequest mergeRequest)
+      private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk)
       {
-         Debug.Assert(mergeRequest != null);
+         Debug.Assert(fmk.MergeRequest != null);
 
          enableMergeRequestActions(true);
-
-         FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
          updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, fmk.ProjectKey, mergeRequest.Author);
+         updateTimeTrackingMergeRequestDetails(
+            true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
-            mergeRequest.Author, projectKey.HostName);
+            fmk.MergeRequest.Author, fmk.ProjectKey.HostName);
 
-         labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", mergeRequest.IId);
+         labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", fmk.MergeRequest.IId);
 
          Debug.WriteLine(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
@@ -1882,6 +1868,9 @@ namespace mrHelper.App.Forms
       private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
          MergeRequest mergeRequest, System.Collections.IEnumerable entities, ListView listView)
       {
+         disableComboBox(comboBoxLatestCommit, String.Empty);
+         disableComboBox(comboBoxEarliestCommit, String.Empty);
+
          MergeRequestKey? mrk = getMergeRequestKey(listView);
 
          IEnumerable<object> objects = entities.Cast<object>();
@@ -1900,8 +1889,6 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            disableComboBox(comboBoxLatestCommit, String.Empty);
-            disableComboBox(comboBoxEarliestCommit, String.Empty);
             if (count == 0)
             {
                // Just to be able to switch between versions and commits
