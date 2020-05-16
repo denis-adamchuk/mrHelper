@@ -125,10 +125,10 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
+      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
          _currentUser = user;
-         _mergeRequestCache = session.MergeRequestCache;
+         _mergeRequestCache = _session.MergeRequestCache;
       }
 
       private User _currentUser;

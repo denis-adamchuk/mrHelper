@@ -22,7 +22,7 @@ namespace mrHelper.App.Helpers
          _session.Started += onSessionStarted;
       }
 
-      private void onSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
+      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
          if (_mergeRequestCache != null)
          {

@@ -270,7 +270,7 @@ namespace mrHelper.App.Forms
          unsubscribeFromLiveSessionContent();
       }
 
-      private void liveSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
+      private void liveSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
          subscribeToLiveSessionContent();
 

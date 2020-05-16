@@ -22,7 +22,7 @@ namespace mrHelper.App.Helpers
          return expression.Replace("%CurrentUsername%", _currentUser.Username);
       }
 
-      private void onSessionStarted(string hostname, User user, SessionContext sessionContext, ISession session)
+      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
          _currentUser = user;
       }

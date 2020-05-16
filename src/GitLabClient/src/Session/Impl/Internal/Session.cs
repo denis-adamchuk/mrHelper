@@ -17,7 +17,7 @@ namespace mrHelper.Client.Session
       }
 
       public event Action<string> Starting;
-      public event Action<string, User, SessionContext, ISession> Started;
+      public event Action<string, User, SessionContext> Started;
 
       async public Task<bool> Start(string hostname, SessionContext context)
       {
@@ -42,7 +42,7 @@ namespace mrHelper.Client.Session
          {
             _operator = op;
             _internal = createSessionInternal(cacheUpdater, hostname, currentUser, context);
-            Started?.Invoke(hostname, currentUser, context, this);
+            Started?.Invoke(hostname, currentUser, context);
             return true;
          }
 
