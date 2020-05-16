@@ -373,15 +373,15 @@ namespace mrHelper.App.Forms
          {
             if (radioButtonSearchByTargetBranch.Checked)
             {
-               await searchMergeRequests(
-                  new SearchByTargetBranch { TargetBranchName = textBoxSearch.Text }, null);
+               await searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
             }
             else if (radioButtonSearchByTitleAndDescription.Checked)
             {
                // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
                Debug.Assert(Constants.MaxSearchByTitleAndDescriptionResults <= 100);
-               await searchMergeRequests(
-                  new SearchByText { Text = textBoxSearch.Text }, Constants.MaxSearchByTitleAndDescriptionResults);
+
+               await searchMergeRequests(new SearchByText(textBoxSearch.Text),
+                  Constants.MaxSearchByTitleAndDescriptionResults);
             }
             else
             {

@@ -112,7 +112,7 @@ namespace mrHelper.Client.Session
          IEnumerable<MergeRequest> mergeRequests;
          try
          {
-            SearchByProject searchByProject = new SearchByProject { ProjectName = projectName };
+            SearchByProject searchByProject = new SearchByProject(projectName);
             mergeRequests = await _operator.SearchMergeRequestsAsync(searchByProject, null, true);
          }
          catch (OperatorException ex)

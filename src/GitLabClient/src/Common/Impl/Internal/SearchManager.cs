@@ -22,7 +22,7 @@ namespace mrHelper.Client.Common
          GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
          try
          {
-            SearchByIId searchByIId = new SearchByIId { ProjectName = projectName, IId = mergeRequestIId };
+            SearchByIId searchByIId = new SearchByIId(projectName, mergeRequestIId);
             IEnumerable<MergeRequest> mergeRequests =
                await CommonOperator.SearchMergeRequestsAsync(client, searchByIId, null, true);
             return mergeRequests.Any() ? mergeRequests.First() : null;

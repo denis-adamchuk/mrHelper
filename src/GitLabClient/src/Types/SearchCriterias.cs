@@ -2,22 +2,44 @@
 {
    public class SearchByProject
    {
-      public string ProjectName;
+      public SearchByProject(string projectName)
+      {
+         ProjectName = projectName;
+      }
+
+      public string ProjectName { get; }
    }
 
-   public class SearchByIId : SearchByProject
+   public class SearchByIId
    {
-      public int IId;
+      public SearchByIId(string projectName, int iId)
+      {
+         ProjectName = projectName;
+         IId = iId;
+      }
+
+      public string ProjectName { get; }
+      public int IId { get; }
    }
 
    public class SearchByTargetBranch
    {
-      public string TargetBranchName;
+      public SearchByTargetBranch(string targetBranchName)
+      {
+         TargetBranchName = targetBranchName;
+      }
+
+      public string TargetBranchName { get; }
    }
 
    public class SearchByText
    {
-      public string Text;
+      public SearchByText(string text)
+      {
+         Text = text;
+      }
+
+      public string Text { get; }
    }
 }
 

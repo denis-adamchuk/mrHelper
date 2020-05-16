@@ -82,9 +82,10 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
 
          await _searchSession.Stop();
+         disableAllSearchUIControls(true);
+
          if (String.IsNullOrWhiteSpace(hostname))
          {
-            disableAllSearchUIControls(true);
             return false;
          }
 
@@ -93,7 +94,6 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         disableAllSearchUIControls(true);
          return await loadAllSearchMergeRequests(hostname, query, maxResults);
       }
 

@@ -1748,14 +1748,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void changeProjectEnabledState(string hostname, string projectname, bool state)
+      private void changeProjectEnabledState(ProjectKey projectKey, bool state)
       {
          Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
-            hostname, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
-         Debug.Assert(projects.ContainsKey(projectname));
-         projects[projectname] = state;
+            projectKey.HostName, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
+         Debug.Assert(projects.ContainsKey(projectKey.ProjectName));
+         projects[projectKey.ProjectName] = state;
 
-         ConfigurationHelper.SetProjectsForHost(hostname,
+         ConfigurationHelper.SetProjectsForHost(projectKey.HostName,
             Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
          updateProjectsListView();
       }
@@ -1834,18 +1834,6 @@ namespace mrHelper.App.Forms
          {
             linkLabelAbortGit.Visible = false;
          }
-      }
-
-      private void onLoadSingleMergeRequestCommon(int mergeRequestIId)
-      {
-         if (mergeRequestIId == 0)
-         {
-            disableCommonUIControls();
-         }
-
-         Debug.WriteLine(String.Format(
-            "[MainForm] Loading merge request with IId {0} IsSearchMode={1}",
-            mergeRequestIId.ToString(), isSearchMode().ToString()));
       }
 
       private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk)

@@ -39,7 +39,6 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            disableAllUIControls(true);
          }
 
          bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
@@ -138,8 +137,12 @@ namespace mrHelper.App.Forms
          textBoxSearch.Enabled = false;
 
          await _liveSession.Stop();
+         disableAllUIControls(true);
+
          await _searchSession.Stop();
-         if (hostname == String.Empty)
+         disableAllSearchUIControls(true);
+
+         if (String.IsNullOrWhiteSpace(hostname))
          {
             return false;
          }
@@ -149,6 +152,21 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
+         if (radioButtonSelectByProjects.Checked)
+         {
+            return await startProjectBasedWorkflowAsync(hostname);
+         }
+         else if (radioButtonSelectByLabels.Checked)
+         {
+            throw new NotImplementedException();
+         }
+
+         Debug.Assert(false);
+         return false;
+      }
+
+      private async Task<bool> startProjectBasedWorkflowAsync(string hostname)
+      {
          IEnumerable<ProjectKey> enabledProjects =
             ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings)
             .Select(x => new ProjectKey(hostname, x.Path_With_Namespace));
@@ -157,11 +175,7 @@ namespace mrHelper.App.Forms
             throw new NoProjectsException(hostname);
          }
 
-         disableAllUIControls(true);
-         disableAllSearchUIControls(true);
-         buttonReloadList.Enabled = true;
          createListViewGroupsForProjects(listViewMergeRequests, enabledProjects);
-
          return await loadAllMergeRequests(hostname, enabledProjects);
       }
 
@@ -192,7 +206,7 @@ namespace mrHelper.App.Forms
          MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
          Trace.TraceInformation("[MainForm.Workflow] Forbidden project. User notified that project will be disabled");
 
-         changeProjectEnabledState(projectKey.HostName, projectKey.ProjectName, false);
+         changeProjectEnabledState(projectKey, false);
       }
 
       private void onNotFoundProject(ProjectKey projectKey)
@@ -204,7 +218,7 @@ namespace mrHelper.App.Forms
          MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
          Trace.TraceInformation("[MainForm.Workflow] Project not found. User notified that project will be disabled");
 
-         changeProjectEnabledState(projectKey.HostName, projectKey.ProjectName, false);
+         changeProjectEnabledState(projectKey, false);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

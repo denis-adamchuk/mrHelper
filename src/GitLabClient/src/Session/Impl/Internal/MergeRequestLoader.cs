@@ -27,7 +27,7 @@ namespace mrHelper.Client.Session
       {
          try
          {
-            SearchByIId searchByIId = new SearchByIId { ProjectName = mrk.ProjectKey.ProjectName, IId = mrk.IId };
+            SearchByIId searchByIId = new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId);
             IEnumerable<MergeRequest> mergeRequests =
                await _operator.SearchMergeRequestsAsync(searchByIId, null, false);
             if (mergeRequests.Any())
