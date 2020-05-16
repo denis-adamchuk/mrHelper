@@ -230,7 +230,7 @@ namespace mrHelper.App.Forms
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
             ListViewItem item = addListViewMergeRequestItem(listViewFoundMergeRequests, projectKey);
-            setListViewItemTag(item, projectKey, mergeRequest);
+            setListViewItemTag(item, new FullMergeRequestKey(projectKey, mergeRequest));
          }
 
          int maxLineCount = 2;

@@ -10,7 +10,7 @@ namespace mrHelper.App.Helpers
    {
       internal CommitBasedContextProvider(IEnumerable<string> shas)
       {
-         _shas = shas.ToList();
+         _shas = shas;
       }
 
       public Task<IProjectUpdateContext> GetContext()
@@ -23,7 +23,7 @@ namespace mrHelper.App.Helpers
          return String.Format("CommitBasedContextProvider. Sha Count: {0}", _shas.Count());
       }
 
-      private readonly List<string> _shas;
+      private readonly IEnumerable<string> _shas;
    }
 }
 

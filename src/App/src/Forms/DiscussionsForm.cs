@@ -314,7 +314,10 @@ namespace mrHelper.App.Forms
             .Where(x => x is DiscussionBox)
             .Cast<DiscussionBox>();
 
-         boxes.ToList().ForEach(x => x.Visible = DisplayFilter.DoesMatchFilter(x.Discussion));
+         foreach (DiscussionBox box in boxes)
+         {
+            box.Visible = DisplayFilter.DoesMatchFilter(box.Discussion);
+         }
       }
 
       private void highlightSearchResult(TextSearchResult? result)

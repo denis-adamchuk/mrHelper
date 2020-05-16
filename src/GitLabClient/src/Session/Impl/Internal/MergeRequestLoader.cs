@@ -30,7 +30,10 @@ namespace mrHelper.Client.Session
             SearchByIId searchByIId = new SearchByIId { ProjectName = mrk.ProjectKey.ProjectName, IId = mrk.IId };
             IEnumerable<MergeRequest> mergeRequests =
                await _operator.SearchMergeRequestsAsync(searchByIId, null, false);
-            _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.FirstOrDefault());
+            if (mergeRequests.Any())
+            {
+               _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
+            }
          }
          catch (OperatorException ex)
          {

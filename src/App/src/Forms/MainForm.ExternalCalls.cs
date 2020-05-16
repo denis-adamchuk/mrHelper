@@ -280,9 +280,9 @@ namespace mrHelper.App.Forms
             return; // URL parsing failed
          }
 
-         HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
-            x => x.Host == mergeRequestUrl.Host);
-         if (String.IsNullOrEmpty(proposedSelectedItem.Host))
+         HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().SingleOrDefault(
+            x => x.Host == mergeRequestUrl.Host); // `null` if not found
+         if (proposedSelectedItem == null || String.IsNullOrEmpty(proposedSelectedItem.Host))
          {
             reportErrorOnConnect(url, String.Format(
                "Cannot connect to host {0} because it is not in the list of known hosts. ", mergeRequestUrl.Host),

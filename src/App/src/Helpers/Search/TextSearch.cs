@@ -140,8 +140,8 @@ namespace mrHelper.App.Helpers
          }
          else
          {
-            string reverseText = String.Join("", control.Text.Reverse().ToArray());
-            string reverseQuery = String.Join("", query.Text.Reverse().ToArray());
+            string reverseText = String.Join("", control.Text.Reverse());
+            string reverseQuery = String.Join("", query.Text.Reverse());
             startPosition = control.Text.Length - startPosition;
             int position = reverseText.IndexOf(reverseQuery, startPosition, stringComparison);
             if (position != -1)

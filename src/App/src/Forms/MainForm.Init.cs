@@ -329,7 +329,7 @@ namespace mrHelper.App.Forms
       private void createGitLabClientManager()
       {
          GitLabClientContext clientContext = new GitLabClientContext
-            (this, Program.Settings, _mergeRequestFilter, _keywords.ToArray(), Program.Settings.AutoUpdatePeriodMs);
+            (this, Program.Settings, _mergeRequestFilter, _keywords, Program.Settings.AutoUpdatePeriodMs);
          _gitlabClientManager = new Client.Common.GitLabClientManager(clientContext);
       }
 

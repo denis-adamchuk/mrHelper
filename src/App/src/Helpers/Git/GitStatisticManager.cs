@@ -139,7 +139,7 @@ namespace mrHelper.App.Helpers
          // Use locally cached information for the whole Project because it is always not less
          // than the latest version of any merge request that we have locally.
          // This allows to guarantee that each MR is processed once and not on each git repository update.
-         DateTime latestChange = _mergeRequestCache.GetLatestVersion(repo.ProjectKey).Created_At;
+         DateTime latestChange = _mergeRequestCache.GetLatestVersion(repo.ProjectKey)?.Created_At ?? DateTime.MinValue;
 
          Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
@@ -150,7 +150,7 @@ namespace mrHelper.App.Helpers
          {
             Version version = _mergeRequestCache.GetLatestVersion(mrk);
 
-            if (version.Created_At <= prevLatestChange || version.Created_At > latestChange)
+            if (version == null || version.Created_At <= prevLatestChange || version.Created_At > latestChange)
             {
                continue;
             }

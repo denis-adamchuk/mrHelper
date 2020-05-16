@@ -8,6 +8,7 @@ using mrHelper.Client.Session;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using Version = GitLabSharp.Entities.Version;
+using System.Diagnostics;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -38,6 +39,12 @@ namespace mrHelper.Client.MergeRequests
          catch (OperatorException ex)
          {
             ExceptionHandlers.Handle("Cannot obtain latest version for RemoteBasedUpdateProvider", ex);
+         }
+
+         if (!allVersions.Any())
+         {
+            Debug.Assert(false);
+            return null;
          }
 
          List<string> shas = new List<string>();

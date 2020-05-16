@@ -995,7 +995,7 @@ namespace mrHelper.App.Forms
       {
          if (isTrackingTime())
          {
-            updateTotalTime();
+            updateTotalTime(null, null, null);
          }
       }
 
@@ -1025,7 +1025,7 @@ namespace mrHelper.App.Forms
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime();
+         updateTotalTime(null, null, null);
 
          updateTrayIcon();
          updateTaskbarIcon();
@@ -1098,8 +1098,8 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            updateTimeTrackingMergeRequestDetails(false);
-            updateTotalTime();
+            updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
+            updateTotalTime(null, null, null);
          }
 
          updateTrayIcon();

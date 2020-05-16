@@ -46,8 +46,7 @@ namespace mrHelper.Client.MergeRequests
       public MergeRequest GetMergeRequest(MergeRequestKey mrk)
       {
          IEnumerable<MergeRequest> mergeRequests = GetMergeRequests(mrk.ProjectKey);
-         MergeRequest result = mergeRequests.FirstOrDefault(x => x.IId == mrk.IId);
-         return result == null ? new MergeRequest() : result;
+         return mergeRequests.FirstOrDefault(x => x.IId == mrk.IId); // `null` if not found
       }
 
       public IProjectUpdateContextProvider GetLocalBasedContextProvider(ProjectKey projectKey)

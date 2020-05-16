@@ -113,13 +113,14 @@ namespace mrHelper.App.Forms
 
          comboBoxHost.SelectedIndex = -1;
 
-         HostComboBoxItem initialSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().ToList().SingleOrDefault(
-            x => x.Host == getInitialHostName());
+         HostComboBoxItem initialSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().SingleOrDefault(
+            x => x.Host == getInitialHostName()); // `null` if not found
+
          HostComboBoxItem defaultSelectedItem = (HostComboBoxItem)comboBoxHost.Items[comboBoxHost.Items.Count - 1];
          switch (preferred)
          {
             case PreferredSelection.Initial:
-               if (!String.IsNullOrEmpty(initialSelectedItem.Host))
+               if (initialSelectedItem != null && !String.IsNullOrEmpty(initialSelectedItem.Host))
                {
                   comboBoxHost.SelectedItem = initialSelectedItem;
                }
@@ -155,9 +156,6 @@ namespace mrHelper.App.Forms
 
       private bool selectMergeRequest(ListView listView, string projectname, int iid, bool exact)
       {
-         // CAUTION: this method fires ListViewMergeRequests_ItemSelectionChanged event handler which is an async method.
-         // However, as the event is fired by .NET Framework internally, we cannot await it and execution does not stop.
-
          foreach (ListViewItem item in listView.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
@@ -480,7 +478,7 @@ namespace mrHelper.App.Forms
          linkLabelAbortGit.Visible = !enabled;
          linkLabelAbortGit.Tag = operation;
 
-         tabPageSettings.Controls.Cast<Control>().ToList().ForEach((x) => x.Enabled = enabled);
+         foreach (Control control in tabPageSettings.Controls) control.Enabled = enabled;
 
          buttonDiffTool.Enabled = enabled;
          buttonDiscussions.Enabled = enabled;
@@ -532,8 +530,7 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(linkLabelConnectedTo, url);
       }
 
-      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title = null,
-         ProjectKey projectKey = default(ProjectKey), User author = default(User))
+      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey, User author)
       {
          if (isTrackingTime())
          {
@@ -557,7 +554,7 @@ namespace mrHelper.App.Forms
          labelTimeTrackingMergeRequestName.Refresh();
       }
 
-      private void updateTotalTime(MergeRequestKey? mrk = null, User author = default(User), string hostname = null)
+      private void updateTotalTime(MergeRequestKey? mrk, User author, string hostname)
       {
          if (isTrackingTime())
          {
@@ -701,9 +698,15 @@ namespace mrHelper.App.Forms
 
       private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
       {
+         if (author == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          if (!enabled)
          {
-            groupBoxActions.Controls.Cast<Control>().ToList().ForEach(x => x.Enabled = false);
+            foreach (Control control in groupBoxActions.Controls) control.Enabled = false;
             return;
          }
 
@@ -949,9 +952,8 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void cleanupReviewedCommits(ProjectKey projectKey, IEnumerable<MergeRequest> mergeRequests)
       {
-         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(
-            (x) => x.ProjectKey.Equals(projectKey)
-                && !mergeRequests.Any(y => x.IId == y.IId));
+         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys
+            .Where(x => x.ProjectKey.Equals(projectKey) && !mergeRequests.Any(y => x.IId == y.IId));
          foreach (MergeRequestKey key in toRemove.ToArray())
          {
             _reviewedCommits.Remove(key);
@@ -968,28 +970,18 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.BeginUpdate();
 
+         // TODO Handle added/removed project groups in user-based workflow
          IEnumerable<ProjectKey> projectKeys =
             listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          foreach (ProjectKey projectKey in projectKeys)
          {
             foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
             {
-               MergeRequestKey mrk = new MergeRequestKey(projectKey, mergeRequest.IId);
-               int index = listViewMergeRequests.Items.Cast<ListViewItem>().ToList().FindIndex(
-                  x =>
-               {
-                  FullMergeRequestKey fmk = (FullMergeRequestKey)x.Tag;
-                  return fmk.ProjectKey.Equals(mrk.ProjectKey) && fmk.MergeRequest.IId == mrk.IId;
-               });
-               if (index == -1)
-               {
-                  ListViewItem item = addListViewMergeRequestItem(listViewMergeRequests, projectKey);
-                  setListViewItemTag(item, mrk);
-               }
-               else
-               {
-                  setListViewItemTag(listViewMergeRequests.Items[index], mrk);
-               }
+               FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
+               ListViewItem item = listViewMergeRequests.Items.Cast<ListViewItem>().FirstOrDefault( // `null` if not found
+                  x => ((FullMergeRequestKey)x.Tag).ProjectKey.Equals(fmk.ProjectKey)
+                    && ((FullMergeRequestKey)x.Tag).MergeRequest.IId == fmk.MergeRequest.IId);
+               setListViewItemTag(item ?? addListViewMergeRequestItem(listViewMergeRequests, projectKey), fmk);
             }
          }
 
@@ -1020,23 +1012,11 @@ namespace mrHelper.App.Forms
          return item;
       }
 
-      private void setListViewItemTag(ListViewItem item, MergeRequestKey mrk)
+      private void setListViewItemTag(ListViewItem item, FullMergeRequestKey fmk)
       {
-         MergeRequest mergeRequest = getCurrentSession()?.MergeRequestCache?.GetMergeRequest(mrk);
-         if (mergeRequest == null)
-         {
-            Trace.TraceError(String.Format("[MainForm] setListViewItemTag() cannot find MR with IId {0}", mrk.IId));
-            Debug.Assert(false);
-            return;
-         }
-
-         setListViewItemTag(item, mrk.ProjectKey, mergeRequest);
-      }
-
-      private void setListViewItemTag(ListViewItem item, ProjectKey projectKey, MergeRequest mr)
-      {
+         ProjectKey projectKey = fmk.ProjectKey;
+         MergeRequest mr = fmk.MergeRequest;
          MergeRequestKey mrk = new MergeRequestKey(projectKey, mr.IId);
-         FullMergeRequestKey fmk = new FullMergeRequestKey(mrk.ProjectKey, mr);
 
          item.Tag = fmk;
 
@@ -1103,7 +1083,7 @@ namespace mrHelper.App.Forms
       {
          User currentUser = _currentUser.ContainsKey(fmk.ProjectKey.HostName)
             ? _currentUser[fmk.ProjectKey.HostName]
-            : default(User);
+            : null;
 
          IEnumerable<string> unimportantSuffices = Program.ServiceManager.GetUnimportantSuffices();
 
@@ -1137,11 +1117,14 @@ namespace mrHelper.App.Forms
 
          StringBuilder stringBuilder = new StringBuilder();
          int take = tooltip ? query.Count() : Constants.MaxLabelRows - 1;
-         query
+
+         foreach (var x in
+            query
             .OrderBy(x => x.Priority)
-            .Take(take)
-            .ToList()
-            .ForEach(x => stringBuilder.Append(joinLabels(x.Labels)));
+            .Take(take))
+         {
+            stringBuilder.Append(joinLabels(x.Labels));
+         }
 
          if (!tooltip)
          {
@@ -1445,19 +1428,22 @@ namespace mrHelper.App.Forms
       {
          listViewLabels.Items.Clear();
 
-         ConfigurationHelper.GetEnabledLabels(getHostName(), Program.Settings)
-            .ToList()
-            .ForEach(x => listViewLabels.Items.Add(x));
+         foreach (string label in ConfigurationHelper.GetEnabledLabels(getHostName(), Program.Settings))
+         {
+            listViewLabels.Items.Add(label);
+         }
       }
 
       private void updateProjectsListView()
       {
          listViewProjects.Items.Clear();
 
-         ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings)
-            .Select(x => x.Path_With_Namespace)
-            .ToList()
-            .ForEach(x => listViewProjects.Items.Add(x));
+         foreach (string project in
+            ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings)
+            .Select(x => x.Path_With_Namespace))
+         {
+            listViewProjects.Items.Add(project);
+         }
       }
 
       private int calcHorzDistance(Control leftControl, Control rightControl, bool preventOverlap = false)
@@ -1858,10 +1844,10 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = message;
 
          enableMergeRequestActions(false);
-         enableCommitActions(false, null, default(User));
+         enableCommitActions(false, null, null);
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false);
-         updateTotalTime();
+         updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
+         updateTotalTime(null, null, null);
          disableComboBox(comboBoxLatestCommit, String.Empty);
          disableComboBox(comboBoxEarliestCommit, String.Empty);
 
@@ -1906,7 +1892,7 @@ namespace mrHelper.App.Forms
             enableComboBox(comboBoxEarliestCommit);
 
             addCommitsToComboBoxes(comboBoxLatestCommit, comboBoxEarliestCommit, objects,
-               latestVersion.Base_Commit_SHA, mergeRequest.Target_Branch);
+               latestVersion?.Base_Commit_SHA, mergeRequest.Target_Branch);
             selectNotReviewedCommits(listView == listViewFoundMergeRequests,
                comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
 
@@ -1932,10 +1918,10 @@ namespace mrHelper.App.Forms
       private void disableCommonUIControls()
       {
          enableMergeRequestActions(false);
-         enableCommitActions(false, null, default(User));
+         enableCommitActions(false, null, null);
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false);
-         updateTotalTime();
+         updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
+         updateTotalTime(null, null, null);
          disableComboBox(comboBoxLatestCommit, String.Empty);
          disableComboBox(comboBoxEarliestCommit, String.Empty);
       }

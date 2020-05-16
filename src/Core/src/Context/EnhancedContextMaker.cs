@@ -51,22 +51,21 @@ namespace mrHelper.Core.Context
 
          GitShowRevisionArguments arguments = new GitShowRevisionArguments(filename, sha);
 
-         IEnumerable<string> gitResult;
+         IEnumerable<string> contents;
          try
          {
-            gitResult = _gitRepository.Data?.Get(arguments);
+            contents = _gitRepository.Data?.Get(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
             throw new ContextMakingException("Cannot obtain git revision", ex);
          }
 
-         if (gitResult == null)
+         if (contents == null)
          {
             throw new ContextMakingException("Cannot obtain git revision", null);
          }
 
-         string[] contents = gitResult.ToArray();
          if (linenumber > contents.Count())
          {
             throw new ArgumentException(
@@ -79,7 +78,7 @@ namespace mrHelper.Core.Context
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
       // linenumber is one-based
-      private DiffContext createDiffContext(int linenumber, bool isRightSideContext, string[] contents,
+      private DiffContext createDiffContext(int linenumber, bool isRightSideContext, IEnumerable<string> contents,
          GitDiffAnalyzer analyzer, ContextDepth depth)
       {
          List<DiffContext.Line> lines = new List<DiffContext.Line>();
@@ -102,7 +101,7 @@ namespace mrHelper.Core.Context
 
       // linenumber is one-based
       private DiffContext.Line getLineContext(int linenumber, bool isRightSideContext,
-         GitDiffAnalyzer analyzer, string[] contents)
+         GitDiffAnalyzer analyzer, IEnumerable<string> contents)
       {
          Debug.Assert(linenumber > 0 && linenumber <= contents.Count());
 
@@ -110,7 +109,7 @@ namespace mrHelper.Core.Context
          DiffContext.Line.Side side = new DiffContext.Line.Side(
             linenumber, getLineState(analyzer, linenumber, isRightSideContext));
 
-         return new DiffContext.Line(contents[linenumber - 1],
+         return new DiffContext.Line(contents.ElementAt(linenumber - 1),
             isRightSideContext ? new Nullable<DiffContext.Line.Side>() : side,
             isRightSideContext ? side : new Nullable<DiffContext.Line.Side>());
       }

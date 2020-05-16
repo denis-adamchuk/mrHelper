@@ -46,22 +46,21 @@ namespace mrHelper.Core.Context
 
          GitShowRevisionArguments arguments = new GitShowRevisionArguments(filename, sha);
 
-         IEnumerable<string> gitResult;
+         IEnumerable<string> contents;
          try
          {
-            gitResult = _gitRepository.Data?.Get(arguments);
+            contents = _gitRepository.Data?.Get(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
             throw new ContextMakingException("Cannot obtain git revision", ex);
          }
 
-         if (gitResult == null)
+         if (contents == null)
          {
             throw new ContextMakingException("Cannot obtain git revision", null);
          }
 
-         string[] contents = gitResult.ToArray();
          if (linenumber > contents.Count())
          {
             throw new ArgumentException(

@@ -12,24 +12,27 @@ namespace mrHelper.Client.MergeRequests
    {
       internal InternalCache()
       {
-         _mergeRequests = new Dictionary<ProjectKey, MergeRequest[]>();
-         _changes = new Dictionary<MergeRequestKey, Version[]>();
-         _commits = new Dictionary<MergeRequestKey, Commit[]>();
+         _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
+         _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
+         _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
       }
 
       private InternalCache(InternalCache details)
       {
-         _mergeRequests = details._mergeRequests.ToDictionary(
-            item => item.Key,
-            item => item.Value.ToArray());
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in details._mergeRequests)
+         {
+            SetMergeRequests(kv.Key, kv.Value.ToArray()); // make a copy
+         }
 
-         _changes = details._changes.ToDictionary(
-            item => item.Key,
-            item => item.Value.ToArray());
+         foreach (KeyValuePair<MergeRequestKey, IEnumerable<Version>> kv in details._versions)
+         {
+            SetVersions(kv.Key, kv.Value.ToArray()); // make a copy
+         }
 
-         _commits = details._commits.ToDictionary(
-            item => item.Key,
-            item => item.Value.ToArray());
+         foreach (KeyValuePair<MergeRequestKey, IEnumerable<Commit>> kv in details._commits)
+         {
+            SetCommits(kv.Key, kv.Value.ToArray()); // make a copy
+         }
       }
 
       /// <summary>
@@ -53,8 +56,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key)
       {
-         return _mergeRequests.ContainsKey(key) ?
-            _mergeRequests[key].ToArray() : Array.Empty<MergeRequest>();
+         return _mergeRequests.ContainsKey(key) ?  _mergeRequests[key] : Array.Empty<MergeRequest>();
       }
 
       /// <summary>
@@ -62,7 +64,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void SetMergeRequests(ProjectKey key, IEnumerable<MergeRequest> mergeRequests)
       {
-         _mergeRequests[key] = mergeRequests.ToArray();
+         _mergeRequests[key] = mergeRequests;
       }
 
       /// <summary>
@@ -70,7 +72,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public IEnumerable<Version> GetVersions(MergeRequestKey mrk)
       {
-         return _changes.ContainsKey(mrk) ? _changes[mrk] : Array.Empty<Version>();
+         return _versions.ContainsKey(mrk) ? _versions[mrk] : Array.Empty<Version>();
       }
 
       /// <summary>
@@ -78,7 +80,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void SetVersions(MergeRequestKey mrk, IEnumerable<Version> versions)
       {
-         _changes[mrk] = versions.ToArray();
+         _versions[mrk] = versions;
       }
 
       /// <summary>
@@ -94,7 +96,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void SetCommits(MergeRequestKey mrk, IEnumerable<Commit> commits)
       {
-         _commits[mrk] = commits.ToArray();
+         _commits[mrk] = commits;
       }
 
       /// <summary>
@@ -104,11 +106,13 @@ namespace mrHelper.Client.MergeRequests
       {
          if (_mergeRequests.ContainsKey(mrk.ProjectKey))
          {
-            int index = Array.FindIndex(_mergeRequests[mrk.ProjectKey], x => x.IId == mrk.IId);
+            MergeRequest[] mergeRequests = _mergeRequests[mrk.ProjectKey].ToArray(); // make a copy
+            int index = Array.FindIndex(mergeRequests, x => x.IId == mrk.IId);
             if (index != -1)
             {
-               _mergeRequests[mrk.ProjectKey][index] = mergeRequest;
+               mergeRequests[index] = mergeRequest; // substitute an item
             }
+            _mergeRequests[mrk.ProjectKey] = mergeRequests;
          }
       }
 
@@ -117,18 +121,18 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void CleanupVersions(MergeRequestKey mrk)
       {
-         _changes.Remove(mrk);
+         _versions.Remove(mrk);
          _commits.Remove(mrk);
       }
 
       // maps unique project id to list of merge requests
-      private readonly Dictionary<ProjectKey, MergeRequest[]> _mergeRequests;
+      private readonly Dictionary<ProjectKey, IEnumerable<MergeRequest>> _mergeRequests;
 
-      // maps Merge Request to a timestamp of its latest version
-      private readonly Dictionary<MergeRequestKey, Version[]> _changes;
+      // maps Merge Request to its versions
+      private readonly Dictionary<MergeRequestKey, IEnumerable<Version>> _versions;
 
-      // maps Merge Request to a timestamp of its latest version
-      private readonly Dictionary<MergeRequestKey, Commit[]> _commits;
+      // maps Merge Request to its commits
+      private readonly Dictionary<MergeRequestKey, IEnumerable<Commit>> _commits;
    }
 }
 

@@ -201,56 +201,58 @@ namespace mrHelper.Client.Discussions
             EDiscussionUpdateType.PeriodicUpdate);
       }
 
+      async Task updateDiscussions(MergeRequestKey mrk, EDiscussionUpdateType type)
+      {
+         if (_reconnect)
+         {
+            return;
+         }
+
+         try
+         {
+            await updateDiscussionsAsync(mrk, type);
+         }
+         catch (OperatorException ex)
+         {
+            ExceptionHandlers.Handle(String.Format(
+               "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
+               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
+         }
+      }
+
       async private Task processScheduledUpdate(ScheduledUpdate scheduledUpdate)
       {
-         getAllMergeRequests(
-            out IEnumerable<MergeRequestKey> matchingFilter,
-            out IEnumerable<MergeRequestKey> nonMatchingFilter);
-
-         IEnumerable<MergeRequestKey> highPriorityMergeRequests =
-            scheduledUpdate.MergeRequests ?? matchingFilter;
-         IEnumerable<MergeRequestKey> lowPriorityMergeRequests =
-            scheduledUpdate.MergeRequests == null ? nonMatchingFilter : new MergeRequestKey[] { };
-
          if (scheduledUpdate.MergeRequests == null)
          {
+            getAllMergeRequests(
+               out IEnumerable<MergeRequestKey> matchingFilter,
+               out IEnumerable<MergeRequestKey> nonMatchingFilter);
+
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0}+{1} merge requests (ALL)",
-               highPriorityMergeRequests.Count(), lowPriorityMergeRequests.Count()));
+               matchingFilter.Count(), nonMatchingFilter.Count()));
+
+            await TaskUtils.RunConcurrentFunctionsAsync(matchingFilter,
+               x => updateDiscussions(x, scheduledUpdate.Type),
+               Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+               () => _reconnect);
+
+            await TaskUtils.RunConcurrentFunctionsAsync(nonMatchingFilter,
+               x => updateDiscussions(x, scheduledUpdate.Type),
+               Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+               () => _reconnect);
          }
          else
          {
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests",
                scheduledUpdate.MergeRequests.Count()));
+
+            await TaskUtils.RunConcurrentFunctionsAsync(scheduledUpdate.MergeRequests,
+               x => updateDiscussions(x, scheduledUpdate.Type),
+               Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+               () => _reconnect);
          }
-
-         async Task updateDiscussions(MergeRequestKey mrk)
-         {
-            if (_reconnect)
-            {
-               return;
-            }
-
-            try
-            {
-               await updateDiscussionsAsync(mrk, scheduledUpdate.Type);
-            }
-            catch (OperatorException ex)
-            {
-               ExceptionHandlers.Handle(String.Format(
-                  "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
-                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
-            }
-         }
-
-         await TaskUtils.RunConcurrentFunctionsAsync(highPriorityMergeRequests, x => updateDiscussions(x),
-            Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
-            () => _reconnect);
-
-         await TaskUtils.RunConcurrentFunctionsAsync(lowPriorityMergeRequests, x => updateDiscussions(x),
-            Constants.CrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
-            () => _reconnect);
 
          if (_reconnect)
          {
@@ -267,7 +269,7 @@ namespace mrHelper.Client.Discussions
          }
 
          // make a copy of `keys` just in case
-         _scheduledUpdates.Enqueue(new ScheduledUpdate(keys?.ToArray(), type));
+         _scheduledUpdates.Enqueue(new ScheduledUpdate(keys, type));
 
          _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
          {
@@ -421,6 +423,11 @@ namespace mrHelper.Client.Discussions
 
       private void cacheDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
+         if (discussions == null || !discussions.Any())
+         {
+            return;
+         }
+
          if (!_closed.Contains(mrk))
          {
             int noteCount = discussions.Select(x => x.Notes?.Count() ?? 0).Sum();
@@ -445,7 +452,7 @@ namespace mrHelper.Client.Discussions
 
             _cachedDiscussions[mrk] = new CachedDiscussions(
                prevUpdateTimestamp, latestNoteTimestamp, noteCount,
-               discussions.ToArray(), resolvableDiscussionCount, resolvedDiscussionCount);
+               discussions, resolvableDiscussionCount, resolvedDiscussionCount);
          }
          else
          {
@@ -564,15 +571,15 @@ namespace mrHelper.Client.Discussions
          List<MergeRequestKey> nonMatchingFilterList = new List<MergeRequestKey>();
          foreach (ProjectKey projectKey in _mergeRequestCache.GetProjects())
          {
-            matchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
-               .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
-               .Select(x => new MergeRequestKey(projectKey, x.IId))
-               .ToList());
+            matchingFilterList.AddRange(
+               _mergeRequestCache.GetMergeRequests(projectKey)
+                  .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
+                  .Select(x => new MergeRequestKey(projectKey, x.IId)));
 
-            nonMatchingFilterList.AddRange(_mergeRequestCache.GetMergeRequests(projectKey)
-               .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
-               .Select(x => new MergeRequestKey(projectKey, x.IId))
-               .ToList());
+            nonMatchingFilterList.AddRange(
+               _mergeRequestCache.GetMergeRequests(projectKey)
+                  .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
+                  .Select(x => new MergeRequestKey(projectKey, x.IId)));
          }
          matchingFilter = matchingFilterList;
          nonMatchingFilter = nonMatchingFilterList;

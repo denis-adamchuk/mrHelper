@@ -21,6 +21,12 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateMergeRequests(ProjectKey key, IEnumerable<MergeRequest> mergeRequests)
       {
+         if (mergeRequests == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(key);
          _cache.SetMergeRequests(key, mergeRequests);
 
@@ -39,10 +45,14 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateCommits(MergeRequestKey mrk, IEnumerable<Commit> commits)
       {
-         Commit oldLatestCommit =
-            _cache.GetCommits(mrk).OrderBy(x => x.Created_At).LastOrDefault();
-         Commit newLatestCommit =
-            commits.OrderBy(x => x.Created_At).LastOrDefault();
+         if (commits == null || !commits.Any() || _cache.GetCommits(mrk) == null || !_cache.GetCommits(mrk).Any())
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         Commit oldLatestCommit = _cache.GetCommits(mrk).OrderBy(x => x.Created_At).LastOrDefault();
+         Commit newLatestCommit = commits.OrderBy(x => x.Created_At).LastOrDefault();
 
          _cache.SetCommits(mrk, commits);
 
@@ -59,10 +69,14 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateVersions(MergeRequestKey mrk, IEnumerable<Version> versions)
       {
-         Version oldLatestVersion =
-            _cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
-         Version newLatestVersion =
-            versions.OrderBy(x => x.Created_At).LastOrDefault();
+         if (versions == null || !versions.Any() || _cache.GetVersions(mrk) == null || !_cache.GetVersions(mrk).Any())
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         Version oldLatestVersion = _cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
+         Version newLatestVersion = versions.OrderBy(x => x.Created_At).LastOrDefault();
 
          _cache.SetVersions(mrk, versions);
 
@@ -79,6 +93,12 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       internal void UpdateMergeRequest(MergeRequestKey mrk, MergeRequest mergeRequest)
       {
+         if (mergeRequest == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          _cache.UpdateMergeRequest(mrk, mergeRequest);
       }
 

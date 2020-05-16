@@ -98,7 +98,7 @@ namespace mrHelper.Common.Tools
 
             if (exitcode != 0)
             {
-               throw new ExternalProcessFailureException(name, arguments, exitcode, standardError.ToArray());
+               throw new ExternalProcessFailureException(name, arguments, exitcode, standardError);
             }
 
             return new Result(process.HasExited ? -1 : process.Id, standardOutput, standardError);

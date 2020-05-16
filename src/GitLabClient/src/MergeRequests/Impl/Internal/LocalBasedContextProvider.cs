@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
+using System.Diagnostics;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -19,6 +20,12 @@ namespace mrHelper.Client.MergeRequests
 
       public Task<IProjectUpdateContext> GetContext()
       {
+         if (_versions == null || !_versions.Any())
+         {
+            Debug.Assert(false);
+            return null;
+         }
+
          List<string> shas = new List<string>();
          foreach (Version version in _versions)
          {

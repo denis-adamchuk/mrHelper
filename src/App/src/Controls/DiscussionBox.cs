@@ -308,7 +308,7 @@ namespace mrHelper.App.Controls
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
-         _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
+         _textboxesNotes = createTextBoxes(Discussion.Notes);
 
          Controls.Add(_labelAuthor);
          Controls.Add(_textboxFilename);
@@ -444,7 +444,7 @@ namespace mrHelper.App.Controls
          bool discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
 
          List<Control> boxes = new List<Control>();
-         foreach (var note in notes)
+         foreach (DiscussionNote note in notes)
          {
             if (note.System)
             {
@@ -1051,7 +1051,7 @@ namespace mrHelper.App.Controls
          prepareToRefresh();
 
          // Create controls
-         _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
+         _textboxesNotes = createTextBoxes(Discussion.Notes);
          foreach (Control note in _textboxesNotes)
          {
             Controls.Add(note);

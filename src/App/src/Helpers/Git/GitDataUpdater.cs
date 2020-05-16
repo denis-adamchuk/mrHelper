@@ -217,8 +217,7 @@ namespace mrHelper.App.Helpers
                .Where(x => x.Notes.Any()
                        && !x.Notes.First().System
                        && x.Notes.First().Type == "DiffNote"
-                       && x.Notes.First().Updated_At > prevLatestChange)
-               .ToArray();
+                       && x.Notes.First().Updated_At > prevLatestChange);
       }
 
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)

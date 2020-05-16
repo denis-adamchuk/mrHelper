@@ -81,7 +81,7 @@ namespace mrHelper.Client.MergeRequests
 
             if (updates != null)
             {
-               updates.ToList().ForEach(x => MergeRequestEvent?.Invoke(x));
+               foreach (UserEvents.MergeRequestEvent update in updates) MergeRequestEvent?.Invoke(update);
             }
 
             onUpdateFinished?.Invoke();
@@ -102,7 +102,7 @@ namespace mrHelper.Client.MergeRequests
 
          if (updates != null)
          {
-            updates.ToList().ForEach(x => MergeRequestEvent?.Invoke(x));
+            foreach (UserEvents.MergeRequestEvent update in updates) MergeRequestEvent?.Invoke(update);
          }
       }
 
@@ -113,6 +113,7 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
+         // TODO - Can we compare two InternalCache without making a full copy here?
          IInternalCache oldDetails = _cache.Clone();
 
          try
@@ -150,6 +151,7 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
+         // TODO - Can we compare two InternalCache without making a full copy here?
          IInternalCache oldDetails = _cache.Clone();
 
          try

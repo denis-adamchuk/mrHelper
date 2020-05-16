@@ -48,7 +48,8 @@ namespace mrHelper.App.Forms
       private void updateListView(IEnumerable<Tuple<string, bool>> items)
       {
          listView.Items.Clear();
-         items.ToList().ForEach(x => addListViewItem(x));
+
+         foreach (Tuple<string, bool> item in items) addListViewItem(item);
       }
 
       private void addListViewItem(Tuple<string, bool> item)
