@@ -835,27 +835,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            if (_newVersionFilePath.EndsWith(".msi"))
-            {
-               AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
-               string applicationPath = appInfo == null ? String.Empty : appInfo.InstallPath;
-               if (String.IsNullOrWhiteSpace(applicationPath))
-               {
-                  applicationPath = Application.StartupPath;
-                  Trace.TraceInformation(String.Format(
-                     "[CheckForUpdates] Using Startup Path \"{0}\"", applicationPath));
-               }
-               else
-               {
-                  Trace.TraceInformation(String.Format(
-                     "[CheckForUpdates] Using Application Path \"{0}\"", applicationPath));
-               }
-               Process.Start(_newVersionFilePath, "TARGETDIR=" + StringUtils.EscapeSpaces(applicationPath));
-            }
-            else
-            {
-               Process.Start(_newVersionFilePath);
-            }
+            Process.Start(_newVersionFilePath);
          }
          catch (Exception ex)
          {
