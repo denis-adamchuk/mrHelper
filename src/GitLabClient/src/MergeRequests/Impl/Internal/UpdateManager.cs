@@ -26,13 +26,10 @@ namespace mrHelper.Client.MergeRequests
          _cache = cacheUpdater.Cache;
          _context = context;
 
-         if (context.UpdateRules.UpdateMergeRequests)
-         {
-            _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
-            _timer.Elapsed += onTimer;
-            _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
-            _timer.Start();
-         }
+         _timer = new System.Timers.Timer { Interval = clientContext.AutoUpdatePeriodMs };
+         _timer.Elapsed += onTimer;
+         _timer.SynchronizingObject = clientContext.SynchronizeInvoke;
+         _timer.Start();
       }
 
       public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
@@ -41,6 +38,7 @@ namespace mrHelper.Client.MergeRequests
       {
          _timer?.Stop();
          _timer?.Dispose();
+         _timer = null; // prevent accessing a timer which is disposed while waiting for async call
 
          foreach (System.Timers.Timer timer in _oneShotTimers)
          {

@@ -627,12 +627,13 @@ namespace mrHelper.App.Forms
 
       private string getDiscussionCount(MergeRequestKey mrk)
       {
-         if (getCurrentSession()?.DiscussionCache == null)
+         // discussion count is supported in "live" session only
+         if (_liveSession?.DiscussionCache == null)
          {
             return "N/A";
          }
 
-         DiscussionCount dc = getCurrentSession().DiscussionCache.GetDiscussionCount(mrk);
+         DiscussionCount dc = _liveSession.DiscussionCache.GetDiscussionCount(mrk);
          switch (dc.Status)
          {
             case DiscussionCount.EStatus.NotAvailable:
@@ -917,7 +918,8 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         DiscussionCount dc = getCurrentSession()?.DiscussionCache?.GetDiscussionCount(
+         // discussion count is supported in "live" session only
+         DiscussionCount dc = _liveSession?.DiscussionCache?.GetDiscussionCount(
             new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
 
          if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
@@ -952,6 +954,12 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void cleanupReviewedCommits(ProjectKey projectKey, IEnumerable<MergeRequest> mergeRequests)
       {
+         if (mergeRequests == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys
             .Where(x => x.ProjectKey.Equals(projectKey) && !mergeRequests.Any(y => x.IId == y.IId));
          foreach (MergeRequestKey key in toRemove.ToArray())
@@ -962,7 +970,9 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         IMergeRequestCache mergeRequestCache = getCurrentSession()?.MergeRequestCache;
+         // this function works for "live" session only
+
+         IMergeRequestCache mergeRequestCache = _liveSession?.MergeRequestCache;
          if (mergeRequestCache == null)
          {
             return;

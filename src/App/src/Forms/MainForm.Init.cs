@@ -344,7 +344,7 @@ namespace mrHelper.App.Forms
          _gitStatManager.Update -= onGitStatisticManagerUpdate;
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
 
-         unsubscribeFromLiveSessionContent();
+         unsubscribeFromLiveSessionInternalEvents();
          unsubscribeFromLiveSession();
 
          await finalizeCommitChainCreator();
@@ -514,7 +514,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void subscribeToLiveSessionContent()
+      private void subscribeToLiveSessionInternalEvents()
       {
          if (_liveSession?.MergeRequestCache != null)
          {
@@ -543,7 +543,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void unsubscribeFromLiveSessionContent()
+      private void unsubscribeFromLiveSessionInternalEvents()
       {
          if (_liveSession?.MergeRequestCache != null)
          {

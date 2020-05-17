@@ -45,7 +45,12 @@ namespace mrHelper.App.Controls
             // using a very short Interval to emulate a quick deselection on clicking an empty area
             Interval = 100,
          };
-         _delayedDeselectionTimer.Tick += (s, ee) => Deselected?.Invoke(this);
+         _delayedDeselectionTimer.Tick +=
+            (s, ee) =>
+         {
+            _delayedDeselectionTimer.Stop();
+            Deselected?.Invoke(this);
+         };
       }
 
       public class ListViewSubItemInfo

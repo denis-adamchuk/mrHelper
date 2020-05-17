@@ -21,7 +21,7 @@ namespace mrHelper.Client.Session
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
          _sessionContext = sessionContext;
-         Debug.Assert(_sessionContext.CustomData is ProjectBasedContext);
+         Debug.Assert(_sessionContext.CustomData is SearchBasedContext);
       }
 
       async public Task<bool> Load()

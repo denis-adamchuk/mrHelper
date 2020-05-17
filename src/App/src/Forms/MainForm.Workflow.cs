@@ -248,7 +248,7 @@ namespace mrHelper.App.Forms
          foreach (ProjectKey projectKey in projects)
          {
             scheduleSilentUpdate(projectKey);
-            cleanupReviewedCommits(projectKey, getCurrentSession()?.MergeRequestCache?.GetMergeRequests(projectKey));
+            cleanupReviewedCommits(projectKey, _liveSession?.MergeRequestCache?.GetMergeRequests(projectKey));
          }
       }
 
@@ -281,12 +281,12 @@ namespace mrHelper.App.Forms
 
       private void liveSessionStarting(string hostname)
       {
-         unsubscribeFromLiveSessionContent();
+         unsubscribeFromLiveSessionInternalEvents();
       }
 
       private void liveSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
-         subscribeToLiveSessionContent();
+         subscribeToLiveSessionInternalEvents();
 
          if (!_currentUser.ContainsKey(hostname))
          {

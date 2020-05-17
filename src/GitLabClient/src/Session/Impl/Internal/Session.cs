@@ -23,9 +23,9 @@ namespace mrHelper.Client.Session
       {
          await Stop();
 
-         SessionOperator op = new SessionOperator(hostname, _clientContext.HostProperties);
+         _operator = new SessionOperator(hostname, _clientContext.HostProperties);
 
-         User currentUser = await new CurrentUserLoader(op).Load(hostname);
+         User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
          if (currentUser == null)
          {
             return false;
@@ -33,13 +33,12 @@ namespace mrHelper.Client.Session
 
          InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
          IMergeRequestListLoader mergeRequestListLoader =
-            MergeRequestListLoaderFactory.CreateMergeRequestListLoader(op, context, cacheUpdater);
+            MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
 
          Starting?.Invoke(hostname);
 
          if (await mergeRequestListLoader.Load())
          {
-            _operator = op;
             _internal = createSessionInternal(cacheUpdater, hostname, currentUser, context);
             Started?.Invoke(hostname, currentUser, context);
             return true;

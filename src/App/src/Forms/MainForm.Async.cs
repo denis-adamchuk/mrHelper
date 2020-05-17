@@ -15,23 +15,31 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
+using mrHelper.Client.Session;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string state)
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author)
       {
          Debug.Assert(getHostName() != String.Empty);
          Debug.Assert(_currentUser.ContainsKey(getHostName()));
 
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
+         ISession currentSession = getCurrentSession();
+         if (currentSession == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
          if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            _searchSession.DiscussionCache.RequestUpdate(
+            Debug.Assert(currentSession == _searchSession);
+            currentSession.DiscussionCache.RequestUpdate(
                mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
@@ -43,7 +51,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote-based provider as there are might be discussions from other users on newer commits
                IProjectUpdateContextProvider contextProvider =
-                  getCurrentSession()?.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
+                  currentSession?.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -97,7 +105,7 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
          }
 
-         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(mrk);
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(currentSession, mrk);
          if (discussions == null || _exiting)
          {
             return;
@@ -116,16 +124,21 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         if (_exiting)
+         {
+            return;
+         }
+
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
          labelWorkflowStatus.Refresh();
 
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(getCurrentSession(), repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(currentSession, repo,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               async (key) =>
+               async (session, key) =>
             {
                try
                {
@@ -134,7 +147,7 @@ namespace mrHelper.App.Forms
                   {
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =
-                        getCurrentSession()?.MergeRequestCache?.GetRemoteBasedContextProvider(key);
+                        session?.MergeRequestCache?.GetRemoteBasedContextProvider(key);
                      await updatingRepo.Updater.SilentUpdate(contextProvider);
                      return updatingRepo;
                   }
@@ -151,7 +164,7 @@ namespace mrHelper.App.Forms
                }
                return null;
             },
-            () => getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk,
+            (session) => session?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
@@ -194,6 +207,12 @@ namespace mrHelper.App.Forms
          string getSHA(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
          string leftSHA = getSHA(comboBoxEarliestCommit);
          string rightSHA = getSHA(comboBoxLatestCommit);
+         ISession currentSession = getCurrentSession();
+         if (currentSession == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
          List<string> includedSHA = new List<string>();
          for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
@@ -216,7 +235,7 @@ namespace mrHelper.App.Forms
                // because user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version (this is possible for Open MR only)
                IProjectUpdateContextProvider contextProvider =
-                  getCurrentSession()?.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
+                  currentSession?.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -294,7 +313,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
             leftSHA, rightSHA, repo.Path, pid.ToString()));
 
-         saveInterprocessSnapshot(pid, leftSHA, rightSHA);
+         saveInterprocessSnapshot(pid, leftSHA, rightSHA, currentSession);
 
          if (!_reviewedCommits.ContainsKey(mrk))
          {
@@ -353,7 +372,8 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               IDiscussionCreator creator = getCurrentSession()?.GetDiscussionCreator(mrk);
+               ISession session = getCurrentSession();
+               IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
@@ -369,13 +389,13 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               getCurrentSession()?.DiscussionCache?.RequestUpdate(
+               session?.DiscussionCache?.RequestUpdate(
                   mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
             }
          }
       }
 
-      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA)
+      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, ISession session)
       {
          // leftSHA - Base commit SHA in the source branch
          // rightSHA - SHA referencing HEAD of this merge request
@@ -385,19 +405,20 @@ namespace mrHelper.App.Forms
             GetCurrentAccessToken(),
             GetCurrentProjectName(),
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
-            textBoxLocalGitFolder.Text);
+            textBoxLocalGitFolder.Text,
+            session == _liveSession ? "Live" : "Search");
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.SerializeToDisk(snapshot, pid);
       }
 
-      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(MergeRequestKey mrk)
+      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
       {
          labelWorkflowStatus.Text = "Loading discussions...";
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await getCurrentSession()?.DiscussionCache?.LoadDiscussions(mrk);
+            discussions = await session?.DiscussionCache?.LoadDiscussions(mrk);
          }
          catch (DiscussionCacheException ex)
          {
@@ -419,7 +440,8 @@ namespace mrHelper.App.Forms
             // Use local-based provider here because remote-based one looks an overkill.
             // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
             IProjectUpdateContextProvider contextProvider =
-               getCurrentSession()?.MergeRequestCache?.GetLocalBasedContextProvider(projectKey);
+               // silent updates work in "live" session only
+               _liveSession?.MergeRequestCache?.GetLocalBasedContextProvider(projectKey);
             await repo.Updater.SilentUpdate(contextProvider);
          }
       }

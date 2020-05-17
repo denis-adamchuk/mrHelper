@@ -148,6 +148,12 @@ namespace mrHelper.Client.Discussions
       /// </summary>
       public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
+         if (_timer == null)
+         {
+            // updates are disabled
+            return null;
+         }
+
          foreach (int interval in intervals)
          {
             enqueueOneShotTimer(mrk, interval, onUpdateFinished);

@@ -46,11 +46,12 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         ISession session = snapshot.SessionName == "Live" ? _liveSession : _searchSession;
          DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
          DiffCallHandler handler;
          try
          {
-            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, getCurrentSession());
+            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, session);
          }
          catch (ArgumentException ex)
          {
@@ -80,7 +81,7 @@ namespace mrHelper.App.Forms
 
          MergeRequestKey mrk = new MergeRequestKey(
             new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-         getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk,
+         session?.DiscussionCache?.RequestUpdate(mrk,
             new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
       }
 

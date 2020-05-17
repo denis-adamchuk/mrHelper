@@ -785,7 +785,7 @@ namespace mrHelper.App.Forms
          MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.State);
+         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
       async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

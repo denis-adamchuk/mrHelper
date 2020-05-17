@@ -21,14 +21,20 @@ namespace mrHelper.Client.MergeRequests
          _clientContext = clientContext;
          _cacheUpdater = cacheUpdater;
 
-         _updateManager = new UpdateManager(_clientContext, hostname, context, _cacheUpdater);
-         _updateManager.MergeRequestEvent += onUpdate;
+         if (context.UpdateRules.UpdateMergeRequests)
+         {
+            _updateManager = new UpdateManager(_clientContext, hostname, context, _cacheUpdater);
+            _updateManager.MergeRequestEvent += onUpdate;
+         }
       }
 
       public void Dispose()
       {
-         _updateManager.MergeRequestEvent -= onUpdate;
-         _updateManager.Dispose();
+         if (_updateManager != null)
+         {
+            _updateManager.MergeRequestEvent -= onUpdate;
+            _updateManager.Dispose();
+         }
       }
 
       public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
@@ -99,7 +105,7 @@ namespace mrHelper.Client.MergeRequests
       /// </summary>
       public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
-         _updateManager.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
+         _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
          return null;
       }
 

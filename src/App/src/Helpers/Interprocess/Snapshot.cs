@@ -9,7 +9,7 @@ namespace mrHelper.App.Interprocess
    public class Snapshot
    {
       public Snapshot(int mergeRequestIId, string host, string accessToken, string project,
-         DiffRefs refs, string tempFolder)
+         DiffRefs refs, string tempFolder, string sessionName)
       {
          MergeRequestIId = mergeRequestIId;
          Host = host;
@@ -17,6 +17,7 @@ namespace mrHelper.App.Interprocess
          Project = project;
          Refs = refs;
          TempFolder = tempFolder;
+         SessionName = sessionName;
       }
 
       [JsonProperty]
@@ -36,5 +37,8 @@ namespace mrHelper.App.Interprocess
 
       [JsonProperty]
       public string TempFolder { get; protected set; }
+
+      [JsonProperty]
+      public string SessionName { get; protected set; }
    }
 }
