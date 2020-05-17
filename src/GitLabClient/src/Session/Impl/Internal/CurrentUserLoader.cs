@@ -12,19 +12,11 @@ namespace mrHelper.Client.Session
       {
       }
 
-      async public Task<User> Load(string hostName)
+      public Task<User> Load(string hostName)
       {
-         try
-         {
-            return await _operator.GetCurrentUserAsync();
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading current user from host \"{0}\"", hostName);
-            string errorMessage = String.Format("Cannot load user from host \"{0}\"", hostName);
-            handleOperatorException(ex, cancelMessage, errorMessage);
-         }
-         return null;
+         return call(() => _operator.GetCurrentUserAsync(),
+            String.Format("Cancelled loading current user from host \"{0}\"", hostName),
+            String.Format("Cannot load user from host \"{0}\"", hostName));
       }
    }
 }

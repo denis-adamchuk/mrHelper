@@ -69,6 +69,7 @@ namespace mrHelper.Client.Session
                }
                else
                {
+                  _cacheUpdater.UpdateMergeRequests(project, mergeRequests);
                   await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests,
                      x => loadVersionsLocal(new MergeRequestKey(project, x.IId)),
                      Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
@@ -105,26 +106,13 @@ namespace mrHelper.Client.Session
          return false;
       }
 
-      async private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(ProjectKey project)
+      private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(ProjectKey project)
       {
-         string projectName = project.ProjectName;
-
-         IEnumerable<MergeRequest> mergeRequests;
-         try
-         {
-            SearchByProject searchByProject = new SearchByProject(projectName);
-            mergeRequests = await _operator.SearchMergeRequestsAsync(searchByProject, null, true);
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading merge requests for project \"{0}\"", projectName);
-            string errorMessage = String.Format("Cannot load project \"{0}\"", projectName);
-            handleOperatorException(ex, cancelMessage, errorMessage);
-            return null;
-         }
-
-         _cacheUpdater.UpdateMergeRequests(project, mergeRequests);
-         return mergeRequests;
+         return call(
+            () => _operator.SearchMergeRequestsAsync(
+               new SearchCriteria(new object[] { new SearchByProject(project.ProjectName) }), null, true),
+            String.Format("Cancelled loading merge requests for project \"{0}\"", project.ProjectName),
+            String.Format("Cannot load project \"{0}\"", project.ProjectName));
       }
 
       private static bool isForbiddenProjectException(SessionException ex)

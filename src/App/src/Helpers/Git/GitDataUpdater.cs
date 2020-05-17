@@ -353,6 +353,10 @@ namespace mrHelper.App.Helpers
 
       private void unsubscribeFromAll()
       {
+         _mergeRequestCache = null;
+         _discussionCache = null;
+         _contextProviderFactory = null;
+
          foreach (ILocalGitRepository repo in _connected)
          {
             repo.Updated -= onLocalGitRepositoryUpdated;

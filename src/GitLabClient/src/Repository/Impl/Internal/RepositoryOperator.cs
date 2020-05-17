@@ -17,94 +17,49 @@ namespace mrHelper.Client.Repository
          _client = new GitLabClient(host, token);
       }
 
-      async internal Task<Comparison> CompareAsync(string projectname, string from, string to)
+      internal Task<Comparison> CompareAsync(string projectname, string from, string to)
       {
-         try
-         {
-            return (Comparison)(await _client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectname).Repository.CompareAsync(
-                  new CompareParameters(from, to))));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return OperatorCallWrapper.Call(
+            async () =>
+               (Comparison)(await _client.RunAsync(
+                  async (gl) =>
+                     await gl.Projects.Get(projectname).Repository.CompareAsync(new CompareParameters(from, to)))));
       }
 
-      async internal Task<File> LoadFileAsync(string projectname, string filename, string sha)
+      internal Task<File> LoadFileAsync(string projectname, string filename, string sha)
       {
-         try
-         {
-            return (File)(await _client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectname).Repository.Files.
-                  Get(filename).LoadTaskAsync(sha)));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return OperatorCallWrapper.Call(
+            async () =>
+               (File)(await _client.RunAsync(
+                  async (gl) =>
+                     await gl.Projects.Get(projectname).Repository.Files. Get(filename).LoadTaskAsync(sha))));
       }
 
-      async internal Task<Commit> LoadCommitAsync(string projectname, string sha)
+      internal Task<Commit> LoadCommitAsync(string projectname, string sha)
       {
-         try
-         {
-            return (Commit)(await _client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectname).Repository.Commits.
-                  Get(sha).LoadTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return OperatorCallWrapper.Call(
+            async () =>
+               (Commit)(await _client.RunAsync(
+                  async (gitlab) =>
+                     await gitlab.Projects.Get(projectname).Repository.Commits.Get(sha).LoadTaskAsync())));
       }
 
-      async internal Task<Branch> CreateNewBranchAsync(string projectname, string name, string sha)
+      internal Task<Branch> CreateNewBranchAsync(string projectname, string name, string sha)
       {
-         try
-         {
-            return (Branch)(await _client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectname).Repository.Branches.
-                  CreateNewTaskAsync(new CreateNewBranchParameters(name, sha))));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return OperatorCallWrapper.Call(
+            async () =>
+               (Branch)(await _client.RunAsync(async (gl) =>
+                  await gl.Projects.Get(projectname).Repository.Branches.CreateNewTaskAsync(
+                     new CreateNewBranchParameters(name, sha)))));
       }
 
-      async internal Task DeleteBranchAsync(string projectname, string name)
+      internal Task DeleteBranchAsync(string projectname, string name)
       {
-         try
-         {
-            await _client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(projectname).Repository.Branches.
-                  Get(name).DeleteTaskAsync());
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return OperatorCallWrapper.Call(
+            async () =>
+               await _client.RunAsync(
+                  async (gl) =>
+                     await gl.Projects.Get(projectname).Repository.Branches.Get(name).DeleteTaskAsync()));
       }
 
       async internal Task CancelAsync()

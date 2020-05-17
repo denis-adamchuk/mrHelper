@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Client.Common;
-using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
+using mrHelper.Client.MergeRequests;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.Client.Session
 {
@@ -18,42 +18,30 @@ namespace mrHelper.Client.Session
 
       async public Task<bool> LoadCommitsAsync(MergeRequestKey mrk)
       {
-         IEnumerable<Commit> commits;
-         try
+         IEnumerable<Commit> commits = await call(
+            () => _operator.GetCommitsAsync(mrk.ProjectKey.ProjectName, mrk.IId),
+            String.Format("Cancelled loading commits for merge request with IId {0}", mrk.IId),
+            String.Format("Cannot load commits for merge request with IId {0}", mrk.IId));
+         if (commits != null)
          {
-            commits = await _operator.GetCommitsAsync(mrk.ProjectKey.ProjectName, mrk.IId);
+            _cacheUpdater.UpdateCommits(mrk, commits);
+            return true;
          }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading commits for merge request with IId {0}",
-               mrk.IId);
-            string errorMessage = String.Format("Cannot load commits for merge request with IId {0}",
-               mrk.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage);
-            return false;
-         }
-         _cacheUpdater.UpdateCommits(mrk, commits);
-         return true;
+         return false;
       }
 
       async public Task<bool> LoadVersionsAsync(MergeRequestKey mrk)
       {
-         IEnumerable<GitLabSharp.Entities.Version> versions;
-         try
+         IEnumerable<Version> versions = await call(
+            () => _operator.GetVersionsAsync(mrk.ProjectKey.ProjectName, mrk.IId),
+            String.Format("Cancelled loading versions for merge request with IId {0}", mrk.IId),
+            String.Format("Cannot load versions for merge request with IId {0}", mrk.IId));
+         if (versions != null)
          {
-            versions = await _operator.GetVersionsAsync(mrk.ProjectKey.ProjectName, mrk.IId);
+            _cacheUpdater.UpdateVersions(mrk, versions);
+            return true;
          }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading versions for merge request with IId {0}",
-               mrk.IId);
-            string errorMessage = String.Format("Cannot load versions for merge request with IId {0}",
-               mrk.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage);
-            return false;
-         }
-         _cacheUpdater.UpdateVersions(mrk, versions);
-         return true;
+         return false;
       }
 
       private readonly InternalCacheUpdater _cacheUpdater;

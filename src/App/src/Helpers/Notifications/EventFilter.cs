@@ -16,6 +16,7 @@ namespace mrHelper.App.Helpers
          _settings = settings;
 
          _session = session;
+         _session.Starting += onSessionStarting;
          _session.Started += onSessionStarted;
 
          _mergeRequestFilter = mergeRequestFilter;
@@ -23,6 +24,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
+         _session.Starting -= onSessionStarting;
          _session.Started -= onSessionStarted;
       }
 
@@ -123,6 +125,12 @@ namespace mrHelper.App.Helpers
                Debug.Assert(false);
                return false;
          }
+      }
+
+      private void onSessionStarting(string hostname)
+      {
+         _currentUser = null;
+         _mergeRequestCache = null;
       }
 
       private void onSessionStarted(string hostname, User user, SessionContext sessionContext)

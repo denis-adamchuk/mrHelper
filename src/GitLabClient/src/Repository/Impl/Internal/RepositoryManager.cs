@@ -2,6 +2,8 @@
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Common;
+using System;
+using System.Diagnostics;
 
 namespace mrHelper.Client.Repository
 {
@@ -12,94 +14,34 @@ namespace mrHelper.Client.Repository
          _settings = settings;
       }
 
-      async public Task<Comparison> Compare(ProjectKey projectKey, string from, string to)
+      public Task<Comparison> Compare(ProjectKey projectKey, string from, string to)
       {
-         _operator = new RepositoryOperator(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
-         try
-         {
-            return await _operator.CompareAsync(projectKey.ProjectName, from, to);
-         }
-         catch (OperatorException ex)
-         {
-            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
-            {
-               return null;
-            }
-            throw new RepositoryManagerException("Cannot perform comparison", ex);
-         }
+         return call(projectKey, () => _operator.CompareAsync(projectKey.ProjectName, from, to),
+            "Cancelled Compare() call", "Failed Compare() call");
       }
 
-      async public Task<File> LoadFile(ProjectKey projectKey, string filename, string sha)
+      public Task<File> LoadFile(ProjectKey projectKey, string filename, string sha)
       {
-         _operator = new RepositoryOperator(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
-         try
-         {
-            return await _operator.LoadFileAsync(projectKey.ProjectName, filename, sha);
-         }
-         catch (OperatorException ex)
-         {
-            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
-            {
-               return null;
-            }
-            throw new RepositoryManagerException("Cannot load file", ex);
-         }
+         return call(projectKey, () => _operator.LoadFileAsync(projectKey.ProjectName, filename, sha),
+            "File loading cancelled", "Cannot load file");
       }
 
-      async public Task<Commit> LoadCommit(ProjectKey projectKey, string sha)
+      public Task<Commit> LoadCommit(ProjectKey projectKey, string sha)
       {
-         _operator = new RepositoryOperator(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
-         try
-         {
-            return await _operator.LoadCommitAsync(projectKey.ProjectName, sha);
-         }
-         catch (OperatorException ex)
-         {
-            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
-            {
-               return null;
-            }
-            throw new RepositoryManagerException("Cannot load commit", ex);
-         }
+         return call(projectKey, () => _operator.LoadCommitAsync(projectKey.ProjectName, sha),
+            "Commit loading cancelled", "Cannot load commit");
       }
 
-      async public Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha)
+      public Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha)
       {
-         _operator = new RepositoryOperator(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
-         try
-         {
-            return await _operator.CreateNewBranchAsync(projectKey.ProjectName, name, sha);
-         }
-         catch (OperatorException ex)
-         {
-            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
-            {
-               return null;
-            }
-            throw new RepositoryManagerException("Cannot create a new branch", ex);
-         }
+         return call(projectKey, () => _operator.CreateNewBranchAsync(projectKey.ProjectName, name, sha),
+            "Branch creation cancelled", "Cannot create a new branch");
       }
 
-      async public Task DeleteBranch(ProjectKey projectKey, string name)
+      public Task DeleteBranch(ProjectKey projectKey, string name)
       {
-         _operator = new RepositoryOperator(projectKey.HostName,
-            _settings.GetAccessToken(projectKey.HostName));
-         try
-         {
-            await _operator.DeleteBranchAsync(projectKey.ProjectName, name);
-         }
-         catch (OperatorException ex)
-         {
-            if (ex.InnerException is GitLabSharp.GitLabClientCancelled)
-            {
-               return;
-            }
-            throw new RepositoryManagerException("Cannot delete a branch", ex);
-         }
+         return call(projectKey, () => _operator.DeleteBranchAsync(projectKey.ProjectName, name),
+            "Branch deletion cancelled", "Cannot delete a branch");
       }
 
       async public Task Cancel()
@@ -107,6 +49,42 @@ namespace mrHelper.Client.Repository
          if (_operator != null)
          {
             await _operator.CancelAsync();
+         }
+      }
+
+      async private Task call(ProjectKey projectKey, Func<Task> func, string cancelMessage, string errorMessage)
+      {
+         _operator = new RepositoryOperator(projectKey.HostName, _settings.GetAccessToken(projectKey.HostName));
+         try
+         {
+            await func();
+         }
+         catch (OperatorException ex)
+         {
+            if (ex.Cancelled)
+            {
+               Trace.TraceInformation(String.Format("[RepositoryManager] {0}", cancelMessage));
+               return;
+            }
+            throw new RepositoryManagerException(errorMessage, ex);
+         }
+      }
+
+      async private Task<T> call<T>(ProjectKey projectKey, Func<Task<T>> func, string cancelMessage, string errorMessage)
+      {
+         _operator = new RepositoryOperator(projectKey.HostName, _settings.GetAccessToken(projectKey.HostName));
+         try
+         {
+            return await func();
+         }
+         catch (OperatorException ex)
+         {
+            if (ex.Cancelled)
+            {
+               Trace.TraceInformation(String.Format("[RepositoryManager] {0}", cancelMessage));
+               return default(T);
+            }
+            throw new RepositoryManagerException(errorMessage, ex);
          }
       }
 

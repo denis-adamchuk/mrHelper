@@ -56,8 +56,7 @@ namespace mrHelper.Client.MergeRequests
 
       public IProjectUpdateContextProvider GetRemoteBasedContextProvider(MergeRequestKey mrk)
       {
-         SessionOperator tempOperator = new SessionOperator(
-            mrk.ProjectKey.HostName, _clientContext.HostProperties.GetAccessToken(mrk.ProjectKey.HostName));
+         SessionOperator tempOperator = new SessionOperator(mrk.ProjectKey.HostName, _clientContext.HostProperties);
          return new RemoteBasedContextProvider(getAllVersions(mrk.ProjectKey), mrk, tempOperator);
       }
 

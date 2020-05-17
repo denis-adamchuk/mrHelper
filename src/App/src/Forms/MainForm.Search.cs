@@ -101,10 +101,11 @@ namespace mrHelper.App.Forms
       {
          onLoadAllSearchMergeRequests();
 
+         SearchCriteria searchCriteria = new SearchCriteria(new object[] { query });
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(null, null),
             new SessionUpdateRules(false, false),
-            new SearchBasedContext(query, maxResults, false));
+            new SearchBasedContext(searchCriteria, maxResults, false));
 
          if (!await _searchSession.Start(hostname, sessionContext))
          {

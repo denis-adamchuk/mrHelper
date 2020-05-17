@@ -23,8 +23,7 @@ namespace mrHelper.Client.Session
       {
          await Stop();
 
-         SessionOperator op = new SessionOperator(
-            hostname, _clientContext.HostProperties.GetAccessToken(hostname));
+         SessionOperator op = new SessionOperator(hostname, _clientContext.HostProperties);
 
          User currentUser = await new CurrentUserLoader(op).Load(hostname);
          if (currentUser == null)

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using mrHelper.Client.Common;
@@ -45,15 +46,21 @@ namespace mrHelper.Client.Session
          _operator = op;
       }
 
-      internal void handleOperatorException(OperatorException ex, string cancelMessage, string errorMessage)
+      async protected static Task<T> call<T>(Func<Task<T>> func, string cancelMessage, string errorMessage)
       {
-         bool cancelled = ex.InnerException is GitLabClientCancelled;
-         if (cancelled)
+         try
          {
-            Trace.TraceInformation(String.Format("[BaseSessionLoader] {0}", cancelMessage));
-            return;
+            return await func();
          }
-         throw new SessionException(errorMessage, ex);
+         catch (OperatorException ex)
+         {
+            if (ex.Cancelled)
+            {
+               Trace.TraceInformation(String.Format("[BaseSessionLoader] {0}", cancelMessage));
+               return default(T);
+            }
+            throw new SessionException(errorMessage, ex);
+         }
       }
 
       internal SessionOperator _operator;

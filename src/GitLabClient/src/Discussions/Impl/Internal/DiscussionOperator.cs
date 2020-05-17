@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
@@ -15,251 +14,152 @@ namespace mrHelper.Client.Discussions
    /// <summary>
    /// Implements Discussions-related interaction with GitLab
    /// </summary>
-   internal class DiscussionOperator
+   internal class DiscussionOperator : BaseOperator
    {
       internal DiscussionOperator(IHostProperties settings)
+         : base(settings)
       {
-         _settings = settings;
       }
 
-      async internal Task<Note> GetMostRecentUpdatedNoteAsync(MergeRequestKey mrk)
+      internal Task<Note> GetMostRecentUpdatedNoteAsync(MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            IEnumerable<Note> notes = (IEnumerable<Note>)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Notes.LoadTaskAsync(new PageFilter(1, 1), new SortFilter(false, "updated_at"))));
-            return notes.Any() ? notes.First() : new Note();
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                  ((IEnumerable<Note>)(await client.RunAsync(
+                     async (gl) =>
+                        await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                           Notes.LoadTaskAsync(new PageFilter(1, 1), new SortFilter(false, "updated_at")))))
+                              .FirstOrDefault()));
       }
 
-      async internal Task<int> GetNoteCount(MergeRequestKey mrk)
+      internal Task<int> GetNoteCount(MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            return (int)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Notes.CountAsync()));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     (int)(await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Notes.CountAsync()))));
       }
 
-      async internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            return (IEnumerable<Discussion>)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.LoadAllTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     (IEnumerable<Discussion>)(await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.LoadAllTaskAsync()))));
       }
 
-      async internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)
+      internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            return (Discussion)(await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.Get(discussionId).LoadTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     (Discussion)(await client.RunAsync(
+                        async (gitlab) =>
+                           await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.Get(discussionId).LoadTaskAsync()))));
       }
 
-      async internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
+      internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.Get(discussionId).CreateNewNoteTaskAsync(
-                     new CreateNewNoteParameters(body)));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.Get(discussionId).CreateNewNoteTaskAsync(
+                                 new CreateNewNoteParameters(body)))));
       }
 
-      async internal Task<DiscussionNote> ModifyNoteBodyAsync(MergeRequestKey mrk, string discussionId, int noteId, string body)
+      internal Task<DiscussionNote> ModifyNoteBodyAsync(MergeRequestKey mrk,
+         string discussionId, int noteId, string body)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            return (DiscussionNote)await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
-                     new ModifyDiscussionNoteParameters(
-                        ModifyDiscussionNoteParameters.ModificationType.Body, body, false)));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     (DiscussionNote)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
+                                 new ModifyDiscussionNoteParameters(
+                                    ModifyDiscussionNoteParameters.ModificationType.Body, body, false)))));
       }
 
-      async internal Task DeleteNoteAsync(MergeRequestKey mrk, int noteId)
+      internal Task DeleteNoteAsync(MergeRequestKey mrk, int noteId)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Notes.Get(noteId).DeleteTaskAsync());
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Notes.Get(noteId).DeleteTaskAsync())));
       }
 
-      async internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolved)
+      internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolved)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
-                     new ModifyDiscussionNoteParameters(
-                        ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolved)));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
+                                 new ModifyDiscussionNoteParameters(
+                                    ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolved)))));
       }
 
-      async internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
+      internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            return (Discussion)await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.Get(discussionId).ResolveTaskAsync(
-                     new ResolveThreadParameters(resolved)));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     (Discussion)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.Get(discussionId).ResolveTaskAsync(
+                                 new ResolveThreadParameters(resolved)))));
       }
 
-      async internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
+      internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Discussions.CreateNewTaskAsync(parameters));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Discussions.CreateNewTaskAsync(parameters))));
       }
 
-      async internal Task CreateNoteAsync(MergeRequestKey mrk, CreateNewNoteParameters parameters)
+      internal Task CreateNoteAsync(MergeRequestKey mrk, CreateNewNoteParameters parameters)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                  Notes.CreateNewTaskAsync(parameters));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
+                              Notes.CreateNewTaskAsync(parameters))));
       }
-
-      private readonly IHostProperties _settings;
    }
 }
 

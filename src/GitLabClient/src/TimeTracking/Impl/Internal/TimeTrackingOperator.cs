@@ -12,35 +12,24 @@ namespace mrHelper.Client.TimeTracking
    /// <summary>
    /// Implements Time-Tracking-related interaction with GitLab
    /// </summary>
-   internal class TimeTrackingOperator
+   internal class TimeTrackingOperator : BaseOperator
    {
       internal TimeTrackingOperator(IHostProperties settings)
+         : base(settings)
       {
-         _settings = settings;
       }
 
-      async internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
+      internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         GitLabClient client = new GitLabClient(mrk.ProjectKey.HostName,
-            _settings.GetAccessToken(mrk.ProjectKey.HostName));
-         try
-         {
-            await client.RunAsync(async (gitlab) =>
-               await gitlab.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).AddSpentTimeAsync(
-                  new AddSpentTimeParameters(add, span)));
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(!(ex is GitLabClientCancelled));
-            if (ex is GitLabSharpException || ex is GitLabRequestException)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return callWithNewClient(mrk.ProjectKey.HostName,
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).AddSpentTimeAsync(
+                              new AddSpentTimeParameters(add, span)))));
       }
-
-      private readonly IHostProperties _settings;
    }
 }
 

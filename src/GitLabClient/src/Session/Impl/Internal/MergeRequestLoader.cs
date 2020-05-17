@@ -20,30 +20,22 @@ namespace mrHelper.Client.Session
 
       async public Task<bool> LoadMergeRequest(MergeRequestKey mrk)
       {
-         return await loadMergeRequestAsync(mrk);
-      }
-
-      async private Task<bool> loadMergeRequestAsync(MergeRequestKey mrk)
-      {
-         try
+         IEnumerable<MergeRequest> mergeRequests = await call(
+            () => _operator.SearchMergeRequestsAsync(
+               new SearchCriteria(new object[] { new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId) }), null, false),
+            String.Format("Cancelled loading MR with IId {0}", mrk.IId),
+            String.Format("Cannot load merge request with IId {0}", mrk.IId));
+         if (mergeRequests == null)
          {
-            SearchByIId searchByIId = new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId);
-            IEnumerable<MergeRequest> mergeRequests =
-               await _operator.SearchMergeRequestsAsync(searchByIId, null, false);
-            if (mergeRequests.Any())
-            {
-               _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
-            }
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading MR with IId {0}", mrk.IId);
-            string errorMessage = String.Format("Cannot load merge request with IId {0}", mrk.IId);
-            handleOperatorException(ex, cancelMessage, errorMessage);
             return false;
          }
 
-         return await _versionLoader.LoadVersionsAsync(mrk) && await _versionLoader.LoadCommitsAsync(mrk);
+         if (mergeRequests.Any())
+         {
+            _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
+            return await _versionLoader.LoadVersionsAsync(mrk) && await _versionLoader.LoadCommitsAsync(mrk);
+         }
+         return true;
       }
 
       private readonly IVersionLoader _versionLoader;

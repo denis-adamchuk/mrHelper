@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Session
@@ -55,14 +56,14 @@ namespace mrHelper.Client.Session
 
    public class SearchBasedContext
    {
-      public SearchBasedContext(object searchCriteria, int? maxSearchResults, bool onlyOpen)
+      public SearchBasedContext(SearchCriteria searchCriteria, int? maxSearchResults, bool onlyOpen)
       {
          SearchCriteria = searchCriteria;
          MaxSearchResults = maxSearchResults;
          OnlyOpen = onlyOpen;
       }
 
-      public object SearchCriteria { get; }
+      public SearchCriteria SearchCriteria { get; }
       public int? MaxSearchResults { get; }
       public bool OnlyOpen { get; }
    }

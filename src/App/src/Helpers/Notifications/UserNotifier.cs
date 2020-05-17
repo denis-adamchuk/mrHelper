@@ -44,8 +44,16 @@ namespace mrHelper.App.Helpers
       public void Dispose()
       {
          _session.Started -= onSessionStarted;
-         _mergeRequestCache.MergeRequestEvent -= notifyOnMergeRequestEvent;
-         _discussionCache.DiscussionEvent -= notifyOnDiscussionEvent;
+
+         if (_mergeRequestCache != null)
+         {
+            _mergeRequestCache.MergeRequestEvent -= notifyOnMergeRequestEvent;
+         }
+
+         if (_discussionCache != null)
+         {
+            _discussionCache.DiscussionEvent -= notifyOnDiscussionEvent;
+         }
       }
 
       private TrayIcon.BalloonText getBalloonText(MergeRequestEvent e)

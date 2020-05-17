@@ -319,6 +319,11 @@ namespace mrHelper.Client.Discussions
             }
 
             Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
+            if (mostRecentNote == null)
+            {
+               return;
+            }
+
             int noteCount = await _operator.GetNoteCount(mrk);
             if (_reconnect || !needToLoadDiscussions(mostRecentNote, mrk, noteCount))
             {

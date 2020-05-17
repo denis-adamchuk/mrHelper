@@ -83,17 +83,13 @@ namespace mrHelper.Client.Session
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
          SearchBasedContext sbc = (SearchBasedContext)_sessionContext.CustomData;
-         object search = sbc.SearchCriteria;
-         IEnumerable<MergeRequest> mergeRequests;
-         try
+
+         IEnumerable<MergeRequest> mergeRequests = await call(
+            () => _operator.SearchMergeRequestsAsync(sbc.SearchCriteria, sbc.MaxSearchResults, sbc.OnlyOpen),
+            String.Format("Cancelled loading merge requests with search string \"{0}\"", sbc.SearchCriteria.ToString()),
+            String.Format("Cannot load merge requests with search string \"{0}\"", sbc.SearchCriteria.ToString()));
+         if (mergeRequests == null)
          {
-            mergeRequests = await _operator.SearchMergeRequestsAsync(search, sbc.MaxSearchResults, sbc.OnlyOpen);
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled loading merge requests with search string \"{0}\"", search);
-            string errorMessage = String.Format("Cannot load merge requests with search string \"{0}\"", search);
-            handleOperatorException(ex, cancelMessage, errorMessage);
             return null;
          }
 
@@ -143,17 +139,10 @@ namespace mrHelper.Client.Session
 
       async private Task<ProjectKey?> resolveProject(int projectId)
       {
-         try
-         {
-            return await _operator.GetProjectAsync(projectId.ToString());
-         }
-         catch (OperatorException ex)
-         {
-            string cancelMessage = String.Format("Cancelled resolving project with Id \"{0}\"", projectId);
-            string errorMessage = String.Format("Cannot load project with Id \"{0}\"", projectId);
-            handleOperatorException(ex, cancelMessage, errorMessage);
-         }
-         return null;
+         ProjectKey projectKey = await call(() => _operator.GetProjectAsync(projectId.ToString()),
+            String.Format("Cancelled resolving project with Id \"{0}\"", projectId),
+            String.Format("Cannot load project with Id \"{0}\"", projectId));
+         return projectKey.Equals(default(ProjectKey)) ? new Nullable<ProjectKey>() : projectKey;
       }
 
       private readonly IVersionLoader _versionLoader;

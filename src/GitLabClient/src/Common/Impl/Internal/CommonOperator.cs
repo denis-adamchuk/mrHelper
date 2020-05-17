@@ -1,12 +1,11 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
-using Version = GitLabSharp.Entities.Version;
 using System.Diagnostics;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Common
 {
@@ -16,70 +15,57 @@ namespace mrHelper.Client.Common
    internal static class CommonOperator
    {
       async internal static Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
-         GitLabClient client, object search, int? maxResults, bool onlyOpen)
+         GitLabClient client, SearchCriteria searchCriteria, int? maxResults, bool onlyOpen)
       {
-         try
+         List<MergeRequest> mergeRequests = new List<MergeRequest>();
+         foreach (object search in searchCriteria.Criteria)
          {
-            return (IEnumerable<MergeRequest>)(await client.RunAsync(
-               async (gitlab) =>
-               {
-                  if (search is Types.SearchByIId sid)
-                  {
-                     return new MergeRequest[]
-                        { await gitlab.Projects.Get(sid.ProjectName).MergeRequests.Get(sid.IId).LoadTaskAsync() };
-                  }
-
-                  BaseMergeRequestAccessor accessor = search is Types.SearchByProject sbp
-                     ? (BaseMergeRequestAccessor)gitlab.Projects.Get(sbp.ProjectName).MergeRequests
-                     : (BaseMergeRequestAccessor)gitlab.MergeRequests;
-                  if (maxResults.HasValue)
-                  {
-                     PageFilter pageFilter = new PageFilter(maxResults.Value, 1);
-                     return await accessor.LoadTaskAsync(convertSearchToFilter(search, onlyOpen), pageFilter);
-                  }
-                  return await accessor.LoadAllTaskAsync(convertSearchToFilter(search, onlyOpen));
-               }));
+            mergeRequests.AddRange(
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<MergeRequest>)(await client.RunAsync(
+                        async (gl) =>
+                           await loadMergeRequests(gl, search, maxResults, onlyOpen)))));
          }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return mergeRequests;
       }
 
-      async internal static Task<IEnumerable<User>> SearchUserAsync(GitLabClient client, string name)
+      async private static Task<IEnumerable<MergeRequest>> loadMergeRequests(GitLab gl,
+         object search, int? maxResults, bool onlyOpen)
       {
-         try
+         if (search is Types.SearchByIId sid)
          {
-            return (IEnumerable<User>)(await client.RunAsync(async (gitlab) => await gitlab.Users.SearchTaskAsync(name)));
+            return new MergeRequest[]
+               { await gl.Projects.Get(sid.ProjectName).MergeRequests.Get(sid.IId).LoadTaskAsync() };
          }
-         catch (Exception ex)
+
+         BaseMergeRequestAccessor accessor = search is Types.SearchByProject sbp
+            ? (BaseMergeRequestAccessor)gl.Projects.Get(sbp.ProjectName).MergeRequests
+            : (BaseMergeRequestAccessor)gl.MergeRequests;
+         if (maxResults.HasValue)
          {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
+            PageFilter pageFilter = new PageFilter(maxResults.Value, 1);
+            return await accessor.LoadTaskAsync(convertSearchToFilter(search, onlyOpen), pageFilter);
          }
+         return await accessor.LoadAllTaskAsync(convertSearchToFilter(search, onlyOpen));
       }
 
-      async internal static Task<Project> SearchProjectAsync(GitLabClient client, string projectname)
+      internal static Task<IEnumerable<User>> SearchUserAsync(GitLabClient client, string name)
       {
-         try
-         {
-            return (Project)(await client.RunAsync(async (gitlab) => await gitlab.Projects.Get(projectname).LoadTaskAsync()));
-         }
-         catch (Exception ex)
-         {
-            if (ex is GitLabSharpException || ex is GitLabRequestException || ex is GitLabClientCancelled)
-            {
-               throw new OperatorException(ex);
-            }
-            throw;
-         }
+         return OperatorCallWrapper.Call(
+            async () =>
+               (IEnumerable<User>)await client.RunAsync(
+                  async (gl) =>
+                     await gl.Users.SearchTaskAsync(name)));
+      }
+
+      internal static Task<Project> SearchProjectAsync(GitLabClient client, string projectname)
+      {
+         return OperatorCallWrapper.Call(
+            async () =>
+               (Project)await client.RunAsync(
+                  async (gl) =>
+                     await gl.Projects.Get(projectname).LoadTaskAsync()));
       }
 
       private static MergeRequestsFilter convertSearchToFilter(object search, bool onlyOpen)

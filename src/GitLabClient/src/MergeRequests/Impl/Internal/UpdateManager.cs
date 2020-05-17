@@ -18,8 +18,7 @@ namespace mrHelper.Client.MergeRequests
       internal UpdateManager(GitLabClientContext clientContext, string hostname,
          SessionContext context, InternalCacheUpdater cacheUpdater)
       {
-         SessionOperator updateOperator = new SessionOperator(
-            hostname, clientContext.HostProperties.GetAccessToken(hostname));
+         SessionOperator updateOperator = new SessionOperator(hostname, clientContext.HostProperties);
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
             updateOperator, context, cacheUpdater);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);

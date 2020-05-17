@@ -333,6 +333,9 @@ namespace mrHelper.App.Helpers
 
       private void unsubscribeFromAll()
       {
+         _mergeRequestCache = null;
+         _contextProviderFactory = null;
+
          foreach (KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> keyValuePair in _gitStatistic)
          {
             keyValuePair.Key.Updated -= onLocalGitRepositoryUpdated;
