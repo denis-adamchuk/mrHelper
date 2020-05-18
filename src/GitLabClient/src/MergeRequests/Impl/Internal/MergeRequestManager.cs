@@ -23,7 +23,12 @@ namespace mrHelper.Client.MergeRequests
 
          if (context.UpdateRules.UpdateMergeRequests)
          {
-            _updateManager = new UpdateManager(_clientContext, hostname, context, _cacheUpdater);
+            SessionContext updateContext = new SessionContext(
+               new SessionCallbacks(null, null), // disable callbacks from updates
+               context.UpdateRules,
+               context.CustomData);
+
+            _updateManager = new UpdateManager(_clientContext, hostname, updateContext, _cacheUpdater);
             _updateManager.MergeRequestEvent += onUpdate;
          }
       }

@@ -59,6 +59,11 @@ namespace mrHelper.GitClient
          }
 
          IProjectUpdateContext context = await contextProvider.GetContext();
+         if (context == null)
+         {
+            return;
+         }
+
          bool needUpdate = isUpdateNeeded(context, _updatingContext);
 
          if (onProgressChange != null)
@@ -324,12 +329,8 @@ namespace mrHelper.GitClient
 
       private static bool isUpdateNeeded(IProjectUpdateContext proposed, IProjectUpdateContext updating)
       {
+         Debug.Assert(proposed != null);
          if (updating == null)
-         {
-            return proposed != null;
-         }
-
-         if (proposed == null)
          {
             return true;
          }

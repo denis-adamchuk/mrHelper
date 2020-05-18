@@ -292,7 +292,7 @@ namespace mrHelper.App.Forms
 
          bool canOpenAtLiveTab = (mergeRequest.State == "opened")
           && (isProjectInTheList(mrk.ProjectKey) || addMissingProject(mrk.ProjectKey))
-          && (isEnabledProject(mrk.ProjectKey))  || enableDisabledProject(mrk.ProjectKey);
+          && (isEnabledProject(mrk.ProjectKey)   || enableDisabledProject(mrk.ProjectKey));
 
          await (canOpenAtLiveTab ? openUrlAtLiveTab(mrk, url) : openUrlAtSearchTab(mrk, url));
       }

@@ -40,15 +40,11 @@ namespace mrHelper.App.Forms
             }
             throw;
          }
-
-         if (!isSearchMode())
+         _suppressExternalConnections = false;
+         if (isSearchMode())
          {
-            _suppressExternalConnections = false;
-            return;
+            selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
          }
-
-         _suppressExternalConnections = _suppressExternalConnections
-            && selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
       }
 
       private void switchSearchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)

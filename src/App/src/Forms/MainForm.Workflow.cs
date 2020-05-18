@@ -74,15 +74,11 @@ namespace mrHelper.App.Forms
             }
             throw;
          }
-
-         if (isSearchMode())
+         _suppressExternalConnections = false;
+         if (!isSearchMode())
          {
-            _suppressExternalConnections = false;
-            return;
+            selectMergeRequest(listViewMergeRequests, projectname, iid, false);
          }
-
-         _suppressExternalConnections = _suppressExternalConnections
-            && selectMergeRequest(listViewMergeRequests, projectname, iid, false);
       }
 
       private void switchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)

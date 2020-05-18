@@ -20,10 +20,15 @@ namespace mrHelper.Client.MergeRequests
 
       public Task<IProjectUpdateContext> GetContext()
       {
-         if (_versions == null || !_versions.Any())
+         if (_versions == null)
          {
             Debug.Assert(false);
-            return null;
+            return Task.FromResult<IProjectUpdateContext>(null);
+         }
+
+         if (!_versions.Any())
+         {
+            return Task.FromResult<IProjectUpdateContext>(null);
          }
 
          List<string> shas = new List<string>();

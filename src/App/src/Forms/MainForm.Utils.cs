@@ -46,7 +46,6 @@ namespace mrHelper.App.Forms
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
             return fmk.MergeRequest;
          }
-         Debug.Assert(false);
          return null;
       }
 

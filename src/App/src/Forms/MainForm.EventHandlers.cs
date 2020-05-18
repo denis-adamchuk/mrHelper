@@ -370,7 +370,10 @@ namespace mrHelper.App.Forms
          else
          {
             switchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
-            _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
+            if (getMergeRequestKey(listViewMergeRequests) != null)
+            {
+               _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
+            }
          }
       }
 
