@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote-based provider as there are might be discussions from other users on newer commits
                IProjectUpdateContextProvider contextProvider =
-                  session?.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
+                  session.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -206,8 +206,8 @@ namespace mrHelper.App.Forms
          string getSHA(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
          string leftSHA = getSHA(comboBoxEarliestCommit);
          string rightSHA = getSHA(comboBoxLatestCommit);
-         ISession currentSession = getSession(!isSearchMode());
-         if (currentSession == null)
+         ISession session = getSession(!isSearchMode());
+         if (session == null)
          {
             Debug.Assert(false);
             return;
@@ -234,7 +234,7 @@ namespace mrHelper.App.Forms
                // because user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version (this is possible for Open MR only)
                IProjectUpdateContextProvider contextProvider =
-                  currentSession?.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
+                  session.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -312,7 +312,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
             leftSHA, rightSHA, repo.Path, pid.ToString()));
 
-         saveInterprocessSnapshot(pid, leftSHA, rightSHA, currentSession);
+         saveInterprocessSnapshot(pid, leftSHA, rightSHA, session);
 
          if (!_reviewedCommits.ContainsKey(mrk))
          {
@@ -340,6 +340,10 @@ namespace mrHelper.App.Forms
 
                ISession session = getSession(!isSearchMode());
                IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
+               if (creator == null)
+               {
+                  return;
+               }
 
                labelWorkflowStatus.Text = "Adding a comment...";
                try
@@ -374,6 +378,10 @@ namespace mrHelper.App.Forms
 
                ISession session = getSession(!isSearchMode());
                IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
+               if (creator == null)
+               {
+                  return;
+               }
 
                labelWorkflowStatus.Text = "Creating a discussion...";
                try

@@ -331,7 +331,7 @@ namespace mrHelper.GitClient
 
          if (proposed == null)
          {
-            return updating != null;
+            return true;
          }
 
          if (updating is FullUpdateContext fullUpdating)

@@ -62,7 +62,7 @@ namespace mrHelper.App.Helpers
          }
 
          bool onMention =
-               (!isCurrentUserActivity(_currentUser ?? new User(), e) || _settings.Notifications_MyActivity)
+               (!isCurrentUserActivity(_currentUser, e)               || _settings.Notifications_MyActivity)
             && (!isServiceEvent(e)                                    || _settings.Notifications_Service)
             && e.EventType == DiscussionEvent.Type.MentionedCurrentUser && _settings.Notifications_OnMention;
          if (onMention)

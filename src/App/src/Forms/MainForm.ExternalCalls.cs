@@ -87,7 +87,7 @@ namespace mrHelper.App.Forms
 
          MergeRequestKey mrk = new MergeRequestKey(
             new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-         session?.DiscussionCache?.RequestUpdate(mrk,
+         session.DiscussionCache?.RequestUpdate(mrk,
             new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
       }
 

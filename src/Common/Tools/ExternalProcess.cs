@@ -206,7 +206,7 @@ namespace mrHelper.Common.Tools
          setStdHandler(tcsStdErr, standardError,
             x => process.ErrorDataReceived += x, () => process.CancelErrorRead());
 
-         descriptor?.OnProgressChange?.Invoke(getStatus(arguments, "in progress..."));
+         descriptor.OnProgressChange?.Invoke(getStatus(arguments, "in progress..."));
 
          try
          {
