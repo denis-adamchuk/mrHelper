@@ -46,7 +46,13 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ISession session = snapshot.SessionName == "Live" ? _liveSession : _searchSession;
+         ISession session = getSessionByName(snapshot.SessionName);
+         if (session == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
          DiffCallHandler handler;
          try
@@ -293,7 +299,14 @@ namespace mrHelper.App.Forms
 
       async private Task openUrlAtLiveTab(MergeRequestKey mrk, string url)
       {
-         if (!_liveSession.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+         ISession session = getSession(true);
+         if (session == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
          {
             // We need to restart the workflow here because we possibly have an outdated list
             // of merge requests in the cache
@@ -319,7 +332,7 @@ namespace mrHelper.App.Forms
             {
                // We could not select MR, but let's check if it is cached or not.
 
-               if (_liveSession.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+               if (session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
                {
                   // If it is cached, it is probably hidden by filters and user might want to un-hide it.
                   if (!unhideFilteredMergeRequest(mrk))

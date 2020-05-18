@@ -28,8 +28,8 @@ namespace mrHelper.App.Forms
 
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
-         ISession currentSession = getCurrentSession();
-         if (currentSession == null)
+         ISession session = getSession(!isSearchMode());
+         if (session == null)
          {
             Debug.Assert(false);
             return;
@@ -38,8 +38,7 @@ namespace mrHelper.App.Forms
          if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            Debug.Assert(currentSession == _searchSession);
-            currentSession.DiscussionCache.RequestUpdate(
+            session.DiscussionCache.RequestUpdate(
                mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
@@ -51,7 +50,7 @@ namespace mrHelper.App.Forms
             {
                // Using remote-based provider as there are might be discussions from other users on newer commits
                IProjectUpdateContextProvider contextProvider =
-                  currentSession?.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
+                  session?.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -105,7 +104,7 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
          }
 
-         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(currentSession, mrk);
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(session, mrk);
          if (discussions == null || _exiting)
          {
             return;
@@ -135,10 +134,10 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(currentSession, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(session, repo,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               async (session, key) =>
+               async (key) =>
             {
                try
                {
@@ -164,7 +163,7 @@ namespace mrHelper.App.Forms
                }
                return null;
             },
-            (session) => session?.DiscussionCache?.RequestUpdate(mrk,
+            () => session?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
@@ -207,7 +206,7 @@ namespace mrHelper.App.Forms
          string getSHA(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
          string leftSHA = getSHA(comboBoxEarliestCommit);
          string rightSHA = getSHA(comboBoxLatestCommit);
-         ISession currentSession = getCurrentSession();
+         ISession currentSession = getSession(!isSearchMode());
          if (currentSession == null)
          {
             Debug.Assert(false);
@@ -339,7 +338,8 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               IDiscussionCreator creator = getCurrentSession()?.GetDiscussionCreator(mrk);
+               ISession session = getSession(!isSearchMode());
+               IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Adding a comment...";
                try
@@ -372,7 +372,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ISession session = getCurrentSession();
+               ISession session = getSession(!isSearchMode());
                IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
 
                labelWorkflowStatus.Text = "Creating a discussion...";
@@ -406,7 +406,7 @@ namespace mrHelper.App.Forms
             GetCurrentProjectName(),
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
             textBoxLocalGitFolder.Text,
-            session == _liveSession ? "Live" : "Search");
+            getSessionName(session));
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.SerializeToDisk(snapshot, pid);
@@ -437,11 +437,12 @@ namespace mrHelper.App.Forms
          ILocalGitRepository repo = getRepository(projectKey, false);
          if (repo != null && !repo.ExpectingClone)
          {
+            ISession session = getSession(true /* supported in Live only */);
+
             // Use local-based provider here because remote-based one looks an overkill.
             // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
-            IProjectUpdateContextProvider contextProvider =
-               // silent updates work in "live" session only
-               _liveSession?.MergeRequestCache?.GetLocalBasedContextProvider(projectKey);
+            IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
+               GetLocalBasedContextProvider(projectKey);
             await repo.Updater.SilentUpdate(contextProvider);
          }
       }

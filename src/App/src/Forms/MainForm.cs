@@ -119,6 +119,9 @@ namespace mrHelper.App.Forms
 
       private ISession _liveSession;
       private ISession _searchSession;
+      private ISession getSessionByName(string name) => name == "Live" ? _liveSession : _searchSession;
+      private string getSessionName(ISession session) => session == _liveSession ? "Live" : "Search";
+
       private ITimeTracker _timeTracker;
       private GitLabClientManager _gitlabClientManager;
 

@@ -165,7 +165,8 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     await getCurrentSession()?.TotalTimeCache?.AddSpan(add, diff, mrk);
+                     await getSession(true /* supported in Live only */)?
+                        .TotalTimeCache?.AddSpan(add, diff, mrk);
                   }
                   catch (TimeTrackingException ex)
                   {
@@ -984,7 +985,8 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTracker = getCurrentSession().GetTimeTracker(getMergeRequestKey(null).Value);
+         _timeTracker = getSession(true /* supported in Live only */)
+            .GetTimeTracker(getMergeRequestKey(null).Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode

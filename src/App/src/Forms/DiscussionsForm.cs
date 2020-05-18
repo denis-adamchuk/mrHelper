@@ -27,7 +27,7 @@ namespace mrHelper.App.Forms
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
-         Func<ISession, MergeRequestKey, Task<ILocalGitRepository>> updateGit, Action<ISession> onDiscussionModified)
+         Func<MergeRequestKey, Task<ILocalGitRepository>> updateGit, Action onDiscussionModified)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -235,7 +235,7 @@ namespace mrHelper.App.Forms
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
          this.Text = DefaultCaption + "   (Checking for new commits)";
-         _gitRepository = await _updateGit(_session, _mergeRequestKey);
+         _gitRepository = await _updateGit(_mergeRequestKey);
 
          this.Text = DefaultCaption + "   (Loading discussions)";
 
@@ -362,7 +362,7 @@ namespace mrHelper.App.Forms
                   // 'lite' means that there were no a preceding PreContentChange event, so we did not suspend layout
                   updateLayout(null, true, lite);
                   updateSearch();
-                  _onDiscussionModified?.Invoke(_session);
+                  _onDiscussionModified?.Invoke();
                }, sender => MostRecentFocusedDiscussionControl = sender)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
@@ -525,8 +525,8 @@ namespace mrHelper.App.Forms
 
       private readonly User _currentUser;
       private readonly ISession _session;
-      private readonly Func<ISession, MergeRequestKey, Task<ILocalGitRepository>> _updateGit;
-      private readonly Action<ISession> _onDiscussionModified;
+      private readonly Func<MergeRequestKey, Task<ILocalGitRepository>> _updateGit;
+      private readonly Action _onDiscussionModified;
 
       private readonly DiscussionFilterPanel FilterPanel;
       private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences

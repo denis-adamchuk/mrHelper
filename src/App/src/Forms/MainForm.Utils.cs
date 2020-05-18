@@ -61,9 +61,9 @@ namespace mrHelper.App.Forms
          return null;
       }
 
-      private ISession getCurrentSession()
+      private ISession getSession(bool live)
       {
-         return isSearchMode() ? _searchSession : _liveSession;
+         return live ? _liveSession : _searchSession;
       }
 
       /// <summary>
@@ -589,7 +589,8 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         return getCurrentSession()?.TotalTimeCache?.GetTotalTime(mrk.Value);
+         return getSession(true /* supported in Live only */)?
+            .TotalTimeCache?.GetTotalTime(mrk.Value);
       }
 
       private string convertTotalTimeToText(TimeSpan? span, bool isTimeTrackingAllowed)
@@ -627,13 +628,13 @@ namespace mrHelper.App.Forms
 
       private string getDiscussionCount(MergeRequestKey mrk)
       {
-         // discussion count is supported in "live" session only
-         if (_liveSession?.DiscussionCache == null)
+         ISession session = getSession(true /* supported in Live only */);
+         if (session?.DiscussionCache == null)
          {
             return "N/A";
          }
 
-         DiscussionCount dc = _liveSession.DiscussionCache.GetDiscussionCount(mrk);
+         DiscussionCount dc = session.DiscussionCache.GetDiscussionCount(mrk);
          switch (dc.Status)
          {
             case DiscussionCount.EStatus.NotAvailable:
@@ -918,8 +919,8 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         // discussion count is supported in "live" session only
-         DiscussionCount dc = _liveSession?.DiscussionCache?.GetDiscussionCount(
+         ISession session = getSession(true /* supported in Live only */);
+         DiscussionCount dc = session?.DiscussionCache?.GetDiscussionCount(
             new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
 
          if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
@@ -970,9 +971,8 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         // this function works for "live" session only
-
-         IMergeRequestCache mergeRequestCache = _liveSession?.MergeRequestCache;
+         ISession session = getSession(true /* supported in Live only */);
+         IMergeRequestCache mergeRequestCache = session?.MergeRequestCache;
          if (mergeRequestCache == null)
          {
             return;
@@ -1783,9 +1783,10 @@ namespace mrHelper.App.Forms
             }
          }
 
-         getCurrentSession()?.MergeRequestCache?.RequestUpdate(mrk, intervals,
+         ISession session = getSession(true /* supported in Live only */);
+         session?.MergeRequestCache?.RequestUpdate(mrk, intervals,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
-         getCurrentSession()?.DiscussionCache?.RequestUpdate(mrk, intervals,
+         session?.DiscussionCache?.RequestUpdate(mrk, intervals,
             () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
       }
 

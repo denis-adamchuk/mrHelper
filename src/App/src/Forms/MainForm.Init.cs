@@ -354,6 +354,10 @@ namespace mrHelper.App.Forms
          {
             await _liveSession.Stop();
          }
+         if (_searchSession != null)
+         {
+            await _searchSession.Stop();
+         }
 
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
