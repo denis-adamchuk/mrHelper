@@ -9,13 +9,14 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
-using mrHelper.Common.Constants;
-using mrHelper.Common.Exceptions;
 using mrHelper.Client.Types;
 using mrHelper.Client.Session;
-using mrHelper.Common.Tools;
-using mrHelper.CommonControls.Tools;
 using mrHelper.Client.Common;
+using mrHelper.Client.TimeTracking;
+using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -70,6 +71,8 @@ namespace mrHelper.App.Forms
                   return;
                }
 
+               ITotalTimeCache totalTimeCache = getSession(!isSearchMode())?.TotalTimeCache;
+
                labelWorkflowStatus.Text = "Command " + name + " is in progress";
                try
                {
@@ -89,7 +92,7 @@ namespace mrHelper.App.Forms
 
                if (command.GetStopTimer())
                {
-                  await onStopTimer(true);
+                  await onStopTimer(true, totalTimeCache);
                }
 
                bool reload = command.GetReload();
@@ -586,17 +589,17 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.Invalidate();
       }
 
-      private void onPreLoadTrackedTime(MergeRequestKey mrk)
+      private void onPreLoadTrackedTime(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
       {
-         onTrackedTimeManagerEvent(mrk);
+         onTrackedTimeManagerEvent(totalTimeCache, mrk);
       }
 
-      private void onPostLoadTrackedTime(MergeRequestKey mrk)
+      private void onPostLoadTrackedTime(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
       {
-         onTrackedTimeManagerEvent(mrk);
+         onTrackedTimeManagerEvent(totalTimeCache, mrk);
       }
 
-      private void onTrackedTimeManagerEvent(MergeRequestKey mrk)
+      private void onTrackedTimeManagerEvent(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
       {
          MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
          if (currentMergeRequestKey.HasValue && currentMergeRequestKey.Value.Equals(mrk))
@@ -606,7 +609,7 @@ namespace mrHelper.App.Forms
             {
                // change control enabled state
                updateTotalTime(currentMergeRequestKey,
-                  currentMergeRequest.Author, currentMergeRequestKey.Value.ProjectKey.HostName);
+                  currentMergeRequest.Author, currentMergeRequestKey.Value.ProjectKey.HostName, totalTimeCache);
             }
          }
 

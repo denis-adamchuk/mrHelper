@@ -30,8 +30,8 @@ namespace mrHelper.Client.TimeTracking
          _discussionLoader.DiscussionsLoaded += processDiscussions;
       }
 
-      public event Action<MergeRequestKey> TotalTimeLoading;
-      public event Action<MergeRequestKey> TotalTimeLoaded;
+      public event Action<ITotalTimeCache, MergeRequestKey> TotalTimeLoading;
+      public event Action<ITotalTimeCache, MergeRequestKey> TotalTimeLoaded;
 
       public void Dispose()
       {
@@ -115,7 +115,7 @@ namespace mrHelper.Client.TimeTracking
          }
 
          _times[mrk] = span;
-         TotalTimeLoaded?.Invoke(mrk);
+         TotalTimeLoaded?.Invoke(this, mrk);
       }
 
       public void preProcessDiscussions(MergeRequestKey mrk)
@@ -123,7 +123,7 @@ namespace mrHelper.Client.TimeTracking
          // TODO TimeSpan.MinValue is a bad design decision, consider implementing States
          // by analogy with DiscussionManager.GetDiscussionCount()
          _times[mrk] = TimeSpan.MinValue;
-         TotalTimeLoading?.Invoke(mrk);
+         TotalTimeLoading?.Invoke(this, mrk);
       }
 
       private readonly TimeTrackingOperator _operator;

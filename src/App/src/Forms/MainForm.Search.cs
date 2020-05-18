@@ -166,7 +166,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk);
+         onSingleMergeRequestLoadedCommon(fmk, _searchSession);
       }
 
       private void onSearchComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,

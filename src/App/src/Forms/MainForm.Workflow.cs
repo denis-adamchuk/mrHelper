@@ -262,7 +262,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk);
+         onSingleMergeRequestLoadedCommon(fmk, _liveSession);
       }
 
       private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,

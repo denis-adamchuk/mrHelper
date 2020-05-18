@@ -5,8 +5,8 @@ namespace mrHelper.Client.TimeTracking
 {
    public interface ITotalTimeLoader
    {
-      event Action<MergeRequestKey> TotalTimeLoading;
-      event Action<MergeRequestKey> TotalTimeLoaded;
+      event Action<ITotalTimeCache, MergeRequestKey> TotalTimeLoading;
+      event Action<ITotalTimeCache, MergeRequestKey> TotalTimeLoaded;
    }
 }
 

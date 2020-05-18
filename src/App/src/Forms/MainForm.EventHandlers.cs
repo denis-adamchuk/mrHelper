@@ -1,4 +1,5 @@
 using System;
+using System.Timers;
 using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,7 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
+using mrHelper.App.Forms.Helpers;
 using mrHelper.Client.Types;
+using mrHelper.Client.Session;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
@@ -18,9 +21,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
-using mrHelper.App.Forms.Helpers;
 using Newtonsoft.Json.Linq;
-using System.Timers;
 
 namespace mrHelper.App.Forms
 {
@@ -127,20 +128,22 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
+         ISession session = getSession(!isSearchMode());
+
          if (isTrackingTime())
          {
-            await onStopTimer(true);
+            await onStopTimer(true, session?.TotalTimeCache);
          }
          else
          {
-            onStartTimer();
+            onStartTimer(session);
          }
       }
 
       async private void ButtonTimeTrackingCancel_Click(object sender, EventArgs e)
       {
          Debug.Assert(isTrackingTime());
-         await onStopTimer(false);
+         await onStopTimer(false, getSession(!isSearchMode())?.TotalTimeCache);
       }
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
@@ -152,7 +155,11 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequest(null) != null);
          MergeRequest mr = getMergeRequest(null);
 
-         TimeSpan oldSpan = getTotalTime(mrk) ?? TimeSpan.Zero;
+         Debug.Assert(!isSearchMode());
+         ISession session = getSession(true /* supported in Live only */);
+         ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
+
+         TimeSpan oldSpan = getTotalTime(mrk, totalTimeCache) ?? TimeSpan.Zero;
 
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
@@ -165,8 +172,7 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     await getSession(true /* supported in Live only */)?
-                        .TotalTimeCache?.AddSpan(add, diff, mrk);
+                     await totalTimeCache?.AddSpan(add, diff, mrk);
                   }
                   catch (TimeTrackingException ex)
                   {
@@ -176,7 +182,7 @@ namespace mrHelper.App.Forms
                      return;
                   }
 
-                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName);
+                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, totalTimeCache);
 
                   labelWorkflowStatus.Text = "Total spent time updated";
 
@@ -959,7 +965,7 @@ namespace mrHelper.App.Forms
       {
          if (isTrackingTime())
          {
-            updateTotalTime(null, null, null);
+            updateTotalTime(null, null, null, null);
          }
       }
 
@@ -970,7 +976,7 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
       }
 
-      private void onStartTimer()
+      private void onStartTimer(ISession session)
       {
          Debug.Assert(!isTrackingTime());
 
@@ -985,18 +991,17 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTracker = getSession(true /* supported in Live only */)
-            .GetTimeTracker(getMergeRequestKey(null).Value);
-         _timeTracker.Start();
+         _timeTracker = session?.GetTimeTracker(getMergeRequestKey(null).Value);
+         _timeTracker?.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(null, null, null);
+         updateTotalTime(null, null, null, null);
 
          updateTrayIcon();
          updateTaskbarIcon();
       }
 
-      async private Task onStopTimer(bool send)
+      async private Task onStopTimer(bool send, ITotalTimeCache totalTimeCache)
       {
          if (!isTrackingTime())
          {
@@ -1059,12 +1064,12 @@ namespace mrHelper.App.Forms
             updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey, mergeRequest.Author);
 
             // Take care of controls that 'time tracking' mode shares with normal mode
-            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName);
+            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName, totalTimeCache);
          }
          else
          {
             updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-            updateTotalTime(null, null, null);
+            updateTotalTime(null, null, null, null);
          }
 
          updateTrayIcon();
