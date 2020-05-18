@@ -213,15 +213,12 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         // includedSHA contains all the SHA starting from the selected one
          List<string> includedSHA = new List<string>();
          for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
          {
             string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[index])).SHA;
             includedSHA.Add(sha);
-            if (sha == leftSHA)
-            {
-               break;
-            }
          }
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
