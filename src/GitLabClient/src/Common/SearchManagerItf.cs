@@ -7,6 +7,8 @@ namespace mrHelper.Client.Common
    {
       Task<MergeRequest> SearchMergeRequestAsync(string hostname, string projectName, int mergeRequestIId);
 
+      Task<User> GetCurrentUserAsync(string hostname);
+
       Task<User> SearchUserAsync(string hostname, string name);
 
       Task<Project> SearchProjectAsync(string hostname, string projectname);

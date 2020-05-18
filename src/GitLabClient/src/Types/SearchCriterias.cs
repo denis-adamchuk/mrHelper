@@ -79,5 +79,20 @@ namespace mrHelper.Client.Types
          return String.Format("Text: {0}", Text);
       }
    }
+
+   public class SearchByUsername
+   {
+      public SearchByUsername(string username)
+      {
+         Username = username;
+      }
+
+      public string Username { get; }
+
+      public override string ToString()
+      {
+         return String.Format("Username: {0}", Username);
+      }
+   }
 }
 

@@ -1278,9 +1278,24 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      async private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
       {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
 
+         listViewLabels.Enabled = radioButtonSelectByLabels.Checked;
+         buttonEditLabels.Enabled = listViewLabels.Enabled;
+
+         listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
+         buttonEditProjects.Enabled = listViewProjects.Enabled;
+
+         if (!_loadingConfiguration)
+         {
+            Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
+            await switchHostToSelected();
+         }
       }
 
       protected override void OnFontChanged(EventArgs e)

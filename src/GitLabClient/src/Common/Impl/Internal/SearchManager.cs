@@ -34,6 +34,19 @@ namespace mrHelper.Client.Common
          }
       }
 
+      async public Task<User> GetCurrentUserAsync(string hostname)
+      {
+         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         try
+         {
+            return await CommonOperator.SearchCurrentUserAsync(client);
+         }
+         catch (OperatorException)
+         {
+            return null;
+         }
+      }
+
       async public Task<User> SearchUserAsync(string hostname, string name)
       {
          GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));

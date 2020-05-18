@@ -979,9 +979,26 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.BeginUpdate();
 
-         // TODO Handle added/removed project groups in user-based workflow
+         IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
+         foreach (ProjectKey projectKey in allProjects)
+         {
+            if (!listViewMergeRequests.Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
+            {
+               createListViewGroupForProject(listViewMergeRequests, projectKey);
+            }
+         }
+
          IEnumerable<ProjectKey> projectKeys =
             listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
+         for (int index = listViewMergeRequests.Groups.Count - 1; index >= 0; --index)
+         {
+            ListViewGroup group = listViewMergeRequests.Groups[index];
+            if (!allProjects.Any(x => x.Equals((ProjectKey)group.Tag)))
+            {
+               listViewMergeRequests.Groups.Remove(group);
+            }
+         }
+
          foreach (ProjectKey projectKey in projectKeys)
          {
             foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))

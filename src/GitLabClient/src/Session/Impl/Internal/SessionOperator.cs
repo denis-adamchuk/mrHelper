@@ -26,8 +26,8 @@ namespace mrHelper.Client.Session
          return callWithNewClient(
             async (client) =>
                await OperatorCallWrapper.Call(
-                  async () =>
-                     (User)await client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync())));
+                  () =>
+                     CommonOperator.SearchCurrentUserAsync(client)));
       }
 
       internal Task<ProjectKey> GetProjectAsync(string projectName)

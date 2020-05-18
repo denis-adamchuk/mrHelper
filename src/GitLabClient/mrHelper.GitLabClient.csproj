@@ -46,6 +46,10 @@
     <Compile Include="src\Common\Impl\Helpers.cs" />
     <Compile Include="src\Common\Impl\Internal\BaseOperator.cs" />
     <Compile Include="src\Common\Impl\Internal\CommonOperator.cs" />
+    <Compile Include="src\Common\Impl\Internal\GlobalUserCache.cs" />
+    <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessorAbstract.cs" />
+    <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessor.cs" />
+    <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessorFactory.cs" />
     <Compile Include="src\Common\SearchManagerItf.cs" />
     <Compile Include="src\Common\Impl\Internal\SearchManager.cs" />
     <Compile Include="src\Common\Impl\Internal\OperatorException.cs" />

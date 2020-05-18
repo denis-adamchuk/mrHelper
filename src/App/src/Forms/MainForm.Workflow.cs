@@ -37,9 +37,6 @@ namespace mrHelper.App.Forms
          {
             tabControl.SelectedTab = tabPageMR;
          }
-         else
-         {
-         }
 
          bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
          string projectname = shouldUseLastSelection ?
@@ -154,7 +151,8 @@ namespace mrHelper.App.Forms
          }
          else if (radioButtonSelectByLabels.Checked)
          {
-            throw new NotImplementedException();
+            await initializeLabelListIfEmpty(hostname);
+            return await startLabelBasedWorkflowAsync(hostname);
          }
 
          Debug.Assert(false);
@@ -171,12 +169,6 @@ namespace mrHelper.App.Forms
             throw new NoProjectsException(hostname);
          }
 
-         createListViewGroupsForProjects(listViewMergeRequests, enabledProjects);
-         return await loadAllMergeRequests(hostname, enabledProjects);
-      }
-
-      async private Task<bool> loadAllMergeRequests(string hostname, IEnumerable<ProjectKey> enabledProjects)
-      {
          onLoadAllMergeRequests(enabledProjects);
 
          SessionContext sessionContext = new SessionContext(
@@ -189,7 +181,25 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         onAllMergeRequestsLoaded(hostname, enabledProjects);
+         onAllMergeRequestsLoaded(enabledProjects);
+         return true;
+      }
+
+      private async Task<bool> startLabelBasedWorkflowAsync(string hostname)
+      {
+         onLoadAllMergeRequests();
+
+         SessionContext sessionContext = new SessionContext(
+            new SessionCallbacks(onForbiddenProject, onNotFoundProject),
+            new SessionUpdateRules(true, true),
+            getCustomDataForLabelBasedWorkflow());
+
+         if (!await _liveSession.Start(hostname, sessionContext))
+         {
+            return false;
+         }
+
+         onAllMergeRequestsLoaded(_liveSession.MergeRequestCache.GetProjects());
          return true;
       }
 
@@ -221,12 +231,20 @@ namespace mrHelper.App.Forms
 
       private void onLoadAllMergeRequests(IEnumerable<ProjectKey> projects)
       {
+         createListViewGroupsForProjects(listViewMergeRequests, projects);
+
          disableAllUIControls(false);
          labelWorkflowStatus.Text = String.Format(
             "Loading merge requests of {0} project{1}...", projects.Count(), projects.Count() > 1 ? "s" : "");
       }
 
-      private void onAllMergeRequestsLoaded(string hostname, IEnumerable<ProjectKey> projects)
+      private void onLoadAllMergeRequests()
+      {
+         disableAllUIControls(false);
+         labelWorkflowStatus.Text = "Loading merge requests...";
+      }
+
+      private void onAllMergeRequestsLoaded(IEnumerable<ProjectKey> projects)
       {
          labelWorkflowStatus.Text = "Merge requests loaded";
 
@@ -289,6 +307,33 @@ namespace mrHelper.App.Forms
             _currentUser.Add(hostname, user);
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
+      }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+      async private Task initializeLabelListIfEmpty(string hostname)
+      {
+         if (!radioButtonSelectByLabels.Checked || listViewLabels.Items.Count > 0)
+         {
+            return;
+         }
+
+         //if (checkBoxDisplayFilter.Checked && textBoxDisplayFilter.Text.Length > 0)
+         //{
+         //}
+
+         User currentUser = await _gitlabClientManager.SearchManager.GetCurrentUserAsync(hostname);
+         listViewLabels.Items.Add(new ListViewItem(currentUser.Username));
+      }
+
+      private object getCustomDataForLabelBasedWorkflow()
+      {
+         object[] criteria = listViewLabels
+            .Items
+            .Cast<ListViewItem>()
+            .Select(x => new SearchByUsername(x.Text))
+            .ToArray();
+         return new SearchBasedContext(new SearchCriteria(criteria), null, true);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
