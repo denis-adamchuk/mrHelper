@@ -35,17 +35,7 @@ namespace mrHelper.Client.Session
          }
 
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
-
-         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
-         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
-         {
-            foreach (MergeRequest mergeRequest in kv.Value)
-            {
-               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
-            }
-         }
-
-         return await _versionLoader.LoadVersionsAndCommits(allKeys);
+         return await _versionLoader.LoadVersionsAndCommits(mergeRequests);
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()

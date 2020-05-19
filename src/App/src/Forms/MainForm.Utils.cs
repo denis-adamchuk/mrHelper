@@ -979,6 +979,7 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.BeginUpdate();
 
+         // Add missing project groups
          IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
          foreach (ProjectKey projectKey in allProjects)
          {
@@ -988,6 +989,7 @@ namespace mrHelper.App.Forms
             }
          }
 
+         // Remove deleted project groups
          IEnumerable<ProjectKey> projectKeys =
             listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          for (int index = listViewMergeRequests.Groups.Count - 1; index >= 0; --index)
@@ -999,6 +1001,7 @@ namespace mrHelper.App.Forms
             }
          }
 
+         // Add missing merge requests
          foreach (ProjectKey projectKey in projectKeys)
          {
             foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
@@ -1011,6 +1014,7 @@ namespace mrHelper.App.Forms
             }
          }
 
+         // Remove deleted merge requests
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;

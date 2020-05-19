@@ -18,8 +18,10 @@ namespace mrHelper.Client.Session
       internal SessionOperator(string host, IHostProperties settings)
          : base(settings)
       {
-         _host = host;
+         Host = host;
       }
+
+      internal string Host { get; }
 
       internal Task<User> GetCurrentUserAsync()
       {
@@ -36,7 +38,7 @@ namespace mrHelper.Client.Session
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
-                     new ProjectKey(_host, ((Project)await client.RunAsync(
+                     new ProjectKey(Host, ((Project)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(projectName).LoadTaskAsync())).Path_With_Namespace)));
       }
@@ -85,7 +87,7 @@ namespace mrHelper.Client.Session
 
       async private Task<T> callWithNewClient<T>(Func<GitLabClient, Task<T>> func)
       {
-         return await callWithNewClient<T>(_host,
+         return await callWithNewClient<T>(Host,
             async (client) =>
                await keepClient(client, func));
       }
@@ -104,7 +106,6 @@ namespace mrHelper.Client.Session
       }
 
       private readonly List<GitLabClient> _clients = new List<GitLabClient>();
-      private readonly string _host;
    }
 }
 

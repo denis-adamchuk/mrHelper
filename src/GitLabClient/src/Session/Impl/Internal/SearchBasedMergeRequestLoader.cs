@@ -34,17 +34,7 @@ namespace mrHelper.Client.Session
          }
 
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
-
-         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
-         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
-         {
-            foreach (MergeRequest mergeRequest in kv.Value)
-            {
-               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
-            }
-         }
-
-         return await _versionLoader.LoadVersionsAndCommits(allKeys);
+         return await _versionLoader.LoadVersionsAndCommits(mergeRequests);
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
@@ -125,10 +115,21 @@ namespace mrHelper.Client.Session
 
       async private Task<ProjectKey?> resolveProject(int projectId)
       {
+         ProjectKey? projectKeyOpt = GlobalCache.GetProjectKey(_operator.Host, projectId);
+         if (projectKeyOpt.HasValue)
+         {
+            return projectKeyOpt.Value;
+         }
+
          ProjectKey projectKey = await call(() => _operator.GetProjectAsync(projectId.ToString()),
             String.Format("Cancelled resolving project with Id \"{0}\"", projectId),
             String.Format("Cannot load project with Id \"{0}\"", projectId));
-         return projectKey.Equals(default(ProjectKey)) ? new Nullable<ProjectKey>() : projectKey;
+         if (projectKey.Equals(default(ProjectKey)))
+         {
+            return new Nullable<ProjectKey>();
+         }
+         GlobalCache.AddProjectKey(_operator.Host, projectId, projectKey);
+         return projectKey;
       }
 
       private readonly IVersionLoader _versionLoader;

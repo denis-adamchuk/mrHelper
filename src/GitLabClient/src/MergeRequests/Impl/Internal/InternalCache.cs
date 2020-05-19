@@ -63,6 +63,9 @@ namespace mrHelper.Client.MergeRequests
          return _mergeRequests.ContainsKey(key) ?  _mergeRequests[key] : Array.Empty<MergeRequest>();
       }
 
+      /// <summary>
+      /// Sets a list of merge requests for the given projects
+      /// </summary>
       internal void SetMergeRequests(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
          _mergeRequests = mergeRequests;

@@ -1,4 +1,7 @@
-﻿namespace mrHelper.Common.Interfaces
+﻿using System;
+using System.Collections.Generic;
+
+namespace mrHelper.Common.Interfaces
 {
    public struct ProjectKey
    {
@@ -10,6 +13,21 @@
 
       public string HostName { get; }
       public string ProjectName { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is ProjectKey key
+             && 0 == String.Compare(HostName, key.HostName, true)
+             && 0 == String.Compare(ProjectName, key.ProjectName, true);
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -1910759831;
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(HostName);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ProjectName);
+         return hashCode;
+      }
    }
 }
 

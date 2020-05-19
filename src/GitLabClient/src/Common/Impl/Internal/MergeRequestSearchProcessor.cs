@@ -104,7 +104,7 @@ namespace mrHelper.Client.Common
 
       async private Task<IEnumerable<MergeRequest>> loadByAuthor(GitLab gl, string username)
       {
-         User user = GlobalUserCache.GetUser(gl.Host, username);
+         User user = GlobalCache.GetUser(gl.Host, username);
          if (user == null)
          {
             IEnumerable<User> users = await gl.Users.SearchByUsernameTaskAsync(username);
@@ -113,7 +113,7 @@ namespace mrHelper.Client.Common
                return System.Array.Empty<MergeRequest>();
             }
             user = users.First();
-            GlobalUserCache.AddUser(gl.Host, user);
+            GlobalCache.AddUser(gl.Host, user);
          }
 
          return await load(gl, null, new MergeRequestsFilter(

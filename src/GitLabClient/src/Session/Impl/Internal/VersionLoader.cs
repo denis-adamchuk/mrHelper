@@ -8,6 +8,7 @@ using mrHelper.Client.MergeRequests;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Session
 {
@@ -19,7 +20,7 @@ namespace mrHelper.Client.Session
          _cacheUpdater = cacheUpdater;
       }
 
-      async public Task<bool> LoadVersionsAndCommits(IEnumerable<MergeRequestKey> mergeRequestKeys)
+      async public Task<bool> LoadVersionsAndCommits(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
          Exception exception = null;
          bool cancelled = false;
@@ -44,11 +45,21 @@ namespace mrHelper.Client.Session
             }
          }
 
+         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
+         {
+            foreach (MergeRequest mergeRequest in kv.Value)
+            {
+               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
+            }
+         }
+
+         // to load versions and commits in parallel
          IEnumerable<Tuple<MergeRequestKey, bool>> duplicateKeys =
-               mergeRequestKeys
+               allKeys
                .Select(x => new Tuple<MergeRequestKey, bool>(x, true))
             .Concat(
-               mergeRequestKeys
+               allKeys
                .Select(x => new Tuple<MergeRequestKey, bool>(x, false)));
 
          await TaskUtils.RunConcurrentFunctionsAsync(duplicateKeys, x => loadVersionsLocal(x),
