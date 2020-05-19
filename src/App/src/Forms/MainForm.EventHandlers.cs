@@ -1293,6 +1293,9 @@ namespace mrHelper.App.Forms
 
          if (!_loadingConfiguration)
          {
+            Program.Settings.MergeRequestSelectingMode =
+               radioButtonSelectByProjects.Checked ? "Projects" : "Labels";
+
             Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
             await switchHostToSelected();
          }

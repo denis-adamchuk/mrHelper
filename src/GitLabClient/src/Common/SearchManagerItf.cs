@@ -9,7 +9,7 @@ namespace mrHelper.Client.Common
 
       Task<User> GetCurrentUserAsync(string hostname);
 
-      Task<User> SearchUserAsync(string hostname, string name);
+      Task<User> SearchUserByNameAsync(string hostname, string name, bool isUsername);
 
       Task<Project> SearchProjectAsync(string hostname, string projectname);
    }

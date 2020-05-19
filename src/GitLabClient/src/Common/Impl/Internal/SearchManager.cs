@@ -47,12 +47,12 @@ namespace mrHelper.Client.Common
          }
       }
 
-      async public Task<User> SearchUserAsync(string hostname, string name)
+      async public Task<User> SearchUserByNameAsync(string hostname, string name, bool isUsername)
       {
          GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
          try
          {
-            IEnumerable<User> users = await CommonOperator.SearchUserAsync(client, name);
+            IEnumerable<User> users = await CommonOperator.SearchUserAsync(client, name, isUsername);
             return users.Any() ? users.First() : null;
          }
          catch (OperatorException)

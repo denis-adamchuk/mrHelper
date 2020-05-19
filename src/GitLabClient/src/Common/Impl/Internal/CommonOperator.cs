@@ -36,13 +36,13 @@ namespace mrHelper.Client.Common
                      await gl.CurrentUser.LoadTaskAsync()));
       }
 
-      internal static Task<IEnumerable<User>> SearchUserAsync(GitLabClient client, string name)
+      internal static Task<IEnumerable<User>> SearchUserAsync(GitLabClient client, string name, bool isUsername)
       {
          return OperatorCallWrapper.Call(
             async () =>
                (IEnumerable<User>)await client.RunAsync(
                   async (gl) =>
-                     await gl.Users.SearchTaskAsync(name)));
+                     await (isUsername ? gl.Users.SearchByUsernameTaskAsync(name) : gl.Users.SearchTaskAsync(name))));
       }
 
       internal static Task<Project> SearchProjectAsync(GitLabClient client, string projectname)

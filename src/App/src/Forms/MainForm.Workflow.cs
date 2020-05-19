@@ -13,6 +13,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.MergeRequests;
 using System.Collections;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Forms
 {
@@ -318,12 +319,38 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         //if (checkBoxDisplayFilter.Checked && textBoxDisplayFilter.Text.Length > 0)
-         //{
-         //}
+         labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
+         List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
+         MergeRequestFilterState filter = _mergeRequestFilter.Filter;
+         if (filter.Enabled)
+         {
+            foreach (string keyword in filter.Keywords)
+            {
+               string adjustedKeyword = keyword.ToLower();
+               if (keyword.StartsWith(Constants.GitLabLabelPrefix) || keyword.StartsWith(Constants.AuthorLabelPrefix))
+               {
+                  adjustedKeyword = keyword.Substring(1);
+               }
+               User user = await _gitlabClientManager.SearchManager.SearchUserByNameAsync(hostname, adjustedKeyword, true);
+               if (user != null)
+               {
+                  labels.Add(new Tuple<string, bool>(adjustedKeyword, true));
+               }
+            }
+         }
 
          User currentUser = await _gitlabClientManager.SearchManager.GetCurrentUserAsync(hostname);
-         listViewLabels.Items.Add(new ListViewItem(currentUser.Username));
+         if (currentUser != null)
+         {
+            string currentUsername = currentUser.Username.ToLower();
+            if (!labels.Any(x => x.Item1 == currentUsername))
+            {
+               labels.Add(new Tuple<string, bool>(currentUsername, true));
+            }
+         }
+         ConfigurationHelper.SetLabelsForHost(hostname, labels, Program.Settings);
+         updateLabelsListView();
+         labelWorkflowStatus.Text = "Workflow prepared.";
       }
 
       private object getCustomDataForLabelBasedWorkflow()

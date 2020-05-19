@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
@@ -62,9 +63,12 @@ namespace mrHelper.Client.Session
                break;
             }
 
-            _cacheUpdater.UpdateMergeRequests(kv.Key, kv.Value);
+            IEnumerable<MergeRequest> mergeRequestsUnique = kv.Value
+               .GroupBy(x => x.IId)
+               .Select(x => x.First());
+            _cacheUpdater.UpdateMergeRequests(kv.Key, mergeRequestsUnique);
 
-            await TaskUtils.RunConcurrentFunctionsAsync(kv.Value,
+            await TaskUtils.RunConcurrentFunctionsAsync(mergeRequestsUnique,
                x => loadVersionsLocal(new MergeRequestKey(kv.Key, x.IId)),
                Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
          }
