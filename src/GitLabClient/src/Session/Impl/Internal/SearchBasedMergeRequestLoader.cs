@@ -33,30 +33,8 @@ namespace mrHelper.Client.Session
             return false; // cancelled
          }
 
-         Exception exception = null;
-         bool cancelled = false;
-         async Task loadVersionsLocal(MergeRequestKey mrk)
-         {
-            if (cancelled)
-            {
-               return;
-            }
-
-            try
-            {
-               if (!await _versionLoader.LoadVersionsAsync(mrk) || !await _versionLoader.LoadCommitsAsync(mrk))
-               {
-                  cancelled = true;
-               }
-            }
-            catch (SessionException ex)
-            {
-               exception = ex;
-               cancelled = true;
-            }
-         }
-
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
+
          List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
          {
@@ -65,42 +43,32 @@ namespace mrHelper.Client.Session
                allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
             }
          }
-         await TaskUtils.RunConcurrentFunctionsAsync(allKeys, x => loadVersionsLocal(x),
-            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
 
-         if (!cancelled)
-         {
-            return true;
-         }
-
-         if (exception != null)
-         {
-            throw exception;
-         }
-         return false;
+         return await _versionLoader.LoadVersionsAndCommits(allKeys);
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
          SearchBasedContext sbc = (SearchBasedContext)_sessionContext.CustomData;
 
-         IEnumerable<MergeRequest> mergeRequests = await call(
+         IEnumerable<MergeRequest> allMergeRequests = await call(
             () => _operator.SearchMergeRequestsAsync(sbc.SearchCriteria, sbc.MaxSearchResults, sbc.OnlyOpen),
             String.Format("Cancelled loading merge requests with search string \"{0}\"", sbc.SearchCriteria.ToString()),
             String.Format("Cannot load merge requests with search string \"{0}\"", sbc.SearchCriteria.ToString()));
-         if (mergeRequests == null)
+         if (allMergeRequests == null)
          {
             return null;
          }
 
          // leave unique IIds
-         mergeRequests = mergeRequests
+         allMergeRequests = allMergeRequests
             .GroupBy(x => x.IId)
             .Select(x => x.First());
 
-         Dictionary<ProjectKey, IEnumerable<MergeRequest>> result =
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
             new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
 
+         Exception exception = null;
          bool cancelled = false;
          async Task resolve(KeyValuePair<int, List<MergeRequest>> keyValuePair)
          {
@@ -109,23 +77,35 @@ namespace mrHelper.Client.Session
                return;
             }
 
-            ProjectKey? project = await resolveProject(keyValuePair.Key);
-            if (project == null)
+            try
             {
-               cancelled = true;
-               return;
+               ProjectKey? project = await resolveProject(keyValuePair.Key);
+               if (project == null)
+               {
+                  cancelled = true;
+                  return;
+               }
+               mergeRequests.Add(project.Value, keyValuePair.Value);
             }
-            result.Add(project.Value, keyValuePair.Value);
+            catch (SessionException ex)
+            {
+               exception = ex;
+               cancelled = true;
+            }
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(groupMergeRequestsByProject(mergeRequests), x => resolve(x),
+         await TaskUtils.RunConcurrentFunctionsAsync(groupMergeRequestsByProject(allMergeRequests), x => resolve(x),
             Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
-         if (cancelled)
+         if (!cancelled)
          {
-            return null;
+            return mergeRequests;
          }
 
-         return result;
+         if (exception != null)
+         {
+            throw exception;
+         }
+         return null;
       }
 
       private Dictionary<int, List<MergeRequest>> groupMergeRequestsByProject(IEnumerable<MergeRequest> mergeRequests)

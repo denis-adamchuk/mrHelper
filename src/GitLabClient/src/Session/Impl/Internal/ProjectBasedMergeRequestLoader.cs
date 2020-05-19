@@ -28,33 +28,35 @@ namespace mrHelper.Client.Session
 
       async public Task<bool> Load()
       {
-         ProjectBasedContext pbc = (ProjectBasedContext)_sessionContext.CustomData;
-
-         Exception exception = null;
-         bool cancelled = false;
-         async Task loadVersionsLocal(MergeRequestKey mrk)
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
+         if (mergeRequests == null)
          {
-            if (cancelled)
-            {
-               return;
-            }
+            return false; // cancelled
+         }
 
-            try
+         _cacheUpdater.UpdateMergeRequests(mergeRequests);
+
+         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
+         {
+            foreach (MergeRequest mergeRequest in kv.Value)
             {
-               if (!await _versionLoader.LoadVersionsAsync(mrk) || !await _versionLoader.LoadCommitsAsync(mrk))
-               {
-                  cancelled = true;
-               }
-            }
-            catch (SessionException ex)
-            {
-               exception = ex;
-               cancelled = true;
+               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
             }
          }
 
+         return await _versionLoader.LoadVersionsAndCommits(allKeys);
+      }
+
+      async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
+      {
+         ProjectBasedContext pbc = (ProjectBasedContext)_sessionContext.CustomData;
+
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
             new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
+
+         Exception exception = null;
+         bool cancelled = false;
          async Task loadProject(ProjectKey project)
          {
             if (cancelled)
@@ -93,29 +95,16 @@ namespace mrHelper.Client.Session
 
          await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
             Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
-
-         _cacheUpdater.UpdateMergeRequests(mergeRequests);
-         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
-         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
-         {
-            foreach (MergeRequest mergeRequest in kv.Value)
-            {
-               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
-            }
-         }
-         await TaskUtils.RunConcurrentFunctionsAsync(allKeys, x => loadVersionsLocal(x),
-            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
-
          if (!cancelled)
          {
-            return true;
+            return mergeRequests;
          }
 
          if (exception != null)
          {
             throw exception;
          }
-         return false;
+         return null;
       }
 
       private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(ProjectKey project)
