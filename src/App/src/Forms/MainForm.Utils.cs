@@ -1464,7 +1464,7 @@ namespace mrHelper.App.Forms
       {
          listViewLabels.Items.Clear();
 
-         foreach (string label in ConfigurationHelper.GetEnabledLabels(getHostName(), Program.Settings))
+         foreach (string label in ConfigurationHelper.GetEnabledUsers(getHostName(), Program.Settings))
          {
             listViewLabels.Items.Add(label);
          }

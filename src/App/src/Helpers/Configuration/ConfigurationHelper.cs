@@ -1,8 +1,8 @@
-﻿using GitLabSharp.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using GitLabSharp.Entities;
+using Newtonsoft.Json;
 
 namespace mrHelper.App.Helpers
 {
@@ -16,139 +16,93 @@ namespace mrHelper.App.Helpers
             .ToArray();
       }
 
-      // TODO
-#pragma warning disable 0649
-      public struct HostInProjectsFile
+      public class HostInProjectsFile
       {
-         public HostInProjectsFile(string name, IEnumerable<Project> projects)
+         public HostInProjectsFile(string hostname, IEnumerable<Project> projects)
          {
-            Name = name;
+            Name = hostname;
             Projects = projects;
          }
 
-         public string Name { get; }
-         public IEnumerable<Project> Projects { get; }
-      }
-#pragma warning restore 0649
+         [JsonProperty]
+         public string Name { get; protected set; }
 
-      public static void SetupProjects(IEnumerable<HostInProjectsFile> projects, UserDefinedSettings settings)
+         [JsonProperty]
+         public IEnumerable<Project> Projects { get; protected set; }
+      }
+
+      public static void InitializeSelectedProjects(IEnumerable<HostInProjectsFile> projects,
+         UserDefinedSettings settings)
       {
          if (projects == null)
          {
             return;
          }
 
-         settings.SelectedProjects = projects
-            .Where(x => x.Name != String.Empty && (x.Projects?.Count() ?? 0) > 0)
-            .ToDictionary(
-               item => item.Name,
-               item => String.Join(",", item.Projects.Select(x => x.Path_With_Namespace + ":" + bool.TrueString)));
+         projects = projects
+            .Where(x => !String.IsNullOrEmpty(x.Name) && (x.Projects?.Any() ?? false));
+         if (!projects.Any())
+         {
+            return;
+         }
+
+         Dictionary<string, string> selectedProjects = settings.SelectedProjects;
+         DictionaryStringHelper.UpdateRawDictionaryString(
+            projects.ToDictionary(
+               x => x.Name,
+               x => x.Projects.Select(y => new Tuple<string, string>(y.Path_With_Namespace, bool.TrueString))),
+            selectedProjects);
+         settings.SelectedProjects = selectedProjects;
       }
 
-      public static void SetLabelsForHost(string host, IEnumerable<Tuple<string, bool>> labels,
+      public static void SetUsersForHost(string host, IEnumerable<Tuple<string, bool>> users,
          UserDefinedSettings settings)
       {
-         settings.SelectedLabels = setItemsForHost(host, labels, settings.SelectedLabels);
+         Dictionary<string, string> selectedUsers = settings.SelectedUsers;
+         DictionaryStringHelper.UpdateRawDictionaryString(
+            new Dictionary<string, IEnumerable<Tuple<string, string>>>
+            {
+               { host, users.Select(y => new Tuple<string, string>(y.Item1, y.Item2.ToString())) }
+            },
+            selectedUsers);
+         settings.SelectedUsers = selectedUsers;
       }
 
       public static void SetProjectsForHost(string host, IEnumerable<Tuple<string, bool>> projects,
          UserDefinedSettings settings)
       {
-         settings.SelectedProjects = setItemsForHost(host, projects, settings.SelectedProjects);
+         Dictionary<string, string> selectedProjects = settings.SelectedProjects;
+         DictionaryStringHelper.UpdateRawDictionaryString(
+            new Dictionary<string, IEnumerable<Tuple<string, string>>>
+            {
+               { host, projects.Select(y => new Tuple<string, string>(y.Item1, y.Item2.ToString())) }
+            },
+            selectedProjects);
+         settings.SelectedProjects = selectedProjects;
       }
 
-      public static IEnumerable<Tuple<string, bool>> GetLabelsForHost(string host, UserDefinedSettings settings)
+      public static IEnumerable<Tuple<string, bool>> GetUsersForHost(string host, UserDefinedSettings settings)
       {
-         return getItemsForHost(host, settings.SelectedLabels);
+         return DictionaryStringHelper.GetDictionaryStringValue(host, settings.SelectedUsers)
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) ? result : false));
       }
 
       public static IEnumerable<Tuple<string, bool>> GetProjectsForHost(string host, UserDefinedSettings settings)
       {
-         return getItemsForHost(host, settings.SelectedProjects);
+         return DictionaryStringHelper.GetDictionaryStringValue(host, settings.SelectedProjects)
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) ? result : false));
       }
 
       public static IEnumerable<Project> GetEnabledProjects(string hostname, UserDefinedSettings settings)
       {
-         if (String.IsNullOrEmpty(hostname))
-         {
-            return new Project[0];
-         }
-
-         IEnumerable<Tuple<string, bool>> projects = GetProjectsForHost(hostname, settings);
-         Debug.Assert(projects != null);
-
-         return projects
-            .Where(x => x.Item2)
-            .Select(x => x.Item1)
-            .Select(x => new Project(x));
+         return GetProjectsForHost(hostname, settings)?
+            .Where(x => x.Item2)?.Select(x => x.Item1)?.Select(x => new Project(x)) ?? Array.Empty<Project>();
       }
 
-      public static IEnumerable<string> GetEnabledLabels(string hostname, UserDefinedSettings settings)
+      public static IEnumerable<string> GetEnabledUsers(string hostname, UserDefinedSettings settings)
       {
-         if (String.IsNullOrEmpty(hostname))
-         {
-            return new string[0];
-         }
-
-         IEnumerable<Tuple<string, bool>> labels = GetLabelsForHost(hostname, settings);
-         Debug.Assert(labels != null);
-
-         return labels
-            .Where(x => x.Item2)
-            .Select(x => x.Item1);
-      }
-
-      private static Dictionary<string, string> setItemsForHost(string host,
-         IEnumerable<Tuple<string, bool>> items, Dictionary<string, string> configuration)
-      {
-         Dictionary<string, IEnumerable<Tuple<string, bool>>> all = getAllItems(configuration);
-
-         all[host] = items;
-
-         return all.ToDictionary(
-            item => item.Key,
-            item => String.Join(",", item.Value.Select(x => x.Item1.ToString() + ":" + x.Item2.ToString())));
-      }
-
-      private static IEnumerable<Tuple<string, bool>> getItemsForHost(
-         string host, Dictionary<string, string> configuration)
-      {
-         if (String.IsNullOrEmpty(host) || !configuration.ContainsKey(host))
-         {
-            return new Tuple<string, bool>[0];
-         }
-
-         string labelString = configuration[host];
-         return parseItemWithStateString(labelString);
-      }
-
-      private static Dictionary<string, IEnumerable<Tuple<string, bool>>> getAllItems(
-         Dictionary<string, string> allItems)
-      {
-         return allItems
-            .ToDictionary(
-               item => item.Key,
-               item => parseItemWithStateString(item.Value));
-      }
-
-      private static IEnumerable<Tuple<string, bool>> parseItemWithStateString(string projectString)
-      {
-         if (projectString == String.Empty)
-         {
-            return new Tuple<string, bool>[0];
-         }
-
-         return projectString
-            .Split(',')
-            .Where(x => x.Split(':').Length == 2)
-            .Select(x => parseItemWithStateStringElement(x));
-      }
-
-      private static Tuple<string, bool> parseItemWithStateStringElement(string element)
-      {
-         string[] splitted = element.Split(':');
-         return new Tuple<string, bool>(
-            splitted[0], bool.TryParse(splitted[1], out bool result) ? result : false);
+         return GetUsersForHost(hostname, settings)?
+            .Where(x => x.Item2)?.Select(x => x.Item1) ?? Array.Empty<string>();
       }
    }
 }

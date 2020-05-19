@@ -110,7 +110,6 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
-         // TODO - Can we compare two InternalCache without making a full copy here?
          IInternalCache oldDetails = _cache.Clone();
 
          try
@@ -148,7 +147,6 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
-         // TODO - Can we compare two InternalCache without making a full copy here?
          IInternalCache oldDetails = _cache.Clone();
 
          try

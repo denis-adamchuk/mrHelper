@@ -166,9 +166,9 @@ namespace mrHelper.App.Forms
          {
             radioButtonSelectByProjects.Checked = true;
          }
-         else if (Program.Settings.MergeRequestSelectingMode == "Labels")
+         else if (Program.Settings.MergeRequestSelectingMode == "User")
          {
-            radioButtonSelectByLabels.Checked = true;
+            radioButtonSelectByUsernames.Checked = true;
          }
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
@@ -195,11 +195,6 @@ namespace mrHelper.App.Forms
          WinFormsHelpers.FillComboBox(comboBoxThemes,
             Constants.ThemeNames, Program.Settings.VisualThemeName);
          applyTheme(Program.Settings.VisualThemeName);
-
-         if (!Program.Settings.HasSelectedProjects())
-         {
-            setupDefaultProjectList();
-         }
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
          _loadingConfiguration = false;
@@ -647,7 +642,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            ConfigurationHelper.SetupProjects(JsonFileReader.
+            ConfigurationHelper.InitializeSelectedProjects(JsonFileReader.
                LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
                   Constants.ProjectListFileName), Program.Settings);
          }

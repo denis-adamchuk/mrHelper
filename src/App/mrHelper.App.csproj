@@ -185,6 +185,7 @@
     </Compile>
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
+    <Compile Include="src\Helpers\Configuration\DictionaryStringHelper.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />

@@ -86,16 +86,20 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             fmk.MergeRequest.IId.ToString()));
 
-         IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
-            fmk.ProjectKey.HostName, Program.Settings);
-
-         string projectname = fmk.ProjectKey.ProjectName;
-         if (projectname != String.Empty &&
-            (!enabledProjects.Cast<Project>().Any(x => 0 == String.Compare(x.Path_With_Namespace, projectname, true))))
+         if (radioButtonSelectByProjects.Checked)
          {
-            string message = String.Format("Project {0} is not in the list of enabled projects", projectname);
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            // TODO Do we need this check and message box really?
+            IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
+               fmk.ProjectKey.HostName, Program.Settings);
+
+            string projectname = fmk.ProjectKey.ProjectName;
+            if (projectname != String.Empty &&
+               (!enabledProjects.Cast<Project>().Any(x => 0 == String.Compare(x.Path_With_Namespace, projectname, true))))
+            {
+               string message = String.Format("Project {0} is not in the list of enabled projects", projectname);
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return;
+            }
          }
 
          _suppressExternalConnections = true;
@@ -148,12 +152,13 @@ namespace mrHelper.App.Forms
 
          if (radioButtonSelectByProjects.Checked)
          {
+            initializeProjectListIfEmpty(hostname);
             return await startProjectBasedWorkflowAsync(hostname);
          }
-         else if (radioButtonSelectByLabels.Checked)
+         else if (radioButtonSelectByUsernames.Checked)
          {
             await initializeLabelListIfEmpty(hostname);
-            return await startLabelBasedWorkflowAsync(hostname);
+            return await startUserBasedWorkflowAsync(hostname);
          }
 
          Debug.Assert(false);
@@ -186,14 +191,14 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private async Task<bool> startLabelBasedWorkflowAsync(string hostname)
+      private async Task<bool> startUserBasedWorkflowAsync(string hostname)
       {
          onLoadAllMergeRequests();
 
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(onForbiddenProject, onNotFoundProject),
             new SessionUpdateRules(true, true),
-            getCustomDataForLabelBasedWorkflow());
+            getCustomDataForUserBasedWorkflow());
 
          if (!await _liveSession.Start(hostname, sessionContext))
          {
@@ -312,9 +317,18 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      private void initializeProjectListIfEmpty(string hostname)
+      {
+         if (!ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings).Any())
+         {
+            setupDefaultProjectList();
+            updateProjectsListView();
+         }
+      }
+
       async private Task initializeLabelListIfEmpty(string hostname)
       {
-         if (!radioButtonSelectByLabels.Checked || listViewLabels.Items.Count > 0)
+         if (!radioButtonSelectByUsernames.Checked || listViewLabels.Items.Count > 0)
          {
             return;
          }
@@ -348,12 +362,12 @@ namespace mrHelper.App.Forms
                labels.Add(new Tuple<string, bool>(currentUsername, true));
             }
          }
-         ConfigurationHelper.SetLabelsForHost(hostname, labels, Program.Settings);
+         ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);
          updateLabelsListView();
          labelWorkflowStatus.Text = "Workflow prepared.";
       }
 
-      private object getCustomDataForLabelBasedWorkflow()
+      private object getCustomDataForUserBasedWorkflow()
       {
          object[] criteria = listViewLabels
             .Items

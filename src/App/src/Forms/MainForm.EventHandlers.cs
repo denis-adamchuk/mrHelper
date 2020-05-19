@@ -1224,7 +1224,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         IEnumerable<Tuple<string, bool>> labels = ConfigurationHelper.GetLabelsForHost(host, Program.Settings);
+         IEnumerable<Tuple<string, bool>> labels = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(labels != null);
 
          using (EditOrderedListViewForm form = new EditOrderedListViewForm(labels,
@@ -1237,10 +1237,10 @@ namespace mrHelper.App.Forms
 
             if (!Enumerable.SequenceEqual(labels, form.Items))
             {
-               ConfigurationHelper.SetLabelsForHost(host, form.Items, Program.Settings);
+               ConfigurationHelper.SetUsersForHost(host, form.Items, Program.Settings);
                updateLabelsListView();
 
-               if (radioButtonSelectByLabels.Checked)
+               if (radioButtonSelectByUsernames.Checked)
                {
                   Trace.TraceInformation("[MainForm] Reloading merge request list after label list change");
                   await switchHostToSelected();
@@ -1286,7 +1286,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         listViewLabels.Enabled = radioButtonSelectByLabels.Checked;
+         listViewLabels.Enabled = radioButtonSelectByUsernames.Checked;
          buttonEditLabels.Enabled = listViewLabels.Enabled;
 
          listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
@@ -1295,7 +1295,7 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.MergeRequestSelectingMode =
-               radioButtonSelectByProjects.Checked ? "Projects" : "Labels";
+               radioButtonSelectByProjects.Checked ? "Projects" : "User";
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
             await switchHostToSelected();

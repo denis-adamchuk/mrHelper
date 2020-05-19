@@ -159,8 +159,6 @@ namespace mrHelper.App.Helpers
          return null;
       }
 
-// TODO
-#pragma warning disable 0649
       private struct Service
       {
          public Service(string name, Dictionary<string, object> properties)
@@ -172,7 +170,6 @@ namespace mrHelper.App.Helpers
          public string Name { get; }
          public Dictionary<string, object> Properties { get; }
       }
-#pragma warning restore 0649
 
       private readonly Service[] _services = Array.Empty<Service>();
 

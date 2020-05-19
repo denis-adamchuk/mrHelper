@@ -136,10 +136,10 @@ namespace mrHelper.App.Helpers
          Constants.DefaultThemeName;
 
       private static readonly string MergeRequestSelectingModeKeyName      = "MergeRequestSelectingMode";
-      private static readonly string MergeRequestSelectingModeDefaultValue = "Projects"; // TODO - Change this!
+      private static readonly string MergeRequestSelectingModeDefaultValue = "User";
 
-      private static readonly string SelectedLabelsKeyName      = "SelectedLabels";
-      private static readonly string SelectedLabelsDefaultValue = String.Empty;
+      private static readonly string SelectedUsersKeyName      = "SelectedUsers";
+      private static readonly string SelectedUsersDefaultValue = String.Empty;
 
       private static readonly string SelectedProjectsKeyName      = "SelectedProjects";
       private static readonly string SelectedProjectsDefaultValue = String.Empty;
@@ -488,7 +488,7 @@ namespace mrHelper.App.Helpers
       private Dictionary<string, int> getStringToIntDictionary(string keyName, string defaultValue,
          int fallbackValue, int errorValue)
       {
-         return stringToDictionary(getValue(keyName, defaultValue))
+         return DictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue))
             .ToDictionary(
                item => item.Key,
                item => int.TryParse(item.Value, out int result) ? result : fallbackValue)
@@ -500,7 +500,8 @@ namespace mrHelper.App.Helpers
 
       private void setStringToIntDictionary(string keyName, Dictionary<string, int> value)
       {
-         setValue(keyName, dictionaryToString(value.ToDictionary(item => item.Key, item => item.Value.ToString())));
+         setValue(keyName, DictionaryStringHelper.SerializeRawDictionaryString(
+            value.ToDictionary(item => item.Key, item => item.Value.ToString())));
       }
 
       public int MainWindowSplitterDistance
@@ -611,15 +612,16 @@ namespace mrHelper.App.Helpers
          set { setValue(MergeRequestSelectingModeKeyName, value); }
       }
 
-      public Dictionary<string, string> SelectedLabels
+      public Dictionary<string, string> SelectedUsers
       {
          get
          {
-            return stringToDictionary(getValue(SelectedLabelsKeyName, SelectedLabelsDefaultValue));
+            return DictionaryStringHelper.DeserializeRawDictionaryString(
+               getValue(SelectedUsersKeyName, SelectedUsersDefaultValue));
          }
          set
          {
-            setValue(SelectedLabelsKeyName, dictionaryToString(value));
+            setValue(SelectedUsersKeyName, DictionaryStringHelper.SerializeRawDictionaryString(value));
          }
       }
 
@@ -632,11 +634,12 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-            return stringToDictionary(getValue(SelectedProjectsKeyName, SelectedProjectsDefaultValue));
+            return DictionaryStringHelper.DeserializeRawDictionaryString(
+               getValue(SelectedProjectsKeyName, SelectedProjectsDefaultValue));
          }
          set
          {
-            setValue(SelectedProjectsKeyName, dictionaryToString(value));
+            setValue(SelectedProjectsKeyName, DictionaryStringHelper.SerializeRawDictionaryString(value));
          }
       }
 
@@ -650,21 +653,6 @@ namespace mrHelper.App.Helpers
             }
          }
          return String.Empty;
-      }
-
-      public IEnumerable<string> GetEnabledProjects(string host)
-      {
-         if (String.IsNullOrEmpty(host))
-         {
-            return new string[0];
-         }
-
-         IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, this);
-         Debug.Assert(projects != null);
-
-         return projects
-            .Where(x => x.Item2)
-            .Select(x => x.Item1);
       }
 
       private string getValue(string key, string defaultValue)
@@ -727,41 +715,6 @@ namespace mrHelper.App.Helpers
       {
          string valuesString = string.Join(";", values);
          setValue(key, valuesString);
-      }
-
-      private Dictionary<string, string> stringToDictionary(string value)
-      {
-         Dictionary<string, string> result = new Dictionary<string, string>();
-
-         string[] splitted = value.Split(';');
-         foreach (string splittedItem in splitted)
-         {
-            if (!splittedItem.Contains("|"))
-            {
-               Debug.Assert(splittedItem == String.Empty);
-               continue;
-            }
-
-            string[] subsplitted = splittedItem.Split('|');
-            if (subsplitted.Length != 2)
-            {
-               Debug.Assert(false);
-               continue;
-            }
-            result.Add(subsplitted[0], subsplitted[1]);
-         }
-
-         return result;
-      }
-
-      private string dictionaryToString(Dictionary<string, string> value)
-      {
-         List<string> result = new List<string>();
-         foreach (KeyValuePair<string, string> pair in value)
-         {
-            result.Add(pair.Key + "|" + pair.Value);
-         }
-         return String.Join(";", result);
       }
 
       private string boolToString(bool value)
