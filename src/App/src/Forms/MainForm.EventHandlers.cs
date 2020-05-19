@@ -541,6 +541,7 @@ namespace mrHelper.App.Forms
          if (removeCurrent)
          {
             updateProjectsListView();
+            updateLabelsListView();
 
             selectHost(PreferredSelection.Latest);
             await switchHostToSelected();

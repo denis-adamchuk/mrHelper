@@ -1452,6 +1452,7 @@ namespace mrHelper.App.Forms
       private void onHostSelected()
       {
          updateProjectsListView();
+         updateLabelsListView();
          disableListView(listViewFoundMergeRequests, true);
       }
 

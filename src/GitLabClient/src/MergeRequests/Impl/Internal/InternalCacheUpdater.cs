@@ -19,7 +19,7 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Cache passed merge requests
       /// </summary>
-      internal void UpdateMergeRequests(ProjectKey key, IEnumerable<MergeRequest> mergeRequests)
+      internal void UpdateMergeRequests(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
          if (mergeRequests == null)
          {
@@ -27,16 +27,20 @@ namespace mrHelper.Client.MergeRequests
             return;
          }
 
-         _cache.SetMergeRequests(key, mergeRequests);
-
-         IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(key);
-         if (previouslyCachedMergeRequests != null && mergeRequests.Count() != previouslyCachedMergeRequests.Count())
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
          {
-            Debug.WriteLine(String.Format(
-               "[InternalCacheUpdater] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
-               key.ProjectName, key.HostName, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
+            IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(kv.Key);
+            if (previouslyCachedMergeRequests != null && mergeRequests.Count() != previouslyCachedMergeRequests.Count())
+            {
+               Debug.WriteLine(String.Format(
+                  "[InternalCacheUpdater] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
+                  kv.Key.ProjectName, kv.Key.HostName, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
+            }
+
+            cleanupOldRecords(kv.Key, previouslyCachedMergeRequests, kv.Value);
          }
-         cleanupOldRecords(key, previouslyCachedMergeRequests, mergeRequests);
+
+         _cache.SetMergeRequests(mergeRequests);
       }
 
       /// <summary>

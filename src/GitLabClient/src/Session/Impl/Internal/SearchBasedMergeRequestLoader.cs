@@ -56,22 +56,18 @@ namespace mrHelper.Client.Session
             }
          }
 
+         _cacheUpdater.UpdateMergeRequests(mergeRequests);
+         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
          {
-            if (cancelled)
+            foreach (MergeRequest mergeRequest in kv.Value)
             {
-               break;
+               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
             }
-
-            IEnumerable<MergeRequest> mergeRequestsUnique = kv.Value
-               .GroupBy(x => x.IId)
-               .Select(x => x.First());
-            _cacheUpdater.UpdateMergeRequests(kv.Key, mergeRequestsUnique);
-
-            await TaskUtils.RunConcurrentFunctionsAsync(mergeRequestsUnique,
-               x => loadVersionsLocal(new MergeRequestKey(kv.Key, x.IId)),
-               Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
          }
+         await TaskUtils.RunConcurrentFunctionsAsync(allKeys, x => loadVersionsLocal(x),
+            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
+
          if (!cancelled)
          {
             return true;
@@ -97,7 +93,13 @@ namespace mrHelper.Client.Session
             return null;
          }
 
-         Dictionary<ProjectKey, IEnumerable<MergeRequest>> result = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
+         // leave unique IIds
+         mergeRequests = mergeRequests
+            .GroupBy(x => x.IId)
+            .Select(x => x.First());
+
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> result =
+            new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
 
          bool cancelled = false;
          async Task resolve(KeyValuePair<int, List<MergeRequest>> keyValuePair)

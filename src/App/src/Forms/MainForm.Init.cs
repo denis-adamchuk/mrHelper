@@ -166,6 +166,10 @@ namespace mrHelper.App.Forms
          {
             radioButtonSelectByProjects.Checked = true;
          }
+         else if (Program.Settings.MergeRequestSelectingMode == "Labels")
+         {
+            radioButtonSelectByLabels.Checked = true;
+         }
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
          {

@@ -25,7 +25,7 @@ namespace mrHelper.Client.MergeRequests
 
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in details._mergeRequests)
          {
-            SetMergeRequests(kv.Key, kv.Value.ToArray()); // make a copy
+            _mergeRequests[kv.Key] = kv.Value.ToArray(); // make a copy
          }
 
          foreach (KeyValuePair<MergeRequestKey, IEnumerable<Version>> kv in details._versions)
@@ -63,12 +63,9 @@ namespace mrHelper.Client.MergeRequests
          return _mergeRequests.ContainsKey(key) ?  _mergeRequests[key] : Array.Empty<MergeRequest>();
       }
 
-      /// <summary>
-      /// Sets a list of merge requests for the given project
-      /// </summary>
-      internal void SetMergeRequests(ProjectKey key, IEnumerable<MergeRequest> mergeRequests)
+      internal void SetMergeRequests(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
-         _mergeRequests[key] = mergeRequests;
+         _mergeRequests = mergeRequests;
       }
 
       /// <summary>
@@ -130,7 +127,7 @@ namespace mrHelper.Client.MergeRequests
       }
 
       // maps unique project id to list of merge requests
-      private readonly Dictionary<ProjectKey, IEnumerable<MergeRequest>> _mergeRequests;
+      private Dictionary<ProjectKey, IEnumerable<MergeRequest>> _mergeRequests;
 
       // maps Merge Request to its versions
       private readonly Dictionary<MergeRequestKey, IEnumerable<Version>> _versions;

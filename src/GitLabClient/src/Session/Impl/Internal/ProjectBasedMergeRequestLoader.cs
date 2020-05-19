@@ -53,6 +53,8 @@ namespace mrHelper.Client.Session
             }
          }
 
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
+            new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
          async Task loadProject(ProjectKey project)
          {
             if (cancelled)
@@ -62,17 +64,14 @@ namespace mrHelper.Client.Session
 
             try
             {
-               IEnumerable<MergeRequest> mergeRequests = await loadProjectMergeRequestsAsync(project);
+               IEnumerable<MergeRequest> projectMergeRequests = await loadProjectMergeRequestsAsync(project);
                if (mergeRequests == null)
                {
                   cancelled = true;
                }
                else
                {
-                  _cacheUpdater.UpdateMergeRequests(project, mergeRequests);
-                  await TaskUtils.RunConcurrentFunctionsAsync(mergeRequests,
-                     x => loadVersionsLocal(new MergeRequestKey(project, x.IId)),
-                     Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
+                  mergeRequests.Add(project, projectMergeRequests);
                }
             }
             catch (SessionException ex)
@@ -94,6 +93,19 @@ namespace mrHelper.Client.Session
 
          await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
             Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
+
+         _cacheUpdater.UpdateMergeRequests(mergeRequests);
+         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
+         {
+            foreach (MergeRequest mergeRequest in kv.Value)
+            {
+               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
+            }
+         }
+         await TaskUtils.RunConcurrentFunctionsAsync(allKeys, x => loadVersionsLocal(x),
+            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
+
          if (!cancelled)
          {
             return true;
