@@ -104,6 +104,15 @@ namespace mrHelper.App.Helpers
          return GetUsersForHost(hostname, settings)?
             .Where(x => x.Item2)?.Select(x => x.Item1) ?? Array.Empty<string>();
       }
+
+      public static void SelectProjectBasedWorkflow(UserDefinedSettings settings)
+         => settings.WorkflowType = "Projects";
+
+      public static void SelectUserBasedWorkflow(UserDefinedSettings settings)
+         => settings.WorkflowType = "Users";
+
+      public static bool IsProjectBasedWorkflowSelected(UserDefinedSettings settings)
+         => settings.WorkflowType == "Projects";
    }
 }
 

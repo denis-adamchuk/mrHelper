@@ -290,33 +290,36 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         bool canOpenAtLiveTab = (mergeRequest.State == "opened")
-          && (isProjectInTheList(mrk.ProjectKey) || addMissingProject(mrk.ProjectKey))
-          && (isEnabledProject(mrk.ProjectKey)   || enableDisabledProject(mrk.ProjectKey));
-
-         await (canOpenAtLiveTab ? openUrlAtLiveTab(mrk, url) : openUrlAtSearchTab(mrk, url));
+         bool canOpenAtLiveTab = (mergeRequest.State == "opened") && checkIfCanOpenAtLiveTab(mrk, true);
+         if (!canOpenAtLiveTab || !await openUrlAtLiveTab(mrk, url))
+         {
+            await openUrlAtSearchTab(mrk, url);
+         }
       }
 
-      async private Task openUrlAtLiveTab(MergeRequestKey mrk, string url)
+      async private Task<bool> openUrlAtLiveTab(MergeRequestKey mrk, string url)
       {
          ISession session = getSession(true);
          if (session == null)
          {
             Debug.Assert(false);
-            return;
+            return false;
          }
 
          if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
          {
             // We need to restart the workflow here because we possibly have an outdated list
             // of merge requests in the cache
-            if (!await restartWorkflowByUrl(url, mrk.ProjectKey.HostName)
-             || !isProjectInTheList(mrk.ProjectKey) || !isEnabledProject(mrk.ProjectKey))
+            if (!await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
             {
-               // Could not restart workflow or...
-               // ...this may happen if project list changed while we were in 'await'
+               return false; // could not restart workflow
+            }
+
+            if (!checkIfCanOpenAtLiveTab(mrk, false))
+            {
+               // this may happen if project list changed while we were in 'await'
                // or project has just been disabled in restartWorkflowByUrl()
-               return;
+               return false;
             }
          }
 
@@ -337,7 +340,7 @@ namespace mrHelper.App.Forms
                   // If it is cached, it is probably hidden by filters and user might want to un-hide it.
                   if (!unhideFilteredMergeRequest(mrk))
                   {
-                     return; // user decided to not un-hide merge request
+                     return false; // user decided to not un-hide merge request
                   }
 
                   if (!selectMergeRequest(listViewMergeRequests, mrk.ProjectKey.ProjectName, mrk.IId, true))
@@ -345,6 +348,7 @@ namespace mrHelper.App.Forms
                      Debug.Assert(false);
                      Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
                      reportErrorOnConnect(url, "Something went wrong. ", null, false);
+                     return false;
                   }
                }
                else
@@ -352,9 +356,32 @@ namespace mrHelper.App.Forms
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
                   reportErrorOnConnect(url, "Something went wrong. ", null, false);
+                  return false;
                }
             }
          }
+
+         return true;
+      }
+
+      private bool checkIfCanOpenAtLiveTab(MergeRequestKey mrk, bool proposeFix)
+      {
+         if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+         {
+            return true;
+         }
+
+         if (!isProjectInTheList(mrk.ProjectKey) && (!proposeFix || !addMissingProject(mrk.ProjectKey)))
+         {
+            return false;
+         }
+
+         if (!isEnabledProject(mrk.ProjectKey) && (!proposeFix || !enableDisabledProject(mrk.ProjectKey)))
+         {
+            return false;
+         }
+
+         return true;
       }
 
       private MergeRequestKey? parseUrlIntoMergeRequestKey(string url)

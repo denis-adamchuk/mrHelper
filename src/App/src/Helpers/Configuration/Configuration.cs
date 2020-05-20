@@ -135,8 +135,8 @@ namespace mrHelper.App.Helpers
       private static readonly string VisualThemeNameDefaultValue  =
          Constants.DefaultThemeName;
 
-      private static readonly string MergeRequestSelectingModeKeyName      = "MergeRequestSelectingMode";
-      private static readonly string MergeRequestSelectingModeDefaultValue = "User";
+      private static readonly string WorkflowTypeKeyName      = "WorkflowType";
+      private static readonly string WorkflowTypeDefaultValue = "User";
 
       private static readonly string SelectedUsersKeyName      = "SelectedUsers";
       private static readonly string SelectedUsersDefaultValue = String.Empty;
@@ -606,10 +606,10 @@ namespace mrHelper.App.Helpers
          set { setValue(DisableSSLVerificationKeyName, boolToString(value)); }
       }
 
-      public string MergeRequestSelectingMode
+      public string WorkflowType
       {
-         get { return getValue(MergeRequestSelectingModeKeyName, MergeRequestSelectingModeDefaultValue); }
-         set { setValue(MergeRequestSelectingModeKeyName, value); }
+         get { return getValue(WorkflowTypeKeyName, WorkflowTypeDefaultValue); }
+         set { setValue(WorkflowTypeKeyName, value); }
       }
 
       public Dictionary<string, string> SelectedUsers

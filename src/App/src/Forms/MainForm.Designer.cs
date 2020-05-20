@@ -100,8 +100,8 @@ namespace mrHelper.App.Forms
          this.groupBoxGit = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
-         this.buttonEditLabels = new System.Windows.Forms.Button();
-         this.listViewLabels = new System.Windows.Forms.ListView();
+         this.buttonEditUsers = new System.Windows.Forms.Button();
+         this.listViewUsers = new System.Windows.Forms.ListView();
          this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.radioButtonSelectByUsernames = new System.Windows.Forms.RadioButton();
          this.buttonEditProjects = new System.Windows.Forms.Button();
@@ -426,8 +426,8 @@ namespace mrHelper.App.Forms
          this.textBoxDisplayFilter.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxDisplayFilter, "To select merge requests use comma-separated list of the following:\n#{username} o" +
         "r label or MR IId or any substring from MR title/author name/label/branch");
-         this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxLabels_TextChanged);
-         this.textBoxDisplayFilter.Leave += new System.EventHandler(this.textBoxLabels_Leave);
+         this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxDisplayFilter_TextChanged);
+         this.textBoxDisplayFilter.Leave += new System.EventHandler(this.textBoxDisplayFilter_Leave);
          // 
          // textBoxSearch
          // 
@@ -803,8 +803,8 @@ namespace mrHelper.App.Forms
          // groupBoxHost
          // 
          this.groupBoxHost.Controls.Add(this.radioButtonSelectByProjects);
-         this.groupBoxHost.Controls.Add(this.buttonEditLabels);
-         this.groupBoxHost.Controls.Add(this.listViewLabels);
+         this.groupBoxHost.Controls.Add(this.buttonEditUsers);
+         this.groupBoxHost.Controls.Add(this.listViewUsers);
          this.groupBoxHost.Controls.Add(this.radioButtonSelectByUsernames);
          this.groupBoxHost.Controls.Add(this.buttonEditProjects);
          this.groupBoxHost.Controls.Add(this.comboBoxHost);
@@ -828,31 +828,31 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
          this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
          // 
-         // buttonEditLabels
+         // buttonEditUsers
          // 
-         this.buttonEditLabels.Location = new System.Drawing.Point(182, 235);
-         this.buttonEditLabels.Name = "buttonEditLabels";
-         this.buttonEditLabels.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditLabels.TabIndex = 8;
-         this.buttonEditLabels.Text = "Edit...";
-         this.buttonEditLabels.UseVisualStyleBackColor = true;
-         this.buttonEditLabels.Click += new System.EventHandler(this.buttonEditLabels_Click);
+         this.buttonEditUsers.Location = new System.Drawing.Point(182, 235);
+         this.buttonEditUsers.Name = "buttonEditUsers";
+         this.buttonEditUsers.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditUsers.TabIndex = 8;
+         this.buttonEditUsers.Text = "Edit...";
+         this.buttonEditUsers.UseVisualStyleBackColor = true;
+         this.buttonEditUsers.Click += new System.EventHandler(this.buttonEditUsers_Click);
          // 
-         // listViewLabels
+         // listViewUsers
          // 
-         this.listViewLabels.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+         this.listViewUsers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
-         this.listViewLabels.FullRowSelect = true;
-         this.listViewLabels.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewLabels.HideSelection = false;
-         this.listViewLabels.Location = new System.Drawing.Point(6, 72);
-         this.listViewLabels.MultiSelect = false;
-         this.listViewLabels.Name = "listViewLabels";
-         this.listViewLabels.ShowGroups = false;
-         this.listViewLabels.Size = new System.Drawing.Size(259, 157);
-         this.listViewLabels.TabIndex = 7;
-         this.listViewLabels.UseCompatibleStateImageBehavior = false;
-         this.listViewLabels.View = System.Windows.Forms.View.Details;
+         this.listViewUsers.FullRowSelect = true;
+         this.listViewUsers.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewUsers.HideSelection = false;
+         this.listViewUsers.Location = new System.Drawing.Point(6, 72);
+         this.listViewUsers.MultiSelect = false;
+         this.listViewUsers.Name = "listViewUsers";
+         this.listViewUsers.ShowGroups = false;
+         this.listViewUsers.Size = new System.Drawing.Size(259, 157);
+         this.listViewUsers.TabIndex = 7;
+         this.listViewUsers.UseCompatibleStateImageBehavior = false;
+         this.listViewUsers.View = System.Windows.Forms.View.Details;
          // 
          // columnHeader1
          // 
@@ -1719,8 +1719,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
         private System.Windows.Forms.CheckBox checkBoxUseShallowClone;
         private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
-        private System.Windows.Forms.Button buttonEditLabels;
-        private System.Windows.Forms.ListView listViewLabels;
+        private System.Windows.Forms.Button buttonEditUsers;
+        private System.Windows.Forms.ListView listViewUsers;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
     }

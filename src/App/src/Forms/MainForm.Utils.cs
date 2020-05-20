@@ -135,7 +135,8 @@ namespace mrHelper.App.Forms
                break;
          }
 
-         onHostSelected();
+         updateProjectsListView();
+         updateUsersListView();
       }
 
       private void createListViewGroupsForProjects(ListView listView, IEnumerable<ProjectKey> projects)
@@ -1453,20 +1454,13 @@ namespace mrHelper.App.Forms
          Program.Settings.VisualThemeName = theme;
       }
 
-      private void onHostSelected()
+      private void updateUsersListView()
       {
-         updateProjectsListView();
-         updateLabelsListView();
-         disableListView(listViewFoundMergeRequests, true);
-      }
-
-      private void updateLabelsListView()
-      {
-         listViewLabels.Items.Clear();
+         listViewUsers.Items.Clear();
 
          foreach (string label in ConfigurationHelper.GetEnabledUsers(getHostName(), Program.Settings))
          {
-            listViewLabels.Items.Add(label);
+            listViewUsers.Items.Add(label);
          }
       }
 

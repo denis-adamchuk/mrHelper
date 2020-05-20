@@ -86,22 +86,6 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
             fmk.MergeRequest.IId.ToString()));
 
-         if (radioButtonSelectByProjects.Checked)
-         {
-            // TODO Do we need this check and message box really?
-            IEnumerable<Project> enabledProjects = ConfigurationHelper.GetEnabledProjects(
-               fmk.ProjectKey.HostName, Program.Settings);
-
-            string projectname = fmk.ProjectKey.ProjectName;
-            if (projectname != String.Empty &&
-               (!enabledProjects.Cast<Project>().Any(x => 0 == String.Compare(x.Path_With_Namespace, projectname, true))))
-            {
-               string message = String.Format("Project {0} is not in the list of enabled projects", projectname);
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
-            }
-         }
-
          _suppressExternalConnections = true;
          try
          {
@@ -150,19 +134,16 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         if (radioButtonSelectByProjects.Checked)
+         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
             initializeProjectListIfEmpty(hostname);
             return await startProjectBasedWorkflowAsync(hostname);
          }
-         else if (radioButtonSelectByUsernames.Checked)
+         else
          {
             await initializeLabelListIfEmpty(hostname);
             return await startUserBasedWorkflowAsync(hostname);
          }
-
-         Debug.Assert(false);
-         return false;
       }
 
       private async Task<bool> startProjectBasedWorkflowAsync(string hostname)
@@ -319,7 +300,7 @@ namespace mrHelper.App.Forms
 
       private void initializeProjectListIfEmpty(string hostname)
       {
-         if (!ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings).Any())
+         if (!ConfigurationHelper.GetProjectsForHost(hostname, Program.Settings).Any())
          {
             setupDefaultProjectList();
             updateProjectsListView();
@@ -328,7 +309,7 @@ namespace mrHelper.App.Forms
 
       async private Task initializeLabelListIfEmpty(string hostname)
       {
-         if (!radioButtonSelectByUsernames.Checked || listViewLabels.Items.Count > 0)
+         if (!radioButtonSelectByUsernames.Checked || listViewUsers.Items.Count > 0)
          {
             return;
          }
@@ -363,13 +344,13 @@ namespace mrHelper.App.Forms
             }
          }
          ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);
-         updateLabelsListView();
+         updateUsersListView();
          labelWorkflowStatus.Text = "Workflow prepared.";
       }
 
       private object getCustomDataForUserBasedWorkflow()
       {
-         object[] criteria = listViewLabels
+         object[] criteria = listViewUsers
             .Items
             .Cast<ListViewItem>()
             .Select(x => new SearchByUsername(x.Text))

@@ -241,7 +241,8 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
 
-         onHostSelected();
+         updateProjectsListView();
+         updateUsersListView();
          await switchHostToSelected();
       }
 
@@ -540,10 +541,17 @@ namespace mrHelper.App.Forms
          updateTabControlSelection();
          if (removeCurrent)
          {
-            updateProjectsListView();
-            updateLabelsListView();
+            if (comboBoxHost.Items.Count == 0)
+            {
+               updateProjectsListView();
+               updateUsersListView();
+            }
+            else
+            {
+               selectHost(PreferredSelection.Latest);
+            }
 
-            selectHost(PreferredSelection.Latest);
+            // calling this unconditionally to drop current sessions and disable UI
             await switchHostToSelected();
          }
       }
@@ -716,12 +724,12 @@ namespace mrHelper.App.Forms
          onUserIsMovingSplitter(splitter, true);
       }
 
-      private void textBoxLabels_TextChanged(object sender, EventArgs e)
+      private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
          onTextBoxDisplayFilterUpdate();
       }
 
-      private void textBoxLabels_Leave(object sender, EventArgs e)
+      private void textBoxDisplayFilter_Leave(object sender, EventArgs e)
       {
          onTextBoxDisplayFilterUpdate();
       }
@@ -1202,21 +1210,20 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            Debug.Assert(radioButtonSelectByProjects.Checked);
+
             if (!Enumerable.SequenceEqual(projects, form.Items))
             {
                ConfigurationHelper.SetProjectsForHost(host, form.Items, Program.Settings);
                updateProjectsListView();
 
-               if (radioButtonSelectByProjects.Checked)
-               {
-                  Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
-                  await switchHostToSelected();
-               }
+               Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
+               await switchHostToSelected();
             }
          }
       }
 
-      async private void buttonEditLabels_Click(object sender, EventArgs e)
+      async private void buttonEditUsers_Click(object sender, EventArgs e)
       {
          string host = getHostName();
          if (host == String.Empty)
@@ -1235,16 +1242,15 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            Debug.Assert(radioButtonSelectByUsernames.Checked);
+
             if (!Enumerable.SequenceEqual(labels, form.Items))
             {
                ConfigurationHelper.SetUsersForHost(host, form.Items, Program.Settings);
-               updateLabelsListView();
+               updateUsersListView();
 
-               if (radioButtonSelectByUsernames.Checked)
-               {
-                  Trace.TraceInformation("[MainForm] Reloading merge request list after label list change");
-                  await switchHostToSelected();
-               }
+               Trace.TraceInformation("[MainForm] Reloading merge request list after label list change");
+               await switchHostToSelected();
             }
          }
       }
@@ -1286,16 +1292,22 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         listViewLabels.Enabled = radioButtonSelectByUsernames.Checked;
-         buttonEditLabels.Enabled = listViewLabels.Enabled;
+         listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
+         buttonEditUsers.Enabled = listViewUsers.Enabled;
 
          listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
          buttonEditProjects.Enabled = listViewProjects.Enabled;
 
          if (!_loadingConfiguration)
          {
-            Program.Settings.MergeRequestSelectingMode =
-               radioButtonSelectByProjects.Checked ? "Projects" : "User";
+            if (radioButtonSelectByProjects.Checked)
+            {
+               ConfigurationHelper.SelectProjectBasedWorkflow(Program.Settings);
+            }
+            else
+            {
+               ConfigurationHelper.SelectUserBasedWorkflow(Program.Settings);
+            }
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
             await switchHostToSelected();

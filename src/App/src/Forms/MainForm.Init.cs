@@ -162,11 +162,11 @@ namespace mrHelper.App.Forms
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
          checkBoxShowServiceNotifications.Checked = Program.Settings.Notifications_Service;
 
-         if (Program.Settings.MergeRequestSelectingMode == "Projects")
+         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
             radioButtonSelectByProjects.Checked = true;
          }
-         else if (Program.Settings.MergeRequestSelectingMode == "User")
+         else
          {
             radioButtonSelectByUsernames.Checked = true;
          }
