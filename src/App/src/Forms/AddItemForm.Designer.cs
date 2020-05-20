@@ -56,10 +56,10 @@ namespace mrHelper.App.Forms
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
-         // textBoxProjectName
+         // textBox
          // 
          this.textBox.Location = new System.Drawing.Point(12, 27);
-         this.textBox.Name = "textBoxProjectName";
+         this.textBox.Name = "textBox";
          this.textBox.Size = new System.Drawing.Size(227, 20);
          this.textBox.TabIndex = 0;
          this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
@@ -71,9 +71,9 @@ namespace mrHelper.App.Forms
          this.label1.Name = "label1";
          this.label1.Size = new System.Drawing.Size(71, 13);
          this.label1.TabIndex = 0;
-         this.label1.Text = "Project Name";
+         this.label1.Text = "Item Name";
          // 
-         // AddProjectForm
+         // AddItemForm
          // 
          this.AcceptButton = this.buttonOK;
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -87,8 +87,8 @@ namespace mrHelper.App.Forms
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
-         this.Name = "AddProjectForm";
-         this.Text = "Add Project";
+         this.Name = "AddItemForm";
+         this.Text = "Add Item";
          this.ResumeLayout(false);
          this.PerformLayout();
 

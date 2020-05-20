@@ -1202,7 +1202,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         using (EditOrderedListViewForm form = new EditOrderedListViewForm(projects,
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects", projects,
             new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager)))
          {
             if (form.ShowDialog() != DialogResult.OK)
@@ -1231,10 +1231,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         IEnumerable<Tuple<string, bool>> labels = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
-         Debug.Assert(labels != null);
+         IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
+         Debug.Assert(users != null);
 
-         using (EditOrderedListViewForm form = new EditOrderedListViewForm(labels,
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users", users,
             new EditLabelListViewCallback(host)))
          {
             if (form.ShowDialog() != DialogResult.OK)
@@ -1244,7 +1244,7 @@ namespace mrHelper.App.Forms
 
             Debug.Assert(radioButtonSelectByUsernames.Checked);
 
-            if (!Enumerable.SequenceEqual(labels, form.Items))
+            if (!Enumerable.SequenceEqual(users, form.Items))
             {
                ConfigurationHelper.SetUsersForHost(host, form.Items, Program.Settings);
                updateUsersListView();

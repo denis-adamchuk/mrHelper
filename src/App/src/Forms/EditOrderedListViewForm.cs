@@ -18,12 +18,14 @@ namespace mrHelper.App.Forms
    public partial class EditOrderedListViewForm : CustomFontForm
    {
       public EditOrderedListViewForm(
+         string caption,
          IEnumerable<Tuple<string, bool>> initialItems,
          IEditOrderedListViewCallback callback)
       {
          Debug.Assert(initialItems != null);
 
          InitializeComponent();
+         this.Text = caption;
 
          updateListView(initialItems);
 

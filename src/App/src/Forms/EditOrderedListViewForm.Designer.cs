@@ -30,7 +30,7 @@
       {
          this.listView = new System.Windows.Forms.ListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.buttonAddProject = new System.Windows.Forms.Button();
+         this.buttonAddItem = new System.Windows.Forms.Button();
          this.buttonRemoveItem = new System.Windows.Forms.Button();
          this.buttonToggleState = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
@@ -39,7 +39,7 @@
          this.buttonDown = new System.Windows.Forms.Button();
          this.SuspendLayout();
          // 
-         // listViewProjects
+         // listView
          // 
          this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -51,7 +51,7 @@
          this.listView.HideSelection = false;
          this.listView.Location = new System.Drawing.Point(12, 12);
          this.listView.MultiSelect = false;
-         this.listView.Name = "listViewProjects";
+         this.listView.Name = "listView";
          this.listView.OwnerDraw = true;
          this.listView.ShowGroups = false;
          this.listView.Size = new System.Drawing.Size(212, 236);
@@ -67,23 +67,23 @@
          this.columnHeaderName.Text = "Name";
          this.columnHeaderName.Width = 205;
          // 
-         // buttonAddProject
+         // buttonAddItem
          // 
-         this.buttonAddProject.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonAddProject.Location = new System.Drawing.Point(230, 12);
-         this.buttonAddProject.Name = "buttonAddProject";
-         this.buttonAddProject.Size = new System.Drawing.Size(75, 23);
-         this.buttonAddProject.TabIndex = 1;
-         this.buttonAddProject.Text = "Add...";
-         this.buttonAddProject.UseVisualStyleBackColor = true;
-         this.buttonAddProject.Click += new System.EventHandler(this.buttonAddItem_Click);
+         this.buttonAddItem.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonAddItem.Location = new System.Drawing.Point(230, 12);
+         this.buttonAddItem.Name = "buttonAddItem";
+         this.buttonAddItem.Size = new System.Drawing.Size(75, 23);
+         this.buttonAddItem.TabIndex = 1;
+         this.buttonAddItem.Text = "Add...";
+         this.buttonAddItem.UseVisualStyleBackColor = true;
+         this.buttonAddItem.Click += new System.EventHandler(this.buttonAddItem_Click);
          // 
-         // buttonRemoveProject
+         // buttonRemoveItem
          // 
          this.buttonRemoveItem.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonRemoveItem.Enabled = false;
          this.buttonRemoveItem.Location = new System.Drawing.Point(230, 41);
-         this.buttonRemoveItem.Name = "buttonRemoveProject";
+         this.buttonRemoveItem.Name = "buttonRemoveItem";
          this.buttonRemoveItem.Size = new System.Drawing.Size(75, 23);
          this.buttonRemoveItem.TabIndex = 2;
          this.buttonRemoveItem.Text = "Remove";
@@ -148,7 +148,7 @@
          this.buttonDown.UseVisualStyleBackColor = true;
          this.buttonDown.Click += new System.EventHandler(this.buttonDown_Click);
          // 
-         // EditProjectsForm
+         // EditOrderedListViewForm
          // 
          this.AcceptButton = this.buttonOK;
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -161,14 +161,14 @@
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonToggleState);
          this.Controls.Add(this.buttonRemoveItem);
-         this.Controls.Add(this.buttonAddProject);
+         this.Controls.Add(this.buttonAddItem);
          this.Controls.Add(this.listView);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
          this.MinimumSize = new System.Drawing.Size(332, 299);
-         this.Name = "EditProjectsForm";
-         this.Text = "Edit Projects";
+         this.Name = "EditOrderedListViewForm";
+         this.Text = "Edit Items";
          this.ResumeLayout(false);
 
       }
@@ -176,7 +176,7 @@
         #endregion
 
         private System.Windows.Forms.ListView listView;
-        private System.Windows.Forms.Button buttonAddProject;
+        private System.Windows.Forms.Button buttonAddItem;
         private System.Windows.Forms.Button buttonRemoveItem;
         private System.Windows.Forms.Button buttonToggleState;
         private System.Windows.Forms.ColumnHeader columnHeaderName;
