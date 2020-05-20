@@ -95,14 +95,13 @@ namespace mrHelper.App.Helpers
 
       public static IEnumerable<Project> GetEnabledProjects(string hostname, UserDefinedSettings settings)
       {
-         return GetProjectsForHost(hostname, settings)?
-            .Where(x => x.Item2)?.Select(x => x.Item1)?.Select(x => new Project(x)) ?? Array.Empty<Project>();
+         return GetProjectsForHost(hostname, settings)
+            .Where(x => x.Item2).Select(x => x.Item1).Select(x => new Project(x));
       }
 
       public static IEnumerable<string> GetEnabledUsers(string hostname, UserDefinedSettings settings)
       {
-         return GetUsersForHost(hostname, settings)?
-            .Where(x => x.Item2)?.Select(x => x.Item1) ?? Array.Empty<string>();
+         return GetUsersForHost(hostname, settings).Where(x => x.Item2)?.Select(x => x.Item1);
       }
 
       public static void SelectProjectBasedWorkflow(UserDefinedSettings settings)
