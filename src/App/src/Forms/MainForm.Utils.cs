@@ -1112,7 +1112,7 @@ namespace mrHelper.App.Forms
             .Max() + 1;
          int maxLineCountInAuthor = 2;
          int maxLineCount = Math.Max(maxLineCountInLabels, maxLineCountInAuthor);
-         setListViewRowHeight(listView, listView.Font.Height * maxLineCount + 2);
+         setListViewRowHeight(listView, maxLineCount);
       }
 
       private string formatLabels(FullMergeRequestKey fmk, bool tooltip)
@@ -1184,8 +1184,11 @@ namespace mrHelper.App.Forms
          return !m.Success || m.Groups.Count < 1 || !m.Groups["name"].Success ? String.Empty : m.Groups["name"].Value;
       }
 
-      private static void setListViewRowHeight(ListView listView, int height)
+      private static void setListViewRowHeight(ListView listView, int maxLineCount)
       {
+         // It is expected to use font size in pixels here
+         int height = listView.Font.Height * maxLineCount + 2;
+
          ImageList imgList = new ImageList
          {
             ImageSize = new Size(1, height)
@@ -1421,7 +1424,8 @@ namespace mrHelper.App.Forms
 
       private void applyTheme(string theme)
       {
-         string cssEx = String.Format("body div {{ font-size: {0}px; }}", this.Font.Height);
+         string cssEx = String.Format("body div {{ font-size: {0}px; }}",
+            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPixels(richTextBoxMergeRequestDescription));
 
          if (theme == "New Year 2020")
          {

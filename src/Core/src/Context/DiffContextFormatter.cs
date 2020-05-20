@@ -10,7 +10,7 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class DiffContextFormatter
    {
-      public DiffContextFormatter(int fontSizePx, int rowsVPaddingPx)
+      public DiffContextFormatter(double fontSizePx, int rowsVPaddingPx)
       {
          _fontSizePx = fontSizePx;
          _rowsVPaddingPx = rowsVPaddingPx;
@@ -49,7 +49,7 @@ namespace mrHelper.Core.Context
          return mrHelper.Core.Properties.Resources.DiffContextCSS;
       }
 
-      private string getCustomStyle(int fontSizePx, int rowsVPaddingPx)
+      private string getCustomStyle(double fontSizePx, int rowsVPaddingPx)
       {
          return string.Format(@"
             table {{
@@ -138,7 +138,7 @@ namespace mrHelper.Core.Context
          return result.ToString();
       }
 
-      private readonly int _fontSizePx;
+      private readonly double _fontSizePx;
       private readonly int _rowsVPaddingPx;
    }
 }

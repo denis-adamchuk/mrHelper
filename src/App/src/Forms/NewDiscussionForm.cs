@@ -8,6 +8,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.Common.Exceptions;
 using System.Diagnostics;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -84,7 +85,8 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(context.HasValue);
-         DiffContextFormatter formatter = new DiffContextFormatter(htmlPanel.Font.Height, 0);
+         DiffContextFormatter formatter =
+            new DiffContextFormatter(WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 0);
          stylesheet = formatter.GetStylesheet();
          return formatter.GetBody(context.Value);
       }

@@ -204,8 +204,7 @@ namespace mrHelper.App.Forms
             setListViewItemTag(item, new FullMergeRequestKey(projectKey, mergeRequest));
          }
 
-         int maxLineCount = 2;
-         setListViewRowHeight(listViewFoundMergeRequests, listViewFoundMergeRequests.Font.Height * maxLineCount + 2);
+         setListViewRowHeight(listViewFoundMergeRequests, 2);
 
          listViewFoundMergeRequests.EndUpdate();
       }

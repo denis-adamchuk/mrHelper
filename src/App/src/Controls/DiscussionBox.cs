@@ -17,6 +17,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Discussions;
 using mrHelper.CommonControls.Controls;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -64,7 +65,9 @@ namespace mrHelper.App.Controls
          {
             AutoPopDelay = 20000, // 20s
             InitialDelay = 150,
-            BaseStylesheet = Properties.Resources.Common_CSS +
+         };
+
+         _htmlDiscussionNoteToolTipCssEx =
             "body" +
             "{" +
                "width: 800px;" + // for some reason `max-width` does not work for `body` so have to use `width`
@@ -79,8 +82,7 @@ namespace mrHelper.App.Controls
                "max-width: 100%;" +
                "max-height: auto;" +
                "padding: 2px;" +
-            "}",
-         };
+            "}";
 
          _specialDiscussionNoteMarkdownPipeline = MarkDownUtils.CreatePipeline();
 
@@ -347,20 +349,22 @@ namespace mrHelper.App.Controls
          DiffPosition position = PositionConverter.Convert(note.Position);
          Debug.Assert(note.Type == "DiffNote");
 
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
+
          string html = getContext(_panelContextMaker, position,
-            _diffContextDepth, htmlPanel.Font.Height, out string css);
+            _diffContextDepth, fontSizePx, out string css);
          htmlPanel.BaseStylesheet = css;
          htmlPanel.Text = html;
 
          string tooltipHtml = getContext(_tooltipContextMaker, position,
-            _tooltipContextDepth, htmlPanel.Font.Height, out string tooltipCSS);
+            _tooltipContextDepth, fontSizePx, out string tooltipCSS);
          _htmlDiffContextToolTip.BaseStylesheet =
             String.Format("{0} .htmltooltip {{ padding: 1px; }}", tooltipCSS);
          _htmlDiffContextToolTip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
       private string getContext(IContextMaker contextMaker, DiffPosition position,
-         ContextDepth depth, int fontSizePx, out string stylesheet)
+         ContextDepth depth, double fontSizePx, out string stylesheet)
       {
          stylesheet = String.Empty;
          if (contextMaker == null)
@@ -494,6 +498,7 @@ namespace mrHelper.App.Controls
             textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
             textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
             textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
+            textBox.FontChanged += (sender, e) => updateDiscussionNoteInTextBox(textBox, note);
 
             updateDiscussionNoteInTextBox(textBox, note);
 
@@ -527,6 +532,11 @@ namespace mrHelper.App.Controls
                         + "<br><br>"
                         + MarkDownUtils.ConvertToHtml(note.Body, _imagePath,
                            _specialDiscussionNoteMarkdownPipeline);
+            _htmlDiscussionNoteToolTip.BaseStylesheet =
+               String.Format("{0} {1} body div {{ font-size: {2}px; }}",
+                  Properties.Resources.Common_CSS,
+                  _htmlDiscussionNoteToolTipCssEx,
+                  WinFormsHelpers.GetFontSizeInPixels(textBox));
             _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
          }
          else if (_htmlDiscussionNoteToolTip.GetToolTip(textBox) != null)
@@ -543,8 +553,9 @@ namespace mrHelper.App.Controls
          htmlPanel.Width = 0;
          htmlPanel.Height = 0;
 
-         htmlPanel.BaseStylesheet = String.Format(
-            "{0} body div {{ font-size: {1}px; }}", Properties.Resources.Common_CSS, htmlPanel.Font.Height);
+         htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+            Properties.Resources.Common_CSS,
+            WinFormsHelpers.GetFontSizeInPixels(htmlPanel));
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
          htmlPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
@@ -1118,8 +1129,8 @@ namespace mrHelper.App.Controls
       private readonly int HorzMarginWidth = 1;
       private readonly int LabelAuthorWidth = 5;
       private readonly double LabelAuthorWidthMultiplier = 1.15;
-      private readonly int NotesWidth = 34;
-      private readonly int LabelFilenameWidth = 34;
+      private readonly int NotesWidth = 40;
+      private readonly int LabelFilenameWidth = 40;
 
       private Control _labelAuthor;
       private Control _textboxFilename;
@@ -1144,6 +1155,7 @@ namespace mrHelper.App.Controls
 
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiffContextToolTip;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiscussionNoteToolTip;
+      private readonly string _htmlDiscussionNoteToolTipCssEx;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }
