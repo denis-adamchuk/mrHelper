@@ -361,6 +361,7 @@ namespace mrHelper.App.Forms
       {
          ListView listView = (sender as ListView);
          Debug.Assert(listView.SelectedItems.Count > 0);
+         listView.EnsureVisible(listView.SelectedIndices[0]);
 
          FullMergeRequestKey fmk = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
 

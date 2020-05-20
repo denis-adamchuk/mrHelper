@@ -192,7 +192,10 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] Notify that selected project is not in the list");
 
-         if (MessageBox.Show("Selected project is not in the list of projects. Do you want to add it?", "Warning",
+         if (MessageBox.Show("Selected project is not in the list of projects. Do you want to add it? "
+               + "Selecting 'Yes' will cause reload of all projects. "
+               + "Selecting 'No' will open the merge request at Search tab. ",
+               "Warning",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
          {
@@ -215,7 +218,10 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] Notify that selected project is disabled");
 
-         if (MessageBox.Show("Selected project is not enabled. Do you want to enable it?", "Warning",
+         if (MessageBox.Show("Selected project is not enabled. Do you want to enable it?"
+               + "Selecting 'Yes' will cause reload of all projects. "
+               + "Selecting 'No' will open the merge request at Search tab. ",
+               "Warning",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
          {
@@ -353,9 +359,12 @@ namespace mrHelper.App.Forms
                }
                else
                {
-                  Debug.Assert(false);
-                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
-                  reportErrorOnConnect(url, "Something went wrong. ", null, false);
+                  if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+                  {
+                     Debug.Assert(false);
+                     Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
+                     reportErrorOnConnect(url, "Something went wrong. ", null, false);
+                  }
                   return false;
                }
             }
