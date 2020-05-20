@@ -8,13 +8,24 @@ namespace mrHelper.Common.Interfaces
 
    public class FullUpdateContext : IProjectUpdateContext
    {
-      public DateTime LatestChange;
-      public IEnumerable<string> Sha;
+      public FullUpdateContext(DateTime latestChange, IEnumerable<string> sha)
+      {
+         LatestChange = latestChange;
+         Sha = sha;
+      }
+
+      public DateTime LatestChange { get; }
+      public IEnumerable<string> Sha { get; }
    }
 
    public class PartialUpdateContext : IProjectUpdateContext
    {
-      public IEnumerable<string> Sha;
+      public PartialUpdateContext(IEnumerable<string> sha)
+      {
+         Sha = sha;
+      }
+
+      public IEnumerable<string> Sha { get; }
    }
 
    public interface IProjectUpdateContextProvider

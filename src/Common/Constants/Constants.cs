@@ -67,17 +67,14 @@ namespace mrHelper.Common.Constants
       public static int GitInstancesInBatch = 10;
       public static int GitInstancesInterBatchDelay = 1000; // ms
 
-      public static int MergeRequestsInBatch = 20;
+      public static int MergeRequestsInBatch = 10;
       public static int MergeRequestsInterBatchDelay = 0;
 
       public static int CrossProjectMergeRequestsInBatch = 20;
       public static int CrossProjectMergeRequestsInterBatchDelay = 200;
 
-      public static int ProjectsInBatch = 20;
+      public static int ProjectsInBatch = 10;
       public static int ProjectsInterBatchDelay = 0;
-
-      public static int VersionsInBatch = 20;
-      public static int VersionsInterBatchDelay = 0;
 
       public static int BranchInBatch = 10;
       public static int BranchInterBatchDelay = 0;

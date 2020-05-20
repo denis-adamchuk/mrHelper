@@ -30,15 +30,17 @@ namespace mrHelper.Core.Matching
                String.Format("Bad match info: {0}", matchInfo.ToString()));
          }
 
-         DiffRefs refs = inDiffPosition.Refs;
          bool isLeftSide = matchInfo.IsLeftSideLineNumber;
          string currentName = isLeftSide ? matchInfo.LeftFileName : matchInfo.RightFileName;
          string oppositeName = isLeftSide ? matchInfo.RightFileName : matchInfo.LeftFileName;
-         oppositeName = getOppositeName(refs, isLeftSide, currentName, oppositeName);
+         oppositeName = getOppositeName(inDiffPosition.Refs, isLeftSide, currentName, oppositeName);
 
-         outDiffPosition = inDiffPosition;
-         outDiffPosition.LeftPath = isLeftSide ? currentName : oppositeName;
-         outDiffPosition.RightPath = isLeftSide ? oppositeName : currentName;
+         outDiffPosition = new DiffPosition(
+            isLeftSide ? currentName : oppositeName,
+            isLeftSide ? oppositeName : currentName,
+            inDiffPosition.LeftLine,
+            inDiffPosition.RightLine,
+            inDiffPosition.Refs);
          return oppositeName != null;
       }
 

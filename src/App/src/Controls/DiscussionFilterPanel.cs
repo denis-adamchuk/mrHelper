@@ -45,12 +45,13 @@ namespace mrHelper.App.Controls
          get
          {
             return new DiscussionFilterState
-            {
-               ByCurrentUserOnly = checkBoxCreatedByMe.Checked,
-               ServiceMessages = checkBoxShowService.Checked,
-               ByAnswers = _radioButtonsByAnswers.GetState<FilterByAnswers>(),
-               ByResolution = _radioButtonsByResolution.GetState<FilterByResolution>()
-            };
+            (
+               checkBoxCreatedByMe.Checked,
+               checkBoxShowService.Checked,
+               false, // system notes
+               _radioButtonsByAnswers.GetState<FilterByAnswers>(),
+               _radioButtonsByResolution.GetState<FilterByResolution>()
+            );
          }
       }
 

@@ -12,34 +12,48 @@ namespace mrHelper.App.Controls
       {
          InitializeComponent();
 
-         toolTipTimer = new System.Timers.Timer
+         _toolTipTimer = new System.Timers.Timer
          {
             Interval = 500,
             AutoReset = false,
             SynchronizingObject = this
          };
 
-         toolTipTimer.Elapsed +=
+         _toolTipTimer.Elapsed +=
             (s, et) =>
          {
-            if (lastHistTestInfo == null
-             || lastHistTestInfo.SubItem == null
-             || lastHistTestInfo.SubItem.Tag == null
-             || lastHistTestInfo.Item == null
-             || lastHistTestInfo.Item.ListView == null)
+            if (_lastHistTestInfo == null
+             || _lastHistTestInfo.SubItem == null
+             || _lastHistTestInfo.SubItem.Tag == null
+             || _lastHistTestInfo.Item == null
+             || _lastHistTestInfo.Item.ListView == null)
             {
                return;
             }
 
-            ListViewSubItemInfo info = (ListViewSubItemInfo)lastHistTestInfo.SubItem.Tag;
+            ListViewSubItemInfo info = (ListViewSubItemInfo)_lastHistTestInfo.SubItem.Tag;
 
             // shift tooltip position to the right of the cursor 16 pixels
-            Point location = new Point(lastMouseLocation.X + 16, lastMouseLocation.Y);
-            toolTip.Show(info.TooltipText, lastHistTestInfo.Item.ListView, location);
+            Point location = new Point(_lastMouseLocation.X + 16, _lastMouseLocation.Y);
+            _toolTip.Show(info.TooltipText, _lastHistTestInfo.Item.ListView, location);
+         };
+
+         // had to use this hack, because it is not possible to prevent deselecting a row
+         // on a click on empty area in ListView
+         _delayedDeselectionTimer = new System.Windows.Forms.Timer
+         {
+            // using a very short Interval to emulate a quick deselection on clicking an empty area
+            Interval = 100,
+         };
+         _delayedDeselectionTimer.Tick +=
+            (s, ee) =>
+         {
+            _delayedDeselectionTimer.Stop();
+            Deselected?.Invoke(this);
          };
       }
 
-      public struct ListViewSubItemInfo
+      public class ListViewSubItemInfo
       {
          public ListViewSubItemInfo(Func<bool, string> getText, Func<string> getUrl)
          {
@@ -62,6 +76,26 @@ namespace mrHelper.App.Controls
          private readonly Func<string> _getUrl;
       }
 
+      public event Action<ListView> Deselected;
+
+      protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
+      {
+         Refresh();
+
+         if (SelectedItems.Count < 1)
+         {
+            _delayedDeselectionTimer.Start();
+            return;
+         }
+
+         if (_delayedDeselectionTimer.Enabled)
+         {
+            _delayedDeselectionTimer.Stop();
+         }
+
+         base.OnItemSelectionChanged(e);
+      }
+
       protected override void OnMouseLeave(EventArgs e)
       {
          onLeave();
@@ -78,40 +112,40 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         if (lastMouseLocation == e.Location)
+         if (_lastMouseLocation == e.Location)
          {
             return;
          }
-         lastMouseLocation = e.Location;
+         _lastMouseLocation = e.Location;
 
-         if (!String.IsNullOrEmpty(toolTip.GetToolTip(this)))
+         if (!String.IsNullOrEmpty(_toolTip.GetToolTip(this)))
          {
-            Debug.Assert(!toolTipTimer.Enabled);
-            if (lastHistTestInfo == null
-             || lastHistTestInfo.Item == null
-             || lastHistTestInfo.SubItem == null
-             || lastHistTestInfo.Item.Index != hit.Item.Index
-             || lastHistTestInfo.SubItem.Tag != hit.SubItem.Tag)
+            Debug.Assert(!_toolTipTimer.Enabled);
+            if (_lastHistTestInfo == null
+             || _lastHistTestInfo.Item == null
+             || _lastHistTestInfo.SubItem == null
+             || _lastHistTestInfo.Item.Index != hit.Item.Index
+             || _lastHistTestInfo.SubItem.Tag != hit.SubItem.Tag)
             {
-               toolTip.Hide(this);
-               lastHistTestInfo = hit;
-               toolTipTimer.Start();
+               _toolTip.Hide(this);
+               _lastHistTestInfo = hit;
+               _toolTipTimer.Start();
             }
          }
          else
          {
-            if (lastHistTestInfo == null
-             || lastHistTestInfo.Item == null
-             || lastHistTestInfo.SubItem == null
-             || lastHistTestInfo.Item.Index != hit.Item.Index
-             || lastHistTestInfo.SubItem.Tag != hit.SubItem.Tag)
+            if (_lastHistTestInfo == null
+             || _lastHistTestInfo.Item == null
+             || _lastHistTestInfo.SubItem == null
+             || _lastHistTestInfo.Item.Index != hit.Item.Index
+             || _lastHistTestInfo.SubItem.Tag != hit.SubItem.Tag)
             {
-               if (toolTipTimer.Enabled)
+               if (_toolTipTimer.Enabled)
                {
-                  toolTipTimer.Stop();
+                  _toolTipTimer.Stop();
                }
-               lastHistTestInfo = hit;
-               toolTipTimer.Start();
+               _lastHistTestInfo = hit;
+               _toolTipTimer.Start();
             }
          }
 
@@ -120,23 +154,32 @@ namespace mrHelper.App.Controls
 
       private void onLeave()
       {
-         if (toolTipTimer.Enabled)
+         if (_toolTipTimer.Enabled)
          {
-            toolTipTimer.Stop();
+            _toolTipTimer.Stop();
          }
 
-         if (!String.IsNullOrEmpty(toolTip.GetToolTip(this)))
+         if (!String.IsNullOrEmpty(_toolTip.GetToolTip(this)))
          {
-            toolTip.Hide(this);
+            _toolTip.Hide(this);
          }
 
-         lastHistTestInfo = null;
+         _lastHistTestInfo = null;
       }
 
-      private readonly ToolTip toolTip = new ToolTip();
-      private System.Timers.Timer toolTipTimer;
-      private Point lastMouseLocation = new Point(-1, -1);
-      private ListViewHitTestInfo lastHistTestInfo;
+      private readonly ToolTip _toolTip = new ToolTip();
+      private System.Timers.Timer _toolTipTimer;
+      private Point _lastMouseLocation = new Point(-1, -1);
+      private ListViewHitTestInfo _lastHistTestInfo;
+
+      // Using System.Windows.Forms.Timer here because it remains Enabled
+      // if even Interval exceeded between Start() and Stop() calls occurred
+      // within a single execution thread without async processing.
+      // System.Timers.Timer behaves differently. If Interval exceeds
+      // between Start() and Stop() (see OnItemSelectionChanged),
+      // Enabled property is reset and a timer event is already queued so
+      // it will trigger when no longer needed.
+      private System.Windows.Forms.Timer _delayedDeselectionTimer;
    }
 }
 

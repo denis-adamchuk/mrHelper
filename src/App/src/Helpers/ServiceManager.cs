@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Web.Script.Serialization;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Tools;
+using Newtonsoft.Json;
 
 namespace mrHelper.App.Helpers
 {
@@ -100,28 +100,28 @@ namespace mrHelper.App.Helpers
          }
 
          List<string> result = new List<string>();
-         System.Collections.ArrayList arrayList = (System.Collections.ArrayList)properties["unimportant"];
-         foreach (Dictionary<string, object> d in arrayList)
+         Newtonsoft.Json.Linq.JArray arrayList = (Newtonsoft.Json.Linq.JArray)properties["unimportant"];
+         foreach (Newtonsoft.Json.Linq.JToken d in arrayList)
          {
-            foreach (KeyValuePair<string, object> kv in d)
+            if (d["suffix"] != null)
             {
-               if (kv.Key == "suffix")
-               {
-                  result.Add(kv.Value.ToString());
-               }
+               result.Add(d["suffix"].ToString());
             }
          }
 
          return result;
       }
 
-      public struct LatestVersionInformation
+      public class LatestVersionInformation
       {
-         public string VersionNumber;
-         public string InstallerFilePath;
+         [JsonProperty]
+         public string VersionNumber { get; protected set; }
+
+         [JsonProperty]
+         public string InstallerFilePath { get; protected set; }
       }
 
-      public LatestVersionInformation? GetLatestVersionInfo()
+      public LatestVersionInformation GetLatestVersionInfo()
       {
          int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "CheckForUpdates");
          if (index == -1)
@@ -147,11 +147,10 @@ namespace mrHelper.App.Helpers
          }
 
          string json = System.IO.File.ReadAllText(path);
-         JavaScriptSerializer serializer = new JavaScriptSerializer();
 
          try
          {
-            return serializer.Deserialize<LatestVersionInformation>(json);
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<LatestVersionInformation>(json);
          }
          catch (Exception ex) // whatever de-serialization exception
          {
@@ -160,13 +159,17 @@ namespace mrHelper.App.Helpers
          return null;
       }
 
-#pragma warning disable 0649
       private struct Service
       {
-         public string Name;
-         public Dictionary<string, object> Properties;
+         public Service(string name, Dictionary<string, object> properties)
+         {
+            Name = name;
+            Properties = properties;
+         }
+
+         public string Name { get; }
+         public Dictionary<string, object> Properties { get; }
       }
-#pragma warning restore 0649
 
       private readonly Service[] _services = Array.Empty<Service>();
 

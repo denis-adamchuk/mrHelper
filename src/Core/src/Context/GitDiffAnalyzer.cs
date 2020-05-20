@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Core.Context;
 
@@ -22,10 +16,18 @@ namespace mrHelper.Core.Git
 
       private struct GitDiffSection
       {
-         public int LeftSectionStart;
-         public int LeftSectionEnd;
-         public int RightSectionStart;
-         public int RightSectionEnd;
+         public GitDiffSection(int leftSectionStart, int leftSectionEnd, int rightSectionStart, int rightSectionEnd)
+         {
+            LeftSectionStart = leftSectionStart;
+            LeftSectionEnd = leftSectionEnd;
+            RightSectionStart = rightSectionStart;
+            RightSectionEnd = rightSectionEnd;
+         }
+
+         public int LeftSectionStart { get; }
+         public int LeftSectionEnd { get; }
+         public int RightSectionStart { get; }
+         public int RightSectionEnd { get; }
       }
 
       /// <summary>
@@ -70,21 +72,10 @@ namespace mrHelper.Core.Git
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
-         GitDiffArguments arguments = new GitDiffArguments
-         {
-            Mode = GitDiffArguments.DiffMode.Context,
-            CommonArgs = new GitDiffArguments.CommonArguments
-            {
-               Sha1 = sha1,
-               Sha2 = sha2,
-               Filename1 = filename1,
-               Filename2 = filename2,
-            },
-            SpecialArgs = new GitDiffArguments.DiffContextArguments
-            {
-               Context = 0
-            }
-         };
+         GitDiffArguments arguments = new GitDiffArguments(
+            GitDiffArguments.DiffMode.Context,
+            new GitDiffArguments.CommonArguments(sha1, sha2, filename1, filename2, null),
+            new GitDiffArguments.DiffContextArguments(0));
 
          IEnumerable<string> diff;
          try
@@ -115,14 +106,15 @@ namespace mrHelper.Core.Git
             }
 
             // @@ -1 +1 @@ is essentially the same as @@ -1,1 +1,1 @@
+            int leftSectionStart = int.Parse(m.Groups["left_start"].Value);
             int leftSectionLength = m.Groups["left_len"].Success ? int.Parse(m.Groups["left_len"].Value) : 1;
+
+            int rightSectionStart = int.Parse(m.Groups["right_start"].Value);
             int rightSectionLength = m.Groups["right_len"].Success ? int.Parse(m.Groups["right_len"].Value) : 1;
 
-            GitDiffSection section;
-            section.LeftSectionStart = int.Parse(m.Groups["left_start"].Value);
-            section.LeftSectionEnd = section.LeftSectionStart + leftSectionLength;
-            section.RightSectionStart = int.Parse(m.Groups["right_start"].Value);
-            section.RightSectionEnd = section.RightSectionStart + rightSectionLength;
+            GitDiffSection section = new GitDiffSection(
+               leftSectionStart, leftSectionStart + leftSectionLength,
+               rightSectionStart, rightSectionStart + rightSectionLength);
             sections.Add(section);
          }
 

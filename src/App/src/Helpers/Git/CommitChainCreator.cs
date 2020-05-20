@@ -18,7 +18,8 @@ namespace mrHelper.App.Helpers
    {
       internal CommitChainCreator(IHostProperties hostProperties, Action<string> onStatusChange,
          Action<string> onGitStatusChange, Action<bool> onCancelEnabled, ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepository repo, IEnumerable<string> headShas, bool singleCommitFetchSupported)
+         ILocalGitRepository repo, IEnumerable<string> headShas, bool singleCommitFetchSupported,
+         IRepositoryManager repositoryManager)
       {
          if (repo == null || hostProperties == null || headShas == null)
          {
@@ -33,6 +34,7 @@ namespace mrHelper.App.Helpers
          _repo = repo;
          _headShas = headShas;
          _singleCommitFetchSupported = singleCommitFetchSupported;
+         _repositoryManager = repositoryManager;
       }
 
       async public Task<bool> CreateChainAsync()
@@ -77,7 +79,7 @@ namespace mrHelper.App.Helpers
 
          if (_repositoryManager != null)
          {
-            await _repositoryManager.CancelAsync();
+            await _repositoryManager.Cancel();
          }
 
          await _repo.Updater.CancelUpdate();
@@ -101,8 +103,6 @@ namespace mrHelper.App.Helpers
             "[CommitChainCreator] Will create/delete {0} branches in {1} at {2}",
             shas.Count(), _repo.ProjectKey.ProjectName, _repo.ProjectKey.HostName));
 
-         _repositoryManager = new RepositoryManager(_hostProperties);
-
          string getFakeSha(string sha) => "fake_" + sha;
 
          try
@@ -114,9 +114,9 @@ namespace mrHelper.App.Helpers
 
                Trace.TraceInformation(String.Format(
                   "[CommitChainCreator] Creating branch {0} at GitLab", getFakeSha(sha)));
-               Branch? branch = await _repositoryManager.CreateNewBranchAsync(
+               Branch branch = await _repositoryManager.CreateNewBranch(
                   _repo.ProjectKey, getFakeSha(sha), sha);
-               Debug.Assert(branch.HasValue); // it is not possible to cancel it
+               Debug.Assert(branch != null); // it is not possible to cancel it
             }
             await TaskUtils.RunConcurrentFunctionsAsync(shas, x => createBranch(x),
                Constants.BranchInBatch, Constants.BranchInterBatchDelay, null);
@@ -143,7 +143,7 @@ namespace mrHelper.App.Helpers
                      {
                         Trace.TraceInformation(String.Format(
                            "[CommitChainCreator] Deleting branch {0} at GitLab", getFakeSha(sha)));
-                        await _repositoryManager.DeleteBranchAsync(_repo.ProjectKey, getFakeSha(sha));
+                        await _repositoryManager.DeleteBranch(_repo.ProjectKey, getFakeSha(sha));
                         iBranch++;
                      }
                      catch (Exception ex)
@@ -204,7 +204,7 @@ namespace mrHelper.App.Helpers
       private readonly ILocalGitRepository _repo;
       private readonly IEnumerable<string> _headShas;
 
-      private RepositoryManager _repositoryManager;
+      private IRepositoryManager _repositoryManager;
       private bool _isCancelEnabled = true;
       private readonly bool _singleCommitFetchSupported;
    }

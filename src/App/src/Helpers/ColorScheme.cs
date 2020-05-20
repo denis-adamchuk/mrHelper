@@ -35,7 +35,7 @@ namespace mrHelper.App.Helpers
 
          Dictionary<string, object> colors = JsonFileReader.
             LoadFromFile<Dictionary<string, object>>(filename);
-         foreach (var record in colors)
+         foreach (KeyValuePair<string, object> record in colors)
          {
             string[] rgbs = record.Value.ToString().Split(',');
             if (rgbs.Length != 3)

@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
 {
@@ -12,7 +12,7 @@ namespace mrHelper.GitClient
       /// <summary>
       /// Create a LocalGitRepository object or return it if already cached.
       /// </summary>
-      ILocalGitRepository GetRepository(string hostName, string projectName);
+      ILocalGitRepository GetRepository(ProjectKey projectKey);
    }
 }
 

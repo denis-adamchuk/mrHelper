@@ -50,6 +50,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -99,21 +100,23 @@
     <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
       <DependentUpon>MergeRequestListView.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\AddProjectForm.cs">
+    <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\AddProjectForm.Designer.cs">
-      <DependentUpon>AddProjectForm.cs</DependentUpon>
+    <Compile Include="src\Forms\AddItemForm.Designer.cs">
+      <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\EditProjectsForm.cs">
+    <Compile Include="src\Forms\EditOrderedListViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\EditProjectsForm.Designer.cs">
-      <DependentUpon>EditProjectsForm.cs</DependentUpon>
+    <Compile Include="src\Forms\EditOrderedListViewForm.Designer.cs">
+      <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\CustomFontForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
+    <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -182,6 +185,7 @@
     </Compile>
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
+    <Compile Include="src\Helpers\Configuration\DictionaryStringHelper.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
@@ -220,11 +224,11 @@
     <EmbeddedResource Include="src\Controls\DiscussionSortPanel.resx">
       <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\AddProjectForm.resx">
-      <DependentUpon>AddProjectForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\AddItemForm.resx">
+      <DependentUpon>AddItemForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\EditProjectsForm.resx">
-      <DependentUpon>EditProjectsForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\EditOrderedListViewForm.resx">
+      <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>

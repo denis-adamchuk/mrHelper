@@ -1,4 +1,5 @@
 using System;
+using System.Timers;
 using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,7 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
+using mrHelper.App.Forms.Helpers;
 using mrHelper.Client.Types;
+using mrHelper.Client.Session;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
@@ -18,6 +21,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
+using Newtonsoft.Json.Linq;
 
 namespace mrHelper.App.Forms
 {
@@ -103,9 +107,9 @@ namespace mrHelper.App.Forms
       async private void ButtonAddComment_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
+         Debug.Assert(getMergeRequest(null) != null);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
          await onAddCommentAsync(mrk, mergeRequest.Title);
@@ -114,9 +118,9 @@ namespace mrHelper.App.Forms
       async private void ButtonNewDiscussion_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
+         Debug.Assert(getMergeRequest(null) != null);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
          await onNewDiscussionAsync(mrk, mergeRequest.Title);
@@ -124,20 +128,22 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
+         ISession session = getSession(!isSearchMode());
+
          if (isTrackingTime())
          {
-            await onStopTimer(true);
+            await onStopTimer(true, session?.TotalTimeCache);
          }
          else
          {
-            onStartTimer();
+            onStartTimer(session);
          }
       }
 
       async private void ButtonTimeTrackingCancel_Click(object sender, EventArgs e)
       {
          Debug.Assert(isTrackingTime());
-         await onStopTimer(false);
+         await onStopTimer(false, getSession(!isSearchMode())?.TotalTimeCache);
       }
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
@@ -146,10 +152,14 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequestKey(null).HasValue);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         Debug.Assert(getMergeRequest(null).HasValue);
-         MergeRequest mr = getMergeRequest(null).Value;
+         Debug.Assert(getMergeRequest(null) != null);
+         MergeRequest mr = getMergeRequest(null);
 
-         TimeSpan oldSpan = getTotalTime(mrk) ?? TimeSpan.Zero;
+         Debug.Assert(!isSearchMode());
+         ISession session = getSession(true /* supported in Live only */);
+         ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
+
+         TimeSpan oldSpan = getTotalTime(mrk, totalTimeCache) ?? TimeSpan.Zero;
 
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
@@ -162,9 +172,9 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     await _timeTrackingManager.AddSpanAsync(add, diff, mrk);
+                     await totalTimeCache?.AddSpan(add, diff, mrk);
                   }
-                  catch (TimeTrackingManagerException ex)
+                  catch (TimeTrackingException ex)
                   {
                      string message = "Cannot edit total tracked time";
                      ExceptionHandlers.Handle(message, ex);
@@ -172,7 +182,7 @@ namespace mrHelper.App.Forms
                      return;
                   }
 
-                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName);
+                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, totalTimeCache);
 
                   labelWorkflowStatus.Text = "Total spent time updated";
 
@@ -231,7 +241,8 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
 
-         onHostSelected();
+         updateProjectsListView();
+         updateUsersListView();
          await switchHostToSelected();
       }
 
@@ -337,46 +348,33 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void ListViewMergeRequests_ItemSelectionChanged(
+      private void ListViewMergeRequests_Deselected(object sender)
+      {
+         ListView listView = (sender as ListView);
+         Debug.Assert(listView.SelectedItems.Count < 1);
+
+         disableCommonUIControls();
+      }
+
+      private void ListViewMergeRequests_ItemSelectionChanged(
          object sender, ListViewItemSelectionChangedEventArgs e)
       {
          ListView listView = (sender as ListView);
-         listView.Refresh();
+         Debug.Assert(listView.SelectedItems.Count > 0);
+         listView.EnsureVisible(listView.SelectedIndices[0]);
 
-         bool showVersions = checkBoxShowVersions.Checked;
+         FullMergeRequestKey fmk = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
 
-         // had to use this hack, because it is not possible to prevent deselecting a row
-         // on a click on empty area in ListView
-         if (listView == listViewMergeRequests && listView.SelectedItems.Count < 1)
+         if (isSearchMode())
          {
-            await switchMergeRequestByUserAsync(default(ProjectKey), 0, showVersions);
-            return;
+            switchSearchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
          }
-
-         if (listView == listViewFoundMergeRequests && listView.SelectedItems.Count < 1)
+         else
          {
-            await switchSearchMergeRequestByUserAsync(default(ProjectKey), 0, showVersions);
-            return;
-         }
-
-         FullMergeRequestKey key = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
-         if (listView == listViewFoundMergeRequests)
-         {
-            await switchSearchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId, showVersions);
-         }
-         else if (await switchMergeRequestByUserAsync(key.ProjectKey, key.MergeRequest.IId, showVersions))
-         {
-            if (!isSearchMode())
+            switchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
+            if (getMergeRequestKey(listViewMergeRequests) != null)
             {
-               if (!getMergeRequestKey(listViewMergeRequests).HasValue)
-               {
-                  Debug.Assert(false);
-                  Trace.TraceError("Bad MRK in ListViewMergeRequests_ItemSelectionChanged");
-                  return;
-               }
-
-               _lastMergeRequestsByHosts[key.ProjectKey.HostName] =
-                  getMergeRequestKey(listViewMergeRequests).Value;
+               _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
             }
          }
       }
@@ -387,15 +385,15 @@ namespace mrHelper.App.Forms
          {
             if (radioButtonSearchByTargetBranch.Checked)
             {
-               await searchMergeRequests(
-                  new SearchByTargetBranch { TargetBranchName = textBoxSearch.Text }, null);
+               await searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
             }
             else if (radioButtonSearchByTitleAndDescription.Checked)
             {
                // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
                Debug.Assert(Constants.MaxSearchByTitleAndDescriptionResults <= 100);
-               await searchMergeRequests(
-                  new SearchByText { Text = textBoxSearch.Text }, Constants.MaxSearchByTitleAndDescriptionResults);
+
+               await searchMergeRequests(new SearchByText(textBoxSearch.Text),
+                  Constants.MaxSearchByTitleAndDescriptionResults);
             }
             else
             {
@@ -544,9 +542,17 @@ namespace mrHelper.App.Forms
          updateTabControlSelection();
          if (removeCurrent)
          {
-            updateProjectsListView();
+            if (comboBoxHost.Items.Count == 0)
+            {
+               updateProjectsListView();
+               updateUsersListView();
+            }
+            else
+            {
+               selectHost(PreferredSelection.Latest);
+            }
 
-            selectHost(PreferredSelection.Latest);
+            // calling this unconditionally to drop current sessions and disable UI
             await switchHostToSelected();
          }
       }
@@ -595,17 +601,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         bool newValue = (sender as CheckBox).Checked;
-         if (newValue
-          && MessageBox.Show("This option is not expected to be set in most cases. Are you sure?",
-             "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-         {
-            return;
-         }
+         Program.Settings.UseShallowClone = checkBoxUseShallowClone.Checked;
 
-         Program.Settings.UseShallowClone = newValue;
-
-         Trace.TraceInformation(String.Format("[MainForm] Emulating host switch to reload everything"));
+         Trace.TraceInformation(String.Format("[MainForm] Shallow clone setting has been selected"));
          await switchHostToSelected();
       }
 
@@ -719,28 +717,28 @@ namespace mrHelper.App.Forms
          onUserIsMovingSplitter(splitter, true);
       }
 
-      private void textBoxLabels_TextChanged(object sender, EventArgs e)
+      private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxLabelsUpdate();
+         onTextBoxDisplayFilterUpdate();
       }
 
-      private void textBoxLabels_Leave(object sender, EventArgs e)
+      private void textBoxDisplayFilter_Leave(object sender, EventArgs e)
       {
-         onTextBoxLabelsUpdate();
+         onTextBoxDisplayFilterUpdate();
       }
 
-      private void onTextBoxLabelsUpdate()
+      private void onTextBoxDisplayFilterUpdate()
       {
-         Program.Settings.LastUsedLabels = textBoxLabels.Text;
+         Program.Settings.DisplayFilter = textBoxDisplayFilter.Text;
          if (_mergeRequestFilter != null)
          {
             _mergeRequestFilter.Filter = createMergeRequestFilterState();
          }
       }
 
-      private void CheckBoxLabels_CheckedChanged(object sender, EventArgs e)
+      private void CheckBoxDisplayFilter_CheckedChanged(object sender, EventArgs e)
       {
-         Program.Settings.CheckedLabelsFilter = (sender as CheckBox).Checked;
+         Program.Settings.DisplayFilterEnabled = (sender as CheckBox).Checked;
          if (_mergeRequestFilter != null)
          {
             _mergeRequestFilter.Filter = createMergeRequestFilterState();
@@ -794,12 +792,12 @@ namespace mrHelper.App.Forms
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null).HasValue);
+         Debug.Assert(getMergeRequest(null) != null);
 
-         MergeRequest mergeRequest = getMergeRequest(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.State);
+         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
       async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -849,27 +847,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            if (_newVersionFilePath.EndsWith(".msi"))
-            {
-               AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
-               string applicationPath = appInfo == null ? String.Empty : appInfo.InstallPath;
-               if (String.IsNullOrWhiteSpace(applicationPath))
-               {
-                  applicationPath = Application.StartupPath;
-                  Trace.TraceInformation(String.Format(
-                     "[CheckForUpdates] Using Startup Path \"{0}\"", applicationPath));
-               }
-               else
-               {
-                  Trace.TraceInformation(String.Format(
-                     "[CheckForUpdates] Using Application Path \"{0}\"", applicationPath));
-               }
-               Process.Start(_newVersionFilePath, "TARGETDIR=" + StringUtils.EscapeSpaces(applicationPath));
-            }
-            else
-            {
-               Process.Start(_newVersionFilePath);
-            }
+            Process.Start(_newVersionFilePath);
          }
          catch (Exception ex)
          {
@@ -970,12 +948,6 @@ namespace mrHelper.App.Forms
          e.Value = item.Host;
       }
 
-      private static void formatProjectsListItem(ListControlConvertEventArgs e)
-      {
-         Project item = (Project)(e.ListItem);
-         e.Value = item.Path_With_Namespace;
-      }
-
       private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
       {
          Program.Settings.Update();
@@ -988,7 +960,7 @@ namespace mrHelper.App.Forms
             // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
             // so it's only shown once in a lifetime
             _trayIcon.ShowTooltipBalloon(
-               new TrayIcon.BalloonText { Title = "Information", Text = "I will now live in your tray" });
+               new TrayIcon.BalloonText("Information", "I will now live in your tray"));
             _requireShowingTooltipOnHideToTray = false;
          }
          Hide();
@@ -998,7 +970,7 @@ namespace mrHelper.App.Forms
       {
          if (isTrackingTime())
          {
-            updateTotalTime();
+            updateTotalTime(null, null, null, null);
          }
       }
 
@@ -1009,7 +981,7 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
       }
 
-      private void onStartTimer()
+      private void onStartTimer(ISession session)
       {
          Debug.Assert(!isTrackingTime());
 
@@ -1024,17 +996,17 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTracker = _timeTrackingManager.GetTracker(getMergeRequestKey(null).Value);
-         _timeTracker.Start();
+         _timeTracker = session?.GetTimeTracker(getMergeRequestKey(null).Value);
+         _timeTracker?.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime();
+         updateTotalTime(null, null, null, null);
 
          updateTrayIcon();
          updateTaskbarIcon();
       }
 
-      async private Task onStopTimer(bool send)
+      async private Task onStopTimer(bool send, ITotalTimeCache totalTimeCache)
       {
          if (!isTrackingTime())
          {
@@ -1045,7 +1017,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Stop();
 
          // Reset member right now to not send tracked time again on re-entrance
-         TimeTracker timeTracker = _timeTracker;
+         ITimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
 
          // Stop stopwatch and send tracked time
@@ -1060,7 +1032,7 @@ namespace mrHelper.App.Forms
                string status = String.Format("Tracked time {0} sent successfully", duration);
                try
                {
-                  await timeTracker.StopAsync();
+                  await timeTracker.Stop();
                }
                catch (TimeTrackerException ex)
                {
@@ -1088,21 +1060,21 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
          // Show actual merge request details
-         bool isMergeRequestSelected = getMergeRequest(null).HasValue && getMergeRequestKey(null).HasValue;
+         bool isMergeRequestSelected = getMergeRequest(null) != null && getMergeRequestKey(null).HasValue;
          if (isMergeRequestSelected)
          {
-            MergeRequest mergeRequest = getMergeRequest(null).Value;
+            MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey, mergeRequest.Author);
 
             // Take care of controls that 'time tracking' mode shares with normal mode
-            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName);
+            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName, totalTimeCache);
          }
          else
          {
-            updateTimeTrackingMergeRequestDetails(false);
-            updateTotalTime();
+            updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
+            updateTotalTime(null, null, null, null);
          }
 
          updateTrayIcon();
@@ -1134,7 +1106,9 @@ namespace mrHelper.App.Forms
             _initialHostName = hostname;
          }
 
-         Dictionary<string, object> reviewedCommits = (Dictionary<string, object>)reader.Get("ReviewedCommits");
+         JObject reviewedCommitsObj = (JObject)reader.Get("ReviewedCommits");
+         Dictionary<string, object> reviewedCommits =
+            reviewedCommitsObj.ToObject<Dictionary<string, object>>();
          if (reviewedCommits != null)
          {
             _reviewedCommits = reviewedCommits.ToDictionary(
@@ -1147,16 +1121,12 @@ namespace mrHelper.App.Forms
                   string host = splitted[0];
                   string projectName = splitted[1];
                   int iid = int.Parse(splitted[2]);
-                  return new MergeRequestKey
-                  {
-                     ProjectKey = new ProjectKey { HostName = host, ProjectName = projectName },
-                     IId = iid
-                  };
+                  return new MergeRequestKey(new ProjectKey(host, projectName), iid);
                },
                item =>
                {
                   HashSet<string> commits = new HashSet<string>();
-                  foreach (string commit in (ArrayList)item.Value)
+                  foreach (string commit in (JArray)item.Value)
                   {
                      commits.Add(commit);
                   }
@@ -1164,8 +1134,9 @@ namespace mrHelper.App.Forms
                });
          }
 
+         JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");
          Dictionary<string, object> lastMergeRequestsByHosts =
-            (Dictionary<string, object>)reader.Get("MergeRequestsByHosts");
+            lastMergeRequestsByHostsObj.ToObject<Dictionary<string, object>>();
          if (lastMergeRequestsByHosts != null)
          {
             _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(
@@ -1183,11 +1154,7 @@ namespace mrHelper.App.Forms
                   string hostname2 = splitted[0];
                   string projectname = splitted[1];
                   int iid = int.Parse((string)item.Value);
-                  return new MergeRequestKey
-                  {
-                     ProjectKey = new ProjectKey { HostName = hostname2, ProjectName = projectname },
-                     IId = iid
-                  };
+                  return new MergeRequestKey(new ProjectKey(hostname2, projectname), iid);
                });
          }
       }
@@ -1228,20 +1195,59 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         using (EditProjectsForm form = new EditProjectsForm(projects, host))
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
+            "Add project", "Type project name in group/project format",
+            projects, new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager), true))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
                return;
             }
 
-            if (!Enumerable.SequenceEqual(projects, form.Projects))
+            if (!Enumerable.SequenceEqual(projects, form.Items))
             {
-               ConfigurationHelper.SetProjectsForHost(host, form.Projects, Program.Settings);
+               ConfigurationHelper.SetProjectsForHost(host, form.Items, Program.Settings);
                updateProjectsListView();
 
-               Trace.TraceInformation(String.Format("[MainForm] Reloading merge request list after project list change"));
-               await switchHostToSelected();
+               if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+               {
+                  Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
+                  await switchHostToSelected();
+               }
+            }
+         }
+      }
+
+      async private void buttonEditUsers_Click(object sender, EventArgs e)
+      {
+         string host = getHostName();
+         if (host == String.Empty)
+         {
+            return;
+         }
+
+         IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
+         Debug.Assert(users != null);
+
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
+            "Add username", "Type a name of GitLab user, teams allowed",
+            users, new EditUsersListViewCallback(host, _gitlabClientManager.SearchManager), false))
+         {
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+               return;
+            }
+
+            if (!Enumerable.SequenceEqual(users, form.Items))
+            {
+               ConfigurationHelper.SetUsersForHost(host, form.Items, Program.Settings);
+               updateUsersListView();
+
+               if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+               {
+                  Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
+                  await switchHostToSelected();
+               }
             }
          }
       }
@@ -1273,6 +1279,32 @@ namespace mrHelper.App.Forms
          if (!_canSwitchTab)
          {
             e.Cancel = true;
+         }
+      }
+
+      async private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
+         listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
+
+         if (!_loadingConfiguration)
+         {
+            if (radioButtonSelectByProjects.Checked)
+            {
+               ConfigurationHelper.SelectProjectBasedWorkflow(Program.Settings);
+            }
+            else
+            {
+               ConfigurationHelper.SelectUserBasedWorkflow(Program.Settings);
+            }
+
+            Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
+            await switchHostToSelected();
          }
       }
 
@@ -1317,10 +1349,10 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText
-         {
-            Title = "System DPI has changed",
-            Text = "It is recommended to restart application to update layout"
-         });
+         (
+            "System DPI has changed",
+            "It is recommended to restart application to update layout"
+         ));
       }
    }
 }

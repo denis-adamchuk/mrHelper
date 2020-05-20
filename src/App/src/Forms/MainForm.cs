@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
@@ -13,6 +13,8 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitClient;
 using mrHelper.CustomActions;
+using mrHelper.Client;
+using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -54,6 +56,8 @@ namespace mrHelper.App.Forms
 
          buttonTimeTrackingCancel.ConfirmationCondition = () => true;
          buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
+
+         listViewMergeRequests.Deselected += ListViewMergeRequests_Deselected;
       }
 
       public string GetCurrentHostName()
@@ -97,8 +101,6 @@ namespace mrHelper.App.Forms
       private bool _notifyOnCommitChainCancelEnabled;
       private readonly bool _runningAsUwp = false;
 
-      private TimeTrackingManager _timeTrackingManager;
-      private DiscussionManager _discussionManager;
       private LocalGitRepositoryFactory _gitClientFactory;
       private GitInteractiveUpdater _gitClientUpdater;
       private GitDataUpdater _gitDataUpdater;
@@ -113,11 +115,15 @@ namespace mrHelper.App.Forms
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
-      private WorkflowManager _workflowManager;
       private ExpressionResolver _expressionResolver;
-      private TimeTracker _timeTracker;
 
-      private SearchWorkflowManager _searchWorkflowManager;
+      private ISession _liveSession;
+      private ISession _searchSession;
+      private ISession getSessionByName(string name) => name == "Live" ? _liveSession : _searchSession;
+      private string getSessionName(ISession session) => session == _liveSession ? "Live" : "Search";
+
+      private ITimeTracker _timeTracker;
+      private GitLabClientManager _gitlabClientManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;
@@ -132,10 +138,16 @@ namespace mrHelper.App.Forms
          Interval = Constants.CheckForUpdatesTimerInterval
       };
 
-      private struct HostComboBoxItem
+      private class HostComboBoxItem
       {
-         internal string Host;
-         internal string AccessToken;
+         public HostComboBoxItem(string host, string accessToken)
+         {
+            Host = host;
+            AccessToken = accessToken;
+         }
+
+         internal string Host { get; }
+         internal string AccessToken { get; }
       }
 
       private enum ECommitComboBoxItemStatus
@@ -145,7 +157,13 @@ namespace mrHelper.App.Forms
          Latest
       }
 
-      private struct CommitComboBoxItem
+      public enum EComparableEntityType
+      {
+         Commit,
+         Version
+      }
+
+      private class CommitComboBoxItem
       {
          internal string SHA { get; }
          internal string Text { get; }
@@ -166,7 +184,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private MergeRequestCache _mergeRequestCache;
       private MergeRequestFilter _mergeRequestFilter;
 
       private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();

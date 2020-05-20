@@ -12,8 +12,7 @@ namespace mrHelper.Common.Tools
 
       public static bool DoesMatchPattern(string value, string format, params object[] args)
       {
-         return String.Compare(value, String.Format(format, args),
-            StringComparison.CurrentCultureIgnoreCase) == 0;
+         return String.Compare(value, String.Format(format, args), true) == 0;
       }
 
       public static string EscapeSpaces(string unescaped)

@@ -41,14 +41,8 @@ namespace mrHelper.GitClient
       /// Create a LocalGitRepository object or return it if already cached.
       /// Throws if
       /// </summary>
-      public ILocalGitRepository GetRepository(string hostName, string projectName)
+      public ILocalGitRepository GetRepository(ProjectKey key)
       {
-         ProjectKey key = new ProjectKey
-         {
-            HostName = hostName,
-            ProjectName = projectName
-         };
-
          if (_repos.TryGetValue(key, out LocalGitRepository cachedRepository))
          {
             return cachedRepository;

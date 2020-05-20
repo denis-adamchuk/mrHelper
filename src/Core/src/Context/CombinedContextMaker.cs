@@ -81,25 +81,23 @@ namespace mrHelper.Core.Context
             itRight = SparsedListUtils.Advance(itRight, itLeft.Position);
          }
 
-         DiffContext diffContext = new DiffContext
-         {
-            Lines = new List<DiffContext.Line>()
-         };
-
          int iContextLine = 0;
+         int selectedIndex = 0;
+         List<DiffContext.Line> lines = new List<DiffContext.Line>();
+
          while (true)
          {
             int? leftLineNumber = itLeft.GetLineNumber() != null ? itLeft.GetLineNumber() + 1 : null;
             int? rightLineNumber = itRight.GetLineNumber() != null ? itRight.GetLineNumber() + 1 : null;
 
             DiffContext.Line line = getLineContext(leftLineNumber, rightLineNumber, itLeft.GetCurrent(), itRight.GetCurrent());
-            diffContext.Lines.Add(line);
+            lines.Add(line);
 
             if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber == linenumber)
             || (rightLineNumber.HasValue && isRightSideContext && rightLineNumber == linenumber))
             {
                // zero-based index of a selected line in DiffContext.Lines
-               diffContext.SelectedIndex = iContextLine;
+               selectedIndex = iContextLine;
             }
 
             if ((leftLineNumber.HasValue && !isRightSideContext && leftLineNumber >= endLineNumber)
@@ -118,48 +116,40 @@ namespace mrHelper.Core.Context
             ++iContextLine;
          }
 
-         return diffContext;
+         return new DiffContext(lines, selectedIndex);
       }
 
       // leftLineNumber and rightLineNumber are one-based
       private static DiffContext.Line getLineContext(int? leftLineNumber, int? rightLineNumber,
          string leftLine, string rightLine)
       {
-         DiffContext.Line line = new DiffContext.Line();
+         DiffContext.Line.Side? leftSide = null;
+         DiffContext.Line.Side? rightSide = null;
+         string text = String.Empty;
 
          if (leftLineNumber.HasValue && rightLineNumber.HasValue)
          {
             Debug.Assert(leftLine == rightLine);
-            line.Left = getSide(leftLineNumber.Value, DiffContext.Line.State.Unchanged);
-            line.Right = getSide(rightLineNumber.Value, DiffContext.Line.State.Unchanged);
-            line.Text = leftLine;
+            leftSide = new DiffContext.Line.Side(leftLineNumber.Value, DiffContext.Line.State.Unchanged);
+            rightSide = new DiffContext.Line.Side(rightLineNumber.Value, DiffContext.Line.State.Unchanged);
+            text = leftLine;
          }
          else if (leftLineNumber.HasValue)
          {
-            line.Left = getSide(leftLineNumber.Value, DiffContext.Line.State.Changed);
-            line.Text = leftLine;
+            leftSide = new DiffContext.Line.Side(leftLineNumber.Value, DiffContext.Line.State.Changed);
+            text = leftLine;
          }
          else if (rightLineNumber.HasValue)
          {
-            line.Right = getSide(rightLineNumber.Value, DiffContext.Line.State.Changed);
-            line.Text = rightLine;
+            rightSide = new DiffContext.Line.Side(rightLineNumber.Value, DiffContext.Line.State.Changed);
+            text = rightLine;
          }
          else
          {
             Debug.Assert(false);
          }
 
-         return line;
-      }
-
-      private static DiffContext.Line.Side getSide(int lineNumber, DiffContext.Line.State state)
-      {
-         DiffContext.Line.Side side = new DiffContext.Line.Side
-         {
-            Number = lineNumber,
-            State = state
-         };
-         return side;
+         return new DiffContext.Line(text, leftSide, rightSide);
       }
 
       private readonly IGitRepository _gitRepository;

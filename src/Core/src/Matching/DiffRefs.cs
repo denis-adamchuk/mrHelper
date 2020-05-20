@@ -5,10 +5,16 @@ namespace mrHelper.Core.Matching
    /// <summary>
    /// Git SHAs corresponding to left and right commits in diff
    /// </summary>
-   public struct DiffRefs
+   public class DiffRefs
    {
-      public string LeftSHA;
-      public string RightSHA;
+      public DiffRefs(string leftSHA, string rightSHA)
+      {
+         LeftSHA = leftSHA;
+         RightSHA = rightSHA;
+      }
+
+      public string LeftSHA { get; }
+      public string RightSHA { get; }
 
       new public string ToString()
       {

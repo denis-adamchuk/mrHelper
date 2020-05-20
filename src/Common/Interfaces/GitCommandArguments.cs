@@ -6,6 +6,13 @@ namespace mrHelper.Common.Interfaces
 {
    public struct GitDiffArguments
    {
+      public GitDiffArguments(DiffMode mode, CommonArguments commonArgs, object specialArgs)
+      {
+         Mode = mode;
+         CommonArgs = commonArgs;
+         SpecialArgs = specialArgs;
+      }
+
       public enum DiffMode
       {
          Context,
@@ -15,11 +22,20 @@ namespace mrHelper.Common.Interfaces
 
       public struct CommonArguments
       {
-         public string Sha1;
-         public string Sha2;
-         public string Filename1;
-         public string Filename2;
-         public string Filter;
+         public CommonArguments(string sha1, string sha2, string filename1, string filename2, string filter)
+         {
+            Sha1 = sha1;
+            Sha2 = sha2;
+            Filename1 = filename1;
+            Filename2 = filename2;
+            Filter = filter;
+         }
+
+         public string Sha1 { get; }
+         public string Sha2 { get; }
+         public string Filename1 { get; }
+         public string Filename2 { get; }
+         public string Filter { get; }
 
          public override string ToString()
          {
@@ -55,7 +71,12 @@ namespace mrHelper.Common.Interfaces
 
       public struct DiffContextArguments
       {
-         public int Context;
+         public int Context { get; }
+
+         public DiffContextArguments(int context)
+         {
+            Context = context;
+         }
 
          public override string ToString()
          {
@@ -68,9 +89,9 @@ namespace mrHelper.Common.Interfaces
          }
       }
 
-      public DiffMode Mode;
-      public CommonArguments CommonArgs;
-      public object SpecialArgs;
+      public DiffMode Mode { get; }
+      public CommonArguments CommonArgs { get; }
+      public object SpecialArgs { get; }
 
       public override string ToString()
       {
@@ -115,8 +136,14 @@ namespace mrHelper.Common.Interfaces
 
    public struct GitShowRevisionArguments
    {
-      public string Sha;
-      public string Filename;
+      public GitShowRevisionArguments(string filename, string sha)
+      {
+         Filename = filename;
+         Sha = sha;
+      }
+
+      public string Filename { get; }
+      public string Sha { get; }
 
       public override string ToString()
       {

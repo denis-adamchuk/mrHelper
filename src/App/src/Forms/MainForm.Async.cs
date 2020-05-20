@@ -15,24 +15,31 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
-using mrHelper.Client.Common;
+using mrHelper.Client.Session;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string state)
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author)
       {
          Debug.Assert(getHostName() != String.Empty);
          Debug.Assert(_currentUser.ContainsKey(getHostName()));
 
          // Store data before async/await
          User currentUser = _currentUser[getHostName()];
+         ISession session = getSession(!isSearchMode());
+         if (session == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
-         if (state != "opened")
+         if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            _discussionManager.CheckForUpdates(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
+            session.DiscussionCache.RequestUpdate(
+               mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
@@ -42,7 +49,8 @@ namespace mrHelper.App.Forms
             try
             {
                // Using remote-based provider as there are might be discussions from other users on newer commits
-               IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetRemoteBasedContextProvider(mrk);
+               IProjectUpdateContextProvider contextProvider =
+                  session.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -96,7 +104,7 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
          }
 
-         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(mrk);
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(session, mrk);
          if (discussions == null || _exiting)
          {
             return;
@@ -115,13 +123,18 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         if (_exiting)
+         {
+            return;
+         }
+
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
          labelWorkflowStatus.Refresh();
 
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(_discussionManager, _discussionManager, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(session, repo,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key) =>
@@ -133,7 +146,7 @@ namespace mrHelper.App.Forms
                   {
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =
-                        _mergeRequestCache.GetRemoteBasedContextProvider(key);
+                        session?.MergeRequestCache?.GetRemoteBasedContextProvider(key);
                      await updatingRepo.Updater.SilentUpdate(contextProvider);
                      return updatingRepo;
                   }
@@ -150,7 +163,7 @@ namespace mrHelper.App.Forms
                }
                return null;
             },
-            () => _discussionManager.CheckForUpdates(mrk,
+            () => session?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
@@ -193,16 +206,19 @@ namespace mrHelper.App.Forms
          string getSHA(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
          string leftSHA = getSHA(comboBoxEarliestCommit);
          string rightSHA = getSHA(comboBoxLatestCommit);
+         ISession session = getSession(!isSearchMode());
+         if (session == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
+         // includedSHA contains all the SHA starting from the selected one
          List<string> includedSHA = new List<string>();
          for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
          {
             string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[index])).SHA;
             includedSHA.Add(sha);
-            if (sha == leftSHA)
-            {
-               break;
-            }
          }
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
@@ -215,7 +231,7 @@ namespace mrHelper.App.Forms
                // because user may select only those commits that already loaded and cached and have timestamps less
                // than latest merge request version (this is possible for Open MR only)
                IProjectUpdateContextProvider contextProvider =
-                  _mergeRequestCache.GetLocalBasedContextProvider(mrk.ProjectKey);
+                  session.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
                await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
             }
             catch (Exception ex)
@@ -293,7 +309,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
             leftSHA, rightSHA, repo.Path, pid.ToString()));
 
-         saveInterprocessSnapshot(pid, leftSHA, rightSHA);
+         saveInterprocessSnapshot(pid, leftSHA, rightSHA, session);
 
          if (!_reviewedCommits.ContainsKey(mrk))
          {
@@ -319,12 +335,17 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
+               ISession session = getSession(!isSearchMode());
+               IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
+               if (creator == null)
+               {
+                  return;
+               }
 
                labelWorkflowStatus.Text = "Adding a comment...";
                try
                {
-                  await creator.CreateNoteAsync(new CreateNewNoteParameters { Body = form.Body });
+                  await creator.CreateNoteAsync(new CreateNewNoteParameters(form.Body));
                }
                catch (DiscussionCreatorException)
                {
@@ -352,12 +373,17 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DiscussionCreator creator = _discussionManager.GetDiscussionCreator(mrk);
+               ISession session = getSession(!isSearchMode());
+               IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
+               if (creator == null)
+               {
+                  return;
+               }
 
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
                {
-                  await creator.CreateDiscussionAsync(new NewDiscussionParameters { Body = form.Body }, false);
+                  await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
                }
                catch (DiscussionCreatorException)
                {
@@ -368,35 +394,38 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               _discussionManager.CheckForUpdates(mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
+               session?.DiscussionCache?.RequestUpdate(
+                  mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
             }
          }
       }
 
-      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA)
+      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, ISession session)
       {
-         Snapshot snapshot;
-         snapshot.AccessToken = GetCurrentAccessToken();
-         snapshot.Refs.LeftSHA = leftSHA;     // Base commit SHA in the source branch
-         snapshot.Refs.RightSHA = rightSHA;   // SHA referencing HEAD of this merge request
-         snapshot.Host = GetCurrentHostName();
-         snapshot.MergeRequestIId = GetCurrentMergeRequestIId();
-         snapshot.Project = GetCurrentProjectName();
-         snapshot.TempFolder = textBoxLocalGitFolder.Text;
+         // leftSHA - Base commit SHA in the source branch
+         // rightSHA - SHA referencing HEAD of this merge request
+         Snapshot snapshot = new Snapshot(
+            GetCurrentMergeRequestIId(),
+            GetCurrentHostName(),
+            GetCurrentAccessToken(),
+            GetCurrentProjectName(),
+            new Core.Matching.DiffRefs(leftSHA, rightSHA),
+            textBoxLocalGitFolder.Text,
+            getSessionName(session));
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.SerializeToDisk(snapshot, pid);
       }
 
-      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(MergeRequestKey mrk)
+      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
       {
          labelWorkflowStatus.Text = "Loading discussions...";
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionManager.GetDiscussionsAsync(mrk);
+            discussions = await session?.DiscussionCache?.LoadDiscussions(mrk);
          }
-         catch (DiscussionManagerException ex)
+         catch (DiscussionCacheException ex)
          {
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
@@ -413,9 +442,12 @@ namespace mrHelper.App.Forms
          ILocalGitRepository repo = getRepository(projectKey, false);
          if (repo != null && !repo.ExpectingClone)
          {
+            ISession session = getSession(true /* supported in Live only */);
+
             // Use local-based provider here because remote-based one looks an overkill.
             // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
-            IProjectUpdateContextProvider contextProvider = _mergeRequestCache.GetLocalBasedContextProvider(projectKey);
+            IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
+               GetLocalBasedContextProvider(projectKey);
             await repo.Updater.SilentUpdate(contextProvider);
          }
       }
@@ -429,7 +461,8 @@ namespace mrHelper.App.Forms
       {
          _commitChainCreator = new CommitChainCreator(Program.Settings,
             status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path));
+            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path),
+            _gitlabClientManager.RepositoryManager);
          return await fetchMissingCommits();
       }
 

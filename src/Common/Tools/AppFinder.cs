@@ -7,8 +7,14 @@ namespace mrHelper.Common.Tools
    {
       public class AppInfo
       {
-         public string InstallPath;
-         public string ProductCode;
+         public AppInfo(string installPath, string productCode)
+         {
+            InstallPath = installPath;
+            ProductCode = productCode;
+         }
+
+         public string InstallPath { get; }
+         public string ProductCode { get; }
       }
 
       static public AppInfo GetApplicationInfo(string[] applicationNames)
@@ -40,11 +46,7 @@ namespace mrHelper.Common.Tools
             {
                if (displayName != null && displayName.ToString().Contains(appName))
                {
-                  return new AppInfo
-                  {
-                     InstallPath = product.GetValue("InstallLocation").ToString(),
-                     ProductCode = productSubKey
-                  };
+                  return new AppInfo(product.GetValue("InstallLocation").ToString(), productSubKey);
                }
             }
          }

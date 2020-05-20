@@ -10,14 +10,26 @@ namespace mrHelper.App.Helpers
 {
    internal struct TextSearchResult
    {
-      public Control Control;
-      public int InsideControlPosition;
+      public TextSearchResult(Control control, int insideControlPosition)
+      {
+         Control = control;
+         InsideControlPosition = insideControlPosition;
+      }
+
+      public Control Control { get; }
+      public int InsideControlPosition { get; }
    }
 
    internal struct SearchQuery
    {
-      public string Text;
-      public bool CaseSensitive;
+      public SearchQuery(string text, bool caseSensitive)
+      {
+         Text = text;
+         CaseSensitive = caseSensitive;
+      }
+
+      public string Text { get; }
+      public bool CaseSensitive { get; }
    }
 
    internal class TextSearch
@@ -45,7 +57,7 @@ namespace mrHelper.App.Helpers
                {
                   if (!result.HasValue)
                   {
-                     result = new TextSearchResult { Control = control, InsideControlPosition = insideControlPosition };
+                     result = new TextSearchResult(control, insideControlPosition);
                   }
                   startPosition = insideControlPosition + 1;
                   ++count;
@@ -78,7 +90,7 @@ namespace mrHelper.App.Helpers
          if (_isSearchableControl(currentControl) &&
              doesMatchText(currentControl, Query, forward, iCurrentInsideControlPosition, out int insideControlPosition))
          {
-            return new TextSearchResult { Control = currentControl, InsideControlPosition = insideControlPosition };
+            return new TextSearchResult(currentControl, insideControlPosition);
          }
 
          for (int iControl = iCurrent + (forward ? 1 : -1); iControl != iEnd; iControl += (forward ? 1 : -1))
@@ -88,7 +100,7 @@ namespace mrHelper.App.Helpers
             if (_isSearchableControl(control)
                && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
             {
-               return new TextSearchResult { Control = control, InsideControlPosition = insideControlPosition };
+               return new TextSearchResult(control, insideControlPosition);
             }
          }
 
@@ -99,7 +111,7 @@ namespace mrHelper.App.Helpers
             if (_isSearchableControl(control)
                && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
             {
-               return new TextSearchResult { Control = control, InsideControlPosition = insideControlPosition };
+               return new TextSearchResult(control, insideControlPosition);
             }
          }
 
@@ -128,8 +140,8 @@ namespace mrHelper.App.Helpers
          }
          else
          {
-            string reverseText = String.Join("", control.Text.Reverse().ToArray());
-            string reverseQuery = String.Join("", query.Text.Reverse().ToArray());
+            string reverseText = String.Join("", control.Text.Reverse());
+            string reverseQuery = String.Join("", query.Text.Reverse());
             startPosition = control.Text.Length - startPosition;
             int position = reverseText.IndexOf(reverseQuery, startPosition, stringComparison);
             if (position != -1)

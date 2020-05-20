@@ -17,6 +17,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Discussions;
 using mrHelper.CommonControls.Controls;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -24,7 +25,7 @@ namespace mrHelper.App.Controls
    {
       internal DiscussionBox(
          CustomFontForm parent,
-         DiscussionEditor editor, IGitRepository gitRepository,
+         IDiscussionEditor editor, IGitRepository gitRepository,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -64,7 +65,9 @@ namespace mrHelper.App.Controls
          {
             AutoPopDelay = 20000, // 20s
             InitialDelay = 150,
-            BaseStylesheet = Properties.Resources.Common_CSS +
+         };
+
+         _htmlDiscussionNoteToolTipCssEx =
             "body" +
             "{" +
                "width: 800px;" + // for some reason `max-width` does not work for `body` so have to use `width`
@@ -79,8 +82,7 @@ namespace mrHelper.App.Controls
                "max-width: 100%;" +
                "max-height: auto;" +
                "padding: 2px;" +
-            "}",
-         };
+            "}";
 
          _specialDiscussionNoteMarkdownPipeline = MarkDownUtils.CreatePipeline();
 
@@ -269,7 +271,7 @@ namespace mrHelper.App.Controls
          }
 
          DiscussionNote note = getNoteFromTextBox(textBox);
-         Debug.Assert(note.Resolvable);
+         Debug.Assert(note == null || note.Resolvable);
 
          await onToggleResolveNoteAsync(note);
       }
@@ -308,7 +310,7 @@ namespace mrHelper.App.Controls
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
-         _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
+         _textboxesNotes = createTextBoxes(Discussion.Notes);
 
          Controls.Add(_labelAuthor);
          Controls.Add(_textboxFilename);
@@ -347,20 +349,22 @@ namespace mrHelper.App.Controls
          DiffPosition position = PositionConverter.Convert(note.Position);
          Debug.Assert(note.Type == "DiffNote");
 
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
+
          string html = getContext(_panelContextMaker, position,
-            _diffContextDepth, htmlPanel.Font.Height, out string css);
+            _diffContextDepth, fontSizePx, out string css);
          htmlPanel.BaseStylesheet = css;
          htmlPanel.Text = html;
 
          string tooltipHtml = getContext(_tooltipContextMaker, position,
-            _tooltipContextDepth, htmlPanel.Font.Height, out string tooltipCSS);
+            _tooltipContextDepth, fontSizePx, out string tooltipCSS);
          _htmlDiffContextToolTip.BaseStylesheet =
             String.Format("{0} .htmltooltip {{ padding: 1px; }}", tooltipCSS);
          _htmlDiffContextToolTip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
       private string getContext(IContextMaker contextMaker, DiffPosition position,
-         ContextDepth depth, int fontSizePx, out string stylesheet)
+         ContextDepth depth, double fontSizePx, out string stylesheet)
       {
          stylesheet = String.Empty;
          if (contextMaker == null)
@@ -444,7 +448,7 @@ namespace mrHelper.App.Controls
          bool discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
 
          List<Control> boxes = new List<Control>();
-         foreach (var note in notes)
+         foreach (DiscussionNote note in notes)
          {
             if (note.System)
             {
@@ -460,6 +464,10 @@ namespace mrHelper.App.Controls
 
       private bool canBeModified(DiscussionNote note)
       {
+         if (note == null)
+         {
+            return false;
+         }
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
@@ -490,6 +498,7 @@ namespace mrHelper.App.Controls
             textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
             textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
             textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
+            textBox.FontChanged += (sender, e) => updateDiscussionNoteInTextBox(textBox, note);
 
             updateDiscussionNoteInTextBox(textBox, note);
 
@@ -513,16 +522,21 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote? note)
+      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote note)
       {
          textBox.Tag = note;
 
-         if (note.HasValue)
+         if (note != null)
          {
-            string body = getNoteTooltipHtml(note.Value)
+            string body = getNoteTooltipHtml(note)
                         + "<br><br>"
-                        + MarkDownUtils.ConvertToHtml(note.Value.Body, _imagePath,
+                        + MarkDownUtils.ConvertToHtml(note.Body, _imagePath,
                            _specialDiscussionNoteMarkdownPipeline);
+            _htmlDiscussionNoteToolTip.BaseStylesheet =
+               String.Format("{0} {1} body div {{ font-size: {2}px; }}",
+                  Properties.Resources.Common_CSS,
+                  _htmlDiscussionNoteToolTipCssEx,
+                  WinFormsHelpers.GetFontSizeInPixels(textBox));
             _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
          }
          else if (_htmlDiscussionNoteToolTip.GetToolTip(textBox) != null)
@@ -539,8 +553,9 @@ namespace mrHelper.App.Controls
          htmlPanel.Width = 0;
          htmlPanel.Height = 0;
 
-         htmlPanel.BaseStylesheet = String.Format(
-            "{0} body div {{ font-size: {1}px; }}", Properties.Resources.Common_CSS, htmlPanel.Font.Height);
+         htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+            Properties.Resources.Common_CSS,
+            WinFormsHelpers.GetFontSizeInPixels(htmlPanel));
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
          htmlPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
@@ -841,6 +856,10 @@ namespace mrHelper.App.Controls
          stopEdit(textBox);
 
          DiscussionNote note = getNoteFromTextBox(textBox);
+         if (note == null)
+         {
+            return;
+         }
 
          Debug.Assert(Discussion.Notes.Any());
          textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
@@ -851,9 +870,10 @@ namespace mrHelper.App.Controls
       {
          stopEdit(textBox);
 
-         DiscussionNote note = getNoteFromTextBox(textBox);
-         if (textBox.Text == note.Body)
+         DiscussionNote cachedNote = getNoteFromTextBox(textBox);
+         if (cachedNote == null || textBox.Text == cachedNote.Body)
          {
+            // TextBox.Tag is equal to TextBox.Text ==> text was not changed
             return;
          }
 
@@ -865,15 +885,14 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         note.Body = textBox.Text;
-
          Color oldColor = textBox.BackColor;
          ContextMenu oldMenu = textBox.ContextMenu;
          disableTextBox(textBox); // let's make a visual effect similar to other modifications
 
+         DiscussionNote note;
          try
          {
-            note = await _editor.ModifyNoteBodyAsync(note.Id, note.Body);
+            note = await _editor.ModifyNoteBodyAsync(cachedNote.Id, textBox.Text);
          }
          catch (DiscussionEditorException ex)
          {
@@ -895,6 +914,11 @@ namespace mrHelper.App.Controls
 
       async private Task onDeleteNoteAsync(DiscussionNote note)
       {
+         if (note == null)
+         {
+            return;
+         }
+
          disableAllTextBoxes();
 
          try
@@ -914,6 +938,11 @@ namespace mrHelper.App.Controls
 
       async private Task onToggleResolveNoteAsync(DiscussionNote note)
       {
+         if (note == null)
+         {
+            return;
+         }
+
          disableAllTextBoxes();
 
          try
@@ -972,7 +1001,7 @@ namespace mrHelper.App.Controls
          disableTextBox(_textboxFilename as TextBox);
       }
 
-      async private Task refreshDiscussion(Discussion? discussion = null)
+      async private Task refreshDiscussion(Discussion discussion = null)
       {
          if (Parent == null)
          {
@@ -1033,7 +1062,7 @@ namespace mrHelper.App.Controls
          prepareToRefresh();
 
          // Create controls
-         _textboxesNotes = createTextBoxes(Discussion.Notes).ToArray();
+         _textboxesNotes = createTextBoxes(Discussion.Notes);
          foreach (Control note in _textboxesNotes)
          {
             Controls.Add(note);
@@ -1055,7 +1084,7 @@ namespace mrHelper.App.Controls
                if (textBox != null)
                {
                   DiscussionNote note = getNoteFromTextBox(textBox as TextBox);
-                  if (note.Resolvable && !note.Resolved)
+                  if (note != null && note.Resolvable && !note.Resolved)
                   {
                      result = false;
                   }
@@ -1081,8 +1110,7 @@ namespace mrHelper.App.Controls
 
       private DiscussionNote getNoteFromTextBox(TextBox textBox)
       {
-         return (textBox == null || textBox.Tag == null)
-            ? default(DiscussionNote) : (DiscussionNote)(textBox.Tag);
+         return (textBox == null || textBox.Tag == null) ? null : (DiscussionNote)(textBox.Tag);
       }
 
       private TextBox getEditingTextBox()
@@ -1101,8 +1129,8 @@ namespace mrHelper.App.Controls
       private readonly int HorzMarginWidth = 1;
       private readonly int LabelAuthorWidth = 5;
       private readonly double LabelAuthorWidthMultiplier = 1.15;
-      private readonly int NotesWidth = 34;
-      private readonly int LabelFilenameWidth = 34;
+      private readonly int NotesWidth = 40;
+      private readonly int LabelFilenameWidth = 40;
 
       private Control _labelAuthor;
       private Control _textboxFilename;
@@ -1117,7 +1145,7 @@ namespace mrHelper.App.Controls
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
-      private readonly DiscussionEditor _editor;
+      private readonly IDiscussionEditor _editor;
 
       private readonly ColorScheme _colorScheme;
 
@@ -1127,6 +1155,7 @@ namespace mrHelper.App.Controls
 
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiffContextToolTip;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiscussionNoteToolTip;
+      private readonly string _htmlDiscussionNoteToolTipCssEx;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }

@@ -31,15 +31,14 @@ namespace mrHelper.Core.Matching
                String.Format("Bad match info: {0}", matchInfo.ToString()));
          }
 
-         DiffRefs refs = inDiffPosition.Refs;
          int currentLine = matchInfo.LineNumber;
          bool isLeftSide = matchInfo.IsLeftSideLineNumber;
 
          int? oppositeLine;
          try
          {
-            oppositeLine = getOppositeLine(refs, isLeftSide, inDiffPosition.LeftPath, inDiffPosition.RightPath,
-               currentLine);
+            oppositeLine = getOppositeLine(inDiffPosition.Refs, isLeftSide, inDiffPosition.LeftPath,
+               inDiffPosition.RightPath, currentLine);
          }
          catch (BadPosition)
          {
@@ -54,9 +53,12 @@ namespace mrHelper.Core.Matching
          string currentLineAsString = currentLine.ToString();
          string oppositeLineAsString = oppositeLine?.ToString();
 
-         outDiffPosition = inDiffPosition;
-         outDiffPosition.LeftLine = isLeftSide ? currentLineAsString : oppositeLineAsString;
-         outDiffPosition.RightLine = isLeftSide ? oppositeLineAsString : currentLineAsString;
+         outDiffPosition = new DiffPosition(
+            inDiffPosition.LeftPath,
+            inDiffPosition.RightPath,
+            isLeftSide ? currentLineAsString : oppositeLineAsString,
+            isLeftSide ? oppositeLineAsString : currentLineAsString,
+            inDiffPosition.Refs);
       }
 
       private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,

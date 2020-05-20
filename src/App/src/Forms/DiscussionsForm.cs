@@ -9,11 +9,10 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.Client.Discussions;
-using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.GitClient;
 using mrHelper.Common.Exceptions;
-using mrHelper.Common.Constants;
+using mrHelper.Client.Session;
 
 namespace mrHelper.App.Forms
 {
@@ -24,9 +23,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         IDiscussionProvider provider,
-         IDiscussionEditorFactory editorFactory,
-         ILocalGitRepository repo,
+         ISession session, ILocalGitRepository repo,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -45,8 +42,7 @@ namespace mrHelper.App.Forms
 
          _colorScheme = colorScheme;
 
-         _factory = editorFactory;
-         _provider = provider;
+         _session = session;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
 
@@ -246,9 +242,9 @@ namespace mrHelper.App.Forms
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _provider.GetDiscussionsAsync(_mergeRequestKey);
+            discussions = await _session?.DiscussionCache?.LoadDiscussions(_mergeRequestKey);
          }
-         catch (DiscussionManagerException ex)
+         catch (DiscussionCacheException ex)
          {
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
@@ -316,7 +312,10 @@ namespace mrHelper.App.Forms
             .Where(x => x is DiscussionBox)
             .Cast<DiscussionBox>();
 
-         boxes.ToList().ForEach(x => x.Visible = DisplayFilter.DoesMatchFilter(x.Discussion));
+         foreach (DiscussionBox box in boxes)
+         {
+            box.Visible = DisplayFilter.DoesMatchFilter(box.Discussion);
+         }
       }
 
       private void highlightSearchResult(TextSearchResult? result)
@@ -347,7 +346,7 @@ namespace mrHelper.App.Forms
                continue;
             }
 
-            DiscussionEditor editor = _factory.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
+            IDiscussionEditor editor = _session.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, editor, _gitRepository, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme,
@@ -469,12 +468,9 @@ namespace mrHelper.App.Forms
          {
             Control startControl = MostRecentFocusedDiscussionControl ?? ActiveControl;
 
-            TextSearchResult current = new TextSearchResult
-            {
-               Control = startControl,
-               InsideControlPosition = ((startControl as TextBox)?.SelectionStart ?? 0)
-                          + (forward ? ((startControl as TextBox)?.SelectionLength ?? 0) : 0)
-            };
+            TextSearchResult current = new TextSearchResult(startControl,
+               ((startControl as TextBox)?.SelectionStart ?? 0)
+              + (forward ? ((startControl as TextBox)?.SelectionLength ?? 0) : 0));
 
             highlightSearchResult(forward ? TextSearch.FindNext(current) : TextSearch.FindPrev(current));
          }
@@ -527,9 +523,8 @@ namespace mrHelper.App.Forms
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 
-      private User _currentUser;
-      private readonly IDiscussionEditorFactory _factory;
-      private readonly IDiscussionProvider _provider;
+      private readonly User _currentUser;
+      private readonly ISession _session;
       private readonly Func<MergeRequestKey, Task<ILocalGitRepository>> _updateGit;
       private readonly Action _onDiscussionModified;
 

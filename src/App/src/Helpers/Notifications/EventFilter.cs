@@ -4,53 +4,65 @@ using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using static mrHelper.Client.Types.UserEvents;
 
 namespace mrHelper.App.Helpers
 {
    internal class EventFilter : IDisposable
    {
-      internal EventFilter(UserDefinedSettings settings, IWorkflowEventNotifier workflowEventNotifier,
-         ICachedMergeRequestProvider mergeRequestProvider, MergeRequestFilter mergeRequestFilter)
+      internal EventFilter(UserDefinedSettings settings, ISession session, MergeRequestFilter mergeRequestFilter)
       {
          _settings = settings;
-         _mergeRequestProvider = mergeRequestProvider;
 
-         _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connected += onConnected;
+         _session = session;
+         _session.Starting += onSessionStarting;
+         _session.Started += onSessionStarted;
 
          _mergeRequestFilter = mergeRequestFilter;
       }
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connected -= onConnected;
+         _session.Starting -= onSessionStarting;
+         _session.Started -= onSessionStarted;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
       {
+         if (_currentUser == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
          return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
-            || (isServiceEvent(mergeRequest)                                    && !_settings.Notifications_Service)
-            || (isCurrentUserActivity(_currentUser ?? new User(), mergeRequest) && !_settings.Notifications_MyActivity)
-            || (e.EventType == MergeRequestEvent.Type.NewMergeRequest           && !_settings.Notifications_NewMergeRequests)
-            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !_settings.Notifications_UpdatedMergeRequests)
-            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest       && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
-            || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest        && !_settings.Notifications_MergedMergeRequests));
+            || (isServiceEvent(mergeRequest)                                 && !_settings.Notifications_Service)
+            || (isCurrentUserActivity(_currentUser, mergeRequest)            && !_settings.Notifications_MyActivity)
+            || (e.EventType == MergeRequestEvent.Type.NewMergeRequest        && !_settings.Notifications_NewMergeRequests)
+            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !_settings.Notifications_UpdatedMergeRequests)
+            || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
+            || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest     && !_settings.Notifications_MergedMergeRequests));
       }
 
       internal bool NeedSuppressEvent(DiscussionEvent e)
       {
-         MergeRequest? mergeRequest = _mergeRequestProvider.GetMergeRequest(e.MergeRequestKey);
-         if (!mergeRequest.HasValue)
+         if (_currentUser == null || _mergeRequestCache == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
+         MergeRequest mergeRequest = _mergeRequestCache.GetMergeRequest(e.MergeRequestKey);
+         if (mergeRequest == null)
          {
             return true;
          }
 
          bool onMention =
-               (!isCurrentUserActivity(_currentUser ?? new User(), e) || _settings.Notifications_MyActivity)
+               (!isCurrentUserActivity(_currentUser, e)               || _settings.Notifications_MyActivity)
             && (!isServiceEvent(e)                                    || _settings.Notifications_Service)
             && e.EventType == DiscussionEvent.Type.MentionedCurrentUser && _settings.Notifications_OnMention;
          if (onMention)
@@ -59,9 +71,9 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest.Value)
+         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
             || (isServiceEvent(e)                                         && !_settings.Notifications_Service)
-            || (isCurrentUserActivity(_currentUser ?? new User(), e)      && !_settings.Notifications_MyActivity)
+            || (isCurrentUserActivity(_currentUser, e)                    && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads    && !_settings.Notifications_AllThreadsResolved)
             || (e.EventType == DiscussionEvent.Type.Keyword               && !_settings.Notifications_Keywords));
       }
@@ -115,15 +127,23 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onSessionStarting(string hostname)
       {
-         _currentUser = user;
+         _currentUser = null;
+         _mergeRequestCache = null;
       }
 
+      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
+      {
+         _currentUser = user;
+         _mergeRequestCache = _session.MergeRequestCache;
+      }
+
+      private User _currentUser;
+      private IMergeRequestCache _mergeRequestCache;
+
       private readonly UserDefinedSettings _settings;
-      private User? _currentUser;
-      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
-      private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private readonly ISession _session;
       private readonly MergeRequestFilter _mergeRequestFilter;
    }
 }

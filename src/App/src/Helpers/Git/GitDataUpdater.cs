@@ -11,7 +11,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitClient;
 using mrHelper.Client.Types;
-using mrHelper.Client.Workflow;
+using mrHelper.Client.Session;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Discussions;
 
@@ -23,12 +23,9 @@ namespace mrHelper.App.Helpers
    internal class GitDataUpdater : IDisposable
    {
       internal GitDataUpdater(
-         IWorkflowEventNotifier workflowEventNotifier,
+         ISession session,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
-         ICachedMergeRequestProvider mergeRequestProvider,
-         IDiscussionProvider discussionProvider,
-         IProjectUpdateContextProviderFactory contextProviderFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
       {
@@ -37,15 +34,12 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException("Bad auto-update period specified");
          }
 
-         _workflowEventNotifier = workflowEventNotifier;
-         _workflowEventNotifier.Connecting += onConnecting;
-         _workflowEventNotifier.Connected += onConnected;
+         _session = session;
+         _session.Starting += onSessionStarting;
+         _session.Started += onSessionStarted;
 
          _factoryAccessor = factoryAccessor;
-         _mergeRequestProvider = mergeRequestProvider;
-         _discussionProvider = discussionProvider;
          _mergeRequestFilter = mergeRequestFilter;
-         _contextProviderFactory = contextProviderFactory;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
          _timer.Elapsed += onTimer;
@@ -55,8 +49,8 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _workflowEventNotifier.Connecting -= onConnecting;
-         _workflowEventNotifier.Connected -= onConnected;
+         _session.Starting -= onSessionStarting;
+         _session.Started -= onSessionStarted;
 
          _timer?.Stop();
          _timer?.Dispose();
@@ -131,13 +125,9 @@ namespace mrHelper.App.Helpers
 
       private async Task doUpdateGitDataAsync(ILocalGitRepository repo)
       {
-         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestProvider.GetMergeRequests(repo.ProjectKey)
+         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
-            .Select(x => new MergeRequestKey
-            {
-               ProjectKey = repo.ProjectKey,
-               IId = x.IId
-            });
+            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId));
 
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
@@ -210,9 +200,9 @@ namespace mrHelper.App.Helpers
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionProvider.GetDiscussionsAsync(mrk);
+            discussions = await _discussionCache.LoadDiscussions(mrk);
          }
-         catch (DiscussionManagerException ex)
+         catch (DiscussionCacheException ex)
          {
             ExceptionHandlers.Handle("Cannot load discussions from GitLab", ex);
             return null;
@@ -227,8 +217,7 @@ namespace mrHelper.App.Helpers
                .Where(x => x.Notes.Any()
                        && !x.Notes.First().System
                        && x.Notes.First().Type == "DiffNote"
-                       && x.Notes.First().Updated_At > prevLatestChange)
-               .ToArray();
+                       && x.Notes.First().Updated_At > prevLatestChange);
       }
 
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
@@ -253,54 +242,42 @@ namespace mrHelper.App.Helpers
                PositionConverter.Convert(discussion.Notes.First().Position);
 
             diffArgs.Add(new GitDiffArguments
-            {
-               Mode = GitDiffArguments.DiffMode.Context,
-               CommonArgs = new GitDiffArguments.CommonArguments
-               {
-                  Sha1 = position.Refs.LeftSHA,
-                  Sha2 = position.Refs.RightSHA,
-                  Filename1 = position.LeftPath,
-                  Filename2 = position.RightPath,
-               },
-               SpecialArgs = new GitDiffArguments.DiffContextArguments
-               {
-                  Context = 0
-               }
-            });
+            (
+               GitDiffArguments.DiffMode.Context,
+               new GitDiffArguments.CommonArguments
+               (
+                  position.Refs.LeftSHA,
+                  position.Refs.RightSHA,
+                  position.LeftPath,
+                  position.RightPath,
+                  null
+               ),
+               new GitDiffArguments.DiffContextArguments(0)
+            ));
 
             diffArgs.Add(new GitDiffArguments
-            {
-               Mode = GitDiffArguments.DiffMode.Context,
-               CommonArgs = new GitDiffArguments.CommonArguments
-               {
-                  Sha1 = position.Refs.LeftSHA,
-                  Sha2 = position.Refs.RightSHA,
-                  Filename1 = position.LeftPath,
-                  Filename2 = position.RightPath,
-               },
-               SpecialArgs = new GitDiffArguments.DiffContextArguments
-               {
-                  Context = Constants.FullContextSize
-               }
-            });
+            (
+               GitDiffArguments.DiffMode.Context,
+               new GitDiffArguments.CommonArguments
+               (
+                  position.Refs.LeftSHA,
+                  position.Refs.RightSHA,
+                  position.LeftPath,
+                  position.RightPath,
+                  null
+               ),
+               new GitDiffArguments.DiffContextArguments(Constants.FullContextSize)
+            ));
 
             // the same condition as in EnhancedContextMaker and SimpleContextMaker,
             // which are consumers of the cache
             if (position.RightLine != null)
             {
-               revisionArgs.Add(new GitShowRevisionArguments
-               {
-                  Filename = position.RightPath,
-                  Sha = position.Refs.RightSHA
-               });
+               revisionArgs.Add(new GitShowRevisionArguments(position.RightPath, position.Refs.RightSHA));
             }
             else
             {
-               revisionArgs.Add(new GitShowRevisionArguments
-               {
-                  Filename = position.LeftPath,
-                  Sha = position.Refs.LeftSHA
-               });
+               revisionArgs.Add(new GitShowRevisionArguments(position.LeftPath, position.Refs.LeftSHA));
             }
          }
       }
@@ -331,23 +308,21 @@ namespace mrHelper.App.Helpers
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }
 
-      private void onConnecting(string hostname)
+      private void onSessionStarting(string hostname)
       {
          unsubscribeFromAll();
       }
 
-      private void onConnected(string hostname, User user, IEnumerable<Project> projects)
+      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
-         Debug.Assert(!_connected.Any());
-         foreach (Project project in projects)
-         {
-            ProjectKey key = new ProjectKey
-            {
-               HostName = hostname,
-               ProjectName = project.Path_With_Namespace
-            };
+         _mergeRequestCache = _session.MergeRequestCache;
+         _discussionCache = _session.DiscussionCache;
+         _contextProviderFactory = _session.UpdateContextProviderFactory;
 
-            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key.HostName, key.ProjectName);
+         Debug.Assert(!_connected.Any());
+         foreach (ProjectKey key in _mergeRequestCache.GetProjects())
+         {
+            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key);
             if (repo != null && !isConnected(repo))
             {
                _connected.Add(repo);
@@ -378,6 +353,10 @@ namespace mrHelper.App.Helpers
 
       private void unsubscribeFromAll()
       {
+         _mergeRequestCache = null;
+         _discussionCache = null;
+         _contextProviderFactory = null;
+
          foreach (ILocalGitRepository repo in _connected)
          {
             repo.Updated -= onLocalGitRepositoryUpdated;
@@ -413,13 +392,13 @@ namespace mrHelper.App.Helpers
       private readonly Dictionary<MergeRequestKey, DateTime> _latestChanges =
          new Dictionary<MergeRequestKey, DateTime>();
 
-      private readonly IWorkflowEventNotifier _workflowEventNotifier;
+      private readonly ISession _session;
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
-      private readonly IDiscussionProvider _discussionProvider;
-
-      private readonly ICachedMergeRequestProvider _mergeRequestProvider;
-      private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly MergeRequestFilter _mergeRequestFilter;
+
+      private IDiscussionCache _discussionCache;
+      private IMergeRequestCache _mergeRequestCache;
+      private IProjectUpdateContextProviderFactory _contextProviderFactory;
 
       private readonly System.Timers.Timer _timer;
 
