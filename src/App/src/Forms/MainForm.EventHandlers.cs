@@ -1204,15 +1204,16 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            Debug.Assert(radioButtonSelectByProjects.Checked);
-
             if (!Enumerable.SequenceEqual(projects, form.Items))
             {
                ConfigurationHelper.SetProjectsForHost(host, form.Items, Program.Settings);
                updateProjectsListView();
 
-               Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
-               await switchHostToSelected();
+               if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+               {
+                  Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
+                  await switchHostToSelected();
+               }
             }
          }
       }
@@ -1237,15 +1238,16 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            Debug.Assert(radioButtonSelectByUsernames.Checked);
-
             if (!Enumerable.SequenceEqual(users, form.Items))
             {
                ConfigurationHelper.SetUsersForHost(host, form.Items, Program.Settings);
                updateUsersListView();
 
-               Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
-               await switchHostToSelected();
+               if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+               {
+                  Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
+                  await switchHostToSelected();
+               }
             }
          }
       }
@@ -1288,10 +1290,7 @@ namespace mrHelper.App.Forms
          }
 
          listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
-         buttonEditUsers.Enabled = listViewUsers.Enabled;
-
          listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
-         buttonEditProjects.Enabled = listViewProjects.Enabled;
 
          if (!_loadingConfiguration)
          {

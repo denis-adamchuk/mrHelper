@@ -27,7 +27,8 @@ namespace mrHelper.App.Forms
 
          InitializeComponent();
          this.Text = caption;
-         if (!allowReorder)
+         _allowReorder = allowReorder;
+         if (!_allowReorder)
          {
             buttonDown.Enabled = false;
             buttonUp.Enabled = false;
@@ -110,8 +111,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         buttonUp.Enabled = listView.SelectedIndices[0] != 0;
-         buttonDown.Enabled = listView.SelectedIndices[0] != listView.Items.Count - 1;
+         buttonUp.Enabled = _allowReorder && listView.SelectedIndices[0] != 0;
+         buttonDown.Enabled = _allowReorder && listView.SelectedIndices[0] != listView.Items.Count - 1;
 
          buttonRemoveItem.Enabled = true;
          buttonToggleState.Enabled = true;
@@ -197,6 +198,7 @@ namespace mrHelper.App.Forms
 
       private readonly string _addItemHint;
       private readonly string _addItemCaption;
+      private readonly bool _allowReorder;
       private readonly IEditOrderedListViewCallback _callback;
    }
 }
