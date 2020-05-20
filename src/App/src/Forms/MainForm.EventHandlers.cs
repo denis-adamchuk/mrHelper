@@ -601,17 +601,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         bool newValue = (sender as CheckBox).Checked;
-         if (newValue
-          && MessageBox.Show("This option is not expected to be set in most cases. Are you sure?",
-             "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-         {
-            return;
-         }
+         Program.Settings.UseShallowClone = checkBoxUseShallowClone.Checked;
 
-         Program.Settings.UseShallowClone = newValue;
-
-         Trace.TraceInformation(String.Format("[MainForm] Emulating host switch to reload everything"));
+         Trace.TraceInformation(String.Format("[MainForm] Shallow clone setting has been selected"));
          await switchHostToSelected();
       }
 
@@ -1203,8 +1195,9 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects", projects,
-            new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager)))
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
+            "Add project", "Type project name in group/project format",
+            projects, new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager), true))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1235,8 +1228,9 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(users != null);
 
-         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users", users,
-            new EditLabelListViewCallback(host)))
+         using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
+            "Add username", "Type a name of GitLab user, teams allowed",
+            users, new EditUsersListViewCallback(host, _gitlabClientManager.SearchManager), false))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1250,7 +1244,7 @@ namespace mrHelper.App.Forms
                ConfigurationHelper.SetUsersForHost(host, form.Items, Program.Settings);
                updateUsersListView();
 
-               Trace.TraceInformation("[MainForm] Reloading merge request list after label list change");
+               Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
                await switchHostToSelected();
             }
          }

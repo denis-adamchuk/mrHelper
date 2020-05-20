@@ -242,6 +242,7 @@ namespace mrHelper.App.Forms
          this.listViewKnownHosts.Name = "listViewKnownHosts";
          this.listViewKnownHosts.Size = new System.Drawing.Size(409, 110);
          this.listViewKnownHosts.TabIndex = 1;
+         this.toolTip.SetToolTip(this.listViewKnownHosts, "Available GitLab hosts");
          this.listViewKnownHosts.UseCompatibleStateImageBehavior = false;
          this.listViewKnownHosts.View = System.Windows.Forms.View.Details;
          // 
@@ -825,6 +826,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByProjects.TabIndex = 9;
          this.radioButtonSelectByProjects.TabStop = true;
          this.radioButtonSelectByProjects.Text = "Project-based workflow";
+         this.toolTip.SetToolTip(this.radioButtonSelectByProjects, "All merge requests from selected projects will be loaded from GitLab");
          this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
          this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
          // 
@@ -835,6 +837,7 @@ namespace mrHelper.App.Forms
          this.buttonEditUsers.Size = new System.Drawing.Size(83, 27);
          this.buttonEditUsers.TabIndex = 8;
          this.buttonEditUsers.Text = "Edit...";
+         this.toolTip.SetToolTip(this.buttonEditUsers, "Edit list of usernames");
          this.buttonEditUsers.UseVisualStyleBackColor = true;
          this.buttonEditUsers.Click += new System.EventHandler(this.buttonEditUsers_Click);
          // 
@@ -851,6 +854,7 @@ namespace mrHelper.App.Forms
          this.listViewUsers.ShowGroups = false;
          this.listViewUsers.Size = new System.Drawing.Size(259, 157);
          this.listViewUsers.TabIndex = 7;
+         this.toolTip.SetToolTip(this.listViewUsers, "Selected usernames");
          this.listViewUsers.UseCompatibleStateImageBehavior = false;
          this.listViewUsers.View = System.Windows.Forms.View.Details;
          // 
@@ -868,6 +872,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByUsernames.TabIndex = 6;
          this.radioButtonSelectByUsernames.TabStop = true;
          this.radioButtonSelectByUsernames.Text = "User-based workflow";
+         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select usernames to track only their merge requests");
          this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
          this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
          // 
@@ -878,6 +883,7 @@ namespace mrHelper.App.Forms
          this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
          this.buttonEditProjects.TabIndex = 1;
          this.buttonEditProjects.Text = "Edit...";
+         this.toolTip.SetToolTip(this.buttonEditProjects, "Edit list of projects");
          this.buttonEditProjects.UseVisualStyleBackColor = true;
          this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
          // 
@@ -889,6 +895,7 @@ namespace mrHelper.App.Forms
          this.comboBoxHost.Name = "comboBoxHost";
          this.comboBoxHost.Size = new System.Drawing.Size(259, 21);
          this.comboBoxHost.TabIndex = 5;
+         this.toolTip.SetToolTip(this.comboBoxHost, "Select a GitLab host");
          this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
@@ -905,6 +912,7 @@ namespace mrHelper.App.Forms
          this.listViewProjects.ShowGroups = false;
          this.listViewProjects.Size = new System.Drawing.Size(259, 260);
          this.listViewProjects.TabIndex = 0;
+         this.toolTip.SetToolTip(this.listViewProjects, "Selected projects");
          this.listViewProjects.UseCompatibleStateImageBehavior = false;
          this.listViewProjects.View = System.Windows.Forms.View.Details;
          // 
@@ -968,6 +976,7 @@ namespace mrHelper.App.Forms
          this.tabPageLive.Size = new System.Drawing.Size(328, 832);
          this.tabPageLive.TabIndex = 0;
          this.tabPageLive.Text = "Live";
+         this.toolTip.SetToolTip(this.tabPageLive, "List of open merge requests (updates automatically)");
          this.tabPageLive.UseVisualStyleBackColor = true;
          // 
          // groupBoxSelectMergeRequest
@@ -1103,6 +1112,7 @@ namespace mrHelper.App.Forms
          this.tabPageSearch.Size = new System.Drawing.Size(328, 832);
          this.tabPageSearch.TabIndex = 1;
          this.tabPageSearch.Text = "Search";
+         this.toolTip.SetToolTip(this.tabPageSearch, "Use this mode to search closed merge requests");
          this.tabPageSearch.UseVisualStyleBackColor = true;
          // 
          // groupBoxSearch
@@ -1341,6 +1351,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit.TabIndex = 15;
          this.linkLabelAbortGit.TabStop = true;
          this.linkLabelAbortGit.Text = "Abort";
+         this.toolTip.SetToolTip(this.linkLabelAbortGit, "Abort current git operation");
          this.linkLabelAbortGit.Visible = false;
          this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
          // 
@@ -1441,6 +1452,7 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingCancel.Size = new System.Drawing.Size(96, 32);
          this.buttonTimeTrackingCancel.TabIndex = 12;
          this.buttonTimeTrackingCancel.Text = "Cancel";
+         this.toolTip.SetToolTip(this.buttonTimeTrackingCancel, "Discard tracked time");
          this.buttonTimeTrackingCancel.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingCancel.Click += new System.EventHandler(this.ButtonTimeTrackingCancel_Click);
          // 
@@ -1453,6 +1465,7 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingStart.Size = new System.Drawing.Size(96, 32);
          this.buttonTimeTrackingStart.TabIndex = 11;
          this.buttonTimeTrackingStart.Text = "Start Timer";
+         this.toolTip.SetToolTip(this.buttonTimeTrackingStart, "Start/stop tracking time for the selected merge request");
          this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
          // 

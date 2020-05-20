@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
          this.textBox = new System.Windows.Forms.TextBox();
-         this.label1 = new System.Windows.Forms.Label();
+         this.labelAddItemHint = new System.Windows.Forms.Label();
          this.SuspendLayout();
          // 
          // buttonCancel
@@ -66,12 +66,12 @@ namespace mrHelper.App.Forms
          // 
          // label1
          // 
-         this.label1.AutoSize = true;
-         this.label1.Location = new System.Drawing.Point(12, 9);
-         this.label1.Name = "label1";
-         this.label1.Size = new System.Drawing.Size(71, 13);
-         this.label1.TabIndex = 0;
-         this.label1.Text = "Item Name";
+         this.labelAddItemHint.AutoSize = true;
+         this.labelAddItemHint.Location = new System.Drawing.Point(12, 9);
+         this.labelAddItemHint.Name = "label1";
+         this.labelAddItemHint.Size = new System.Drawing.Size(71, 13);
+         this.labelAddItemHint.TabIndex = 0;
+         this.labelAddItemHint.Text = "Item Name";
          // 
          // AddItemForm
          // 
@@ -83,7 +83,7 @@ namespace mrHelper.App.Forms
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.textBox);
-         this.Controls.Add(this.label1);
+         this.Controls.Add(this.labelAddItemHint);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
@@ -96,7 +96,7 @@ namespace mrHelper.App.Forms
 
       #endregion
 
-      private System.Windows.Forms.Label label1;
+      private System.Windows.Forms.Label labelAddItemHint;
       private System.Windows.Forms.TextBox textBox;
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.Button buttonOK;

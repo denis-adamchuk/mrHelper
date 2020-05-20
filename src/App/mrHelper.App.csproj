@@ -116,7 +116,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
-    <Compile Include="src\Forms\Helpers\EditLabelListViewCallback.cs" />
+    <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>

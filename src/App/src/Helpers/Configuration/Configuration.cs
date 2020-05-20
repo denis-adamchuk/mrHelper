@@ -26,8 +26,8 @@ namespace mrHelper.App.Helpers
       private static readonly string AutoSelectNewestCommitKeyName      = "AutoSelectNewestCommit";
       private static readonly bool   AutoSelectNewestCommitDefaultValue = false;
 
-      private static readonly string ShowVersionsKeyName      = "ShowVersions";
-      private static readonly bool   ShowVersionsDefaultValue = false;
+      private static readonly string ShowVersionsKeyName      = "ShowVersionsByDefault";
+      private static readonly bool   ShowVersionsDefaultValue = true;
 
       private static readonly string UseShallowCloneKeyName      = "UseShallowClone";
       private static readonly bool   UseShallowCloneDefaultValue = false;

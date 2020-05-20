@@ -4,9 +4,11 @@ namespace mrHelper.App.Forms
 {
    internal partial class AddItemForm : CustomFontForm
    {
-      internal AddItemForm()
+      internal AddItemForm(string caption, string hint)
       {
          InitializeComponent();
+         this.Text = caption;
+         labelAddItemHint.Text = hint;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
       }

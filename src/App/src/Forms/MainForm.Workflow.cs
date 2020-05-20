@@ -44,12 +44,6 @@ namespace mrHelper.App.Forms
             _lastMergeRequestsByHosts[hostName].ProjectKey.ProjectName : String.Empty;
          int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
 
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Changing host to {0}. Last selected project: {1}, IId: {2}",
-            hostName != String.Empty ? hostName : "N/A",
-            projectname != String.Empty ? projectname : "N/A",
-            iid != 0 ? iid.ToString() : "N/A"));
-
          _suppressExternalConnections = true;
          try
          {
@@ -83,7 +77,8 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change merge request to IId {0}",
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] User requested to change merge request to IId {0}",
             fmk.MergeRequest.IId.ToString()));
 
          _suppressExternalConnections = true;
@@ -112,6 +107,10 @@ namespace mrHelper.App.Forms
          // we will miss them. It might be ok when host changes, but if this method used to "refresh"
          // things, missed events are not desirable.
          // This is why "Update List" button implemented not by means of switchHostToSelected().
+
+         Trace.TraceInformation(String.Format(
+            "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
+            hostname, Program.Settings.WorkflowType));
 
          await disposeLocalGitRepositoryFactory();
 
@@ -326,7 +325,8 @@ namespace mrHelper.App.Forms
                {
                   adjustedKeyword = keyword.Substring(1);
                }
-               User user = await _gitlabClientManager.SearchManager.SearchUserByNameAsync(hostname, adjustedKeyword, true);
+               User user = await _gitlabClientManager.SearchManager.
+                  SearchUserByNameAsync(hostname, adjustedKeyword, true);
                if (user != null)
                {
                   labels.Add(new Tuple<string, bool>(adjustedKeyword, true));

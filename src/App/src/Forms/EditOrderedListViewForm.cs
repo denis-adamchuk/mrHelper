@@ -18,19 +18,27 @@ namespace mrHelper.App.Forms
    public partial class EditOrderedListViewForm : CustomFontForm
    {
       public EditOrderedListViewForm(
-         string caption,
+         string caption, string addItemCaption, string addItemHint,
          IEnumerable<Tuple<string, bool>> initialItems,
-         IEditOrderedListViewCallback callback)
+         IEditOrderedListViewCallback callback,
+         bool allowReorder)
       {
          Debug.Assert(initialItems != null);
 
          InitializeComponent();
          this.Text = caption;
+         if (!allowReorder)
+         {
+            buttonDown.Enabled = false;
+            buttonUp.Enabled = false;
+         }
 
          updateListView(initialItems);
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
+         _addItemHint = addItemHint;
+         _addItemCaption = addItemCaption;
          _callback = callback;
 
          buttonCancel.ConfirmationCondition = () => !Enumerable.SequenceEqual(initialItems, Items);
@@ -114,7 +122,7 @@ namespace mrHelper.App.Forms
 
       async private void buttonAddItem_Click(object sender, EventArgs e)
       {
-         using (AddItemForm form = new AddItemForm())
+         using (AddItemForm form = new AddItemForm(_addItemCaption, _addItemHint))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -187,6 +195,8 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private readonly string _addItemHint;
+      private readonly string _addItemCaption;
       private readonly IEditOrderedListViewCallback _callback;
    }
 }
