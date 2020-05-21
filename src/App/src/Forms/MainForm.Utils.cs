@@ -1267,11 +1267,33 @@ namespace mrHelper.App.Forms
          }
 
          LatestVersionInformation info = Program.ServiceManager.GetLatestVersionInfo();
-         if (info == null
-           || String.IsNullOrEmpty(info.VersionNumber)
-           || info.VersionNumber == Application.ProductVersion
-           || (!String.IsNullOrEmpty(_newVersionNumber) && info.VersionNumber == _newVersionNumber))
+         if (info == null || String.IsNullOrWhiteSpace(info.VersionNumber))
          {
+            return;
+         }
+
+         // TODO Extract all this stuff into ApplicationUpdater entity
+         try
+         {
+            System.Version currentVersion = new System.Version(Application.ProductVersion);
+            System.Version latestVersion = new System.Version(info.VersionNumber);
+            if (currentVersion >= latestVersion)
+            {
+               return;
+            }
+
+            if (!String.IsNullOrWhiteSpace(_newVersionNumber))
+            {
+               System.Version cachedLatestVersion = new System.Version(_newVersionNumber);
+               if (cachedLatestVersion >= latestVersion)
+               {
+                  return;
+               }
+            }
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("Wrong version number", ex);
             return;
          }
 
