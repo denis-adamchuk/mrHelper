@@ -56,6 +56,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
       private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
 
+      private static readonly string ShowWarningOnFilterMigrationKeyName      = "ShowWarningOnFilterMigration";
+      private static readonly bool   ShowWarningOnFilterMigrationDefaultValue = true;
+
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
@@ -306,6 +309,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowWarningOnReloadListDefaultValue;
          }
          set { setValue(ShowWarningOnReloadListKeyName, boolToString(value)); }
+      }
+
+      public bool ShowWarningOnFilterMigration
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               ShowWarningOnFilterMigrationKeyName, boolToString(ShowWarningOnFilterMigrationDefaultValue)),
+                  out bool result) ? result : ShowWarningOnFilterMigrationDefaultValue;
+         }
+         set { setValue(ShowWarningOnFilterMigrationKeyName, boolToString(value)); }
       }
 
       public string DiffContextDepth

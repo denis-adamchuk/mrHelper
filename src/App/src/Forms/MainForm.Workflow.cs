@@ -308,11 +308,12 @@ namespace mrHelper.App.Forms
 
       async private Task initializeLabelListIfEmpty(string hostname)
       {
-         if (!radioButtonSelectByUsernames.Checked || listViewUsers.Items.Count > 0)
+         if (ConfigurationHelper.GetUsersForHost(hostname, Program.Settings).Any())
          {
             return;
          }
 
+         bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
          MergeRequestFilterState filter = _mergeRequestFilter.Filter;
@@ -330,6 +331,7 @@ namespace mrHelper.App.Forms
                if (user != null)
                {
                   labels.Add(new Tuple<string, bool>(adjustedKeyword, true));
+                  migratedLabels |= true;
                }
             }
          }
@@ -346,6 +348,33 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);
          updateUsersListView();
          labelWorkflowStatus.Text = "Workflow prepared.";
+
+         if (Program.Settings.ShowWarningOnFilterMigration)
+         {
+            if (migratedLabels)
+            {
+               MessageBox.Show(
+                  "By default new versions of mrHelper select user-based workflow. "
+                + "Some of your filters are moved to Settings and only merge requests that match them are loaded from GitLab. "
+                + "You don't need to specify projects manually.\n"
+                + "Note that old Filter entry still works as additional filtering of loaded merge requests.",
+                  "Important news",
+                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+               checkBoxDisplayFilter.Checked = false;
+            }
+            else if (currentUser != null)
+            {
+               MessageBox.Show(
+                  "By default new versions of mrHelper select user-based workflow. "
+                + "Only merge requests that affect you are loaded from GitLab. "
+                + "If you want to track merge requests of other users, specify them in Settings. "
+                + "You don't need to specify projects manually.\n"
+                + "Note that old Filter entry still works as additional filtering of loaded merge requests.",
+                  "Important news",
+                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            Program.Settings.ShowWarningOnFilterMigration = false;
+         }
       }
 
       private object getCustomDataForUserBasedWorkflow()
