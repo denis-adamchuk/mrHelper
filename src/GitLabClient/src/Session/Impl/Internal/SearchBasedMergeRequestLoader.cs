@@ -50,9 +50,9 @@ namespace mrHelper.Client.Session
             return null;
          }
 
-         // leave unique IIds
+         // leave unique Ids
          allMergeRequests = allMergeRequests
-            .GroupBy(x => x.IId)
+            .GroupBy(x => x.Id) // important to use Id (not IId) because loading is cross-project
             .Select(x => x.First());
 
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =

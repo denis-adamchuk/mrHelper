@@ -92,7 +92,7 @@ namespace mrHelper.Client.Common
          IEnumerable<MergeRequest> byAuthor = await loadByAuthor(gl, _username);
          return byLabel
             .Concat(byAuthor)
-            .GroupBy(x => x.IId)
+            .GroupBy(x => x.Id) // filter out non-unique, important to use Id because search is cross-project
             .Select(group => group.First());
       }
 
