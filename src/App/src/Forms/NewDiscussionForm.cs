@@ -86,7 +86,7 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(context.HasValue);
          DiffContextFormatter formatter =
-            new DiffContextFormatter(WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 0);
+            new DiffContextFormatter(WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 2);
          stylesheet = formatter.GetStylesheet();
          return formatter.GetBody(context.Value);
       }

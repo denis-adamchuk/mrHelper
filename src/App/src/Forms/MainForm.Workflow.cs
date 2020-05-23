@@ -353,7 +353,7 @@ namespace mrHelper.App.Forms
             if (migratedLabels)
             {
                MessageBox.Show(
-                  "By default new versions of mrHelper select user-based workflow. "
+                  "By default, new versions of mrHelper select user-based workflow. "
                 + "Some of your filters are moved to Settings and only merge requests that match them are loaded from GitLab. "
                 + "You don't need to specify projects manually.\n"
                 + "Note that old Filter entry still works as additional filtering of loaded merge requests.",
@@ -364,11 +364,9 @@ namespace mrHelper.App.Forms
             else if (currentUser != null)
             {
                MessageBox.Show(
-                  "By default new versions of mrHelper select user-based workflow. "
-                + "Only merge requests that affect you are loaded from GitLab. "
-                + "If you want to track merge requests of other users, specify them in Settings. "
-                + "You don't need to specify projects manually.\n"
-                + "Note that old Filter entry still works as additional filtering of loaded merge requests.",
+                  "By default, new versions of mrHelper select user-based workflow. "
+                + "Only merge requests that authored by you OR expected to be reviewed by you are loaded from GitLab.\n"
+                + "If you want to track merge requests of other users, specify them in Settings. ",
                   "Important news",
                   MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
