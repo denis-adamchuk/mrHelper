@@ -57,7 +57,7 @@ namespace mrHelper.Client.Session
             try
             {
                IEnumerable<MergeRequest> projectMergeRequests = await loadProjectMergeRequestsAsync(project);
-               if (mergeRequests == null)
+               if (projectMergeRequests == null)
                {
                   cancelled = true;
                }
