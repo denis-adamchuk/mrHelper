@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace mrHelper.Common.Interfaces
 {
-   public struct ProjectKey
+   public struct ProjectKey : IEquatable<ProjectKey>
    {
       public ProjectKey(string hostName, string projectName)
       {
@@ -16,9 +16,13 @@ namespace mrHelper.Common.Interfaces
 
       public override bool Equals(object obj)
       {
-         return obj is ProjectKey key
-             && 0 == String.Compare(HostName, key.HostName, true)
-             && 0 == String.Compare(ProjectName, key.ProjectName, true);
+         return obj is ProjectKey key && Equals(key);
+      }
+
+      public bool Equals(ProjectKey other)
+      {
+      return 0 == String.Compare(HostName, other.HostName, true)
+          && 0 == String.Compare(ProjectName, other.ProjectName, true);
       }
 
       public override int GetHashCode()

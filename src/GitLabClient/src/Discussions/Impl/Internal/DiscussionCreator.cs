@@ -158,7 +158,12 @@ namespace mrHelper.Client.Discussions
             if (discussion.Notes.Count() == 1)
             {
                DiscussionNote note = discussion.Notes.First();
-               if (note.Type == "DiffNote" && note.Author.Equals(_currentUser) && note.Body == parameters.Body)
+               if (_currentUser != null
+                && note != null
+                && note.Type == "DiffNote"
+                && note.Author != null
+                && note.Author.Id == _currentUser.Id
+                && note.Body == parameters.Body)
                {
                   Trace.TraceInformation(
                      "[DicsussionCreator] Deleting discussion note." +

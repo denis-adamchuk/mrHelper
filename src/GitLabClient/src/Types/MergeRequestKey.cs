@@ -1,14 +1,15 @@
 using mrHelper.Common.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace mrHelper.Client.Types
 {
-   public struct MergeRequestKey
+   public struct MergeRequestKey : IEquatable<MergeRequestKey>
    {
-      public MergeRequestKey(ProjectKey projectKey, int iId)
+      public MergeRequestKey(ProjectKey projectKey, int iid)
       {
          ProjectKey = projectKey;
-         IId = iId;
+         IId = iid;
       }
 
       public ProjectKey ProjectKey { get; }
@@ -16,9 +17,13 @@ namespace mrHelper.Client.Types
 
       public override bool Equals(object obj)
       {
-         return obj is MergeRequestKey key
-            && ProjectKey.Equals(ProjectKey, key.ProjectKey)
-            && IId == key.IId;
+         return obj is MergeRequestKey key && Equals(key);
+      }
+
+      public bool Equals(MergeRequestKey other)
+      {
+         return ProjectKey.Equals(other.ProjectKey) &&
+                IId == other.IId;
       }
 
       public override int GetHashCode()

@@ -1,10 +1,11 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace mrHelper.Client.Types
 {
-   public struct FullMergeRequestKey
+   public struct FullMergeRequestKey : IEquatable<FullMergeRequestKey>
    {
       public FullMergeRequestKey(ProjectKey projectKey, MergeRequest mergeRequest)
       {
@@ -17,16 +18,21 @@ namespace mrHelper.Client.Types
 
       public override bool Equals(object obj)
       {
-         return obj is FullMergeRequestKey key
-            && ProjectKey.Equals(key.ProjectKey)
-            && MergeRequest.IId == key.MergeRequest.IId;
+         return obj is FullMergeRequestKey key && Equals(key);
+      }
+
+      public bool Equals(FullMergeRequestKey other)
+      {
+         return ProjectKey.Equals(other.ProjectKey)
+            && ((MergeRequest == null && other.MergeRequest == null)
+               || (MergeRequest.IId == other.MergeRequest.IId));
       }
 
       public override int GetHashCode()
       {
          int hashCode = 1485227685;
          hashCode = hashCode * -1521134295 + ProjectKey.GetHashCode();
-         hashCode = hashCode * -1521134295 + EqualityComparer<MergeRequest>.Default.GetHashCode(MergeRequest);
+         hashCode = hashCode * -1521134295 + MergeRequest?.IId ?? 0;
          return hashCode;
       }
    }
