@@ -71,6 +71,8 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void updateHostsDropdownList()
       {
+         updateEnablementsOfWorkflowSelectors();
+
          if (listViewKnownHosts.Items.Count == 0)
          {
             disableComboBox(comboBoxHost, String.Empty);
@@ -95,6 +97,28 @@ namespace mrHelper.App.Forms
                HostComboBoxItem hostItem = new HostComboBoxItem(item.Text, item.SubItems[1].Text);
                comboBoxHost.Items.Add(hostItem);
             }
+         }
+      }
+
+      private void updateEnablementsOfWorkflowSelectors()
+      {
+         if (listViewKnownHosts.Items.Count > 0)
+         {
+            radioButtonSelectByUsernames.Enabled = true;
+            radioButtonSelectByProjects.Enabled = true;
+            listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
+            listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
+            buttonEditProjects.Enabled = true;
+            buttonEditUsers.Enabled = true;
+         }
+         else
+         {
+            radioButtonSelectByUsernames.Enabled = false;
+            radioButtonSelectByProjects.Enabled = false;
+            listViewUsers.Enabled = false;
+            listViewProjects.Enabled = false;
+            buttonEditProjects.Enabled = false;
+            buttonEditUsers.Enabled = false;
          }
       }
 
@@ -1008,9 +1032,8 @@ namespace mrHelper.App.Forms
             foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
             {
                FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
-               ListViewItem item = listViewMergeRequests.Items.Cast<ListViewItem>().FirstOrDefault( // `null` if not found
-                  x => ((FullMergeRequestKey)x.Tag).ProjectKey.Equals(fmk.ProjectKey)
-                    && ((FullMergeRequestKey)x.Tag).MergeRequest.IId == fmk.MergeRequest.IId);
+               ListViewItem item = listViewMergeRequests.Items.Cast<ListViewItem>().FirstOrDefault(
+                  x => ((FullMergeRequestKey)x.Tag).Equals(fmk)); // item=`null` if not found
                setListViewItemTag(item ?? addListViewMergeRequestItem(listViewMergeRequests, projectKey), fmk);
             }
          }

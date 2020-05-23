@@ -17,7 +17,7 @@ namespace mrHelper.App.Forms.Helpers
          _searchManager = searchManager;
       }
 
-      public async Task<bool> CanAddItem(string item, IEnumerable<string> currentItems)
+      public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
       {
          string username = item.ToLower();
          if (item.StartsWith(Constants.GitLabLabelPrefix) || item.StartsWith(Constants.AuthorLabelPrefix))
@@ -30,17 +30,17 @@ namespace mrHelper.App.Forms.Helpers
          {
             MessageBox.Show(String.Format("User \"{0}\" is not found at {1}", username, _hostname),
                "User will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return null;
          }
 
-         if (currentItems.Any(x => 0 == String.Compare(x, item, true)))
+         if (currentItems.Any(x => 0 == String.Compare(x, user.Username, true)))
          {
-            MessageBox.Show(String.Format("User {0} is already in the list", item),
+            MessageBox.Show(String.Format("User {0} is already in the list", user.Username),
                "User will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return null;
          }
 
-         return true;
+         return user.Username;
       }
 
       private string _hostname;

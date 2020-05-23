@@ -73,32 +73,6 @@ namespace mrHelper.App.Forms
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.checkBoxShowVersions = new System.Windows.Forms.CheckBox();
          this.checkBoxUseShallowClone = new System.Windows.Forms.CheckBox();
-         this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-         this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-         this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
-         this.tabControl = new System.Windows.Forms.TabControl();
-         this.tabPageSettings = new System.Windows.Forms.TabPage();
-         this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
-         this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowMyActivity = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowKeywords = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowOnMention = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowResolvedAll = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowUpdatedMergeRequests = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
-         this.groupBoxOther = new System.Windows.Forms.GroupBox();
-         this.labelFontSize = new System.Windows.Forms.Label();
-         this.comboBoxFonts = new System.Windows.Forms.ComboBox();
-         this.comboBoxThemes = new System.Windows.Forms.ComboBox();
-         this.labelVisualTheme = new System.Windows.Forms.Label();
-         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
-         this.labelColorScheme = new System.Windows.Forms.Label();
-         this.labelDepth = new System.Windows.Forms.Label();
-         this.groupBoxGit = new System.Windows.Forms.GroupBox();
-         this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.listViewUsers = new System.Windows.Forms.ListView();
@@ -108,9 +82,6 @@ namespace mrHelper.App.Forms
          this.comboBoxHost = new System.Windows.Forms.ComboBox();
          this.listViewProjects = new System.Windows.Forms.ListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.tabPageMR = new System.Windows.Forms.TabPage();
-         this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-         this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.listViewMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
@@ -137,6 +108,38 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
+         this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
+         this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
+         this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+         this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+         this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
+         this.tabControl = new System.Windows.Forms.TabControl();
+         this.tabPageSettings = new System.Windows.Forms.TabPage();
+         this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
+         this.checkBoxShowServiceNotifications = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowMyActivity = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowKeywords = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowOnMention = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowResolvedAll = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowUpdatedMergeRequests = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowMergedMergeRequests = new System.Windows.Forms.CheckBox();
+         this.checkBoxShowNewMergeRequests = new System.Windows.Forms.CheckBox();
+         this.groupBoxOther = new System.Windows.Forms.GroupBox();
+         this.labelFontSize = new System.Windows.Forms.Label();
+         this.comboBoxFonts = new System.Windows.Forms.ComboBox();
+         this.comboBoxThemes = new System.Windows.Forms.ComboBox();
+         this.labelVisualTheme = new System.Windows.Forms.Label();
+         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
+         this.labelColorScheme = new System.Windows.Forms.Label();
+         this.labelDepth = new System.Windows.Forms.Label();
+         this.groupBoxGit = new System.Windows.Forms.GroupBox();
+         this.groupBoxHost = new System.Windows.Forms.GroupBox();
+         this.tabPageMR = new System.Windows.Forms.TabPage();
+         this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+         this.tabControlMode = new System.Windows.Forms.TabControl();
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
@@ -145,7 +148,6 @@ namespace mrHelper.App.Forms
          this.pictureBox2 = new System.Windows.Forms.PictureBox();
          this.pictureBox1 = new System.Windows.Forms.PictureBox();
          this.panelStatusBar = new System.Windows.Forms.Panel();
-         this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.labelGitStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.panelBottomMenu = new System.Windows.Forms.Panel();
@@ -153,8 +155,6 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
-         this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
-         this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
          this.labelEarliestCommitTimestampLabel = new System.Windows.Forms.Label();
@@ -164,6 +164,10 @@ namespace mrHelper.App.Forms
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
          this.groupBoxKnownHosts.SuspendLayout();
+         this.tabPageLive.SuspendLayout();
+         this.groupBoxSelectMergeRequest.SuspendLayout();
+         this.tabPageSearch.SuspendLayout();
+         this.groupBoxSearch.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
          this.tabPageSettings.SuspendLayout();
@@ -177,10 +181,6 @@ namespace mrHelper.App.Forms
          this.splitContainer1.Panel2.SuspendLayout();
          this.splitContainer1.SuspendLayout();
          this.tabControlMode.SuspendLayout();
-         this.tabPageLive.SuspendLayout();
-         this.groupBoxSelectMergeRequest.SuspendLayout();
-         this.tabPageSearch.SuspendLayout();
-         this.groupBoxSearch.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
          this.splitContainer2.Panel1.SuspendLayout();
          this.splitContainer2.Panel2.SuspendLayout();
@@ -210,6 +210,7 @@ namespace mrHelper.App.Forms
          // 
          // buttonRemoveKnownHost
          // 
+         this.buttonRemoveKnownHost.Enabled = false;
          this.buttonRemoveKnownHost.Location = new System.Drawing.Point(424, 72);
          this.buttonRemoveKnownHost.Name = "buttonRemoveKnownHost";
          this.buttonRemoveKnownHost.Size = new System.Drawing.Size(83, 27);
@@ -245,6 +246,7 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.listViewKnownHosts, "Available GitLab hosts");
          this.listViewKnownHosts.UseCompatibleStateImageBehavior = false;
          this.listViewKnownHosts.View = System.Windows.Forms.View.Details;
+         this.listViewKnownHosts.SelectedIndexChanged += new System.EventHandler(this.listViewKnownHosts_SelectedIndexChanged);
          // 
          // columnHeaderHost
          // 
@@ -532,6 +534,410 @@ namespace mrHelper.App.Forms
          this.checkBoxUseShallowClone.UseVisualStyleBackColor = true;
          this.checkBoxUseShallowClone.CheckedChanged += new System.EventHandler(this.checkBoxUseShallowClone_CheckedChanged);
          // 
+         // radioButtonSelectByProjects
+         // 
+         this.radioButtonSelectByProjects.AutoSize = true;
+         this.radioButtonSelectByProjects.Location = new System.Drawing.Point(6, 280);
+         this.radioButtonSelectByProjects.Name = "radioButtonSelectByProjects";
+         this.radioButtonSelectByProjects.Size = new System.Drawing.Size(135, 17);
+         this.radioButtonSelectByProjects.TabIndex = 9;
+         this.radioButtonSelectByProjects.TabStop = true;
+         this.radioButtonSelectByProjects.Text = "Project-based workflow";
+         this.toolTip.SetToolTip(this.radioButtonSelectByProjects, "All merge requests from selected projects will be loaded from GitLab");
+         this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
+         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
+         // 
+         // buttonEditUsers
+         // 
+         this.buttonEditUsers.Location = new System.Drawing.Point(182, 235);
+         this.buttonEditUsers.Name = "buttonEditUsers";
+         this.buttonEditUsers.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditUsers.TabIndex = 8;
+         this.buttonEditUsers.Text = "Edit...";
+         this.toolTip.SetToolTip(this.buttonEditUsers, "Edit list of usernames");
+         this.buttonEditUsers.UseVisualStyleBackColor = true;
+         this.buttonEditUsers.Click += new System.EventHandler(this.buttonEditUsers_Click);
+         // 
+         // listViewUsers
+         // 
+         this.listViewUsers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+         this.listViewUsers.FullRowSelect = true;
+         this.listViewUsers.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewUsers.HideSelection = false;
+         this.listViewUsers.Location = new System.Drawing.Point(6, 72);
+         this.listViewUsers.MultiSelect = false;
+         this.listViewUsers.Name = "listViewUsers";
+         this.listViewUsers.ShowGroups = false;
+         this.listViewUsers.Size = new System.Drawing.Size(259, 157);
+         this.listViewUsers.TabIndex = 7;
+         this.toolTip.SetToolTip(this.listViewUsers, "Selected usernames");
+         this.listViewUsers.UseCompatibleStateImageBehavior = false;
+         this.listViewUsers.View = System.Windows.Forms.View.Details;
+         // 
+         // columnHeader1
+         // 
+         this.columnHeader1.Text = "Name";
+         this.columnHeader1.Width = 160;
+         // 
+         // radioButtonSelectByUsernames
+         // 
+         this.radioButtonSelectByUsernames.AutoSize = true;
+         this.radioButtonSelectByUsernames.Location = new System.Drawing.Point(6, 49);
+         this.radioButtonSelectByUsernames.Name = "radioButtonSelectByUsernames";
+         this.radioButtonSelectByUsernames.Size = new System.Drawing.Size(124, 17);
+         this.radioButtonSelectByUsernames.TabIndex = 6;
+         this.radioButtonSelectByUsernames.TabStop = true;
+         this.radioButtonSelectByUsernames.Text = "User-based workflow";
+         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select usernames to track only their merge requests");
+         this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
+         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
+         // 
+         // buttonEditProjects
+         // 
+         this.buttonEditProjects.Location = new System.Drawing.Point(184, 572);
+         this.buttonEditProjects.Name = "buttonEditProjects";
+         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditProjects.TabIndex = 1;
+         this.buttonEditProjects.Text = "Edit...";
+         this.toolTip.SetToolTip(this.buttonEditProjects, "Edit list of projects");
+         this.buttonEditProjects.UseVisualStyleBackColor = true;
+         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
+         // 
+         // comboBoxHost
+         // 
+         this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxHost.FormattingEnabled = true;
+         this.comboBoxHost.Location = new System.Drawing.Point(6, 19);
+         this.comboBoxHost.Name = "comboBoxHost";
+         this.comboBoxHost.Size = new System.Drawing.Size(259, 21);
+         this.comboBoxHost.TabIndex = 5;
+         this.toolTip.SetToolTip(this.comboBoxHost, "Select a GitLab host");
+         this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
+         this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
+         // 
+         // listViewProjects
+         // 
+         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderName});
+         this.listViewProjects.FullRowSelect = true;
+         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewProjects.HideSelection = false;
+         this.listViewProjects.Location = new System.Drawing.Point(6, 303);
+         this.listViewProjects.MultiSelect = false;
+         this.listViewProjects.Name = "listViewProjects";
+         this.listViewProjects.ShowGroups = false;
+         this.listViewProjects.Size = new System.Drawing.Size(259, 260);
+         this.listViewProjects.TabIndex = 0;
+         this.toolTip.SetToolTip(this.listViewProjects, "Selected projects");
+         this.listViewProjects.UseCompatibleStateImageBehavior = false;
+         this.listViewProjects.View = System.Windows.Forms.View.Details;
+         // 
+         // columnHeaderName
+         // 
+         this.columnHeaderName.Text = "Name";
+         this.columnHeaderName.Width = 160;
+         // 
+         // tabPageLive
+         // 
+         this.tabPageLive.Controls.Add(this.groupBoxSelectMergeRequest);
+         this.tabPageLive.Location = new System.Drawing.Point(4, 22);
+         this.tabPageLive.Name = "tabPageLive";
+         this.tabPageLive.Padding = new System.Windows.Forms.Padding(3);
+         this.tabPageLive.Size = new System.Drawing.Size(328, 832);
+         this.tabPageLive.TabIndex = 0;
+         this.tabPageLive.Text = "Live";
+         this.toolTip.SetToolTip(this.tabPageLive, "List of open merge requests (updates automatically)");
+         this.tabPageLive.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxSelectMergeRequest
+         // 
+         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonReloadList);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxDisplayFilter);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.listViewMergeRequests);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxDisplayFilter);
+         this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(322, 826);
+         this.groupBoxSelectMergeRequest.TabIndex = 1;
+         this.groupBoxSelectMergeRequest.TabStop = false;
+         this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
+         // 
+         // listViewMergeRequests
+         // 
+         this.listViewMergeRequests.AllowColumnReorder = true;
+         this.listViewMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.listViewMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderIId,
+            this.columnHeaderAuthor,
+            this.columnHeaderTitle,
+            this.columnHeaderLabels,
+            this.columnHeaderSize,
+            this.columnHeaderJira,
+            this.columnHeaderTotalTime,
+            this.columnHeaderResolved,
+            this.columnHeaderSourceBranch,
+            this.columnHeaderTargetBranch});
+         this.listViewMergeRequests.FullRowSelect = true;
+         this.listViewMergeRequests.GridLines = true;
+         this.listViewMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewMergeRequests.HideSelection = false;
+         this.listViewMergeRequests.Location = new System.Drawing.Point(3, 46);
+         this.listViewMergeRequests.MultiSelect = false;
+         this.listViewMergeRequests.Name = "listViewMergeRequests";
+         this.listViewMergeRequests.OwnerDraw = true;
+         this.listViewMergeRequests.Size = new System.Drawing.Size(316, 777);
+         this.listViewMergeRequests.TabIndex = 3;
+         this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
+         this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
+         this.listViewMergeRequests.ColumnReordered += new System.Windows.Forms.ColumnReorderedEventHandler(this.listViewMergeRequests_ColumnReordered);
+         this.listViewMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
+         this.listViewMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
+         this.listViewMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
+         this.listViewMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.ListViewMergeRequests_ItemSelectionChanged);
+         this.listViewMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseDown);
+         this.listViewMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseMove);
+         // 
+         // columnHeaderIId
+         // 
+         this.columnHeaderIId.Tag = "IId";
+         this.columnHeaderIId.Text = "IId";
+         this.columnHeaderIId.Width = 40;
+         // 
+         // columnHeaderAuthor
+         // 
+         this.columnHeaderAuthor.Tag = "Author";
+         this.columnHeaderAuthor.Text = "Author";
+         this.columnHeaderAuthor.Width = 110;
+         // 
+         // columnHeaderTitle
+         // 
+         this.columnHeaderTitle.Tag = "Title";
+         this.columnHeaderTitle.Text = "Title";
+         this.columnHeaderTitle.Width = 400;
+         // 
+         // columnHeaderLabels
+         // 
+         this.columnHeaderLabels.Tag = "Labels";
+         this.columnHeaderLabels.Text = "Labels";
+         this.columnHeaderLabels.Width = 180;
+         // 
+         // columnHeaderSize
+         // 
+         this.columnHeaderSize.Tag = "Size";
+         this.columnHeaderSize.Text = "Size";
+         this.columnHeaderSize.Width = 100;
+         // 
+         // columnHeaderJira
+         // 
+         this.columnHeaderJira.Tag = "Jira";
+         this.columnHeaderJira.Text = "Jira";
+         this.columnHeaderJira.Width = 80;
+         // 
+         // columnHeaderTotalTime
+         // 
+         this.columnHeaderTotalTime.Tag = "TotalTime";
+         this.columnHeaderTotalTime.Text = "Total Time";
+         this.columnHeaderTotalTime.Width = 70;
+         // 
+         // columnHeaderResolved
+         // 
+         this.columnHeaderResolved.Tag = "Resolved";
+         this.columnHeaderResolved.Text = "Resolved";
+         this.columnHeaderResolved.Width = 65;
+         // 
+         // columnHeaderSourceBranch
+         // 
+         this.columnHeaderSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderSourceBranch.Text = "Source Branch";
+         this.columnHeaderSourceBranch.Width = 100;
+         // 
+         // columnHeaderTargetBranch
+         // 
+         this.columnHeaderTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderTargetBranch.Text = "Target Branch";
+         this.columnHeaderTargetBranch.Width = 100;
+         // 
+         // checkBoxDisplayFilter
+         // 
+         this.checkBoxDisplayFilter.AutoSize = true;
+         this.checkBoxDisplayFilter.Enabled = false;
+         this.checkBoxDisplayFilter.Location = new System.Drawing.Point(6, 19);
+         this.checkBoxDisplayFilter.MinimumSize = new System.Drawing.Size(48, 0);
+         this.checkBoxDisplayFilter.Name = "checkBoxDisplayFilter";
+         this.checkBoxDisplayFilter.Size = new System.Drawing.Size(48, 17);
+         this.checkBoxDisplayFilter.TabIndex = 0;
+         this.checkBoxDisplayFilter.Text = "Filter";
+         this.checkBoxDisplayFilter.UseVisualStyleBackColor = true;
+         this.checkBoxDisplayFilter.CheckedChanged += new System.EventHandler(this.CheckBoxDisplayFilter_CheckedChanged);
+         // 
+         // tabPageSearch
+         // 
+         this.tabPageSearch.Controls.Add(this.groupBoxSearch);
+         this.tabPageSearch.Location = new System.Drawing.Point(4, 22);
+         this.tabPageSearch.Name = "tabPageSearch";
+         this.tabPageSearch.Padding = new System.Windows.Forms.Padding(3);
+         this.tabPageSearch.Size = new System.Drawing.Size(328, 832);
+         this.tabPageSearch.TabIndex = 1;
+         this.tabPageSearch.Text = "Search";
+         this.toolTip.SetToolTip(this.tabPageSearch, "Use this mode to search closed merge requests");
+         this.tabPageSearch.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxSearch
+         // 
+         this.groupBoxSearch.Controls.Add(this.radioButtonSearchByTargetBranch);
+         this.groupBoxSearch.Controls.Add(this.radioButtonSearchByTitleAndDescription);
+         this.groupBoxSearch.Controls.Add(this.textBoxSearch);
+         this.groupBoxSearch.Controls.Add(this.listViewFoundMergeRequests);
+         this.groupBoxSearch.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxSearch.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxSearch.Name = "groupBoxSearch";
+         this.groupBoxSearch.Size = new System.Drawing.Size(322, 826);
+         this.groupBoxSearch.TabIndex = 2;
+         this.groupBoxSearch.TabStop = false;
+         this.groupBoxSearch.Text = "Search Merge";
+         // 
+         // radioButtonSearchByTargetBranch
+         // 
+         this.radioButtonSearchByTargetBranch.AutoSize = true;
+         this.radioButtonSearchByTargetBranch.Location = new System.Drawing.Point(212, 19);
+         this.radioButtonSearchByTargetBranch.Name = "radioButtonSearchByTargetBranch";
+         this.radioButtonSearchByTargetBranch.Size = new System.Drawing.Size(107, 17);
+         this.radioButtonSearchByTargetBranch.TabIndex = 5;
+         this.radioButtonSearchByTargetBranch.Text = "by Target Branch";
+         this.radioButtonSearchByTargetBranch.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonSearchByTitleAndDescription
+         // 
+         this.radioButtonSearchByTitleAndDescription.AutoSize = true;
+         this.radioButtonSearchByTitleAndDescription.Checked = true;
+         this.radioButtonSearchByTitleAndDescription.Location = new System.Drawing.Point(3, 19);
+         this.radioButtonSearchByTitleAndDescription.Name = "radioButtonSearchByTitleAndDescription";
+         this.radioButtonSearchByTitleAndDescription.Size = new System.Drawing.Size(136, 17);
+         this.radioButtonSearchByTitleAndDescription.TabIndex = 4;
+         this.radioButtonSearchByTitleAndDescription.TabStop = true;
+         this.radioButtonSearchByTitleAndDescription.Text = "by Title and Description";
+         this.radioButtonSearchByTitleAndDescription.UseVisualStyleBackColor = true;
+         // 
+         // listViewFoundMergeRequests
+         // 
+         this.listViewFoundMergeRequests.AllowColumnReorder = true;
+         this.listViewFoundMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.listViewFoundMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderFoundIId,
+            this.columnHeaderFoundState,
+            this.columnHeaderFoundAuthor,
+            this.columnHeaderFoundTitle,
+            this.columnHeaderFoundJira,
+            this.columnHeaderFoundSourceBranch,
+            this.columnHeaderFoundTargetBranch});
+         this.listViewFoundMergeRequests.FullRowSelect = true;
+         this.listViewFoundMergeRequests.GridLines = true;
+         this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewFoundMergeRequests.HideSelection = false;
+         this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 68);
+         this.listViewFoundMergeRequests.MultiSelect = false;
+         this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
+         this.listViewFoundMergeRequests.OwnerDraw = true;
+         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(316, 755);
+         this.listViewFoundMergeRequests.TabIndex = 3;
+         this.listViewFoundMergeRequests.UseCompatibleStateImageBehavior = false;
+         this.listViewFoundMergeRequests.View = System.Windows.Forms.View.Details;
+         this.listViewFoundMergeRequests.ColumnReordered += new System.Windows.Forms.ColumnReorderedEventHandler(this.listViewMergeRequests_ColumnReordered);
+         this.listViewFoundMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
+         this.listViewFoundMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
+         this.listViewFoundMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
+         this.listViewFoundMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.ListViewMergeRequests_ItemSelectionChanged);
+         this.listViewFoundMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseDown);
+         this.listViewFoundMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseMove);
+         // 
+         // columnHeaderFoundIId
+         // 
+         this.columnHeaderFoundIId.Tag = "IId";
+         this.columnHeaderFoundIId.Text = "IId";
+         this.columnHeaderFoundIId.Width = 40;
+         // 
+         // columnHeaderFoundState
+         // 
+         this.columnHeaderFoundState.Tag = "State";
+         this.columnHeaderFoundState.Text = "State";
+         this.columnHeaderFoundState.Width = 80;
+         // 
+         // columnHeaderFoundAuthor
+         // 
+         this.columnHeaderFoundAuthor.Tag = "Author";
+         this.columnHeaderFoundAuthor.Text = "Author";
+         this.columnHeaderFoundAuthor.Width = 110;
+         // 
+         // columnHeaderFoundTitle
+         // 
+         this.columnHeaderFoundTitle.Tag = "Title";
+         this.columnHeaderFoundTitle.Text = "Title";
+         this.columnHeaderFoundTitle.Width = 400;
+         // 
+         // columnHeaderFoundJira
+         // 
+         this.columnHeaderFoundJira.Tag = "Jira";
+         this.columnHeaderFoundJira.Text = "Jira";
+         this.columnHeaderFoundJira.Width = 80;
+         // 
+         // columnHeaderFoundSourceBranch
+         // 
+         this.columnHeaderFoundSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderFoundSourceBranch.Text = "Source Branch";
+         this.columnHeaderFoundSourceBranch.Width = 100;
+         // 
+         // columnHeaderFoundTargetBranch
+         // 
+         this.columnHeaderFoundTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderFoundTargetBranch.Text = "Target Branch";
+         this.columnHeaderFoundTargetBranch.Width = 100;
+         // 
+         // linkLabelAbortGit
+         // 
+         this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelAbortGit.Location = new System.Drawing.Point(887, 31);
+         this.linkLabelAbortGit.Name = "linkLabelAbortGit";
+         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 15);
+         this.linkLabelAbortGit.TabIndex = 15;
+         this.linkLabelAbortGit.TabStop = true;
+         this.linkLabelAbortGit.Text = "Abort";
+         this.toolTip.SetToolTip(this.linkLabelAbortGit, "Abort current git operation");
+         this.linkLabelAbortGit.Visible = false;
+         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
+         // 
+         // buttonTimeTrackingCancel
+         // 
+         this.buttonTimeTrackingCancel.ConfirmationText = "All changes will be lost, are you sure?";
+         this.buttonTimeTrackingCancel.Enabled = false;
+         this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
+         this.buttonTimeTrackingCancel.MinimumSize = new System.Drawing.Size(96, 0);
+         this.buttonTimeTrackingCancel.Name = "buttonTimeTrackingCancel";
+         this.buttonTimeTrackingCancel.Size = new System.Drawing.Size(96, 32);
+         this.buttonTimeTrackingCancel.TabIndex = 12;
+         this.buttonTimeTrackingCancel.Text = "Cancel";
+         this.toolTip.SetToolTip(this.buttonTimeTrackingCancel, "Discard tracked time");
+         this.buttonTimeTrackingCancel.UseVisualStyleBackColor = true;
+         this.buttonTimeTrackingCancel.Click += new System.EventHandler(this.ButtonTimeTrackingCancel_Click);
+         // 
+         // buttonTimeTrackingStart
+         // 
+         this.buttonTimeTrackingStart.Enabled = false;
+         this.buttonTimeTrackingStart.Location = new System.Drawing.Point(6, 19);
+         this.buttonTimeTrackingStart.MinimumSize = new System.Drawing.Size(96, 0);
+         this.buttonTimeTrackingStart.Name = "buttonTimeTrackingStart";
+         this.buttonTimeTrackingStart.Size = new System.Drawing.Size(96, 32);
+         this.buttonTimeTrackingStart.TabIndex = 11;
+         this.buttonTimeTrackingStart.Text = "Start Timer";
+         this.toolTip.SetToolTip(this.buttonTimeTrackingStart, "Start/stop tracking time for the selected merge request");
+         this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
+         this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -817,110 +1223,6 @@ namespace mrHelper.App.Forms
          this.groupBoxHost.TabStop = false;
          this.groupBoxHost.Text = "Select host and workflow";
          // 
-         // radioButtonSelectByProjects
-         // 
-         this.radioButtonSelectByProjects.AutoSize = true;
-         this.radioButtonSelectByProjects.Location = new System.Drawing.Point(6, 280);
-         this.radioButtonSelectByProjects.Name = "radioButtonSelectByProjects";
-         this.radioButtonSelectByProjects.Size = new System.Drawing.Size(135, 17);
-         this.radioButtonSelectByProjects.TabIndex = 9;
-         this.radioButtonSelectByProjects.TabStop = true;
-         this.radioButtonSelectByProjects.Text = "Project-based workflow";
-         this.toolTip.SetToolTip(this.radioButtonSelectByProjects, "All merge requests from selected projects will be loaded from GitLab");
-         this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
-         // 
-         // buttonEditUsers
-         // 
-         this.buttonEditUsers.Location = new System.Drawing.Point(182, 235);
-         this.buttonEditUsers.Name = "buttonEditUsers";
-         this.buttonEditUsers.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditUsers.TabIndex = 8;
-         this.buttonEditUsers.Text = "Edit...";
-         this.toolTip.SetToolTip(this.buttonEditUsers, "Edit list of usernames");
-         this.buttonEditUsers.UseVisualStyleBackColor = true;
-         this.buttonEditUsers.Click += new System.EventHandler(this.buttonEditUsers_Click);
-         // 
-         // listViewUsers
-         // 
-         this.listViewUsers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1});
-         this.listViewUsers.FullRowSelect = true;
-         this.listViewUsers.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewUsers.HideSelection = false;
-         this.listViewUsers.Location = new System.Drawing.Point(6, 72);
-         this.listViewUsers.MultiSelect = false;
-         this.listViewUsers.Name = "listViewUsers";
-         this.listViewUsers.ShowGroups = false;
-         this.listViewUsers.Size = new System.Drawing.Size(259, 157);
-         this.listViewUsers.TabIndex = 7;
-         this.toolTip.SetToolTip(this.listViewUsers, "Selected usernames");
-         this.listViewUsers.UseCompatibleStateImageBehavior = false;
-         this.listViewUsers.View = System.Windows.Forms.View.Details;
-         // 
-         // columnHeader1
-         // 
-         this.columnHeader1.Text = "Name";
-         this.columnHeader1.Width = 160;
-         // 
-         // radioButtonSelectByUsernames
-         // 
-         this.radioButtonSelectByUsernames.AutoSize = true;
-         this.radioButtonSelectByUsernames.Location = new System.Drawing.Point(6, 49);
-         this.radioButtonSelectByUsernames.Name = "radioButtonSelectByUsernames";
-         this.radioButtonSelectByUsernames.Size = new System.Drawing.Size(124, 17);
-         this.radioButtonSelectByUsernames.TabIndex = 6;
-         this.radioButtonSelectByUsernames.TabStop = true;
-         this.radioButtonSelectByUsernames.Text = "User-based workflow";
-         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select usernames to track only their merge requests");
-         this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
-         // 
-         // buttonEditProjects
-         // 
-         this.buttonEditProjects.Location = new System.Drawing.Point(184, 572);
-         this.buttonEditProjects.Name = "buttonEditProjects";
-         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditProjects.TabIndex = 1;
-         this.buttonEditProjects.Text = "Edit...";
-         this.toolTip.SetToolTip(this.buttonEditProjects, "Edit list of projects");
-         this.buttonEditProjects.UseVisualStyleBackColor = true;
-         this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
-         // 
-         // comboBoxHost
-         // 
-         this.comboBoxHost.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxHost.FormattingEnabled = true;
-         this.comboBoxHost.Location = new System.Drawing.Point(6, 19);
-         this.comboBoxHost.Name = "comboBoxHost";
-         this.comboBoxHost.Size = new System.Drawing.Size(259, 21);
-         this.comboBoxHost.TabIndex = 5;
-         this.toolTip.SetToolTip(this.comboBoxHost, "Select a GitLab host");
-         this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
-         this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
-         // 
-         // listViewProjects
-         // 
-         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderName});
-         this.listViewProjects.FullRowSelect = true;
-         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewProjects.HideSelection = false;
-         this.listViewProjects.Location = new System.Drawing.Point(6, 303);
-         this.listViewProjects.MultiSelect = false;
-         this.listViewProjects.Name = "listViewProjects";
-         this.listViewProjects.ShowGroups = false;
-         this.listViewProjects.Size = new System.Drawing.Size(259, 260);
-         this.listViewProjects.TabIndex = 0;
-         this.toolTip.SetToolTip(this.listViewProjects, "Selected projects");
-         this.listViewProjects.UseCompatibleStateImageBehavior = false;
-         this.listViewProjects.View = System.Windows.Forms.View.Details;
-         // 
-         // columnHeaderName
-         // 
-         this.columnHeaderName.Text = "Name";
-         this.columnHeaderName.Width = 160;
-         // 
          // tabPageMR
          // 
          this.tabPageMR.Controls.Add(this.splitContainer1);
@@ -966,266 +1268,6 @@ namespace mrHelper.App.Forms
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
-         // 
-         // tabPageLive
-         // 
-         this.tabPageLive.Controls.Add(this.groupBoxSelectMergeRequest);
-         this.tabPageLive.Location = new System.Drawing.Point(4, 22);
-         this.tabPageLive.Name = "tabPageLive";
-         this.tabPageLive.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageLive.Size = new System.Drawing.Size(328, 832);
-         this.tabPageLive.TabIndex = 0;
-         this.tabPageLive.Text = "Live";
-         this.toolTip.SetToolTip(this.tabPageLive, "List of open merge requests (updates automatically)");
-         this.tabPageLive.UseVisualStyleBackColor = true;
-         // 
-         // groupBoxSelectMergeRequest
-         // 
-         this.groupBoxSelectMergeRequest.Controls.Add(this.buttonReloadList);
-         this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxDisplayFilter);
-         this.groupBoxSelectMergeRequest.Controls.Add(this.listViewMergeRequests);
-         this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxDisplayFilter);
-         this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
-         this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
-         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(322, 826);
-         this.groupBoxSelectMergeRequest.TabIndex = 1;
-         this.groupBoxSelectMergeRequest.TabStop = false;
-         this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
-         // 
-         // listViewMergeRequests
-         // 
-         this.listViewMergeRequests.AllowColumnReorder = true;
-         this.listViewMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.listViewMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderIId,
-            this.columnHeaderAuthor,
-            this.columnHeaderTitle,
-            this.columnHeaderLabels,
-            this.columnHeaderSize,
-            this.columnHeaderJira,
-            this.columnHeaderTotalTime,
-            this.columnHeaderResolved,
-            this.columnHeaderSourceBranch,
-            this.columnHeaderTargetBranch});
-         this.listViewMergeRequests.FullRowSelect = true;
-         this.listViewMergeRequests.GridLines = true;
-         this.listViewMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-         this.listViewMergeRequests.HideSelection = false;
-         this.listViewMergeRequests.Location = new System.Drawing.Point(3, 46);
-         this.listViewMergeRequests.MultiSelect = false;
-         this.listViewMergeRequests.Name = "listViewMergeRequests";
-         this.listViewMergeRequests.OwnerDraw = true;
-         this.listViewMergeRequests.Size = new System.Drawing.Size(316, 777);
-         this.listViewMergeRequests.TabIndex = 3;
-         this.listViewMergeRequests.UseCompatibleStateImageBehavior = false;
-         this.listViewMergeRequests.View = System.Windows.Forms.View.Details;
-         this.listViewMergeRequests.ColumnReordered += new System.Windows.Forms.ColumnReorderedEventHandler(this.listViewMergeRequests_ColumnReordered);
-         this.listViewMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
-         this.listViewMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
-         this.listViewMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
-         this.listViewMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.ListViewMergeRequests_ItemSelectionChanged);
-         this.listViewMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseDown);
-         this.listViewMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseMove);
-         // 
-         // columnHeaderIId
-         // 
-         this.columnHeaderIId.Tag = "IId";
-         this.columnHeaderIId.Text = "IId";
-         this.columnHeaderIId.Width = 40;
-         // 
-         // columnHeaderAuthor
-         // 
-         this.columnHeaderAuthor.Tag = "Author";
-         this.columnHeaderAuthor.Text = "Author";
-         this.columnHeaderAuthor.Width = 110;
-         // 
-         // columnHeaderTitle
-         // 
-         this.columnHeaderTitle.Tag = "Title";
-         this.columnHeaderTitle.Text = "Title";
-         this.columnHeaderTitle.Width = 400;
-         // 
-         // columnHeaderLabels
-         // 
-         this.columnHeaderLabels.Tag = "Labels";
-         this.columnHeaderLabels.Text = "Labels";
-         this.columnHeaderLabels.Width = 180;
-         // 
-         // columnHeaderSize
-         // 
-         this.columnHeaderSize.Tag = "Size";
-         this.columnHeaderSize.Text = "Size";
-         this.columnHeaderSize.Width = 100;
-         // 
-         // columnHeaderJira
-         // 
-         this.columnHeaderJira.Tag = "Jira";
-         this.columnHeaderJira.Text = "Jira";
-         this.columnHeaderJira.Width = 80;
-         // 
-         // columnHeaderTotalTime
-         // 
-         this.columnHeaderTotalTime.Tag = "TotalTime";
-         this.columnHeaderTotalTime.Text = "Total Time";
-         this.columnHeaderTotalTime.Width = 70;
-         // 
-         // columnHeaderResolved
-         // 
-         this.columnHeaderResolved.Tag = "Resolved";
-         this.columnHeaderResolved.Text = "Resolved";
-         this.columnHeaderResolved.Width = 65;
-         // 
-         // columnHeaderSourceBranch
-         // 
-         this.columnHeaderSourceBranch.Tag = "SourceBranch";
-         this.columnHeaderSourceBranch.Text = "Source Branch";
-         this.columnHeaderSourceBranch.Width = 100;
-         // 
-         // columnHeaderTargetBranch
-         // 
-         this.columnHeaderTargetBranch.Tag = "TargetBranch";
-         this.columnHeaderTargetBranch.Text = "Target Branch";
-         this.columnHeaderTargetBranch.Width = 100;
-         // 
-         // checkBoxDisplayFilter
-         // 
-         this.checkBoxDisplayFilter.AutoSize = true;
-         this.checkBoxDisplayFilter.Enabled = false;
-         this.checkBoxDisplayFilter.Location = new System.Drawing.Point(6, 19);
-         this.checkBoxDisplayFilter.MinimumSize = new System.Drawing.Size(48, 0);
-         this.checkBoxDisplayFilter.Name = "checkBoxDisplayFilter";
-         this.checkBoxDisplayFilter.Size = new System.Drawing.Size(48, 17);
-         this.checkBoxDisplayFilter.TabIndex = 0;
-         this.checkBoxDisplayFilter.Text = "Filter";
-         this.checkBoxDisplayFilter.UseVisualStyleBackColor = true;
-         this.checkBoxDisplayFilter.CheckedChanged += new System.EventHandler(this.CheckBoxDisplayFilter_CheckedChanged);
-         // 
-         // tabPageSearch
-         // 
-         this.tabPageSearch.Controls.Add(this.groupBoxSearch);
-         this.tabPageSearch.Location = new System.Drawing.Point(4, 22);
-         this.tabPageSearch.Name = "tabPageSearch";
-         this.tabPageSearch.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSearch.Size = new System.Drawing.Size(328, 832);
-         this.tabPageSearch.TabIndex = 1;
-         this.tabPageSearch.Text = "Search";
-         this.toolTip.SetToolTip(this.tabPageSearch, "Use this mode to search closed merge requests");
-         this.tabPageSearch.UseVisualStyleBackColor = true;
-         // 
-         // groupBoxSearch
-         // 
-         this.groupBoxSearch.Controls.Add(this.radioButtonSearchByTargetBranch);
-         this.groupBoxSearch.Controls.Add(this.radioButtonSearchByTitleAndDescription);
-         this.groupBoxSearch.Controls.Add(this.textBoxSearch);
-         this.groupBoxSearch.Controls.Add(this.listViewFoundMergeRequests);
-         this.groupBoxSearch.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxSearch.Location = new System.Drawing.Point(3, 3);
-         this.groupBoxSearch.Name = "groupBoxSearch";
-         this.groupBoxSearch.Size = new System.Drawing.Size(322, 826);
-         this.groupBoxSearch.TabIndex = 2;
-         this.groupBoxSearch.TabStop = false;
-         this.groupBoxSearch.Text = "Search Merge";
-         // 
-         // radioButtonSearchByTargetBranch
-         // 
-         this.radioButtonSearchByTargetBranch.AutoSize = true;
-         this.radioButtonSearchByTargetBranch.Location = new System.Drawing.Point(212, 19);
-         this.radioButtonSearchByTargetBranch.Name = "radioButtonSearchByTargetBranch";
-         this.radioButtonSearchByTargetBranch.Size = new System.Drawing.Size(107, 17);
-         this.radioButtonSearchByTargetBranch.TabIndex = 5;
-         this.radioButtonSearchByTargetBranch.Text = "by Target Branch";
-         this.radioButtonSearchByTargetBranch.UseVisualStyleBackColor = true;
-         // 
-         // radioButtonSearchByTitleAndDescription
-         // 
-         this.radioButtonSearchByTitleAndDescription.AutoSize = true;
-         this.radioButtonSearchByTitleAndDescription.Checked = true;
-         this.radioButtonSearchByTitleAndDescription.Location = new System.Drawing.Point(3, 19);
-         this.radioButtonSearchByTitleAndDescription.Name = "radioButtonSearchByTitleAndDescription";
-         this.radioButtonSearchByTitleAndDescription.Size = new System.Drawing.Size(136, 17);
-         this.radioButtonSearchByTitleAndDescription.TabIndex = 4;
-         this.radioButtonSearchByTitleAndDescription.TabStop = true;
-         this.radioButtonSearchByTitleAndDescription.Text = "by Title and Description";
-         this.radioButtonSearchByTitleAndDescription.UseVisualStyleBackColor = true;
-         // 
-         // listViewFoundMergeRequests
-         // 
-         this.listViewFoundMergeRequests.AllowColumnReorder = true;
-         this.listViewFoundMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.listViewFoundMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderFoundIId,
-            this.columnHeaderFoundState,
-            this.columnHeaderFoundAuthor,
-            this.columnHeaderFoundTitle,
-            this.columnHeaderFoundJira,
-            this.columnHeaderFoundSourceBranch,
-            this.columnHeaderFoundTargetBranch});
-         this.listViewFoundMergeRequests.FullRowSelect = true;
-         this.listViewFoundMergeRequests.GridLines = true;
-         this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-         this.listViewFoundMergeRequests.HideSelection = false;
-         this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 68);
-         this.listViewFoundMergeRequests.MultiSelect = false;
-         this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
-         this.listViewFoundMergeRequests.OwnerDraw = true;
-         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(316, 755);
-         this.listViewFoundMergeRequests.TabIndex = 3;
-         this.listViewFoundMergeRequests.UseCompatibleStateImageBehavior = false;
-         this.listViewFoundMergeRequests.View = System.Windows.Forms.View.Details;
-         this.listViewFoundMergeRequests.ColumnReordered += new System.Windows.Forms.ColumnReorderedEventHandler(this.listViewMergeRequests_ColumnReordered);
-         this.listViewFoundMergeRequests.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.listViewMergeRequests_ColumnWidthChanged);
-         this.listViewFoundMergeRequests.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.ListViewMergeRequests_DrawColumnHeader);
-         this.listViewFoundMergeRequests.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.ListViewMergeRequests_DrawSubItem);
-         this.listViewFoundMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.ListViewMergeRequests_ItemSelectionChanged);
-         this.listViewFoundMergeRequests.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseDown);
-         this.listViewFoundMergeRequests.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ListViewMergeRequests_MouseMove);
-         // 
-         // columnHeaderFoundIId
-         // 
-         this.columnHeaderFoundIId.Tag = "IId";
-         this.columnHeaderFoundIId.Text = "IId";
-         this.columnHeaderFoundIId.Width = 40;
-         // 
-         // columnHeaderFoundState
-         // 
-         this.columnHeaderFoundState.Tag = "State";
-         this.columnHeaderFoundState.Text = "State";
-         this.columnHeaderFoundState.Width = 80;
-         // 
-         // columnHeaderFoundAuthor
-         // 
-         this.columnHeaderFoundAuthor.Tag = "Author";
-         this.columnHeaderFoundAuthor.Text = "Author";
-         this.columnHeaderFoundAuthor.Width = 110;
-         // 
-         // columnHeaderFoundTitle
-         // 
-         this.columnHeaderFoundTitle.Tag = "Title";
-         this.columnHeaderFoundTitle.Text = "Title";
-         this.columnHeaderFoundTitle.Width = 400;
-         // 
-         // columnHeaderFoundJira
-         // 
-         this.columnHeaderFoundJira.Tag = "Jira";
-         this.columnHeaderFoundJira.Text = "Jira";
-         this.columnHeaderFoundJira.Width = 80;
-         // 
-         // columnHeaderFoundSourceBranch
-         // 
-         this.columnHeaderFoundSourceBranch.Tag = "SourceBranch";
-         this.columnHeaderFoundSourceBranch.Text = "Source Branch";
-         this.columnHeaderFoundSourceBranch.Width = 100;
-         // 
-         // columnHeaderFoundTargetBranch
-         // 
-         this.columnHeaderFoundTargetBranch.Tag = "TargetBranch";
-         this.columnHeaderFoundTargetBranch.Text = "Target Branch";
-         this.columnHeaderFoundTargetBranch.Width = 100;
          // 
          // splitContainer2
          // 
@@ -1342,19 +1384,6 @@ namespace mrHelper.App.Forms
          this.panelStatusBar.Size = new System.Drawing.Size(926, 52);
          this.panelStatusBar.TabIndex = 10;
          // 
-         // linkLabelAbortGit
-         // 
-         this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(887, 31);
-         this.linkLabelAbortGit.Name = "linkLabelAbortGit";
-         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 15);
-         this.linkLabelAbortGit.TabIndex = 15;
-         this.linkLabelAbortGit.TabStop = true;
-         this.linkLabelAbortGit.Text = "Abort";
-         this.toolTip.SetToolTip(this.linkLabelAbortGit, "Abort current git operation");
-         this.linkLabelAbortGit.Visible = false;
-         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
-         // 
          // labelGitStatus
          // 
          this.labelGitStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -1441,33 +1470,6 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingMergeRequestName.TabIndex = 5;
          this.labelTimeTrackingMergeRequestName.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
          this.labelTimeTrackingMergeRequestName.Visible = false;
-         // 
-         // buttonTimeTrackingCancel
-         // 
-         this.buttonTimeTrackingCancel.ConfirmationText = "All changes will be lost, are you sure?";
-         this.buttonTimeTrackingCancel.Enabled = false;
-         this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
-         this.buttonTimeTrackingCancel.MinimumSize = new System.Drawing.Size(96, 0);
-         this.buttonTimeTrackingCancel.Name = "buttonTimeTrackingCancel";
-         this.buttonTimeTrackingCancel.Size = new System.Drawing.Size(96, 32);
-         this.buttonTimeTrackingCancel.TabIndex = 12;
-         this.buttonTimeTrackingCancel.Text = "Cancel";
-         this.toolTip.SetToolTip(this.buttonTimeTrackingCancel, "Discard tracked time");
-         this.buttonTimeTrackingCancel.UseVisualStyleBackColor = true;
-         this.buttonTimeTrackingCancel.Click += new System.EventHandler(this.ButtonTimeTrackingCancel_Click);
-         // 
-         // buttonTimeTrackingStart
-         // 
-         this.buttonTimeTrackingStart.Enabled = false;
-         this.buttonTimeTrackingStart.Location = new System.Drawing.Point(6, 19);
-         this.buttonTimeTrackingStart.MinimumSize = new System.Drawing.Size(96, 0);
-         this.buttonTimeTrackingStart.Name = "buttonTimeTrackingStart";
-         this.buttonTimeTrackingStart.Size = new System.Drawing.Size(96, 32);
-         this.buttonTimeTrackingStart.TabIndex = 11;
-         this.buttonTimeTrackingStart.Text = "Start Timer";
-         this.toolTip.SetToolTip(this.buttonTimeTrackingStart, "Start/stop tracking time for the selected merge request");
-         this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
-         this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
          // 
          // groupBoxReview
          // 
@@ -1574,6 +1576,12 @@ namespace mrHelper.App.Forms
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
          this.Load += new System.EventHandler(this.MainForm_Load);
          this.groupBoxKnownHosts.ResumeLayout(false);
+         this.tabPageLive.ResumeLayout(false);
+         this.groupBoxSelectMergeRequest.ResumeLayout(false);
+         this.groupBoxSelectMergeRequest.PerformLayout();
+         this.tabPageSearch.ResumeLayout(false);
+         this.groupBoxSearch.ResumeLayout(false);
+         this.groupBoxSearch.PerformLayout();
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);
          this.tabPageSettings.ResumeLayout(false);
@@ -1591,12 +1599,6 @@ namespace mrHelper.App.Forms
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
          this.splitContainer1.ResumeLayout(false);
          this.tabControlMode.ResumeLayout(false);
-         this.tabPageLive.ResumeLayout(false);
-         this.groupBoxSelectMergeRequest.ResumeLayout(false);
-         this.groupBoxSelectMergeRequest.PerformLayout();
-         this.tabPageSearch.ResumeLayout(false);
-         this.groupBoxSearch.ResumeLayout(false);
-         this.groupBoxSearch.PerformLayout();
          this.splitContainer2.Panel1.ResumeLayout(false);
          this.splitContainer2.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();

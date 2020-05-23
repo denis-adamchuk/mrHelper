@@ -88,7 +88,8 @@ namespace mrHelper.Client.Common
 
       public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? _)
       {
-         IEnumerable<MergeRequest> byLabel = await loadByLabel(gl, Constants.GitLabLabelPrefix + _username);
+         string lowercaseLabel = Constants.GitLabLabelPrefix + _username.ToLower();
+         IEnumerable<MergeRequest> byLabel = await loadByLabel(gl, lowercaseLabel);
          IEnumerable<MergeRequest> byAuthor = await loadByAuthor(gl, _username);
          return byLabel
             .Concat(byAuthor)

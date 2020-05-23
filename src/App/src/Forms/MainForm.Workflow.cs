@@ -321,7 +321,7 @@ namespace mrHelper.App.Forms
          {
             foreach (string keyword in filter.Keywords)
             {
-               string adjustedKeyword = keyword.ToLower();
+               string adjustedKeyword = keyword;
                if (keyword.StartsWith(Constants.GitLabLabelPrefix) || keyword.StartsWith(Constants.AuthorLabelPrefix))
                {
                   adjustedKeyword = keyword.Substring(1);
@@ -330,7 +330,7 @@ namespace mrHelper.App.Forms
                   SearchUserByNameAsync(hostname, adjustedKeyword, true);
                if (user != null)
                {
-                  labels.Add(new Tuple<string, bool>(adjustedKeyword, true));
+                  labels.Add(new Tuple<string, bool>(user.Username, true));
                   migratedLabels |= true;
                }
             }
@@ -339,10 +339,9 @@ namespace mrHelper.App.Forms
          User currentUser = await _gitlabClientManager.SearchManager.GetCurrentUserAsync(hostname);
          if (currentUser != null)
          {
-            string currentUsername = currentUser.Username.ToLower();
-            if (!labels.Any(x => x.Item1 == currentUsername))
+            if (!labels.Any(x => x.Item1 == currentUser.Username))
             {
-               labels.Add(new Tuple<string, bool>(currentUsername, true));
+               labels.Add(new Tuple<string, bool>(currentUser.Username, true));
             }
          }
          ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);

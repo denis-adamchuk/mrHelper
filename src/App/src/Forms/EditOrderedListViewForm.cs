@@ -1,6 +1,4 @@
-﻿using GitLabSharp.Entities;
-using mrHelper.Client.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -12,7 +10,7 @@ namespace mrHelper.App.Forms
 {
    public interface IEditOrderedListViewCallback
    {
-      Task<bool> CanAddItem(string item, IEnumerable<string> currentItems);
+      Task<string> CanAddItem(string item, IEnumerable<string> currentItems);
    }
 
    public partial class EditOrderedListViewForm : CustomFontForm
@@ -130,10 +128,11 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            if (await _callback.CanAddItem(form.Item,
-                  listView.Items.Cast<ListViewItem>().Select(x => x.Text)))
+            string itemToBeAdded = await _callback.CanAddItem(form.Item,
+                  listView.Items.Cast<ListViewItem>().Select(x => x.Text));
+            if (itemToBeAdded != null)
             {
-               addListViewItem(new Tuple<string, bool>(form.Item, true));
+               addListViewItem(new Tuple<string, bool>(itemToBeAdded, true));
             }
          }
       }

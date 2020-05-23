@@ -494,6 +494,12 @@ namespace mrHelper.App.Forms
          openBrowser((sender as LinkLabel).Text);
       }
 
+      private void listViewKnownHosts_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         bool enableRemoveButton = listViewKnownHosts.SelectedItems.Count > 0;
+         buttonRemoveKnownHost.Enabled = enableRemoveButton;
+      }
+
       async private void ButtonAddKnownHost_Click(object sender, EventArgs e)
       {
          using (AddKnownHostForm form = new AddKnownHostForm())
@@ -503,7 +509,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            string hostname = StringUtils.GetHostWithPrefix(form.Host);
+            string hostname = StringUtils.GetHostWithPrefix(form.Host).ToLower();
             if (!addKnownHost(hostname, form.AccessToken))
             {
                MessageBox.Show("Such host is already in the list", "Host will not be added",

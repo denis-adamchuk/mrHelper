@@ -16,13 +16,13 @@ namespace mrHelper.App.Forms.Helpers
          _searchManager = searchManager;
       }
 
-      public async Task<bool> CanAddItem(string item, IEnumerable<string> currentItems)
+      public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
       {
          if (item.Count(x => x == '/') != 1)
          {
             MessageBox.Show("Wrong format of project name. It should include a group name too.",
                "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return null;
          }
 
          int slashIndex = item.IndexOf('/');
@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms.Helpers
             {
                MessageBox.Show("Project name has a space and looks like a name of a user but there is no such user",
                   "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               return false;
+               return null;
             }
 
             item = user.Username + item.Substring(slashIndex);
@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms.Helpers
          {
             MessageBox.Show(String.Format("Project {0} is already in the list", item),
                "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return null;
          }
 
          Project project = await _searchManager.SearchProjectAsync(_hostname, item);
@@ -51,10 +51,10 @@ namespace mrHelper.App.Forms.Helpers
          {
             MessageBox.Show(String.Format("There is no project {0} at {1}", item, _hostname),
                "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return null;
          }
 
-         return true;
+         return project.Path_With_Namespace;
       }
 
       private readonly string _hostname;
