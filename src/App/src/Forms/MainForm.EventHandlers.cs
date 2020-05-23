@@ -1,7 +1,5 @@
 using System;
-using System.Timers;
 using System.Drawing;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -11,6 +9,7 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.Client.Types;
+using mrHelper.Client.Common;
 using mrHelper.Client.Session;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Tools;
@@ -510,6 +509,19 @@ namespace mrHelper.App.Forms
             }
 
             string hostname = StringUtils.GetHostWithPrefix(form.Host).ToLower();
+            GitLabClientManager.EConnectionCheckStatus status =
+               await _gitlabClientManager.VerifyConnection(hostname, form.AccessToken);
+            if (status != GitLabClientManager.EConnectionCheckStatus.OK)
+            {
+               string message =
+                  status == GitLabClientManager.EConnectionCheckStatus.BadAccessToken
+                     ? "Bad access token"
+                     : "Invalid hostname";
+               MessageBox.Show(message, "Cannot connect to the host",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return;
+            }
+
             if (!addKnownHost(hostname, form.AccessToken))
             {
                MessageBox.Show("Such host is already in the list", "Host will not be added",
