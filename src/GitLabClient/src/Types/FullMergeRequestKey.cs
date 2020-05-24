@@ -25,14 +25,17 @@ namespace mrHelper.Client.Types
       {
          return ProjectKey.Equals(other.ProjectKey)
             && ((MergeRequest == null && other.MergeRequest == null)
-               || (MergeRequest.IId == other.MergeRequest.IId));
+               || (MergeRequest != null && other.MergeRequest != null && MergeRequest.IId == other.MergeRequest.IId));
       }
 
       public override int GetHashCode()
       {
          int hashCode = 1485227685;
          hashCode = hashCode * -1521134295 + ProjectKey.GetHashCode();
-         hashCode = hashCode * -1521134295 + MergeRequest?.IId.GetHashCode() ?? 0;
+         if (MergeRequest != null)
+         {
+            hashCode = hashCode * -1521134295 + MergeRequest.IId.GetHashCode();
+         }
          return hashCode;
       }
    }

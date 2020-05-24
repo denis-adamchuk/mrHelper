@@ -442,7 +442,7 @@ namespace mrHelper.App.Forms
             ConfigurationHelper.GetProjectsForHost(projectKey.HostName, Program.Settings);
          IEnumerable<Tuple<string, bool>> enabled =
             projects.Where(x => projectKey.MatchProject(x.Item1));
-         return enabled != null && enabled.Any() ? enabled.First().Item2 : false;
+         return enabled.Any() ? enabled.First().Item2 : false;
       }
    }
 }
