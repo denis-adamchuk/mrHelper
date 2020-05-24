@@ -122,6 +122,7 @@ namespace mrHelper.App.Forms
          }
 
          List<string> newKnownHosts = new List<string>();
+         List<string> newAccessTokens = new List<string>();
          for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
@@ -129,10 +130,14 @@ namespace mrHelper.App.Forms
             string accessToken = Program.Settings.KnownAccessTokens.Length > iKnownHost
                ? Program.Settings.KnownAccessTokens[iKnownHost]
                : String.Empty;
-            addKnownHost(host, accessToken);
-            newKnownHosts.Add(host);
+            if (addKnownHost(host, accessToken))
+            {
+               newKnownHosts.Add(host);
+               newAccessTokens.Add(accessToken);
+            }
          }
          Program.Settings.KnownHosts = newKnownHosts.ToArray();
+         Program.Settings.KnownAccessTokens = newAccessTokens.ToArray();
 
          if (Program.Settings.ColorSchemeFileName == String.Empty)
          {

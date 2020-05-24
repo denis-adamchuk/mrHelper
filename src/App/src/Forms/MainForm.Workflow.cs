@@ -324,7 +324,10 @@ namespace mrHelper.App.Forms
             Project p = await _gitlabClientManager.SearchManager.SearchProjectAsync(hostname, project.Item1);
             if (p != null)
             {
-               upgraded.Add(new Tuple<string, bool>(p.Path_With_Namespace, project.Item2));
+               if (!upgraded.Any(x => x.Item1 == p.Path_With_Namespace))
+               {
+                  upgraded.Add(new Tuple<string, bool>(p.Path_With_Namespace, project.Item2));
+               }
             }
          }
          ConfigurationHelper.SetProjectsForHost(hostname, upgraded, Program.Settings);
@@ -357,8 +360,11 @@ namespace mrHelper.App.Forms
                   SearchUserByNameAsync(hostname, adjustedKeyword, true);
                if (user != null)
                {
-                  labels.Add(new Tuple<string, bool>(user.Username, true));
-                  migratedLabels |= true;
+                  if (!labels.Any(x => x.Item1 == user.Username))
+                  {
+                     labels.Add(new Tuple<string, bool>(user.Username, true));
+                     migratedLabels |= true;
+                  }
                }
             }
          }
