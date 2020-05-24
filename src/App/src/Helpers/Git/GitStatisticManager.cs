@@ -97,7 +97,12 @@ namespace mrHelper.App.Helpers
 
       async private Task updateGitStatistic(ILocalGitRepository repo)
       {
-         Debug.Assert(isConnected(repo));
+         if (!isConnected(repo))
+         {
+            // LocalGitRepository might be removed from collection after this update was scheduled
+            return;
+         }
+
          if (repo.Data == null || repo.ExpectingClone)
          {
             Trace.TraceWarning(String.Format(

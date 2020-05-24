@@ -291,19 +291,24 @@ namespace mrHelper.App.Forms
          }
          labelWorkflowStatus.Text = String.Empty;
 
-         if (mrk.ProjectKey.HostName != getHostName() && !await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
+         bool changeHost = mrk.ProjectKey.HostName != getHostName();
+         if (changeHost && !await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
          {
             return;
          }
 
-         bool canOpenAtLiveTab = (mergeRequest.State == "opened") && checkIfCanOpenAtLiveTab(mrk, true);
-         if (!canOpenAtLiveTab || !await openUrlAtLiveTab(mrk, url))
+         bool canOpenAtLiveTab =
+               // TODO - Opened/WIP should be kept in _liveSesion context and checked here and inside Session
+               (mergeRequest.State == "opened")
+            && (mergeRequest.Work_In_Progress)
+            && checkIfCanOpenAtLiveTab(mrk, true);
+         if (!canOpenAtLiveTab || !await openUrlAtLiveTab(mrk, url, !changeHost))
          {
             await openUrlAtSearchTab(mrk, url);
          }
       }
 
-      async private Task<bool> openUrlAtLiveTab(MergeRequestKey mrk, string url)
+      async private Task<bool> openUrlAtLiveTab(MergeRequestKey mrk, string url, bool updateIfNeeded)
       {
          ISession session = getSession(true);
          if (session == null)
@@ -316,7 +321,7 @@ namespace mrHelper.App.Forms
          {
             // We need to restart the workflow here because we possibly have an outdated list
             // of merge requests in the cache
-            if (!await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
+            if (!updateIfNeeded || !await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
             {
                return false; // could not restart workflow
             }

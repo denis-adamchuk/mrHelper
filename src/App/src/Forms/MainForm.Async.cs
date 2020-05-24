@@ -448,7 +448,11 @@ namespace mrHelper.App.Forms
             // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
             IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
                GetLocalBasedContextProvider(projectKey);
-            await repo.Updater.SilentUpdate(contextProvider);
+            if (contextProvider != null)
+            {
+               // contextProvider can be null if session was dropped after this update was scheduled
+               await repo.Updater.SilentUpdate(contextProvider);
+            }
          }
       }
 

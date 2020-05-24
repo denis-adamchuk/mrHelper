@@ -89,6 +89,12 @@ namespace mrHelper.App.Helpers
       async private Task updateGitDataAsync(ILocalGitRepository repo)
       {
          Debug.Assert(isConsistentState(repo));
+         if (!isConnected(repo))
+         {
+            // LocalGitRepository might be removed from collection after this update was scheduled
+            return;
+         }
+
          if (repo.Data == null || repo.ExpectingClone)
          {
             Debug.WriteLine(String.Format(
