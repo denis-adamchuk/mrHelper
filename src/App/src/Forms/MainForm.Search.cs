@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
          _suppressExternalConnections = false;
          if (isSearchMode())
          {
-            selectMergeRequest(listViewFoundMergeRequests, String.Empty, 0, false);
+            selectMergeRequest(listViewFoundMergeRequests, new Nullable<MergeRequestKey>(), false);
          }
       }
 

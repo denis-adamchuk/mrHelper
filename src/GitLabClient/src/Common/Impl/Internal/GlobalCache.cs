@@ -12,7 +12,7 @@ namespace mrHelper.Client.Common
       {
          if (_users.TryGetValue(hostname, out HashSet<User> users))
          {
-            return users.SingleOrDefault(x => 0 == String.Compare(x.Username, username, true));
+            return users.SingleOrDefault(x => x.Username == username);
          }
          return null;
       }

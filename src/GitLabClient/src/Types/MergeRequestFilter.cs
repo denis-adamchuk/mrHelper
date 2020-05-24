@@ -3,10 +3,11 @@ using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using System.Collections.Generic;
 
 namespace mrHelper.Client.Types
 {
-   public struct MergeRequestFilterState
+   public struct MergeRequestFilterState : IEquatable<MergeRequestFilterState>
    {
       public MergeRequestFilterState(string[] keywords, bool enabled)
       {
@@ -16,6 +17,25 @@ namespace mrHelper.Client.Types
 
       public string[] Keywords { get; }
       public bool Enabled { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is MergeRequestFilterState state && Equals(state);
+      }
+
+      public bool Equals(MergeRequestFilterState other)
+      {
+         return EqualityComparer<string[]>.Default.Equals(Keywords, other.Keywords) &&
+                Enabled == other.Enabled;
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = 1563885307;
+         hashCode = hashCode * -1521134295 + EqualityComparer<string[]>.Default.GetHashCode(Keywords);
+         hashCode = hashCode * -1521134295 + Enabled.GetHashCode();
+         return hashCode;
+      }
    }
 
    public class MergeRequestFilter : IMergeRequestFilterChecker

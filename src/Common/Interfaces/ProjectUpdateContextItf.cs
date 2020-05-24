@@ -16,6 +16,21 @@ namespace mrHelper.Common.Interfaces
 
       public DateTime LatestChange { get; }
       public IEnumerable<string> Sha { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is FullUpdateContext context &&
+                LatestChange == context.LatestChange &&
+                EqualityComparer<IEnumerable<string>>.Default.Equals(Sha, context.Sha);
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -2039341489;
+         hashCode = hashCode * -1521134295 + LatestChange.GetHashCode();
+         hashCode = hashCode * -1521134295 + EqualityComparer<IEnumerable<string>>.Default.GetHashCode(Sha);
+         return hashCode;
+      }
    }
 
    public class PartialUpdateContext : IProjectUpdateContext
@@ -26,6 +41,17 @@ namespace mrHelper.Common.Interfaces
       }
 
       public IEnumerable<string> Sha { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is PartialUpdateContext context &&
+                EqualityComparer<IEnumerable<string>>.Default.Equals(Sha, context.Sha);
+      }
+
+      public override int GetHashCode()
+      {
+         return -1761058603 + EqualityComparer<IEnumerable<string>>.Default.GetHashCode(Sha);
+      }
    }
 
    public interface IProjectUpdateContextProvider

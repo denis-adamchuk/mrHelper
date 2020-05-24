@@ -39,17 +39,17 @@ namespace mrHelper.App.Forms.Helpers
             item = user.Username + item.Substring(slashIndex);
          }
 
-         if (currentItems.Any(x => 0 == String.Compare(x, item, true)))
-         {
-            MessageBox.Show(String.Format("Project {0} is already in the list", item),
-               "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return null;
-         }
-
          Project project = await _searchManager.SearchProjectAsync(_hostname, item);
          if (project == null)
          {
             MessageBox.Show(String.Format("There is no project {0} at {1}", item, _hostname),
+               "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return null;
+         }
+
+         if (currentItems.Any(x => x == project.Path_With_Namespace))
+         {
+            MessageBox.Show(String.Format("Project {0} is already in the list", item),
                "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
          }

@@ -117,7 +117,7 @@ namespace mrHelper.Client.Discussions
 
          try
          {
-            await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
+            await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, newDiscussionParameters);
          }
          catch (OperatorException ex)
          {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -26,6 +27,25 @@ namespace mrHelper.Core.Matching
       {
          return String.Format("\nLeftFileName: {0}\nRightFileName: {1}\nLineNumber: {2}\nIsLeftSideLineNumber: {3}",
             LeftFileName, RightFileName, LineNumber, IsLeftSideLineNumber);
+      }
+
+      public override bool Equals(object obj)
+      {
+         return obj is MatchInfo info &&
+                LeftFileName == info.LeftFileName &&
+                RightFileName == info.RightFileName &&
+                LineNumber == info.LineNumber &&
+                IsLeftSideLineNumber == info.IsLeftSideLineNumber;
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -1644089817;
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LeftFileName);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightFileName);
+         hashCode = hashCode * -1521134295 + LineNumber.GetHashCode();
+         hashCode = hashCode * -1521134295 + IsLeftSideLineNumber.GetHashCode();
+         return hashCode;
       }
 
       public string LeftFileName { get; }

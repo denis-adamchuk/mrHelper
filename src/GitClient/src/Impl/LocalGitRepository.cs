@@ -64,7 +64,9 @@ namespace mrHelper.GitClient
          }
 
          // PathFinder must guarantee the following
-         Debug.Assert(isEmptyFolder(Path) || GitTools.GetRepositoryProjectKey(Path).Equals(projectKey));
+         Debug.Assert(isEmptyFolder(Path)
+            || (GitTools.GetRepositoryProjectKey(Path).HasValue
+               && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
 

@@ -14,6 +14,11 @@ namespace mrHelper.Common.Interfaces
       public string HostName { get; }
       public string ProjectName { get; }
 
+      public bool MatchProject(string projectname)
+      {
+         return isEqualProject(projectname);
+      }
+
       public override bool Equals(object obj)
       {
          return obj is ProjectKey key && Equals(key);
@@ -21,8 +26,12 @@ namespace mrHelper.Common.Interfaces
 
       public bool Equals(ProjectKey other)
       {
-      return 0 == String.Compare(HostName, other.HostName, true)
-          && 0 == String.Compare(ProjectName, other.ProjectName, true);
+         return HostName == other.HostName && isEqualProject(other.ProjectName);
+      }
+
+      private bool isEqualProject(string projectname)
+      {
+         return ProjectName == projectname;
       }
 
       public override int GetHashCode()

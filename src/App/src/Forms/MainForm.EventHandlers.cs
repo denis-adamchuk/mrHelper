@@ -508,7 +508,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            string hostname = StringUtils.GetHostWithPrefix(form.Host).ToLower();
+            string hostname = StringUtils.GetHostWithPrefix(form.Host);
             GitLabClientManager.EConnectionCheckStatus status =
                await _gitlabClientManager.VerifyConnection(hostname, form.AccessToken);
             if (status != GitLabClientManager.EConnectionCheckStatus.OK)
@@ -1121,7 +1121,7 @@ namespace mrHelper.App.Forms
          string hostname = (string)reader.Get("SelectedHost");
          if (hostname != null)
          {
-            _initialHostName = hostname;
+            _initialHostName = StringUtils.GetHostWithPrefix(hostname);
          }
 
          JObject reviewedCommitsObj = (JObject)reader.Get("ReviewedCommits");
@@ -1169,7 +1169,7 @@ namespace mrHelper.App.Forms
                   string[] splitted = item.Key.Split('|');
                   Debug.Assert(splitted.Length == 2);
 
-                  string hostname2 = splitted[0];
+                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
                   string projectname = splitted[1];
                   int iid = int.Parse((string)item.Value);
                   return new MergeRequestKey(new ProjectKey(hostname2, projectname), iid);

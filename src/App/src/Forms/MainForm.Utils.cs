@@ -179,13 +179,24 @@ namespace mrHelper.App.Forms
          group.Tag = projectKey;
       }
 
-      private bool selectMergeRequest(ListView listView, string projectname, int iid, bool exact)
+      private bool selectMergeRequest(ListView listView, MergeRequestKey? mrk, bool exact)
       {
+         if (!mrk.HasValue)
+         {
+            if (listView.Items.Count < 1)
+            {
+               return false;
+            }
+
+            listView.Items[0].Selected = true;
+            return true;
+         }
+
          foreach (ListViewItem item in listView.Items)
          {
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
-            if (projectname == String.Empty ||
-                (iid == key.MergeRequest.IId && projectname == key.ProjectKey.ProjectName))
+            if (mrk.Value.ProjectKey.Equals(key.ProjectKey)
+             && mrk.Value.IId == key.MergeRequest.IId)
             {
                item.Selected = true;
                return true;
@@ -200,7 +211,7 @@ namespace mrHelper.App.Forms
          // selected an item from the proper group
          foreach (ListViewGroup group in listView.Groups)
          {
-            if (projectname == group.Name && group.Items.Count > 0)
+            if (mrk.Value.ProjectKey.MatchProject(group.Name) && group.Items.Count > 0)
             {
                group.Items[0].Selected = true;
                return true;
@@ -1262,8 +1273,7 @@ namespace mrHelper.App.Forms
          ListViewItem selected = listViewMergeRequests.SelectedItems[0];
          FullMergeRequestKey fmk = (FullMergeRequestKey)selected.Tag;
 
-         if (fmk.ProjectKey.Equals(e.FullMergeRequestKey.ProjectKey) &&
-             fmk.MergeRequest.IId == e.FullMergeRequestKey.MergeRequest.IId)
+         if (fmk.Equals(e.FullMergeRequestKey))
          {
             if (e.Details)
             {

@@ -1,6 +1,5 @@
-using mrHelper.Common.Interfaces;
 using System;
-using System.Collections.Generic;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Types
 {

@@ -242,7 +242,7 @@ namespace mrHelper.App.Forms
             if (await startSearchWorkflowAsync(mrk.ProjectKey.HostName,
                   new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null))
             {
-               selectMergeRequest(listViewFoundMergeRequests, mrk.ProjectKey.ProjectName, mrk.IId, true);
+               selectMergeRequest(listViewFoundMergeRequests, mrk, true);
             }
          }
          catch (Exception ex)
@@ -330,7 +330,7 @@ namespace mrHelper.App.Forms
          }
 
          tabControlMode.SelectedTab = tabPageLive;
-         if (!selectMergeRequest(listViewMergeRequests, mrk.ProjectKey.ProjectName, mrk.IId, true))
+         if (!selectMergeRequest(listViewMergeRequests, mrk, true))
          {
             if (!listViewMergeRequests.Enabled)
             {
@@ -349,7 +349,7 @@ namespace mrHelper.App.Forms
                      return false; // user decided to not un-hide merge request
                   }
 
-                  if (!selectMergeRequest(listViewMergeRequests, mrk.ProjectKey.ProjectName, mrk.IId, true))
+                  if (!selectMergeRequest(listViewMergeRequests, mrk, true))
                   {
                      Debug.Assert(false);
                      Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
@@ -414,9 +414,7 @@ namespace mrHelper.App.Forms
 
       private bool isKnownHostInUrl(string hostname, string url)
       {
-         HostComboBoxItem proposedSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().SingleOrDefault(
-            x => x.Host == hostname); // `null` if not found
-         if (proposedSelectedItem == null || String.IsNullOrEmpty(proposedSelectedItem.Host))
+         if (Program.Settings.GetAccessToken(hostname) == String.Empty)
          {
             reportErrorOnConnect(url, String.Format(
                "Cannot connect to host {0} because it is not in the list of known hosts. ", hostname),
@@ -430,14 +428,16 @@ namespace mrHelper.App.Forms
       {
          IEnumerable<Tuple<string, bool>> projects =
             ConfigurationHelper.GetProjectsForHost(projectKey.HostName, Program.Settings);
-         return projects.Any(x => 0 == String.Compare(x.Item1, projectKey.ProjectName, true));
+         return projects.Any(x => projectKey.MatchProject(x.Item1));
       }
 
       private static bool isEnabledProject(ProjectKey projectKey)
       {
          IEnumerable<Tuple<string, bool>> projects =
             ConfigurationHelper.GetProjectsForHost(projectKey.HostName, Program.Settings);
-         return projects.Where(x => 0 == String.Compare(x.Item1, projectKey.ProjectName, true)).First().Item2;
+         IEnumerable<Tuple<string, bool>> enabled =
+            projects.Where(x => projectKey.MatchProject(x.Item1));
+         return enabled != null && enabled.Any() ? enabled.First().Item2 : false;
       }
    }
 }

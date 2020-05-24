@@ -77,11 +77,15 @@ namespace mrHelper.App.Forms
             IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
             context = textContextMaker.GetContext(position, depth);
          }
-         catch (ContextMakingException ex)
+         catch (Exception ex)
          {
-            string errorMessage = "Cannot render HTML context.";
-            ExceptionHandlers.Handle(errorMessage, ex);
-            return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
+            if (ex is ArgumentException || ex is ContextMakingException)
+            {
+               string errorMessage = "Cannot render HTML context.";
+               ExceptionHandlers.Handle(errorMessage, ex);
+               return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
+            }
+            throw;
          }
 
          Debug.Assert(context.HasValue);

@@ -14,7 +14,7 @@ namespace mrHelper.Client.MergeRequests
    /// </summary>
    internal class InternalMergeRequestCacheComparator
    {
-      private struct TwoListDifference<T>
+      private struct TwoListDifference<T> : IEquatable<TwoListDifference<T>>
       {
          public TwoListDifference(List<T> firstOnly, List<T> secondOnly, List<Tuple<T, T>> common)
          {
@@ -26,9 +26,30 @@ namespace mrHelper.Client.MergeRequests
          public List<T> FirstOnly { get; }
          public List<T> SecondOnly { get; }
          public List<Tuple<T, T>> Common { get; }
+
+         public override bool Equals(object obj)
+         {
+            return obj is TwoListDifference<T> difference && Equals(difference);
+         }
+
+         public bool Equals(TwoListDifference<T> other)
+         {
+            return EqualityComparer<List<T>>.Default.Equals(FirstOnly, other.FirstOnly) &&
+                   EqualityComparer<List<T>>.Default.Equals(SecondOnly, other.SecondOnly) &&
+                   EqualityComparer<List<Tuple<T, T>>>.Default.Equals(Common, other.Common);
+         }
+
+         public override int GetHashCode()
+         {
+            int hashCode = 1732896134;
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<T>>.Default.GetHashCode(FirstOnly);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<T>>.Default.GetHashCode(SecondOnly);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<Tuple<T, T>>>.Default.GetHashCode(Common);
+            return hashCode;
+         }
       }
 
-      private struct MergeRequestWithProject
+      private struct MergeRequestWithProject : IEquatable<MergeRequestWithProject>
       {
          public MergeRequestWithProject(MergeRequest mergeRequest, ProjectKey project)
          {
@@ -38,6 +59,25 @@ namespace mrHelper.Client.MergeRequests
 
          public MergeRequest MergeRequest { get; }
          public ProjectKey Project { get; }
+
+         public override bool Equals(object obj)
+         {
+            return obj is MergeRequestWithProject project && Equals(project);
+         }
+
+         public bool Equals(MergeRequestWithProject other)
+         {
+            return EqualityComparer<MergeRequest>.Default.Equals(MergeRequest, other.MergeRequest) &&
+                   Project.Equals(other.Project);
+         }
+
+         public override int GetHashCode()
+         {
+            int hashCode = -1994398954;
+            hashCode = hashCode * -1521134295 + EqualityComparer<MergeRequest>.Default.GetHashCode(MergeRequest);
+            hashCode = hashCode * -1521134295 + Project.GetHashCode();
+            return hashCode;
+         }
       }
 
       /// <summary>

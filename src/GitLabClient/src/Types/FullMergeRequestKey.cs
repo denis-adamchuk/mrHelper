@@ -32,7 +32,7 @@ namespace mrHelper.Client.Types
       {
          int hashCode = 1485227685;
          hashCode = hashCode * -1521134295 + ProjectKey.GetHashCode();
-         hashCode = hashCode * -1521134295 + MergeRequest?.IId ?? 0;
+         hashCode = hashCode * -1521134295 + MergeRequest?.IId.GetHashCode() ?? 0;
          return hashCode;
       }
    }

@@ -8,6 +8,9 @@ namespace mrHelper.GitClient
 {
    public static class LocalGitRepositoryPathFinder
    {
+      /// <summary>
+      /// Returns either a path to empty folder or a path to a folder with already cloned repository
+      /// </summary>
       public static string FindPath(string parentFolder, ProjectKey projectKey)
       {
          Trace.TraceInformation(String.Format(
@@ -40,7 +43,7 @@ namespace mrHelper.GitClient
                continue;
             }
 
-            if (projectAtPath.Equals(projectKey))
+            if (projectAtPath.Value.Equals(projectKey))
             {
                Trace.TraceInformation(String.Format(
                   "[LocalGitRepositoryPathFinder] Found repository at \"{0}\"", repositoryPath));

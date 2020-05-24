@@ -1,5 +1,6 @@
 using mrHelper.Core.Matching;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace mrHelper.App.Interprocess
 {
@@ -40,5 +41,30 @@ namespace mrHelper.App.Interprocess
 
       [JsonProperty]
       public string SessionName { get; protected set; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is Snapshot snapshot &&
+                MergeRequestIId == snapshot.MergeRequestIId &&
+                Host == snapshot.Host &&
+                AccessToken == snapshot.AccessToken &&
+                Project == snapshot.Project &&
+                EqualityComparer<DiffRefs>.Default.Equals(Refs, snapshot.Refs) &&
+                TempFolder == snapshot.TempFolder &&
+                SessionName == snapshot.SessionName;
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -434553603;
+         hashCode = hashCode * -1521134295 + MergeRequestIId.GetHashCode();
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Host);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AccessToken);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Project);
+         hashCode = hashCode * -1521134295 + EqualityComparer<DiffRefs>.Default.GetHashCode(Refs);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TempFolder);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(SessionName);
+         return hashCode;
+      }
    }
 }

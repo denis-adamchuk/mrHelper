@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace mrHelper.Core.Matching
 {
@@ -45,6 +46,27 @@ namespace mrHelper.Core.Matching
       public string LeftLine { get; }
       public string RightLine { get; }
       public DiffRefs Refs { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is DiffPosition position &&
+                LeftPath == position.LeftPath &&
+                RightPath == position.RightPath &&
+                LeftLine == position.LeftLine &&
+                RightLine == position.RightLine &&
+                EqualityComparer<DiffRefs>.Default.Equals(Refs, position.Refs);
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -425429495;
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LeftPath);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightPath);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LeftLine);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightLine);
+         hashCode = hashCode * -1521134295 + EqualityComparer<DiffRefs>.Default.GetHashCode(Refs);
+         return hashCode;
+      }
 
       new public string ToString()
       {

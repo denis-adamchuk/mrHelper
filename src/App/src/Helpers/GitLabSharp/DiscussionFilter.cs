@@ -27,7 +27,7 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Current state of discussion filter
    /// </summary>
-   public struct DiscussionFilterState
+   public struct DiscussionFilterState : IEquatable<DiscussionFilterState>
    {
       public DiscussionFilterState(bool byCurrentUserOnly, bool serviceMessages, bool systemNotes,
          FilterByAnswers byAnswers, FilterByResolution byResolution)
@@ -63,6 +63,31 @@ namespace mrHelper.App.Helpers
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                FilterByResolution.Resolved | FilterByResolution.NotResolved);
          }
+      }
+
+      public override bool Equals(object obj)
+      {
+         return obj is DiscussionFilterState state && Equals(state);
+      }
+
+      public bool Equals(DiscussionFilterState other)
+      {
+         return ByCurrentUserOnly == other.ByCurrentUserOnly &&
+                ServiceMessages == other.ServiceMessages &&
+                SystemNotes == other.SystemNotes &&
+                ByAnswers == other.ByAnswers &&
+                ByResolution == other.ByResolution;
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -858265698;
+         hashCode = hashCode * -1521134295 + ByCurrentUserOnly.GetHashCode();
+         hashCode = hashCode * -1521134295 + ServiceMessages.GetHashCode();
+         hashCode = hashCode * -1521134295 + SystemNotes.GetHashCode();
+         hashCode = hashCode * -1521134295 + ByAnswers.GetHashCode();
+         hashCode = hashCode * -1521134295 + ByResolution.GetHashCode();
+         return hashCode;
       }
    }
 

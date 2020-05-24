@@ -14,7 +14,7 @@ namespace mrHelper.App.Helpers
    /// </summary>
    public static class DictionaryStringHelper
    {
-      public static RawDictionaryString DeserializeRawDictionaryString(string value)
+      public static RawDictionaryString DeserializeRawDictionaryString(string value, bool forceKeyLowerCase)
       {
          RawDictionaryString result = new RawDictionaryString();
 
@@ -33,7 +33,7 @@ namespace mrHelper.App.Helpers
                Debug.Assert(false);
                continue;
             }
-            result.Add(subsplitted[0], subsplitted[1]);
+            result.Add(forceKeyLowerCase ? subsplitted[0].ToLower() : subsplitted[0], subsplitted[1]);
          }
 
          return result;

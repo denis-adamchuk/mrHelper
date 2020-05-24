@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms.Helpers
             return null;
          }
 
-         if (currentItems.Any(x => 0 == String.Compare(x, user.Username, true)))
+         if (currentItems.Any(x => x == user.Username))
          {
             MessageBox.Show(String.Format("User {0} is already in the list", user.Username),
                "User will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);

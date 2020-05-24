@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace mrHelper.Core.Matching
 {
@@ -15,6 +16,21 @@ namespace mrHelper.Core.Matching
 
       public string LeftSHA { get; }
       public string RightSHA { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is DiffRefs refs &&
+                LeftSHA == refs.LeftSHA &&
+                RightSHA == refs.RightSHA;
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = -2045036093;
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LeftSHA);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightSHA);
+         return hashCode;
+      }
 
       new public string ToString()
       {

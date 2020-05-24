@@ -147,6 +147,9 @@ namespace mrHelper.App.Helpers
       private static readonly string SelectedProjectsKeyName      = "SelectedProjects";
       private static readonly string SelectedProjectsDefaultValue = String.Empty;
 
+      private static readonly string SelectedProjectsUpgradedKeyName      = "SelectedProjectsUpgraded";
+      private static readonly bool   SelectedProjectsUpgradedDefaultValue = false;
+
       private static readonly string MainWindowFontSizeNameKeyName       = "MWFontSize";
       private static readonly string MainWindowFontSizeNameDefaultValue  =
          Constants.DefaultMainWindowFontSizeChoice;
@@ -502,7 +505,7 @@ namespace mrHelper.App.Helpers
       private Dictionary<string, int> getStringToIntDictionary(string keyName, string defaultValue,
          int fallbackValue, int errorValue)
       {
-         return DictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue))
+         return DictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue), false)
             .ToDictionary(
                item => item.Key,
                item => int.TryParse(item.Value, out int result) ? result : fallbackValue)
@@ -631,7 +634,7 @@ namespace mrHelper.App.Helpers
          get
          {
             return DictionaryStringHelper.DeserializeRawDictionaryString(
-               getValue(SelectedUsersKeyName, SelectedUsersDefaultValue));
+               getValue(SelectedUsersKeyName, SelectedUsersDefaultValue), true);
          }
          set
          {
@@ -649,12 +652,23 @@ namespace mrHelper.App.Helpers
          get
          {
             return DictionaryStringHelper.DeserializeRawDictionaryString(
-               getValue(SelectedProjectsKeyName, SelectedProjectsDefaultValue));
+               getValue(SelectedProjectsKeyName, SelectedProjectsDefaultValue), true);
          }
          set
          {
             setValue(SelectedProjectsKeyName, DictionaryStringHelper.SerializeRawDictionaryString(value));
          }
+      }
+
+      public bool SelectedProjectsUpgraded
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               SelectedProjectsUpgradedKeyName, boolToString(SelectedProjectsUpgradedDefaultValue)),
+                  out bool result) ? result : SelectedProjectsUpgradedDefaultValue;
+         }
+         set { setValue(SelectedProjectsUpgradedKeyName, boolToString(value)); }
       }
 
       public string GetAccessToken(string host)

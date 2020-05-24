@@ -69,7 +69,8 @@ namespace mrHelper.App.Forms
          _suppressExternalConnections = false;
          if (!isSearchMode())
          {
-            selectMergeRequest(listViewMergeRequests, projectname, iid, false);
+            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostName, projectname), iid);
+            selectMergeRequest(listViewMergeRequests, mrk, false);
          }
       }
 
@@ -136,6 +137,7 @@ namespace mrHelper.App.Forms
          if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
             initializeProjectListIfEmpty(hostname);
+            await upgradeProjectListFromOldVersion(hostname);
             return await startProjectBasedWorkflowAsync(hostname);
          }
          else
@@ -304,6 +306,31 @@ namespace mrHelper.App.Forms
             setupDefaultProjectList();
             updateProjectsListView();
          }
+      }
+
+      async private Task upgradeProjectListFromOldVersion(string hostname)
+      {
+         if (Program.Settings.SelectedProjectsUpgraded)
+         {
+            return;
+         }
+
+         labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
+         IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
+            hostname, Program.Settings);
+         List<Tuple<string, bool>> upgraded = new List<Tuple<string, bool>>();
+         foreach (var project in projects)
+         {
+            Project p = await _gitlabClientManager.SearchManager.SearchProjectAsync(hostname, project.Item1);
+            if (p != null)
+            {
+               upgraded.Add(new Tuple<string, bool>(p.Path_With_Namespace, project.Item2));
+            }
+         }
+         ConfigurationHelper.SetProjectsForHost(hostname, upgraded, Program.Settings);
+         updateProjectsListView();
+         Program.Settings.SelectedProjectsUpgraded = true;
+         labelWorkflowStatus.Text = "Workflow prepared.";
       }
 
       async private Task initializeLabelListIfEmpty(string hostname)

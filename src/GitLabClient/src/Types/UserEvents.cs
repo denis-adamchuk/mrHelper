@@ -1,4 +1,5 @@
 ﻿using GitLabSharp.Entities;
+using System.Collections.Generic;
 
 namespace mrHelper.Client.Types
 {
@@ -32,6 +33,23 @@ namespace mrHelper.Client.Types
             public bool Commits { get; }
             public bool Labels { get; }
             public bool Details { get; }
+
+            public override bool Equals(object obj)
+            {
+               return obj is UpdateScope scope &&
+                      Commits == scope.Commits &&
+                      Labels == scope.Labels &&
+                      Details == scope.Details;
+            }
+
+            public override int GetHashCode()
+            {
+               int hashCode = -87658868;
+               hashCode = hashCode * -1521134295 + Commits.GetHashCode();
+               hashCode = hashCode * -1521134295 + Labels.GetHashCode();
+               hashCode = hashCode * -1521134295 + Details.GetHashCode();
+               return hashCode;
+            }
          }
 
          public FullMergeRequestKey FullMergeRequestKey { get; }
@@ -71,6 +89,21 @@ namespace mrHelper.Client.Types
 
             public string Keyword { get; }
             public User Author { get; }
+
+            public override bool Equals(object obj)
+            {
+               return obj is KeywordDescription description &&
+                      Keyword == description.Keyword &&
+                      EqualityComparer<User>.Default.Equals(Author, description.Author);
+            }
+
+            public override int GetHashCode()
+            {
+               int hashCode = -2089405254;
+               hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Keyword);
+               hashCode = hashCode * -1521134295 + EqualityComparer<User>.Default.GetHashCode(Author);
+               return hashCode;
+            }
          }
 
          public MergeRequestKey MergeRequestKey { get; }

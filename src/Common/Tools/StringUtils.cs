@@ -28,9 +28,15 @@ namespace mrHelper.Common.Tools
 
       public static string GetHostWithPrefix(string host)
       {
+         if (String.IsNullOrWhiteSpace(host))
+         {
+            return host;
+         }
+
          string supportedProtocolPrefix = "https://";
          string unsupportedProtocolPrefix = "http://";
 
+         host = host.ToLower();
          if (host.StartsWith(supportedProtocolPrefix))
          {
             return host;
