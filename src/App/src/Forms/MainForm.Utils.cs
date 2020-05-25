@@ -1033,7 +1033,7 @@ namespace mrHelper.App.Forms
       private void cleanupReviewedCommits(MergeRequestKey mrk)
       {
          IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(x => x.Equals(mrk));
-         if (toRemove == null || !toRemove.Any())
+         if (!toRemove.Any())
          {
             return;
          }
