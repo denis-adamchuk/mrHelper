@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
@@ -17,7 +18,7 @@ namespace mrHelper.Client.Session
       }
 
       public event Action<string> Starting;
-      public event Action<string, User, SessionContext> Started;
+      public event Action<string, User> Started;
 
       async public Task<bool> Start(string hostname, SessionContext context)
       {
@@ -35,12 +36,15 @@ namespace mrHelper.Client.Session
          IMergeRequestListLoader mergeRequestListLoader =
             MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
 
+         Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
          Starting?.Invoke(hostname);
 
          if (await mergeRequestListLoader.Load())
          {
             _internal = createSessionInternal(cacheUpdater, hostname, currentUser, context);
-            Started?.Invoke(hostname, currentUser, context);
+
+            Trace.TraceInformation(String.Format("[Session] Started new session at {0}", hostname));
+            Started?.Invoke(hostname, currentUser);
             return true;
          }
 
@@ -51,6 +55,8 @@ namespace mrHelper.Client.Session
       {
          if (_operator != null)
          {
+            Trace.TraceInformation("[Session] Canceling operations");
+
             await _operator.CancelAsync();
             _operator = null;
          }

@@ -281,7 +281,7 @@ namespace mrHelper.App.Forms
          unsubscribeFromLiveSessionInternalEvents();
       }
 
-      private void liveSessionStarted(string hostname, User user, SessionContext sessionContext)
+      private void liveSessionStarted(string hostname, User user)
       {
          subscribeToLiveSessionInternalEvents();
 

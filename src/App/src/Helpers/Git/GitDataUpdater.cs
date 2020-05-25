@@ -319,7 +319,7 @@ namespace mrHelper.App.Helpers
          unsubscribeFromAll();
       }
 
-      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
+      private void onSessionStarted(string hostname, User user)
       {
          _mergeRequestCache = _session.MergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;

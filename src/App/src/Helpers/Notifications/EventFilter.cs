@@ -133,7 +133,7 @@ namespace mrHelper.App.Helpers
          _mergeRequestCache = null;
       }
 
-      private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
+      private void onSessionStarted(string hostname, User user)
       {
          _currentUser = user;
          _mergeRequestCache = _session.MergeRequestCache;

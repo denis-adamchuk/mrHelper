@@ -23,7 +23,7 @@ namespace mrHelper.Client.Session
       IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk);
 
       event Action<string> Starting;
-      event Action<string, User, SessionContext> Started;
+      event Action<string, User> Started;
    }
 }
 
