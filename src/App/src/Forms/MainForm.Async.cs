@@ -304,12 +304,18 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         labelWorkflowStatus.Text = "Diff tool launched";
-
          Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
             leftSHA, rightSHA, repo.Path, pid.ToString()));
 
-         saveInterprocessSnapshot(pid, leftSHA, rightSHA, session);
+         if (pid == -1)
+         {
+            labelWorkflowStatus.Text = "Diff tool was not launched. Most likely the difference is empty.";
+         }
+         else
+         {
+            labelWorkflowStatus.Text = "Diff tool launched";
+            saveInterprocessSnapshot(pid, leftSHA, rightSHA, session);
+         }
 
          if (!_reviewedCommits.ContainsKey(mrk))
          {
