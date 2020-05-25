@@ -28,6 +28,7 @@ namespace mrHelper.Common.Tools
       {
          return System.Net.WebUtility
             .HtmlDecode(Markdig.Markdown.ToHtml(System.Net.WebUtility.HtmlEncode(text), pipeline))
+            .Replace("<a href=\"/uploads/", String.Format("<a href=\"{0}/uploads/", uploadsPrefix))
             .Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/uploads/", uploadsPrefix));
       }
    }
