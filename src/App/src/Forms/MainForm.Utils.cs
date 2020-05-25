@@ -997,21 +997,51 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(ProjectKey projectKey, IEnumerable<MergeRequest> mergeRequests)
+      private void cleanupReviewedCommits(string hostname)
       {
-         if (mergeRequests == null)
+         if (_liveSession?.MergeRequestCache == null)
          {
-            Debug.Assert(false);
             return;
          }
 
-         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys
-            .Where(x => x.ProjectKey.Equals(projectKey) && !mergeRequests.Any(y => x.IId == y.IId));
-         foreach (MergeRequestKey key in toRemove.ToArray())
+         IEnumerable<ProjectKey> projectKeys = _liveSession.MergeRequestCache.GetProjects();
+
+         // gather all MR from projects that no longer in use
+         IEnumerable<MergeRequestKey> toRemove1 = _reviewedCommits.Keys
+            .Where(x => !projectKeys.Any(y => y.Equals(x.ProjectKey)));
+
+         // gather all closed MR from existing projects
+         IEnumerable<MergeRequestKey> toRemove2 = _reviewedCommits.Keys
+            .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
+               && !_liveSession.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
+
+         // leave only MR from the passed project
+         IEnumerable<MergeRequestKey> toRemove =
+            toRemove1
+               .Concat(toRemove2)
+               .Where(x => x.ProjectKey.HostName == hostname)
+               .ToArray();
+
+         foreach (MergeRequestKey key in toRemove)
          {
             _reviewedCommits.Remove(key);
          }
       }
+
+      /// <summary>
+      /// Clean up records that correspond to merge requests that have been closed
+      /// </summary>
+      private void cleanupReviewedCommits(MergeRequestKey mrk)
+      {
+         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(x => x.Equals(mrk));
+         if (toRemove == null || !toRemove.Any())
+         {
+            return;
+         }
+
+         _reviewedCommits.Remove(toRemove.First());
+      }
+
 
       private void updateVisibleMergeRequests()
       {
@@ -1263,12 +1293,18 @@ namespace mrHelper.App.Forms
             scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
          }
 
+         MergeRequestKey mrk = new MergeRequestKey(
+            e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
+
+         if (e.Closed)
+         {
+            cleanupReviewedCommits(mrk);
+         }
+
          updateVisibleMergeRequests();
 
          if (e.New)
          {
-            MergeRequestKey mrk = new MergeRequestKey(
-               e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
             enqueueCheckForUpdates(mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});

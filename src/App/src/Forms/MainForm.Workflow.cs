@@ -170,6 +170,7 @@ namespace mrHelper.App.Forms
          }
 
          onAllMergeRequestsLoaded(enabledProjects);
+         cleanupReviewedCommits(hostname);
          return true;
       }
 
@@ -188,6 +189,7 @@ namespace mrHelper.App.Forms
          }
 
          onAllMergeRequestsLoaded(_liveSession.MergeRequestCache.GetProjects());
+         cleanupReviewedCommits(hostname);
          return true;
       }
 
@@ -244,7 +246,6 @@ namespace mrHelper.App.Forms
          foreach (ProjectKey projectKey in projects)
          {
             scheduleSilentUpdate(projectKey);
-            cleanupReviewedCommits(projectKey, _liveSession?.MergeRequestCache?.GetMergeRequests(projectKey));
          }
       }
 
