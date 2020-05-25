@@ -194,11 +194,7 @@ namespace mrHelper.App.Forms
 
       private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
       {
-         repo.Disposed -= onLocalGitRepositoryDisposed;
-         if (IsHandleCreated)
-         {
-            BeginInvoke(new Action(async () => await onRefresh()));
-         }
+         this.Close();
       }
 
       private async Task onRefresh()

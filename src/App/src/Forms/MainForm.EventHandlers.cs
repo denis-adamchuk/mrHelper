@@ -211,8 +211,8 @@ namespace mrHelper.App.Forms
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
                Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
 
-               MessageBox.Show("Git folder is changed. It is recommended to restart Diff Tool and"
-                             + " reopen Discussions views if you have already opened them",
+               MessageBox.Show("Git folder is changed.\n" +
+                               "It is recommended to restart Diff Tool if you have already launched it.",
                   "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                labelWorkflowStatus.Text = "Parent folder for git repositories changed";

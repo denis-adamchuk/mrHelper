@@ -882,7 +882,6 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
             }
          }
-         Debug.Assert(_gitClientFactory.ParentFolder == localFolder);
          return _gitClientFactory;
       }
 
