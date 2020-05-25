@@ -40,6 +40,7 @@ namespace mrHelper.Client.Discussions
 
          _currentUser = user;
          _mergeRequestCache = mergeRequestCache;
+         _mergeRequestCache.MergeRequestEvent += OnMergeRequestEvent;
 
          if (sessionContext.UpdateRules.UpdateDiscussions)
          {
@@ -55,6 +56,8 @@ namespace mrHelper.Client.Discussions
 
       public void Dispose()
       {
+         _mergeRequestCache.MergeRequestEvent -= OnMergeRequestEvent;
+
          _parser.DiscussionEvent -= onDiscussionParserEvent;
          _parser.Dispose();
 

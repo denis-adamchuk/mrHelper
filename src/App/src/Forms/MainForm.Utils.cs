@@ -548,6 +548,15 @@ namespace mrHelper.App.Forms
          textBoxSearch.Enabled = enabled;
       }
 
+      private void updateVisibleMergeRequestsEnablements()
+      {
+         if (listViewMergeRequests.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
+         {
+            enableMergeRequestFilterControls(true);
+            enableListView(listViewMergeRequests);
+         }
+      }
+
       private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
       {
          string body = fmk.HasValue
@@ -1064,6 +1073,7 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.EndUpdate();
 
+         updateVisibleMergeRequestsEnablements();
          updateTrayIcon();
          updateTaskbarIcon();
       }
@@ -1259,7 +1269,6 @@ namespace mrHelper.App.Forms
          {
             MergeRequestKey mrk = new MergeRequestKey(
                e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
-
             enqueueCheckForUpdates(mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});

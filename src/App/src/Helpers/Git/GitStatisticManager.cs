@@ -306,9 +306,20 @@ namespace mrHelper.App.Helpers
       private void onSessionStarted(string hostname, User user, SessionContext sessionContext)
       {
          _mergeRequestCache = _session.MergeRequestCache;
+         _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
          _contextProviderFactory = _session.UpdateContextProviderFactory;
 
          Debug.Assert(!_gitStatistic.Any());
+         updateProjectList();
+      }
+
+      private void updateProjectList()
+      {
+         if (_mergeRequestCache == null || _factoryAccessor == null)
+         {
+            return;
+         }
+
          foreach (ProjectKey key in _mergeRequestCache.GetProjects())
          {
             ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key);
@@ -338,6 +349,10 @@ namespace mrHelper.App.Helpers
 
       private void unsubscribeFromAll()
       {
+         if (_mergeRequestCache != null)
+         {
+            _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+         }
          _mergeRequestCache = null;
          _contextProviderFactory = null;
 
@@ -348,6 +363,14 @@ namespace mrHelper.App.Helpers
          }
          _gitStatistic.Clear();
          Update?.Invoke();
+      }
+
+      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
+      {
+         if (e.New)
+         {
+            updateProjectList();
+         }
       }
 
       private bool isConnected(ILocalGitRepository repo)
