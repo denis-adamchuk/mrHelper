@@ -167,10 +167,12 @@ namespace mrHelper.Client.MergeRequests
 
          Trace.TraceInformation(
             String.Format(
-               "[UpdateManager] Merge Request Updates: New {0}, Updated commits {1}, Updated labels {2}, Closed {3}",
+               "[UpdateManager] Merge Request Updates: " +
+               "New {0}, Updated commits {1}, Updated labels {2}, Updated details {3}, Closed {4}",
                updates.Count(x => x.New),
                updates.Count(x => x.Commits),
                updates.Count(x => x.Labels),
+               updates.Count(x => x.Details),
                updates.Count(x => x.Closed)));
 
          return updates;
