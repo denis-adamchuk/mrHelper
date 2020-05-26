@@ -141,14 +141,12 @@ namespace mrHelper.App.Forms
             {
                try
                {
-                  ILocalGitRepository updatingRepo = getRepository(key.ProjectKey, true);
-                  if (updatingRepo != null && !updatingRepo.ExpectingClone)
+                  if (repo != null && !repo.ExpectingClone)
                   {
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =
                         session?.MergeRequestCache?.GetRemoteBasedContextProvider(key);
-                     await updatingRepo.Updater.SilentUpdate(contextProvider);
-                     return updatingRepo;
+                     await repo.Updater.SilentUpdate(contextProvider);
                   }
                   else
                   {
@@ -161,7 +159,6 @@ namespace mrHelper.App.Forms
                {
                   ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
                }
-               return null;
             },
             () => session?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));

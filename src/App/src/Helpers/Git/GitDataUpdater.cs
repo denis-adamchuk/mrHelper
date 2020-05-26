@@ -11,7 +11,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitClient;
 using mrHelper.Client.Types;
-using mrHelper.Client.Session;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Discussions;
 
@@ -20,25 +19,22 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Pre-loads file revisions into git repository cache to speed up Discussions view rendering
    /// </summary>
-   internal class GitDataUpdater : IDisposable
+   internal class GitDataUpdater : BaseGitHelper, IDisposable
    {
       internal GitDataUpdater(
-         ISession session,
+         IMergeRequestCache mergeRequestCache,
+         IDiscussionCache discussionCache,
+         IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
+         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, factoryAccessor)
       {
          if (autoUpdatePeriodMs < 1)
          {
             throw new ArgumentException("Bad auto-update period specified");
          }
-
-         _session = session;
-         _session.Starting += onSessionStarting;
-         _session.Started += onSessionStarted;
-
-         _factoryAccessor = factoryAccessor;
          _mergeRequestFilter = mergeRequestFilter;
 
          _timer = new System.Timers.Timer { Interval = autoUpdatePeriodMs };
@@ -47,89 +43,21 @@ namespace mrHelper.App.Helpers
          _timer.Start();
       }
 
-      public void Dispose()
+      public new void Dispose()
       {
-         _session.Starting -= onSessionStarting;
-         _session.Started -= onSessionStarted;
+         base.Dispose();
 
          _timer?.Stop();
          _timer?.Dispose();
-
-         unsubscribeFromAll();
-      }
-
-      private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
-      {
-         Trace.TraceInformation(String.Format(
-            "[GitDataUpdater] Scheduling update of {0} project repository", repo.ProjectKey.ProjectName));
-
-         scheduleUpdate(repo);
       }
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-         updateAll();
-      }
-
-      private void updateAll()
-      {
          Trace.TraceInformation("[GitDataUpdater] Scheduling update of all repositories (on timer)");
-
-         foreach (ILocalGitRepository repo in _connected)
-         {
-            scheduleUpdate(repo);
-         }
+         scheduleAllProjectsUpdate();
       }
 
-      private void scheduleUpdate(ILocalGitRepository repo)
-      {
-         _timer.SynchronizingObject.BeginInvoke(new Action(async () => await updateGitDataAsync(repo)), null);
-      }
-
-      async private Task updateGitDataAsync(ILocalGitRepository repo)
-      {
-         Debug.Assert(isConsistentState(repo));
-         if (!isConnected(repo))
-         {
-            // LocalGitRepository might be removed from collection after this update was scheduled
-            return;
-         }
-
-         if (repo.Data == null || repo.ExpectingClone)
-         {
-            Debug.WriteLine(String.Format(
-               "[GitDataUpdater] Update failed. Repository is not ready (Host={0}, Project={1})",
-               repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-            return;
-         }
-
-         if (!_updating.Add(repo))
-         {
-            return;
-         }
-
-         try
-         {
-            await repo.Updater.SilentUpdate(getContextProvider(repo));
-            if (isConnected(repo))
-            {
-               // LocalGitRepository might be removed from collection while we were updating
-               await doUpdateGitDataAsync(repo);
-            }
-         }
-         finally
-         {
-            _updating.Remove(repo);
-            Debug.Assert(isConsistentState(repo));
-         }
-      }
-
-      private IProjectUpdateContextProvider getContextProvider(ILocalGitRepository repo)
-      {
-         return _contextProviderFactory.GetLocalBasedContextProvider(repo.ProjectKey);
-      }
-
-      private async Task doUpdateGitDataAsync(ILocalGitRepository repo)
+      async protected override Task doUpdate(ILocalGitRepository repo)
       {
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
@@ -138,11 +66,6 @@ namespace mrHelper.App.Helpers
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
             await updateGitDataForSingleMergeRequest(mrk, repo);
-            if (!isConnected(repo))
-            {
-               // LocalGitRepository was removed from collection while we were caching data for this MR
-               break;
-            }
          }
       }
 
@@ -150,13 +73,7 @@ namespace mrHelper.App.Helpers
       {
          DateTime prevLatestChange = getLatestChange(mrk);
 
-         IEnumerable<Discussion> newDiscussions =
-            await loadNewDiscussionsAsync(mrk, prevLatestChange);
-         if (!isConnected(repo))
-         {
-            // LocalGitRepository was removed from collection while we were loading discussions
-            return;
-         }
+         IEnumerable<Discussion> newDiscussions = await loadNewDiscussionsAsync(mrk, prevLatestChange);
 
          int totalCount = newDiscussions?.Count() ?? 0;
          if (totalCount == 0)
@@ -171,8 +88,8 @@ namespace mrHelper.App.Helpers
             .OrderByDescending(x => x.Notes.First().Updated_At)
             .First().Notes.First().Updated_At;
 
-         Trace.TraceInformation(String.Format(
-            "[GitDataUpdater] Start processing of merge request: "
+         Debug.WriteLine(String.Format(
+            "[GitDataUpdater] Start processing merge request: "
           + "Host={0}, Project={1}, IId={2}. New Discussions: {3}. LatestChange = {4}",
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
             totalCount, latestChange.ToLocalTime().ToString()));
@@ -187,16 +104,10 @@ namespace mrHelper.App.Helpers
 
          await doCacheAsync(repo, diffArgs, revisionArgs);
 
-         Trace.TraceInformation(String.Format(
-            "[GitDataUpdater] Finished processing of merge request with IId={0}. "
+         Debug.WriteLine(String.Format(
+            "[GitDataUpdater] Finished processing merge request with IId={0}. "
           + "Cached git results: {1} git diff, {2} git show",
             mrk.IId, diffArgs.Count, revisionArgs.Count));
-         if (!isConnected(repo))
-         {
-            // LocalGitRepository was removed from collection while we were caching data
-            return;
-         }
-
          setLatestChange(mrk, latestChange);
       }
 
@@ -224,11 +135,6 @@ namespace mrHelper.App.Helpers
                        && !x.Notes.First().System
                        && x.Notes.First().Type == "DiffNote"
                        && x.Notes.First().Updated_At > prevLatestChange);
-      }
-
-      private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
-      {
-         unsubscribeFromOne(repo);
       }
 
       private void gatherArguments(IEnumerable<Discussion> discussions,
@@ -300,7 +206,7 @@ namespace mrHelper.App.Helpers
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
             {
-               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
+               await repo.Updater?.SilentUpdate(new CommitBasedContextProvider(
                   new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }));
                await repo.Data?.LoadFromDisk(x);
             },
@@ -308,103 +214,10 @@ namespace mrHelper.App.Helpers
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { x.Sha }));
+               await repo.Updater?.SilentUpdate(new CommitBasedContextProvider(new string[] { x.Sha }));
                repo.Data?.LoadFromDisk(x);
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
-      }
-
-      private void onSessionStarting(string hostname)
-      {
-         unsubscribeFromAll();
-      }
-
-      private void onSessionStarted(string hostname, User user)
-      {
-         _mergeRequestCache = _session.MergeRequestCache;
-         _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
-         _discussionCache = _session.DiscussionCache;
-         _contextProviderFactory = _session.UpdateContextProviderFactory;
-
-         Debug.Assert(!_connected.Any());
-         updateProjectList();
-      }
-
-      private void updateProjectList()
-      {
-         if (_mergeRequestCache == null || _factoryAccessor == null)
-         {
-            return;
-         }
-
-         foreach (ProjectKey key in _mergeRequestCache.GetProjects())
-         {
-            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key);
-            if (repo != null && !isConnected(repo))
-            {
-               _connected.Add(repo);
-
-               Trace.TraceInformation(String.Format("[GitDataUpdater] Subscribing to Git Repo {0}/{1}",
-                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-               repo.Updated += onLocalGitRepositoryUpdated;
-               repo.Disposed += onLocalGitRepositoryDisposed;
-               scheduleUpdate(repo);
-            }
-         }
-      }
-
-      private void unsubscribeFromOne(ILocalGitRepository repo)
-      {
-         repo.Disposed -= onLocalGitRepositoryDisposed;
-         repo.Updated -= onLocalGitRepositoryUpdated;
-         _connected.Remove(repo);
-
-         IEnumerable<MergeRequestKey> toRemove = _latestChanges.Keys.Where(x => x.ProjectKey.Equals(repo.ProjectKey));
-         foreach (MergeRequestKey key in toRemove.ToArray())
-         {
-            _latestChanges.Remove(key);
-         }
-
-         Debug.Assert(isConsistentState(repo));
-      }
-
-      private void unsubscribeFromAll()
-      {
-         if (_mergeRequestCache != null)
-         {
-            _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
-         }
-
-         _mergeRequestCache = null;
-         _discussionCache = null;
-         _contextProviderFactory = null;
-
-         foreach (ILocalGitRepository repo in _connected)
-         {
-            repo.Updated -= onLocalGitRepositoryUpdated;
-            repo.Disposed -= onLocalGitRepositoryDisposed;
-         }
-         _connected.Clear();
-         _latestChanges.Clear();
-      }
-
-      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.New)
-         {
-            updateProjectList();
-         }
-      }
-
-      private bool isConnected(ILocalGitRepository repo)
-      {
-         return _connected.Contains(repo);
-      }
-
-      private bool isConsistentState(ILocalGitRepository repo)
-      {
-         // We expect that if a repository is not connected, we no longer store timestamps of its MRs
-         return _connected.Contains(repo) || !_latestChanges.Any(x => x.Key.ProjectKey.Equals(repo.ProjectKey));
       }
 
       private DateTime getLatestChange(MergeRequestKey mrk)
@@ -417,19 +230,10 @@ namespace mrHelper.App.Helpers
          _latestChanges[mrk] = dateTime;
       }
 
-      private readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
-      private readonly HashSet<ILocalGitRepository> _connected = new HashSet<ILocalGitRepository>();
       private readonly Dictionary<MergeRequestKey, DateTime> _latestChanges =
          new Dictionary<MergeRequestKey, DateTime>();
 
-      private readonly ISession _session;
-      private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
       private readonly MergeRequestFilter _mergeRequestFilter;
-
-      private IDiscussionCache _discussionCache;
-      private IMergeRequestCache _mergeRequestCache;
-      private IProjectUpdateContextProviderFactory _contextProviderFactory;
-
       private readonly System.Timers.Timer _timer;
 
       private static readonly int MaxDiscussionsInMergeRequest = 400;

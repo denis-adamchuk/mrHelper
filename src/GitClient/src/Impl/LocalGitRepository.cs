@@ -12,7 +12,7 @@ namespace mrHelper.GitClient
    /// <summary>
    /// Provides access to git repository.
    /// </summary>
-   internal class LocalGitRepository : ILocalGitRepository
+   internal class LocalGitRepository : ILocalGitRepository, IDisposable
    {
       // @{ IGitRepository
       IGitRepositoryData IGitRepository.Data => ExpectingClone ? null : _data;
@@ -41,9 +41,6 @@ namespace mrHelper.GitClient
       public string Path { get; }
 
       public ILocalGitRepositoryUpdater Updater => _updater;
-
-      public event Action<ILocalGitRepository> Updated;
-      public event Action<ILocalGitRepository> Disposed;
 
       public bool ExpectingClone { get; private set; } = true;
       // @} ILocalGitRepository
@@ -78,7 +75,6 @@ namespace mrHelper.GitClient
          ExpectingClone = isEmptyFolder(Path);
          _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
          _updater.Cloned += onCloned;
-         _updater.Updated += onUpdated;
 
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
@@ -89,22 +85,22 @@ namespace mrHelper.GitClient
             Path, ProjectKey.HostName, ProjectKey.ProjectName, ExpectingClone.ToString()));
       }
 
-      async internal Task DisposeAsync()
+      public void Dispose()
       {
          Trace.TraceInformation(String.Format("[LocalGitRepository] Disposing LocalGitRepository at path {0}", Path));
+
          _data.DisableUpdates();
-         await _operationManager.CancelAll();
-         Disposed?.Invoke(this);
+         _data = null;
+
+         _updater.DisableUpdates();
+         _updater = null;
+
+         _operationManager.CancelAll();
       }
 
       private void onCloned()
       {
          ExpectingClone = false;
-      }
-
-      private void onUpdated()
-      {
-         Updated?.Invoke(this);
       }
 
       private static bool isEmptyFolder(string path)
@@ -113,8 +109,8 @@ namespace mrHelper.GitClient
       }
 
       private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
-      private readonly LocalGitRepositoryData _data;
-      private readonly LocalGitRepositoryUpdater _updater;
+      private LocalGitRepositoryData _data;
+      private LocalGitRepositoryUpdater _updater;
       private readonly IExternalProcessManager _operationManager;
    }
 }

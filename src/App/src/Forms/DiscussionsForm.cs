@@ -27,17 +27,13 @@ namespace mrHelper.App.Forms
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
-         Func<MergeRequestKey, Task<ILocalGitRepository>> updateGit, Action onDiscussionModified)
+         Func<MergeRequestKey, Task> updateGit, Action onDiscussionModified)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
          _gitRepository = repo;
-         if (_gitRepository != null)
-         {
-            _gitRepository.Disposed += onLocalGitRepositoryDisposed;
-         }
          _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
@@ -132,14 +128,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void DiscussionsForm_FormClosing(object sender, FormClosingEventArgs e)
-      {
-         if (_gitRepository != null)
-         {
-            _gitRepository.Disposed -= onLocalGitRepositoryDisposed;
-         }
-      }
-
       async private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.F5)
@@ -231,7 +219,7 @@ namespace mrHelper.App.Forms
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
          this.Text = DefaultCaption + "   (Checking for new commits)";
-         _gitRepository = await _updateGit(_mergeRequestKey);
+         await _updateGit(_mergeRequestKey);
 
          this.Text = DefaultCaption + "   (Loading discussions)";
 
@@ -515,13 +503,13 @@ namespace mrHelper.App.Forms
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
-      private ILocalGitRepository _gitRepository;
+      private readonly ILocalGitRepository _gitRepository;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 
       private readonly User _currentUser;
       private readonly ISession _session;
-      private readonly Func<MergeRequestKey, Task<ILocalGitRepository>> _updateGit;
+      private readonly Func<MergeRequestKey, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 
       private readonly DiscussionFilterPanel FilterPanel;

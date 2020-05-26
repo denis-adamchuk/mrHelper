@@ -118,7 +118,6 @@ namespace mrHelper.App.Forms
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}", hostname);
 
-         await disposeLocalGitRepositoryFactory();
          await _liveSession.Stop();
          await _searchSession.Stop();
 
@@ -274,14 +273,18 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void liveSessionStarting(string hostname)
+      private void liveSessionStopped()
       {
+         foreach (Form form in Application.OpenForms.Cast<Form>().Where(x => x is DiscussionsForm)) form.Close();
+         disposeGitHelpers();
+         disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveSessionInternalEvents();
       }
 
       private void liveSessionStarted(string hostname, User user)
       {
          subscribeToLiveSessionInternalEvents();
+         createGitHelpers(_liveSession);
 
          if (!_currentUser.ContainsKey(hostname))
          {

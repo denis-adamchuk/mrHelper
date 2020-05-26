@@ -845,7 +845,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         await repo.Updater.CancelUpdate();
+         repo.Updater.CancelUpdate();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

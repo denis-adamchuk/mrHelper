@@ -36,13 +36,12 @@ namespace mrHelper.GitClient
       }
 
       internal event Action Cloned;
-      internal event Action Updated;
 
-      async public Task CancelUpdate()
+      public void CancelUpdate()
       {
          try
          {
-            await _operationManager.Cancel(_updateOperationDescriptor);
+            _operationManager.Cancel(_updateOperationDescriptor);
          }
          finally
          {
@@ -50,8 +49,18 @@ namespace mrHelper.GitClient
          }
       }
 
+      internal void DisableUpdates()
+      {
+         _disabled = true;
+      }
+
       async public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
       {
+         if (_disabled)
+         {
+            return;
+         }
+
          if (contextProvider == null)
          {
             Debug.Assert(false);
@@ -201,11 +210,6 @@ namespace mrHelper.GitClient
          {
             await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone);
          }
-
-         if (_latestFullUpdateTimestamp != prevLatestTimeStamp)
-         {
-            Updated?.Invoke();
-         }
       }
 
       async private Task processPartialProjectUpdate(PartialUpdateContext context)
@@ -229,10 +233,7 @@ namespace mrHelper.GitClient
             throw new RepositoryUpdateException("Cannot update git repository", null);
          }
 
-         if (await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone))
-         {
-            Updated?.Invoke();
-         }
+         await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone);
       }
 
       async private Task cloneAsync(bool shallowClone)
@@ -417,6 +418,7 @@ namespace mrHelper.GitClient
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
 
+      private bool _disabled;
       private IProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
       private DateTime _latestFullUpdateTimestamp = DateTime.MinValue;

@@ -22,6 +22,7 @@ namespace mrHelper.Client.Session
       IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId);
       IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk);
 
+      event Action Stopped;
       event Action<string> Starting;
       event Action<string, User> Started;
    }

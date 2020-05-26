@@ -49,7 +49,7 @@ namespace mrHelper.App.Interprocess
          }
          Debug.Assert(!tempRepository.ExpectingClone);
          await doHandleAsync(tempRepository);
-         await factory.DisposeAsync();
+         factory.Dispose();
       }
 
       async public Task doHandleAsync(IGitRepository gitRepository)

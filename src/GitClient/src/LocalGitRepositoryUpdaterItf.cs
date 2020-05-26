@@ -44,7 +44,7 @@ namespace mrHelper.GitClient
    {
       Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange);
       Task SilentUpdate(IProjectUpdateContextProvider contextProvider);
-      Task CancelUpdate();
+      void CancelUpdate();
    }
 }
 

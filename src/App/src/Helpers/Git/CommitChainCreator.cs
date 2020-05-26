@@ -82,7 +82,7 @@ namespace mrHelper.App.Helpers
             await _repositoryManager.Cancel();
          }
 
-         await _repo.Updater.CancelUpdate();
+         _repo.Updater.CancelUpdate();
       }
 
       async private Task<bool> createBranches(IEnumerable<string> shas)

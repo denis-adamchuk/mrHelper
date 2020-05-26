@@ -17,6 +17,7 @@ namespace mrHelper.Client.Session
          _clientContext = clientContext;
       }
 
+      public event Action Stopped;
       public event Action<string> Starting;
       public event Action<string, User> Started;
 
@@ -63,6 +64,8 @@ namespace mrHelper.Client.Session
 
          _internal?.Dispose();
          _internal = null;
+
+         Stopped?.Invoke();
       }
 
       public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>

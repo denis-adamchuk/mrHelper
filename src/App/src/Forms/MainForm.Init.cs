@@ -320,13 +320,11 @@ namespace mrHelper.App.Forms
 
          createGitLabClientManager();
          createLiveSessionAndDependencies();
-         createSearchSession();
-
          subscribeToLiveSession();
+         createSearchSession();
 
          _gitClientUpdater = new GitInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
-         _gitStatManager.Update += onGitStatisticManagerUpdate;
 
          initializeColorScheme();
          initializeIconScheme();
@@ -348,14 +346,11 @@ namespace mrHelper.App.Forms
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
-         _gitStatManager.Update -= onGitStatisticManagerUpdate;
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
 
-         unsubscribeFromLiveSessionInternalEvents();
          unsubscribeFromLiveSession();
 
          await finalizeCommitChainCreator();
-         await disposeLocalGitRepositoryFactory();
 
          if (_liveSession != null)
          {
@@ -494,11 +489,6 @@ namespace mrHelper.App.Forms
          _expressionResolver = new ExpressionResolver(_liveSession);
          _eventFilter = new EventFilter(Program.Settings, _liveSession, _mergeRequestFilter);
          _userNotifier = new UserNotifier(_liveSession, _eventFilter, _trayIcon);
-
-         _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
-            ? new GitDataUpdater(_liveSession, this, this, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
-            : null;
-         _gitStatManager = new GitStatisticManager(_liveSession, this, this);
       }
 
       private void createSearchSession()
@@ -508,9 +498,6 @@ namespace mrHelper.App.Forms
 
       private void disposeLiveSessionDependencies()
       {
-         _gitDataUpdater?.Dispose();
-         _gitStatManager?.Dispose();
-
          _userNotifier?.Dispose();
          _eventFilter?.Dispose();
          _expressionResolver?.Dispose();
@@ -520,7 +507,7 @@ namespace mrHelper.App.Forms
       {
          if (_liveSession != null)
          {
-            _liveSession.Starting += liveSessionStarting;
+            _liveSession.Stopped += liveSessionStopped;
             _liveSession.Started += liveSessionStarted;
          }
       }
@@ -549,7 +536,7 @@ namespace mrHelper.App.Forms
       {
          if (_liveSession != null)
          {
-            _liveSession.Starting -= liveSessionStarting;
+            _liveSession.Stopped -= liveSessionStopped;
             _liveSession.Started -= liveSessionStarted;
          }
       }
@@ -581,6 +568,42 @@ namespace mrHelper.App.Forms
             await _commitChainCreator.CancelAsync();
          }
       }
+
+      private void createGitHelpers(ISession session)
+      {
+         if (session.MergeRequestCache == null
+          || session.DiscussionCache == null
+          || session.UpdateContextProviderFactory == null)
+         {
+            return;
+         }
+
+         _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
+            ? new GitDataUpdater(
+               session.MergeRequestCache, session.DiscussionCache,
+               session.UpdateContextProviderFactory, this, this,
+               Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
+            : null;
+
+         _gitStatManager = new GitStatisticManager(
+               session.MergeRequestCache, session.DiscussionCache,
+               session.UpdateContextProviderFactory, this, this);
+         _gitStatManager.Update += onGitStatisticManagerUpdate;
+      }
+
+      private void disposeGitHelpers()
+      {
+         _gitDataUpdater?.Dispose();
+         _gitDataUpdater = null;
+
+         if (_gitStatManager != null)
+         {
+            _gitStatManager.Update -= onGitStatisticManagerUpdate;
+            _gitStatManager.Dispose();
+            _gitStatManager = null;
+         }
+      }
+
 
       private void onGitInitStatusChange(string status)
       {

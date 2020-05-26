@@ -50,28 +50,14 @@ namespace mrHelper.GitClient
          }
       }
 
-      async public Task Join(ExternalProcess.AsyncTaskDescriptor descriptor, Action<string> onProgressChange)
+      public void Cancel(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
-         traceOperationStatus("join", "start");
-         try
-         {
-            await _externalProcessManager.Join(descriptor, onProgressChange);
-            traceOperationStatus("join", "end");
-         }
-         catch (ExternalProcessFailureException ex)
-         {
-            handleException("join", ex);
-         }
+         _externalProcessManager.Cancel(descriptor);
       }
 
-      public Task Cancel(ExternalProcess.AsyncTaskDescriptor descriptor)
+      public void CancelAll()
       {
-         return _externalProcessManager.Cancel(descriptor);
-      }
-
-      public Task CancelAll()
-      {
-         return _externalProcessManager.CancelAll();
+         _externalProcessManager.CancelAll();
       }
 
       public void checkStandardError(IEnumerable<string> stdErr)

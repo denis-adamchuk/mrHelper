@@ -11,11 +11,9 @@ namespace mrHelper.Common.Interfaces
 
       Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor);
 
-      Task Join(ExternalProcess.AsyncTaskDescriptor descriptor, Action<string> onProgressChange);
+      void Cancel(ExternalProcess.AsyncTaskDescriptor descriptor);
 
-      Task Cancel(ExternalProcess.AsyncTaskDescriptor descriptor);
-
-      Task CancelAll();
+      void CancelAll();
    }
 }
 

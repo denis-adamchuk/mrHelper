@@ -885,13 +885,13 @@ namespace mrHelper.App.Forms
          return _gitClientFactory;
       }
 
-      async private Task disposeLocalGitRepositoryFactory()
+      private void disposeLocalGitRepositoryFactory()
       {
          if (_gitClientFactory != null)
          {
             LocalGitRepositoryFactory factory = _gitClientFactory;
             _gitClientFactory = null;
-            await factory.DisposeAsync();
+            factory.Dispose();
          }
       }
 

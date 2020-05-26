@@ -13,7 +13,7 @@ namespace mrHelper.GitClient
    ///<summary>
    /// Creates LocalGitRepository objects.
    ///<summary>
-   public class LocalGitRepositoryFactory : ILocalGitRepositoryFactory
+   public class LocalGitRepositoryFactory : ILocalGitRepositoryFactory, IDisposable
    {
       public string ParentFolder { get; }
 
@@ -62,7 +62,7 @@ namespace mrHelper.GitClient
          return repo;
       }
 
-      async public Task DisposeAsync()
+      public void Dispose()
       {
          Trace.TraceInformation(String.Format(
             "[LocalGitRepositoryFactory] Disposing LocalGitRepositoryFactory for parentFolder {0}", ParentFolder));
@@ -70,7 +70,10 @@ namespace mrHelper.GitClient
          // It is safer to clean-up a copy asynchronously
          Dictionary<ProjectKey, LocalGitRepository> repos = _repos.ToDictionary(x => x.Key, x => x.Value);
          _repos.Clear();
-         await Task.WhenAll(repos.Values.Select(x => x.DisposeAsync()).ToArray());
+         foreach (LocalGitRepository repo in repos.Values)
+         {
+            repo.Dispose();
+         }
       }
 
       private readonly Dictionary<ProjectKey, LocalGitRepository> _repos =

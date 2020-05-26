@@ -6,11 +6,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DiffStatisticKey = System.Int32; // Merge Request IId
-using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
-using mrHelper.Client.Session;
+using mrHelper.Client.Discussions;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
@@ -20,26 +19,28 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Traces git diff statistic change for all merge requests within one or more repositories
    /// </summary>
-   internal class GitStatisticManager : IDisposable
+   internal class GitStatisticManager : BaseGitHelper, IDisposable
    {
-      internal GitStatisticManager(ISession session, ISynchronizeInvoke synchronizeInvoke,
+      internal GitStatisticManager(
+         IMergeRequestCache mergeRequestCache,
+         IDiscussionCache discussionCache,
+         IProjectUpdateContextProviderFactory updateContextProviderFactory,
+         ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepositoryFactoryAccessor factoryAccessor)
+         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, factoryAccessor)
       {
-         _session = session;
-         _session.Starting += onSessionStarting;
-         _session.Started += onSessionStarted;
-
-         _factoryAccessor = factoryAccessor;
-         _synchronizeInvoke = synchronizeInvoke;
+         BaseUpdate += onBaseUpdate;
       }
 
-      public void Dispose()
-      {
-         _session.Starting -= onSessionStarting;
-         _session.Started -= onSessionStarted;
+      internal event Action Update;
 
-         unsubscribeFromAll();
+      public new void Dispose()
+      {
+         BaseUpdate -= onBaseUpdate;
+         base.Dispose();
       }
+
+      private void onBaseUpdate() => Update?.Invoke();
 
       /// <summary>
       /// Returns statistic for the given MR
@@ -80,64 +81,7 @@ namespace mrHelper.App.Helpers
          return stat.Value;
       }
 
-      internal event Action Update;
-
-      private void onLocalGitRepositoryUpdated(ILocalGitRepository repo)
-      {
-         Trace.TraceInformation(String.Format(
-            "[GitStatisticManager] Scheduling update of {0} project repository", repo.ProjectKey.ProjectName));
-
-         scheduleUpdate(repo);
-      }
-
-      private void scheduleUpdate(ILocalGitRepository repo)
-      {
-         _synchronizeInvoke.BeginInvoke(new Action(async () => await updateGitStatistic(repo)), null);
-      }
-
-      async private Task updateGitStatistic(ILocalGitRepository repo)
-      {
-         if (!isConnected(repo))
-         {
-            // LocalGitRepository might be removed from collection after this update was scheduled
-            return;
-         }
-
-         if (repo.Data == null || repo.ExpectingClone)
-         {
-            Trace.TraceWarning(String.Format(
-               "[GitStatisticManager] Update failed. Repository is not ready (Host={0}, Project={1})",
-               repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-            return;
-         }
-
-         if (!_updating.Add(repo))
-         {
-            return;
-         }
-
-         try
-         {
-            await repo.Updater.SilentUpdate(getContextProvider(repo));
-            if (isConnected(repo))
-            {
-               // LocalGitRepository might be removed from collection while we were updating
-               await doUpdateGitStatistic(repo);
-            }
-         }
-         finally
-         {
-            _updating.Remove(repo);
-            Update?.Invoke();
-         }
-      }
-
-      private IProjectUpdateContextProvider getContextProvider(ILocalGitRepository repo)
-      {
-         return _contextProviderFactory.GetLocalBasedContextProvider(repo.ProjectKey);
-      }
-
-      async private Task doUpdateGitStatistic(ILocalGitRepository repo)
+      async protected override Task doUpdate(ILocalGitRepository repo)
       {
          DateTime prevLatestChange = _gitStatistic[repo].State.LatestChange;
 
@@ -212,12 +156,7 @@ namespace mrHelper.App.Helpers
                success = false;
             }
 
-            if (!isConnected(repo))
-            {
-               // LocalGitRepository was removed from collection while we were caching current MR
-               break;
-            }
-            else if (success)
+            if (success)
             {
                DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, args);
                updateCachedStatistic(repo, key, latestChange, diffStat);
@@ -293,91 +232,6 @@ namespace mrHelper.App.Helpers
             parseOrZero(m.Groups["ins"].Value), parseOrZero(m.Groups["del"].Value));
       }
 
-      private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
-      {
-         unsubscribeFromOne(repo);
-      }
-
-      private void onSessionStarting(string hostname)
-      {
-         unsubscribeFromAll();
-      }
-
-      private void onSessionStarted(string hostname, User user)
-      {
-         _mergeRequestCache = _session.MergeRequestCache;
-         _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
-         _contextProviderFactory = _session.UpdateContextProviderFactory;
-
-         Debug.Assert(!_gitStatistic.Any());
-         updateProjectList();
-      }
-
-      private void updateProjectList()
-      {
-         if (_mergeRequestCache == null || _factoryAccessor == null)
-         {
-            return;
-         }
-
-         foreach (ProjectKey key in _mergeRequestCache.GetProjects())
-         {
-            ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(key);
-            if (repo != null && !isConnected(repo))
-            {
-               _gitStatistic.Add(repo, new LocalGitRepositoryStatistic(
-                  new RepositoryState(!repo.ExpectingClone, DateTime.MinValue),
-                  new Dictionary<DiffStatisticKey, DiffStatistic?>()));
-
-               Trace.TraceInformation(String.Format("[GitStatisticManager] Subscribing to Git Repo {0}/{1}",
-                  repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
-               repo.Updated += onLocalGitRepositoryUpdated;
-               repo.Disposed += onLocalGitRepositoryDisposed;
-               scheduleUpdate(repo);
-            }
-         }
-
-         Update?.Invoke();
-      }
-
-      private void unsubscribeFromOne(ILocalGitRepository repo)
-      {
-         repo.Disposed -= onLocalGitRepositoryDisposed;
-         repo.Updated -= onLocalGitRepositoryUpdated;
-         _gitStatistic.Remove(repo);
-      }
-
-      private void unsubscribeFromAll()
-      {
-         if (_mergeRequestCache != null)
-         {
-            _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
-         }
-         _mergeRequestCache = null;
-         _contextProviderFactory = null;
-
-         foreach (KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> keyValuePair in _gitStatistic)
-         {
-            keyValuePair.Key.Updated -= onLocalGitRepositoryUpdated;
-            keyValuePair.Key.Disposed -= onLocalGitRepositoryDisposed;
-         }
-         _gitStatistic.Clear();
-         Update?.Invoke();
-      }
-
-      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.New)
-         {
-            updateProjectList();
-         }
-      }
-
-      private bool isConnected(ILocalGitRepository repo)
-      {
-         return _gitStatistic.ContainsKey(repo);
-      }
-
       internal struct RepositoryState
       {
          public RepositoryState(bool isCloned, DateTime latestChange)
@@ -422,17 +276,8 @@ namespace mrHelper.App.Helpers
          internal Dictionary<DiffStatisticKey, DiffStatistic?> Statistic { get; }
       }
 
-      private readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
       private readonly Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
          new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
-
-      private readonly ISession _session;
-      private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
-
-      private IMergeRequestCache _mergeRequestCache;
-      private IProjectUpdateContextProviderFactory _contextProviderFactory;
-
-      private readonly ISynchronizeInvoke _synchronizeInvoke;
    }
 }
 
