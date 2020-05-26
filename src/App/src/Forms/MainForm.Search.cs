@@ -76,9 +76,9 @@ namespace mrHelper.App.Forms
       async private Task<bool> startSearchWorkflowAsync(string hostname, object query, int? maxResults)
       {
          labelWorkflowStatus.Text = String.Empty;
+         disableAllSearchUIControls(true);
 
          await _searchSession.Stop();
-         disableAllSearchUIControls(true);
 
          if (String.IsNullOrWhiteSpace(hostname))
          {

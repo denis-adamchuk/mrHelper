@@ -113,16 +113,14 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             hostname, Program.Settings.WorkflowType));
 
-         await disposeLocalGitRepositoryFactory();
-
-         labelWorkflowStatus.Text = String.Empty;
-         textBoxSearch.Enabled = false;
-
-         await _liveSession.Stop();
          disableAllUIControls(true);
-
-         await _searchSession.Stop();
          disableAllSearchUIControls(true);
+         textBoxSearch.Enabled = false;
+         labelWorkflowStatus.Text = String.Format("Connecting to {0}", hostname);
+
+         await disposeLocalGitRepositoryFactory();
+         await _liveSession.Stop();
+         await _searchSession.Stop();
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
