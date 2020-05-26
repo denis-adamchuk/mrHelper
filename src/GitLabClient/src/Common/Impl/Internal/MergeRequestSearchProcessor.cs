@@ -38,7 +38,7 @@ namespace mrHelper.Client.Common
       public override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults)
       {
          return load(gl, _projectname, maxResults, new MergeRequestsFilter(
-            null, _wipFilter, _stateFilter, false, null, null, null, null, null));
+            null, _wipFilter, _stateFilter, false, null, null, null, null));
       }
 
       private string _projectname;
@@ -55,7 +55,7 @@ namespace mrHelper.Client.Common
       public override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults)
       {
          return load(gl, maxResults, new MergeRequestsFilter(
-            null, _wipFilter, _stateFilter, false, null, _branchname, null, null, null));
+            null, _wipFilter, _stateFilter, false, null, _branchname, null, null));
       }
 
       private string _branchname;
@@ -72,7 +72,7 @@ namespace mrHelper.Client.Common
       public override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults)
       {
          return load(gl, maxResults, new MergeRequestsFilter(
-            null, _wipFilter, _stateFilter, false, _text, null, null, null, null));
+            null, _wipFilter, _stateFilter, false, _text, null, null, null));
       }
 
       private string _text;
@@ -100,7 +100,7 @@ namespace mrHelper.Client.Common
       private Task<IEnumerable<MergeRequest>> loadByLabel(GitLab gl, string label)
       {
          return load(gl, null, new MergeRequestsFilter(
-            label, _wipFilter, _stateFilter, false, null, null, null, null, null));
+            label, _wipFilter, _stateFilter, false, null, null, null, null));
       }
 
       async private Task<IEnumerable<MergeRequest>> loadByAuthor(GitLab gl, string username)
@@ -118,7 +118,7 @@ namespace mrHelper.Client.Common
          }
 
          return await load(gl, null, new MergeRequestsFilter(
-            null, _wipFilter, _stateFilter, false, null, null, null, null, user.Id));
+            null, _wipFilter, _stateFilter, false, null, null, null, user.Id));
       }
 
       private string _username;
