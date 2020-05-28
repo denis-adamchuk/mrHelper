@@ -113,7 +113,6 @@ namespace mrHelper.App.Forms
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}", hostname);
 
-
          if (String.IsNullOrWhiteSpace(hostname))
          {
             return false;

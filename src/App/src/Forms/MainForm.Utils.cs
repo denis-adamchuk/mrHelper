@@ -695,15 +695,10 @@ namespace mrHelper.App.Forms
          return "N/A";
       }
 
-      private string getSize(FullMergeRequestKey? fmk)
+      private string getSize(MergeRequestKey mrk)
       {
-         if (!fmk.HasValue)
-         {
-            return String.Empty;
-         }
-
          GitStatisticManager.DiffStatistic? diffStatistic =
-            _gitStatManager.GetStatistic(fmk.Value, out string errMsg);
+            _gitStatManager.GetStatistic(mrk, out string errMsg);
          return diffStatistic?.ToString() ?? errMsg;
       }
 
@@ -1163,7 +1158,7 @@ namespace mrHelper.App.Forms
          setSubItemTag("Author",       new ListViewSubItemInfo(x => author,                    () => String.Empty));
          setSubItemTag("Title",        new ListViewSubItemInfo(x => mr.Title,                  () => String.Empty));
          setSubItemTag("Labels",       new ListViewSubItemInfo(x => labels[x],                 () => String.Empty));
-         setSubItemTag("Size",         new ListViewSubItemInfo(x => getSize(fmk),              () => String.Empty));
+         setSubItemTag("Size",         new ListViewSubItemInfo(x => getSize(mrk),              () => String.Empty));
          setSubItemTag("Jira",         new ListViewSubItemInfo(x => jiraTask,                  () => jiraTaskUrl));
          setSubItemTag("TotalTime",    new ListViewSubItemInfo(x => getTotalTimeText(mrk),     () => String.Empty));
          setSubItemTag("SourceBranch", new ListViewSubItemInfo(x => mr.Source_Branch,          () => String.Empty));

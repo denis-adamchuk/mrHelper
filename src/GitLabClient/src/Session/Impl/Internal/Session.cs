@@ -23,8 +23,7 @@ namespace mrHelper.Client.Session
 
       async public Task<bool> Start(string hostname, SessionContext context)
       {
-         //await StopAsync();
-         Stop();
+         stop();
 
          _operator = new SessionOperator(hostname, _clientContext.HostProperties);
 
@@ -53,23 +52,12 @@ namespace mrHelper.Client.Session
          return false;
       }
 
-      async public Task StopAsync()
+      public void Dispose()
       {
-         if (_operator != null)
-         {
-            Trace.TraceInformation("[Session] Canceling operations");
-
-            await _operator.CancelAsync();
-            _operator = null;
-         }
-
-         _internal?.Dispose();
-         _internal = null;
-
-         Stopped?.Invoke();
+         stop();
       }
 
-      public void Stop()
+      private void stop()
       {
          if (_operator != null)
          {
@@ -81,6 +69,8 @@ namespace mrHelper.Client.Session
 
          _internal?.Dispose();
          _internal = null;
+
+         Stopped?.Invoke();
       }
 
       public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>

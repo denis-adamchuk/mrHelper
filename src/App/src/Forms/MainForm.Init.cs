@@ -352,15 +352,6 @@ namespace mrHelper.App.Forms
 
          await finalizeCommitChainCreator();
 
-         if (_liveSession != null)
-         {
-            await _liveSession.StopAsync();
-         }
-         if (_searchSession != null)
-         {
-            await _searchSession.StopAsync();
-         }
-
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
 

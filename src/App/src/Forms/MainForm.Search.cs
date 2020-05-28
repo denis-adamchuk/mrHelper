@@ -80,8 +80,6 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
          disableAllSearchUIControls(true);
 
-         await _searchSession.StopAsync();
-
          if (String.IsNullOrWhiteSpace(hostname))
          {
             return false;

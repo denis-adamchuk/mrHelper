@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using DiffStatisticKey = System.Int32; // Merge Request IId
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
@@ -46,50 +45,40 @@ namespace mrHelper.App.Helpers
       /// Returns statistic for the given MR
       /// Statistic is collected for hash tags that match the last version of a merge request
       /// </summary>
-      internal DiffStatistic? GetStatistic(FullMergeRequestKey fmk, out string errorMessage)
+      internal DiffStatistic? GetStatistic(MergeRequestKey mrk, out string errorMessage)
       {
-         KeyValuePair<ILocalGitRepository, LocalGitRepositoryStatistic> repository2Statistic =
-            _gitStatistic.SingleOrDefault(x => x.Key.ProjectKey.Equals(fmk.ProjectKey));
-         if (repository2Statistic.Key == null)
+         ILocalGitRepository repo = getRepository(mrk.ProjectKey);
+         if (repo == null || !_gitStatistic.ContainsKey(mrk))
          {
             errorMessage = "N/A";
             return null;
          }
 
-         if (!repository2Statistic.Value.State.IsCloned)
+         if (repo.ExpectingClone)
          {
             errorMessage = "N/A (not cloned)";
             return null;
          }
 
-         KeyValuePair<DiffStatisticKey, DiffStatistic?> stat =
-            repository2Statistic.Value.Statistic.SingleOrDefault(x => x.Key == fmk.MergeRequest.IId);
-         if (stat.Key == default(DiffStatisticKey))
+         if (!_gitStatistic[mrk].HasValue)
          {
             // This is to be shown while "silent update" is in progress.
             // If update fails, it is still shown, can be considered a bug... so TODO.
             errorMessage = "Checking...";
             return null;
          }
-         else if (!stat.Value.HasValue)
+         else if (!_gitStatistic[mrk].Value.Statistic.HasValue)
          {
-            errorMessage = _updating.Contains(repository2Statistic.Key) ? "Loading..." : "Error";
+            errorMessage = _updating.Contains(repo) ? "Loading..." : "Error";
             return null;
          }
 
          errorMessage = String.Empty;
-         return stat.Value;
+         return _gitStatistic[mrk].Value.Statistic.Value;
       }
 
       async protected override Task doUpdate(ILocalGitRepository repo)
       {
-         DateTime prevLatestChange = _gitStatistic[repo].State.LatestChange;
-
-         // Use locally cached information for the whole Project because it is always not less
-         // than the latest version of any merge request that we have locally.
-         // This allows to guarantee that each MR is processed once and not on each git repository update.
-         DateTime latestChange = _mergeRequestCache.GetLatestVersion(repo.ProjectKey)?.Created_At ?? DateTime.MinValue;
-
          Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
@@ -98,8 +87,8 @@ namespace mrHelper.App.Helpers
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
             Version version = _mergeRequestCache.GetLatestVersion(mrk);
-
-            if (version == null || version.Created_At <= prevLatestChange || version.Created_At > latestChange)
+            bool newKey = !_gitStatistic.ContainsKey(mrk) || !_gitStatistic[mrk].HasValue;
+            if (version == null || (!newKey && version.Created_At <= _gitStatistic[mrk].Value.LatestChange))
             {
                continue;
             }
@@ -115,19 +104,17 @@ namespace mrHelper.App.Helpers
 
          foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
          {
-            DiffStatisticKey key = keyValuePair.Key.IId;
-            resetCachedStatistic(repo, key);
+            resetCachedStatistic(keyValuePair.Key);
             Update?.Invoke();
          }
 
          int updateCount = 0;
          foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in versionsToUpdate)
          {
-            DiffStatisticKey key = keyValuePair.Key.IId;
             if (String.IsNullOrEmpty(keyValuePair.Value.Base_Commit_SHA)
              || String.IsNullOrEmpty(keyValuePair.Value.Head_Commit_SHA))
             {
-               updateCachedStatistic(repo, key, latestChange, null);
+               updateCachedStatistic(keyValuePair.Key, keyValuePair.Value.Created_At, null);
                Update?.Invoke();
                continue;
             }
@@ -144,7 +131,7 @@ namespace mrHelper.App.Helpers
                null
             );
 
-            bool success = true;
+            bool success = repo.Data != null;
             try
             {
                await repo.Data?.LoadFromDisk(args);
@@ -152,14 +139,14 @@ namespace mrHelper.App.Helpers
             catch (LoadFromDiskFailedException ex)
             {
                ExceptionHandlers.Handle(String.Format(
-                  "Cannot update git statistic for MR with IID {0}", key), ex);
+                  "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
                success = false;
             }
 
             if (success)
             {
-               DiffStatistic? diffStat = parseGitDiffStatistic(repo, key, args);
-               updateCachedStatistic(repo, key, latestChange, diffStat);
+               DiffStatistic? diffStat = parseGitDiffStatistic(repo, keyValuePair.Key, args);
+               updateCachedStatistic(keyValuePair.Key, keyValuePair.Value.Created_At, diffStat);
                updateCount++;
                if (updateCount % 2 == 0) // to reduce number of Update calls
                {
@@ -169,19 +156,15 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void resetCachedStatistic(ILocalGitRepository repo, DiffStatisticKey key)
+      private void resetCachedStatistic(MergeRequestKey mrk)
       {
-         _gitStatistic[repo].Statistic[key] = null;
+         _gitStatistic[mrk] = null;
       }
 
-      private void updateCachedStatistic(ILocalGitRepository repo, DiffStatisticKey key,
+      private void updateCachedStatistic(MergeRequestKey mrk,
          DateTime latestChange, DiffStatistic? diffStat)
       {
-         _gitStatistic[repo].Statistic[key] = diffStat;
-
-         Dictionary<DiffStatisticKey, DiffStatistic?> repositoryStatistic = _gitStatistic[repo].Statistic;
-         _gitStatistic[repo] = new LocalGitRepositoryStatistic(
-            new RepositoryState(true, latestChange), repositoryStatistic);
+         _gitStatistic[mrk] = new MergeRequestStatistic(latestChange, diffStat);
       }
 
       private static readonly Regex gitDiffStatRe =
@@ -189,7 +172,7 @@ namespace mrHelper.App.Helpers
             @"(?'files'\d*) file[s]? changed, ((?'ins'\d*) insertion[s]?\(\+\)(, )?)?((?'del'\d*) deletion[s]?\(\-\))?",
                RegexOptions.Compiled);
 
-      private DiffStatistic? parseGitDiffStatistic(ILocalGitRepository repo, DiffStatisticKey key,
+      private DiffStatistic? parseGitDiffStatistic(ILocalGitRepository repo, MergeRequestKey mrk,
          GitDiffArguments args)
       {
          void traceError(string text)
@@ -199,7 +182,7 @@ namespace mrHelper.App.Helpers
              + "This makes impossible to show git statistic for MR with IID {4}", text, repo.Path,
                String.Format("{0}/{1}", args.CommonArgs.Sha1?.ToString() ?? "N/A",
                                         args.CommonArgs.Sha2?.ToString() ?? "N/A"),
-               String.Format("{0}:{1}", repo.ProjectKey.HostName, repo.ProjectKey.ProjectName), key));
+               String.Format("{0}:{1}", repo.ProjectKey.HostName, repo.ProjectKey.ProjectName), mrk.IId));
          }
 
          IEnumerable<string> statText = null;
@@ -232,18 +215,6 @@ namespace mrHelper.App.Helpers
             parseOrZero(m.Groups["ins"].Value), parseOrZero(m.Groups["del"].Value));
       }
 
-      internal struct RepositoryState
-      {
-         public RepositoryState(bool isCloned, DateTime latestChange)
-         {
-            IsCloned = isCloned;
-            LatestChange = latestChange;
-         }
-
-         internal bool IsCloned { get; }
-         internal DateTime LatestChange { get; }
-      }
-
       internal struct DiffStatistic
       {
          internal DiffStatistic(int files, int insertions, int deletions)
@@ -264,20 +235,20 @@ namespace mrHelper.App.Helpers
          private readonly int _deletions;
       }
 
-      private struct LocalGitRepositoryStatistic
+      private struct MergeRequestStatistic
       {
-         public LocalGitRepositoryStatistic(RepositoryState state, Dictionary<int, DiffStatistic?> statistic)
+         public MergeRequestStatistic(DateTime latestChange, DiffStatistic? statistic)
          {
-            State = state;
+            LatestChange = latestChange;
             Statistic = statistic;
          }
 
-         internal RepositoryState State { get; }
-         internal Dictionary<DiffStatisticKey, DiffStatistic?> Statistic { get; }
+         internal DateTime LatestChange { get; }
+         internal DiffStatistic? Statistic { get; }
       }
 
-      private readonly Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic> _gitStatistic =
-         new Dictionary<ILocalGitRepository, LocalGitRepositoryStatistic>();
+      private readonly Dictionary<MergeRequestKey, MergeRequestStatistic?> _gitStatistic =
+         new Dictionary<MergeRequestKey, MergeRequestStatistic?>();
    }
 }
 

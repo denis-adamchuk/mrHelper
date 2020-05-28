@@ -8,11 +8,9 @@ using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Session
 {
-   public interface ISession
+   public interface ISession : IDisposable
    {
       Task<bool> Start(string hostname, SessionContext context);
-      Task StopAsync();
-      void Stop();
 
       IMergeRequestCache MergeRequestCache { get; }
       IDiscussionCache DiscussionCache { get; }

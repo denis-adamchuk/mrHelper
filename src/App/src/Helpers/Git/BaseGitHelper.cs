@@ -58,7 +58,7 @@ namespace mrHelper.App.Helpers
 
       private void scheduleSingleProjectUpdate(ProjectKey projectKey)
       {
-         ILocalGitRepository repo = _factoryAccessor.GetFactory()?.GetRepository(projectKey);
+         ILocalGitRepository repo = getRepository(projectKey);
          if (repo != null)
          {
             _synchronizeInvoke.BeginInvoke(new Action(async () => await updateAsync(repo)), null);
@@ -95,6 +95,11 @@ namespace mrHelper.App.Helpers
       private IProjectUpdateContextProvider getContextProvider(ILocalGitRepository repo)
       {
          return _contextProviderFactory.GetLocalBasedContextProvider(repo.ProjectKey);
+      }
+
+      protected ILocalGitRepository getRepository(ProjectKey projectKey)
+      {
+         return _factoryAccessor.GetFactory()?.GetRepository(projectKey);
       }
 
       protected abstract Task doUpdate(ILocalGitRepository repo);
