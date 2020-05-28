@@ -1,7 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using GitLabSharp;
 using GitLabSharp.Accessors;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
@@ -14,14 +12,14 @@ namespace mrHelper.Client.TimeTracking
    /// </summary>
    internal class TimeTrackingOperator : BaseOperator
    {
-      internal TimeTrackingOperator(IHostProperties settings)
-         : base(settings)
+      internal TimeTrackingOperator(string hostname, IHostProperties settings)
+         : base(hostname, settings)
       {
       }
 
       internal Task AddSpanAsync(bool add, TimeSpan span, MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>

@@ -54,7 +54,7 @@ namespace mrHelper.Client.Repository
 
       async private Task call(ProjectKey projectKey, Func<Task> func, string cancelMessage, string errorMessage)
       {
-         _operator = new RepositoryOperator(projectKey.HostName, _settings.GetAccessToken(projectKey.HostName));
+         _operator = new RepositoryOperator(projectKey.HostName, _settings);
          try
          {
             await func();
@@ -72,7 +72,7 @@ namespace mrHelper.Client.Repository
 
       async private Task<T> call<T>(ProjectKey projectKey, Func<Task<T>> func, string cancelMessage, string errorMessage)
       {
-         _operator = new RepositoryOperator(projectKey.HostName, _settings.GetAccessToken(projectKey.HostName));
+         _operator = new RepositoryOperator(projectKey.HostName, _settings);
          try
          {
             return await func();

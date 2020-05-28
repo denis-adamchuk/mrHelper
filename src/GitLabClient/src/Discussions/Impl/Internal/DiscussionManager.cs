@@ -29,9 +29,9 @@ namespace mrHelper.Client.Discussions
       IDiscussionCacheInternal
    {
       internal DiscussionManager(GitLabClientContext clientContext,
-         User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext)
+         string hostname, User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext)
       {
-         _operator = new DiscussionOperator(clientContext.HostProperties);
+         _operator = new DiscussionOperator(hostname, clientContext.HostProperties);
 
          _parser = new DiscussionParser(this, clientContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;

@@ -31,47 +31,45 @@ namespace mrHelper.App.Forms
 
    internal partial class MainForm
    {
-      async private Task switchHostToSelected()
+      private bool startWorkflowDefaultExceptionHandler(Exception ex)
       {
-         string hostName = getHostName();
-         if (hostName != String.Empty)
+         if (ex is SessionException || ex is UnknownHostException || ex is NoProjectsException)
          {
-            tabControl.SelectedTab = tabPageMR;
+            disableAllUIControls(true);
+            ExceptionHandlers.Handle("Cannot switch host", ex);
+            string message = ex.Message;
+            if (ex is SessionException wx)
+            {
+               message = wx.UserMessage;
+            }
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return true;
          }
+         return false;
+      }
 
-         bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
-         string projectname = shouldUseLastSelection ?
-            _lastMergeRequestsByHosts[hostName].ProjectKey.ProjectName : String.Empty;
-         int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
-
-         _suppressExternalConnections = true;
+      /// <summary>
+      /// </summary>
+      /// <returns>Was switch successful</returns>
+      async private Task<bool> switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
+      {
+         updateTabControlSelection();
          try
          {
-            _suppressExternalConnections = await startWorkflowAsync(hostName);
+            return await startWorkflowAsync(getHostName());
          }
          catch (Exception ex)
          {
-            _suppressExternalConnections = false;
-            if (ex is SessionException || ex is UnknownHostException || ex is NoProjectsException)
+            if (exceptionHandler == null)
             {
-               disableAllUIControls(true);
-               ExceptionHandlers.Handle("Cannot switch host", ex);
-               string message = ex.Message;
-               if (ex is SessionException wx)
-               {
-                  message = wx.UserMessage;
-               }
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
+               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
             }
-            throw;
+            if (!exceptionHandler(ex))
+            {
+               throw;
+            }
          }
-         _suppressExternalConnections = false;
-         if (!isSearchMode())
-         {
-            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostName, projectname), iid);
-            selectMergeRequest(listViewMergeRequests, mrk, false);
-         }
+         return false;
       }
 
       private void switchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)
@@ -82,25 +80,22 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] User requested to change merge request to IId {0}",
             fmk.MergeRequest.IId.ToString()));
 
-         _suppressExternalConnections = true;
-         try
-         {
-            onSingleMergeRequestLoaded(fmk);
+         onSingleMergeRequestLoaded(fmk);
 
-            IMergeRequestCache cache = _liveSession.MergeRequestCache;
-            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-            onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
-               showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
-         }
-         finally
-         {
-            _suppressExternalConnections = false;
-         }
+         IMergeRequestCache cache = _liveSession.MergeRequestCache;
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
+         onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
+            showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      /// <summary>
+      /// Connects Live Session to GitLab
+      /// </summary>
+      /// <param name="hostname"></param>
+      /// <returns>false if operation was cancelled</returns>
       async private Task<bool> startWorkflowAsync(string hostname)
       {
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
@@ -118,8 +113,6 @@ namespace mrHelper.App.Forms
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}", hostname);
 
-         await _liveSession.Stop();
-         await _searchSession.Stop();
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -166,7 +159,7 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         onAllMergeRequestsLoaded(enabledProjects);
+         onAllMergeRequestsLoaded(hostname, enabledProjects);
          cleanupReviewedCommits(hostname);
          return true;
       }
@@ -185,7 +178,7 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         onAllMergeRequestsLoaded(_liveSession.MergeRequestCache.GetProjects());
+         onAllMergeRequestsLoaded(hostname, _liveSession.MergeRequestCache.GetProjects());
          cleanupReviewedCommits(hostname);
          return true;
       }
@@ -231,7 +224,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Loading merge requests...";
       }
 
-      private void onAllMergeRequestsLoaded(IEnumerable<ProjectKey> projects)
+      private void onAllMergeRequestsLoaded(string hostName, IEnumerable<ProjectKey> projects)
       {
          labelWorkflowStatus.Text = "Merge requests loaded";
 
@@ -243,6 +236,17 @@ namespace mrHelper.App.Forms
          foreach (ProjectKey projectKey in projects)
          {
             scheduleSilentUpdate(projectKey);
+         }
+
+         if (!isSearchMode())
+         {
+            bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
+            string projectname = shouldUseLastSelection ?
+               _lastMergeRequestsByHosts[hostName].ProjectKey.ProjectName : String.Empty;
+            int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
+
+            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostName, projectname), iid);
+            selectMergeRequest(listViewMergeRequests, mrk, false);
          }
       }
 

@@ -91,32 +91,26 @@ namespace mrHelper.App.Forms
             new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
       }
 
-      /// <summary>
-      /// This flag helps to avoid re-entrance when external connection attempt occurs in the middle of internal
-      /// connection procedure.
-      /// </summary>
-      private bool _suppressExternalConnections;
-
       async private Task onOpenCommand(string argumentsString)
       {
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         if (_suppressExternalConnections)
+         //if (_suppressExternalConnections)
          {
             Trace.TraceInformation("[Mainform] Cannot connect to URL because the app is connecting");
-            return;
+            //return;
          }
 
-         _suppressExternalConnections = true;
+         //_suppressExternalConnections = true;
          try
          {
             await connectToUrlAsync(url);
          }
          finally
          {
-            _suppressExternalConnections = false;
+            //_suppressExternalConnections = false;
          }
       }
 
@@ -144,11 +138,8 @@ namespace mrHelper.App.Forms
          _initialHostName = hostname;
          selectHost(PreferredSelection.Initial);
 
-         try
-         {
-            return await startWorkflowAsync(hostname);
-         }
-         catch (Exception ex)
+         return await switchHostToSelected(new Func<Exception, bool>(
+            (ex) =>
          {
             if (ex is UnknownHostException)
             {
@@ -167,8 +158,8 @@ namespace mrHelper.App.Forms
                Debug.Assert(false);
                ExceptionHandlers.Handle(String.Format("Unexpected error on attempt to open URL {0}", url), ex);
             }
-         }
-         return false;
+            return true;
+         }));
       }
 
       private bool unhideFilteredMergeRequest(MergeRequestKey mrk)
@@ -237,15 +228,9 @@ namespace mrHelper.App.Forms
       {
          tabControlMode.SelectedTab = tabPageSearch;
 
-         try
-         {
-            if (await startSearchWorkflowAsync(mrk.ProjectKey.HostName,
-                  new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null))
-            {
-               selectMergeRequest(listViewFoundMergeRequests, mrk, true);
-            }
-         }
-         catch (Exception ex)
+         await searchMergeRequests(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
+            new Func<Exception, bool>(
+               (ex) =>
          {
             if (ex is UnknownHostException)
             {
@@ -260,7 +245,8 @@ namespace mrHelper.App.Forms
                Debug.Assert(false);
                ExceptionHandlers.Handle(String.Format("Unexpected error on attempt to open URL {0}", url), ex);
             }
-         }
+            return true;
+         }));
       }
 
       async private Task connectToUrlAsync(string originalUrl)
@@ -319,11 +305,10 @@ namespace mrHelper.App.Forms
 
          if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
          {
-            // We need to restart the workflow here because we possibly have an outdated list
-            // of merge requests in the cache
-            if (!updateIfNeeded || !await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
+            // We need to update the MR list here because cached one is possible outdated
+            if (updateIfNeeded)
             {
-               return false; // could not restart workflow
+               await checkForUpdatesAsync();
             }
 
             if (!checkIfCanOpenAtLiveTab(mrk, false))

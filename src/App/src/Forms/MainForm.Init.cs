@@ -354,11 +354,11 @@ namespace mrHelper.App.Forms
 
          if (_liveSession != null)
          {
-            await _liveSession.Stop();
+            await _liveSession.StopAsync();
          }
          if (_searchSession != null)
          {
-            await _searchSession.Stop();
+            await _searchSession.StopAsync();
          }
 
          saveState();

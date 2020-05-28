@@ -1,8 +1,6 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
@@ -16,14 +14,14 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    internal class DiscussionOperator : BaseOperator
    {
-      internal DiscussionOperator(IHostProperties settings)
-         : base(settings)
+      internal DiscussionOperator(string hostname, IHostProperties settings)
+         : base(hostname, settings)
       {
       }
 
       internal Task<Note> GetMostRecentUpdatedNoteAsync(MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -36,7 +34,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task<int> GetNoteCount(MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -48,7 +46,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -60,7 +58,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -72,7 +70,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -86,7 +84,7 @@ namespace mrHelper.Client.Discussions
       internal Task<DiscussionNote> ModifyNoteBodyAsync(MergeRequestKey mrk,
          string discussionId, int noteId, string body)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -100,7 +98,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task DeleteNoteAsync(MergeRequestKey mrk, int noteId)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -112,7 +110,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolved)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -126,7 +124,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -139,7 +137,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>
@@ -151,7 +149,7 @@ namespace mrHelper.Client.Discussions
 
       internal Task CreateNoteAsync(MergeRequestKey mrk, CreateNewNoteParameters parameters)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.CallNoCancel(
                   async () =>

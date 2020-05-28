@@ -1,7 +1,5 @@
-using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using Version = GitLabSharp.Entities.Version;
@@ -16,16 +14,16 @@ namespace mrHelper.Client.Session
    internal class SessionOperator : BaseOperator
    {
       internal SessionOperator(string host, IHostProperties settings)
-         : base(settings)
+         : base(host, settings)
       {
-         Host = host;
+         Host = host; // TODO Can be removed if users keep Host separately from Operator
       }
 
       internal string Host { get; }
 
       internal Task<User> GetCurrentUserAsync()
       {
-         return callWithNewClient(
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   () =>
@@ -34,7 +32,7 @@ namespace mrHelper.Client.Session
 
       internal Task<ProjectKey> GetProjectAsync(string projectName)
       {
-         return callWithNewClient(
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
@@ -46,7 +44,7 @@ namespace mrHelper.Client.Session
       internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
          SearchCriteria searchCriteria, int? maxResults, bool onlyOpen)
       {
-         return callWithNewClient(
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   () =>
@@ -55,7 +53,7 @@ namespace mrHelper.Client.Session
 
       internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid)
       {
-         return callWithNewClient(
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
@@ -66,7 +64,7 @@ namespace mrHelper.Client.Session
 
       internal Task<IEnumerable<Version>> GetVersionsAsync(string projectName, int iid)
       {
-         return callWithNewClient(
+         return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
@@ -75,37 +73,15 @@ namespace mrHelper.Client.Session
                         await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync())));
       }
 
-      public Task CancelAsync()
+      public new Task CancelAsync()
       {
-         List<Task> tasks = new List<Task>();
-         foreach (GitLabClient client in _clients)
-         {
-            tasks.Add(client.CancelAsync());
-         }
-         return Task.WhenAll(tasks);
+         return base.CancelAsync();
       }
 
-      async private Task<T> callWithNewClient<T>(Func<GitLabClient, Task<T>> func)
+      public new void Cancel()
       {
-         return await callWithNewClient<T>(Host,
-            async (client) =>
-               await keepClient(client, func));
+         base.Cancel();
       }
-
-      async private Task<T> keepClient<T>(GitLabClient client, Func<GitLabClient, Task<T>> func)
-      {
-         _clients.Add(client);
-         try
-         {
-            return await func(client);
-         }
-         finally
-         {
-            _clients.Remove(client);
-         }
-      }
-
-      private readonly List<GitLabClient> _clients = new List<GitLabClient>();
    }
 }
 

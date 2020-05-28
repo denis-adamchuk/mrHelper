@@ -16,34 +16,40 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task searchMergeRequests(object query, int? maxResults)
+      private bool startSearchWorkflowDefaultExceptionHandler(Exception ex)
       {
-         _suppressExternalConnections = true;
+         if (ex is SessionException || ex is UnknownHostException)
+         {
+            disableAllSearchUIControls(true);
+            ExceptionHandlers.Handle("Cannot perform merge request search", ex);
+            string message = ex.Message;
+            if (ex is SessionException wx)
+            {
+               message = wx.UserMessage;
+            }
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return true;
+         }
+         return false;
+      }
+
+      async private Task searchMergeRequests(object query, int? maxResults,
+         Func<Exception, bool> exceptionHandler = null)
+      {
          try
          {
-            _suppressExternalConnections = await startSearchWorkflowAsync(getHostName(), query, maxResults);
+            await startSearchWorkflowAsync(getHostName(), query, maxResults);
          }
          catch (Exception ex)
          {
-            _suppressExternalConnections = false;
-            if (ex is SessionException || ex is UnknownHostException)
+            if (exceptionHandler == null)
             {
-               disableAllSearchUIControls(true);
-               ExceptionHandlers.Handle("Cannot perform merge request search", ex);
-               string message = ex.Message;
-               if (ex is SessionException wx)
-               {
-                  message = wx.UserMessage;
-               }
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
+               exceptionHandler = new Func<Exception, bool>((e) => startSearchWorkflowDefaultExceptionHandler(e));
             }
-            throw;
-         }
-         _suppressExternalConnections = false;
-         if (isSearchMode())
-         {
-            selectMergeRequest(listViewFoundMergeRequests, new Nullable<MergeRequestKey>(), false);
+            if (!exceptionHandler(ex))
+            {
+               throw;
+            }
          }
       }
 
@@ -54,31 +60,27 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm.Search] User requested to change merge request to IId {0}",
             fmk.MergeRequest.IId.ToString()));
 
-         _suppressExternalConnections = true;
-         try
-         {
-            onSingleSearchMergeRequestLoaded(fmk);
+         onSingleSearchMergeRequestLoaded(fmk);
 
-            IMergeRequestCache cache = _searchSession.MergeRequestCache;
-            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-            onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
-               showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
-         }
-         finally
-         {
-            _suppressExternalConnections = false;
-         }
+         IMergeRequestCache cache = _searchSession.MergeRequestCache;
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
+         onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
+            showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      /// <summary>
+      /// Connects Search Session to GitLab
+      /// </summary>
+      /// <returns>false if operation was cancelled</returns>
       async private Task<bool> startSearchWorkflowAsync(string hostname, object query, int? maxResults)
       {
          labelWorkflowStatus.Text = String.Empty;
          disableAllSearchUIControls(true);
 
-         await _searchSession.Stop();
+         await _searchSession.StopAsync();
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -149,6 +151,11 @@ namespace mrHelper.App.Forms
          else
          {
             labelWorkflowStatus.Text = "Nothing found. Try more specific search query.";
+         }
+
+         if (isSearchMode())
+         {
+            selectMergeRequest(listViewFoundMergeRequests, new Nullable<MergeRequestKey>(), false);
          }
       }
 
