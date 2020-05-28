@@ -157,9 +157,12 @@ namespace mrHelper.App.Forms
          Debug.Assert(!isSearchMode());
          ISession session = getSession(true /* supported in Live only */);
          ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
+         if (totalTimeCache == null)
+         {
+            return;
+         }
 
          TimeSpan oldSpan = getTotalTime(mrk, totalTimeCache) ?? TimeSpan.Zero;
-
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -171,7 +174,7 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     await totalTimeCache?.AddSpan(add, diff, mrk);
+                     await totalTimeCache.AddSpan(add, diff, mrk);
                   }
                   catch (TimeTrackingException ex)
                   {

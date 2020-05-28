@@ -93,25 +93,16 @@ namespace mrHelper.App.Forms
 
       async private Task onOpenCommand(string argumentsString)
       {
+         if (_gitlabClientManager?.SearchManager == null)
+         {
+            return;
+         }
+
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         //if (_suppressExternalConnections)
-         {
-            Trace.TraceInformation("[Mainform] Cannot connect to URL because the app is connecting");
-            //return;
-         }
-
-         //_suppressExternalConnections = true;
-         try
-         {
-            await connectToUrlAsync(url);
-         }
-         finally
-         {
-            //_suppressExternalConnections = false;
-         }
+         await connectToUrlAsync(url);
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
@@ -268,7 +259,7 @@ namespace mrHelper.App.Forms
          }
 
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
-         MergeRequest mergeRequest = await _gitlabClientManager?.SearchManager?.SearchMergeRequestAsync(
+         MergeRequest mergeRequest = await _gitlabClientManager.SearchManager.SearchMergeRequestAsync(
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
          if (mergeRequest == null)
          {

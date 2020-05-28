@@ -79,6 +79,11 @@ namespace mrHelper.App.Helpers
 
       async protected override Task doUpdate(ILocalGitRepository repo)
       {
+         if (repo.Data == null)
+         {
+            return;
+         }
+
          Dictionary<MergeRequestKey, Version> versionsToUpdate = new Dictionary<MergeRequestKey, Version>();
 
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
@@ -132,15 +137,18 @@ namespace mrHelper.App.Helpers
             );
 
             bool success = repo.Data != null;
-            try
+            if (repo.Data != null)
             {
-               await repo.Data?.LoadFromDisk(args);
-            }
-            catch (LoadFromDiskFailedException ex)
-            {
-               ExceptionHandlers.Handle(String.Format(
-                  "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
-               success = false;
+               try
+               {
+                  await repo.Data.LoadFromDisk(args);
+               }
+               catch (LoadFromDiskFailedException ex)
+               {
+                  ExceptionHandlers.Handle(String.Format(
+                     "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
+                  success = false;
+               }
             }
 
             if (success)

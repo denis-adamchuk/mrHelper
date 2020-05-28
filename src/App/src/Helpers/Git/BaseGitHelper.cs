@@ -82,7 +82,10 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            await repo.Updater?.SilentUpdate(getContextProvider(repo));
+            if (repo.Updater != null)
+            {
+               await repo.Updater.SilentUpdate(getContextProvider(repo));
+            }
             await doUpdate(repo);
          }
          finally

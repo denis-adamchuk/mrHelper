@@ -214,6 +214,11 @@ namespace mrHelper.App.Forms
 
       async private Task<IEnumerable<Discussion>> loadDiscussionsAsync()
       {
+         if (_session?.DiscussionCache == null)
+         {
+            return null;
+         }
+
          Trace.TraceInformation(String.Format(
             "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
@@ -226,7 +231,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _session?.DiscussionCache?.LoadDiscussions(_mergeRequestKey);
+            discussions = await _session.DiscussionCache.LoadDiscussions(_mergeRequestKey);
          }
          catch (DiscussionCacheException ex)
          {

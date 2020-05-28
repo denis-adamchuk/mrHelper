@@ -422,11 +422,16 @@ namespace mrHelper.App.Forms
 
       async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
       {
+         if (session?.DiscussionCache == null)
+         {
+            return null;
+         }
+
          labelWorkflowStatus.Text = "Loading discussions...";
-         IEnumerable<Discussion> discussions;
+         IEnumerable<Discussion> discussions = null;
          try
          {
-            discussions = await session?.DiscussionCache?.LoadDiscussions(mrk);
+            discussions = await session.DiscussionCache.LoadDiscussions(mrk);
          }
          catch (DiscussionCacheException ex)
          {
