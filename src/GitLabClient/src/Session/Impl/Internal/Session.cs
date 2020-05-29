@@ -18,7 +18,6 @@ namespace mrHelper.Client.Session
       }
 
       public event Action Stopped;
-      public event Action<string> Starting;
       public event Action<string, User> Started;
 
       async public Task Start(string hostname, SessionContext context)
@@ -34,7 +33,6 @@ namespace mrHelper.Client.Session
                MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
 
             Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
-            Starting?.Invoke(hostname);
 
             User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
             await mergeRequestListLoader.Load();
