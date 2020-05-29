@@ -108,10 +108,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Request to update the specified MR after the specified time periods (in milliseconds)
       /// </summary>
-      public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
-         return null;
       }
 
       private void onUpdate(UserEvents.MergeRequestEvent e)

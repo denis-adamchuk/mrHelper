@@ -38,7 +38,7 @@ namespace mrHelper.Client.Discussions
    {
       DiscussionCount GetDiscussionCount(MergeRequestKey mrk);
 
-      IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished);
+      void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished);
 
       event Action<UserEvents.DiscussionEvent> DiscussionEvent;
    }

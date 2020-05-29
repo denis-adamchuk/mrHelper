@@ -149,19 +149,18 @@ namespace mrHelper.Client.Discussions
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          if (_timer == null)
          {
             // updates are disabled
-            return null;
+            return;
          }
 
          foreach (int interval in intervals)
          {
             enqueueOneShotTimer(mrk, interval, onUpdateFinished);
          }
-         return null;
       }
 
       private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
