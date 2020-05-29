@@ -14,7 +14,7 @@ namespace mrHelper.Client.Common
       {
       }
 
-      internal bool Cancelled => InnerException is GitLabClientCancelled;
+      internal bool Cancelled => InnerException is GitLabTaskRunnerCancelled;
    }
 
    internal static class OperatorCallWrapper
@@ -67,7 +67,7 @@ namespace mrHelper.Client.Common
 
       private static void handleException(Exception ex, bool enabledCancel)
       {
-         if (ex is GitLabClientCancelled)
+         if (ex is GitLabTaskRunnerCancelled)
          {
             Debug.Assert(enabledCancel);
             throw new OperatorException(ex);

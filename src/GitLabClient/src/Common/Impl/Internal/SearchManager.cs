@@ -19,7 +19,7 @@ namespace mrHelper.Client.Common
       async public Task<MergeRequest> SearchMergeRequestAsync(
          string hostname, string projectName, int mergeRequestIId)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
          try
          {
             SearchCriteria searchCriteria = new SearchCriteria(
@@ -36,7 +36,7 @@ namespace mrHelper.Client.Common
 
       async public Task<User> GetCurrentUserAsync(string hostname)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
          try
          {
             return await CommonOperator.SearchCurrentUserAsync(client);
@@ -49,7 +49,7 @@ namespace mrHelper.Client.Common
 
       async public Task<User> SearchUserByNameAsync(string hostname, string name, bool isUsername)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
          try
          {
             IEnumerable<User> users = await CommonOperator.SearchUserAsync(client, name, isUsername);
@@ -63,7 +63,7 @@ namespace mrHelper.Client.Common
 
       async public Task<Project> SearchProjectAsync(string hostname, string projectname)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
          try
          {
             return await CommonOperator.SearchProjectAsync(client, projectname);

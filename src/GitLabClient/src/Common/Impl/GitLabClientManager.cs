@@ -25,7 +25,7 @@ namespace mrHelper.Client.Common
 
       async public Task<EConnectionCheckStatus> VerifyConnection(string host, string token)
       {
-         GitLabClient client = new GitLabClient(host, token);
+         GitLabTaskRunner client = new GitLabTaskRunner(host, token);
          try
          {
             await CommonOperator.SearchCurrentUserAsync(client);

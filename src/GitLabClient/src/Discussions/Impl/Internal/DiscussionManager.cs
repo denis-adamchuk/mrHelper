@@ -378,11 +378,7 @@ namespace mrHelper.Client.Discussions
                   "[DiscussionManager] Waiting for completion of updating discussions for MR: "
                 + "Host={0}, Project={1}, IId={2}",
                   mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString()));
-
-               while (_updating.Contains(mrk.Value)) //-V3120
-               {
-                  await Task.Delay(50);
-               }
+               await TaskUtils.WhileAsync(() => _updating.Contains(mrk.Value));
             }
          }
          else
@@ -391,11 +387,7 @@ namespace mrHelper.Client.Discussions
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Waiting for completion of updating discussions"));
-
-               while (_updating.Any()) //-V3120
-               {
-                  await Task.Delay(50);
-               }
+               await TaskUtils.WhileAsync(() => _updating.Any());
             }
          }
       }

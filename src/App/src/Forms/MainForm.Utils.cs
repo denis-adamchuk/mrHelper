@@ -1299,7 +1299,7 @@ namespace mrHelper.App.Forms
 
          if (e.New)
          {
-            enqueueCheckForUpdates(mrk, new[] {
+            requestUpdates(mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
          }
@@ -1888,7 +1888,7 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
       }
 
-      private void enqueueCheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished = null)
+      private void requestUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished = null)
       {
          bool mergeRequestUpdateFinished = false;
          bool discussionUpdateFinished = false;
@@ -1906,21 +1906,6 @@ namespace mrHelper.App.Forms
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
          session?.DiscussionCache?.RequestUpdate(mrk, intervals,
             () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
-      }
-
-      async private Task checkForUpdatesAsync()
-      {
-         bool mergeRequestUpdateFinished = false;
-         bool discussionUpdateFinished = false;
-
-         ISession session = getSession(true /* supported in Live only */);
-         session?.MergeRequestCache?.RequestUpdate(null, new int[] { 0 }, () => { mergeRequestUpdateFinished = true; });
-         session?.DiscussionCache?.RequestUpdate(null, new int[] { 0 }, () => { discussionUpdateFinished = true; });
-
-         while (!mergeRequestUpdateFinished || !discussionUpdateFinished)
-         {
-            await Task.Delay(50);
-         }
       }
 
       private static void disableSSLVerification()

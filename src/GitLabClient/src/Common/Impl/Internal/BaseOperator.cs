@@ -10,26 +10,21 @@ namespace mrHelper.Client.Common
       internal BaseOperator(string hostname, IHostProperties hostProperties)
       {
          _settings = hostProperties;
-         _client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
+         _client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
       }
 
-      async protected Task<T> callWithSharedClient<T>(Func<GitLabClient, Task<T>> func)
+      async protected Task<T> callWithSharedClient<T>(Func<GitLabTaskRunner, Task<T>> func)
       {
          return await func(_client);
       }
 
-      protected Task CancelAsync()
-      {
-         return _client.CancelAsync();
-      }
-
       protected void Cancel()
       {
-         _client.Cancel();
+         _client.CancelAll();
       }
 
       private readonly IHostProperties _settings;
-      private readonly GitLabClient _client;
+      private readonly GitLabTaskRunner _client;
    }
 }
 

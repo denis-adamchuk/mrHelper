@@ -796,7 +796,7 @@ namespace mrHelper.App.Forms
             string oldButtonText = buttonReloadList.Text;
             buttonReloadList.Text = "Updating...";
 
-            enqueueCheckForUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval },
+            requestUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval },
                () =>
                {
                   buttonReloadList.Enabled = true;

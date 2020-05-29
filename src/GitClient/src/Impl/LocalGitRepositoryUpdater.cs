@@ -85,10 +85,7 @@ namespace mrHelper.GitClient
             _updateOperationDescriptor.OnProgressChange = onProgressChange;
          }
 
-         while (_updatingContext != null) //-V3120
-         {
-            await Task.Delay(50);
-         }
+         await TaskUtils.WhileAsync(() => _updatingContext != null);
 
          if (needUpdate)
          {

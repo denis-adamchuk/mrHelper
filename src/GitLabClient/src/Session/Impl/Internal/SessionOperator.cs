@@ -73,11 +73,6 @@ namespace mrHelper.Client.Session
                         await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync())));
       }
 
-      public new Task CancelAsync()
-      {
-         return base.CancelAsync();
-      }
-
       public new void Cancel()
       {
          base.Cancel();

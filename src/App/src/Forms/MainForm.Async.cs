@@ -490,6 +490,14 @@ namespace mrHelper.App.Forms
             enableControlsOnGitAsyncOperation(true, "restoring merged commits");
          }
       }
+
+      async private Task checkForUpdatesAsync()
+      {
+         bool updateReceived = false;
+         requestUpdates(null, new int[] { 1 }, () => updateReceived = true);
+         await TaskUtils.WhileAsync(() => !updateReceived);
+      }
+
    }
 }
 

@@ -10,6 +10,22 @@ namespace mrHelper.Common.Tools
 {
    public static class TaskUtils
    {
+      async public static Task IfAsync(Func<bool> condition, int delay = 50)
+      {
+         if (condition())
+         {
+            await Task.Delay(delay);
+         }
+      }
+
+      async public static Task WhileAsync(Func<bool> condition, int delay = 50)
+      {
+         while (condition()) //-V3120
+         {
+            await Task.Delay(delay);
+         }
+      }
+
       /// <summary>
       /// Runs a batch of functions of the given type simultaneously.
       /// Each function receives a single argument of type T which can be treated as a parallelized loop variable.
@@ -57,10 +73,7 @@ namespace mrHelper.Common.Tools
                break;
             }
 
-            if (interBatchDelay > 0)
-            {
-               await Task.Delay(interBatchDelay);
-            }
+            await IfAsync(() => interBatchDelay > 0, interBatchDelay);
          }
       }
    }
