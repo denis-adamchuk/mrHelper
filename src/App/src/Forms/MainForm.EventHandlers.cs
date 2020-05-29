@@ -49,10 +49,11 @@ namespace mrHelper.App.Forms
          cleanUpTempFolder("mrHelper.logs.*.zip");
          checkForApplicationUpdates();
 
-         await initializeWork();
+         initializeWork();
+         await connectOnStartup();
       }
 
-      async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+      private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
       {
          Trace.TraceInformation(String.Format("[MainForm] Requested to close the Main Form. Reason: {0}",
             e.CloseReason.ToString()));
@@ -70,12 +71,6 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!isReadyToClose())
-         {
-            e.Cancel = true;
-            return;
-         }
-
          Hide();
 
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
@@ -86,7 +81,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         await finalizeWork();
+         finalizeWork();
       }
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
@@ -226,8 +221,6 @@ namespace mrHelper.App.Forms
                Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
                await switchHostToSelected();
             }
-
-            updateTabControlSelection();
          }
       }
 
@@ -534,7 +527,6 @@ namespace mrHelper.App.Forms
 
             updateKnownHostAndTokensInSettings();
             updateHostsDropdownList();
-            updateTabControlSelection();
             selectHost(PreferredSelection.Latest);
             await switchHostToSelected();
          }
@@ -560,7 +552,6 @@ namespace mrHelper.App.Forms
          _currentUser.Remove(removedHostName);
          updateKnownHostAndTokensInSettings();
          updateHostsDropdownList();
-         updateTabControlSelection();
          if (removeCurrent)
          {
             if (comboBoxHost.Items.Count == 0)
@@ -821,7 +812,7 @@ namespace mrHelper.App.Forms
          await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
-      async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          object tag = linkLabelAbortGit.Tag;
          string message = String.Format("Do you really want to abort current operation{0}?",
@@ -835,20 +826,10 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation("[MainForm] User decided to abort current operation");
 
-         if (_commitChainCreator != null)
-         {
-            await _commitChainCreator.CancelAsync();
-         }
-
          Debug.Assert(getMergeRequestKey(null).HasValue);
 
          ILocalGitRepository repo = getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
-         if (repo == null)
-         {
-            return;
-         }
-
-         repo.Updater?.CancelUpdate();
+         repo?.Updater?.CancelUpdate();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

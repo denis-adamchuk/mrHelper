@@ -65,24 +65,21 @@ namespace mrHelper.GitClient
             throw new ArgumentException("Cannot use shallow clone if single commit fetch is not supported");
          }
 
+         LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
+            ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
+            : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches;
+
          // PathFinder must guarantee the following
          Debug.Assert(isEmptyFolder(Path)
             || (GitTools.GetRepositoryProjectKey(Path).HasValue
                && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-
-         LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
-            ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
-            : (GitTools.IsSingleCommitFetchSupported(Path) //-V3022
-               ? LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches
-               : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithoutSingleCommitFetches);
-         ExpectingClone = isEmptyFolder(Path);
          _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
          _updater.Cloned += onCloned;
-
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
+         ExpectingClone = isEmptyFolder(Path);
          ProjectKey = projectKey;
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2}, "

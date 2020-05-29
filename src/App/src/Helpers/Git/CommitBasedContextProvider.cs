@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Helpers
@@ -13,9 +12,9 @@ namespace mrHelper.App.Helpers
          _shas = shas;
       }
 
-      public Task<IProjectUpdateContext> GetContext()
+      public ProjectUpdateContext GetContext()
       {
-         return Task.FromResult((new PartialUpdateContext(_shas)) as IProjectUpdateContext);
+         return new PartialUpdateContext(_shas);
       }
 
       public override string ToString()

@@ -528,7 +528,6 @@ namespace mrHelper.App.Forms
          {
             buttonReloadList.Enabled = enabled;
          }
-         //_suppressExternalConnections = !enabled;
          _canSwitchTab = enabled;
 
          if (enabled)
@@ -883,6 +882,7 @@ namespace mrHelper.App.Forms
       private void disposeLocalGitRepositoryFactory()
       {
          _gitClientFactory?.Dispose();
+         _gitClientFactory = null;
       }
 
       /// <summary>
@@ -1927,37 +1927,6 @@ namespace mrHelper.App.Forms
             columnWidths[(string)column.Tag] = column.Width;
          }
          saveProperty(columnWidths);
-      }
-
-      private bool isReadyToClose()
-      {
-         if (_commitChainCreator != null && !_commitChainCreator.IsCancelEnabled)
-         {
-            MessageBox.Show("Current background operation on GitLab branches prevents immediate exit. "
-               + "You will be notified when it is done.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Trace.TraceInformation("[MainForm] Cannot exit due to CommitChainCreator");
-            _notifyOnCommitChainCancelEnabled = true;
-            return false;
-         }
-         return true;
-      }
-
-      private void onCommitChainCancelEnabled(bool enabled)
-      {
-         if (enabled)
-         {
-            if (_notifyOnCommitChainCancelEnabled)
-            {
-               MessageBox.Show("Operation that prevented exit completed.",
-                  "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-               Trace.TraceInformation("[MainForm] User notified that operation is completed");
-               _notifyOnCommitChainCancelEnabled = false;
-            }
-         }
-         else
-         {
-            linkLabelAbortGit.Visible = false;
-         }
       }
 
       private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk, ISession session)

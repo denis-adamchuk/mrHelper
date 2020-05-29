@@ -80,18 +80,12 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            await repo.Updater.SilentUpdate(getContextProvider(repo));
             await doUpdate(repo);
          }
          finally
          {
             _updating.Remove(repo);
          }
-      }
-
-      private IProjectUpdateContextProvider getContextProvider(ILocalGitRepository repo)
-      {
-         return _contextProviderFactory.GetLocalBasedContextProvider(repo.ProjectKey);
       }
 
       protected ILocalGitRepository getRepository(ProjectKey projectKey)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using System.Diagnostics;
@@ -18,17 +17,17 @@ namespace mrHelper.Client.MergeRequests
          _versions = versions;
       }
 
-      public Task<IProjectUpdateContext> GetContext()
+      public ProjectUpdateContext GetContext()
       {
          if (_versions == null)
          {
             Debug.Assert(false);
-            return Task.FromResult<IProjectUpdateContext>(null);
+            return null;
          }
 
          if (!_versions.Any())
          {
-            return Task.FromResult<IProjectUpdateContext>(null);
+            return null;
          }
 
          List<string> shas = new List<string>();
@@ -38,9 +37,7 @@ namespace mrHelper.Client.MergeRequests
             shas.Add(version.Head_Commit_SHA);
          }
 
-         FullUpdateContext update = new FullUpdateContext(
-            _versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At, shas);
-         return Task.FromResult(update as IProjectUpdateContext);
+         return new FullUpdateContext(_versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At, shas);
       }
 
       public override string ToString()

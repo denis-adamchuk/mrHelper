@@ -313,7 +313,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task initializeWork()
+      private void initializeWork()
       {
          restoreState();
          prepareFormToStart();
@@ -329,8 +329,6 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
          initializeIconScheme();
          initializeBadgeScheme();
-
-         await connectOnStartup();
       }
 
       private void createGitLabClientManager()
@@ -340,7 +338,7 @@ namespace mrHelper.App.Forms
          _gitlabClientManager = new Client.Common.GitLabClientManager(clientContext);
       }
 
-      async private Task finalizeWork()
+      private void finalizeWork()
       {
          _exiting = true; // to prevent execution of Dispose() which is called while we are in 'await'
 
@@ -349,8 +347,6 @@ namespace mrHelper.App.Forms
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
 
          unsubscribeFromLiveSession();
-
-         await finalizeCommitChainCreator();
 
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
@@ -542,14 +538,6 @@ namespace mrHelper.App.Forms
          {
             _liveSession.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
             _liveSession.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
-         }
-      }
-
-      private async Task finalizeCommitChainCreator()
-      {
-         if (_commitChainCreator != null)
-         {
-            await _commitChainCreator.CancelAsync();
          }
       }
 

@@ -101,18 +101,23 @@ namespace mrHelper.App.Helpers
                   null
                );
 
-               if (repo.Data != null)
+               try
                {
-                  try
+                  if (repo.Updater != null)
+                  {
+                     await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
+                        new string[] { keyValuePair.Value.Base_Commit_SHA, keyValuePair.Value.Head_Commit_SHA }));
+                  }
+                  if (repo.Data != null)
                   {
                      await repo.Data.LoadFromDisk(args);
-                     diffStat = parseGitDiffStatistic(repo, keyValuePair.Key, args);
                   }
-                  catch (LoadFromDiskFailedException ex)
-                  {
-                     ExceptionHandlers.Handle(String.Format(
-                        "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
-                  }
+                  diffStat = parseGitDiffStatistic(repo, keyValuePair.Key, args);
+               }
+               catch (LoadFromDiskFailedException ex)
+               {
+                  ExceptionHandlers.Handle(String.Format(
+                     "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
                }
             }
             _gitStatistic[keyValuePair.Key] = new MergeRequestStatistic(keyValuePair.Value.Created_At, diffStat);

@@ -209,33 +209,42 @@ namespace mrHelper.App.Helpers
          // Update() call will return from `await` only when all ongoing updates within
          // the project are finished.
 
+         foreach (GitDiffArguments args in diffArgs)
+         {
+            if (repo.Updater != null)
+            {
+               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
+                  new string[] { args.CommonArgs.Sha1, args.CommonArgs.Sha2 }));
+            }
+         }
+
+         foreach (GitShowRevisionArguments args in revisionArgs)
+         {
+            if (repo.Updater != null)
+            {
+               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { args.Sha }));
+            }
+         }
+
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
             {
-               if (repo.Updater != null)
-               {
-                  await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
-                     new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }));
-               }
                if (repo.Data != null)
                {
                   await repo.Data.LoadFromDisk(x);
                }
             },
-            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
+            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, () => repo.Data == null);
+
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               if (repo.Updater != null)
-               {
-                  await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { x.Sha }));
-               }
                if (repo.Data != null)
                {
                   await repo.Data.LoadFromDisk(x);
                }
             },
-            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
+            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, () => repo.Data == null);
       }
 
       private DateTime getLatestChange(MergeRequestKey mrk)

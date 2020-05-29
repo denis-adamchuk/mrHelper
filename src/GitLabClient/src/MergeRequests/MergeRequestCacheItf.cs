@@ -45,10 +45,6 @@ namespace mrHelper.Client.MergeRequests
 
       /// <summary>
       /// </summary>
-      IProjectUpdateContextProvider GetRemoteBasedContextProvider(MergeRequestKey mrk);
-
-      /// <summary>
-      /// </summary>
       void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished);
 
       /// <summary>

@@ -98,7 +98,6 @@ namespace mrHelper.App.Forms
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
       private bool _canSwitchTab = true;
-      private bool _notifyOnCommitChainCancelEnabled;
       private readonly bool _runningAsUwp = false;
 
       private LocalGitRepositoryFactory _gitClientFactory;
@@ -108,7 +107,6 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
-      private CommitChainCreator _commitChainCreator;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =

@@ -27,7 +27,7 @@ namespace mrHelper.App.Forms
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
-         Func<MergeRequestKey, Task> updateGit, Action onDiscussionModified)
+         Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit, Action onDiscussionModified)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -223,9 +223,6 @@ namespace mrHelper.App.Forms
             "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
-         this.Text = DefaultCaption + "   (Checking for new commits)";
-         await _updateGit(_mergeRequestKey);
-
          this.Text = DefaultCaption + "   (Loading discussions)";
 
          IEnumerable<Discussion> discussions;
@@ -235,15 +232,16 @@ namespace mrHelper.App.Forms
          }
          catch (DiscussionCacheException ex)
          {
+            this.Text = DefaultCaption;
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return null;
          }
-         finally
-         {
-            this.Text = DefaultCaption;
-         }
+
+         this.Text = DefaultCaption + "   (Checking for new commits)";
+         await _updateGit(_mergeRequestKey, discussions);
+         this.Text = DefaultCaption;
 
          return discussions;
       }
@@ -514,7 +512,7 @@ namespace mrHelper.App.Forms
 
       private readonly User _currentUser;
       private readonly ISession _session;
-      private readonly Func<MergeRequestKey, Task> _updateGit;
+      private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 
       private readonly DiscussionFilterPanel FilterPanel;

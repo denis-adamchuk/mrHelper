@@ -17,9 +17,18 @@ namespace mrHelper.GitClient
    {
       internal enum EUpdateMode
       {
-         ShallowClone, // implies single commit fetching
-         FullCloneWithoutSingleCommitFetches,
-         FullCloneWithSingleCommitFetches
+         ShallowClone,                    // "git clone --depth=1" and "git fetch --depth=1 sha:/refs/keep-around/sha"
+         FullCloneWithSingleCommitFetches // "git clone" and "git fetch" and "git fetch sha:/refs/keep-around/sha"
+      }
+
+      private class InternalUpdateContext
+      {
+         internal InternalUpdateContext(IEnumerable<string> sha)
+         {
+            Sha = sha;
+         }
+
+         internal IEnumerable<string> Sha { get; }
       }
 
       /// <summary>
@@ -59,26 +68,25 @@ namespace mrHelper.GitClient
          _isDisposed = true;
       }
 
-      async public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
+      public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
       {
-         if (_isDisposed)
-         {
-            return;
-         }
+         return update(contextProvider, onProgressChange, true);
+      }
 
-         if (contextProvider == null)
+      async public Task update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
+         bool canClone)
+      {
+         ProjectUpdateContext context = contextProvider?.GetContext();
+         if (contextProvider == null || (context != null && context.Sha == null))
          {
             Debug.Assert(false);
             return;
          }
 
-         IProjectUpdateContext context = await contextProvider.GetContext();
-         if (context == null)
+         if (_isDisposed || context == null || (_localGitRepository.ExpectingClone && !canClone))
          {
             return;
          }
-
-         bool needUpdate = isUpdateNeeded(context, _updatingContext);
 
          if (onProgressChange != null)
          {
@@ -90,19 +98,13 @@ namespace mrHelper.GitClient
             _updateOperationDescriptor.OnProgressChange = onProgressChange;
          }
 
-         await TaskUtils.WhileAsync(() => _updatingContext != null);
-
-         if (needUpdate)
+         if (isUpdateNeeded(context, _updatingContext))
          {
-            _updatingContext = context;
-            try
-            {
-               await processContext(context);
-            }
-            finally
-            {
-               _updatingContext = null;
-            }
+            await processContext(context);
+         }
+         else
+         {
+            await TaskUtils.WhileAsync(() => _updatingContext != null);
          }
 
          _onProgressChange = null;
@@ -112,7 +114,7 @@ namespace mrHelper.GitClient
       {
          try
          {
-            await Update(contextProvider, null);
+            await update(contextProvider, null, false);
          }
          catch (RepositoryUpdateException ex)
          {
@@ -120,22 +122,51 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task processContext(IProjectUpdateContext context)
+      private IEnumerable<InternalUpdateContext> splitContext(ProjectUpdateContext context)
       {
+         if (_updateMode != EUpdateMode.ShallowClone || !(context is FullUpdateContext))
+         {
+            return new InternalUpdateContext[] { new InternalUpdateContext(context.Sha.Distinct()) };
+         }
+
+         List<InternalUpdateContext> splitted = new List<InternalUpdateContext>();
+         FullUpdateContext fullContext = context as FullUpdateContext;
+         IEnumerable<string> sha = fullContext.Sha.Distinct();
+         int remaining = sha.Count();
+         while (remaining > 0)
+         {
+            string[] shaChunk = sha
+               .Skip(sha.Count() - remaining)
+               .Take(ShaInChunk)
+               .ToArray();
+            remaining -= shaChunk.Length;
+            splitted.Add(new InternalUpdateContext(shaChunk));
+         }
+         return splitted;
+      }
+
+      async private Task processContext(ProjectUpdateContext context)
+      {
+         if (!context.Sha.Any())
+         {
+            // It is not always a problem. May happen when a MR is opened from Search tab
+            // for a project that is not added to the list. Or when MR list is empty
+            // for a project.
+            traceDebug("Empty context");
+         }
+
          try
          {
-            Debug.Assert(_updateOperationDescriptor == null);
+            await doPreProcessContext(context);
 
-            if (context is FullUpdateContext ps)
+            IEnumerable<InternalUpdateContext> splitted = splitContext(context);
+            foreach (InternalUpdateContext internalContext in splitted)
             {
-               await processFullProjectUpdate(ps);
-            }
-            else if (context is PartialUpdateContext pu)
-            {
-               await processPartialProjectUpdate(pu);
-            }
+               await doProcessContext(context, internalContext);
 
-            Debug.Assert(_updateOperationDescriptor == null);
+               // this allows others to interleave with their (shorter) requests
+               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed, DelayBetweenChunksMs);
+            }
          }
          catch (GitException ex)
          {
@@ -159,83 +190,62 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task processFullProjectUpdate(FullUpdateContext context)
+      async private Task doPreProcessContext(ProjectUpdateContext context)
       {
-         if (context.Sha == null)
-         {
-            Debug.Assert(false);
-            traceError("Unexpected project update content");
-            throw new RepositoryUpdateException("Cannot update git repository", null);
-         }
+         await TaskUtils.WhileAsync(() => _updatingContext != null);
 
-         if (!context.Sha.Any())
+         try
          {
-            // It is not always a problem. May happen when a MR is opened from Search tab
-            // for a project that is not added to the list. Or when MR list is empty
-            // for a project.
-            traceDebug("Empty context");
-         }
+            Debug.Assert(_updateOperationDescriptor == null);
 
-         DateTime prevLatestTimeStamp = _latestFullUpdateTimestamp;
-         if (_localGitRepository.ExpectingClone)
-         {
-            await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
-            _latestFullUpdateTimestamp = context.LatestChange;
-            traceInformation(String.Format("Repository cloned. Updating LatestChange timestamp to {0}",
-               _latestFullUpdateTimestamp.ToLocalTime().ToString()));
-            Cloned?.Invoke();
-         }
+            _updatingContext = context;
+            traceDebug(String.Format("[LOCK][PRE] by {0}", context.GetType()));
 
-         if (context.LatestChange > _latestFullUpdateTimestamp)
-         {
-            if (_updateMode != EUpdateMode.ShallowClone)
+            DateTime prevFullUpdateTimestamp = updateTimestamp(context);
+
+            if (_localGitRepository.ExpectingClone)
+            {
+               await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
+               traceInformation("Repository cloned.");
+               Cloned?.Invoke();
+            }
+            else if (_updateMode != EUpdateMode.ShallowClone
+                  && context.LatestChange.HasValue
+                  && context.LatestChange.Value > prevFullUpdateTimestamp)
             {
                await fetchAsync(false);
             }
-            _latestFullUpdateTimestamp = context.LatestChange;
-            traceInformation(String.Format("Repository {0} updated. Updating LatestChange timestamp to {1}",
-               _updateMode == EUpdateMode.ShallowClone ? "not" : String.Empty,
-               _latestFullUpdateTimestamp.ToLocalTime().ToString()));
-         }
-         else if (context.LatestChange == _latestFullUpdateTimestamp)
-         {
-            traceDebug("Repository not updated");
-         }
-         else if (context.LatestChange < _latestFullUpdateTimestamp)
-         {
-            // This is not a problem and may happen when, for example, a Merge Request with the most newest
-            // version has been closed.
-            traceInformation("New LatestChange is older than a previous one");
-         }
 
-         if (_updateMode != EUpdateMode.FullCloneWithoutSingleCommitFetches)
+            Debug.Assert(_updateOperationDescriptor == null);
+         }
+         finally
          {
-            await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone);
+            traceDebug(String.Format("[UNLOCK][PRE] by {0}", context.GetType()));
+            _updatingContext = null;
          }
       }
 
-      async private Task processPartialProjectUpdate(PartialUpdateContext context)
+      async private Task doProcessContext(ProjectUpdateContext context, InternalUpdateContext internalUpdateContext)
       {
-         if (context.Sha == null || !context.Sha.Any())
-         {
-            Debug.Assert(false);
-            traceError("Unexpected project update content");
-            throw new RepositoryUpdateException("Cannot update git repository", null);
-         }
+         await TaskUtils.WhileAsync(() => _updatingContext != null);
 
-         if (_localGitRepository.ExpectingClone)
+         try
          {
-            traceError("Partial updates cannot be applied to a not cloned repository");
-            throw new RepositoryUpdateException("Cannot update git repository", null);
-         }
+            Debug.Assert(_updateOperationDescriptor == null);
 
-         if (_updateMode == EUpdateMode.FullCloneWithoutSingleCommitFetches)
+            _updatingContext = context;
+            traceDebug(String.Format("[LOCK] by {0}", context.GetType()));
+
+            IEnumerable<string> missingSha = await getMissingSha(internalUpdateContext.Sha);
+            await fetchCommitsAsync(missingSha, _updateMode == EUpdateMode.ShallowClone);
+
+            Debug.Assert(_updateOperationDescriptor == null);
+         }
+         finally
          {
-            traceError("Partial updates are not supported in this repository");
-            throw new RepositoryUpdateException("Cannot update git repository", null);
+            traceDebug(String.Format("[UNLOCK] by {0}", context.GetType()));
+            _updatingContext = null;
          }
-
-         await fetchCommitsAsync(context.Sha, _updateMode == EUpdateMode.ShallowClone);
       }
 
       async private Task cloneAsync(bool shallowClone)
@@ -250,6 +260,8 @@ namespace mrHelper.GitClient
 
       async private Task fetchAsync(bool shallowFetch)
       {
+         Debug.Assert(shallowFetch == false); // we don't support shallow fetch here
+
          string arguments = String.Format("fetch {0}",
             getFetchArguments(null, shallowFetch));
          await doUpdateOperationAsync(arguments, _localGitRepository.Path);
@@ -257,11 +269,25 @@ namespace mrHelper.GitClient
 
       async private Task fetchCommitsAsync(IEnumerable<string> shas, bool shallowFetch)
       {
-         IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
+         int iCommit = 0;
+         foreach (string sha in shas)
+         {
+            string arguments = String.Format("fetch {0}", getFetchArguments(sha, shallowFetch));
+            await doUpdateOperationAsync(arguments, _localGitRepository.Path);
+            ++iCommit;
+         }
 
+         if (iCommit > 0)
+         {
+            traceInformation(String.Format("Fetched commits: {0}", iCommit));
+         }
+      }
+
+      async private Task<IEnumerable<string>> getMissingSha(IEnumerable<string> sha)
+      {
          Exception exception = null;
          List<string> missingSha = new List<string>();
-         await TaskUtils.RunConcurrentFunctionsAsync(goodSha,
+         await TaskUtils.RunConcurrentFunctionsAsync(sha,
             async x =>
             {
                if (exception != null)
@@ -288,25 +314,16 @@ namespace mrHelper.GitClient
             throw exception;
          }
 
-         int iCommit = 0;
-         foreach (string sha in missingSha)
-         {
-            string arguments = String.Format("fetch {0}",
-               getFetchArguments(sha, shallowFetch));
-            await doUpdateOperationAsync(arguments, _localGitRepository.Path);
-            ++iCommit;
-         }
-
-         if (iCommit > 0)
-         {
-            traceInformation(String.Format("Fetched commits: {0}. Total: {1}", iCommit, goodSha.Count()));
-         }
+         return missingSha;
       }
 
       async private Task doUpdateOperationAsync(string arguments, string path)
       {
-         ExternalProcess.AsyncTaskDescriptor descriptor = startUpdateOperation(arguments, path);
-         await waitUpdateOperationAsync(arguments, descriptor);
+         if (!_isDisposed)
+         {
+            ExternalProcess.AsyncTaskDescriptor descriptor = startUpdateOperation(arguments, path);
+            await waitUpdateOperationAsync(arguments, descriptor);
+         }
       }
 
       private ExternalProcess.AsyncTaskDescriptor startUpdateOperation(string arguments, string path)
@@ -333,7 +350,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      private static bool isUpdateNeeded(IProjectUpdateContext proposed, IProjectUpdateContext updating)
+      private static bool isUpdateNeeded(ProjectUpdateContext proposed, ProjectUpdateContext updating)
       {
          Debug.Assert(proposed != null);
          if (updating == null)
@@ -341,27 +358,18 @@ namespace mrHelper.GitClient
             return true;
          }
 
-         if (updating is FullUpdateContext fullUpdating)
+         if (updating.LatestChange.HasValue && proposed.LatestChange.HasValue)
          {
-            if (proposed is PartialUpdateContext)
-            {
-               return true;
-            }
-
-            FullUpdateContext fullProposed = proposed as FullUpdateContext;
-            return fullProposed.LatestChange  > fullUpdating.LatestChange
-               || (fullProposed.LatestChange == fullUpdating.LatestChange
-                  && !areEqualShaCollections(fullProposed.Sha, fullUpdating.Sha));
+            return proposed.LatestChange  > updating.LatestChange
+               || (proposed.LatestChange == updating.LatestChange
+                  && !areEqualShaCollections(proposed.Sha, updating.Sha));
          }
-
-         PartialUpdateContext partialUpdating = updating as PartialUpdateContext;
-         if (proposed is FullUpdateContext)
+         else if (updating.LatestChange.HasValue || proposed.LatestChange.HasValue)
          {
             return true;
          }
 
-         PartialUpdateContext partialProposed = proposed as PartialUpdateContext;
-         return !areEqualShaCollections(partialProposed.Sha, partialUpdating.Sha);
+         return !areEqualShaCollections(proposed.Sha, updating.Sha);
       }
 
       private static bool areEqualShaCollections(IEnumerable<string> a, IEnumerable<string> b)
@@ -391,6 +399,32 @@ namespace mrHelper.GitClient
             shallow ? "--depth=1" : String.Empty,
             GitTools.SupportsFetchNoTags() ? "--no-tags" : String.Empty,
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
+      }
+
+      private DateTime updateTimestamp(ProjectUpdateContext context)
+      {
+         DateTime prevFullUpdateTimestamp = _latestFullUpdateTimestamp;
+         if (context.LatestChange.HasValue)
+         {
+            Debug.Assert(context is FullUpdateContext);
+            if (context.LatestChange.Value > _latestFullUpdateTimestamp)
+            {
+               traceInformation(String.Format("Updating LatestChange timestamp to {0}",
+                  context.LatestChange.Value.ToLocalTime().ToString()));
+               _latestFullUpdateTimestamp = context.LatestChange.Value;
+            }
+            else if (context.LatestChange == _latestFullUpdateTimestamp)
+            {
+               traceDebug("Timestamp not updated");
+            }
+            else if (context.LatestChange < _latestFullUpdateTimestamp)
+            {
+               // This is not a problem and may happen when, for example, a Merge Request with the most newest
+               // version has been closed.
+               traceInformation("New LatestChange is older than a previous one");
+            }
+         }
+         return prevFullUpdateTimestamp;
       }
 
       private void traceDebug(string message)
@@ -424,9 +458,12 @@ namespace mrHelper.GitClient
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
 
       private bool _isDisposed;
-      private IProjectUpdateContext _updatingContext;
+      private ProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
       private DateTime _latestFullUpdateTimestamp = DateTime.MinValue;
+
+      private const int ShaInChunk = 2;
+      private const int DelayBetweenChunksMs = 50;
    }
 }
 

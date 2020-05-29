@@ -65,12 +65,6 @@ namespace mrHelper.Client.MergeRequests
          return new LocalBasedContextProvider(getAllVersions(projectKey));
       }
 
-      public IProjectUpdateContextProvider GetRemoteBasedContextProvider(MergeRequestKey mrk)
-      {
-         SessionOperator tempOperator = new SessionOperator(mrk.ProjectKey.HostName, _clientContext.HostProperties);
-         return new RemoteBasedContextProvider(getAllVersions(mrk.ProjectKey), mrk, tempOperator);
-      }
-
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
          return _cacheUpdater.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
