@@ -20,14 +20,17 @@ namespace mrHelper.App.Forms
       {
          if (ex is SessionException || ex is UnknownHostException)
          {
-            disableAllSearchUIControls(true);
-            ExceptionHandlers.Handle("Cannot perform merge request search", ex);
-            string message = ex.Message;
-            if (ex is SessionException wx)
+            if (!(ex is SessionStartCancelledException))
             {
-               message = wx.UserMessage;
+               disableAllSearchUIControls(true);
+               ExceptionHandlers.Handle("Cannot perform merge request search", ex);
+               string message = ex.Message;
+               if (ex is SessionException wx)
+               {
+                  message = wx.UserMessage;
+               }
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return true;
          }
          return false;
@@ -75,14 +78,14 @@ namespace mrHelper.App.Forms
       /// Connects Search Session to GitLab
       /// </summary>
       /// <returns>false if operation was cancelled</returns>
-      async private Task<bool> startSearchWorkflowAsync(string hostname, object query, int? maxResults)
+      async private Task startSearchWorkflowAsync(string hostname, object query, int? maxResults)
       {
          labelWorkflowStatus.Text = String.Empty;
          disableAllSearchUIControls(true);
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
-            return false;
+            return;
          }
 
          if (Program.Settings.GetAccessToken(hostname) == String.Empty)
@@ -90,10 +93,10 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         return await loadAllSearchMergeRequests(hostname, query, maxResults);
+         await loadAllSearchMergeRequests(hostname, query, maxResults);
       }
 
-      async private Task<bool> loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
+      async private Task loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
       {
          onLoadAllSearchMergeRequests();
 
@@ -103,10 +106,7 @@ namespace mrHelper.App.Forms
             new SessionUpdateRules(false, false),
             new SearchBasedContext(searchCriteria, maxResults, false));
 
-         if (!await _searchSession.Start(hostname, sessionContext))
-         {
-            return false;
-         }
+         await _searchSession.Start(hostname, sessionContext);
 
          foreach (ProjectKey projectKey in _searchSession.MergeRequestCache.GetProjects())
          {
@@ -115,7 +115,6 @@ namespace mrHelper.App.Forms
          }
 
          onAllSearchMergeRequestsLoaded();
-         return true;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

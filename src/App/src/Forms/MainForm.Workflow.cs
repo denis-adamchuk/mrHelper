@@ -35,14 +35,17 @@ namespace mrHelper.App.Forms
       {
          if (ex is SessionException || ex is UnknownHostException || ex is NoProjectsException)
          {
-            disableAllUIControls(true);
-            ExceptionHandlers.Handle("Cannot switch host", ex);
-            string message = ex.Message;
-            if (ex is SessionException wx)
+            if (!(ex is SessionStartCancelledException))
             {
-               message = wx.UserMessage;
+               disableAllUIControls(true);
+               ExceptionHandlers.Handle("Cannot switch host", ex);
+               string message = ex.Message;
+               if (ex is SessionException wx)
+               {
+                  message = wx.UserMessage;
+               }
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return true;
          }
          return false;
@@ -51,12 +54,12 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// </summary>
       /// <returns>Was switch successful</returns>
-      async private Task<bool> switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
+      async private Task switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
       {
          updateTabControlSelection();
          try
          {
-            return await startWorkflowAsync(getHostName());
+            await startWorkflowAsync(getHostName());
          }
          catch (Exception ex)
          {
@@ -69,7 +72,6 @@ namespace mrHelper.App.Forms
                throw;
             }
          }
-         return false;
       }
 
       private void switchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)
@@ -96,7 +98,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       /// <param name="hostname"></param>
       /// <returns>false if operation was cancelled</returns>
-      async private Task<bool> startWorkflowAsync(string hostname)
+      async private Task startWorkflowAsync(string hostname)
       {
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
          // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
@@ -115,7 +117,7 @@ namespace mrHelper.App.Forms
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
-            return false;
+            return;
          }
 
          if (Program.Settings.GetAccessToken(hostname) == String.Empty)
@@ -127,16 +129,16 @@ namespace mrHelper.App.Forms
          {
             initializeProjectListIfEmpty(hostname);
             await upgradeProjectListFromOldVersion(hostname);
-            return await startProjectBasedWorkflowAsync(hostname);
+            await startProjectBasedWorkflowAsync(hostname);
          }
          else
          {
             await initializeLabelListIfEmpty(hostname);
-            return await startUserBasedWorkflowAsync(hostname);
+            await startUserBasedWorkflowAsync(hostname);
          }
       }
 
-      private async Task<bool> startProjectBasedWorkflowAsync(string hostname)
+      private async Task startProjectBasedWorkflowAsync(string hostname)
       {
          IEnumerable<ProjectKey> enabledProjects =
             ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings)
@@ -153,17 +155,13 @@ namespace mrHelper.App.Forms
             new SessionUpdateRules(true, true),
             new ProjectBasedContext(enabledProjects.ToArray()));
 
-         if (!await _liveSession.Start(hostname, sessionContext))
-         {
-            return false;
-         }
+         await _liveSession.Start(hostname, sessionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
          cleanupReviewedCommits(hostname);
-         return true;
       }
 
-      private async Task<bool> startUserBasedWorkflowAsync(string hostname)
+      private async Task startUserBasedWorkflowAsync(string hostname)
       {
          onLoadAllMergeRequests();
 
@@ -172,14 +170,10 @@ namespace mrHelper.App.Forms
             new SessionUpdateRules(true, true),
             getCustomDataForUserBasedWorkflow());
 
-         if (!await _liveSession.Start(hostname, sessionContext))
-         {
-            return false;
-         }
+         await _liveSession.Start(hostname, sessionContext);
 
          onAllMergeRequestsLoaded(hostname, _liveSession.MergeRequestCache.GetProjects());
          cleanupReviewedCommits(hostname);
-         return true;
       }
 
       private void onForbiddenProject(ProjectKey projectKey)

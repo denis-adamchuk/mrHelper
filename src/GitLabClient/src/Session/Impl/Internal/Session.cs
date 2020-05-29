@@ -21,35 +21,36 @@ namespace mrHelper.Client.Session
       public event Action<string> Starting;
       public event Action<string, User> Started;
 
-      async public Task<bool> Start(string hostname, SessionContext context)
+      async public Task Start(string hostname, SessionContext context)
       {
          stop();
 
          _operator = new SessionOperator(hostname, _clientContext.HostProperties);
 
-         User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
-         if (currentUser == null)
+         try
          {
-            return false;
-         }
+            InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
+            IMergeRequestListLoader mergeRequestListLoader =
+               MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
 
-         InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-         IMergeRequestListLoader mergeRequestListLoader =
-            MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
+            Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
+            Starting?.Invoke(hostname);
 
-         Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
-         Starting?.Invoke(hostname);
-
-         if (await mergeRequestListLoader.Load())
-         {
+            User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
+            await mergeRequestListLoader.Load();
             _internal = createSessionInternal(cacheUpdater, hostname, currentUser, context);
 
             Trace.TraceInformation(String.Format("[Session] Started new session at {0}", hostname));
             Started?.Invoke(hostname, currentUser);
-            return true;
          }
-
-         return false;
+         catch (BaseLoaderException ex)
+         {
+            if (ex is BaseLoaderCancelledException)
+            {
+               throw new SessionStartCancelledException();
+            }
+            throw new SessionException("Something went wrong", ex);
+         }
       }
 
       public void Dispose()

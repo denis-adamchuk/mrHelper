@@ -105,8 +105,13 @@ namespace mrHelper.App.Forms
          await connectToUrlAsync(url);
       }
 
-      private void reportErrorOnConnect(string url, string msg, Exception ex, bool error)
+      private void reportErrorOnConnect(string url, string msg, Exception ex)
       {
+         if (ex is SessionStartCancelledException)
+         {
+            return;
+         }
+
          string exceptionMessage = ex != null ? ex.Message : String.Empty;
          if (ex is SessionException wfex)
          {
@@ -115,42 +120,19 @@ namespace mrHelper.App.Forms
 
          string msgBoxMessage = String.Format("{0}Cannot open merge request from URL. {1}", msg, exceptionMessage);
 
-         MessageBox.Show(msgBoxMessage, error ? "Error" : "Warning", MessageBoxButtons.OK,
-            error ? MessageBoxIcon.Error : MessageBoxIcon.Exclamation,
-            MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+         MessageBox.Show(msgBoxMessage, "Warning", MessageBoxButtons.OK,
+            MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
 
          string errorMessage = String.Format("Cannot open URL {0}", url);
          ExceptionHandlers.Handle(errorMessage, ex);
          labelWorkflowStatus.Text = errorMessage;
       }
 
-      async private Task<bool> restartWorkflowByUrl(string url, string hostname)
+      async private Task restartWorkflowByUrl(string url, string hostname)
       {
          _initialHostName = hostname;
          selectHost(PreferredSelection.Initial);
-
-         return await switchHostToSelected(new Func<Exception, bool>(
-            (ex) =>
-         {
-            if (ex is UnknownHostException)
-            {
-               reportErrorOnConnect(url, String.Empty, ex, true);
-            }
-            else if (ex is NoProjectsException)
-            {
-               reportErrorOnConnect(url, String.Empty, ex, true);
-            }
-            else if (ex is SessionException)
-            {
-               reportErrorOnConnect(url, String.Empty, ex, true);
-            }
-            else
-            {
-               Debug.Assert(false);
-               ExceptionHandlers.Handle(String.Format("Unexpected error on attempt to open URL {0}", url), ex);
-            }
-            return true;
-         }));
+         await switchHostToSelected(new Func<Exception, bool>(x => throw new UrlConnectionException(String.Empty, x)));
       }
 
       private bool unhideFilteredMergeRequest(MergeRequestKey mrk)
@@ -218,29 +200,29 @@ namespace mrHelper.App.Forms
       async private Task openUrlAtSearchTab(MergeRequestKey mrk, string url)
       {
          tabControlMode.SelectedTab = tabPageSearch;
-
          await searchMergeRequests(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
-            new Func<Exception, bool>(
-               (ex) =>
-         {
-            if (ex is UnknownHostException)
-            {
-               reportErrorOnConnect(url, String.Empty, ex, true);
-            }
-            else if (ex is SessionException)
-            {
-               reportErrorOnConnect(url, String.Empty, ex, true);
-            }
-            else
-            {
-               Debug.Assert(false);
-               ExceptionHandlers.Handle(String.Format("Unexpected error on attempt to open URL {0}", url), ex);
-            }
-            return true;
-         }));
+            new Func<Exception, bool>(x => throw new UrlConnectionException(String.Empty, x)));
       }
 
-      async private Task connectToUrlAsync(string originalUrl)
+      private class UrlConnectionException : ExceptionEx
+      {
+         internal UrlConnectionException(string message, Exception innerException)
+            : base(message, innerException) { }
+      }
+
+      async private Task connectToUrlAsync(string url)
+      {
+         try
+         {
+            await connectToUrlAsyncInternal(url);
+         }
+         catch (UrlConnectionException ex)
+         {
+            reportErrorOnConnect(url, ex.Message, ex.InnerException);
+         }
+      }
+
+      async private Task connectToUrlAsyncInternal(string originalUrl)
       {
          Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", originalUrl));
 
@@ -253,9 +235,10 @@ namespace mrHelper.App.Forms
          }
 
          MergeRequestKey mrk = mrkOpt.Value;
-         if (!isKnownHostInUrl(mrk.ProjectKey.HostName, url))
+         if (Program.Settings.GetAccessToken(mrk.ProjectKey.HostName) == String.Empty)
          {
-            return;
+            throw new UrlConnectionException(String.Format(
+               "Cannot connect to {0} because it is not in the list of known hosts. ", mrk.ProjectKey.HostName), null);
          }
 
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
@@ -263,15 +246,14 @@ namespace mrHelper.App.Forms
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
          if (mergeRequest == null)
          {
-            reportErrorOnConnect(url, "Merge Request does not exist. ", null, false);
-            return;
+            throw new UrlConnectionException("Merge request does not exist", null);
          }
          labelWorkflowStatus.Text = String.Empty;
 
          bool changeHost = mrk.ProjectKey.HostName != getHostName();
-         if (changeHost && !await restartWorkflowByUrl(url, mrk.ProjectKey.HostName))
+         if (changeHost)
          {
-            return;
+            await restartWorkflowByUrl(url, mrk.ProjectKey.HostName); // TODO Test failure
          }
 
          bool canOpenAtLiveTab =
@@ -305,49 +287,38 @@ namespace mrHelper.App.Forms
             if (!checkIfCanOpenAtLiveTab(mrk, false))
             {
                // this may happen if project list changed while we were in 'await'
-               // or project has just been disabled in restartWorkflowByUrl()
                return false;
             }
          }
 
          tabControlMode.SelectedTab = tabPageLive;
-         if (!selectMergeRequest(listViewMergeRequests, mrk, true))
+         if (!selectMergeRequest(listViewMergeRequests, mrk, true) && listViewMergeRequests.Enabled)
          {
-            if (!listViewMergeRequests.Enabled)
+            // We could not select MR, but let's check if it is cached or not.
+            if (session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
             {
-               // This may happen if Reload is in progress now
-               reportErrorOnConnect(url, "Merge Request list is being updated. ", null, false);
+               // If it is cached, it is probably hidden by filters and user might want to un-hide it.
+               if (!unhideFilteredMergeRequest(mrk))
+               {
+                  return false; // user decided to not un-hide merge request
+               }
+
+               if (!selectMergeRequest(listViewMergeRequests, mrk, true))
+               {
+                  Debug.Assert(false);
+                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+                  throw new UrlConnectionException("Something went wrong", null);
+               }
             }
             else
             {
-               // We could not select MR, but let's check if it is cached or not.
-
-               if (session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+               if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
-                  // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-                  if (!unhideFilteredMergeRequest(mrk))
-                  {
-                     return false; // user decided to not un-hide merge request
-                  }
-
-                  if (!selectMergeRequest(listViewMergeRequests, mrk, true))
-                  {
-                     Debug.Assert(false);
-                     Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
-                     reportErrorOnConnect(url, "Something went wrong. ", null, false);
-                     return false;
-                  }
+                  Debug.Assert(false);
+                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
+                  throw new UrlConnectionException("Something went wrong", null);
                }
-               else
-               {
-                  if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-                  {
-                     Debug.Assert(false);
-                     Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
-                     reportErrorOnConnect(url, "Something went wrong. ", null, false);
-                  }
-                  return false;
-               }
+               return false;
             }
          }
 
@@ -388,21 +359,8 @@ namespace mrHelper.App.Forms
          catch (Exception ex)
          {
             Debug.Assert(ex is UriFormatException);
-            reportErrorOnConnect(url, String.Empty, ex, true);
-            return null; // URL parsing failed
+            throw new UrlConnectionException(String.Empty, ex);
          }
-      }
-
-      private bool isKnownHostInUrl(string hostname, string url)
-      {
-         if (Program.Settings.GetAccessToken(hostname) == String.Empty)
-         {
-            reportErrorOnConnect(url, String.Format(
-               "Cannot connect to host {0} because it is not in the list of known hosts. ", hostname),
-               null, true);
-            return false; // unknown host
-         }
-         return true;
       }
 
       private static bool isProjectInTheList(ProjectKey projectKey)

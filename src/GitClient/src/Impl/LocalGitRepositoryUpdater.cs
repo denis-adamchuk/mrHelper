@@ -253,16 +253,16 @@ namespace mrHelper.GitClient
          await doUpdateOperationAsync(arguments, _localGitRepository.Path);
       }
 
-      async private Task<bool> fetchCommitsAsync(IEnumerable<string> shas, bool shallowFetch)
+      async private Task fetchCommitsAsync(IEnumerable<string> shas, bool shallowFetch)
       {
          IEnumerable<string> goodSha = shas.Where(x => x != null).Distinct();
 
-         bool cancelled = false;
+         Exception exception = null;
          List<string> missingSha = new List<string>();
          await TaskUtils.RunConcurrentFunctionsAsync(goodSha,
             async x =>
             {
-               if (cancelled)
+               if (exception != null)
                {
                   return;
                }
@@ -274,12 +274,17 @@ namespace mrHelper.GitClient
                      missingSha.Add(x);
                   }
                }
-               catch (OperationCancelledException)
+               catch (OperationCancelledException ex)
                {
-                  cancelled = true;
+                  exception = ex;
                }
             },
-            20, 50, () => cancelled);
+            20, 50, () => exception != null);
+
+         if (exception != null)
+         {
+            throw exception;
+         }
 
          int iCommit = 0;
          foreach (string sha in missingSha)
@@ -293,9 +298,7 @@ namespace mrHelper.GitClient
          if (iCommit > 0)
          {
             traceInformation(String.Format("Fetched commits: {0}. Total: {1}", iCommit, goodSha.Count()));
-            return true;
          }
-         return false;
       }
 
       async private Task doUpdateOperationAsync(string arguments, string path)

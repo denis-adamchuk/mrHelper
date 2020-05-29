@@ -57,6 +57,8 @@ namespace mrHelper.App.Helpers
          scheduleAllProjectsUpdate();
       }
 
+      protected override void preUpdate(ILocalGitRepository repo) {}
+
       async protected override Task doUpdate(ILocalGitRepository repo)
       {
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
@@ -71,8 +73,12 @@ namespace mrHelper.App.Helpers
 
       async private Task updateGitDataForSingleMergeRequest(MergeRequestKey mrk, ILocalGitRepository repo)
       {
-         DateTime prevLatestChange = getLatestChange(mrk);
+         if (repo.Data == null)
+         {
+            return;
+         }
 
+         DateTime prevLatestChange = getLatestChange(mrk);
          IEnumerable<Discussion> newDiscussions = await loadNewDiscussionsAsync(mrk, prevLatestChange);
 
          int totalCount = newDiscussions?.Count() ?? 0;
@@ -203,24 +209,31 @@ namespace mrHelper.App.Helpers
          // Update() call will return from `await` only when all ongoing updates within
          // the project are finished.
 
-         if (repo.Updater == null || repo.Data == null)
-         {
-            return;
-         }
-
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
             {
-               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
-                  new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }));
-               await repo.Data.LoadFromDisk(x);
+               if (repo.Updater != null)
+               {
+                  await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
+                     new string[] { x.CommonArgs.Sha1, x.CommonArgs.Sha2 }));
+               }
+               if (repo.Data != null)
+               {
+                  await repo.Data.LoadFromDisk(x);
+               }
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { x.Sha }));
-               await repo.Data.LoadFromDisk(x);
+               if (repo.Updater != null)
+               {
+                  await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { x.Sha }));
+               }
+               if (repo.Data != null)
+               {
+                  await repo.Data.LoadFromDisk(x);
+               }
             },
             Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, null);
       }

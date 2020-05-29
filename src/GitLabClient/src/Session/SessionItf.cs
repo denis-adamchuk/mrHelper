@@ -10,7 +10,7 @@ namespace mrHelper.Client.Session
 {
    public interface ISession : IDisposable
    {
-      Task<bool> Start(string hostname, SessionContext context);
+      Task Start(string hostname, SessionContext context);
 
       IMergeRequestCache MergeRequestCache { get; }
       IDiscussionCache DiscussionCache { get; }

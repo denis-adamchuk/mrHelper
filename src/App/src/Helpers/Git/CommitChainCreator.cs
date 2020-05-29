@@ -76,12 +76,7 @@ namespace mrHelper.App.Helpers
          }
 
          Trace.TraceInformation("[CommitChainCreator] Cancellation is enabled");
-
-         if (_repositoryManager != null)
-         {
-            await _repositoryManager.Cancel();
-         }
-
+         _repositoryManager?.Cancel();
          _repo.Updater.CancelUpdate();
       }
 

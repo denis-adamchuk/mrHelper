@@ -20,28 +20,23 @@ namespace mrHelper.Client.Session
          _cacheUpdater = cacheUpdater;
       }
 
-      async public Task<bool> LoadVersionsAndCommits(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
+      async public Task LoadVersionsAndCommits(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
          Exception exception = null;
-         bool cancelled = false;
          async Task loadVersionsLocal(Tuple<MergeRequestKey, bool> tuple)
          {
-            if (cancelled)
+            if (exception != null)
             {
                return;
             }
 
             try
             {
-               if (!await (tuple.Item2 ? LoadVersionsAsync(tuple.Item1) : LoadCommitsAsync(tuple.Item1)))
-               {
-                  cancelled = true;
-               }
+               await (tuple.Item2 ? LoadVersionsAsync(tuple.Item1) : LoadCommitsAsync(tuple.Item1));
             }
-            catch (SessionException ex)
+            catch (BaseLoaderException ex)
             {
                exception = ex;
-               cancelled = true;
             }
          }
 
@@ -63,45 +58,29 @@ namespace mrHelper.Client.Session
                .Select(x => new Tuple<MergeRequestKey, bool>(x, false)));
 
          await TaskUtils.RunConcurrentFunctionsAsync(duplicateKeys, x => loadVersionsLocal(x),
-            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => cancelled);
-         if (!cancelled)
-         {
-            return true;
-         }
-
+            Constants.MergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => exception != null);
          if (exception != null)
          {
             throw exception;
          }
-         return false;
       }
 
-      async public Task<bool> LoadCommitsAsync(MergeRequestKey mrk)
+      async public Task LoadCommitsAsync(MergeRequestKey mrk)
       {
          IEnumerable<Commit> commits = await call(
             () => _operator.GetCommitsAsync(mrk.ProjectKey.ProjectName, mrk.IId),
             String.Format("Cancelled loading commits for merge request with IId {0}", mrk.IId),
             String.Format("Cannot load commits for merge request with IId {0}", mrk.IId));
-         if (commits != null)
-         {
-            _cacheUpdater.UpdateCommits(mrk, commits);
-            return true;
-         }
-         return false;
+         _cacheUpdater.UpdateCommits(mrk, commits);
       }
 
-      async public Task<bool> LoadVersionsAsync(MergeRequestKey mrk)
+      async public Task LoadVersionsAsync(MergeRequestKey mrk)
       {
          IEnumerable<Version> versions = await call(
             () => _operator.GetVersionsAsync(mrk.ProjectKey.ProjectName, mrk.IId),
             String.Format("Cancelled loading versions for merge request with IId {0}", mrk.IId),
             String.Format("Cannot load versions for merge request with IId {0}", mrk.IId));
-         if (versions != null)
-         {
-            _cacheUpdater.UpdateVersions(mrk, versions);
-            return true;
-         }
-         return false;
+         _cacheUpdater.UpdateVersions(mrk, versions);
       }
 
       private readonly InternalCacheUpdater _cacheUpdater;

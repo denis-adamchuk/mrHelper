@@ -117,7 +117,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = true;
             await _mergeRequestLoader.LoadMergeRequest(mrk);
          }
-         catch (SessionException ex)
+         catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
             return null;
@@ -154,7 +154,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = true;
             await _mergeRequestListLoader.Load();
          }
-         catch (SessionException ex)
+         catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot update merge requests on timer", ex);
          }

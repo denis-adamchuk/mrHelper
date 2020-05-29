@@ -8,33 +8,16 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Session
 {
-   public class SessionException : ExceptionEx
+   internal class BaseLoaderException : ExceptionEx
    {
-      internal SessionException(string message, Exception innerException)
-         : base(message, innerException) {}
+      internal BaseLoaderException(string message, Exception innerException)
+         : base(message, innerException) { }
+   }
 
-      public string UserMessage
-      {
-         get
-         {
-            if (InnerException is OperatorException ox)
-            {
-               if (ox.InnerException is GitLabRequestException rx)
-               {
-                  if (rx.InnerException is System.Net.WebException wx)
-                  {
-                     System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
-                     if (response != null && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                     {
-                        return wx.Message + " Check your access token!";
-                     }
-                     return wx.Message;
-                  }
-               }
-            }
-            return OriginalMessage;
-         }
-      }
+   internal class BaseLoaderCancelledException : BaseLoaderException
+   {
+      internal BaseLoaderCancelledException()
+         : base(String.Empty, null) { }
    }
 
    /// <summary>
@@ -57,9 +40,9 @@ namespace mrHelper.Client.Session
             if (ex.Cancelled)
             {
                Trace.TraceInformation(String.Format("[BaseSessionLoader] {0}", cancelMessage));
-               return default(T);
+               throw new BaseLoaderCancelledException();
             }
-            throw new SessionException(errorMessage, ex);
+            throw new BaseLoaderException(errorMessage, ex);
          }
       }
 

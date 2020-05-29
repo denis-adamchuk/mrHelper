@@ -30,10 +30,7 @@ namespace mrHelper.App.Helpers
          _synchronizeInvoke = synchronizeInvoke;
 
          scheduleAllProjectsUpdate();
-         BaseUpdate?.Invoke();
       }
-
-      protected event Action BaseUpdate;
 
       public void Dispose()
       {
@@ -67,7 +64,7 @@ namespace mrHelper.App.Helpers
 
       async private Task updateAsync(ILocalGitRepository repo)
       {
-         if (repo.Data == null || repo.ExpectingClone)
+         if (repo.Data == null || repo.Updater == null || repo.ExpectingClone)
          {
             Debug.WriteLine(String.Format(
                "[BaseGitHelper] Update failed. Repository is not ready (Host={0}, Project={1})",
@@ -79,19 +76,16 @@ namespace mrHelper.App.Helpers
          {
             return;
          }
+         preUpdate(repo);
 
          try
          {
-            if (repo.Updater != null)
-            {
-               await repo.Updater.SilentUpdate(getContextProvider(repo));
-            }
+            await repo.Updater.SilentUpdate(getContextProvider(repo));
             await doUpdate(repo);
          }
          finally
          {
             _updating.Remove(repo);
-            BaseUpdate?.Invoke();
          }
       }
 
@@ -105,6 +99,7 @@ namespace mrHelper.App.Helpers
          return _factoryAccessor.GetFactory()?.GetRepository(projectKey);
       }
 
+      protected abstract void preUpdate(ILocalGitRepository repo);
       protected abstract Task doUpdate(ILocalGitRepository repo);
 
       private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;

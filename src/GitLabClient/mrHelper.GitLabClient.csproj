@@ -66,6 +66,7 @@
     <Compile Include="src\Common\GitLabClientContext.cs" />
     <Compile Include="src\Common\UpdateTokenItf.cs" />
     <Compile Include="src\Session\Impl\Internal\CurrentUserLoader.cs" />
+    <Compile Include="src\Session\SessionException.cs" />
     <Compile Include="src\TimeTracking\TimeTrackerItf.cs" />
     <Compile Include="src\TimeTracking\TotalTimeLoaderItf.cs" />
     <Compile Include="src\Session\Impl\Internal\Session.cs" />

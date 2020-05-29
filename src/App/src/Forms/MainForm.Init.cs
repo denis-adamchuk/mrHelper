@@ -453,24 +453,17 @@ namespace mrHelper.App.Forms
 
       async private Task connectOnStartup()
       {
-         try
-         {
-            string[] arguments = Environment.GetCommandLineArgs();
-            string url = arguments.Length > 1 ? arguments[1] : String.Empty;
+         string[] arguments = Environment.GetCommandLineArgs();
+         string url = arguments.Length > 1 ? arguments[1] : String.Empty;
 
-            if (url != String.Empty)
-            {
-               await connectToUrlAsync(url);
-            }
-            else
-            {
-               selectHost(PreferredSelection.Initial);
-               await switchHostToSelected();
-            }
-         }
-         catch (SessionException ex)
+         if (url != String.Empty)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            await connectToUrlAsync(url);
+         }
+         else
+         {
+            selectHost(PreferredSelection.Initial);
+            await switchHostToSelected();
          }
       }
 

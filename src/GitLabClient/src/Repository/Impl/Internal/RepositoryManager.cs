@@ -44,11 +44,11 @@ namespace mrHelper.Client.Repository
             "Branch deletion cancelled", "Cannot delete a branch");
       }
 
-      async public Task Cancel()
+      public void Cancel()
       {
          if (_operator != null)
          {
-            await _operator.CancelAsync();
+            _operator.Cancel();
          }
       }
 

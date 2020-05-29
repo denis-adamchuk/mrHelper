@@ -71,9 +71,9 @@ namespace mrHelper.Client.Repository
                            await gl.Projects.Get(projectname).Repository.Branches.Get(name).DeleteTaskAsync())));
       }
 
-      internal new Task CancelAsync()
+      internal new void Cancel()
       {
-         return base.CancelAsync();
+         base.Cancel();
       }
    }
 }
