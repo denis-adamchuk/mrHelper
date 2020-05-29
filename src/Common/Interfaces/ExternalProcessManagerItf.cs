@@ -12,8 +12,6 @@ namespace mrHelper.Common.Interfaces
       Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor);
 
       void Cancel(ExternalProcess.AsyncTaskDescriptor descriptor);
-
-      void CancelAll();
    }
 }
 

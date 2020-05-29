@@ -13,7 +13,7 @@ namespace mrHelper.GitClient
    /// <summary>
    /// Updates attached ILocalGitRepository object
    /// </summary>
-   internal class LocalGitRepositoryUpdater : ILocalGitRepositoryUpdater
+   internal class LocalGitRepositoryUpdater : ILocalGitRepositoryUpdater, IDisposable
    {
       internal enum EUpdateMode
       {
@@ -39,6 +39,11 @@ namespace mrHelper.GitClient
 
       public void CancelUpdate()
       {
+         if (_isDisposed)
+         {
+            return;
+         }
+
          try
          {
             _operationManager.Cancel(_updateOperationDescriptor);
@@ -49,14 +54,14 @@ namespace mrHelper.GitClient
          }
       }
 
-      internal void DisableUpdates()
+      public void Dispose()
       {
-         _disabled = true;
+         _isDisposed = true;
       }
 
       async public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
       {
-         if (_disabled)
+         if (_isDisposed)
          {
             return;
          }
@@ -418,7 +423,7 @@ namespace mrHelper.GitClient
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
 
-      private bool _disabled;
+      private bool _isDisposed;
       private IProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
       private DateTime _latestFullUpdateTimestamp = DateTime.MinValue;

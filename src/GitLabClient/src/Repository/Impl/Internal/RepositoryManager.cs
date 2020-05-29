@@ -7,11 +7,16 @@ using System.Diagnostics;
 
 namespace mrHelper.Client.Repository
 {
-   internal class RepositoryManager : IRepositoryManager
+   internal class RepositoryManager : IRepositoryManager, IDisposable
    {
       internal RepositoryManager(IHostProperties settings)
       {
          _settings = settings;
+      }
+
+      public void Dispose()
+      {
+         _operator?.Dispose();
       }
 
       public Task<Comparison> Compare(ProjectKey projectKey, string from, string to)
@@ -42,14 +47,6 @@ namespace mrHelper.Client.Repository
       {
          return call(projectKey, () => _operator.DeleteBranchAsync(projectKey.ProjectName, name),
             "Branch deletion cancelled", "Cannot delete a branch");
-      }
-
-      public void Cancel()
-      {
-         if (_operator != null)
-         {
-            _operator.Cancel();
-         }
       }
 
       async private Task call(ProjectKey projectKey, Func<Task> func, string cancelMessage, string errorMessage)

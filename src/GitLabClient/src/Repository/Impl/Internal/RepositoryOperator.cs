@@ -70,11 +70,6 @@ namespace mrHelper.Client.Repository
                         async (gl) =>
                            await gl.Projects.Get(projectname).Repository.Branches.Get(name).DeleteTaskAsync())));
       }
-
-      internal new void Cancel()
-      {
-         base.Cancel();
-      }
    }
 }
 

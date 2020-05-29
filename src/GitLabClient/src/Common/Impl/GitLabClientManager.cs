@@ -1,19 +1,19 @@
-﻿using mrHelper.Client.Session;
+﻿using System;
+using System.Threading.Tasks;
+using mrHelper.Client.Session;
 using mrHelper.Client.Repository;
 using GitLabSharp;
-using System.Threading.Tasks;
-using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 
 namespace mrHelper.Client.Common
 {
-   public class GitLabClientManager
+   public class GitLabClientManager : IDisposable
    {
       public GitLabClientManager(GitLabClientContext clientContext)
       {
          SessionManager = new SessionManager(clientContext);
          SearchManager = new SearchManager(clientContext.HostProperties);
-         RepositoryManager = new RepositoryManager(clientContext.HostProperties);
+         _repositoryManager = new RepositoryManager(clientContext.HostProperties);
       }
 
       public enum EConnectionCheckStatus
@@ -48,9 +48,16 @@ namespace mrHelper.Client.Common
          return EConnectionCheckStatus.BadHostname;
       }
 
+      public void Dispose()
+      {
+         _repositoryManager.Dispose();
+      }
+
       public ISessionManager SessionManager { get; }
       public ISearchManager SearchManager { get; }
-      public IRepositoryManager RepositoryManager { get; }
+      public IRepositoryManager RepositoryManager => _repositoryManager;
+
+      private readonly RepositoryManager _repositoryManager;
    }
 }
 

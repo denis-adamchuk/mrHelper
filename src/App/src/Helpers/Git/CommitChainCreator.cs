@@ -73,7 +73,6 @@ namespace mrHelper.App.Helpers
          await TaskUtils.WhileAsync(() => !IsCancelEnabled);
 
          Trace.TraceInformation("[CommitChainCreator] Cancellation is enabled");
-         _repositoryManager?.Cancel();
          _repo.Updater.CancelUpdate();
       }
 

@@ -7,7 +7,7 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
 {
-   internal class LocalGitRepositoryData : ILocalGitRepositoryData
+   internal class LocalGitRepositoryData : ILocalGitRepositoryData, IDisposable
    {
       internal LocalGitRepositoryData(IExternalProcessManager operationManager, string path)
       {
@@ -35,19 +35,24 @@ namespace mrHelper.GitClient
          await doUpdate(arguments, _cachedRevisions);
       }
 
-      internal void DisableUpdates()
+      public void Dispose()
       {
-         _disabled = true;
+         _isDisposed = true;
       }
 
       private IEnumerable<string> doGet<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
+         if (_isDisposed)
+         {
+            return null;
+         }
+
          if (cache.TryGetValue(arguments, out IEnumerable<string> value))
          {
             return value;
          }
 
-         if (_disabled || !((dynamic)arguments).IsValid())
+         if (!((dynamic)arguments).IsValid())
          {
             return null;
          }
@@ -70,7 +75,7 @@ namespace mrHelper.GitClient
 
       async private Task doUpdate<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
-         if (_disabled || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
+         if (_isDisposed || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
          {
             return;
          }
@@ -97,7 +102,7 @@ namespace mrHelper.GitClient
       }
 
       private readonly string _path;
-      private bool _disabled;
+      private bool _isDisposed;
       private readonly IExternalProcessManager _operationManager;
 
       private readonly Dictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =

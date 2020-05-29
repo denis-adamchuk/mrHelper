@@ -1,10 +1,8 @@
 using System;
-using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 
@@ -43,6 +41,11 @@ namespace mrHelper.GitClient
       /// </summary>
       public ILocalGitRepository GetRepository(ProjectKey key)
       {
+         if (_isDisposed)
+         {
+            return null;
+         }
+
          if (_repos.TryGetValue(key, out LocalGitRepository cachedRepository))
          {
             return cachedRepository;
@@ -66,14 +69,12 @@ namespace mrHelper.GitClient
       {
          Trace.TraceInformation(String.Format(
             "[LocalGitRepositoryFactory] Disposing LocalGitRepositoryFactory for parentFolder {0}", ParentFolder));
-
-         // It is safer to clean-up a copy asynchronously
-         Dictionary<ProjectKey, LocalGitRepository> repos = _repos.ToDictionary(x => x.Key, x => x.Value);
-         _repos.Clear();
-         foreach (LocalGitRepository repo in repos.Values)
+         foreach (LocalGitRepository repo in _repos.Values)
          {
             repo.Dispose();
          }
+         _repos.Clear();
+         _isDisposed = true;
       }
 
       private readonly Dictionary<ProjectKey, LocalGitRepository> _repos =
@@ -81,6 +82,7 @@ namespace mrHelper.GitClient
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
       private readonly bool _useShallowClone;
+      private bool _isDisposed;
    }
 }
 

@@ -153,6 +153,11 @@ namespace mrHelper.GitClient
          {
             ExternalProcess.AsyncTaskDescriptor descriptor =
                operationManager.CreateDescriptor("git", arguments, path, null);
+            if (descriptor == null)
+            {
+               return false;
+            }
+
             await operationManager.Wait(descriptor);
             return descriptor.StdErr.Count() == 0;
          }

@@ -64,7 +64,7 @@ namespace mrHelper.Client.Session
          {
             Trace.TraceInformation("[Session] Canceling operations");
 
-            _operator.Cancel();
+            _operator.Dispose();
             _operator = null;
          }
 

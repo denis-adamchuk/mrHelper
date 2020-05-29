@@ -21,6 +21,11 @@ namespace mrHelper.GitClient
 
       async public Task<bool> ContainsSHAAsync(string sha)
       {
+         if (_isDisposed)
+         {
+            return false;
+         }
+
          if (_cached_existingSha.Contains(sha))
          {
             return true;
@@ -89,13 +94,15 @@ namespace mrHelper.GitClient
       {
          Trace.TraceInformation(String.Format("[LocalGitRepository] Disposing LocalGitRepository at path {0}", Path));
 
-         _data.DisableUpdates();
+         _data.Dispose();
          _data = null;
 
-         _updater.DisableUpdates();
+         _updater.Dispose();
          _updater = null;
 
-         _operationManager.CancelAll();
+         _operationManager.Dispose();
+
+         _isDisposed = true;
       }
 
       private void onCloned()
@@ -111,7 +118,8 @@ namespace mrHelper.GitClient
       private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
       private LocalGitRepositoryData _data;
       private LocalGitRepositoryUpdater _updater;
-      private readonly IExternalProcessManager _operationManager;
+      private bool _isDisposed;
+      private readonly GitOperationManager _operationManager;
    }
 }
 

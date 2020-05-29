@@ -72,11 +72,6 @@ namespace mrHelper.Client.Session
                      async (gl) =>
                         await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync())));
       }
-
-      public new void Cancel()
-      {
-         base.Cancel();
-      }
    }
 }
 

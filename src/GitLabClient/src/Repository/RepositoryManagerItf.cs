@@ -25,8 +25,6 @@ namespace mrHelper.Client.Repository
       Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha);
 
       Task DeleteBranch(ProjectKey projectKey, string name);
-
-      void Cancel();
    }
 }
 

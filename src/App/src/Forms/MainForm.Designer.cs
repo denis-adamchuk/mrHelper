@@ -27,6 +27,7 @@ namespace mrHelper.App.Forms
 
          _liveSession?.Dispose();
          _searchSession?.Dispose();
+         _gitlabClientManager.Dispose();
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();

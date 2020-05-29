@@ -882,12 +882,7 @@ namespace mrHelper.App.Forms
 
       private void disposeLocalGitRepositoryFactory()
       {
-         if (_gitClientFactory != null)
-         {
-            LocalGitRepositoryFactory factory = _gitClientFactory;
-            _gitClientFactory = null;
-            factory.Dispose();
-         }
+         _gitClientFactory?.Dispose();
       }
 
       /// <summary>

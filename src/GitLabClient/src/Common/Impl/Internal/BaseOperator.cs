@@ -5,7 +5,7 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Common
 {
-   internal class BaseOperator
+   internal class BaseOperator : IDisposable
    {
       internal BaseOperator(string hostname, IHostProperties hostProperties)
       {
@@ -18,9 +18,9 @@ namespace mrHelper.Client.Common
          return await func(_client);
       }
 
-      protected void Cancel()
+      public void Dispose()
       {
-         _client.CancelAll();
+         _client.Dispose();
       }
 
       private readonly IHostProperties _settings;
