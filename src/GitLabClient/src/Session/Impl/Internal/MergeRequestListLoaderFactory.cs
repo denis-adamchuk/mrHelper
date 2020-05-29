@@ -5,7 +5,7 @@ namespace mrHelper.Client.Session
 {
    internal static class MergeRequestListLoaderFactory
    {
-      internal static IMergeRequestListLoader CreateMergeRequestListLoader(
+      internal static IMergeRequestListLoader CreateMergeRequestListLoader(string hostname,
          SessionOperator op, SessionContext context, InternalCacheUpdater cache)
       {
          IVersionLoader versionLoader = new VersionLoader(op, cache);
@@ -18,7 +18,7 @@ namespace mrHelper.Client.Session
          }
          else if (context.CustomData is SearchBasedContext)
          {
-            listLoader = new SearchBasedMergeRequestLoader(
+            listLoader = new SearchBasedMergeRequestLoader(hostname,
                op, versionLoader, cache, context);
          }
          return listLoader;

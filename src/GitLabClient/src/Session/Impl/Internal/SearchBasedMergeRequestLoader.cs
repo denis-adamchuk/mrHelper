@@ -15,10 +15,11 @@ namespace mrHelper.Client.Session
 {
    internal class SearchBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
    {
-      internal SearchBasedMergeRequestLoader(SessionOperator op,
+      internal SearchBasedMergeRequestLoader(string hostname, SessionOperator op,
          IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, SessionContext sessionContext)
          : base(op)
       {
+         _hostname = hostname;
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
          _sessionContext = sessionContext;
@@ -94,7 +95,7 @@ namespace mrHelper.Client.Session
 
       async private Task<ProjectKey?> resolveProject(int projectId)
       {
-         ProjectKey? projectKeyOpt = GlobalCache.GetProjectKey(_operator.Host, projectId);
+         ProjectKey? projectKeyOpt = GlobalCache.GetProjectKey(_hostname, projectId);
          if (projectKeyOpt.HasValue)
          {
             return projectKeyOpt.Value;
@@ -103,10 +104,11 @@ namespace mrHelper.Client.Session
          ProjectKey projectKey = await call(() => _operator.GetProjectAsync(projectId.ToString()),
             String.Format("Cancelled resolving project with Id \"{0}\"", projectId),
             String.Format("Cannot load project with Id \"{0}\"", projectId));
-         GlobalCache.AddProjectKey(_operator.Host, projectId, projectKey);
+         GlobalCache.AddProjectKey(_hostname, projectId, projectKey);
          return projectKey;
       }
 
+      private readonly string _hostname;
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly SessionContext _sessionContext;

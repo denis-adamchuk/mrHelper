@@ -141,7 +141,7 @@ namespace mrHelper.App.Forms
             {
                try
                {
-                  if (repo != null && !repo.ExpectingClone)
+                  if (repo != null && !repo.ExpectingClone && repo.Updater != null)
                   {
                      // Using remote-based provider as there are might be discussions from other users on newer commits
                      IProjectUpdateContextProvider contextProvider =

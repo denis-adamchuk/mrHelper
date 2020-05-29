@@ -16,10 +16,7 @@ namespace mrHelper.Client.Session
       internal SessionOperator(string host, IHostProperties settings)
          : base(host, settings)
       {
-         Host = host; // TODO Can be removed if users keep Host separately from Operator
       }
-
-      internal string Host { get; }
 
       internal Task<User> GetCurrentUserAsync()
       {
@@ -36,7 +33,7 @@ namespace mrHelper.Client.Session
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
-                     new ProjectKey(Host, ((Project)await client.RunAsync(
+                     new ProjectKey(Hostname, ((Project)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(projectName).LoadTaskAsync())).Path_With_Namespace)));
       }

@@ -10,6 +10,7 @@ namespace mrHelper.Client.Common
       internal BaseOperator(string hostname, IHostProperties hostProperties)
       {
          _settings = hostProperties;
+         _hostname = hostname;
          _client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
       }
 
@@ -18,11 +19,14 @@ namespace mrHelper.Client.Common
          return await func(_client);
       }
 
+      protected string Hostname => _hostname;
+
       public void Dispose()
       {
          _client.Dispose();
       }
 
+      private readonly string _hostname;
       private readonly IHostProperties _settings;
       private readonly GitLabTaskRunner _client;
    }

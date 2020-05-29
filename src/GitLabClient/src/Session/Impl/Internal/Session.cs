@@ -30,7 +30,7 @@ namespace mrHelper.Client.Session
          {
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             IMergeRequestListLoader mergeRequestListLoader =
-               MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
+               MergeRequestListLoaderFactory.CreateMergeRequestListLoader(hostname, _operator, context, cacheUpdater);
 
             Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
 
@@ -58,13 +58,10 @@ namespace mrHelper.Client.Session
 
       private void stop()
       {
-         if (_operator != null)
-         {
-            Trace.TraceInformation("[Session] Canceling operations");
+         Trace.TraceInformation("[Session] Canceling operations");
 
-            _operator.Dispose();
-            _operator = null;
-         }
+         _operator?.Dispose();
+         _operator = null;
 
          _internal?.Dispose();
          _internal = null;

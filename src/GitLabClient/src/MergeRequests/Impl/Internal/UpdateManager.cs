@@ -20,7 +20,7 @@ namespace mrHelper.Client.MergeRequests
       {
          SessionOperator updateOperator = new SessionOperator(hostname, clientContext.HostProperties);
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            updateOperator, context, cacheUpdater);
+            hostname, updateOperator, context, cacheUpdater);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
 
          _cache = cacheUpdater.Cache;
