@@ -29,8 +29,8 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersionsByDefault";
       private static readonly bool   ShowVersionsDefaultValue = true;
 
-      private static readonly string UseShallowCloneKeyName      = "UseShallowClone";
-      private static readonly bool   UseShallowCloneDefaultValue = false;
+      private static readonly string UseShallowCloneKeyName      = "UseShallowClone_New";
+      private static readonly bool   UseShallowCloneDefaultValue = true;
 
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;

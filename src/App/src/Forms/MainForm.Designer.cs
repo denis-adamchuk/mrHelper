@@ -535,7 +535,7 @@ namespace mrHelper.App.Forms
          this.checkBoxUseShallowClone.Name = "checkBoxUseShallowClone";
          this.checkBoxUseShallowClone.Size = new System.Drawing.Size(180, 17);
          this.checkBoxUseShallowClone.TabIndex = 15;
-         this.checkBoxUseShallowClone.Text = "Use shallow clone (experimental)";
+         this.checkBoxUseShallowClone.Text = "Use shallow clone";
          this.toolTip.SetToolTip(this.checkBoxUseShallowClone, "Use depth=1 in git clone and fetch commands");
          this.checkBoxUseShallowClone.UseVisualStyleBackColor = true;
          this.checkBoxUseShallowClone.CheckedChanged += new System.EventHandler(this.checkBoxUseShallowClone_CheckedChanged);
