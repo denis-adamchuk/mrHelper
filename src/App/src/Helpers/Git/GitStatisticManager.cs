@@ -25,8 +25,8 @@ namespace mrHelper.App.Helpers
          IDiscussionCache discussionCache,
          IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactoryAccessor factoryAccessor)
-         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, factoryAccessor)
+         ILocalGitRepositoryFactory gitFactory)
+         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
       {
       }
 
@@ -164,7 +164,7 @@ namespace mrHelper.App.Helpers
          void traceError(string text)
          {
             Trace.TraceError(String.Format(
-               "Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
+               "[GitStatisticManager] Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
              + "This makes impossible to show git statistic for MR with IID {4}", text, repo.Path,
                String.Format("{0}/{1}", args.CommonArgs.Sha1?.ToString() ?? "N/A",
                                         args.CommonArgs.Sha2?.ToString() ?? "N/A"),

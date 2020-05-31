@@ -26,10 +26,10 @@ namespace mrHelper.App.Helpers
          IDiscussionCache discussionCache,
          IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactoryAccessor factoryAccessor,
+         ILocalGitRepositoryFactory gitFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
-         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, factoryAccessor)
+         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
       {
          if (autoUpdatePeriodMs < 1)
          {

@@ -18,7 +18,7 @@ namespace mrHelper.App.Helpers
          IDiscussionCache discussionCache,
          IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactoryAccessor factoryAccessor)
+         ILocalGitRepositoryFactory gitFactory)
       {
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
@@ -26,7 +26,8 @@ namespace mrHelper.App.Helpers
          _discussionCache = discussionCache;
          _contextProviderFactory = updateContextProviderFactory;
 
-         _factoryAccessor = factoryAccessor;
+         _gitFactory = gitFactory;
+         _gitFactory.RepositoryCloned += onRepositoryCloned;
          _synchronizeInvoke = synchronizeInvoke;
 
          scheduleAllProjectsUpdate();
@@ -34,6 +35,7 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
+         _gitFactory.RepositoryCloned -= onRepositoryCloned;
          _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
       }
 
@@ -51,6 +53,11 @@ namespace mrHelper.App.Helpers
          {
             scheduleSingleProjectUpdate(e.FullMergeRequestKey.ProjectKey);
          }
+      }
+
+      private void onRepositoryCloned(ILocalGitRepository repo)
+      {
+         scheduleSingleProjectUpdate(repo.ProjectKey);
       }
 
       private void scheduleSingleProjectUpdate(ProjectKey projectKey)
@@ -90,13 +97,13 @@ namespace mrHelper.App.Helpers
 
       protected ILocalGitRepository getRepository(ProjectKey projectKey)
       {
-         return _factoryAccessor.GetFactory()?.GetRepository(projectKey);
+         return _gitFactory?.GetRepository(projectKey);
       }
 
       protected abstract void preUpdate(ILocalGitRepository repo);
       protected abstract Task doUpdate(ILocalGitRepository repo);
 
-      private readonly ILocalGitRepositoryFactoryAccessor _factoryAccessor;
+      private readonly ILocalGitRepositoryFactory _gitFactory;
       protected readonly IDiscussionCache _discussionCache;
       protected readonly IMergeRequestCache _mergeRequestCache;
       private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;

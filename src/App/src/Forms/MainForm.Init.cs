@@ -17,6 +17,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -541,7 +542,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createGitHelpers(ISession session)
+      private void createGitHelpers(ISession session, ILocalGitRepositoryFactory factory)
       {
          if (session.MergeRequestCache == null
           || session.DiscussionCache == null
@@ -553,13 +554,13 @@ namespace mrHelper.App.Forms
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
             ? new GitDataUpdater(
                session.MergeRequestCache, session.DiscussionCache,
-               session.UpdateContextProviderFactory, this, this,
+               session.UpdateContextProviderFactory, this, factory,
                Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
 
          _gitStatManager = new GitStatisticManager(
                session.MergeRequestCache, session.DiscussionCache,
-               session.UpdateContextProviderFactory, this, this);
+               session.UpdateContextProviderFactory, this, factory);
          _gitStatManager.Update += onGitStatisticManagerUpdate;
       }
 

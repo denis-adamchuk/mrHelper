@@ -862,14 +862,15 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory(string localFolder)
+      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory()
       {
          if (_gitClientFactory == null)
          {
             try
             {
                _gitClientFactory = new LocalGitRepositoryFactory(
-                  localFolder, this, Program.Settings.UseShallowClone);
+                  Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone);
+               _gitClientFactory.RepositoryCloned += onRepositoryCloned;
             }
             catch (ArgumentException ex)
             {
@@ -881,8 +882,17 @@ namespace mrHelper.App.Forms
 
       private void disposeLocalGitRepositoryFactory()
       {
-         _gitClientFactory?.Dispose();
-         _gitClientFactory = null;
+         if (_gitClientFactory != null)
+         {
+            _gitClientFactory.RepositoryCloned -= onRepositoryCloned;
+            _gitClientFactory?.Dispose();
+            _gitClientFactory = null;
+         }
+      }
+
+      private void onRepositoryCloned(ILocalGitRepository repo)
+      {
+         scheduleSilentUpdate(repo.ProjectKey);
       }
 
       /// <summary>
@@ -891,7 +901,7 @@ namespace mrHelper.App.Forms
       /// <returns>null if could not create a repository</returns>
       private ILocalGitRepository getRepository(ProjectKey key, bool showMessageBoxOnError)
       {
-         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
+         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory();
          if (factory == null)
          {
             return null;

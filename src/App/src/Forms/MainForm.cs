@@ -20,8 +20,7 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm :
       CustomFontForm,
-      ICommandCallback,
-      ILocalGitRepositoryFactoryAccessor
+      ICommandCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -78,11 +77,6 @@ namespace mrHelper.App.Forms
       public int GetCurrentMergeRequestIId()
       {
          return getMergeRequestKey(null)?.IId ?? 0;
-      }
-
-      public ILocalGitRepositoryFactory GetFactory()
-      {
-         return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
       }
 
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer

@@ -193,7 +193,6 @@
     <Compile Include="src\Helpers\Git\BaseGitHelper.cs" />
     <Compile Include="src\Helpers\Git\DiscussionBasedContextProvider.cs" />
     <Compile Include="src\Helpers\Git\CommitBasedContextProvider.cs" />
-    <Compile Include="src\Helpers\Git\FactoryAccessorItf.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />
     <Compile Include="src\Helpers\Git\GitStatisticManager.cs" />

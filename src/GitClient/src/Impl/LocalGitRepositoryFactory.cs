@@ -54,7 +54,8 @@ namespace mrHelper.GitClient
          LocalGitRepository repo;
          try
          {
-            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone);
+            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone,
+               (r) => RepositoryCloned?.Invoke(r));
          }
          catch (ArgumentException ex)
          {
@@ -64,6 +65,8 @@ namespace mrHelper.GitClient
          _repos[key] = repo;
          return repo;
       }
+
+      public event Action<ILocalGitRepository> RepositoryCloned;
 
       public void Dispose()
       {

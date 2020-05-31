@@ -56,13 +56,13 @@ namespace mrHelper.GitClient
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal LocalGitRepository(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
+         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, Action<ILocalGitRepository> onClonedRepo)
       {
          Path = LocalGitRepositoryPathFinder.FindPath(parentFolder, projectKey);
 
-         if (useShallowClone && !GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
+         if (!GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
          {
-            throw new ArgumentException("Cannot use shallow clone if single commit fetch is not supported");
+            throw new ArgumentException("Cannot work with such repositories");
          }
 
          LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
@@ -77,6 +77,7 @@ namespace mrHelper.GitClient
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
          _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
          _updater.Cloned += onCloned;
+         _onClonedRepo = onClonedRepo;
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
          ExpectingClone = isEmptyFolder(Path);
@@ -105,6 +106,7 @@ namespace mrHelper.GitClient
       private void onCloned()
       {
          ExpectingClone = false;
+         _onClonedRepo?.Invoke(this);
       }
 
       private static bool isEmptyFolder(string path)
@@ -117,6 +119,7 @@ namespace mrHelper.GitClient
       private LocalGitRepositoryUpdater _updater;
       private bool _isDisposed;
       private readonly GitOperationManager _operationManager;
+      private readonly Action<ILocalGitRepository> _onClonedRepo;
    }
 }
 
