@@ -38,15 +38,17 @@ namespace mrHelper.GitClient
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepository localGitRepository,
          IExternalProcessManager operationManager,
-         EUpdateMode mode)
+         EUpdateMode mode,
+         Action onCloned,
+         Action<string> onFetched)
       {
          _synchronizeInvoke = synchronizeInvoke;
          _localGitRepository = localGitRepository;
          _operationManager = operationManager;
          _updateMode = mode;
+         _onCloned = onCloned;
+         _onFetched = onFetched;
       }
-
-      internal event Action Cloned;
 
       public void CancelUpdate()
       {
@@ -214,7 +216,7 @@ namespace mrHelper.GitClient
             {
                await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
                traceInformation("Repository cloned.");
-               Cloned?.Invoke();
+               _onCloned?.Invoke();
             }
             else if (_updateMode != EUpdateMode.ShallowClone
                   && context.LatestChange.HasValue
@@ -281,6 +283,7 @@ namespace mrHelper.GitClient
          {
             string arguments = String.Format("fetch {0}", getFetchArguments(sha, shallowFetch));
             await doUpdateOperationAsync(arguments, _localGitRepository.Path);
+            _onFetched?.Invoke(sha);
             ++iCommit;
          }
 
@@ -386,8 +389,8 @@ namespace mrHelper.GitClient
 
       private static string getCloneArguments(bool shallow)
       {
-         return String.Format(" --progress {0} {1} {2}",
-           shallow ? "--depth=1" : String.Empty,
+         return String.Format(" --progress  {0} {1} {2}",
+           shallow ? "--depth=1 --no-checkout" : String.Empty,
            GitTools.SupportsFetchNoTags() ? "--no-tags" : String.Empty,
            "-c credential.helper=manager -c credential.interactive=auto -c credential.modalPrompt=true");
       }
@@ -462,6 +465,8 @@ namespace mrHelper.GitClient
       private readonly ILocalGitRepository _localGitRepository;
       private readonly IExternalProcessManager _operationManager;
       private readonly EUpdateMode _updateMode;
+      private readonly Action _onCloned;
+      private readonly Action<string> _onFetched;
 
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
 

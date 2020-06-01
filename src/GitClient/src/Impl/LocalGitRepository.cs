@@ -75,8 +75,7 @@ namespace mrHelper.GitClient
                && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new LocalGitRepositoryUpdater(synchronizeInvoke, this, _operationManager, mode);
-         _updater.Cloned += onCloned;
+         _updater = new LocalGitRepositoryUpdater(synchronizeInvoke, this, _operationManager, mode, onCloned, onFetched);
          _onClonedRepo = onClonedRepo;
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
@@ -101,6 +100,12 @@ namespace mrHelper.GitClient
          _operationManager.Dispose();
 
          _isDisposed = true;
+      }
+
+      private void onFetched(string sha)
+      {
+         Debug.Assert(!_cached_existingSha.Contains(sha));
+         _cached_existingSha.Add(sha);
       }
 
       private void onCloned()
