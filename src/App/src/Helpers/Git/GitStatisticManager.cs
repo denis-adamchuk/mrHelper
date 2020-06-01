@@ -9,6 +9,7 @@ using Version = GitLabSharp.Entities.Version;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
@@ -101,13 +102,14 @@ namespace mrHelper.App.Helpers
                   null
                );
 
+               bool finished = repo?.Updater == null;
+               CommitBasedContextProvider contextProvider = new CommitBasedContextProvider(
+                  new string[] { args.CommonArgs.Sha1, args.CommonArgs.Sha2 });
+               repo?.Updater?.RequestUpdate(contextProvider, () => finished = true);
+               await TaskUtils.WhileAsync(() => !finished);
+
                try
                {
-                  if (repo.Updater != null)
-                  {
-                     await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
-                        new string[] { keyValuePair.Value.Base_Commit_SHA, keyValuePair.Value.Head_Commit_SHA }));
-                  }
                   if (repo.Data != null)
                   {
                      await repo.Data.LoadFromDisk(args);

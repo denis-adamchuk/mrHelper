@@ -42,8 +42,21 @@ namespace mrHelper.GitClient
    /// </summary>
    public interface ILocalGitRepositoryUpdater
    {
+      /// <summary>
+      /// Async version of Update.
+      /// - Can report progress change
+      /// - Can clone
+      /// - Processes context in a single chunk
+      /// </summary>
       Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange);
-      Task SilentUpdate(IProjectUpdateContextProvider contextProvider);
+
+      /// <summary>
+      /// Non-blocking version of Update.
+      /// - Cannot report progress change
+      /// - Cannot clone
+      /// - May split passed context in chunks and process them with delays
+      /// </summary>
+      void RequestUpdate(IProjectUpdateContextProvider contextProvider, Action onFinished);
       void CancelUpdate();
    }
 }

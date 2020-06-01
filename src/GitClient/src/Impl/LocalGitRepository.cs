@@ -75,7 +75,7 @@ namespace mrHelper.GitClient
                && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
+         _updater = new LocalGitRepositoryUpdater(synchronizeInvoke, this, _operationManager, mode);
          _updater.Cloned += onCloned;
          _onClonedRepo = onClonedRepo;
          _data = new LocalGitRepositoryData(_operationManager, Path);

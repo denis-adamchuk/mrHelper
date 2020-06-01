@@ -30,7 +30,7 @@ namespace mrHelper.Client.MergeRequests
             return null;
          }
 
-         List<string> shas = new List<string>();
+         HashSet<string> shas = new HashSet<string>();
          foreach (Version version in _versions)
          {
             shas.Add(version.Base_Commit_SHA);

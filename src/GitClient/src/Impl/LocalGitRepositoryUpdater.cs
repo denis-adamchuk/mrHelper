@@ -35,10 +35,12 @@ namespace mrHelper.GitClient
       /// Bind to the specific LocalGitRepository object
       /// </summary>
       internal LocalGitRepositoryUpdater(
+         ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepository localGitRepository,
          IExternalProcessManager operationManager,
          EUpdateMode mode)
       {
+         _synchronizeInvoke = synchronizeInvoke;
          _localGitRepository = localGitRepository;
          _operationManager = operationManager;
          _updateMode = mode;
@@ -70,11 +72,11 @@ namespace mrHelper.GitClient
 
       public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
       {
-         return update(contextProvider, onProgressChange, true);
+         return update(contextProvider, onProgressChange, true, false);
       }
 
       async public Task update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         bool canClone)
+         bool canClone, bool canSplit)
       {
          ProjectUpdateContext context = contextProvider?.GetContext();
          if (contextProvider == null || (context != null && context.Sha == null))
@@ -100,7 +102,7 @@ namespace mrHelper.GitClient
 
          if (isUpdateNeeded(context, _updatingContext))
          {
-            await processContext(context);
+            await processContext(context, canSplit);
          }
          else
          {
@@ -110,28 +112,32 @@ namespace mrHelper.GitClient
          _onProgressChange = null;
       }
 
-      async public Task SilentUpdate(IProjectUpdateContextProvider contextProvider)
+      public void RequestUpdate(IProjectUpdateContextProvider contextProvider, Action onFinished)
       {
-         try
-         {
-            await update(contextProvider, null, false);
-         }
-         catch (RepositoryUpdateException ex)
-         {
-            ExceptionHandlers.Handle("Silent update failed", ex);
-         }
+         _synchronizeInvoke.BeginInvoke(new Action(
+            async () =>
+            {
+               try
+               {
+                  await update(contextProvider, null, false, true);
+                  onFinished?.Invoke();
+               }
+               catch (RepositoryUpdateException ex)
+               {
+                  ExceptionHandlers.Handle("Silent update failed", ex);
+               }
+            }), null);
       }
 
-      private IEnumerable<InternalUpdateContext> splitContext(ProjectUpdateContext context)
+      private IEnumerable<InternalUpdateContext> splitContext(ProjectUpdateContext context, bool canSplit)
       {
-         if (_updateMode != EUpdateMode.ShallowClone || !(context is FullUpdateContext))
+         if (!canSplit || _updateMode != EUpdateMode.ShallowClone)
          {
             return new InternalUpdateContext[] { new InternalUpdateContext(context.Sha.Distinct()) };
          }
 
          List<InternalUpdateContext> splitted = new List<InternalUpdateContext>();
-         FullUpdateContext fullContext = context as FullUpdateContext;
-         IEnumerable<string> sha = fullContext.Sha.Distinct();
+         IEnumerable<string> sha = context.Sha.Distinct();
          int remaining = sha.Count();
          while (remaining > 0)
          {
@@ -145,7 +151,7 @@ namespace mrHelper.GitClient
          return splitted;
       }
 
-      async private Task processContext(ProjectUpdateContext context)
+      async private Task processContext(ProjectUpdateContext context, bool canSplit)
       {
          if (!context.Sha.Any())
          {
@@ -159,7 +165,7 @@ namespace mrHelper.GitClient
          {
             await doPreProcessContext(context);
 
-            IEnumerable<InternalUpdateContext> splitted = splitContext(context);
+            IEnumerable<InternalUpdateContext> splitted = splitContext(context, canSplit);
             foreach (InternalUpdateContext internalContext in splitted)
             {
                await doProcessContext(context, internalContext);
@@ -403,21 +409,21 @@ namespace mrHelper.GitClient
 
       private DateTime updateTimestamp(ProjectUpdateContext context)
       {
-         DateTime prevFullUpdateTimestamp = _latestFullUpdateTimestamp;
+         DateTime prevFullUpdateTimestamp = _latestFullFetchTimestamp;
          if (context.LatestChange.HasValue)
          {
             Debug.Assert(context is FullUpdateContext);
-            if (context.LatestChange.Value > _latestFullUpdateTimestamp)
+            if (context.LatestChange.Value > _latestFullFetchTimestamp)
             {
                traceInformation(String.Format("Updating LatestChange timestamp to {0}",
                   context.LatestChange.Value.ToLocalTime().ToString()));
-               _latestFullUpdateTimestamp = context.LatestChange.Value;
+               _latestFullFetchTimestamp = context.LatestChange.Value;
             }
-            else if (context.LatestChange == _latestFullUpdateTimestamp)
+            else if (context.LatestChange == _latestFullFetchTimestamp)
             {
                traceDebug("Timestamp not updated");
             }
-            else if (context.LatestChange < _latestFullUpdateTimestamp)
+            else if (context.LatestChange < _latestFullFetchTimestamp)
             {
                // This is not a problem and may happen when, for example, a Merge Request with the most newest
                // version has been closed.
@@ -451,6 +457,7 @@ namespace mrHelper.GitClient
             _localGitRepository.ProjectKey.ProjectName, message));
       }
 
+      private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ILocalGitRepository _localGitRepository;
       private readonly IExternalProcessManager _operationManager;
       private readonly EUpdateMode _updateMode;
@@ -460,7 +467,7 @@ namespace mrHelper.GitClient
       private bool _isDisposed;
       private ProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
-      private DateTime _latestFullUpdateTimestamp = DateTime.MinValue;
+      private DateTime _latestFullFetchTimestamp = DateTime.MinValue;
 
       private const int ShaInChunk = 2;
       private const int DelayBetweenChunksMs = 50;

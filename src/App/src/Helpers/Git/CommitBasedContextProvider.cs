@@ -14,7 +14,7 @@ namespace mrHelper.App.Helpers
 
       public ProjectUpdateContext GetContext()
       {
-         return new PartialUpdateContext(_shas);
+         return new PartialUpdateContext(_shas.Distinct());
       }
 
       public override string ToString()

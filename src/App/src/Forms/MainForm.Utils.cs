@@ -892,7 +892,7 @@ namespace mrHelper.App.Forms
 
       private void onRepositoryCloned(ILocalGitRepository repo)
       {
-         scheduleSilentUpdate(repo.ProjectKey);
+         requestRepositoryUpdate(repo.ProjectKey);
       }
 
       /// <summary>
@@ -1289,7 +1289,7 @@ namespace mrHelper.App.Forms
       {
          if (e.New || e.Commits)
          {
-            scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
+            requestRepositoryUpdate(e.FullMergeRequestKey.ProjectKey);
          }
 
          MergeRequestKey mrk = new MergeRequestKey(

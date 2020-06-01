@@ -228,7 +228,7 @@ namespace mrHelper.App.Forms
 
          foreach (ProjectKey projectKey in projects)
          {
-            scheduleSilentUpdate(projectKey);
+            requestRepositoryUpdate(projectKey);
          }
 
          if (!isSearchMode())

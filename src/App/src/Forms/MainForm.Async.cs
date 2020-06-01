@@ -422,26 +422,18 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      async private Task performSilentUpdate(ProjectKey projectKey)
+      private void requestRepositoryUpdate(ProjectKey projectKey)
       {
-         ILocalGitRepository repo = getRepository(projectKey, false);
-         if (repo != null && !repo.ExpectingClone)
+         ISession session = getSession(true /* supported in Live only */);
+
+         IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
+            GetLocalBasedContextProvider(projectKey);
+         if (contextProvider != null)
          {
-            ISession session = getSession(true /* supported in Live only */);
-
-            IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
-               GetLocalBasedContextProvider(projectKey);
-            if (contextProvider != null)
-            {
-               // contextProvider can be null if session was dropped after this update was scheduled
-               await repo.Updater.SilentUpdate(contextProvider);
-            }
+            // contextProvider can be null if session was dropped after this update was scheduled
+            ILocalGitRepository repo = getRepository(projectKey, false);
+            repo?.Updater?.RequestUpdate(contextProvider, null);
          }
-      }
-
-      private void scheduleSilentUpdate(ProjectKey pk)
-      {
-         BeginInvoke(new Action(async () => await performSilentUpdate(pk)));
       }
 
       async private Task checkForUpdatesAsync()

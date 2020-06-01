@@ -209,22 +209,22 @@ namespace mrHelper.App.Helpers
          // Update() call will return from `await` only when all ongoing updates within
          // the project are finished.
 
+         HashSet<string> sha = new HashSet<string>();
+
          foreach (GitDiffArguments args in diffArgs)
          {
-            if (repo.Updater != null)
-            {
-               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(
-                  new string[] { args.CommonArgs.Sha1, args.CommonArgs.Sha2 }));
-            }
+            sha.Add(args.CommonArgs.Sha1);
+            sha.Add(args.CommonArgs.Sha2);
          }
 
          foreach (GitShowRevisionArguments args in revisionArgs)
          {
-            if (repo.Updater != null)
-            {
-               await repo.Updater.SilentUpdate(new CommitBasedContextProvider(new string[] { args.Sha }));
-            }
+            sha.Add(args.Sha);
          }
+
+         bool finished = repo?.Updater == null;
+         repo?.Updater?.RequestUpdate(new CommitBasedContextProvider(sha), () => finished = true);
+         await TaskUtils.WhileAsync(() => !finished);
 
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
