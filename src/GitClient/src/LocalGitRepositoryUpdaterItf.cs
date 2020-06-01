@@ -13,9 +13,17 @@ namespace mrHelper.GitClient
       }
    }
 
-   public class SecurityException : RepositoryUpdateException
+   public class SSLVerificationException : RepositoryUpdateException
    {
-      public SecurityException(Exception innerException)
+      public SSLVerificationException(Exception innerException)
+         : base(String.Empty, innerException)
+      {
+      }
+   }
+
+   public class AuthenticationFailedException : RepositoryUpdateException
+   {
+      public AuthenticationFailedException(Exception innerException)
          : base(String.Empty, innerException)
       {
       }

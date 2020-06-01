@@ -187,7 +187,13 @@ namespace mrHelper.GitClient
                   && gfex.InnerException is ExternalProcessFailureException pfex
                   && String.Join("\n", pfex.Errors).Contains("SSL certificate problem"))
             {
-               throw new SecurityException(ex);
+               throw new SSLVerificationException(ex);
+            }
+            else if (ex is GitCallFailedException gfex3
+                  && gfex3.InnerException is ExternalProcessFailureException pfex3
+                  && String.Join("\n", pfex3.Errors).Contains("Authentication failed"))
+            {
+               throw new AuthenticationFailedException(ex);
             }
             else if (ex is GitCallFailedException gfex2
                   && gfex2.InnerException is ExternalProcessFailureException pfex2

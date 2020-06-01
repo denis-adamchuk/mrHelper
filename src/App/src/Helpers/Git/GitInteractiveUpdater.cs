@@ -1,8 +1,9 @@
 using System;
+using System.Linq;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using mrHelper.Common.Tools;
+using System.Collections.Generic;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitClient;
@@ -43,7 +44,7 @@ namespace mrHelper.App.Helpers
 
          InitializationStatusChange?.Invoke("Updating git repository...");
 
-         await runAsync(async () => await repo.Updater.Update(contextProvider, onProgressChange));
+         await runAsync(repo, async () => await repo.Updater.Update(contextProvider, onProgressChange));
          InitializationStatusChange?.Invoke("Git repository updated");
       }
 
@@ -65,14 +66,12 @@ namespace mrHelper.App.Helpers
          return true;
       }
 
-      private delegate Task Command();
-
       /// <summary>
       /// Run a git command asynchronously.
       /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private Task runAsync(Command command)
+      async private Task runAsync(ILocalGitRepository repo, Func<Task> command)
       {
          try
          {
@@ -86,7 +85,7 @@ namespace mrHelper.App.Helpers
                throw new InteractiveUpdateCancelledException();
             }
 
-            if (ex is SecurityException)
+            if (ex is SSLVerificationException)
             {
                InitializationStatusChange?.Invoke("Cannot clone due to SSL verification error");
                if (handleSSLCertificateProblem())
@@ -94,6 +93,22 @@ namespace mrHelper.App.Helpers
                   throw new InteractiveUpdateSSLFixedException();
                }
                throw new InteractiveUpdateCancelledException();
+            }
+
+            if (ex is AuthenticationFailedException)
+            {
+               if (_fixingAuthFailed.Add(repo))
+               {
+                  try
+                  {
+                     await handleAuthenticationFailedException(repo, async () => await runAsync(repo, command));
+                     return;
+                  }
+                  finally
+                  {
+                     _fixingAuthFailed.Remove(repo);
+                  }
+               }
             }
 
             if (ex is NotEmptyDirectoryException)
@@ -146,6 +161,30 @@ namespace mrHelper.App.Helpers
             + "Do you want to disable certificate verification in global git config?",
             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
+
+      async private Task handleAuthenticationFailedException(ILocalGitRepository repo, Func<Task> command)
+      {
+         string configKey = "credential.interactive";
+         string configValue = "always";
+
+         GitTools.EConfigScope scope = repo.ExpectingClone ? GitTools.EConfigScope.Global : GitTools.EConfigScope.Local;
+         string path = repo.ExpectingClone ? String.Empty : repo.Path;
+
+         IEnumerable<string> prevValue = GitTools.GetConfigKeyValue(scope, configKey, path);
+         string prevInteractiveMode = prevValue.Any() ? prevValue.First() : null; // `null` to unset
+
+         try
+         {
+            GitTools.SetConfigKeyValue(scope, configKey, configValue, path);
+            await command();
+         }
+         finally
+         {
+            GitTools.SetConfigKeyValue(scope, configKey, prevInteractiveMode, path);
+         }
+      }
+
+      private HashSet<ILocalGitRepository> _fixingAuthFailed = new HashSet<ILocalGitRepository>();
    }
 }
 
