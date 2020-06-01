@@ -100,7 +100,7 @@ namespace mrHelper.GitClient
             _updateOperationDescriptor.OnProgressChange = onProgressChange;
          }
 
-         if (isUpdateNeeded(context, _updatingContext))
+         if (isWorthNewUpdate(context, _updatingContext))
          {
             await processContext(context, canSplit);
          }
@@ -155,9 +155,10 @@ namespace mrHelper.GitClient
       {
          if (!context.Sha.Any())
          {
-            // It is not always a problem. May happen when a MR is opened from Search tab
-            // for a project that is not added to the list. Or when MR list is empty
-            // for a project.
+            if (!_localGitRepository.ExpectingClone && _updateMode == EUpdateMode.ShallowClone)
+            {
+               return; // optimization. cannot do anything without Sha list
+            }
             traceDebug("Empty context");
          }
 
@@ -356,7 +357,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      private static bool isUpdateNeeded(ProjectUpdateContext proposed, ProjectUpdateContext updating)
+      private static bool isWorthNewUpdate(ProjectUpdateContext proposed, ProjectUpdateContext updating)
       {
          Debug.Assert(proposed != null);
          if (updating == null)
