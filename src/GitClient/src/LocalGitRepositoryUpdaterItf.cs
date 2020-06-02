@@ -29,6 +29,14 @@ namespace mrHelper.GitClient
       }
    }
 
+   public class CouldNotReadUsernameException : RepositoryUpdateException
+   {
+      public CouldNotReadUsernameException(Exception innerException)
+         : base(String.Empty, innerException)
+      {
+      }
+   }
+
    public class NotEmptyDirectoryException : RepositoryUpdateException
    {
       public NotEmptyDirectoryException(string path, Exception innerException)

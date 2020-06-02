@@ -86,21 +86,22 @@ namespace mrHelper.App.Forms
             if (ex is InteractiveUpdateSSLFixedException)
             {
                // SSL check is disabled
-               return false;
             }
             else if (ex is InteractiveUpdateCancelledException)
             {
                MessageBox.Show("Cannot show Discussions without up-to-date git repository", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               return false;
+            }
+            else if (ex is InteractiveUpdateFailed inex)
+            {
+               ExceptionHandlers.Handle(ex.Message, ex);
+               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-               Debug.Assert(ex is InteractiveUpdateFailed);
-               MessageBox.Show("Cannot initialize git repository",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return false;
+               Debug.Assert(false);
             }
+            return false;
          }
          finally
          {
@@ -273,21 +274,20 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            if (ex is InteractiveUpdateCancelledException)
+            if (ex is InteractiveUpdateSSLFixedException)
+            {
+               // SSL check is disabled
+            }
+            else if (ex is InteractiveUpdateCancelledException)
             {
                // User declined to create a repository
                MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            else if (ex is InteractiveUpdateFailed)
+            else if (ex is InteractiveUpdateFailed inex)
             {
-               string errorMessage = "Cannot initialize git repository";
-               ExceptionHandlers.Handle(errorMessage, ex);
-               MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (ex is InteractiveUpdateSSLFixedException)
-            {
-               // SSL check is disabled
+               ExceptionHandlers.Handle(ex.Message, ex);
+               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {

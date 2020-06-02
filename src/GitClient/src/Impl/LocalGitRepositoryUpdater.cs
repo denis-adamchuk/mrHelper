@@ -189,17 +189,23 @@ namespace mrHelper.GitClient
             {
                throw new SSLVerificationException(ex);
             }
+            else if (ex is GitCallFailedException gfex2
+                  && gfex2.InnerException is ExternalProcessFailureException pfex2
+                  && String.Join("\n", pfex2.Errors).Contains("already exists and is not an empty directory"))
+            {
+               throw new NotEmptyDirectoryException(_localGitRepository.Path, ex);
+            }
             else if (ex is GitCallFailedException gfex3
                   && gfex3.InnerException is ExternalProcessFailureException pfex3
                   && String.Join("\n", pfex3.Errors).Contains("Authentication failed"))
             {
                throw new AuthenticationFailedException(ex);
             }
-            else if (ex is GitCallFailedException gfex2
-                  && gfex2.InnerException is ExternalProcessFailureException pfex2
-                  && String.Join("\n", pfex2.Errors).Contains("already exists and is not an empty directory"))
+            else if (ex is GitCallFailedException gfex4
+                  && gfex4.InnerException is ExternalProcessFailureException pfex4
+                  && String.Join("\n", pfex4.Errors).Contains("could not read Username"))
             {
-               throw new NotEmptyDirectoryException(_localGitRepository.Path, ex);
+               throw new CouldNotReadUsernameException(ex);
             }
             throw new RepositoryUpdateException("Cannot update git repository", ex);
          }

@@ -79,6 +79,7 @@ namespace mrHelper.App.Helpers
          }
          catch (RepositoryUpdateException ex)
          {
+            string errorMessage = "Cannot initialize git repository";
             if (ex is UpdateCancelledException)
             {
                InitializationStatusChange?.Invoke("Git repository update cancelled by user");
@@ -97,6 +98,7 @@ namespace mrHelper.App.Helpers
 
             if (ex is AuthenticationFailedException)
             {
+               errorMessage = "Wrong username or password. Authentication failed.";
                if (_fixingAuthFailed.Add(repo))
                {
                   try
@@ -111,6 +113,11 @@ namespace mrHelper.App.Helpers
                }
             }
 
+            if (ex is CouldNotReadUsernameException)
+            {
+               errorMessage = String.Format("Cannot work with {0} without credentials", repo.ProjectKey.ProjectName);
+            }
+
             if (ex is NotEmptyDirectoryException)
             {
                InitializationStatusChange?.Invoke("Cannot clone due to bad directory");
@@ -121,7 +128,7 @@ namespace mrHelper.App.Helpers
             }
 
             InitializationStatusChange?.Invoke("Git repository update failed");
-            throw new InteractiveUpdateFailed("Cannot update repository", ex);
+            throw new InteractiveUpdateFailed(errorMessage, ex);
          }
       }
 
