@@ -81,6 +81,24 @@ namespace mrHelper.Client.Discussions
                                  new CreateNewNoteParameters(body)))));
       }
 
+      internal Task ReplyAndResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, string body, bool resolve)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.CallNoCancel(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                        {
+                           SingleProjectAccessor projectAccessor = gl.Projects.Get(mrk.ProjectKey.ProjectName);
+                           SingleMergeRequestAccessor mrAccessor = projectAccessor.MergeRequests.Get(mrk.IId);
+                           SingleDiscussionAccessor accessor = mrAccessor.Discussions.Get(discussionId);
+                           await accessor.CreateNewNoteTaskAsync(new CreateNewNoteParameters(body));
+                           await accessor.ResolveTaskAsync(new ResolveThreadParameters(resolve));
+                           return true;
+                        })));
+      }
+
       internal Task<DiscussionNote> ModifyNoteBodyAsync(MergeRequestKey mrk,
          string discussionId, int noteId, string body)
       {
@@ -108,7 +126,7 @@ namespace mrHelper.Client.Discussions
                               Notes.Get(noteId).DeleteTaskAsync())));
       }
 
-      internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolved)
+      internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolve)
       {
          return callWithSharedClient(
             async (client) =>
@@ -119,10 +137,10 @@ namespace mrHelper.Client.Discussions
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                               Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                                  new ModifyDiscussionNoteParameters(
-                                    ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolved)))));
+                                    ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolve)))));
       }
 
-      internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
+      internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolve)
       {
          return callWithSharedClient(
             async (client) =>
@@ -132,7 +150,7 @@ namespace mrHelper.Client.Discussions
                         async (gl) =>
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                               Discussions.Get(discussionId).ResolveTaskAsync(
-                                 new ResolveThreadParameters(resolved)))));
+                                 new ResolveThreadParameters(resolve)))));
       }
 
       internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
