@@ -29,8 +29,10 @@ namespace mrHelper.App.Forms
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
-      internal MainForm()
+      internal MainForm(bool startMinimized)
       {
+         _startMinimized = startMinimized;
+
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
@@ -84,6 +86,9 @@ namespace mrHelper.App.Forms
          Interval = timeTrackingTimerInterval
       };
 
+      bool _startMinimized;
+      bool _forceMaximizeOnNextRestore;
+      FormWindowState _prevWindowState;
       private bool _loadingConfiguration = false;
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;

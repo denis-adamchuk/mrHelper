@@ -71,6 +71,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         Program.Settings.WasMaximizedBeforeClose = WindowState == FormWindowState.Maximized;
          Hide();
 
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
@@ -82,6 +83,32 @@ namespace mrHelper.App.Forms
          }
 
          finalizeWork();
+      }
+
+      private void MainForm_Resize(object sender, EventArgs e)
+      {
+         if (this.WindowState == _prevWindowState)
+         {
+            return;
+         }
+
+         if (this.WindowState != FormWindowState.Minimized)
+         {
+            if (_prevWindowState == FormWindowState.Minimized)
+            {
+               if (this.WindowState == FormWindowState.Normal && _forceMaximizeOnNextRestore)
+               {
+                  _forceMaximizeOnNextRestore = false;
+                  _prevWindowState = FormWindowState.Maximized; // prevent re-entrance on next line
+                  this.WindowState = FormWindowState.Maximized;
+               }
+
+               resetMinimumSizes();
+               updateMinimumSizes();
+            }
+         }
+
+         _prevWindowState = WindowState;
       }
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)

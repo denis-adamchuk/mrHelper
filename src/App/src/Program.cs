@@ -126,7 +126,8 @@ namespace mrHelper.App
             Version currentVersion = Environment.OSVersion.Version;
             Trace.TraceInformation(String.Format("OS Version is {0}", currentVersion.ToString()));
 
-            Application.Run(new MainForm());
+            bool startMinimized = context.Arguments.Length == 2 && context.Arguments[1] == "-m";
+            Application.Run(new MainForm(startMinimized));
          }
          catch (Exception ex) // whatever unhandled exception
          {
@@ -245,16 +246,19 @@ namespace mrHelper.App
             {
                return true;
             }
-            else
-            {
-               string arguments = String.Join(" ", context.Arguments);
-               Trace.TraceError(String.Format("Invalid arguments {0}", arguments));
-               MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return false;
-            }
+
+            string arguments = String.Join(" ", context.Arguments);
+            Trace.TraceError(String.Format("Invalid arguments {0}", arguments));
+            MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
          }
          else if (context.Arguments.Length == 2)
          {
+            if (context.Arguments[1] == "-m")
+            {
+               return true;
+            }
+
             Match m = url_re.Match(context.Arguments[1]);
             if (!m.Success)
             {

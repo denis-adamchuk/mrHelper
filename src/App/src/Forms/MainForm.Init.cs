@@ -395,14 +395,11 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
          fillColorSchemesList();
          prepareControlsToStart();
-         resetMinimumSizes();
-         updateMinimumSizes();
+         prepareSizeToStart();
       }
 
       private void prepareControlsToStart()
       {
-         WindowState = FormWindowState.Maximized;
-
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
          updateGitStatusText(String.Empty);
@@ -428,16 +425,6 @@ namespace mrHelper.App.Forms
             toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
          }
 
-         if (Program.Settings.MainWindowSplitterDistance != 0)
-         {
-            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
-         }
-
-         if (Program.Settings.RightPaneSplitterDistance != 0)
-         {
-            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
-         }
-
          radioButtonSearchByTitleAndDescription.Text += String.Format(
             " (up to {0} results)", Constants.MaxSearchByTitleAndDescriptionResults);
          radioButtonSearchByTitleAndDescription.Text += "            ";
@@ -448,10 +435,38 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
       }
 
+      private void prepareSizeToStart()
+      {
+         if (_startMinimized)
+         {
+            _forceMaximizeOnNextRestore = Program.Settings.WasMaximizedBeforeClose;
+            WindowState = FormWindowState.Minimized;
+         }
+         else
+         {
+            WindowState = Program.Settings.WasMaximizedBeforeClose ? FormWindowState.Maximized : FormWindowState.Normal;
+         }
+
+         if (Program.Settings.MainWindowSplitterDistance != 0
+            && splitContainer1.Panel1MinSize < Program.Settings.MainWindowSplitterDistance
+            && splitContainer1.Width - splitContainer1.Panel2MinSize > Program.Settings.MainWindowSplitterDistance)
+         {
+            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
+         }
+
+         if (Program.Settings.RightPaneSplitterDistance != 0
+            && splitContainer2.Panel1MinSize < Program.Settings.RightPaneSplitterDistance
+            && splitContainer2.Width - splitContainer2.Panel2MinSize > Program.Settings.RightPaneSplitterDistance)
+         {
+            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
+         }
+      }
+
       async private Task connectOnStartup()
       {
+         // TODO Argument manipulation shall be rewritten to avoid copy/paste of option names
          string[] arguments = Environment.GetCommandLineArgs();
-         string url = arguments.Length > 1 ? arguments[1] : String.Empty;
+         string url = arguments.Length > 1 && arguments[1] != "-m" ? arguments[1] : String.Empty;
 
          if (url != String.Empty)
          {

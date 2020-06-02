@@ -533,7 +533,7 @@ namespace mrHelper.App.Forms
          this.checkBoxUseShallowClone.AutoSize = true;
          this.checkBoxUseShallowClone.Location = new System.Drawing.Point(6, 220);
          this.checkBoxUseShallowClone.Name = "checkBoxUseShallowClone";
-         this.checkBoxUseShallowClone.Size = new System.Drawing.Size(180, 17);
+         this.checkBoxUseShallowClone.Size = new System.Drawing.Size(112, 17);
          this.checkBoxUseShallowClone.TabIndex = 15;
          this.checkBoxUseShallowClone.Text = "Use shallow clone";
          this.toolTip.SetToolTip(this.checkBoxUseShallowClone, "Use depth=1 in git clone and fetch commands");
@@ -1581,6 +1581,7 @@ namespace mrHelper.App.Forms
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
          this.Load += new System.EventHandler(this.MainForm_Load);
+         this.Resize += new System.EventHandler(this.MainForm_Resize);
          this.groupBoxKnownHosts.ResumeLayout(false);
          this.tabPageLive.ResumeLayout(false);
          this.groupBoxSelectMergeRequest.ResumeLayout(false);
