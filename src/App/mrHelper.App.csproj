@@ -100,6 +100,12 @@
     <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
       <DependentUpon>MergeRequestListView.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\VersionBrowser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\VersionBrowser.Designer.cs">
+      <DependentUpon>VersionBrowser.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -207,6 +213,8 @@
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\FeedbackReporter.cs" />
     <Compile Include="src\Helpers\ServiceManager.cs" />
+    <Compile Include="src\Helpers\VersionBrowserItem.cs" />
+    <Compile Include="src\Helpers\VersionBrowserModel.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
