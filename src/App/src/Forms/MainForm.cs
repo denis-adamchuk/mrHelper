@@ -39,6 +39,7 @@ namespace mrHelper.App.Forms
 
          _runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
          Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}", _runningAsUwp ? "Yes" : "No"));
+         checkBoxRunWhenWindowsStarts.Enabled = !_runningAsUwp;
 
          _trayIcon = new TrayIcon(notifyIcon);
          _mergeRequestDescriptionMarkdownPipeline = MarkDownUtils.CreatePipeline();

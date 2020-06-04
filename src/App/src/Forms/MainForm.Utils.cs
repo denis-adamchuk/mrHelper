@@ -2075,6 +2075,17 @@ namespace mrHelper.App.Forms
             Program.Settings.DisplayFilterEnabled
          );
       }
+
+      private void applyAutostartSetting(bool enabled)
+      {
+         if (_runningAsUwp)
+         {
+            return;
+         }
+
+         string command = String.Format("{0} -m", Application.ExecutablePath);
+         AutoStartHelper.ApplyAutostartSetting(enabled, "mrHelper", command);
+      }
    }
 }
 

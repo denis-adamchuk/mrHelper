@@ -50,6 +50,12 @@ namespace mrHelper.App.Helpers
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static readonly bool   MinimizeOnCloseDefaultValue = false;
 
+      private static readonly string RunWhenWindowsStartsKeyName        = "RunWhenWindowsStarts";
+      private static readonly bool   RunWhenWindowsStartsDefaultValue   = false;
+
+      private static readonly string WasMaximizedBeforeCloseKeyName       = "WasMaximizedBeforeClose";
+      private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = true;
+
       private static readonly string DisableSplitterRestrictionsKeyName = "DisableSplitterRestrictions";
       private static readonly bool   DisableSplitterRestrictionsDefaultValue = false;
 
@@ -83,9 +89,6 @@ namespace mrHelper.App.Helpers
 
       private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
       private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
-
-      private static readonly string WasMaximizedBeforeCloseKeyName       = "WasMaximizedBeforeClose";
-      private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = true;
 
       private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
       private static readonly bool   DisableSSLVerificationDefaultValue = true;
@@ -293,6 +296,28 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : MinimizeOnCloseDefaultValue;
          }
          set { setValue(MinimizeOnCloseKeyName, boolToString(value)); }
+      }
+
+      public bool RunWhenWindowsStarts
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               RunWhenWindowsStartsKeyName, boolToString(RunWhenWindowsStartsDefaultValue)),
+                  out bool result) ? result : RunWhenWindowsStartsDefaultValue;
+         }
+         set { setValue(RunWhenWindowsStartsKeyName, boolToString(value)); }
+      }
+
+      public bool WasMaximizedBeforeClose
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               WasMaximizedBeforeCloseKeyName, boolToString(WasMaximizedBeforeCloseDefaultValue)),
+                  out bool result) ? result : WasMaximizedBeforeCloseDefaultValue;
+         }
+         set { setValue(WasMaximizedBeforeCloseKeyName, boolToString(value)); }
       }
 
       public bool DisableSplitterRestrictions
@@ -613,17 +638,6 @@ namespace mrHelper.App.Helpers
                   out int result) ? result : CacheRevisionsPeriodMsDefaultValue;
          }
          set { setValue(CacheRevisionsPeriodMsKeyName, value.ToString()); }
-      }
-
-      public bool WasMaximizedBeforeClose
-      {
-         get
-         {
-            return bool.TryParse(getValue(
-               WasMaximizedBeforeCloseKeyName, boolToString(WasMaximizedBeforeCloseDefaultValue)),
-                  out bool result) ? result : WasMaximizedBeforeCloseDefaultValue;
-         }
-         set { setValue(WasMaximizedBeforeCloseKeyName, boolToString(value)); }
       }
 
       public bool DisableSSLVerification

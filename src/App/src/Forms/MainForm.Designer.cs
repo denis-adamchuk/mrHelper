@@ -27,7 +27,7 @@ namespace mrHelper.App.Forms
 
          _liveSession?.Dispose();
          _searchSession?.Dispose();
-         _gitlabClientManager.Dispose();
+         _gitlabClientManager?.Dispose();
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -169,6 +169,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLatestCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -1115,6 +1116,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxOther.Controls.Add(this.checkBoxUseShallowClone);
          this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
          this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestCommit);
@@ -1130,7 +1132,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 248);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 270);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -1570,6 +1572,18 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // checkBoxRunWhenWindowsStarts
+         // 
+         this.checkBoxRunWhenWindowsStarts.AutoSize = true;
+         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
+         this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
+         this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
+         this.checkBoxRunWhenWindowsStarts.Text = "Run mrHelper when Windows starts";
+         this.toolTip.SetToolTip(this.checkBoxRunWhenWindowsStarts, "Add mrHelper to the list of Startup Apps");
+         this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
+         this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1745,6 +1759,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ListView listViewUsers;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
-    }
+      private System.Windows.Forms.CheckBox checkBoxRunWhenWindowsStarts;
+   }
 }
 

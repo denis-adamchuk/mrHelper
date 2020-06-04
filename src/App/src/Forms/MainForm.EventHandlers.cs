@@ -615,6 +615,16 @@ namespace mrHelper.App.Forms
          Program.Settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
+      private void checkBoxRunWhenWindowsStarts_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.RunWhenWindowsStarts = (sender as CheckBox).Checked;
+
+         if (!_loadingConfiguration)
+         {
+            applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
+         }
+      }
+
       private void CheckBoxDisableSplitterRestrictions_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.DisableSplitterRestrictions = (sender as CheckBox).Checked;

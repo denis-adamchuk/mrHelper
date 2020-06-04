@@ -150,6 +150,8 @@ namespace mrHelper.App.Forms
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
+         checkBoxRunWhenWindowsStarts.Checked = Program.Settings.RunWhenWindowsStarts;
+         applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
