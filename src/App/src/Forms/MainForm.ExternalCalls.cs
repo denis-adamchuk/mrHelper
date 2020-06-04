@@ -131,7 +131,8 @@ namespace mrHelper.App.Forms
       {
          _initialHostName = hostname;
          selectHost(PreferredSelection.Initial);
-         await switchHostToSelected(new Func<Exception, bool>(x => throw new UrlConnectionException(String.Empty, x)));
+         await switchHostToSelected(new Func<Exception, bool>(x =>
+            throw new UrlConnectionException("Failed to connect to GitLab. ", x)));
       }
 
       private bool unhideFilteredMergeRequest(MergeRequestKey mrk)
@@ -200,7 +201,8 @@ namespace mrHelper.App.Forms
       {
          tabControlMode.SelectedTab = tabPageSearch;
          await searchMergeRequests(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
-            new Func<Exception, bool>(x => throw new UrlConnectionException(String.Empty, x)));
+            new Func<Exception, bool>(x =>
+               throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }
 
       private class UrlConnectionException : ExceptionEx
@@ -217,7 +219,7 @@ namespace mrHelper.App.Forms
          }
          catch (UrlConnectionException ex)
          {
-            reportErrorOnConnect(url, ex.Message, ex.InnerException);
+            reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
          }
       }
 
@@ -245,7 +247,7 @@ namespace mrHelper.App.Forms
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
          if (mergeRequest == null)
          {
-            throw new UrlConnectionException("Merge request does not exist", null);
+            throw new UrlConnectionException("Merge request does not exist. ", null);
          }
          labelWorkflowStatus.Text = String.Empty;
 
@@ -280,12 +282,16 @@ namespace mrHelper.App.Forms
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
             {
+               labelWorkflowStatus.Text = String.Format("Merge Request {0} is missing in the list, updating...", url);
+               enableControlsOnAsyncOperation(false);
                await checkForUpdatesAsync();
+               enableControlsOnAsyncOperation(true);
+               labelWorkflowStatus.Text = String.Empty;
             }
 
             if (!checkIfCanOpenAtLiveTab(mrk, false))
             {
-               // this may happen if project list changed while we were in 'await'
+               Debug.Assert(false);
                return false;
             }
          }

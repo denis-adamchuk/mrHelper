@@ -263,7 +263,7 @@ namespace mrHelper.App
             if (!m.Success)
             {
                Trace.TraceError(String.Format("Invalid URL {0}", context.Arguments[1]));
-               MessageBox.Show("Invalid URL", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               MessageBox.Show("Invalid URL", "mrHelper - Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                return false;
             }
          }

@@ -21,17 +21,12 @@ namespace mrHelper.GitClient
 
       async public Task<bool> ContainsSHAAsync(string sha)
       {
-         if (_isDisposed)
-         {
-            return false;
-         }
-
          if (_cached_existingSha.Contains(sha))
          {
             return true;
          }
 
-         if (await GitTools.DoesEntityExistAtPathAsync(_operationManager, Path, sha))
+         if (!_isDisposed && await GitTools.DoesEntityExistAtPathAsync(_operationManager, Path, sha))
          {
             _cached_existingSha.Add(sha);
             return true;

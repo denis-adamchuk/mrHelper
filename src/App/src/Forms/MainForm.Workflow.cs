@@ -112,6 +112,7 @@ namespace mrHelper.App.Forms
 
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
+         _searchSession.Stop();
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}", hostname);
 
@@ -272,7 +273,7 @@ namespace mrHelper.App.Forms
 
       private void liveSessionStopped()
       {
-         foreach (Form form in Application.OpenForms.Cast<Form>().Where(x => x is DiscussionsForm)) form.Close();
+         closeAllFormsExceptMain();
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveSessionInternalEvents();

@@ -51,6 +51,11 @@ namespace mrHelper.Client.Session
          }
       }
 
+      public void Stop()
+      {
+         stop();
+      }
+
       public void Dispose()
       {
          stop();

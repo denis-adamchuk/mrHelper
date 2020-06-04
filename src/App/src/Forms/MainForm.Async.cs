@@ -439,7 +439,10 @@ namespace mrHelper.App.Forms
       async private Task checkForUpdatesAsync()
       {
          bool updateReceived = false;
-         requestUpdates(null, new int[] { 1 }, () => updateReceived = true);
+
+         string oldButtonText = buttonReloadList.Text;
+         onUpdating();
+         requestUpdates(null, new int[] { 1 }, () => { updateReceived = true; onUpdated(oldButtonText); });
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
    }

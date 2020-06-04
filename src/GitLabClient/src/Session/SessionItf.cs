@@ -11,6 +11,7 @@ namespace mrHelper.Client.Session
    public interface ISession : IDisposable
    {
       Task Start(string hostname, SessionContext context);
+      void Stop();
 
       IMergeRequestCache MergeRequestCache { get; }
       IDiscussionCache DiscussionCache { get; }

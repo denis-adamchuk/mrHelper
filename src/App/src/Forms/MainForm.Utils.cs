@@ -513,7 +513,15 @@ namespace mrHelper.App.Forms
       {
          linkLabelAbortGit.Visible = !enabled;
          linkLabelAbortGit.Tag = operation;
+         enableControlsOnAsyncOperation(enabled);
+         if (enabled)
+         {
+            updateGitStatusText(String.Empty);
+         }
+      }
 
+      private void enableControlsOnAsyncOperation(bool enabled)
+      {
          foreach (Control control in tabPageSettings.Controls) control.Enabled = enabled;
 
          buttonDiffTool.Enabled = enabled;
@@ -529,11 +537,6 @@ namespace mrHelper.App.Forms
             buttonReloadList.Enabled = enabled;
          }
          _canSwitchTab = enabled;
-
-         if (enabled)
-         {
-            updateGitStatusText(String.Empty);
-         }
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -2085,6 +2088,18 @@ namespace mrHelper.App.Forms
 
          string command = String.Format("{0} -m", Application.ExecutablePath);
          AutoStartHelper.ApplyAutostartSetting(enabled, "mrHelper", command);
+      }
+
+      private void onUpdating()
+      {
+         buttonReloadList.Text = "Updating...";
+         buttonReloadList.Enabled = false;
+      }
+
+      private void onUpdated(string oldButtonText)
+      {
+         buttonReloadList.Text = oldButtonText;
+         buttonReloadList.Enabled = true;
       }
    }
 }

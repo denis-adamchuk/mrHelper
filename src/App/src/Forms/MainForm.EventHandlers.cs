@@ -53,6 +53,17 @@ namespace mrHelper.App.Forms
          await connectOnStartup();
       }
 
+      private void closeAllFormsExceptMain()
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            if (Application.OpenForms[iForm] != this)
+            {
+               Application.OpenForms[iForm].Close();
+            }
+         }
+      }
+
       private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
       {
          Trace.TraceInformation(String.Format("[MainForm] Requested to close the Main Form. Reason: {0}",
@@ -74,13 +85,7 @@ namespace mrHelper.App.Forms
          Program.Settings.WasMaximizedBeforeClose = WindowState == FormWindowState.Maximized;
          Hide();
 
-         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
-         {
-            if (Application.OpenForms[iForm] != this)
-            {
-               Application.OpenForms[iForm].Close();
-            }
-         }
+         closeAllFormsExceptMain();
 
          finalizeWork();
       }
@@ -819,17 +824,9 @@ namespace mrHelper.App.Forms
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
 
-            buttonReloadList.Enabled = false;
-
             string oldButtonText = buttonReloadList.Text;
-            buttonReloadList.Text = "Updating...";
-
-            requestUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval },
-               () =>
-               {
-                  buttonReloadList.Enabled = true;
-                  buttonReloadList.Text = oldButtonText;
-               });
+            onUpdating();
+            requestUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval }, () => onUpdated(oldButtonText));
          }
       }
 
