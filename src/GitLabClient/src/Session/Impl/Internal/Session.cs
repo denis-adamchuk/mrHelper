@@ -47,7 +47,7 @@ namespace mrHelper.Client.Session
             {
                throw new SessionStartCancelledException();
             }
-            throw new SessionException("Something went wrong", ex);
+            throw new SessionException(ex.OriginalMessage, ex);
          }
       }
 
