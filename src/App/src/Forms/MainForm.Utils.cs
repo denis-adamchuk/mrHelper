@@ -509,34 +509,17 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void enableControlsOnGitAsyncOperation(bool enabled, string operation)
+      private void updateGitAbortState()
       {
-         linkLabelAbortGit.Visible = !enabled;
-         linkLabelAbortGit.Tag = operation;
-         enableControlsOnAsyncOperation(enabled);
-         if (enabled)
-         {
-            updateGitStatusText(String.Empty);
-         }
+         ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
+         ILocalGitRepository repo = projectKey.HasValue ? getRepository(projectKey.Value, false) : null;
+         enableGitAbort(repo?.Updater?.CanBeStopped() ?? false);
       }
 
-      private void enableControlsOnAsyncOperation(bool enabled)
+      private void enableGitAbort(bool enabled)
       {
-         foreach (Control control in tabPageSettings.Controls) control.Enabled = enabled;
-
-         buttonDiffTool.Enabled = enabled;
-         buttonDiscussions.Enabled = enabled;
-         listViewMergeRequests.Enabled = enabled;
-         listViewFoundMergeRequests.Enabled = enabled;
-         enableMergeRequestFilterControls(enabled);
-         enableMergeRequestSearchControls(enabled);
-
-         checkBoxShowVersions.Enabled = enabled;
-         if (buttonReloadList.Text != "Updating...") // sorry
-         {
-            buttonReloadList.Enabled = enabled;
-         }
-         _canSwitchTab = enabled;
+         linkLabelAbortGit.Visible = enabled;
+         labelGitStatus.Visible = enabled;
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -860,7 +843,6 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            labelGitStatus.Visible = true;
             labelGitStatus.Text = text;
          }
       }
@@ -1952,6 +1934,7 @@ namespace mrHelper.App.Forms
             true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
             fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
+         updateGitAbortState();
 
          labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", fmk.MergeRequest.IId);
 

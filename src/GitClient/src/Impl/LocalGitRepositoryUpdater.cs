@@ -50,21 +50,22 @@ namespace mrHelper.GitClient
          _onFetched = onFetched;
       }
 
-      public void CancelUpdate()
+      public void StopUpdate()
       {
-         if (_isDisposed)
+         if (!CanBeStopped())
          {
             return;
          }
 
-         try
-         {
-            _operationManager.Cancel(_updateOperationDescriptor);
-         }
-         finally
-         {
-            _updateOperationDescriptor = null;
-         }
+         _operationManager.Cancel(_updateOperationDescriptor);
+      }
+
+      public bool CanBeStopped()
+      {
+         return !_isDisposed
+            && _updateOperationDescriptor != null                    // update is running
+            && _updateOperationDescriptor.OnProgressChange != null   // update is caused by StartUpdate() call
+            && _localGitRepository.ExpectingClone;                   // update is 'git clone'
       }
 
       public void Dispose()
@@ -72,13 +73,19 @@ namespace mrHelper.GitClient
          _isDisposed = true;
       }
 
-      public Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange)
+      async public Task StartUpdate(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
+         Action onUpdateStateChange)
       {
-         return update(contextProvider, onProgressChange, true, false);
+         if (onProgressChange == null)
+         {
+            return;
+         }
+
+         await update(contextProvider, onProgressChange, onUpdateStateChange, true, false);
       }
 
       async public Task update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         bool canClone, bool canSplit)
+         Action onUpdateStateChange, bool canClone, bool canSplit)
       {
          ProjectUpdateContext context = contextProvider?.GetContext();
          if (contextProvider == null || (context != null && context.Sha == null))
@@ -94,12 +101,16 @@ namespace mrHelper.GitClient
 
          if (onProgressChange != null)
          {
+            // save callbacks for operations that may start
             _onProgressChange = onProgressChange;
+            _onUpdateStateChange = onUpdateStateChange;
          }
 
          if (_updateOperationDescriptor != null)
          {
+            // already started, joining it
             _updateOperationDescriptor.OnProgressChange = onProgressChange;
+            _onUpdateStateChange?.Invoke();
          }
 
          if (isWorthNewUpdate(context, _updatingContext))
@@ -112,6 +123,7 @@ namespace mrHelper.GitClient
          }
 
          _onProgressChange = null;
+         _onUpdateStateChange = null;
       }
 
       public void RequestUpdate(IProjectUpdateContextProvider contextProvider, Action onFinished)
@@ -121,7 +133,7 @@ namespace mrHelper.GitClient
             {
                try
                {
-                  await update(contextProvider, null, false, true);
+                  await update(contextProvider, null, null, false, true);
                   onFinished?.Invoke();
                }
                catch (RepositoryUpdateException ex)
@@ -360,6 +372,7 @@ namespace mrHelper.GitClient
          try
          {
             _updateOperationDescriptor = descriptor;
+            _onUpdateStateChange?.Invoke();
             traceInformation(String.Format("START git with arguments \"{0}\" in \"{1}\" for {2}",
                arguments, _localGitRepository.Path, _localGitRepository.ProjectKey.ProjectName));
             await _operationManager.Wait(descriptor);
@@ -369,6 +382,7 @@ namespace mrHelper.GitClient
             traceInformation(String.Format("FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
                arguments, _localGitRepository.Path, _localGitRepository.ProjectKey.ProjectName));
             _updateOperationDescriptor = null;
+            _onUpdateStateChange?.Invoke();
          }
       }
 
@@ -485,6 +499,7 @@ namespace mrHelper.GitClient
       private bool _isDisposed;
       private ProjectUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
+      private Action _onUpdateStateChange;
       private DateTime _latestFullFetchTimestamp = DateTime.MinValue;
 
       private const int ShaInChunk = 2;

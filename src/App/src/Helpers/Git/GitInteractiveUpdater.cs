@@ -34,7 +34,7 @@ namespace mrHelper.App.Helpers
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async internal Task UpdateAsync(ILocalGitRepository repo, IProjectUpdateContextProvider contextProvider,
-         Action<string> onProgressChange)
+         Action<string> onProgressChange, Action onUpdateStateChange)
       {
          if (repo.ExpectingClone && !isCloneAllowed(repo.Path))
          {
@@ -44,7 +44,8 @@ namespace mrHelper.App.Helpers
 
          InitializationStatusChange?.Invoke("Updating git repository...");
 
-         await runAsync(repo, async () => await repo.Updater.Update(contextProvider, onProgressChange));
+         await runAsync(repo, async () => await repo.Updater.StartUpdate(
+            contextProvider, onProgressChange, onUpdateStateChange));
          InitializationStatusChange?.Invoke("Git repository updated");
       }
 

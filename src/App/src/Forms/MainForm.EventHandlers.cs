@@ -381,6 +381,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(listView.SelectedItems.Count < 1);
 
          disableCommonUIControls();
+         updateGitAbortState();
       }
 
       private void ListViewMergeRequests_ItemSelectionChanged(
@@ -848,22 +849,33 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         object tag = linkLabelAbortGit.Tag;
-         string message = String.Format("Do you really want to abort current operation{0}?",
-             tag == null ? String.Empty : String.Format(" ({0})", tag.ToString()));
-         if (MessageBox.Show(message, "Confirmation",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+         MergeRequestKey? mrk = getMergeRequestKey(null);
+         if (!mrk.HasValue)
          {
-            Trace.TraceInformation("[MainForm] User discarded to abort current operation");
+            Debug.Assert(mrk.HasValue);
             return;
          }
 
-         Trace.TraceInformation("[MainForm] User decided to abort current operation");
+         ILocalGitRepository repo = getRepository(mrk.Value.ProjectKey, false);
+         if (repo == null || repo.Updater == null || !repo.Updater.CanBeStopped())
+         {
+            Debug.Assert(mrk.HasValue);
+            return;
+         }
 
-         Debug.Assert(getMergeRequestKey(null).HasValue);
+         string message = String.Format("Do you really want to abort current git update operation for {0}?",
+            mrk.Value.ProjectKey.ProjectName);
+         if (MessageBox.Show(message, "Confirmation",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+         {
+            Trace.TraceInformation(String.Format("[MainForm] User declined to abort current operation for project {0}",
+               mrk.Value.ProjectKey.ProjectName));
+            return;
+         }
 
-         ILocalGitRepository repo = getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
-         repo?.Updater?.CancelUpdate();
+         Trace.TraceInformation(String.Format("[MainForm] User decided to abort current operation for project {0}",
+            mrk.Value.ProjectKey.ProjectName));
+         repo.Updater.StopUpdate();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

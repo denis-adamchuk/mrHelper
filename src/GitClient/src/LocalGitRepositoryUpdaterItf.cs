@@ -64,7 +64,10 @@ namespace mrHelper.GitClient
       /// - Can clone
       /// - Processes context in a single chunk
       /// </summary>
-      Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange);
+      Task StartUpdate(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
+         Action onUpdateStateChange);
+      void StopUpdate();
+      bool CanBeStopped();
 
       /// <summary>
       /// Non-blocking version of Update.
@@ -73,7 +76,6 @@ namespace mrHelper.GitClient
       /// - May split passed context in chunks and process them with delays
       /// </summary>
       void RequestUpdate(IProjectUpdateContextProvider contextProvider, Action onFinished);
-      void CancelUpdate();
    }
 }
 

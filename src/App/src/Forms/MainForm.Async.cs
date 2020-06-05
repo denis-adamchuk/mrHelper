@@ -74,11 +74,10 @@ namespace mrHelper.App.Forms
             }
          }
 
-         enableControlsOnGitAsyncOperation(false, "updating git repository");
          try
          {
             IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
+            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText, updateGitAbortState);
             return true;
          }
          catch (Exception ex)
@@ -103,10 +102,6 @@ namespace mrHelper.App.Forms
             }
             return false;
          }
-         finally
-         {
-            enableControlsOnGitAsyncOperation(true, "updating git repository");
-         }
       }
 
       private void showDiscussionForm(ISession session, ILocalGitRepository repo,
@@ -128,7 +123,8 @@ namespace mrHelper.App.Forms
                   if (repo != null && !repo.ExpectingClone && repo.Updater != null)
                   {
                      IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
-                     await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
+                     await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+                        updateGitAbortState);
                   }
                   else
                   {
@@ -264,12 +260,11 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         enableControlsOnGitAsyncOperation(false, "updating git repository");
          try
          {
             IProjectUpdateContextProvider contextProvider =
                new CommitBasedContextProvider(new string[] { leftSHA, rightSHA });
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
+            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText, updateGitAbortState);
             return true;
          }
          catch (Exception ex)
@@ -294,10 +289,6 @@ namespace mrHelper.App.Forms
                Debug.Assert(false);
             }
             return false;
-         }
-         finally
-         {
-            enableControlsOnGitAsyncOperation(true, "updating git repository");
          }
       }
 
