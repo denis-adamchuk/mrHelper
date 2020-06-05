@@ -251,18 +251,21 @@ namespace mrHelper.App.Forms
          }
          labelWorkflowStatus.Text = String.Empty;
 
-         bool changeHost = mrk.ProjectKey.HostName != getHostName();
-         if (changeHost)
-         {
-            await restartWorkflowByUrl(url, mrk.ProjectKey.HostName); // TODO Test failure
-         }
-
          bool canOpenAtLiveTab =
                // TODO - Opened/WIP should be kept in _liveSesion context and checked here and inside Session
                (mergeRequest.State == "opened")
             && (mergeRequest.Work_In_Progress)
             && checkIfCanOpenAtLiveTab(mrk, true);
-         if (!canOpenAtLiveTab || !await openUrlAtLiveTab(mrk, url, !changeHost))
+
+         bool needReload = (canOpenAtLiveTab && getSession(canOpenAtLiveTab).MergeRequestCache == null)
+                        || mrk.ProjectKey.HostName != getHostName();
+         if (needReload)
+         {
+            Trace.TraceInformation("[MainForm.ExternalCalls] Restart workflow for url {0}", url);
+            await restartWorkflowByUrl(url, mrk.ProjectKey.HostName);
+         }
+
+         if (!canOpenAtLiveTab || !await openUrlAtLiveTab(mrk, url, !needReload))
          {
             await openUrlAtSearchTab(mrk, url);
          }
@@ -282,16 +285,16 @@ namespace mrHelper.App.Forms
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
             {
-               labelWorkflowStatus.Text = String.Format("Merge Request {0} is missing in the list, updating...", url);
-               enableControlsOnAsyncOperation(false);
                await checkForUpdatesAsync();
-               enableControlsOnAsyncOperation(true);
-               labelWorkflowStatus.Text = String.Empty;
+               if (getHostName() != mrk.ProjectKey.HostName)
+               {
+                  throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
+               }
             }
 
             if (!checkIfCanOpenAtLiveTab(mrk, false))
             {
-               Debug.Assert(false);
+               // this may happen if project list changed while we were in 'await'
                return false;
             }
          }
@@ -312,7 +315,7 @@ namespace mrHelper.App.Forms
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
-                  throw new UrlConnectionException("Something went wrong", null);
+                  throw new UrlConnectionException("Something went wrong. ", null);
                }
             }
             else
@@ -321,7 +324,7 @@ namespace mrHelper.App.Forms
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
-                  throw new UrlConnectionException("Something went wrong", null);
+                  throw new UrlConnectionException("Something went wrong. ", null);
                }
                return false;
             }
