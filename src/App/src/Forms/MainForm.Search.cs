@@ -109,9 +109,9 @@ namespace mrHelper.App.Forms
 
       async private Task loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
       {
-         onLoadAllSearchMergeRequests();
-
          SearchCriteria searchCriteria = new SearchCriteria(new object[] { query });
+         onLoadAllSearchMergeRequests(searchCriteria, hostname);
+
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(null, null),
             new SessionUpdateRules(false, false),
@@ -130,18 +130,16 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllSearchMergeRequests()
+      private void onLoadAllSearchMergeRequests(SearchCriteria criteria, string hostname)
       {
          listViewFoundMergeRequests.Items.Clear();
-         labelWorkflowStatus.Text = "Search in progress";
+         labelWorkflowStatus.Text = String.Format("Searching by criteria: {0} at {1}...",
+            criteria.ToString(), hostname);
       }
 
       private void onProjectSearchMergeRequestsLoaded(ProjectKey projectKey,
          IEnumerable<MergeRequest> mergeRequests)
       {
-         labelWorkflowStatus.Text = String.Format(
-            "Search results for project {0} loaded", projectKey.ProjectName);
-
          Debug.WriteLine(String.Format(
             "[MainForm.Search] Project {0} loaded. Loaded {1} merge requests",
            projectKey.ProjectName, mergeRequests.Count()));
@@ -155,6 +153,7 @@ namespace mrHelper.App.Forms
          if (listViewFoundMergeRequests.Items.Count > 0)
          {
             enableListView(listViewFoundMergeRequests);
+            labelWorkflowStatus.Text = String.Empty;
          }
          else
          {

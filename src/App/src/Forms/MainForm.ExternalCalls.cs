@@ -278,6 +278,8 @@ namespace mrHelper.App.Forms
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
             {
+               labelWorkflowStatus.Text = String.Format(
+                  "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
                await checkForUpdatesAsync();
                if (getHostName() != mrk.ProjectKey.HostName)
                {

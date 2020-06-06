@@ -111,6 +111,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -840,6 +841,7 @@ namespace mrHelper.App.Forms
             this.columnHeaderFoundState,
             this.columnHeaderFoundAuthor,
             this.columnHeaderFoundTitle,
+            this.columnHeaderFoundLabels,
             this.columnHeaderFoundJira,
             this.columnHeaderFoundSourceBranch,
             this.columnHeaderFoundTargetBranch});
@@ -886,6 +888,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundTitle.Tag = "Title";
          this.columnHeaderFoundTitle.Text = "Title";
          this.columnHeaderFoundTitle.Width = 400;
+         // 
+         // columnHeaderFoundLabels
+         // 
+         this.columnHeaderFoundLabels.Tag = "Labels";
+         this.columnHeaderFoundLabels.Text = "Labels";
+         this.columnHeaderFoundLabels.Width = 180;
          // 
          // columnHeaderFoundJira
          // 
@@ -1744,6 +1752,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundIId;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundAuthor;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTitle;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundLabels;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundJira;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundSourceBranch;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTargetBranch;

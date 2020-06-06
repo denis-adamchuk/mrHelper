@@ -14,7 +14,7 @@ namespace mrHelper.Client.Types
 
       public new string ToString()
       {
-         return String.Join(";", Criteria.ToString());
+         return String.Join(";", Criteria);
       }
 
       public override bool Equals(object obj)

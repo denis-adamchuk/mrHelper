@@ -119,7 +119,7 @@ namespace mrHelper.App.Forms
          disableAllSearchUIControls(true);
          _searchSession.Stop();
          textBoxSearch.Enabled = false;
-         labelWorkflowStatus.Text = String.Format("Connecting to {0}", hostname);
+         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -154,7 +154,7 @@ namespace mrHelper.App.Forms
             throw new NoProjectsException(hostname);
          }
 
-         onLoadAllMergeRequests(enabledProjects);
+         onLoadAllMergeRequests(enabledProjects, hostname);
 
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(onForbiddenProject, onNotFoundProject),
@@ -169,7 +169,7 @@ namespace mrHelper.App.Forms
 
       private async Task startUserBasedWorkflowAsync(string hostname)
       {
-         onLoadAllMergeRequests();
+         onLoadAllMergeRequests(hostname);
 
          SessionContext sessionContext = new SessionContext(
             new SessionCallbacks(onForbiddenProject, onNotFoundProject),
@@ -208,19 +208,19 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllMergeRequests(IEnumerable<ProjectKey> projects)
+      private void onLoadAllMergeRequests(IEnumerable<ProjectKey> projects, string hostname)
       {
          createListViewGroupsForProjects(listViewMergeRequests, projects);
 
          disableAllUIControls(false);
-         labelWorkflowStatus.Text = String.Format(
-            "Loading merge requests of {0} project{1}...", projects.Count(), projects.Count() > 1 ? "s" : "");
+         labelWorkflowStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",
+            projects.Count(), projects.Count() > 1 ? "s" : "", hostname);
       }
 
-      private void onLoadAllMergeRequests()
+      private void onLoadAllMergeRequests(string hostname)
       {
          disableAllUIControls(false);
-         labelWorkflowStatus.Text = "Loading merge requests...";
+         labelWorkflowStatus.Text = String.Format("Loading merge requests from {0}...", hostname);
       }
 
       private void onAllMergeRequestsLoaded(string hostName, IEnumerable<ProjectKey> projects)

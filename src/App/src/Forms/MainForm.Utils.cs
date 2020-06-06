@@ -1936,8 +1936,6 @@ namespace mrHelper.App.Forms
             fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
          updateGitAbortState();
 
-         labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", fmk.MergeRequest.IId);
-
          Debug.WriteLine(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
       }
@@ -1972,8 +1970,6 @@ namespace mrHelper.App.Forms
                checkBoxShowVersions.Enabled = true;
             }
          }
-
-         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", count);
 
          Debug.WriteLine(String.Format(
             "[MainForm] Loaded {0} comparable entities IsSearchMode={1}", count, isSearchMode().ToString()));
