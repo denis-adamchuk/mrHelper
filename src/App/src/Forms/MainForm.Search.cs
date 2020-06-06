@@ -36,7 +36,15 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      async private Task searchMergeRequests(object query, int? maxResults,
+      /// <summary>
+      /// </summary>
+      /// <returns>Was switch successful</returns>
+      private void searchMergeRequests(object query, int? maxResults, Func<Exception, bool> exceptionHandler = null)
+      {
+         BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, maxResults, exceptionHandler)), null);
+      }
+
+      async private Task searchMergeRequestsAsync(object query, int? maxResults,
          Func<Exception, bool> exceptionHandler = null)
       {
          try

@@ -464,7 +464,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task connectOnStartup()
+      private void connectOnStartup()
       {
          // TODO Argument manipulation shall be rewritten to avoid copy/paste of option names
          string[] arguments = Environment.GetCommandLineArgs();
@@ -472,12 +472,12 @@ namespace mrHelper.App.Forms
 
          if (url != String.Empty)
          {
-            await connectToUrlAsync(url);
+            enqueueUrlConnectionRequest(url);
          }
          else
          {
             selectHost(PreferredSelection.Initial);
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 

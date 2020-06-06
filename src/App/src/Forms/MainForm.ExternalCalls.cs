@@ -20,77 +20,122 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task onDiffCommand(string argumentsString)
+      private void onDiffCommand(string argumentString)
       {
-         string[] argumentsEx = argumentsString.Split('|');
+         string[] argumentsEx = argumentString.Split('|');
          int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
 
          string[] arguments = new string[argumentsEx.Length - 1];
          Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
 
-         SnapshotSerializer serializer = new SnapshotSerializer();
-         Snapshot snapshot;
-         try
-         {
-            snapshot = serializer.DeserializeFromDisk(gitPID);
-         }
-         catch (System.IO.IOException ex)
-         {
-            ExceptionHandlers.Handle("Cannot de-serialize snapshot", ex);
-            MessageBox.Show(
-               "Make sure that diff tool was launched from Merge Request Helper which is still running",
-               "Cannot create a discussion",
-               MessageBoxButtons.OK, MessageBoxIcon.Error,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-            return;
-         }
-
-         ISession session = getSessionByName(snapshot.SessionName);
-         if (session == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         DiffArgumentParser diffArgumentParser = new DiffArgumentParser(arguments);
-         DiffCallHandler handler;
-         try
-         {
-            handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, session);
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("Cannot parse diff tool arguments", ex);
-            MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
-               MessageBoxButtons.OK, MessageBoxIcon.Error,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-            return;
-         }
-
-         IGitRepository gitRepository = null;
-         if (_gitClientFactory != null && _gitClientFactory.ParentFolder == snapshot.TempFolder)
-         {
-            ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
-            gitRepository = _gitClientFactory.GetRepository(projectKey);
-         }
-
-         try
-         {
-            await handler.HandleAsync(gitRepository);
-         }
-         catch (DiscussionCreatorException)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         MergeRequestKey mrk = new MergeRequestKey(
-            new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-         session.DiscussionCache?.RequestUpdate(mrk,
-            new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
+         enqueueDiffRequest(new DiffRequest(gitPID, arguments));
       }
 
-      async private Task onOpenCommand(string argumentsString)
+      struct DiffRequest
+      {
+         internal int GitPID { get; }
+         internal string[] DiffArguments { get; }
+
+         public DiffRequest(int gitPID, string[] diffArguments)
+         {
+            GitPID = gitPID;
+            DiffArguments = diffArguments;
+         }
+      }
+      Queue<DiffRequest> _requestedDiff = new Queue<DiffRequest>();
+      private void enqueueDiffRequest(DiffRequest diffRequest)
+      {
+         _requestedDiff.Enqueue(diffRequest);
+         if (_requestedDiff.Count == 1)
+         {
+            BeginInvoke(new Action(async () => await processDiffQueue()));
+         }
+      }
+
+      async private Task processDiffQueue()
+      {
+         if (!_requestedDiff.Any())
+         {
+            return;
+         }
+
+         DiffRequest diffRequest = _requestedDiff.Peek();
+         try
+         {
+            SnapshotSerializer serializer = new SnapshotSerializer();
+            Snapshot snapshot;
+            try
+            {
+               snapshot = serializer.DeserializeFromDisk(diffRequest.GitPID);
+            }
+            catch (System.IO.IOException ex)
+            {
+               ExceptionHandlers.Handle("Cannot de-serialize snapshot", ex);
+               MessageBox.Show(
+                  "Make sure that diff tool was launched from Merge Request Helper which is still running",
+                  "Cannot create a discussion",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               return;
+            }
+
+            ISession session = getSessionByName(snapshot.SessionName);
+            if (session == null)
+            {
+               Debug.Assert(false);
+               return;
+            }
+
+            DiffArgumentParser diffArgumentParser = new DiffArgumentParser(diffRequest.DiffArguments);
+            DiffCallHandler handler;
+            try
+            {
+               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, session);
+            }
+            catch (ArgumentException ex)
+            {
+               ExceptionHandlers.Handle("Cannot parse diff tool arguments", ex);
+               MessageBox.Show("Bad arguments passed from diff tool", "Cannot create a discussion",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               return;
+            }
+
+            IGitRepository gitRepository = null;
+            if (_gitClientFactory != null && _gitClientFactory.ParentFolder == snapshot.TempFolder)
+            {
+               ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+               gitRepository = _gitClientFactory.GetRepository(projectKey);
+            }
+
+            try
+            {
+               await handler.HandleAsync(gitRepository);
+            }
+            catch (DiscussionCreatorException)
+            {
+               Debug.Assert(false);
+               return;
+            }
+
+            MergeRequestKey mrk = new MergeRequestKey(
+               new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
+            session.DiscussionCache?.RequestUpdate(mrk,
+               new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
+         }
+         finally
+         {
+            _requestedDiff.Dequeue();
+            if (_requestedDiff.Count > 0)
+            {
+               BeginInvoke(new Action(async () => await processDiffQueue()));
+            }
+         }
+      }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+      private void onOpenCommand(string argumentsString)
       {
          if (_gitlabClientManager?.SearchManager == null)
          {
@@ -101,7 +146,97 @@ namespace mrHelper.App.Forms
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         await connectToUrlAsync(url);
+         enqueueUrlConnectionRequest(url);
+      }
+
+      Queue<string> _requestedUrl = new Queue<string>();
+      private void enqueueUrlConnectionRequest(string url)
+      {
+         _requestedUrl.Enqueue(url);
+         if (_requestedUrl.Count == 1)
+         {
+            BeginInvoke(new Action(async () => await processUrlConnectionQueue()));
+         }
+      }
+
+      async private Task processUrlConnectionQueue()
+      {
+         if (!_requestedUrl.Any())
+         {
+            return;
+         }
+
+         string url = _requestedUrl.Peek();
+         try
+         {
+            await connectToUrlAsyncInternal(url);
+         }
+         catch (UrlConnectionException ex)
+         {
+            reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
+         }
+         finally
+         {
+            _requestedUrl.Dequeue();
+            if (_requestedUrl.Count > 0)
+            {
+               BeginInvoke(new Action(async () => await processUrlConnectionQueue()));
+            }
+         }
+      }
+
+      private class UrlConnectionException : ExceptionEx
+      {
+         internal UrlConnectionException(string message, Exception innerException)
+            : base(message, innerException) { }
+      }
+
+      async private Task connectToUrlAsyncInternal(string originalUrl)
+      {
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", originalUrl));
+
+         string prefix = Constants.CustomProtocolName + "://";
+         string url = originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
+         MergeRequestKey? mrkOpt = parseUrlIntoMergeRequestKey(url);
+         if (!mrkOpt.HasValue)
+         {
+            return;
+         }
+
+         MergeRequestKey mrk = mrkOpt.Value;
+         if (Program.Settings.GetAccessToken(mrk.ProjectKey.HostName) == String.Empty)
+         {
+            throw new UrlConnectionException(String.Format(
+               "Cannot connect to {0} because it is not in the list of known hosts. ", mrk.ProjectKey.HostName), null);
+         }
+
+         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
+         MergeRequest mergeRequest = await _gitlabClientManager.SearchManager.SearchMergeRequestAsync(
+            mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
+         if (mergeRequest == null)
+         {
+            throw new UrlConnectionException("Merge request does not exist. ", null);
+         }
+         labelWorkflowStatus.Text = String.Empty;
+
+         bool canOpenAtLiveTab =
+               // TODO - Opened/WIP should be kept in _liveSesion context and checked here and inside Session
+               (mergeRequest.State == "opened")
+            && (mergeRequest.Work_In_Progress)
+            && checkIfCanOpenAtLiveTab(mrk, true);
+
+         bool needReload = (canOpenAtLiveTab && getSession(canOpenAtLiveTab).MergeRequestCache == null)
+                        || mrk.ProjectKey.HostName != getHostName();
+         if (needReload)
+         {
+            Trace.TraceInformation("[MainForm.ExternalCalls] Restart workflow for url {0}", url);
+            await restartWorkflowByUrlAsync(url, mrk.ProjectKey.HostName);
+         }
+
+         if (!canOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url, !needReload))
+         {
+            await openUrlAtSearchTabAsync(mrk, url);
+         }
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex)
@@ -127,12 +262,82 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = errorMessage;
       }
 
-      async private Task restartWorkflowByUrl(string url, string hostname)
+      async private Task restartWorkflowByUrlAsync(string url, string hostname)
       {
          _initialHostName = hostname;
          selectHost(PreferredSelection.Initial);
-         await switchHostToSelected(new Func<Exception, bool>(x =>
+         await switchHostToSelectedAsync(new Func<Exception, bool>(x =>
             throw new UrlConnectionException("Failed to connect to GitLab. ", x)));
+      }
+
+      async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url, bool updateIfNeeded)
+      {
+         ISession session = getSession(true);
+         if (session == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
+         if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+         {
+            // We need to update the MR list here because cached one is possible outdated
+            if (updateIfNeeded)
+            {
+               await checkForUpdatesAsync();
+               if (getHostName() != mrk.ProjectKey.HostName)
+               {
+                  throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
+               }
+            }
+
+            if (!checkIfCanOpenAtLiveTab(mrk, false))
+            {
+               // this may happen if project list changed while we were in 'await'
+               return false;
+            }
+         }
+
+         tabControlMode.SelectedTab = tabPageLive;
+         if (!selectMergeRequest(listViewMergeRequests, mrk, true) && listViewMergeRequests.Enabled)
+         {
+            // We could not select MR, but let's check if it is cached or not.
+            if (session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+            {
+               // If it is cached, it is probably hidden by filters and user might want to un-hide it.
+               if (!unhideFilteredMergeRequest(mrk))
+               {
+                  return false; // user decided to not un-hide merge request
+               }
+
+               if (!selectMergeRequest(listViewMergeRequests, mrk, true))
+               {
+                  Debug.Assert(false);
+                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
+                  throw new UrlConnectionException("Something went wrong. ", null);
+               }
+            }
+            else
+            {
+               if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+               {
+                  Debug.Assert(false);
+                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
+                  throw new UrlConnectionException("Something went wrong. ", null);
+               }
+               return false;
+            }
+         }
+
+         return true;
+      }
+
+      async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk, string url)
+      {
+         tabControlMode.SelectedTab = tabPageSearch;
+         await searchMergeRequestsAsync(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
+            new Func<Exception, bool>(x =>
+               throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }
 
       private bool unhideFilteredMergeRequest(MergeRequestKey mrk)
@@ -194,142 +399,6 @@ namespace mrHelper.App.Forms
          }
 
          changeProjectEnabledState(projectKey, true);
-         return true;
-      }
-
-      async private Task openUrlAtSearchTab(MergeRequestKey mrk, string url)
-      {
-         tabControlMode.SelectedTab = tabPageSearch;
-         await searchMergeRequests(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
-            new Func<Exception, bool>(x =>
-               throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
-      }
-
-      private class UrlConnectionException : ExceptionEx
-      {
-         internal UrlConnectionException(string message, Exception innerException)
-            : base(message, innerException) { }
-      }
-
-      async private Task connectToUrlAsync(string url)
-      {
-         try
-         {
-            await connectToUrlAsyncInternal(url);
-         }
-         catch (UrlConnectionException ex)
-         {
-            reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
-         }
-      }
-
-      async private Task connectToUrlAsyncInternal(string originalUrl)
-      {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", originalUrl));
-
-         string prefix = Constants.CustomProtocolName + "://";
-         string url = originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
-         MergeRequestKey? mrkOpt = parseUrlIntoMergeRequestKey(url);
-         if (!mrkOpt.HasValue)
-         {
-            return;
-         }
-
-         MergeRequestKey mrk = mrkOpt.Value;
-         if (Program.Settings.GetAccessToken(mrk.ProjectKey.HostName) == String.Empty)
-         {
-            throw new UrlConnectionException(String.Format(
-               "Cannot connect to {0} because it is not in the list of known hosts. ", mrk.ProjectKey.HostName), null);
-         }
-
-         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
-         MergeRequest mergeRequest = await _gitlabClientManager.SearchManager.SearchMergeRequestAsync(
-            mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
-         if (mergeRequest == null)
-         {
-            throw new UrlConnectionException("Merge request does not exist. ", null);
-         }
-         labelWorkflowStatus.Text = String.Empty;
-
-         bool canOpenAtLiveTab =
-               // TODO - Opened/WIP should be kept in _liveSesion context and checked here and inside Session
-               (mergeRequest.State == "opened")
-            && (mergeRequest.Work_In_Progress)
-            && checkIfCanOpenAtLiveTab(mrk, true);
-
-         bool needReload = (canOpenAtLiveTab && getSession(canOpenAtLiveTab).MergeRequestCache == null)
-                        || mrk.ProjectKey.HostName != getHostName();
-         if (needReload)
-         {
-            Trace.TraceInformation("[MainForm.ExternalCalls] Restart workflow for url {0}", url);
-            await restartWorkflowByUrl(url, mrk.ProjectKey.HostName);
-         }
-
-         if (!canOpenAtLiveTab || !await openUrlAtLiveTab(mrk, url, !needReload))
-         {
-            await openUrlAtSearchTab(mrk, url);
-         }
-      }
-
-      async private Task<bool> openUrlAtLiveTab(MergeRequestKey mrk, string url, bool updateIfNeeded)
-      {
-         ISession session = getSession(true);
-         if (session == null)
-         {
-            Debug.Assert(false);
-            return false;
-         }
-
-         if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
-         {
-            // We need to update the MR list here because cached one is possible outdated
-            if (updateIfNeeded)
-            {
-               await checkForUpdatesAsync();
-               if (getHostName() != mrk.ProjectKey.HostName)
-               {
-                  throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
-               }
-            }
-
-            if (!checkIfCanOpenAtLiveTab(mrk, false))
-            {
-               // this may happen if project list changed while we were in 'await'
-               return false;
-            }
-         }
-
-         tabControlMode.SelectedTab = tabPageLive;
-         if (!selectMergeRequest(listViewMergeRequests, mrk, true) && listViewMergeRequests.Enabled)
-         {
-            // We could not select MR, but let's check if it is cached or not.
-            if (session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
-            {
-               // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-               if (!unhideFilteredMergeRequest(mrk))
-               {
-                  return false; // user decided to not un-hide merge request
-               }
-
-               if (!selectMergeRequest(listViewMergeRequests, mrk, true))
-               {
-                  Debug.Assert(false);
-                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
-                  throw new UrlConnectionException("Something went wrong. ", null);
-               }
-            }
-            else
-            {
-               if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-               {
-                  Debug.Assert(false);
-                  Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
-                  throw new UrlConnectionException("Something went wrong. ", null);
-               }
-               return false;
-            }
-         }
-
          return true;
       }
 

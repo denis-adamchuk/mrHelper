@@ -54,7 +54,12 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// </summary>
       /// <returns>Was switch successful</returns>
-      async private Task switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
+      private void switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
+      {
+         BeginInvoke(new Action(async () => await switchHostToSelectedAsync(exceptionHandler)), null);
+      }
+
+      async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler = null)
       {
          updateTabControlSelection();
          try

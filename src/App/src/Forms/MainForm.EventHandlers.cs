@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// All exceptions thrown within this method are fatal errors, just pass them to upper level handler
       /// </summary>
-      async private void MainForm_Load(object sender, EventArgs e)
+      private void MainForm_Load(object sender, EventArgs e)
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
 
          initializeWork();
-         await connectOnStartup();
+         connectOnStartup();
       }
 
       private void closeAllFormsExceptMain()
@@ -228,7 +228,7 @@ namespace mrHelper.App.Forms
          doClose();
       }
 
-      async private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
+      private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
       {
          localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
@@ -251,7 +251,7 @@ namespace mrHelper.App.Forms
 
                // Emulating a host switch here to trigger GitDataUpdater to work at the new location
                Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
-               await switchHostToSelected();
+               switchHostToSelected();
             }
          }
       }
@@ -262,7 +262,7 @@ namespace mrHelper.App.Forms
          Program.Settings.ColorSchemeFileName = (sender as ComboBox).Text;
       }
 
-      async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
+      private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
          string hostname = (sender as ComboBox).Text;
 
@@ -270,7 +270,7 @@ namespace mrHelper.App.Forms
 
          updateProjectsListView();
          updateUsersListView();
-         await switchHostToSelected();
+         switchHostToSelected();
       }
 
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
@@ -407,20 +407,20 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
+      private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.Enter)
          {
             if (radioButtonSearchByTargetBranch.Checked)
             {
-               await searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
+               searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
             }
             else if (radioButtonSearchByTitleAndDescription.Checked)
             {
                // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
                Debug.Assert(Constants.MaxSearchByTitleAndDescriptionResults <= 100);
 
-               await searchMergeRequests(new SearchByText(textBoxSearch.Text),
+               searchMergeRequests(new SearchByText(textBoxSearch.Text),
                   Constants.MaxSearchByTitleAndDescriptionResults);
             }
             else
@@ -561,11 +561,11 @@ namespace mrHelper.App.Forms
             updateKnownHostAndTokensInSettings();
             updateHostsDropdownList();
             selectHost(PreferredSelection.Latest);
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 
-      async private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
+      private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
       {
          bool removeCurrent =
                listViewKnownHosts.SelectedItems.Count > 0 && getHostName() != String.Empty
@@ -598,7 +598,7 @@ namespace mrHelper.App.Forms
             }
 
             // calling this unconditionally to drop current sessions and disable UI
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 
@@ -649,7 +649,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
+      private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
       {
          if (_loadingConfiguration)
          {
@@ -659,7 +659,7 @@ namespace mrHelper.App.Forms
          Program.Settings.UseShallowClone = checkBoxUseShallowClone.Checked;
 
          Trace.TraceInformation(String.Format("[MainForm] Shallow clone setting has been selected"));
-         await switchHostToSelected();
+         switchHostToSelected();
       }
 
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
@@ -947,26 +947,22 @@ namespace mrHelper.App.Forms
          {
             string argumentString = Win32Tools.ConvertMessageToText(rMessage.LParam);
 
-            BeginInvoke(new Action(
-               async () =>
-               {
-                  string[] arguments = argumentString.Split('|');
-                  if (arguments.Length < 2)
-                  {
-                     Debug.Assert(false);
-                     Trace.TraceError(String.Format("Invalid WM_COPYDATA message content: {0}", argumentString));
-                     return;
-                  }
+            string[] arguments = argumentString.Split('|');
+            if (arguments.Length < 2)
+            {
+               Debug.Assert(false);
+               Trace.TraceError(String.Format("Invalid WM_COPYDATA message content: {0}", argumentString));
+               return;
+            }
 
-                  if (arguments[1] == "diff")
-                  {
-                     await onDiffCommand(argumentString);
-                  }
-                  else
-                  {
-                     await onOpenCommand(argumentString);
-                  }
-               }));
+            if (arguments[1] == "diff")
+            {
+               onDiffCommand(argumentString);
+            }
+            else
+            {
+               onOpenCommand(argumentString);
+            }
          }
 
          base.WndProc(ref rMessage);
@@ -1232,7 +1228,7 @@ namespace mrHelper.App.Forms
          applyFont(font);
       }
 
-      async private void buttonEditProjects_Click(object sender, EventArgs e)
+      private void buttonEditProjects_Click(object sender, EventArgs e)
       {
          string host = getHostName();
          if (host == String.Empty)
@@ -1260,13 +1256,13 @@ namespace mrHelper.App.Forms
                if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
                   Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
-                  await switchHostToSelected();
+                  switchHostToSelected();
                }
             }
          }
       }
 
-      async private void buttonEditUsers_Click(object sender, EventArgs e)
+      private void buttonEditUsers_Click(object sender, EventArgs e)
       {
          string host = getHostName();
          if (host == String.Empty)
@@ -1294,7 +1290,7 @@ namespace mrHelper.App.Forms
                if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
                   Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
-                  await switchHostToSelected();
+                  switchHostToSelected();
                }
             }
          }
@@ -1330,7 +1326,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
       {
          if (!(sender as RadioButton).Checked)
          {
@@ -1352,7 +1348,7 @@ namespace mrHelper.App.Forms
             }
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 
