@@ -146,34 +146,54 @@ namespace mrHelper.App.Forms
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         enqueueUrlConnectionRequest(url);
+         enqueueUrlConnectionRequest(url, false);
       }
 
       Queue<string> _requestedUrl = new Queue<string>();
-      private void enqueueUrlConnectionRequest(string url)
+      private void enqueueUrlConnectionRequest(string url, bool startup)
       {
          _requestedUrl.Enqueue(url);
          if (_requestedUrl.Count == 1)
          {
-            BeginInvoke(new Action(async () => await processUrlConnectionQueue()));
+            BeginInvoke(new Action(
+               async () =>
+            {
+               if (!await processUrlConnectionQueue() && startup)
+               {
+                  selectHost(PreferredSelection.Initial);
+                  switchHostToSelected();
+               }
+            }));
          }
       }
 
-      async private Task processUrlConnectionQueue()
+      async private Task<bool> processUrlConnectionQueue()
       {
          if (!_requestedUrl.Any())
          {
-            return;
+            return true;
          }
 
          string url = _requestedUrl.Peek();
          try
          {
+            if (String.IsNullOrWhiteSpace(url))
+            {
+               return false;
+            }
+
             await connectToUrlAsyncInternal(url);
+            return true;
          }
          catch (UrlConnectionException ex)
          {
+            if (ex.InnerException is SessionStartCancelledException)
+            {
+               return true;
+            }
+
             reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
+            return false;
          }
          finally
          {
@@ -224,7 +244,7 @@ namespace mrHelper.App.Forms
          if (needReload)
          {
             Trace.TraceInformation("[MainForm.ExternalCalls] Restart workflow for url {0}", url);
-            await restartWorkflowByUrlAsync(url, mrk.ProjectKey.HostName);
+            await restartWorkflowByUrlAsync(mrk.ProjectKey.HostName);
          }
 
          if (!canOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url, !needReload))
@@ -235,11 +255,6 @@ namespace mrHelper.App.Forms
 
       private void reportErrorOnConnect(string url, string msg, Exception ex)
       {
-         if (ex is SessionStartCancelledException)
-         {
-            return;
-         }
-
          string exceptionMessage = ex != null ? ex.Message : String.Empty;
          if (ex is SessionException wfex)
          {
@@ -256,7 +271,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = errorMessage;
       }
 
-      async private Task restartWorkflowByUrlAsync(string url, string hostname)
+      async private Task restartWorkflowByUrlAsync(string hostname)
       {
          _initialHostName = hostname;
          selectHost(PreferredSelection.Initial);
