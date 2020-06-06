@@ -38,6 +38,8 @@ namespace mrHelper.Client.TimeTracking
       {
          _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
          _discussionLoader.DiscussionsLoaded -= processDiscussions;
+
+         _operator.Dispose();
       }
 
       public TimeSpan? GetTotalTime(MergeRequestKey mrk)

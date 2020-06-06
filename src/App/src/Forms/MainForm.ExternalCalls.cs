@@ -197,13 +197,7 @@ namespace mrHelper.App.Forms
 
          string prefix = Constants.CustomProtocolName + "://";
          string url = originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
-         MergeRequestKey? mrkOpt = parseUrlIntoMergeRequestKey(url);
-         if (!mrkOpt.HasValue)
-         {
-            return;
-         }
-
-         MergeRequestKey mrk = mrkOpt.Value;
+         MergeRequestKey mrk = parseUrlIntoMergeRequestKey(url);
          if (Program.Settings.GetAccessToken(mrk.ProjectKey.HostName) == String.Empty)
          {
             throw new UrlConnectionException(String.Format(
@@ -422,7 +416,7 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private MergeRequestKey? parseUrlIntoMergeRequestKey(string url)
+      private MergeRequestKey parseUrlIntoMergeRequestKey(string url)
       {
          try
          {

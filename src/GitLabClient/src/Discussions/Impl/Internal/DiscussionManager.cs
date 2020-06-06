@@ -70,6 +70,8 @@ namespace mrHelper.Client.Discussions
             timer.Dispose();
          }
          _oneShotTimers.Clear();
+
+         _operator.Dispose();
       }
 
       public event Action<MergeRequestKey> DiscussionsLoading;

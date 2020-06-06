@@ -66,8 +66,7 @@ namespace mrHelper.App.Helpers
          {
             statusMessage = "Error";
          }
-         return String.IsNullOrEmpty(statusMessage) ?
-            _gitStatistic[mrk].Value.Statistic.Value : new Nullable<DiffStatistic>();
+         return _gitStatistic[mrk].HasValue ? _gitStatistic[mrk].Value.Statistic : new Nullable<DiffStatistic>();
       }
 
       protected override void preUpdate(ILocalGitRepository repo)
@@ -110,7 +109,7 @@ namespace mrHelper.App.Helpers
 
                try
                {
-                  if (repo.Data != null)
+                  if (repo?.Data != null)
                   {
                      await repo.Data.LoadFromDisk(args);
                   }

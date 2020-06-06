@@ -870,7 +870,7 @@ namespace mrHelper.App.Forms
          if (_gitClientFactory != null)
          {
             _gitClientFactory.RepositoryCloned -= onRepositoryCloned;
-            _gitClientFactory?.Dispose();
+            _gitClientFactory.Dispose();
             _gitClientFactory = null;
          }
       }
