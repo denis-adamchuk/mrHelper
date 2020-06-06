@@ -74,10 +74,13 @@ namespace mrHelper.App.Forms
          onSingleSearchMergeRequestLoaded(fmk);
 
          IMergeRequestCache cache = _searchSession.MergeRequestCache;
-         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-         GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-         onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
-            showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
+         if (cache != null)
+         {
+            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
+            onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
+               showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
