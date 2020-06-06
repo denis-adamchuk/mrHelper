@@ -343,7 +343,8 @@ namespace mrHelper.App.Forms
 
       private void finalizeWork()
       {
-         _exiting = true; // to prevent execution of Dispose() which is called while we are in 'await'
+         _requestedDiff.Clear();
+         _requestedUrl.Clear();
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
@@ -354,7 +355,6 @@ namespace mrHelper.App.Forms
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
 
-         _exiting = false; // now we can Dispose()
          Dispose();
 
          Trace.TraceInformation(String.Format("[MainForm] Form disposed. Work finalized. Exiting."));

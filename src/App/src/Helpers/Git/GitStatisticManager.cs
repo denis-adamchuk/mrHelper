@@ -44,29 +44,36 @@ namespace mrHelper.App.Helpers
       /// </summary>
       internal DiffStatistic? GetStatistic(MergeRequestKey mrk, out string statusMessage)
       {
-         statusMessage = String.Empty;
+         statusMessage = getStatusMessage(mrk);
+         return String.IsNullOrWhiteSpace(statusMessage)
+            ? _gitStatistic[mrk].Value.Statistic
+            : new Nullable<DiffStatistic>();
+      }
+
+      private string getStatusMessage(MergeRequestKey mrk)
+      {
          ILocalGitRepository repo = getRepository(mrk.ProjectKey);
          if (repo == null)
          {
-            statusMessage = "N/A";
+            return "N/A";
          }
          else if (repo.ExpectingClone)
          {
-            statusMessage = "N/A (not cloned)";
+            return "N/A (not cloned)";
          }
          else if (!_gitStatistic.ContainsKey(mrk))
          {
-            statusMessage = "N/A";
+            return "N/A";
          }
          else if (!_gitStatistic[mrk].HasValue)
          {
-            statusMessage = "Checking...";
+            return "Checking...";
          }
          else if (!_gitStatistic[mrk].Value.Statistic.HasValue)
          {
-            statusMessage = "Error";
+            return "Error";
          }
-         return _gitStatistic[mrk].HasValue ? _gitStatistic[mrk].Value.Statistic : new Nullable<DiffStatistic>();
+         return String.Empty;
       }
 
       protected override void preUpdate(ILocalGitRepository repo)

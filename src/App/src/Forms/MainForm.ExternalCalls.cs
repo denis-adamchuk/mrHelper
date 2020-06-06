@@ -125,9 +125,9 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            _requestedDiff.Dequeue();
-            if (_requestedDiff.Count > 0)
+            if (_requestedDiff.Any())
             {
+               _requestedDiff.Dequeue();
                BeginInvoke(new Action(async () => await processDiffQueue()));
             }
          }
@@ -197,9 +197,9 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            _requestedUrl.Dequeue();
-            if (_requestedUrl.Count > 0)
+            if (_requestedUrl.Any())
             {
+               _requestedUrl.Dequeue();
                BeginInvoke(new Action(async () => await processUrlConnectionQueue()));
             }
          }
@@ -282,10 +282,9 @@ namespace mrHelper.App.Forms
       async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url, bool updateIfNeeded)
       {
          ISession session = getSession(true);
-         if (session == null)
+         if (session?.MergeRequestCache == null)
          {
-            Debug.Assert(false);
-            return false;
+            throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
          }
 
          if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -296,7 +295,7 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
                await checkForUpdatesAsync();
-               if (getHostName() != mrk.ProjectKey.HostName)
+               if (getHostName() != mrk.ProjectKey.HostName || session.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
                }

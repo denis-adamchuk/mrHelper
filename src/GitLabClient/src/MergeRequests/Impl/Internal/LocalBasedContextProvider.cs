@@ -33,8 +33,14 @@ namespace mrHelper.Client.MergeRequests
          HashSet<string> shas = new HashSet<string>();
          foreach (Version version in _versions)
          {
-            shas.Add(version.Base_Commit_SHA);
-            shas.Add(version.Head_Commit_SHA);
+            if (version.Base_Commit_SHA != null)
+            {
+               shas.Add(version.Base_Commit_SHA);
+            }
+            if (version.Head_Commit_SHA != null)
+            {
+               shas.Add(version.Head_Commit_SHA);
+            }
          }
 
          return new FullUpdateContext(_versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At, shas);
