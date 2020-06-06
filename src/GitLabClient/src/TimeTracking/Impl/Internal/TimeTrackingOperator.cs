@@ -21,7 +21,7 @@ namespace mrHelper.Client.TimeTracking
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>

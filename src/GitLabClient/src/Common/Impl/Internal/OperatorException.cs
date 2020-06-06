@@ -21,25 +21,15 @@ namespace mrHelper.Client.Common
    {
       internal static Task<T> Call<T>(Func<Task<T>> func)
       {
-         return callTask(func, true);
+         return callTask(func);
       }
 
       internal static Task Call(Func<Task> func)
       {
-         return callTask(func, true);
+         return callTask(func);
       }
 
-      internal static Task<T> CallNoCancel<T>(Func<Task<T>> func)
-      {
-         return callTask(func, false);
-      }
-
-      internal static Task CallNoCancel(Func<Task> func)
-      {
-         return callTask(func, false);
-      }
-
-      async private static Task<T> callTask<T>(Func<Task<T>> func, bool enabledCancel)
+      async private static Task<T> callTask<T>(Func<Task<T>> func)
       {
          try
          {
@@ -47,12 +37,12 @@ namespace mrHelper.Client.Common
          }
          catch (Exception ex)
          {
-            handleException(ex, enabledCancel);
+            handleException(ex);
             throw;
          }
       }
 
-      async private static Task callTask(Func<Task> func, bool enabledCancel)
+      async private static Task callTask(Func<Task> func)
       {
          try
          {
@@ -60,16 +50,15 @@ namespace mrHelper.Client.Common
          }
          catch (Exception ex)
          {
-            handleException(ex, enabledCancel);
+            handleException(ex);
             throw;
          }
       }
 
-      private static void handleException(Exception ex, bool enabledCancel)
+      private static void handleException(Exception ex)
       {
          if (ex is GitLabTaskRunnerCancelled)
          {
-            Debug.Assert(enabledCancel);
             throw new OperatorException(ex);
          }
          else if (ex is GitLabSharpException || ex is GitLabRequestException)

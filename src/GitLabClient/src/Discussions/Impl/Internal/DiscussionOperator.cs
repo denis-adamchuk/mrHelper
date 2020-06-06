@@ -23,7 +23,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                   ((IEnumerable<Note>)(await client.RunAsync(
                      async (gl) =>
@@ -36,7 +36,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (int)(await client.RunAsync(
                         async (gl) =>
@@ -48,7 +48,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (IEnumerable<Discussion>)(await client.RunAsync(
                         async (gl) =>
@@ -60,7 +60,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (Discussion)(await client.RunAsync(
                         async (gitlab) =>
@@ -72,7 +72,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -85,7 +85,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -104,7 +104,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (DiscussionNote)await client.RunAsync(
                         async (gl) =>
@@ -118,7 +118,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -130,7 +130,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -144,7 +144,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (Discussion)await client.RunAsync(
                         async (gl) =>
@@ -157,7 +157,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -169,7 +169,7 @@ namespace mrHelper.Client.Discussions
       {
          return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
