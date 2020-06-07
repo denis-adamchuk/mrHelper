@@ -385,7 +385,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(listView.SelectedItems.Count < 1);
 
          disableCommonUIControls();
-         updateGitAbortState();
+         updateGitAbortState(false);
       }
 
       private void ListViewMergeRequests_ItemSelectionChanged(

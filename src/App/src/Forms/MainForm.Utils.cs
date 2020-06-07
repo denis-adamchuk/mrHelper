@@ -509,17 +509,23 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void updateGitAbortState()
+      private void updateGitAbortState(bool resetStatusText)
       {
          ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
          ILocalGitRepository repo = projectKey.HasValue ? getRepository(projectKey.Value, false) : null;
-         enableGitAbort(repo?.Updater?.CanBeStopped() ?? false);
-      }
 
-      private void enableGitAbort(bool enabled)
-      {
+         bool enabled = repo?.Updater?.CanBeStopped() ?? false;
          linkLabelAbortGit.Visible = enabled;
          labelGitStatus.Visible = enabled;
+
+         if (resetStatusText)
+         {
+            string projectname = projectKey?.ProjectName ?? String.Empty;
+            if (!String.IsNullOrWhiteSpace(projectname))
+            {
+               labelGitStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
+            }
+         }
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -1934,7 +1940,7 @@ namespace mrHelper.App.Forms
             true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
             fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
-         updateGitAbortState();
+         updateGitAbortState(true);
 
          Debug.WriteLine(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));

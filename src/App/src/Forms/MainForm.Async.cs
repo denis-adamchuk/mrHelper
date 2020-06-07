@@ -77,7 +77,8 @@ namespace mrHelper.App.Forms
          try
          {
             IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText, updateGitAbortState);
+            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+               () => updateGitAbortState(false));
             return true;
          }
          catch (Exception ex)
@@ -124,7 +125,7 @@ namespace mrHelper.App.Forms
                   {
                      IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
                      await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
-                        updateGitAbortState);
+                        () => updateGitAbortState(false));
                   }
                   else
                   {
@@ -264,7 +265,8 @@ namespace mrHelper.App.Forms
          {
             IProjectUpdateContextProvider contextProvider =
                new CommitBasedContextProvider(new string[] { leftSHA, rightSHA });
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText, updateGitAbortState);
+            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+               () => updateGitAbortState(false));
             return true;
          }
          catch (Exception ex)
