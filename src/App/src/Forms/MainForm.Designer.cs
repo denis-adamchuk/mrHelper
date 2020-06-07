@@ -1,4 +1,5 @@
 ﻿using mrHelper.CommonControls.Controls;
+using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
@@ -19,20 +20,6 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
-
-         _liveSession?.Dispose();
-         _searchSession?.Dispose();
-         _gitlabClientManager?.Dispose();
-
-         disposeGitHelpers();
-         disposeLocalGitRepositoryFactory();
-         disposeLiveSessionDependencies();
-
-         _checkForUpdatesTimer?.Stop();
-         _checkForUpdatesTimer?.Dispose();
-
-         _timeTrackingTimer?.Stop();
-         _timeTrackingTimer?.Dispose();
 
          base.Dispose(disposing);
       }

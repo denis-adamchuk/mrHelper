@@ -88,6 +88,10 @@ namespace mrHelper.App.Forms
          closeAllFormsExceptMain();
 
          finalizeWork();
+
+         // This allows to handle all pending invocations that other threads are
+         // already ready to make before we dispose ourselves
+         Application.DoEvents();
       }
 
       private void MainForm_Resize(object sender, EventArgs e)

@@ -355,9 +355,21 @@ namespace mrHelper.App.Forms
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
 
-         Dispose();
+         _liveSession?.Dispose();
+         _searchSession?.Dispose();
+         _gitlabClientManager?.Dispose();
 
-         Trace.TraceInformation(String.Format("[MainForm] Form disposed. Work finalized. Exiting."));
+         disposeGitHelpers();
+         disposeLocalGitRepositoryFactory();
+         disposeLiveSessionDependencies();
+
+         _checkForUpdatesTimer?.Stop();
+         _checkForUpdatesTimer?.Dispose();
+
+         _timeTrackingTimer?.Stop();
+         _timeTrackingTimer?.Dispose();
+
+         Trace.TraceInformation(String.Format("[MainForm] Work finalized."));
       }
 
       private void restoreState()
