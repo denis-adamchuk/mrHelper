@@ -65,12 +65,6 @@ namespace mrHelper.Client.MergeRequests
          return new LocalBasedContextProvider(getAllVersions(projectKey));
       }
 
-      public IProjectUpdateContextProvider GetRemoteBasedContextProvider(MergeRequestKey mrk)
-      {
-         SessionOperator tempOperator = new SessionOperator(mrk.ProjectKey.HostName, _clientContext.HostProperties);
-         return new RemoteBasedContextProvider(getAllVersions(mrk.ProjectKey), mrk, tempOperator);
-      }
-
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
          return _cacheUpdater.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
@@ -108,10 +102,9 @@ namespace mrHelper.Client.MergeRequests
       /// <summary>
       /// Request to update the specified MR after the specified time periods (in milliseconds)
       /// </summary>
-      public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
-         return null;
       }
 
       private void onUpdate(UserEvents.MergeRequestEvent e)

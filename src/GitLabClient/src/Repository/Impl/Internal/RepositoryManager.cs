@@ -7,11 +7,16 @@ using System.Diagnostics;
 
 namespace mrHelper.Client.Repository
 {
-   internal class RepositoryManager : IRepositoryManager
+   internal class RepositoryManager : IRepositoryManager, IDisposable
    {
       internal RepositoryManager(IHostProperties settings)
       {
          _settings = settings;
+      }
+
+      public void Dispose()
+      {
+         _operator?.Dispose();
       }
 
       public Task<Comparison> Compare(ProjectKey projectKey, string from, string to)
@@ -44,17 +49,10 @@ namespace mrHelper.Client.Repository
             "Branch deletion cancelled", "Cannot delete a branch");
       }
 
-      async public Task Cancel()
-      {
-         if (_operator != null)
-         {
-            await _operator.CancelAsync();
-         }
-      }
-
       async private Task call(ProjectKey projectKey, Func<Task> func, string cancelMessage, string errorMessage)
       {
-         _operator = new RepositoryOperator(projectKey.HostName, _settings.GetAccessToken(projectKey.HostName));
+         _operator?.Dispose();
+         _operator = new RepositoryOperator(projectKey.HostName, _settings);
          try
          {
             await func();
@@ -72,7 +70,8 @@ namespace mrHelper.Client.Repository
 
       async private Task<T> call<T>(ProjectKey projectKey, Func<Task<T>> func, string cancelMessage, string errorMessage)
       {
-         _operator = new RepositoryOperator(projectKey.HostName, _settings.GetAccessToken(projectKey.HostName));
+         _operator?.Dispose();
+         _operator = new RepositoryOperator(projectKey.HostName, _settings);
          try
          {
             return await func();

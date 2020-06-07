@@ -80,8 +80,6 @@ namespace mrHelper.App.Controls
 
       protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
       {
-         Refresh();
-
          if (SelectedItems.Count < 1)
          {
             _delayedDeselectionTimer.Start();

@@ -1,3 +1,4 @@
+using System;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitClient
@@ -13,6 +14,11 @@ namespace mrHelper.GitClient
       /// Create a LocalGitRepository object or return it if already cached.
       /// </summary>
       ILocalGitRepository GetRepository(ProjectKey projectKey);
+
+      /// <summary>
+      /// Notifies that a repository has been cloned
+      /// </summary>
+      event Action<ILocalGitRepository> RepositoryCloned;
    }
 }
 

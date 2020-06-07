@@ -4,7 +4,7 @@ namespace mrHelper.Client.Session
 {
    internal interface IMergeRequestListLoader
    {
-      Task<bool> Load();
+      Task Load();
    }
 }
 

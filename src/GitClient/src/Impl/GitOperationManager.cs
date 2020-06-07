@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace mrHelper.GitClient
 {
-   public class GitOperationManager : IExternalProcessManager
+   public class GitOperationManager : IExternalProcessManager, IDisposable
    {
       public GitOperationManager(ISynchronizeInvoke synchronizeInvoke, string path)
       {
@@ -21,6 +21,11 @@ namespace mrHelper.GitClient
       public ExternalProcess.AsyncTaskDescriptor CreateDescriptor(
          string name, string arguments, string path, Action<string> onProgressChange)
       {
+         if (_isDisposed)
+         {
+            return null;
+         }
+
          traceOperationStatus(arguments, "start");
          try
          {
@@ -32,8 +37,19 @@ namespace mrHelper.GitClient
          }
       }
 
+      public void Dispose()
+      {
+         _externalProcessManager.Dispose();
+         _isDisposed = true;
+      }
+
       async public Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
+         if (_isDisposed)
+         {
+            return;
+         }
+
          try
          {
             await _externalProcessManager.Wait(descriptor);
@@ -44,34 +60,16 @@ namespace mrHelper.GitClient
          {
             handleException("wait", ex);
          }
-         catch (CancellAllInProgressException)
-         {
-            throw new OperationCancelledException();
-         }
       }
 
-      async public Task Join(ExternalProcess.AsyncTaskDescriptor descriptor, Action<string> onProgressChange)
+      public void Cancel(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
-         traceOperationStatus("join", "start");
-         try
+         if (_isDisposed)
          {
-            await _externalProcessManager.Join(descriptor, onProgressChange);
-            traceOperationStatus("join", "end");
+            return;
          }
-         catch (ExternalProcessFailureException ex)
-         {
-            handleException("join", ex);
-         }
-      }
 
-      public Task Cancel(ExternalProcess.AsyncTaskDescriptor descriptor)
-      {
-         return _externalProcessManager.Cancel(descriptor);
-      }
-
-      public Task CancelAll()
-      {
-         return _externalProcessManager.CancelAll();
+         _externalProcessManager.Cancel(descriptor);
       }
 
       public void checkStandardError(IEnumerable<string> stdErr)
@@ -112,7 +110,9 @@ namespace mrHelper.GitClient
       private static readonly int altCancellationExitCode = -1073741510;
 
       private readonly string _path;
-      private readonly IExternalProcessManager _externalProcessManager;
+      private readonly ExternalProcessManager _externalProcessManager;
+
+      private bool _isDisposed;
    }
 }
 

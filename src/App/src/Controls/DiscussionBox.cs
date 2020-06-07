@@ -630,7 +630,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply \"Done\"\t(Shift-F4)"
+            Text = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread" + "\t(Shift-F4)"
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);
@@ -664,7 +664,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = !Discussion.Individual_Note,
-            Text = "Reply \"Done\"\t(Shift-F4)"
+            Text = "Reply \"Done\" and Resolve/Unresolve Thread" + "\t(Shift-F4)"
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);
@@ -813,16 +813,24 @@ namespace mrHelper.App.Controls
 
       async private Task onReplyAsyncDone()
       {
-         await onReplyAsync("Done");
+         await onReplyAsync("Done", true);
       }
 
-      async private Task onReplyAsync(string body)
+      async private Task onReplyAsync(string body, bool toggleResolve = false)
       {
+         bool wasResolved = isDiscussionResolved();
          disableAllTextBoxes();
 
          try
          {
-            await _editor.ReplyAsync(body);
+            if (toggleResolve)
+            {
+               await _editor.ReplyAndResolveDiscussionAsync(body, !wasResolved);
+            }
+            else
+            {
+               await _editor.ReplyAsync(body);
+            }
          }
          catch (DiscussionEditorException ex)
          {

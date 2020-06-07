@@ -26,16 +26,11 @@ namespace mrHelper.Client.Session
          Debug.Assert(_sessionContext.CustomData is ProjectBasedContext);
       }
 
-      async public Task<bool> Load()
+      async public Task Load()
       {
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
-         if (mergeRequests == null)
-         {
-            return false; // cancelled
-         }
-
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
-         return await _versionLoader.LoadVersionsAndCommits(mergeRequests);
+         await _versionLoader.LoadVersionsAndCommits(mergeRequests);
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
@@ -46,10 +41,9 @@ namespace mrHelper.Client.Session
             new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
 
          Exception exception = null;
-         bool cancelled = false;
          async Task loadProject(ProjectKey project)
          {
-            if (cancelled)
+            if (exception != null)
             {
                return;
             }
@@ -57,44 +51,32 @@ namespace mrHelper.Client.Session
             try
             {
                IEnumerable<MergeRequest> projectMergeRequests = await loadProjectMergeRequestsAsync(project);
-               if (projectMergeRequests == null)
-               {
-                  cancelled = true;
-               }
-               else
-               {
-                  mergeRequests.Add(project, projectMergeRequests);
-               }
+               mergeRequests.Add(project, projectMergeRequests);
             }
-            catch (SessionException ex)
+            catch (BaseLoaderException ex)
             {
                if (isForbiddenProjectException(ex))
                {
                   _sessionContext.Callbacks.OnForbiddenProject?.Invoke(project);
-                  return;
                }
                else if (isNotFoundProjectException(ex))
                {
                   _sessionContext.Callbacks.OnNotFoundProject?.Invoke(project);
-                  return;
                }
-               exception = ex;
-               cancelled = true;
+               else
+               {
+                  exception = ex;
+               }
             }
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
-            Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => cancelled);
-         if (!cancelled)
-         {
-            return mergeRequests;
-         }
-
+            Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => exception != null);
          if (exception != null)
          {
             throw exception;
          }
-         return null;
+         return mergeRequests;
       }
 
       private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(ProjectKey project)
@@ -106,19 +88,19 @@ namespace mrHelper.Client.Session
             String.Format("Cannot load project \"{0}\"", project.ProjectName));
       }
 
-      private static bool isForbiddenProjectException(SessionException ex)
+      private static bool isForbiddenProjectException(BaseLoaderException ex)
       {
          System.Net.HttpWebResponse response = getWebResponse(ex);
          return response != null ? response.StatusCode == System.Net.HttpStatusCode.Forbidden : false;
       }
 
-      private static bool isNotFoundProjectException(SessionException ex)
+      private static bool isNotFoundProjectException(BaseLoaderException ex)
       {
          System.Net.HttpWebResponse response = getWebResponse(ex);
          return response != null ? response.StatusCode == System.Net.HttpStatusCode.NotFound : false;
       }
 
-      private static System.Net.HttpWebResponse getWebResponse(SessionException ex)
+      private static System.Net.HttpWebResponse getWebResponse(BaseLoaderException ex)
       {
          if (ex.InnerException?.InnerException is GitLabRequestException rx)
          {

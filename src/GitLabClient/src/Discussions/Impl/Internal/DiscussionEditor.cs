@@ -53,6 +53,18 @@ namespace mrHelper.Client.Discussions
          }
       }
 
+      async public Task ReplyAndResolveDiscussionAsync(string body, bool resolve)
+      {
+         try
+         {
+            await _operator.ReplyAndResolveDiscussionAsync(_mergeRequestKey, _discussionId, body, resolve);
+         }
+         catch (OperatorException ex)
+         {
+            throw new DiscussionEditorException("Cannot send reply", ex);
+         }
+      }
+
       async public Task<DiscussionNote> ModifyNoteBodyAsync(int noteId, string body)
       {
          try
@@ -77,11 +89,11 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task ResolveNoteAsync(int noteId, bool resolved)
+      async public Task ResolveNoteAsync(int noteId, bool resolve)
       {
          try
          {
-            await _operator.ResolveNoteAsync(_mergeRequestKey, _discussionId, noteId, resolved);
+            await _operator.ResolveNoteAsync(_mergeRequestKey, _discussionId, noteId, resolve);
          }
          catch (OperatorException ex)
          {
@@ -89,11 +101,11 @@ namespace mrHelper.Client.Discussions
          }
       }
 
-      async public Task<Discussion> ResolveDiscussionAsync(bool resolved)
+      async public Task<Discussion> ResolveDiscussionAsync(bool resolve)
       {
          try
          {
-            return await _operator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolved);
+            return await _operator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolve);
          }
          catch (OperatorException ex)
          {

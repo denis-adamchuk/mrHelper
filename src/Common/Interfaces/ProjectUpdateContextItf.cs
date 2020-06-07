@@ -4,17 +4,15 @@ using System.Threading.Tasks;
 
 namespace mrHelper.Common.Interfaces
 {
-   public interface IProjectUpdateContext {}
-
-   public class FullUpdateContext : IProjectUpdateContext
+   public abstract class ProjectUpdateContext
    {
-      public FullUpdateContext(DateTime latestChange, IEnumerable<string> sha)
+      public ProjectUpdateContext(DateTime? latestChange, IEnumerable<string> sha)
       {
          LatestChange = latestChange;
          Sha = sha;
       }
 
-      public DateTime LatestChange { get; }
+      public DateTime? LatestChange { get; }
       public IEnumerable<string> Sha { get; }
 
       public override bool Equals(object obj)
@@ -33,30 +31,19 @@ namespace mrHelper.Common.Interfaces
       }
    }
 
-   public class PartialUpdateContext : IProjectUpdateContext
+   public class FullUpdateContext : ProjectUpdateContext
    {
-      public PartialUpdateContext(IEnumerable<string> sha)
-      {
-         Sha = sha;
-      }
+      public FullUpdateContext(DateTime latestChange, IEnumerable<string> sha) : base(latestChange, sha) { }
+   }
 
-      public IEnumerable<string> Sha { get; }
-
-      public override bool Equals(object obj)
-      {
-         return obj is PartialUpdateContext context &&
-                EqualityComparer<IEnumerable<string>>.Default.Equals(Sha, context.Sha);
-      }
-
-      public override int GetHashCode()
-      {
-         return -1761058603 + EqualityComparer<IEnumerable<string>>.Default.GetHashCode(Sha);
-      }
+   public class PartialUpdateContext : ProjectUpdateContext
+   {
+      public PartialUpdateContext(IEnumerable<string> sha) : base(null, sha) { }
    }
 
    public interface IProjectUpdateContextProvider
    {
-      Task<IProjectUpdateContext> GetContext();
+      ProjectUpdateContext GetContext();
    }
 }
 

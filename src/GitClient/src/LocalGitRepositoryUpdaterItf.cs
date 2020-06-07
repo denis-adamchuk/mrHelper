@@ -13,9 +13,25 @@ namespace mrHelper.GitClient
       }
    }
 
-   public class SecurityException : RepositoryUpdateException
+   public class SSLVerificationException : RepositoryUpdateException
    {
-      public SecurityException(Exception innerException)
+      public SSLVerificationException(Exception innerException)
+         : base(String.Empty, innerException)
+      {
+      }
+   }
+
+   public class AuthenticationFailedException : RepositoryUpdateException
+   {
+      public AuthenticationFailedException(Exception innerException)
+         : base(String.Empty, innerException)
+      {
+      }
+   }
+
+   public class CouldNotReadUsernameException : RepositoryUpdateException
+   {
+      public CouldNotReadUsernameException(Exception innerException)
          : base(String.Empty, innerException)
       {
       }
@@ -42,9 +58,24 @@ namespace mrHelper.GitClient
    /// </summary>
    public interface ILocalGitRepositoryUpdater
    {
-      Task Update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange);
-      Task SilentUpdate(IProjectUpdateContextProvider contextProvider);
-      Task CancelUpdate();
+      /// <summary>
+      /// Async version of Update.
+      /// - Can report progress change
+      /// - Can clone
+      /// - Processes context in a single chunk
+      /// </summary>
+      Task StartUpdate(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
+         Action onUpdateStateChange);
+      void StopUpdate();
+      bool CanBeStopped();
+
+      /// <summary>
+      /// Non-blocking version of Update.
+      /// - Cannot report progress change
+      /// - Cannot clone
+      /// - May split passed context in chunks and process them with delays
+      /// </summary>
+      void RequestUpdate(IProjectUpdateContextProvider contextProvider, Action onFinished);
    }
 }
 

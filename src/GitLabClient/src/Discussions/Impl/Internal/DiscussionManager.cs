@@ -29,9 +29,9 @@ namespace mrHelper.Client.Discussions
       IDiscussionCacheInternal
    {
       internal DiscussionManager(GitLabClientContext clientContext,
-         User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext)
+         string hostname, User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext)
       {
-         _operator = new DiscussionOperator(clientContext.HostProperties);
+         _operator = new DiscussionOperator(hostname, clientContext.HostProperties);
 
          _parser = new DiscussionParser(this, clientContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;
@@ -70,6 +70,8 @@ namespace mrHelper.Client.Discussions
             timer.Dispose();
          }
          _oneShotTimers.Clear();
+
+         _operator.Dispose();
       }
 
       public event Action<MergeRequestKey> DiscussionsLoading;
@@ -149,19 +151,18 @@ namespace mrHelper.Client.Discussions
       /// <summary>
       /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
       /// </summary>
-      public IUpdateToken RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
       {
          if (_timer == null)
          {
             // updates are disabled
-            return null;
+            return;
          }
 
          foreach (int interval in intervals)
          {
             enqueueOneShotTimer(mrk, interval, onUpdateFinished);
          }
-         return null;
       }
 
       private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
@@ -378,11 +379,7 @@ namespace mrHelper.Client.Discussions
                   "[DiscussionManager] Waiting for completion of updating discussions for MR: "
                 + "Host={0}, Project={1}, IId={2}",
                   mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString()));
-
-               while (_updating.Contains(mrk.Value)) //-V3120
-               {
-                  await Task.Delay(50);
-               }
+               await TaskUtils.WhileAsync(() => _updating.Contains(mrk.Value));
             }
          }
          else
@@ -391,11 +388,7 @@ namespace mrHelper.Client.Discussions
             {
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Waiting for completion of updating discussions"));
-
-               while (_updating.Any()) //-V3120
-               {
-                  await Task.Delay(50);
-               }
+               await TaskUtils.WhileAsync(() => _updating.Any());
             }
          }
       }

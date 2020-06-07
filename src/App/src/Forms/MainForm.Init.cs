@@ -17,6 +17,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
+using mrHelper.GitClient;
 
 namespace mrHelper.App.Forms
 {
@@ -98,7 +99,7 @@ namespace mrHelper.App.Forms
                bool reload = command.GetReload();
                if (reload)
                {
-                  enqueueCheckForUpdates(mergeRequestKey, new int[] {
+                  requestUpdates(mergeRequestKey, new int[] {
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
                      Program.Settings.OneShotUpdateSecondChanceDelayMs });
                }
@@ -149,6 +150,8 @@ namespace mrHelper.App.Forms
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
+         checkBoxRunWhenWindowsStarts.Checked = Program.Settings.RunWhenWindowsStarts;
+         applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
@@ -313,26 +316,22 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task initializeWork()
+      private void initializeWork()
       {
          restoreState();
          prepareFormToStart();
 
          createGitLabClientManager();
          createLiveSessionAndDependencies();
-         createSearchSession();
-
          subscribeToLiveSession();
+         createSearchSession();
 
          _gitClientUpdater = new GitInteractiveUpdater();
          _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
-         _gitStatManager.Update += onGitStatisticManagerUpdate;
 
          initializeColorScheme();
          initializeIconScheme();
          initializeBadgeScheme();
-
-         await connectOnStartup();
       }
 
       private void createGitLabClientManager()
@@ -342,37 +341,35 @@ namespace mrHelper.App.Forms
          _gitlabClientManager = new Client.Common.GitLabClientManager(clientContext);
       }
 
-      async private Task finalizeWork()
+      private void finalizeWork()
       {
-         _exiting = true; // to prevent execution of Dispose() which is called while we are in 'await'
+         _requestedDiff.Clear();
+         _requestedUrl.Clear();
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
-         _gitStatManager.Update -= onGitStatisticManagerUpdate;
          _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
 
-         unsubscribeFromLiveSessionInternalEvents();
          unsubscribeFromLiveSession();
-
-         await finalizeCommitChainCreator();
-         await disposeLocalGitRepositoryFactory();
-
-         if (_liveSession != null)
-         {
-            await _liveSession.Stop();
-         }
-         if (_searchSession != null)
-         {
-            await _searchSession.Stop();
-         }
 
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
 
-         _exiting = false; // now we can Dispose()
-         Dispose();
+         _liveSession?.Dispose();
+         _searchSession?.Dispose();
+         _gitlabClientManager?.Dispose();
 
-         Trace.TraceInformation(String.Format("[MainForm] Form disposed. Work finalized. Exiting."));
+         disposeGitHelpers();
+         disposeLocalGitRepositoryFactory();
+         disposeLiveSessionDependencies();
+
+         _checkForUpdatesTimer?.Stop();
+         _checkForUpdatesTimer?.Dispose();
+
+         _timeTrackingTimer?.Stop();
+         _timeTrackingTimer?.Dispose();
+
+         Trace.TraceInformation(String.Format("[MainForm] Work finalized."));
       }
 
       private void restoreState()
@@ -412,14 +409,11 @@ namespace mrHelper.App.Forms
          updateHostsDropdownList();
          fillColorSchemesList();
          prepareControlsToStart();
-         resetMinimumSizes();
-         updateMinimumSizes();
+         prepareSizeToStart();
       }
 
       private void prepareControlsToStart()
       {
-         WindowState = FormWindowState.Maximized;
-
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
          updateGitStatusText(String.Empty);
@@ -445,16 +439,6 @@ namespace mrHelper.App.Forms
             toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
          }
 
-         if (Program.Settings.MainWindowSplitterDistance != 0)
-         {
-            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
-         }
-
-         if (Program.Settings.RightPaneSplitterDistance != 0)
-         {
-            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
-         }
-
          radioButtonSearchByTitleAndDescription.Text += String.Format(
             " (up to {0} results)", Constants.MaxSearchByTitleAndDescriptionResults);
          radioButtonSearchByTitleAndDescription.Text += "            ";
@@ -465,27 +449,39 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
       }
 
-      async private Task connectOnStartup()
+      private void prepareSizeToStart()
       {
-         try
+         if (_startMinimized)
          {
-            string[] arguments = Environment.GetCommandLineArgs();
-            string url = arguments.Length > 1 ? arguments[1] : String.Empty;
+            _forceMaximizeOnNextRestore = Program.Settings.WasMaximizedBeforeClose;
+            WindowState = FormWindowState.Minimized;
+         }
+         else
+         {
+            WindowState = Program.Settings.WasMaximizedBeforeClose ? FormWindowState.Maximized : FormWindowState.Normal;
+         }
 
-            if (url != String.Empty)
-            {
-               await connectToUrlAsync(url);
-            }
-            else
-            {
-               selectHost(PreferredSelection.Initial);
-               await switchHostToSelected();
-            }
-         }
-         catch (SessionException ex)
+         if (Program.Settings.MainWindowSplitterDistance != 0
+            && splitContainer1.Panel1MinSize < Program.Settings.MainWindowSplitterDistance
+            && splitContainer1.Width - splitContainer1.Panel2MinSize > Program.Settings.MainWindowSplitterDistance)
          {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
          }
+
+         if (Program.Settings.RightPaneSplitterDistance != 0
+            && splitContainer2.Panel1MinSize < Program.Settings.RightPaneSplitterDistance
+            && splitContainer2.Width - splitContainer2.Panel2MinSize > Program.Settings.RightPaneSplitterDistance)
+         {
+            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
+         }
+      }
+
+      private void connectOnStartup()
+      {
+         // TODO Argument manipulation shall be rewritten to avoid copy/paste of option names
+         string[] arguments = Environment.GetCommandLineArgs();
+         string url = arguments.Length > 1 && arguments[1] != "-m" ? arguments[1] : String.Empty;
+         enqueueUrlConnectionRequest(url, true);
       }
 
       private void createLiveSessionAndDependencies()
@@ -494,11 +490,6 @@ namespace mrHelper.App.Forms
          _expressionResolver = new ExpressionResolver(_liveSession);
          _eventFilter = new EventFilter(Program.Settings, _liveSession, _mergeRequestFilter);
          _userNotifier = new UserNotifier(_liveSession, _eventFilter, _trayIcon);
-
-         _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
-            ? new GitDataUpdater(_liveSession, this, this, Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
-            : null;
-         _gitStatManager = new GitStatisticManager(_liveSession, this, this);
       }
 
       private void createSearchSession()
@@ -508,9 +499,6 @@ namespace mrHelper.App.Forms
 
       private void disposeLiveSessionDependencies()
       {
-         _gitDataUpdater?.Dispose();
-         _gitStatManager?.Dispose();
-
          _userNotifier?.Dispose();
          _eventFilter?.Dispose();
          _expressionResolver?.Dispose();
@@ -520,7 +508,7 @@ namespace mrHelper.App.Forms
       {
          if (_liveSession != null)
          {
-            _liveSession.Starting += liveSessionStarting;
+            _liveSession.Stopped += liveSessionStopped;
             _liveSession.Started += liveSessionStarted;
          }
       }
@@ -549,7 +537,7 @@ namespace mrHelper.App.Forms
       {
          if (_liveSession != null)
          {
-            _liveSession.Starting -= liveSessionStarting;
+            _liveSession.Stopped -= liveSessionStopped;
             _liveSession.Started -= liveSessionStarted;
          }
       }
@@ -574,13 +562,41 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private async Task finalizeCommitChainCreator()
+      private void createGitHelpers(ISession session, ILocalGitRepositoryFactory factory)
       {
-         if (_commitChainCreator != null)
+         if (session.MergeRequestCache == null
+          || session.DiscussionCache == null
+          || session.UpdateContextProviderFactory == null)
          {
-            await _commitChainCreator.CancelAsync();
+            return;
+         }
+
+         _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
+            ? new GitDataUpdater(
+               session.MergeRequestCache, session.DiscussionCache,
+               session.UpdateContextProviderFactory, this, factory,
+               Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
+            : null;
+
+         _gitStatManager = new GitStatisticManager(
+               session.MergeRequestCache, session.DiscussionCache,
+               session.UpdateContextProviderFactory, this, factory);
+         _gitStatManager.Update += onGitStatisticManagerUpdate;
+      }
+
+      private void disposeGitHelpers()
+      {
+         _gitDataUpdater?.Dispose();
+         _gitDataUpdater = null;
+
+         if (_gitStatManager != null)
+         {
+            _gitStatManager.Update -= onGitStatisticManagerUpdate;
+            _gitStatManager.Dispose();
+            _gitStatManager = null;
          }
       }
+
 
       private void onGitInitStatusChange(string status)
       {

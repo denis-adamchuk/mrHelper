@@ -5,7 +5,7 @@ namespace mrHelper.Client.Session
 {
    public interface IMergeRequestLoader
    {
-      Task<bool> LoadMergeRequest(MergeRequestKey mrk);
+      Task LoadMergeRequest(MergeRequestKey mrk);
    }
 }
 

@@ -12,7 +12,7 @@ namespace mrHelper.GitClient
    /// <summary>
    /// Provides access to git repository.
    /// </summary>
-   internal class LocalGitRepository : ILocalGitRepository
+   internal class LocalGitRepository : ILocalGitRepository, IDisposable
    {
       // @{ IGitRepository
       IGitRepositoryData IGitRepository.Data => ExpectingClone ? null : _data;
@@ -26,7 +26,7 @@ namespace mrHelper.GitClient
             return true;
          }
 
-         if (await GitTools.DoesEntityExistAtPathAsync(_operationManager, Path, sha))
+         if (!_isDisposed && await GitTools.DoesEntityExistAtPathAsync(_operationManager, Path, sha))
          {
             _cached_existingSha.Add(sha);
             return true;
@@ -42,9 +42,6 @@ namespace mrHelper.GitClient
 
       public ILocalGitRepositoryUpdater Updater => _updater;
 
-      public event Action<ILocalGitRepository> Updated;
-      public event Action<ILocalGitRepository> Disposed;
-
       public bool ExpectingClone { get; private set; } = true;
       // @} ILocalGitRepository
 
@@ -54,14 +51,18 @@ namespace mrHelper.GitClient
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal LocalGitRepository(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
+         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, Action<ILocalGitRepository> onClonedRepo)
       {
          Path = LocalGitRepositoryPathFinder.FindPath(parentFolder, projectKey);
 
-         if (useShallowClone && !GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
+         if (!GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
          {
-            throw new ArgumentException("Cannot use shallow clone if single commit fetch is not supported");
+            throw new ArgumentException("Cannot work with such repositories");
          }
+
+         LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
+            ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
+            : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches;
 
          // PathFinder must guarantee the following
          Debug.Assert(isEmptyFolder(Path)
@@ -69,19 +70,11 @@ namespace mrHelper.GitClient
                && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-
-         LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
-            ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
-            : (GitTools.IsSingleCommitFetchSupported(Path) //-V3022
-               ? LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches
-               : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithoutSingleCommitFetches);
-         ExpectingClone = isEmptyFolder(Path);
-         _updater = new LocalGitRepositoryUpdater(this, _operationManager, mode);
-         _updater.Cloned += onCloned;
-         _updater.Updated += onUpdated;
-
+         _updater = new LocalGitRepositoryUpdater(synchronizeInvoke, this, _operationManager, mode, onCloned, onFetched);
+         _onClonedRepo = onClonedRepo;
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
+         ExpectingClone = isEmptyFolder(Path);
          ProjectKey = projectKey;
          Trace.TraceInformation(String.Format(
             "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2}, "
@@ -89,22 +82,31 @@ namespace mrHelper.GitClient
             Path, ProjectKey.HostName, ProjectKey.ProjectName, ExpectingClone.ToString()));
       }
 
-      async internal Task DisposeAsync()
+      public void Dispose()
       {
          Trace.TraceInformation(String.Format("[LocalGitRepository] Disposing LocalGitRepository at path {0}", Path));
-         _data.DisableUpdates();
-         await _operationManager.CancelAll();
-         Disposed?.Invoke(this);
+
+         _data.Dispose();
+         _data = null;
+
+         _updater.Dispose();
+         _updater = null;
+
+         _operationManager.Dispose();
+
+         _isDisposed = true;
+      }
+
+      private void onFetched(string sha)
+      {
+         Debug.Assert(!_cached_existingSha.Contains(sha));
+         _cached_existingSha.Add(sha);
       }
 
       private void onCloned()
       {
          ExpectingClone = false;
-      }
-
-      private void onUpdated()
-      {
-         Updated?.Invoke(this);
+         _onClonedRepo?.Invoke(this);
       }
 
       private static bool isEmptyFolder(string path)
@@ -113,9 +115,11 @@ namespace mrHelper.GitClient
       }
 
       private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
-      private readonly LocalGitRepositoryData _data;
-      private readonly LocalGitRepositoryUpdater _updater;
-      private readonly IExternalProcessManager _operationManager;
+      private LocalGitRepositoryData _data;
+      private LocalGitRepositoryUpdater _updater;
+      private bool _isDisposed;
+      private readonly GitOperationManager _operationManager;
+      private readonly Action<ILocalGitRepository> _onClonedRepo;
    }
 }
 

@@ -48,7 +48,7 @@ namespace mrHelper.CustomActions
 
       async public Task Run()
       {
-         GitLabClient client = new GitLabClient(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
+         GitLabTaskRunner client = new GitLabTaskRunner(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
          await client.RunAsync(async (gitlab) =>
             await gitlab.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.
                Get(_callback.GetCurrentMergeRequestIId()).

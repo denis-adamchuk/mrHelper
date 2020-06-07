@@ -8,10 +8,10 @@ using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Session
 {
-   public interface ISession
+   public interface ISession : IDisposable
    {
-      Task<bool> Start(string hostname, SessionContext context);
-      Task Stop();
+      Task Start(string hostname, SessionContext context);
+      void Stop();
 
       IMergeRequestCache MergeRequestCache { get; }
       IDiscussionCache DiscussionCache { get; }
@@ -22,7 +22,7 @@ namespace mrHelper.Client.Session
       IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId);
       IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk);
 
-      event Action<string> Starting;
+      event Action Stopped;
       event Action<string, User> Started;
    }
 }

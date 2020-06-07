@@ -9,15 +9,7 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Common.Tools
 {
-   public class CancellAllInProgressException : Exception
-   {
-      public CancellAllInProgressException()
-         : base(String.Format("Cannot add a new operation while CancelAll() is in progress"))
-      {
-      }
-   }
-
-   public class ExternalProcessManager : IExternalProcessManager
+   public class ExternalProcessManager : IExternalProcessManager, IDisposable
    {
       public ExternalProcessManager(ISynchronizeInvoke synchronizeInvoke)
       {
@@ -31,16 +23,18 @@ namespace mrHelper.Common.Tools
          return ExternalProcess.StartAsync(name, arguments, path, onProgressChange, _synchronizeInvoke);
       }
 
+      public void Dispose()
+      {
+         Trace.TraceInformation(String.Format("[ExternalProcessManager] Number of operations to cancel: {0}",
+            _descriptors.Count));
+         _descriptors.ForEach(x => cancelOperation(x));
+      }
+
       /// <summary>
-      /// Throws ExternalProcessFailureException and CancellAllInProgressException
+      /// Throws ExternalProcessFailureException
       /// </summary>
       async public Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
-         if (_isCancellingAll)
-         {
-            throw new CancellAllInProgressException();
-         }
-
          _descriptors.Add(descriptor);
          try
          {
@@ -53,41 +47,9 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      /// <summary>
-      /// Throws ExternalProcessFailureException and CancellAllInProgressException
-      /// </summary>
-      async public Task Join(ExternalProcess.AsyncTaskDescriptor descriptor, Action<string> onProgressChange)
-      {
-         descriptor.OnProgressChange = onProgressChange;
-         await descriptor.Task;
-      }
-
-      async public Task Cancel(ExternalProcess.AsyncTaskDescriptor descriptor)
+      public void Cancel(ExternalProcess.AsyncTaskDescriptor descriptor)
       {
          cancelOperation(descriptor);
-         while (_descriptors.Contains(descriptor))
-         {
-            await Task.Delay(50);
-         }
-      }
-
-      async public Task CancelAll()
-      {
-         _isCancellingAll = true;
-         await cancelRepositoryOperationsAsync();
-         _isCancellingAll = false;
-      }
-
-      async private Task cancelRepositoryOperationsAsync()
-      {
-         Trace.TraceInformation(String.Format("[ExternalProcessManager] Number of operations to cancel: {0}",
-            _descriptors.Count));
-
-         _descriptors.ForEach(x => cancelOperation(x));
-         while (_descriptors.Count > 0)
-         {
-            await Task.Delay(50);
-         }
       }
 
       private void cancelOperation(ExternalProcess.AsyncTaskDescriptor descriptor)
@@ -108,7 +70,6 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      private bool _isCancellingAll;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly List<ExternalProcess.AsyncTaskDescriptor> _descriptors =
          new List<ExternalProcess.AsyncTaskDescriptor>();

@@ -64,8 +64,7 @@ namespace mrHelper.App.Helpers
          foreach (KeyValuePair<string, Color> color in _colors)
          {
             string resolvedKey = _expressionResolver.Resolve(color.Key);
-            KeyValuePair<string, Color> keyValuePair =
-               new KeyValuePair<string, Color>(resolvedKey, color.Value);
+            KeyValuePair<string, Color> keyValuePair = new KeyValuePair<string, Color>(resolvedKey, color.Value);
             yield return keyValuePair;
          }
       }

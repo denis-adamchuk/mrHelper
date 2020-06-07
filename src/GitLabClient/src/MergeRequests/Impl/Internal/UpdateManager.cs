@@ -7,6 +7,7 @@ using mrHelper.Client.Common;
 using mrHelper.Client.Types;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Session;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -20,7 +21,7 @@ namespace mrHelper.Client.MergeRequests
       {
          SessionOperator updateOperator = new SessionOperator(hostname, clientContext.HostProperties);
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            updateOperator, context, cacheUpdater);
+            hostname, updateOperator, context, cacheUpdater);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
 
          _cache = cacheUpdater.Cache;
@@ -107,6 +108,7 @@ namespace mrHelper.Client.MergeRequests
       {
          if (_updating)
          {
+            await TaskUtils.WhileAsync(() => _updating);
             return null;
          }
 
@@ -117,7 +119,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = true;
             await _mergeRequestLoader.LoadMergeRequest(mrk);
          }
-         catch (SessionException ex)
+         catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
             return null;
@@ -144,6 +146,7 @@ namespace mrHelper.Client.MergeRequests
       {
          if (_updating)
          {
+            await TaskUtils.WhileAsync(() => _updating);
             return null;
          }
 
@@ -154,7 +157,7 @@ namespace mrHelper.Client.MergeRequests
             _updating = true;
             await _mergeRequestListLoader.Load();
          }
-         catch (SessionException ex)
+         catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot update merge requests on timer", ex);
          }

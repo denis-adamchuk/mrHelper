@@ -17,52 +17,61 @@ namespace mrHelper.Client.Session
          _clientContext = clientContext;
       }
 
-      public event Action<string> Starting;
+      public event Action Stopped;
       public event Action<string, User> Started;
 
-      async public Task<bool> Start(string hostname, SessionContext context)
+      async public Task Start(string hostname, SessionContext context)
       {
-         await Stop();
+         stop();
 
          _operator = new SessionOperator(hostname, _clientContext.HostProperties);
 
-         User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
-         if (currentUser == null)
+         try
          {
-            return false;
-         }
+            InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
+            IMergeRequestListLoader mergeRequestListLoader =
+               MergeRequestListLoaderFactory.CreateMergeRequestListLoader(hostname, _operator, context, cacheUpdater);
 
-         InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-         IMergeRequestListLoader mergeRequestListLoader =
-            MergeRequestListLoaderFactory.CreateMergeRequestListLoader(_operator, context, cacheUpdater);
+            Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
 
-         Trace.TraceInformation(String.Format("[Session] Starting new session at {0}", hostname));
-         Starting?.Invoke(hostname);
-
-         if (await mergeRequestListLoader.Load())
-         {
+            User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
+            await mergeRequestListLoader.Load();
             _internal = createSessionInternal(cacheUpdater, hostname, currentUser, context);
 
             Trace.TraceInformation(String.Format("[Session] Started new session at {0}", hostname));
             Started?.Invoke(hostname, currentUser);
-            return true;
          }
-
-         return false;
+         catch (BaseLoaderException ex)
+         {
+            if (ex is BaseLoaderCancelledException)
+            {
+               throw new SessionStartCancelledException();
+            }
+            throw new SessionException(ex.OriginalMessage, ex);
+         }
       }
 
-      async public Task Stop()
+      public void Stop()
       {
-         if (_operator != null)
-         {
-            Trace.TraceInformation("[Session] Canceling operations");
+         stop();
+      }
 
-            await _operator.CancelAsync();
-            _operator = null;
-         }
+      public void Dispose()
+      {
+         stop();
+      }
+
+      private void stop()
+      {
+         Trace.TraceInformation("[Session] Canceling operations");
+
+         _operator?.Dispose();
+         _operator = null;
 
          _internal?.Dispose();
          _internal = null;
+
+         Stopped?.Invoke();
       }
 
       public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>
@@ -89,9 +98,9 @@ namespace mrHelper.Client.Session
          MergeRequestManager mergeRequestManager =
             new MergeRequestManager(_clientContext, cacheUpdater, hostname, context);
          DiscussionManager discussionManager =
-            new DiscussionManager(_clientContext, user, mergeRequestManager, context);
+            new DiscussionManager(_clientContext, hostname, user, mergeRequestManager, context);
          TimeTrackingManager timeTrackingManager =
-            new TimeTrackingManager(_clientContext, user, discussionManager);
+            new TimeTrackingManager(_clientContext, hostname, user, discussionManager);
          return new SessionInternal(mergeRequestManager, discussionManager, timeTrackingManager);
       }
 

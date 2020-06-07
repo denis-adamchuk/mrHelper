@@ -30,8 +30,11 @@ class CommandLineArgs:
       configHelp = 'Configuration filename with path'
       parser.add_argument('-c', '--config', dest='config', nargs=1, help=configHelp)
 
-      deployHelp = 'Deploy MSI to a shared location'
+      deployHelp = 'Deploy MSI/MSIX to a shared location'
       parser.add_argument('-d', '--deploy', action='store_true', help=deployHelp)
+
+      msixHelp = 'Build (and deploy) MSIX'
+      parser.add_argument('-x', '--msix', action='store_true', help=msixHelp)
 
       self.args = parser.parse_known_args(argv)[0]
 
@@ -58,6 +61,9 @@ class CommandLineArgs:
 
    def deploy(self):
       return self.args.deploy
+
+   def msix(self):
+      return self.args.msix
 
    def _validateVersion(self, version):
       version_rex = re.compile(r'^(?:[0-9]+\.){3}[0-9]+$')
@@ -295,10 +301,11 @@ class DeployHelper:
       if not os.path.exists(deploy_path) or not os.path.isdir(deploy_path):
          raise self.Exception(f'Bad path for deployment "{deploy_path}"')
 
-   def deploy(self, version, installer_filepath, msix_installer_filepath):
-      dest_msi_filepath = self._copy_to_remote(version, installer_filepath)
-      dest_msix_filepath = self._copy_to_remote(version, msix_installer_filepath)
-      self._update_version_information_at_remote(version, dest_msi_filepath, dest_msix_filepath);
+   def deploy(self, version, installer_filepath):
+      return self._copy_to_remote(version, installer_filepath)
+
+   def update_version_information(version, json):
+      self._update_version_information_at_remote(version, json)
 
    def _copy_to_remote(self, version, installer_filepath):
       if not os.path.exists(installer_filepath) or not os.path.isfile(installer_filepath):
@@ -326,17 +333,12 @@ class DeployHelper:
       shutil.copyfile(installer_filepath, dest_installer_filepath)
       return dest_installer_filepath
 
-   def _update_version_information_at_remote(self, version, dest_msi_filepath, dest_msix_filepath):
+   def _update_version_information_at_remote(self, version, json):
       with open(config.latest_version_filename(), 'w') as latestVersion:
-         latestVersion.write(self._get_json(args.version(), dest_msi_filepath, dest_msix_filepath))
+         latestVersion.write(json)
       dest_latest_version_filename = os.path.join(self.deploy_path, config.latest_version_filename())
       shutil.copyfile(config.latest_version_filename(), dest_latest_version_filename)
       os.remove(config.latest_version_filename())
-
-   def _get_json(self, version, msi_filepath, msix_filepath):
-      msi_path = msi_filepath.replace("\\", "/")
-      msix_path = msix_filepath.replace("\\", "/")
-      return f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{msi_path}", "XInstallerFilePath": "{msix_path}" }}'
 
 
 def get_status_message(succeeded, step_name, version_incremented, build_created, pushed, deploy):
@@ -367,12 +369,19 @@ try:
    msix_filename = config.msix_target_name_template().replace("{Version}", args.version())
 
    builder.build(config.build_script(), os.path.join(config.bin(), msi_filename))
-   builder.build(config.msix_build_script(),\
-       os.path.join(config.msix_bin(), msix_filename) + " " + config.msix_manifest())
+   if args.msix():
+      builder.build(config.msix_build_script(),\
+          os.path.join(config.msix_bin(), msix_filename) + " " + config.msix_manifest())
 
    if args.deploy():
       deployer = DeployHelper(config.deploy_path())
-      deployer.deploy(args.version(), msi_filename, msix_filename)
+      dest_msi = deployer.deploy(args.version(), msi_filename).replace("\\", "/")
+      if args.msix():
+         dest_msix = deployer.deploy(args.version(), msix_filename).replace("\\", "/") if args.msix() else ""
+         json = f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{dest_msi}", "XInstallerFilePath": "{dest_msix}" }}'
+      else:
+         json = f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{dest_msi}" }}'
+      deployer.update_version_information(args.version(), json)
 
    if args.push():
       repository = RepositoryHelper(config.repository())

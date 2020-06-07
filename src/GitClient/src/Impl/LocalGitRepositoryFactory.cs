@@ -1,10 +1,8 @@
 using System;
-using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 
@@ -13,7 +11,7 @@ namespace mrHelper.GitClient
    ///<summary>
    /// Creates LocalGitRepository objects.
    ///<summary>
-   public class LocalGitRepositoryFactory : ILocalGitRepositoryFactory
+   public class LocalGitRepositoryFactory : ILocalGitRepositoryFactory, IDisposable
    {
       public string ParentFolder { get; }
 
@@ -43,6 +41,11 @@ namespace mrHelper.GitClient
       /// </summary>
       public ILocalGitRepository GetRepository(ProjectKey key)
       {
+         if (_isDisposed)
+         {
+            return null;
+         }
+
          if (_repos.TryGetValue(key, out LocalGitRepository cachedRepository))
          {
             return cachedRepository;
@@ -51,7 +54,8 @@ namespace mrHelper.GitClient
          LocalGitRepository repo;
          try
          {
-            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone);
+            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone,
+               (r) => RepositoryCloned?.Invoke(r));
          }
          catch (ArgumentException ex)
          {
@@ -62,15 +66,18 @@ namespace mrHelper.GitClient
          return repo;
       }
 
-      async public Task DisposeAsync()
+      public event Action<ILocalGitRepository> RepositoryCloned;
+
+      public void Dispose()
       {
          Trace.TraceInformation(String.Format(
             "[LocalGitRepositoryFactory] Disposing LocalGitRepositoryFactory for parentFolder {0}", ParentFolder));
-
-         // It is safer to clean-up a copy asynchronously
-         Dictionary<ProjectKey, LocalGitRepository> repos = _repos.ToDictionary(x => x.Key, x => x.Value);
+         foreach (LocalGitRepository repo in _repos.Values)
+         {
+            repo.Dispose();
+         }
          _repos.Clear();
-         await Task.WhenAll(repos.Values.Select(x => x.DisposeAsync()).ToArray());
+         _isDisposed = true;
       }
 
       private readonly Dictionary<ProjectKey, LocalGitRepository> _repos =
@@ -78,6 +85,7 @@ namespace mrHelper.GitClient
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
       private readonly bool _useShallowClone;
+      private bool _isDisposed;
    }
 }
 

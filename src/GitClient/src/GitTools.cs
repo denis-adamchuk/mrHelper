@@ -12,6 +12,52 @@ namespace mrHelper.GitClient
 {
    public static class GitTools
    {
+      public enum EConfigScope
+      {
+         Local,
+         Global,
+         System
+      }
+
+
+      public static IEnumerable<string> GetConfigKeyValue(EConfigScope scope, string key, string path)
+      {
+         try
+         {
+            string scopeString = scope.ToString().ToLower();
+            string config = String.Format("config --{0} {1}", scopeString, key);
+            ExternalProcess.Result result = ExternalProcess.Start("git", config, true, path);
+            return result.StdOut;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return Array.Empty<string>();
+            }
+            throw;
+         }
+      }
+
+      public static void SetConfigKeyValue(EConfigScope scope, string key, string value, string path)
+      {
+         try
+         {
+            string mode = value == null ? "unset" : "";
+            string scopeString = scope.ToString().ToLower();
+            string config = String.Format("config --{0} --{1} {2} {3}", scopeString, mode, key, value ?? "");
+            ExternalProcess.Start("git", config, true, path);
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return;
+            }
+            throw;
+         }
+      }
+
       public class SSLVerificationDisableException : ExceptionEx
       {
          internal SSLVerificationDisableException(Exception innerException)
@@ -153,6 +199,11 @@ namespace mrHelper.GitClient
          {
             ExternalProcess.AsyncTaskDescriptor descriptor =
                operationManager.CreateDescriptor("git", arguments, path, null);
+            if (descriptor == null)
+            {
+               return false;
+            }
+
             await operationManager.Wait(descriptor);
             return descriptor.StdErr.Count() == 0;
          }

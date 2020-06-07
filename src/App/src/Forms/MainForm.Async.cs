@@ -38,70 +38,7 @@ namespace mrHelper.App.Forms
          if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            session.DiscussionCache.RequestUpdate(
-               mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
-         }
-
-         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
-         if (repo != null)
-         {
-            enableControlsOnGitAsyncOperation(false, "updating git repository");
-            try
-            {
-               // Using remote-based provider as there are might be discussions from other users on newer commits
-               IProjectUpdateContextProvider contextProvider =
-                  session.MergeRequestCache?.GetRemoteBasedContextProvider(mrk);
-               await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
-            }
-            catch (Exception ex)
-            {
-               if (ex is InteractiveUpdateSSLFixedException)
-               {
-                  // SSL check is disabled, let's try to update in the background
-                  scheduleSilentUpdate(mrk.ProjectKey);
-                  return;
-               }
-               else if (ex is InteractiveUpdateCancelledException)
-               {
-                  if (MessageBox.Show("Without up-to-date git repository, some context code snippets might be missing. "
-                     + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
-                        DialogResult.No)
-                  {
-                     Trace.TraceInformation(
-                        "[MainForm] User rejected to show discussions without up-to-date git repository");
-                     return;
-                  }
-                  else
-                  {
-                     Trace.TraceInformation(
-                        "[MainForm] User agreed to show discussions without up-to-date git repository");
-                     repo = null;
-                  }
-               }
-               else
-               {
-                  Debug.Assert(ex is InteractiveUpdateFailed);
-                  MessageBox.Show("Cannot initialize git repository",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return;
-               }
-            }
-            finally
-            {
-               enableControlsOnGitAsyncOperation(true, "updating git repository");
-            }
-         }
-         else
-         {
-            if (MessageBox.Show("Without git repository, context code snippets will be missing. "
-               + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
-                  DialogResult.No)
-            {
-               Trace.TraceInformation("[MainForm] User rejected to show discussions without git repository");
-               return;
-            }
-
-            Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
+            session.DiscussionCache.RequestUpdate(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(session, mrk);
@@ -110,24 +47,67 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         IEnumerable<string> headShaFromDiscussions =
-               discussions
-               .Where(x => x.Notes != null && x.Notes.Any() && x.Notes.First().Type == "DiffNote")
-               .Select(x => x.Notes.First().Position.Head_SHA).Distinct();
-
-         if (repo != null
-          && headShaFromDiscussions.Any()
-          && !await fetchMissingCommits(repo, headShaFromDiscussions))
-         {
-            labelWorkflowStatus.Text = "Could not open Discussions";
-            return;
-         }
-
-         if (_exiting)
+         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
+         if (!await prepareRepositoryForDiscussionsForm(repo, mrk, discussions) || _exiting)
          {
             return;
          }
+         showDiscussionForm(session, repo, currentUser, mrk, discussions, title, author);
+      }
 
+      async private Task<bool> prepareRepositoryForDiscussionsForm(ILocalGitRepository repo,
+         MergeRequestKey mrk, IEnumerable<Discussion> discussions)
+      {
+         if (repo == null)
+         {
+            if (MessageBox.Show("Without git repository, context code snippets will be missing. "
+               + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
+                  DialogResult.No)
+            {
+               Trace.TraceInformation("[MainForm] User rejected to show discussions without git repository");
+               return false;
+            }
+            else
+            {
+               Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
+               return true;
+            }
+         }
+
+         try
+         {
+            IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
+            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+               () => updateGitAbortState(false));
+            return true;
+         }
+         catch (Exception ex)
+         {
+            if (ex is InteractiveUpdateSSLFixedException)
+            {
+               // SSL check is disabled
+            }
+            else if (ex is InteractiveUpdateCancelledException)
+            {
+               MessageBox.Show("Cannot show Discussions without up-to-date git repository", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else if (ex is InteractiveUpdateFailed inex)
+            {
+               ExceptionHandlers.Handle(ex.Message, ex);
+               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
+            return false;
+         }
+      }
+
+      private void showDiscussionForm(ISession session, ILocalGitRepository repo,
+         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
+      {
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
          labelWorkflowStatus.Refresh();
 
@@ -137,18 +117,15 @@ namespace mrHelper.App.Forms
             DiscussionsForm discussionsForm = new DiscussionsForm(session, repo,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               async (key) =>
+               async (key, discussions2) =>
             {
                try
                {
-                  ILocalGitRepository updatingRepo = getRepository(key.ProjectKey, true);
-                  if (updatingRepo != null && !updatingRepo.ExpectingClone)
+                  if (repo != null && !repo.ExpectingClone && repo.Updater != null)
                   {
-                     // Using remote-based provider as there are might be discussions from other users on newer commits
-                     IProjectUpdateContextProvider contextProvider =
-                        session?.MergeRequestCache?.GetRemoteBasedContextProvider(key);
-                     await updatingRepo.Updater.SilentUpdate(contextProvider);
-                     return updatingRepo;
+                     IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
+                     await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+                        () => updateGitAbortState(false));
                   }
                   else
                   {
@@ -161,7 +138,6 @@ namespace mrHelper.App.Forms
                {
                   ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
                }
-               return null;
             },
             () => session?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
@@ -169,8 +145,7 @@ namespace mrHelper.App.Forms
          }
          catch (NoDiscussionsToShow)
          {
-            MessageBox.Show("No discussions to show.", "Information",
-               MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("No discussions to show.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             labelWorkflowStatus.Text = "No discussions to show";
             return;
          }
@@ -222,61 +197,25 @@ namespace mrHelper.App.Forms
          }
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
-         if (repo != null)
+         if (!await prepareRepositoryForDiffTool(repo, leftSHA, rightSHA) || _exiting)
          {
-            enableControlsOnGitAsyncOperation(false, "updating git repository");
-            try
-            {
-               // Using local-based provider because it does not make a GitLab request and it is quite enough here
-               // because user may select only those commits that already loaded and cached and have timestamps less
-               // than latest merge request version (this is possible for Open MR only)
-               IProjectUpdateContextProvider contextProvider =
-                  session.MergeRequestCache?.GetLocalBasedContextProvider(mrk.ProjectKey);
-               await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText);
-            }
-            catch (Exception ex)
-            {
-               if (ex is InteractiveUpdateCancelledException)
-               {
-                  // User declined to create a repository
-                  MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               }
-               else if (ex is InteractiveUpdateFailed)
-               {
-                  string errorMessage = "Cannot initialize git repository";
-                  ExceptionHandlers.Handle(errorMessage, ex);
-                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               }
-               else if (ex is InteractiveUpdateSSLFixedException)
-               {
-                  // SSL check is disabled, let's try to update in the background
-                  scheduleSilentUpdate(mrk.ProjectKey);
-               }
-               else
-               {
-                  Debug.Assert(false);
-               }
-               return;
-            }
-            finally
-            {
-               enableControlsOnGitAsyncOperation(true, "updating git repository");
-            }
-         }
-         else
-         {
-            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository. Check git folder in Settings",
-               "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
          }
 
-         if (!await fetchMissingCommits(repo, new string[] { leftSHA, rightSHA }))
-         {
-            labelWorkflowStatus.Text = "Could not launch diff tool";
-            return;
-         }
+         launchDiffTool(leftSHA, rightSHA, ref repo, session);
 
+         if (!_reviewedCommits.ContainsKey(mrk))
+         {
+            _reviewedCommits[mrk] = new HashSet<string>();
+         }
+         includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
+
+         comboBoxLatestCommit.Refresh();
+         comboBoxEarliestCommit.Refresh();
+      }
+
+      private void launchDiffTool(string leftSHA, string rightSHA, ref ILocalGitRepository repo, ISession session)
+      {
          labelWorkflowStatus.Text = "Launching diff tool...";
 
          int pid;
@@ -299,11 +238,6 @@ namespace mrHelper.App.Forms
             throw;
          }
 
-         if (_exiting)
-         {
-            return;
-         }
-
          Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
             leftSHA, rightSHA, repo.Path, pid.ToString()));
 
@@ -316,15 +250,48 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = "Diff tool launched";
             saveInterprocessSnapshot(pid, leftSHA, rightSHA, session);
          }
+      }
 
-         if (!_reviewedCommits.ContainsKey(mrk))
+      async private Task<bool> prepareRepositoryForDiffTool(ILocalGitRepository repo, string leftSHA, string rightSHA)
+      {
+         if (repo == null)
          {
-            _reviewedCommits[mrk] = new HashSet<string>();
+            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository. Check git folder in Settings",
+               "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
          }
-         includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
 
-         comboBoxLatestCommit.Refresh();
-         comboBoxEarliestCommit.Refresh();
+         try
+         {
+            IProjectUpdateContextProvider contextProvider =
+               new CommitBasedContextProvider(new string[] { leftSHA, rightSHA });
+            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+               () => updateGitAbortState(false));
+            return true;
+         }
+         catch (Exception ex)
+         {
+            if (ex is InteractiveUpdateSSLFixedException)
+            {
+               // SSL check is disabled
+            }
+            else if (ex is InteractiveUpdateCancelledException)
+            {
+               // User declined to create a repository
+               MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else if (ex is InteractiveUpdateFailed inex)
+            {
+               ExceptionHandlers.Handle(ex.Message, ex);
+               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
+            return false;
+         }
       }
 
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
@@ -425,11 +392,16 @@ namespace mrHelper.App.Forms
 
       async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
       {
+         if (session?.DiscussionCache == null)
+         {
+            return null;
+         }
+
          labelWorkflowStatus.Text = "Loading discussions...";
-         IEnumerable<Discussion> discussions;
+         IEnumerable<Discussion> discussions = null;
          try
          {
-            discussions = await session?.DiscussionCache?.LoadDiscussions(mrk);
+            discussions = await session.DiscussionCache.LoadDiscussions(mrk);
          }
          catch (DiscussionCacheException ex)
          {
@@ -443,50 +415,28 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      async private Task performSilentUpdate(ProjectKey projectKey)
+      private void requestRepositoryUpdate(ProjectKey projectKey)
       {
-         ILocalGitRepository repo = getRepository(projectKey, false);
-         if (repo != null && !repo.ExpectingClone)
-         {
-            ISession session = getSession(true /* supported in Live only */);
+         ISession session = getSession(true /* supported in Live only */);
 
-            // Use local-based provider here because remote-based one looks an overkill.
-            // We anyway update discussion remote on attempt to show Discussions view but it might be unneeded right now
-            IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
-               GetLocalBasedContextProvider(projectKey);
-            if (contextProvider != null)
-            {
-               // contextProvider can be null if session was dropped after this update was scheduled
-               await repo.Updater.SilentUpdate(contextProvider);
-            }
+         IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
+            GetLocalBasedContextProvider(projectKey);
+         if (contextProvider != null)
+         {
+            // contextProvider can be null if session was dropped after this update was scheduled
+            ILocalGitRepository repo = getRepository(projectKey, false);
+            repo?.Updater?.RequestUpdate(contextProvider, null);
          }
       }
 
-      private void scheduleSilentUpdate(ProjectKey pk)
+      async private Task checkForUpdatesAsync()
       {
-         BeginInvoke(new Action(async () => await performSilentUpdate(pk)));
-      }
+         bool updateReceived = false;
 
-      async private Task<bool> fetchMissingCommits(ILocalGitRepository repo, IEnumerable<string> heads)
-      {
-         _commitChainCreator = new CommitChainCreator(Program.Settings,
-            status => labelWorkflowStatus.Text = status, updateGitStatusText,
-            onCommitChainCancelEnabled, this, repo, heads, GitTools.IsSingleCommitFetchSupported(repo.Path),
-            _gitlabClientManager.RepositoryManager);
-         return await fetchMissingCommits();
-      }
-
-      async private Task<bool> fetchMissingCommits()
-      {
-         enableControlsOnGitAsyncOperation(false, "restoring merged commits");
-         try
-         {
-            return await _commitChainCreator.CreateChainAsync();
-         }
-         finally
-         {
-            enableControlsOnGitAsyncOperation(true, "restoring merged commits");
-         }
+         string oldButtonText = buttonReloadList.Text;
+         onUpdating();
+         requestUpdates(null, new int[] { 1 }, () => { updateReceived = true; onUpdated(oldButtonText); });
+         await TaskUtils.WhileAsync(() => !updateReceived);
       }
    }
 }

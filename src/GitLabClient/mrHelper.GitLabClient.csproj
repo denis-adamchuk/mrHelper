@@ -66,6 +66,7 @@
     <Compile Include="src\Common\GitLabClientContext.cs" />
     <Compile Include="src\Common\UpdateTokenItf.cs" />
     <Compile Include="src\Session\Impl\Internal\CurrentUserLoader.cs" />
+    <Compile Include="src\Session\SessionException.cs" />
     <Compile Include="src\TimeTracking\TimeTrackerItf.cs" />
     <Compile Include="src\TimeTracking\TotalTimeLoaderItf.cs" />
     <Compile Include="src\Session\Impl\Internal\Session.cs" />
@@ -94,7 +95,6 @@
     <Compile Include="src\MergeRequests\Impl\Internal\InternalCacheUpdater.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\InternalCacheComparator.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\LocalBasedContextProvider.cs" />
-    <Compile Include="src\MergeRequests\Impl\Internal\RemoteBasedContextProvider.cs" />
     <Compile Include="src\Session\Impl\Internal\MergeRequestListLoaderFactory.cs" />
     <Compile Include="src\Session\Impl\Internal\SessionInternal.cs" />
     <Compile Include="src\Session\Impl\Internal\SearchBasedMergeRequestLoader.cs" />

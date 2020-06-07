@@ -20,8 +20,7 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm :
       CustomFontForm,
-      ICommandCallback,
-      ILocalGitRepositoryFactoryAccessor
+      ICommandCallback
    {
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -30,14 +29,17 @@ namespace mrHelper.App.Forms
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
-      internal MainForm()
+      internal MainForm(bool startMinimized)
       {
+         _startMinimized = startMinimized;
+
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          _runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
          Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}", _runningAsUwp ? "Yes" : "No"));
+         checkBoxRunWhenWindowsStarts.Enabled = !_runningAsUwp;
 
          _trayIcon = new TrayIcon(notifyIcon);
          _mergeRequestDescriptionMarkdownPipeline = MarkDownUtils.CreatePipeline();
@@ -80,16 +82,14 @@ namespace mrHelper.App.Forms
          return getMergeRequestKey(null)?.IId ?? 0;
       }
 
-      public ILocalGitRepositoryFactory GetFactory()
-      {
-         return getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
-      }
-
       private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
       {
          Interval = timeTrackingTimerInterval
       };
 
+      bool _startMinimized;
+      bool _forceMaximizeOnNextRestore;
+      FormWindowState _prevWindowState;
       private bool _loadingConfiguration = false;
       private bool _exiting = false;
       private bool _requireShowingTooltipOnHideToTray = true;
@@ -98,7 +98,6 @@ namespace mrHelper.App.Forms
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
       private bool _canSwitchTab = true;
-      private bool _notifyOnCommitChainCancelEnabled;
       private readonly bool _runningAsUwp = false;
 
       private LocalGitRepositoryFactory _gitClientFactory;
@@ -108,7 +107,6 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
-      private CommitChainCreator _commitChainCreator;
 
       private string _initialHostName = String.Empty;
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =

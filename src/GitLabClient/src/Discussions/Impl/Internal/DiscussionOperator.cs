@@ -1,8 +1,6 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using GitLabSharp;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
@@ -16,16 +14,16 @@ namespace mrHelper.Client.Discussions
    /// </summary>
    internal class DiscussionOperator : BaseOperator
    {
-      internal DiscussionOperator(IHostProperties settings)
-         : base(settings)
+      internal DiscussionOperator(string hostname, IHostProperties settings)
+         : base(hostname, settings)
       {
       }
 
       internal Task<Note> GetMostRecentUpdatedNoteAsync(MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                   ((IEnumerable<Note>)(await client.RunAsync(
                      async (gl) =>
@@ -36,9 +34,9 @@ namespace mrHelper.Client.Discussions
 
       internal Task<int> GetNoteCount(MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (int)(await client.RunAsync(
                         async (gl) =>
@@ -48,9 +46,9 @@ namespace mrHelper.Client.Discussions
 
       internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (IEnumerable<Discussion>)(await client.RunAsync(
                         async (gl) =>
@@ -60,9 +58,9 @@ namespace mrHelper.Client.Discussions
 
       internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (Discussion)(await client.RunAsync(
                         async (gitlab) =>
@@ -72,9 +70,9 @@ namespace mrHelper.Client.Discussions
 
       internal Task ReplyAsync(MergeRequestKey mrk, string discussionId, string body)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -83,12 +81,30 @@ namespace mrHelper.Client.Discussions
                                  new CreateNewNoteParameters(body)))));
       }
 
+      internal Task ReplyAndResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, string body, bool resolve)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     await client.RunAsync(
+                        async (gl) =>
+                        {
+                           SingleProjectAccessor projectAccessor = gl.Projects.Get(mrk.ProjectKey.ProjectName);
+                           SingleMergeRequestAccessor mrAccessor = projectAccessor.MergeRequests.Get(mrk.IId);
+                           SingleDiscussionAccessor accessor = mrAccessor.Discussions.Get(discussionId);
+                           await accessor.CreateNewNoteTaskAsync(new CreateNewNoteParameters(body));
+                           await accessor.ResolveTaskAsync(new ResolveThreadParameters(resolve));
+                           return true;
+                        })));
+      }
+
       internal Task<DiscussionNote> ModifyNoteBodyAsync(MergeRequestKey mrk,
          string discussionId, int noteId, string body)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (DiscussionNote)await client.RunAsync(
                         async (gl) =>
@@ -100,9 +116,9 @@ namespace mrHelper.Client.Discussions
 
       internal Task DeleteNoteAsync(MergeRequestKey mrk, int noteId)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -110,38 +126,38 @@ namespace mrHelper.Client.Discussions
                               Notes.Get(noteId).DeleteTaskAsync())));
       }
 
-      internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolved)
+      internal Task ResolveNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, bool resolve)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                               Discussions.Get(discussionId).ModifyNoteTaskAsync(noteId,
                                  new ModifyDiscussionNoteParameters(
-                                    ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolved)))));
+                                    ModifyDiscussionNoteParameters.ModificationType.Resolved, null, resolve)))));
       }
 
-      internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolved)
+      internal Task<Discussion> ResolveDiscussionAsync(MergeRequestKey mrk, string discussionId, bool resolve)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      (Discussion)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                               Discussions.Get(discussionId).ResolveTaskAsync(
-                                 new ResolveThreadParameters(resolved)))));
+                                 new ResolveThreadParameters(resolve)))));
       }
 
       internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
@@ -151,9 +167,9 @@ namespace mrHelper.Client.Discussions
 
       internal Task CreateNoteAsync(MergeRequestKey mrk, CreateNewNoteParameters parameters)
       {
-         return callWithNewClient(mrk.ProjectKey.HostName,
+         return callWithSharedClient(
             async (client) =>
-               await OperatorCallWrapper.CallNoCancel(
+               await OperatorCallWrapper.Call(
                   async () =>
                      await client.RunAsync(
                         async (gl) =>

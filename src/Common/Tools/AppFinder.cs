@@ -52,13 +52,13 @@ namespace mrHelper.Common.Tools
 
       static private AppInfo findApplication(RegistryHive hive, RegistryView view, string[] applicationNames)
       {
-         var hklm = RegistryKey.OpenBaseKey(hive, view);
-         var uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-         foreach (var productSubKey in uninstall.GetSubKeyNames())
+         RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
+         RegistryKey uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+         foreach (string productSubKey in uninstall.GetSubKeyNames())
          {
-            var product = uninstall.OpenSubKey(productSubKey);
-            var displayName = product.GetValue("DisplayName");
-            foreach (var appName in applicationNames)
+            RegistryKey product = uninstall.OpenSubKey(productSubKey);
+            object displayName = product.GetValue("DisplayName");
+            foreach (string appName in applicationNames)
             {
                if (displayName != null && displayName.ToString().Contains(appName))
                {

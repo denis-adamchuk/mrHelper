@@ -509,31 +509,22 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void enableControlsOnGitAsyncOperation(bool enabled, string operation)
+      private void updateGitAbortState(bool resetStatusText)
       {
-         linkLabelAbortGit.Visible = !enabled;
-         linkLabelAbortGit.Tag = operation;
+         ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
+         ILocalGitRepository repo = projectKey.HasValue ? getRepository(projectKey.Value, false) : null;
 
-         foreach (Control control in tabPageSettings.Controls) control.Enabled = enabled;
+         bool enabled = repo?.Updater?.CanBeStopped() ?? false;
+         linkLabelAbortGit.Visible = enabled;
+         labelGitStatus.Visible = enabled;
 
-         buttonDiffTool.Enabled = enabled;
-         buttonDiscussions.Enabled = enabled;
-         listViewMergeRequests.Enabled = enabled;
-         listViewFoundMergeRequests.Enabled = enabled;
-         enableMergeRequestFilterControls(enabled);
-         enableMergeRequestSearchControls(enabled);
-
-         checkBoxShowVersions.Enabled = enabled;
-         if (buttonReloadList.Text != "Updating...") // sorry
+         if (resetStatusText)
          {
-            buttonReloadList.Enabled = enabled;
-         }
-         _suppressExternalConnections = !enabled;
-         _canSwitchTab = enabled;
-
-         if (enabled)
-         {
-            updateGitStatusText(String.Empty);
+            string projectname = projectKey?.ProjectName ?? String.Empty;
+            if (!String.IsNullOrWhiteSpace(projectname))
+            {
+               labelGitStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
+            }
          }
       }
 
@@ -695,15 +686,10 @@ namespace mrHelper.App.Forms
          return "N/A";
       }
 
-      private string getSize(FullMergeRequestKey? fmk)
+      private string getSize(MergeRequestKey mrk)
       {
-         if (!fmk.HasValue)
-         {
-            return String.Empty;
-         }
-
          GitStatisticManager.DiffStatistic? diffStatistic =
-            _gitStatManager.GetStatistic(fmk.Value, out string errMsg);
+            _gitStatManager.GetStatistic(mrk, out string errMsg);
          return diffStatistic?.ToString() ?? errMsg;
       }
 
@@ -863,19 +849,19 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            labelGitStatus.Visible = true;
             labelGitStatus.Text = text;
          }
       }
 
-      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory(string localFolder)
+      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory()
       {
          if (_gitClientFactory == null)
          {
             try
             {
                _gitClientFactory = new LocalGitRepositoryFactory(
-                  localFolder, this, Program.Settings.UseShallowClone);
+                  Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone);
+               _gitClientFactory.RepositoryCloned += onRepositoryCloned;
             }
             catch (ArgumentException ex)
             {
@@ -885,14 +871,19 @@ namespace mrHelper.App.Forms
          return _gitClientFactory;
       }
 
-      async private Task disposeLocalGitRepositoryFactory()
+      private void disposeLocalGitRepositoryFactory()
       {
          if (_gitClientFactory != null)
          {
-            LocalGitRepositoryFactory factory = _gitClientFactory;
+            _gitClientFactory.RepositoryCloned -= onRepositoryCloned;
+            _gitClientFactory.Dispose();
             _gitClientFactory = null;
-            await factory.DisposeAsync();
          }
+      }
+
+      private void onRepositoryCloned(ILocalGitRepository repo)
+      {
+         requestRepositoryUpdate(repo.ProjectKey);
       }
 
       /// <summary>
@@ -901,7 +892,7 @@ namespace mrHelper.App.Forms
       /// <returns>null if could not create a repository</returns>
       private ILocalGitRepository getRepository(ProjectKey key, bool showMessageBoxOnError)
       {
-         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory(Program.Settings.LocalGitFolder);
+         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory();
          if (factory == null)
          {
             return null;
@@ -1163,7 +1154,7 @@ namespace mrHelper.App.Forms
          setSubItemTag("Author",       new ListViewSubItemInfo(x => author,                    () => String.Empty));
          setSubItemTag("Title",        new ListViewSubItemInfo(x => mr.Title,                  () => String.Empty));
          setSubItemTag("Labels",       new ListViewSubItemInfo(x => labels[x],                 () => String.Empty));
-         setSubItemTag("Size",         new ListViewSubItemInfo(x => getSize(fmk),              () => String.Empty));
+         setSubItemTag("Size",         new ListViewSubItemInfo(x => getSize(mrk),              () => String.Empty));
          setSubItemTag("Jira",         new ListViewSubItemInfo(x => jiraTask,                  () => jiraTaskUrl));
          setSubItemTag("TotalTime",    new ListViewSubItemInfo(x => getTotalTimeText(mrk),     () => String.Empty));
          setSubItemTag("SourceBranch", new ListViewSubItemInfo(x => mr.Source_Branch,          () => String.Empty));
@@ -1289,7 +1280,7 @@ namespace mrHelper.App.Forms
       {
          if (e.New || e.Commits)
          {
-            scheduleSilentUpdate(e.FullMergeRequestKey.ProjectKey);
+            requestRepositoryUpdate(e.FullMergeRequestKey.ProjectKey);
          }
 
          MergeRequestKey mrk = new MergeRequestKey(
@@ -1304,7 +1295,7 @@ namespace mrHelper.App.Forms
 
          if (e.New)
          {
-            enqueueCheckForUpdates(mrk, new[] {
+            requestUpdates(mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
          }
@@ -1893,7 +1884,7 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
       }
 
-      private void enqueueCheckForUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished = null)
+      private void requestUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished = null)
       {
          bool mergeRequestUpdateFinished = false;
          bool discussionUpdateFinished = false;
@@ -1939,37 +1930,6 @@ namespace mrHelper.App.Forms
          saveProperty(columnWidths);
       }
 
-      private bool isReadyToClose()
-      {
-         if (_commitChainCreator != null && !_commitChainCreator.IsCancelEnabled)
-         {
-            MessageBox.Show("Current background operation on GitLab branches prevents immediate exit. "
-               + "You will be notified when it is done.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Trace.TraceInformation("[MainForm] Cannot exit due to CommitChainCreator");
-            _notifyOnCommitChainCancelEnabled = true;
-            return false;
-         }
-         return true;
-      }
-
-      private void onCommitChainCancelEnabled(bool enabled)
-      {
-         if (enabled)
-         {
-            if (_notifyOnCommitChainCancelEnabled)
-            {
-               MessageBox.Show("Operation that prevented exit completed.",
-                  "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-               Trace.TraceInformation("[MainForm] User notified that operation is completed");
-               _notifyOnCommitChainCancelEnabled = false;
-            }
-         }
-         else
-         {
-            linkLabelAbortGit.Visible = false;
-         }
-      }
-
       private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk, ISession session)
       {
          Debug.Assert(fmk.MergeRequest != null);
@@ -1980,8 +1940,7 @@ namespace mrHelper.App.Forms
             true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
             fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
-
-         labelWorkflowStatus.Text = String.Format("Merge request with IId {0} loaded", fmk.MergeRequest.IId);
+         updateGitAbortState(true);
 
          Debug.WriteLine(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
@@ -2017,8 +1976,6 @@ namespace mrHelper.App.Forms
                checkBoxShowVersions.Enabled = true;
             }
          }
-
-         labelWorkflowStatus.Text = String.Format("Loaded {0} commits", count);
 
          Debug.WriteLine(String.Format(
             "[MainForm] Loaded {0} comparable entities IsSearchMode={1}", count, isSearchMode().ToString()));
@@ -2105,6 +2062,29 @@ namespace mrHelper.App.Forms
             ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
             Program.Settings.DisplayFilterEnabled
          );
+      }
+
+      private void applyAutostartSetting(bool enabled)
+      {
+         if (_runningAsUwp)
+         {
+            return;
+         }
+
+         string command = String.Format("{0} -m", Application.ExecutablePath);
+         AutoStartHelper.ApplyAutostartSetting(enabled, "mrHelper", command);
+      }
+
+      private void onUpdating()
+      {
+         buttonReloadList.Text = "Updating...";
+         buttonReloadList.Enabled = false;
+      }
+
+      private void onUpdated(string oldButtonText)
+      {
+         buttonReloadList.Text = oldButtonText;
+         buttonReloadList.Enabled = true;
       }
    }
 }

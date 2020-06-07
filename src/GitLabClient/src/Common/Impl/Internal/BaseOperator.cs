@@ -1,24 +1,34 @@
-﻿using GitLabSharp;
-using mrHelper.Common.Interfaces;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using GitLabSharp;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Common
 {
-   internal class BaseOperator
+   internal class BaseOperator : IDisposable
    {
-      internal BaseOperator(IHostProperties hostProperties)
+      internal BaseOperator(string hostname, IHostProperties hostProperties)
       {
          _settings = hostProperties;
+         _hostname = hostname;
+         _client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
       }
 
-      async protected Task<T> callWithNewClient<T>(string hostname, Func<GitLabClient, Task<T>> func)
+      async protected Task<T> callWithSharedClient<T>(Func<GitLabTaskRunner, Task<T>> func)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
-         return await func(client);
+         return await func(_client);
       }
 
-      private IHostProperties _settings;
+      protected string Hostname => _hostname;
+
+      public void Dispose()
+      {
+         _client.Dispose();
+      }
+
+      private readonly string _hostname;
+      private readonly IHostProperties _settings;
+      private readonly GitLabTaskRunner _client;
    }
 }
 

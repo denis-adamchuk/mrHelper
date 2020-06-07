@@ -19,58 +19,66 @@ namespace mrHelper.Client.Common
       async public Task<MergeRequest> SearchMergeRequestAsync(
          string hostname, string projectName, int mergeRequestIId)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
-         try
+         using (GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname)))
          {
-            SearchCriteria searchCriteria = new SearchCriteria(
-               new object[] { new SearchByIId(projectName, mergeRequestIId) });
-            IEnumerable<MergeRequest> mergeRequests =
-               await CommonOperator.SearchMergeRequestsAsync(client, searchCriteria, null, true);
-            return mergeRequests.Any() ? mergeRequests.First() : null;
-         }
-         catch (OperatorException)
-         {
-            return null;
+            try
+            {
+               SearchCriteria searchCriteria = new SearchCriteria(
+                  new object[] { new SearchByIId(projectName, mergeRequestIId) });
+               IEnumerable<MergeRequest> mergeRequests =
+                  await CommonOperator.SearchMergeRequestsAsync(client, searchCriteria, null, true);
+               return mergeRequests.Any() ? mergeRequests.First() : null;
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
          }
       }
 
       async public Task<User> GetCurrentUserAsync(string hostname)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
-         try
+         using (GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname)))
          {
-            return await CommonOperator.SearchCurrentUserAsync(client);
-         }
-         catch (OperatorException)
-         {
-            return null;
+            try
+            {
+               return await CommonOperator.SearchCurrentUserAsync(client);
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
          }
       }
 
       async public Task<User> SearchUserByNameAsync(string hostname, string name, bool isUsername)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
-         try
+         using (GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname)))
          {
-            IEnumerable<User> users = await CommonOperator.SearchUserAsync(client, name, isUsername);
-            return users.Any() ? users.First() : null;
-         }
-         catch (OperatorException)
-         {
-            return null;
+            try
+            {
+               IEnumerable<User> users = await CommonOperator.SearchUserAsync(client, name, isUsername);
+               return users.Any() ? users.First() : null;
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
          }
       }
 
       async public Task<Project> SearchProjectAsync(string hostname, string projectname)
       {
-         GitLabClient client = new GitLabClient(hostname, _settings.GetAccessToken(hostname));
-         try
+         using (GitLabTaskRunner client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname)))
          {
-            return await CommonOperator.SearchProjectAsync(client, projectname);
-         }
-         catch (OperatorException)
-         {
-            return null;
+            try
+            {
+               return await CommonOperator.SearchProjectAsync(client, projectname);
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
          }
       }
 

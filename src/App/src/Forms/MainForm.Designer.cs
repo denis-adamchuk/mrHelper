@@ -1,4 +1,5 @@
 ﻿using mrHelper.CommonControls.Controls;
+using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
@@ -15,23 +16,10 @@ namespace mrHelper.App.Forms
       /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
       protected override void Dispose(bool disposing)
       {
-         if (_exiting)
-         {
-            return;
-         }
-
          if (disposing && (components != null))
          {
             components.Dispose();
          }
-
-         disposeLiveSessionDependencies();
-
-         _checkForUpdatesTimer?.Stop();
-         _checkForUpdatesTimer?.Dispose();
-
-         _timeTrackingTimer?.Stop();
-         _timeTrackingTimer?.Dispose();
 
          base.Dispose(disposing);
       }
@@ -105,6 +93,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -163,6 +152,7 @@ namespace mrHelper.App.Forms
          this.comboBoxLatestCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -527,9 +517,9 @@ namespace mrHelper.App.Forms
          this.checkBoxUseShallowClone.AutoSize = true;
          this.checkBoxUseShallowClone.Location = new System.Drawing.Point(6, 220);
          this.checkBoxUseShallowClone.Name = "checkBoxUseShallowClone";
-         this.checkBoxUseShallowClone.Size = new System.Drawing.Size(180, 17);
+         this.checkBoxUseShallowClone.Size = new System.Drawing.Size(112, 17);
          this.checkBoxUseShallowClone.TabIndex = 15;
-         this.checkBoxUseShallowClone.Text = "Use shallow clone (experimental)";
+         this.checkBoxUseShallowClone.Text = "Use shallow clone";
          this.toolTip.SetToolTip(this.checkBoxUseShallowClone, "Use depth=1 in git clone and fetch commands");
          this.checkBoxUseShallowClone.UseVisualStyleBackColor = true;
          this.checkBoxUseShallowClone.CheckedChanged += new System.EventHandler(this.checkBoxUseShallowClone_CheckedChanged);
@@ -833,6 +823,7 @@ namespace mrHelper.App.Forms
             this.columnHeaderFoundState,
             this.columnHeaderFoundAuthor,
             this.columnHeaderFoundTitle,
+            this.columnHeaderFoundLabels,
             this.columnHeaderFoundJira,
             this.columnHeaderFoundSourceBranch,
             this.columnHeaderFoundTargetBranch});
@@ -879,6 +870,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundTitle.Tag = "Title";
          this.columnHeaderFoundTitle.Text = "Title";
          this.columnHeaderFoundTitle.Width = 400;
+         // 
+         // columnHeaderFoundLabels
+         // 
+         this.columnHeaderFoundLabels.Tag = "Labels";
+         this.columnHeaderFoundLabels.Text = "Labels";
+         this.columnHeaderFoundLabels.Width = 180;
          // 
          // columnHeaderFoundJira
          // 
@@ -1109,6 +1106,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxOther.Controls.Add(this.checkBoxUseShallowClone);
          this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
          this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestCommit);
@@ -1124,7 +1122,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 248);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 270);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -1564,6 +1562,18 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // checkBoxRunWhenWindowsStarts
+         // 
+         this.checkBoxRunWhenWindowsStarts.AutoSize = true;
+         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
+         this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
+         this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
+         this.checkBoxRunWhenWindowsStarts.Text = "Run mrHelper when Windows starts";
+         this.toolTip.SetToolTip(this.checkBoxRunWhenWindowsStarts, "Add mrHelper to the list of Startup Apps");
+         this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
+         this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1575,6 +1585,7 @@ namespace mrHelper.App.Forms
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
          this.Load += new System.EventHandler(this.MainForm_Load);
+         this.Resize += new System.EventHandler(this.MainForm_Resize);
          this.groupBoxKnownHosts.ResumeLayout(false);
          this.tabPageLive.ResumeLayout(false);
          this.groupBoxSelectMergeRequest.ResumeLayout(false);
@@ -1723,6 +1734,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundIId;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundAuthor;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTitle;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundLabels;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundJira;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundSourceBranch;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTargetBranch;
@@ -1738,6 +1750,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ListView listViewUsers;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
-    }
+      private System.Windows.Forms.CheckBox checkBoxRunWhenWindowsStarts;
+   }
 }
 

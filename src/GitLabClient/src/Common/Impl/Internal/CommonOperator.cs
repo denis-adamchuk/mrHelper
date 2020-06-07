@@ -12,7 +12,7 @@ namespace mrHelper.Client.Common
    internal static class CommonOperator
    {
       async internal static Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
-         GitLabClient client, SearchCriteria searchCriteria, int? maxResults, bool onlyOpen)
+         GitLabTaskRunner client, SearchCriteria searchCriteria, int? maxResults, bool onlyOpen)
       {
          List<MergeRequest> mergeRequests = new List<MergeRequest>();
          foreach (object search in searchCriteria.Criteria)
@@ -27,7 +27,7 @@ namespace mrHelper.Client.Common
          return mergeRequests;
       }
 
-      internal static Task<User> SearchCurrentUserAsync(GitLabClient client)
+      internal static Task<User> SearchCurrentUserAsync(GitLabTaskRunner client)
       {
          return OperatorCallWrapper.Call(
             async () =>
@@ -36,7 +36,7 @@ namespace mrHelper.Client.Common
                      await gl.CurrentUser.LoadTaskAsync()));
       }
 
-      internal static Task<IEnumerable<User>> SearchUserAsync(GitLabClient client, string name, bool isUsername)
+      internal static Task<IEnumerable<User>> SearchUserAsync(GitLabTaskRunner client, string name, bool isUsername)
       {
          return OperatorCallWrapper.Call(
             async () =>
@@ -45,7 +45,7 @@ namespace mrHelper.Client.Common
                      await (isUsername ? gl.Users.SearchByUsernameTaskAsync(name) : gl.Users.SearchTaskAsync(name))));
       }
 
-      internal static Task<Project> SearchProjectAsync(GitLabClient client, string projectname)
+      internal static Task<Project> SearchProjectAsync(GitLabTaskRunner client, string projectname)
       {
          return OperatorCallWrapper.Call(
             async () =>

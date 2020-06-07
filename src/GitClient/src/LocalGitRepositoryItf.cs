@@ -11,9 +11,6 @@ namespace mrHelper.GitClient
 
       ILocalGitRepositoryUpdater Updater { get; }
 
-      event Action<ILocalGitRepository> Updated;
-      event Action<ILocalGitRepository> Disposed;
-
       bool ExpectingClone { get; }
    }
 }

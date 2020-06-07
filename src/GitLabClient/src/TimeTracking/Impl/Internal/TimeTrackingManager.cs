@@ -20,9 +20,10 @@ namespace mrHelper.Client.TimeTracking
       IDisposable,
       ITotalTimeCache
    {
-      public TimeTrackingManager(GitLabClientContext clientContext, User user, IDiscussionLoader discussionLoader)
+      public TimeTrackingManager(GitLabClientContext clientContext, string hostname,
+         User user, IDiscussionLoader discussionLoader)
       {
-         _operator = new TimeTrackingOperator(clientContext.HostProperties);
+         _operator = new TimeTrackingOperator(hostname, clientContext.HostProperties);
          _currentUser = user;
 
          _discussionLoader = discussionLoader;
@@ -37,6 +38,8 @@ namespace mrHelper.Client.TimeTracking
       {
          _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
          _discussionLoader.DiscussionsLoaded -= processDiscussions;
+
+         _operator.Dispose();
       }
 
       public TimeSpan? GetTotalTime(MergeRequestKey mrk)

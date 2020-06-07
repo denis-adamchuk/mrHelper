@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// All exceptions thrown within this method are fatal errors, just pass them to upper level handler
       /// </summary>
-      async private void MainForm_Load(object sender, EventArgs e)
+      private void MainForm_Load(object sender, EventArgs e)
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
@@ -49,10 +49,22 @@ namespace mrHelper.App.Forms
          cleanUpTempFolder("mrHelper.logs.*.zip");
          checkForApplicationUpdates();
 
-         await initializeWork();
+         initializeWork();
+         connectOnStartup();
       }
 
-      async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+      private void closeAllFormsExceptMain()
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            if (Application.OpenForms[iForm] != this)
+            {
+               Application.OpenForms[iForm].Close();
+            }
+         }
+      }
+
+      private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
       {
          Trace.TraceInformation(String.Format("[MainForm] Requested to close the Main Form. Reason: {0}",
             e.CloseReason.ToString()));
@@ -70,23 +82,42 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!isReadyToClose())
+         Program.Settings.WasMaximizedBeforeClose = WindowState == FormWindowState.Maximized;
+         Hide();
+
+         closeAllFormsExceptMain();
+
+         finalizeWork();
+
+         // This allows to handle all pending invocations that other threads are
+         // already ready to make before we dispose ourselves
+         Application.DoEvents();
+      }
+
+      private void MainForm_Resize(object sender, EventArgs e)
+      {
+         if (this.WindowState == _prevWindowState)
          {
-            e.Cancel = true;
             return;
          }
 
-         Hide();
-
-         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         if (this.WindowState != FormWindowState.Minimized)
          {
-            if (Application.OpenForms[iForm] != this)
+            if (_prevWindowState == FormWindowState.Minimized)
             {
-               Application.OpenForms[iForm].Close();
+               if (this.WindowState == FormWindowState.Normal && _forceMaximizeOnNextRestore)
+               {
+                  _forceMaximizeOnNextRestore = false;
+                  _prevWindowState = FormWindowState.Maximized; // prevent re-entrance on next line
+                  this.WindowState = FormWindowState.Maximized;
+               }
+
+               resetMinimumSizes();
+               updateMinimumSizes();
             }
          }
 
-         await finalizeWork();
+         _prevWindowState = WindowState;
       }
 
       private void NotifyIcon_DoubleClick(object sender, EventArgs e)
@@ -157,9 +188,12 @@ namespace mrHelper.App.Forms
          Debug.Assert(!isSearchMode());
          ISession session = getSession(true /* supported in Live only */);
          ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
+         if (totalTimeCache == null)
+         {
+            return;
+         }
 
          TimeSpan oldSpan = getTotalTime(mrk, totalTimeCache) ?? TimeSpan.Zero;
-
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -171,7 +205,7 @@ namespace mrHelper.App.Forms
                {
                   try
                   {
-                     await totalTimeCache?.AddSpan(add, diff, mrk);
+                     await totalTimeCache.AddSpan(add, diff, mrk);
                   }
                   catch (TimeTrackingException ex)
                   {
@@ -198,7 +232,7 @@ namespace mrHelper.App.Forms
          doClose();
       }
 
-      async private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
+      private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
       {
          localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
          if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
@@ -221,10 +255,8 @@ namespace mrHelper.App.Forms
 
                // Emulating a host switch here to trigger GitDataUpdater to work at the new location
                Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
-               await switchHostToSelected();
+               switchHostToSelected();
             }
-
-            updateTabControlSelection();
          }
       }
 
@@ -234,7 +266,7 @@ namespace mrHelper.App.Forms
          Program.Settings.ColorSchemeFileName = (sender as ComboBox).Text;
       }
 
-      async private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
+      private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
          string hostname = (sender as ComboBox).Text;
 
@@ -242,7 +274,7 @@ namespace mrHelper.App.Forms
 
          updateProjectsListView();
          updateUsersListView();
-         await switchHostToSelected();
+         switchHostToSelected();
       }
 
       private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
@@ -353,6 +385,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(listView.SelectedItems.Count < 1);
 
          disableCommonUIControls();
+         updateGitAbortState(false);
       }
 
       private void ListViewMergeRequests_ItemSelectionChanged(
@@ -378,20 +411,20 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
+      private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.Enter)
          {
             if (radioButtonSearchByTargetBranch.Checked)
             {
-               await searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
+               searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
             }
             else if (radioButtonSearchByTitleAndDescription.Checked)
             {
                // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
                Debug.Assert(Constants.MaxSearchByTitleAndDescriptionResults <= 100);
 
-               await searchMergeRequests(new SearchByText(textBoxSearch.Text),
+               searchMergeRequests(new SearchByText(textBoxSearch.Text),
                   Constants.MaxSearchByTitleAndDescriptionResults);
             }
             else
@@ -531,13 +564,12 @@ namespace mrHelper.App.Forms
 
             updateKnownHostAndTokensInSettings();
             updateHostsDropdownList();
-            updateTabControlSelection();
             selectHost(PreferredSelection.Latest);
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 
-      async private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
+      private void ButtonRemoveKnownHost_Click(object sender, EventArgs e)
       {
          bool removeCurrent =
                listViewKnownHosts.SelectedItems.Count > 0 && getHostName() != String.Empty
@@ -557,7 +589,6 @@ namespace mrHelper.App.Forms
          _currentUser.Remove(removedHostName);
          updateKnownHostAndTokensInSettings();
          updateHostsDropdownList();
-         updateTabControlSelection();
          if (removeCurrent)
          {
             if (comboBoxHost.Items.Count == 0)
@@ -571,7 +602,7 @@ namespace mrHelper.App.Forms
             }
 
             // calling this unconditionally to drop current sessions and disable UI
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 
@@ -594,6 +625,16 @@ namespace mrHelper.App.Forms
          Program.Settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
+      private void checkBoxRunWhenWindowsStarts_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.RunWhenWindowsStarts = (sender as CheckBox).Checked;
+
+         if (!_loadingConfiguration)
+         {
+            applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
+         }
+      }
+
       private void CheckBoxDisableSplitterRestrictions_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.DisableSplitterRestrictions = (sender as CheckBox).Checked;
@@ -612,7 +653,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
+      private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
       {
          if (_loadingConfiguration)
          {
@@ -622,7 +663,7 @@ namespace mrHelper.App.Forms
          Program.Settings.UseShallowClone = checkBoxUseShallowClone.Checked;
 
          Trace.TraceInformation(String.Format("[MainForm] Shallow clone setting has been selected"));
-         await switchHostToSelected();
+         switchHostToSelected();
       }
 
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
@@ -788,17 +829,9 @@ namespace mrHelper.App.Forms
          {
             Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
 
-            buttonReloadList.Enabled = false;
-
             string oldButtonText = buttonReloadList.Text;
-            buttonReloadList.Text = "Updating...";
-
-            enqueueCheckForUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval },
-               () =>
-               {
-                  buttonReloadList.Enabled = true;
-                  buttonReloadList.Text = oldButtonText;
-               });
+            onUpdating();
+            requestUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval }, () => onUpdated(oldButtonText));
          }
       }
 
@@ -818,34 +851,35 @@ namespace mrHelper.App.Forms
          await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
-      async private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         object tag = linkLabelAbortGit.Tag;
-         string message = String.Format("Do you really want to abort current operation{0}?",
-             tag == null ? String.Empty : String.Format(" ({0})", tag.ToString()));
+         MergeRequestKey? mrk = getMergeRequestKey(null);
+         if (!mrk.HasValue)
+         {
+            Debug.Assert(mrk.HasValue);
+            return;
+         }
+
+         ILocalGitRepository repo = getRepository(mrk.Value.ProjectKey, false);
+         if (repo == null || repo.Updater == null || !repo.Updater.CanBeStopped())
+         {
+            Debug.Assert(mrk.HasValue);
+            return;
+         }
+
+         string message = String.Format("Do you really want to abort current git update operation for {0}?",
+            mrk.Value.ProjectKey.ProjectName);
          if (MessageBox.Show(message, "Confirmation",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
          {
-            Trace.TraceInformation("[MainForm] User discarded to abort current operation");
+            Trace.TraceInformation(String.Format("[MainForm] User declined to abort current operation for project {0}",
+               mrk.Value.ProjectKey.ProjectName));
             return;
          }
 
-         Trace.TraceInformation("[MainForm] User decided to abort current operation");
-
-         if (_commitChainCreator != null)
-         {
-            await _commitChainCreator.CancelAsync();
-         }
-
-         Debug.Assert(getMergeRequestKey(null).HasValue);
-
-         ILocalGitRepository repo = getRepository(getMergeRequestKey(null).Value.ProjectKey, false);
-         if (repo == null)
-         {
-            return;
-         }
-
-         await repo.Updater.CancelUpdate();
+         Trace.TraceInformation(String.Format("[MainForm] User decided to abort current operation for project {0}",
+            mrk.Value.ProjectKey.ProjectName));
+         repo.Updater.StopUpdate();
       }
 
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -917,26 +951,22 @@ namespace mrHelper.App.Forms
          {
             string argumentString = Win32Tools.ConvertMessageToText(rMessage.LParam);
 
-            BeginInvoke(new Action(
-               async () =>
-               {
-                  string[] arguments = argumentString.Split('|');
-                  if (arguments.Length < 2)
-                  {
-                     Debug.Assert(false);
-                     Trace.TraceError(String.Format("Invalid WM_COPYDATA message content: {0}", argumentString));
-                     return;
-                  }
+            string[] arguments = argumentString.Split('|');
+            if (arguments.Length < 2)
+            {
+               Debug.Assert(false);
+               Trace.TraceError(String.Format("Invalid WM_COPYDATA message content: {0}", argumentString));
+               return;
+            }
 
-                  if (arguments[1] == "diff")
-                  {
-                     await onDiffCommand(argumentString);
-                  }
-                  else
-                  {
-                     await onOpenCommand(argumentString);
-                  }
-               }));
+            if (arguments[1] == "diff")
+            {
+               onDiffCommand(argumentString);
+            }
+            else
+            {
+               onOpenCommand(argumentString);
+            }
          }
 
          base.WndProc(ref rMessage);
@@ -1202,7 +1232,7 @@ namespace mrHelper.App.Forms
          applyFont(font);
       }
 
-      async private void buttonEditProjects_Click(object sender, EventArgs e)
+      private void buttonEditProjects_Click(object sender, EventArgs e)
       {
          string host = getHostName();
          if (host == String.Empty)
@@ -1230,13 +1260,13 @@ namespace mrHelper.App.Forms
                if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
                   Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
-                  await switchHostToSelected();
+                  switchHostToSelected();
                }
             }
          }
       }
 
-      async private void buttonEditUsers_Click(object sender, EventArgs e)
+      private void buttonEditUsers_Click(object sender, EventArgs e)
       {
          string host = getHostName();
          if (host == String.Empty)
@@ -1264,7 +1294,7 @@ namespace mrHelper.App.Forms
                if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
                   Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
-                  await switchHostToSelected();
+                  switchHostToSelected();
                }
             }
          }
@@ -1300,7 +1330,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
       {
          if (!(sender as RadioButton).Checked)
          {
@@ -1322,7 +1352,7 @@ namespace mrHelper.App.Forms
             }
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
-            await switchHostToSelected();
+            switchHostToSelected();
          }
       }
 
