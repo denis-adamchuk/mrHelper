@@ -21,6 +21,24 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
+         _liveSession?.Dispose();
+         _searchSession?.Dispose();
+         _gitlabClientManager?.Dispose();
+
+         disposeGitHelpers();
+         disposeLocalGitRepositoryFactory();
+         disposeLiveSessionDependencies();
+
+         _checkForUpdatesTimer?.Stop();
+         _checkForUpdatesTimer?.Dispose();
+
+         _timeTrackingTimer?.Stop();
+         _timeTrackingTimer?.Dispose();
+
+         // This allows to handle all pending invocations that other threads are
+         // already ready to make before we dispose ourselves
+         Application.DoEvents();
+
          base.Dispose(disposing);
       }
 
