@@ -395,11 +395,11 @@ namespace mrHelper.App.Forms
 
          if (isSearchMode())
          {
-            switchSearchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
+            switchSearchMergeRequestByUser(fmk);
          }
          else
          {
-            switchMergeRequestByUser(fmk, checkBoxShowVersions.Checked);
+            switchMergeRequestByUser(fmk);
             if (getMergeRequestKey(listViewMergeRequests) != null)
             {
                _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
@@ -430,86 +430,33 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void checkBoxShowVersionsByDefault_CheckedChanged(object sender, EventArgs e)
-      {
-         Program.Settings.ShowVersionsByDefault = (sender as CheckBox).Checked;
-      }
-
-      private void checkBoxShowVersions_CheckedChanged(object sender, EventArgs e)
-      {
-         bool showVersions = (sender as CheckBox).Checked;
-         groupBoxSelectCommits.Text = showVersions ? "Select versions for diff tool" : "Select commits for diff tool";
-
-         if ((isSearchMode() && listViewFoundMergeRequests.SelectedItems.Count < 1) ||
-            (!isSearchMode() && listViewMergeRequests.SelectedItems.Count < 1))
-         {
-            return;
-         }
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm] User changed Show Versions to {0}. Reloading current Merge Request",
-            showVersions.ToString()));
-
-         ListViewItem selected = isSearchMode() ?
-            listViewFoundMergeRequests.SelectedItems[0] : listViewMergeRequests.SelectedItems[0];
-         selected.Selected = false;
-         selected.Selected = true;
-      }
-
       private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
       {
-         if (e.Index < 0)
-         {
-            return;
-         }
+         //if (e.Index < 0)
+         //{
+         //   return;
+         //}
 
-         ComboBox comboBox = sender as ComboBox;
-         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.Items[e.Index]);
+         //ComboBox comboBox = sender as ComboBox;
+         //CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.Items[e.Index]);
 
-         e.DrawBackground();
+         //e.DrawBackground();
 
-         if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
-         {
-            drawComboBoxEdit(e, comboBox, getCommitComboBoxItemColor(item), formatCommitComboboxItem(item));
-         }
-         else
-         {
-            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            WinFormsHelpers.FillRectangle(e, e.Bounds, getCommitComboBoxItemColor(item), isSelected);
+         //if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
+         //{
+         //   drawComboBoxEdit(e, comboBox, getCommitComboBoxItemColor(item), formatCommitComboboxItem(item));
+         //}
+         //else
+         //{
+         //   bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+         //   WinFormsHelpers.FillRectangle(e, e.Bounds, getCommitComboBoxItemColor(item), isSelected);
 
-            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
-         }
+         //   Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+         //   e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+         //   e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
+         //}
 
-         e.DrawFocusRectangle();
-      }
-
-      private void ComboBoxLatestCommit_SelectedIndexChanged(object sender, EventArgs e)
-      {
-         checkComboboxCommitsOrder(comboBoxLatestCommit, comboBoxEarliestCommit, true /* I'm the latest one */);
-         setCommitComboboxTooltipText(sender as ComboBox, toolTip);
-         setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
-      }
-
-      private void ComboBoxEarliestCommit_SelectedIndexChanged(object sender, EventArgs e)
-      {
-         checkComboboxCommitsOrder(comboBoxLatestCommit, comboBoxEarliestCommit, false /* because I'm the earliest one */);
-         setCommitComboboxTooltipText(sender as ComboBox, toolTip);
-         setCommitComboboxLabels(sender as ComboBox, getLabelForComboBox(sender as ComboBox));
-      }
-
-      private Label getLabelForComboBox(ComboBox box)
-      {
-         if (box == comboBoxLatestCommit)
-         {
-            return labelLatestCommitTimestampLabel;
-         }
-         else if (box == comboBoxEarliestCommit)
-         {
-            return labelEarliestCommitTimestampLabel;
-         }
-         return null;
+         //e.DrawFocusRectangle();
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -644,8 +591,9 @@ namespace mrHelper.App.Forms
          MergeRequestKey? mrk = getMergeRequestKey(null);
          if (mrk.HasValue)
          {
-            selectNotReviewedCommits(isSearchMode(),
-               comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
+            // TODO
+            //selectNotReviewedCommits(isSearchMode(),
+            //   comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
          }
       }
 
@@ -966,24 +914,6 @@ namespace mrHelper.App.Forms
          }
 
          base.WndProc(ref rMessage);
-      }
-
-      private static void setCommitComboboxTooltipText(ComboBox comboBox, ToolTip tooltip)
-      {
-         tooltip.SetToolTip(comboBox, String.Empty);
-
-         if (comboBox.SelectedItem == null)
-         {
-            return;
-         }
-
-         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
-         if (item.Status == ECommitComboBoxItemStatus.Base)
-         {
-            return;
-         }
-
-         tooltip.SetToolTip(comboBox, String.Format("{0}", item.Message));
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)
@@ -1397,6 +1327,29 @@ namespace mrHelper.App.Forms
             "System DPI has changed",
             "It is recommended to restart application to update layout"
          ));
+      }
+
+      private void VersionBrowser_SelectionChanged(object sender, EventArgs e)
+      {
+         string[] selected = versionBrowser.GetSelected();
+         switch (selected.Count())
+         {
+            case 1:
+               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Text = "Diff to Base";
+               break;
+
+            case 2:
+               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Text = "Diff Tool";
+               break;
+
+            case 0:
+            default:
+               buttonDiffTool.Enabled = false;
+               buttonDiffTool.Text = "Diff Tool";
+               break;
+         }
       }
    }
 }

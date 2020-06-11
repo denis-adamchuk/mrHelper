@@ -171,16 +171,8 @@ namespace mrHelper.App.Forms
 
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
-         if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
          // Keep data before async/await
-         string getSHA(ComboBox comboBox) => ((CommitComboBoxItem)comboBox.SelectedItem).SHA;
-         string leftSHA = getSHA(comboBoxEarliestCommit);
-         string rightSHA = getSHA(comboBoxLatestCommit);
+         getShaForDiffTool(out string leftSHA, out string rightSHA);
          ISession session = getSession(!isSearchMode());
          if (session == null)
          {
@@ -190,11 +182,12 @@ namespace mrHelper.App.Forms
 
          // includedSHA contains all the SHA starting from the selected one
          List<string> includedSHA = new List<string>();
-         for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
-         {
-            string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[index])).SHA;
-            includedSHA.Add(sha);
-         }
+         // TODO
+         //for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
+         //{
+         //   string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[index])).SHA;
+         //   includedSHA.Add(sha);
+         //}
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
          if (!await prepareRepositoryForDiffTool(repo, leftSHA, rightSHA) || _exiting)
@@ -209,9 +202,6 @@ namespace mrHelper.App.Forms
             _reviewedCommits[mrk] = new HashSet<string>();
          }
          includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
-
-         comboBoxLatestCommit.Refresh();
-         comboBoxEarliestCommit.Refresh();
       }
 
       private void launchDiffTool(string leftSHA, string rightSHA, ref ILocalGitRepository repo, ISession session)

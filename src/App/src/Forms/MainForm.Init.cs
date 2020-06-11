@@ -154,8 +154,6 @@ namespace mrHelper.App.Forms
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
-         checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
-         checkBoxShowVersions.Checked = checkBoxShowVersionsByDefault.Checked;
          checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());

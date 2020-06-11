@@ -231,92 +231,58 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private static void selectNotReviewedCommits(bool isSearchMode,
-         ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit, HashSet<string> reviewedCommits)
-      {
-         Tuple<int, int> getCommitIndices()
-         {
-            int DefaultLatestIndex = 0;
-            int DefaultEarliestIndex = comboBoxEarliestCommit.Items.Count - 1;
+      //private static void selectNotReviewedCommits(bool isSearchMode,
+      //   ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit, HashSet<string> reviewedCommits)
+      //{
+      //   Tuple<int, int> getCommitIndices()
+      //   {
+      //      int DefaultLatestIndex = 0;
+      //      int DefaultEarliestIndex = comboBoxEarliestCommit.Items.Count - 1;
 
-            int? iNewestReviewedCommitIndex = new Nullable<int>();
-            if (!isSearchMode)
-            {
-               for (int iItem = 0; iItem < comboBoxLatestCommit.Items.Count; ++iItem)
-               {
-                  string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[iItem])).SHA;
-                  if (reviewedCommits.Contains(sha))
-                  {
-                     iNewestReviewedCommitIndex = iItem;
-                     break;
-                  }
-               }
-            }
+      //      int? iNewestReviewedCommitIndex = new Nullable<int>();
+      //      if (!isSearchMode)
+      //      {
+      //         for (int iItem = 0; iItem < comboBoxLatestCommit.Items.Count; ++iItem)
+      //         {
+      //            string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[iItem])).SHA;
+      //            if (reviewedCommits.Contains(sha))
+      //            {
+      //               iNewestReviewedCommitIndex = iItem;
+      //               break;
+      //            }
+      //         }
+      //      }
 
-            if (!iNewestReviewedCommitIndex.HasValue)
-            {
-               return new Tuple<int, int>(DefaultLatestIndex, DefaultEarliestIndex);
-            }
+      //      if (!iNewestReviewedCommitIndex.HasValue)
+      //      {
+      //         return new Tuple<int, int>(DefaultLatestIndex, DefaultEarliestIndex);
+      //      }
 
-            if (Program.Settings.AutoSelectNewestCommit)
-            {
-               return new Tuple<int, int>(0, Math.Max(0, iNewestReviewedCommitIndex.Value - 1));
-            }
-            else
-            {
-               // note that `earliest` should not be `latest + 1` because Latest CB is shifted comparing to Earliest CB
-               int latest = Math.Max(0, iNewestReviewedCommitIndex.Value - 1);
-               int earliest = Math.Min(latest, comboBoxEarliestCommit.Items.Count - 1);
-               return new Tuple<int, int>(latest, earliest);
-            }
-         }
+      //      if (Program.Settings.AutoSelectNewestCommit)
+      //      {
+      //         return new Tuple<int, int>(0, Math.Max(0, iNewestReviewedCommitIndex.Value - 1));
+      //      }
+      //      else
+      //      {
+      //         // note that `earliest` should not be `latest + 1` because Latest CB is shifted comparing to Earliest CB
+      //         int latest = Math.Max(0, iNewestReviewedCommitIndex.Value - 1);
+      //         int earliest = Math.Min(latest, comboBoxEarliestCommit.Items.Count - 1);
+      //         return new Tuple<int, int>(latest, earliest);
+      //      }
+      //   }
 
-         Debug.Assert(comboBoxLatestCommit.Items.Count == comboBoxEarliestCommit.Items.Count);
-         if (comboBoxEarliestCommit.Items.Count > 0)
-         {
-            Tuple<int, int> indices = getCommitIndices();
-            comboBoxLatestCommit.SelectedIndex = indices.Item1;
-            comboBoxEarliestCommit.SelectedIndex = indices.Item2;
-         }
-      }
+      //   Debug.Assert(comboBoxLatestCommit.Items.Count == comboBoxEarliestCommit.Items.Count);
+      //   if (comboBoxEarliestCommit.Items.Count > 0)
+      //   {
+      //      Tuple<int, int> indices = getCommitIndices();
+      //      comboBoxLatestCommit.SelectedIndex = indices.Item1;
+      //      comboBoxEarliestCommit.SelectedIndex = indices.Item2;
+      //   }
+      //}
 
       private HashSet<string> getReviewedCommits(MergeRequestKey mrk)
       {
          return _reviewedCommits.ContainsKey(mrk) ? _reviewedCommits[mrk] : new HashSet<string>();
-      }
-
-      private static void checkComboboxCommitsOrder(ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit,
-         bool shouldReorderRightCombobox)
-      {
-         if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
-         {
-            return;
-         }
-
-         // Latest combobox cannot select a commit older than in Earliest combobox (replicating gitlab web ui behavior)
-         CommitComboBoxItem latestCBItem = (CommitComboBoxItem)(comboBoxLatestCommit.SelectedItem);
-         CommitComboBoxItem earliestCBItem = (CommitComboBoxItem)(comboBoxEarliestCommit.SelectedItem);
-         Debug.Assert(latestCBItem.TimeStamp.HasValue);
-
-         if (earliestCBItem.TimeStamp.HasValue)
-         {
-            // Check if order is broken
-            if (latestCBItem.TimeStamp.Value <= earliestCBItem.TimeStamp.Value)
-            {
-               if (shouldReorderRightCombobox)
-               {
-                  comboBoxEarliestCommit.SelectedIndex = comboBoxLatestCommit.SelectedIndex;
-               }
-               else
-               {
-                  comboBoxLatestCommit.SelectedIndex = comboBoxEarliestCommit.SelectedIndex;
-               }
-            }
-         }
-         else
-         {
-            // It is ok because a commit w/o timestamp is the oldest one
-         }
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -704,7 +670,6 @@ namespace mrHelper.App.Forms
       {
          buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
          buttonDiffTool.Enabled = enabled;
-         checkBoxShowVersions.Enabled = enabled;
          enableCustomActions(enabled, labels, author);
       }
 
@@ -749,93 +714,6 @@ namespace mrHelper.App.Forms
                String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
             control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
          }
-      }
-
-      private static CommitComboBoxItem getItem(Commit commit,
-         ECommitComboBoxItemStatus status, EComparableEntityType type)
-      {
-         Debug.Assert(type == EComparableEntityType.Commit);
-         return new CommitComboBoxItem(commit.Id, commit.Title, commit.Created_At, commit.Message,
-            status, EComparableEntityType.Commit);
-      }
-
-      private static CommitComboBoxItem getItem(GitLabSharp.Entities.Version version, int? index,
-         ECommitComboBoxItemStatus status, EComparableEntityType type)
-      {
-         string sha = version.Head_Commit_SHA;
-         string versionNumber = index.HasValue ? index.ToString() : String.Empty;
-         return new CommitComboBoxItem(
-            /* sha */            sha,
-            /* title */          String.Format("Version {0}", versionNumber),
-            /* timestamp */      version.Created_At,
-            /* commit message */ String.Empty,
-            /* status */         status,
-            /* type */           type);
-      }
-
-      private static void addCommitsToComboBoxes(ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit,
-         IEnumerable<object> commits, string baseSha, string targetBranch)
-      {
-         EComparableEntityType getType()
-         {
-            if (!commits.Any())
-            {
-               Debug.Assert(false);
-               return EComparableEntityType.Commit;
-            }
-
-            object first = commits.First();
-            if (first is Commit)
-            {
-               return EComparableEntityType.Commit;
-            }
-
-            Debug.Assert(first is GitLabSharp.Entities.Version);
-            return EComparableEntityType.Version;
-         }
-
-         CommitComboBoxItem getCommitItem(object commit, int? index, ECommitComboBoxItemStatus status)
-         {
-            if (commit is Commit c)
-            {
-               return getItem(c, status, getType());
-            }
-            else if (commit is GitLabSharp.Entities.Version v)
-            {
-               return getItem(v, index, status, getType());
-            }
-            return null;
-         }
-
-         comboBoxEarliestCommit.BeginUpdate();
-         comboBoxLatestCommit.BeginUpdate();
-
-         // Add latest commit
-         CommitComboBoxItem latestCommitItem = getCommitItem(commits.First(), null, ECommitComboBoxItemStatus.Latest);
-         comboBoxLatestCommit.Items.Add(latestCommitItem);
-
-         // Add other commits
-         int iCommit = commits.Count() - 1;
-         foreach (object commit in commits.Skip(1))
-         {
-            CommitComboBoxItem item = getCommitItem(commit, iCommit--, ECommitComboBoxItemStatus.Normal);
-
-            if (getType() == EComparableEntityType.Commit
-             && comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
-            {
-               continue;
-            }
-            comboBoxLatestCommit.Items.Add(item);
-            comboBoxEarliestCommit.Items.Add(item);
-         }
-
-         // Add target branch to the right combo-box
-         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch, null, String.Empty,
-            ECommitComboBoxItemStatus.Base, getType());
-         comboBoxEarliestCommit.Items.Add(baseCommitItem);
-
-         comboBoxEarliestCommit.EndUpdate();
-         comboBoxLatestCommit.EndUpdate();
       }
 
       /// <summary>
@@ -1947,38 +1825,31 @@ namespace mrHelper.App.Forms
       }
 
       private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, System.Collections.IEnumerable entities, ListView listView)
+         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions,
+         ListView listView)
       {
-         disableComboBox(comboBoxLatestCommit, String.Empty);
-         disableComboBox(comboBoxEarliestCommit, String.Empty);
+         // TODO Clear selection?
+         versionBrowser.Enabled = false;
 
          MergeRequestKey? mrk = getMergeRequestKey(listView);
 
-         IEnumerable<object> objects = entities.Cast<object>();
-         int count = objects.Count();
-         if (mrk.HasValue && count > 0)
+         bool hasObjects = commits.Any() || versions.Any();
+         if (mrk.HasValue && hasObjects)
          {
-            enableComboBox(comboBoxLatestCommit);
-            enableComboBox(comboBoxEarliestCommit);
+            versionBrowser.Enabled = true;
 
-            addCommitsToComboBoxes(comboBoxLatestCommit, comboBoxEarliestCommit, objects,
+            VersionBrowserModelData data = new VersionBrowserModelData(commits, versions,
                latestVersion?.Base_Commit_SHA, mergeRequest.Target_Branch);
-            selectNotReviewedCommits(listView == listViewFoundMergeRequests,
-               comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
+            versionBrowser.SetData(data);
+            //selectNotReviewedCommits(listView == listViewFoundMergeRequests,
+            //   comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
 
             enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
-         {
-            if (count == 0)
-            {
-               // Just to be able to switch between versions and commits
-               checkBoxShowVersions.Enabled = true;
-            }
-         }
 
          Debug.WriteLine(String.Format(
-            "[MainForm] Loaded {0} comparable entities IsSearchMode={1}", count, isSearchMode().ToString()));
+            "[MainForm] Loaded comparable entities IsSearchMode={00", isSearchMode().ToString()));
       }
 
       private void disableCommonUIControls()
@@ -1988,71 +1859,9 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
          updateTotalTime(null, null, null, null);
-         disableComboBox(comboBoxLatestCommit, String.Empty);
-         disableComboBox(comboBoxEarliestCommit, String.Empty);
-      }
 
-      private static string formatCommitComboboxItem(CommitComboBoxItem item)
-      {
-         switch (item.Type)
-         {
-            case EComparableEntityType.Commit:
-               {
-                  switch (item.Status)
-                  {
-                     case ECommitComboBoxItemStatus.Normal:
-                        return item.Text;
-                     case ECommitComboBoxItemStatus.Base:
-                        return String.Format("{0} [Base]", item.Text);
-                     case ECommitComboBoxItemStatus.Latest:
-                        return String.Format("{0} [Latest]", item.Text);
-                  }
-                  break;
-               }
-
-            case EComparableEntityType.Version:
-               {
-                  string sha = String.IsNullOrWhiteSpace(item.SHA)
-                     ? "No SHA" : (item.SHA.Length > 10 ? item.SHA.Substring(0, 10) : item.SHA);
-                  string timestamp = item.TimeStamp.HasValue ?
-                     item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat) : String.Empty;
-                  switch (item.Status)
-                  {
-                     case ECommitComboBoxItemStatus.Normal:
-                        return String.Format("{0} ({1}) created at {2}", item.Text, sha, timestamp);
-                     case ECommitComboBoxItemStatus.Base:
-                        return String.Format("{0} [Base]", item.Text);
-                     case ECommitComboBoxItemStatus.Latest:
-                        return String.Format("Latest {0} ({1}) created at {2}", item.Text, sha, timestamp);
-                  }
-                  break;
-               }
-         }
-
-         Debug.Assert(false);
-         return item.Text;
-      }
-
-      private static void setCommitComboboxLabels(ComboBox comboBox, Label labelTimestamp)
-      {
-         if (comboBox.SelectedItem == null)
-         {
-            labelTimestamp.Text = "Created at: N/A";
-            return;
-         }
-
-         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
-         if (item.Status == ECommitComboBoxItemStatus.Base)
-         {
-            labelTimestamp.Text = "Created at: N/A";
-            return;
-         }
-
-         if (item.TimeStamp != null)
-         {
-            labelTimestamp.Text = String.Format("Created at: {0}",
-               item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat));
-         }
+         // TODO Clear selection?
+         versionBrowser.Enabled = false;
       }
 
       private MergeRequestFilterState createMergeRequestFilterState()
@@ -2085,6 +1894,34 @@ namespace mrHelper.App.Forms
       {
          buttonReloadList.Text = oldButtonText;
          buttonReloadList.Enabled = true;
+      }
+
+      private void getShaForDiffTool(out string left, out string right)
+      {
+         string[] selected = versionBrowser.GetSelected();
+         switch (selected.Count())
+         {
+            case 0:
+               left = String.Empty;
+               right = String.Empty;
+               break;
+
+            case 1:
+               left = versionBrowser.GetBaseCommitSha();
+               right = selected[0];
+               break;
+
+            case 2:
+               left = selected[0];
+               right = selected[1];
+               break;
+
+            default:
+               Debug.Assert(false);
+               left = String.Empty;
+               right = String.Empty;
+               break;
+         }
       }
    }
 }

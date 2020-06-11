@@ -1,4 +1,5 @@
 ﻿using mrHelper.CommonControls.Controls;
+using System;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
@@ -73,7 +74,6 @@ namespace mrHelper.App.Forms
          this.textBoxDisplayFilter = new mrHelper.CommonControls.Controls.DelayedTextBox();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
-         this.checkBoxShowVersionsByDefault = new System.Windows.Forms.CheckBox();
          this.checkBoxAutoSelectNewestCommit = new System.Windows.Forms.CheckBox();
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
@@ -459,19 +459,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.buttonReloadList, "Update merge request list in the background");
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
-         // 
-         // checkBoxShowVersionsByDefault
-         // 
-         this.checkBoxShowVersionsByDefault.AutoSize = true;
-         this.checkBoxShowVersionsByDefault.Location = new System.Drawing.Point(6, 197);
-         this.checkBoxShowVersionsByDefault.Name = "checkBoxShowVersionsByDefault";
-         this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(232, 17);
-         this.checkBoxShowVersionsByDefault.TabIndex = 14;
-         this.checkBoxShowVersionsByDefault.Text = "Show changes between versions by default";
-         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, "When checked, diff tool shows changes between versions by analogy with GitLab Web" +
-        " UI");
-         this.checkBoxShowVersionsByDefault.UseVisualStyleBackColor = true;
-         this.checkBoxShowVersionsByDefault.CheckedChanged += new System.EventHandler(this.checkBoxShowVersionsByDefault_CheckedChanged);
          // 
          // checkBoxAutoSelectNewestCommit
          // 
@@ -1118,7 +1105,6 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxOther.Controls.Add(this.checkBoxUseShallowClone);
-         this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
          this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestCommit);
          this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
          this.groupBoxOther.Controls.Add(this.labelFontSize);
@@ -1527,6 +1513,7 @@ namespace mrHelper.App.Forms
          this.versionBrowser.Name = "versionBrowser";
          this.versionBrowser.Size = new System.Drawing.Size(920, 114);
          this.versionBrowser.TabIndex = 0;
+         this.versionBrowser.SelectionChanged += new System.EventHandler(this.VersionBrowser_SelectionChanged);
          // 
          // MainForm
          // 
@@ -1691,7 +1678,6 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.RadioButton radioButtonSearchByTargetBranch;
         private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
       private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestCommit;
-      private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
         private System.Windows.Forms.CheckBox checkBoxUseShallowClone;
         private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
         private System.Windows.Forms.Button buttonEditUsers;

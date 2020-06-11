@@ -9,19 +9,19 @@ using Aga.Controls.Tree;
 
 namespace mrHelper.App.Helpers
 {
-   public class VersionBrowseModelData
+   public class VersionBrowserModelData
    {
-      public VersionBrowseModelData(IEnumerable<Commit> commits, IEnumerable<Version> versions,
+      public VersionBrowserModelData(IEnumerable<Commit> commits, IEnumerable<Version> versions,
          string baseSha, string targetBranch)
       {
-         Commits = commits;
-         Versions = versions;
+         Objects = new Dictionary<string, IEnumerable<object>>();
+         Objects.Add("Versions", versions);
+         Objects.Add("Commits", commits);
          BaseSha = baseSha;
          TargetBranch = targetBranch;
       }
 
-      public IEnumerable<Version> Versions { get; }
-      public IEnumerable<Commit> Commits { get; }
+      public Dictionary<string, IEnumerable<object>> Objects { get; }
       public string BaseSha { get; }
       public string TargetBranch { get; }
    }
@@ -32,9 +32,10 @@ namespace mrHelper.App.Helpers
       {
       }
 
-      internal void SetData(VersionBrowseModelData data)
+      internal VersionBrowserModelData Data
       {
-         _data = data;
+         get { return _data; }
+         set { _data = value; StructureChanged?.Invoke(this, new TreePathEventArgs()); }
       }
 
       public System.Collections.IEnumerable GetChildren(TreePath treePath)
@@ -52,22 +53,26 @@ namespace mrHelper.App.Helpers
          }
          else
          {
-            int iVersion = _data.Versions.Count() - 1;
-            foreach (Version version in _data.Versions)
+            if (treePath.LastNode is RootVersionBrowserItem parent &&
+                Data.Objects.TryGetValue(parent.Name, out IEnumerable<object> objects))
             {
-               string name = String.Format("Version #{0}", iVersion);
-               string sha = getSha(version.Head_Commit_SHA);
-               BaseVersionBrowserItem parent = treePath.FirstNode as BaseVersionBrowserItem;
-               items.Add(new LeafVersionBrowserItem(name, version.Created_At, sha, parent, this));
-               --iVersion;
-            }
-
-            foreach (Commit commit in _data.Commits)
-            {
-               string name = commit.Title;
-               string sha = getSha(commit.Id);
-               BaseVersionBrowserItem parent = treePath.LastNode as BaseVersionBrowserItem;
-               items.Add(new LeafVersionBrowserItem(name, commit.Created_At, sha, parent, this));
+               int iObject = objects.Count();
+               foreach (object o in objects)
+               {
+                  if (o is Version version)
+                  {
+                     string name = String.Format("Version #{0}", iObject);
+                     string sha = getSha(version.Head_Commit_SHA);
+                     items.Add(new LeafVersionBrowserItem(name, version.Created_At, sha, parent, this));
+                     --iObject;
+                  }
+                  else if (o is Commit commit)
+                  {
+                     string name = commit.Title;
+                     string sha = getSha(commit.Id);
+                     items.Add(new LeafVersionBrowserItem(name, commit.Created_At, sha, parent, this));
+                  }
+               }
             }
          }
          return items;
@@ -88,7 +93,7 @@ namespace mrHelper.App.Helpers
          return fullSha.Substring(0, Math.Min(10, fullSha.Length));
       }
 
-      private VersionBrowseModelData _data;
+      private VersionBrowserModelData _data;
    }
 }
 

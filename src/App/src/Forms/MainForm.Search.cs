@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void switchSearchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)
+      private void switchSearchMergeRequestByUser(FullMergeRequestKey fmk)
       {
          Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 
@@ -79,7 +79,7 @@ namespace mrHelper.App.Forms
             MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
             GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
             onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
-               showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
+               cache.GetCommits(mrk), cache.GetVersions(mrk));
          }
       }
 
@@ -180,7 +180,7 @@ namespace mrHelper.App.Forms
       }
 
       private void onSearchComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, IEnumerable commits)
+         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions)
       {
          if (!isSearchMode())
          {
@@ -188,7 +188,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, commits, listViewFoundMergeRequests);
+         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, commits, versions, listViewFoundMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
