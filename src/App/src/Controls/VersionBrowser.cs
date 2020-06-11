@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.src.Controls
 {

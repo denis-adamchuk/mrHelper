@@ -127,5 +127,13 @@
       }
 
       #endregion
+
+      private Aga.Controls.Tree.TreeViewAdv _treeView;
+      private Aga.Controls.Tree.NodeControls.NodeTextBox _name;
+      private Aga.Controls.Tree.NodeControls.NodeTextBox _timestamp;
+      private Aga.Controls.Tree.NodeControls.NodeTextBox _sha;
+      private Aga.Controls.Tree.TreeColumn treeColumn1;
+      private Aga.Controls.Tree.TreeColumn treeColumn2;
+      private Aga.Controls.Tree.TreeColumn treeColumn3;
    }
 }

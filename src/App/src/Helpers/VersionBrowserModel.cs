@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
+using Aga.Controls.Tree;
 
 namespace mrHelper.App.Helpers
 {
@@ -36,7 +37,7 @@ namespace mrHelper.App.Helpers
 
       public System.Collections.IEnumerable GetChildren(TreePath treePath)
       {
-         if (!treePath.IsEmpty() && !(treePath.LastNode as BaseVersionBrowserItem))
+         if (!treePath.IsEmpty() && !(treePath.LastNode is BaseVersionBrowserItem))
          {
             return null;
          }
@@ -75,10 +76,26 @@ namespace mrHelper.App.Helpers
          return treePath.LastNode is LeafVersionBrowserItem;
       }
 
-      public event EventHandler<TreeModelEventArgs> NodesChanged;
-      public event EventHandler<TreeModelEventArgs> NodesInserted;
-      public event EventHandler<TreeModelEventArgs> NodesRemoved;
-      public event EventHandler<TreePathEventArgs> StructureChanged;
+      public event EventHandler<TreeModelEventArgs> NodesChanged
+      {
+         add { throw new NotSupportedException(); }
+         remove { }
+      }
+      public event EventHandler<TreeModelEventArgs> NodesInserted
+      {
+         add { throw new NotSupportedException(); }
+         remove { }
+      }
+      public event EventHandler<TreeModelEventArgs> NodesRemoved
+      {
+         add { throw new NotSupportedException(); }
+         remove { }
+      }
+      public event EventHandler<TreePathEventArgs> StructureChanged
+      {
+         add { throw new NotSupportedException(); }
+         remove { }
+      }
 
       private string getSha(string fullSha)
       {
