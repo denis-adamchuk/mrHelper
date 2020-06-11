@@ -77,7 +77,6 @@ namespace mrHelper.App.Forms
          this.checkBoxAutoSelectNewestCommit = new System.Windows.Forms.CheckBox();
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowVersions = new System.Windows.Forms.CheckBox();
          this.checkBoxUseShallowClone = new System.Windows.Forms.CheckBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
          this.buttonEditUsers = new System.Windows.Forms.Button();
@@ -118,6 +117,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
+         this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -164,13 +164,9 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
-         this.labelEarliestCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxEarliestCommit = new System.Windows.Forms.ComboBox();
-         this.labelLatestCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxLatestCommit = new System.Windows.Forms.ComboBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
+         this.versionBrowser = new mrHelper.App.src.Controls.VersionBrowser();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -513,22 +509,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.checkBoxMinimizeOnClose, "Don\'t exit on closing the main window but minimize the application to the tray");
          this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
          this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
-         // 
-         // checkBoxShowVersions
-         // 
-         this.checkBoxShowVersions.AutoSize = true;
-         this.checkBoxShowVersions.Dock = System.Windows.Forms.DockStyle.Top;
-         this.checkBoxShowVersions.Enabled = false;
-         this.checkBoxShowVersions.Location = new System.Drawing.Point(3, 16);
-         this.checkBoxShowVersions.Name = "checkBoxShowVersions";
-         this.checkBoxShowVersions.Padding = new System.Windows.Forms.Padding(2, 4, 0, 6);
-         this.checkBoxShowVersions.Size = new System.Drawing.Size(920, 27);
-         this.checkBoxShowVersions.TabIndex = 9;
-         this.checkBoxShowVersions.Text = "Show changes between versions";
-         this.toolTip.SetToolTip(this.checkBoxShowVersions, "When checked, diff tool shows changes between versions by analogy with GitLab Web" +
-        " UI");
-         this.checkBoxShowVersions.UseVisualStyleBackColor = true;
-         this.checkBoxShowVersions.CheckedChanged += new System.EventHandler(this.checkBoxShowVersions_CheckedChanged);
          // 
          // checkBoxUseShallowClone
          // 
@@ -952,6 +932,18 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.buttonTimeTrackingStart, "Start/stop tracking time for the selected merge request");
          this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
+         // 
+         // checkBoxRunWhenWindowsStarts
+         // 
+         this.checkBoxRunWhenWindowsStarts.AutoSize = true;
+         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
+         this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
+         this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
+         this.checkBoxRunWhenWindowsStarts.Text = "Run mrHelper when Windows starts";
+         this.toolTip.SetToolTip(this.checkBoxRunWhenWindowsStarts, "Add mrHelper to the list of Startup Apps");
+         this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
+         this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
          // 
          // contextMenuStrip
          // 
@@ -1503,11 +1495,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSelectCommits
          // 
-         this.groupBoxSelectCommits.Controls.Add(this.labelEarliestCommitTimestampLabel);
-         this.groupBoxSelectCommits.Controls.Add(this.comboBoxEarliestCommit);
-         this.groupBoxSelectCommits.Controls.Add(this.labelLatestCommitTimestampLabel);
-         this.groupBoxSelectCommits.Controls.Add(this.comboBoxLatestCommit);
-         this.groupBoxSelectCommits.Controls.Add(this.checkBoxShowVersions);
+         this.groupBoxSelectCommits.Controls.Add(this.versionBrowser);
          this.groupBoxSelectCommits.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBoxSelectCommits.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectCommits.Name = "groupBoxSelectCommits";
@@ -1515,54 +1503,6 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectCommits.TabIndex = 4;
          this.groupBoxSelectCommits.TabStop = false;
          this.groupBoxSelectCommits.Text = "Select commits for diff tool";
-         // 
-         // labelEarliestCommitTimestampLabel
-         // 
-         this.labelEarliestCommitTimestampLabel.AutoEllipsis = true;
-         this.labelEarliestCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelEarliestCommitTimestampLabel.Location = new System.Drawing.Point(3, 109);
-         this.labelEarliestCommitTimestampLabel.Name = "labelEarliestCommitTimestampLabel";
-         this.labelEarliestCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-         this.labelEarliestCommitTimestampLabel.Size = new System.Drawing.Size(920, 22);
-         this.labelEarliestCommitTimestampLabel.TabIndex = 8;
-         this.labelEarliestCommitTimestampLabel.Text = "Created at:";
-         // 
-         // comboBoxEarliestCommit
-         // 
-         this.comboBoxEarliestCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxEarliestCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxEarliestCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxEarliestCommit.FormattingEnabled = true;
-         this.comboBoxEarliestCommit.Location = new System.Drawing.Point(3, 88);
-         this.comboBoxEarliestCommit.Name = "comboBoxEarliestCommit";
-         this.comboBoxEarliestCommit.Size = new System.Drawing.Size(920, 21);
-         this.comboBoxEarliestCommit.TabIndex = 6;
-         this.comboBoxEarliestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxEarliestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxEarliestCommit_SelectedIndexChanged);
-         // 
-         // labelLatestCommitTimestampLabel
-         // 
-         this.labelLatestCommitTimestampLabel.AutoEllipsis = true;
-         this.labelLatestCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelLatestCommitTimestampLabel.Location = new System.Drawing.Point(3, 64);
-         this.labelLatestCommitTimestampLabel.Name = "labelLatestCommitTimestampLabel";
-         this.labelLatestCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 6);
-         this.labelLatestCommitTimestampLabel.Size = new System.Drawing.Size(920, 24);
-         this.labelLatestCommitTimestampLabel.TabIndex = 7;
-         this.labelLatestCommitTimestampLabel.Text = "Created at:";
-         // 
-         // comboBoxLatestCommit
-         // 
-         this.comboBoxLatestCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxLatestCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxLatestCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLatestCommit.FormattingEnabled = true;
-         this.comboBoxLatestCommit.Location = new System.Drawing.Point(3, 43);
-         this.comboBoxLatestCommit.Name = "comboBoxLatestCommit";
-         this.comboBoxLatestCommit.Size = new System.Drawing.Size(920, 21);
-         this.comboBoxLatestCommit.TabIndex = 5;
-         this.comboBoxLatestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxLatestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLatestCommit_SelectedIndexChanged);
          // 
          // panel4
          // 
@@ -1580,17 +1520,13 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // checkBoxRunWhenWindowsStarts
+         // versionBrowser
          // 
-         this.checkBoxRunWhenWindowsStarts.AutoSize = true;
-         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
-         this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
-         this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
-         this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
-         this.checkBoxRunWhenWindowsStarts.Text = "Run mrHelper when Windows starts";
-         this.toolTip.SetToolTip(this.checkBoxRunWhenWindowsStarts, "Add mrHelper to the list of Startup Apps");
-         this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
-         this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
+         this.versionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.versionBrowser.Location = new System.Drawing.Point(3, 16);
+         this.versionBrowser.Name = "versionBrowser";
+         this.versionBrowser.Size = new System.Drawing.Size(920, 114);
+         this.versionBrowser.TabIndex = 0;
          // 
          // MainForm
          // 
@@ -1642,7 +1578,6 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxSelectCommits.ResumeLayout(false);
-         this.groupBoxSelectCommits.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -1699,8 +1634,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxActions;
       private System.Windows.Forms.GroupBox groupBoxSelectCommits;
       private System.Windows.Forms.Button buttonDiffTool;
-      private System.Windows.Forms.ComboBox comboBoxEarliestCommit;
-      private System.Windows.Forms.ComboBox comboBoxLatestCommit;
       private System.Windows.Forms.CheckBox checkBoxShowServiceNotifications;
       private System.Windows.Forms.ComboBox comboBoxThemes;
       private System.Windows.Forms.ComboBox comboBoxFonts;
@@ -1714,8 +1647,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonAddComment;
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Button buttonNewDiscussion;
-        private System.Windows.Forms.Label labelEarliestCommitTimestampLabel;
-        private System.Windows.Forms.Label labelLatestCommitTimestampLabel;
       private System.Windows.Forms.Panel panelStatusBar;
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
       private System.Windows.Forms.Label labelGitStatus;
@@ -1760,7 +1691,6 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.RadioButton radioButtonSearchByTargetBranch;
         private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
       private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestCommit;
-      private System.Windows.Forms.CheckBox checkBoxShowVersions;
       private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
         private System.Windows.Forms.CheckBox checkBoxUseShallowClone;
         private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
@@ -1769,6 +1699,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
       private System.Windows.Forms.CheckBox checkBoxRunWhenWindowsStarts;
+      private src.Controls.VersionBrowser versionBrowser;
    }
 }
 
