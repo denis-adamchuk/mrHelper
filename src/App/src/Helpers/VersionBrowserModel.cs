@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable 67  // Event never used
+
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
@@ -76,26 +78,10 @@ namespace mrHelper.App.Helpers
          return treePath.LastNode is LeafVersionBrowserItem;
       }
 
-      public event EventHandler<TreeModelEventArgs> NodesChanged
-      {
-         add { throw new NotSupportedException(); }
-         remove { }
-      }
-      public event EventHandler<TreeModelEventArgs> NodesInserted
-      {
-         add { throw new NotSupportedException(); }
-         remove { }
-      }
-      public event EventHandler<TreeModelEventArgs> NodesRemoved
-      {
-         add { throw new NotSupportedException(); }
-         remove { }
-      }
-      public event EventHandler<TreePathEventArgs> StructureChanged
-      {
-         add { throw new NotSupportedException(); }
-         remove { }
-      }
+      public event EventHandler<TreeModelEventArgs> NodesChanged;
+      public event EventHandler<TreeModelEventArgs> NodesInserted;
+      public event EventHandler<TreeModelEventArgs> NodesRemoved;
+      public event EventHandler<TreePathEventArgs> StructureChanged;
 
       private string getSha(string fullSha)
       {
