@@ -430,33 +430,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ComboBoxCommits_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+      private void checkBoxShowVersionsByDefault_CheckedChanged(object sender, EventArgs e)
       {
-         //if (e.Index < 0)
-         //{
-         //   return;
-         //}
-
-         //ComboBox comboBox = sender as ComboBox;
-         //CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.Items[e.Index]);
-
-         //e.DrawBackground();
-
-         //if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.ComboBoxEdit)
-         //{
-         //   drawComboBoxEdit(e, comboBox, getCommitComboBoxItemColor(item), formatCommitComboboxItem(item));
-         //}
-         //else
-         //{
-         //   bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-         //   WinFormsHelpers.FillRectangle(e, e.Bounds, getCommitComboBoxItemColor(item), isSelected);
-
-         //   Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-         //   e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-         //   e.Graphics.DrawString(formatCommitComboboxItem(item), comboBox.Font, textBrush, e.Bounds);
-         //}
-
-         //e.DrawFocusRectangle();
+         Program.Settings.ShowVersionsByDefault = (sender as CheckBox).Checked;
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -587,14 +563,6 @@ namespace mrHelper.App.Forms
       private void checkBoxAutoSelectNewestCommit_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.AutoSelectNewestCommit = (sender as CheckBox).Checked;
-
-         MergeRequestKey? mrk = getMergeRequestKey(null);
-         if (mrk.HasValue)
-         {
-            // TODO
-            //selectNotReviewedCommits(isSearchMode(),
-            //   comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
-         }
       }
 
       private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
@@ -1059,12 +1027,12 @@ namespace mrHelper.App.Forms
       {
          writer.Set("SelectedHost", getHostName());
 
-         Dictionary<string, HashSet<string>> reviewedCommits = _reviewedCommits.ToDictionary(
+         Dictionary<string, HashSet<string>> reviewedRevisions = _reviewedRevisions.ToDictionary(
                item => item.Key.ProjectKey.HostName
                + "|" + item.Key.ProjectKey.ProjectName
                + "|" + item.Key.IId.ToString(),
                item => item.Value);
-         writer.Set("ReviewedCommits", reviewedCommits);
+         writer.Set("ReviewedCommits", reviewedRevisions);
 
          Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
                item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
@@ -1080,12 +1048,12 @@ namespace mrHelper.App.Forms
             _initialHostName = StringUtils.GetHostWithPrefix(hostname);
          }
 
-         JObject reviewedCommitsObj = (JObject)reader.Get("ReviewedCommits");
-         Dictionary<string, object> reviewedCommits =
-            reviewedCommitsObj.ToObject<Dictionary<string, object>>();
-         if (reviewedCommits != null)
+         JObject reviewedRevisionsObj = (JObject)reader.Get("ReviewedCommits");
+         Dictionary<string, object> reviewedRevisions =
+            reviewedRevisionsObj.ToObject<Dictionary<string, object>>();
+         if (reviewedRevisions != null)
          {
-            _reviewedCommits = reviewedCommits.ToDictionary(
+            _reviewedRevisions = reviewedRevisions.ToDictionary(
                item =>
                {
                   string[] splitted = item.Key.Split('|');
@@ -1329,27 +1297,9 @@ namespace mrHelper.App.Forms
          ));
       }
 
-      private void VersionBrowser_SelectionChanged(object sender, EventArgs e)
+      private void RevisionBrowser_SelectionChanged(object sender, EventArgs e)
       {
-         string[] selected = versionBrowser.GetSelected();
-         switch (selected.Count())
-         {
-            case 1:
-               buttonDiffTool.Enabled = true;
-               buttonDiffTool.Text = "Diff to Base";
-               break;
-
-            case 2:
-               buttonDiffTool.Enabled = true;
-               buttonDiffTool.Text = "Diff Tool";
-               break;
-
-            case 0:
-            default:
-               buttonDiffTool.Enabled = false;
-               buttonDiffTool.Text = "Diff Tool";
-               break;
-         }
+         updateDiffToolButtonState();
       }
    }
 }

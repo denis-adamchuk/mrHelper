@@ -163,7 +163,7 @@ namespace mrHelper.App.Forms
          await _liveSession.Start(hostname, sessionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
-         cleanupReviewedCommits(hostname);
+         cleanupReviewedRevisions(hostname);
       }
 
       private async Task startUserBasedWorkflowAsync(string hostname)
@@ -178,7 +178,7 @@ namespace mrHelper.App.Forms
          await _liveSession.Start(hostname, sessionContext);
 
          onAllMergeRequestsLoaded(hostname, _liveSession.MergeRequestCache.GetProjects());
-         cleanupReviewedCommits(hostname);
+         cleanupReviewedRevisions(hostname);
       }
 
       private void onForbiddenProject(ProjectKey projectKey)

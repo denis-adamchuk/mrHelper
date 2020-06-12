@@ -172,22 +172,19 @@ namespace mrHelper.App.Forms
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          // Keep data before async/await
-         getShaForDiffTool(out string leftSHA, out string rightSHA);
          ISession session = getSession(!isSearchMode());
-         if (session == null)
+         getShaForDiffTool(out string leftSHA, out string rightSHA, out IEnumerable<string> includedSHA,
+            out RevisionType? type);
+         if (session == null
+          || String.IsNullOrWhiteSpace(leftSHA)
+          || String.IsNullOrWhiteSpace(rightSHA)
+          || includedSHA == null
+          || !includedSHA.Any()
+          || !type.HasValue)
          {
             Debug.Assert(false);
             return;
          }
-
-         // includedSHA contains all the SHA starting from the selected one
-         List<string> includedSHA = new List<string>();
-         // TODO
-         //for (int index = comboBoxLatestCommit.SelectedIndex; index < comboBoxLatestCommit.Items.Count; ++index)
-         //{
-         //   string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[index])).SHA;
-         //   includedSHA.Add(sha);
-         //}
 
          ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
          if (!await prepareRepositoryForDiffTool(repo, leftSHA, rightSHA) || _exiting)
@@ -197,11 +194,12 @@ namespace mrHelper.App.Forms
 
          launchDiffTool(leftSHA, rightSHA, ref repo, session);
 
-         if (!_reviewedCommits.ContainsKey(mrk))
+         HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
+         foreach (string sha in includedSHA)
          {
-            _reviewedCommits[mrk] = new HashSet<string>();
+            reviewedRevisions.Add(sha);
          }
-         includedSHA.ForEach(x => _reviewedCommits[mrk].Add(x));
+         revisionBrowser.UpdateReviewedRevisions(reviewedRevisions, type.Value);
       }
 
       private void launchDiffTool(string leftSHA, string rightSHA, ref ILocalGitRepository repo, ISession session)

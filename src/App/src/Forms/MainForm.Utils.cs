@@ -231,58 +231,13 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      //private static void selectNotReviewedCommits(bool isSearchMode,
-      //   ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit, HashSet<string> reviewedCommits)
-      //{
-      //   Tuple<int, int> getCommitIndices()
-      //   {
-      //      int DefaultLatestIndex = 0;
-      //      int DefaultEarliestIndex = comboBoxEarliestCommit.Items.Count - 1;
-
-      //      int? iNewestReviewedCommitIndex = new Nullable<int>();
-      //      if (!isSearchMode)
-      //      {
-      //         for (int iItem = 0; iItem < comboBoxLatestCommit.Items.Count; ++iItem)
-      //         {
-      //            string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[iItem])).SHA;
-      //            if (reviewedCommits.Contains(sha))
-      //            {
-      //               iNewestReviewedCommitIndex = iItem;
-      //               break;
-      //            }
-      //         }
-      //      }
-
-      //      if (!iNewestReviewedCommitIndex.HasValue)
-      //      {
-      //         return new Tuple<int, int>(DefaultLatestIndex, DefaultEarliestIndex);
-      //      }
-
-      //      if (Program.Settings.AutoSelectNewestCommit)
-      //      {
-      //         return new Tuple<int, int>(0, Math.Max(0, iNewestReviewedCommitIndex.Value - 1));
-      //      }
-      //      else
-      //      {
-      //         // note that `earliest` should not be `latest + 1` because Latest CB is shifted comparing to Earliest CB
-      //         int latest = Math.Max(0, iNewestReviewedCommitIndex.Value - 1);
-      //         int earliest = Math.Min(latest, comboBoxEarliestCommit.Items.Count - 1);
-      //         return new Tuple<int, int>(latest, earliest);
-      //      }
-      //   }
-
-      //   Debug.Assert(comboBoxLatestCommit.Items.Count == comboBoxEarliestCommit.Items.Count);
-      //   if (comboBoxEarliestCommit.Items.Count > 0)
-      //   {
-      //      Tuple<int, int> indices = getCommitIndices();
-      //      comboBoxLatestCommit.SelectedIndex = indices.Item1;
-      //      comboBoxEarliestCommit.SelectedIndex = indices.Item2;
-      //   }
-      //}
-
-      private HashSet<string> getReviewedCommits(MergeRequestKey mrk)
+      private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
       {
-         return _reviewedCommits.ContainsKey(mrk) ? _reviewedCommits[mrk] : new HashSet<string>();
+         if (!_reviewedRevisions.ContainsKey(mrk))
+         {
+            _reviewedRevisions[mrk] = new HashSet<string>();
+         }
+         return _reviewedRevisions[mrk];
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -669,8 +624,38 @@ namespace mrHelper.App.Forms
       private void enableCommitActions(bool enabled, IEnumerable<string> labels, User author)
       {
          buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
-         buttonDiffTool.Enabled = enabled;
+         updateDiffToolButtonState();
          enableCustomActions(enabled, labels, author);
+      }
+
+      private void updateDiffToolButtonState()
+      {
+         string[] selected = revisionBrowser.GetSelected(out RevisionType? type);
+         switch (selected.Count())
+         {
+            case 1:
+               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Text = "Diff to Base";
+               string targetBranch = getMergeRequest(null)?.Target_Branch;
+               if (targetBranch != null)
+               {
+                  this.toolTip.SetToolTip(this.buttonDiffTool, String.Format(
+                     "Launch diff tool to compare selected revision to {0}", targetBranch));
+               }
+               break;
+
+            case 2:
+               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Text = "Diff Tool";
+               this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to compare selected revisions");
+               break;
+
+            case 0:
+            default:
+               buttonDiffTool.Enabled = false;
+               buttonDiffTool.Text = "Diff Tool";
+               break;
+         }
       }
 
       private bool isCustomActionEnabled(IEnumerable<string> labels, User author, string dependency)
@@ -849,23 +834,10 @@ namespace mrHelper.App.Forms
          return isSelected ? Color.Orange : Color.Red;
       }
 
-      private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
-      {
-         if (!getMergeRequestKey(null).HasValue)
-         {
-            return SystemColors.Window;
-         }
-
-         MergeRequestKey mrk = getMergeRequestKey(null).Value;
-         bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
-         return wasReviewed || item.Status == ECommitComboBoxItemStatus.Base ? SystemColors.Window :
-            _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);
-      }
-
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(string hostname)
+      private void cleanupReviewedRevisions(string hostname)
       {
          if (_liveSession?.MergeRequestCache == null)
          {
@@ -875,11 +847,11 @@ namespace mrHelper.App.Forms
          IEnumerable<ProjectKey> projectKeys = _liveSession.MergeRequestCache.GetProjects();
 
          // gather all MR from projects that no longer in use
-         IEnumerable<MergeRequestKey> toRemove1 = _reviewedCommits.Keys
+         IEnumerable<MergeRequestKey> toRemove1 = _reviewedRevisions.Keys
             .Where(x => !projectKeys.Any(y => y.Equals(x.ProjectKey)));
 
          // gather all closed MR from existing projects
-         IEnumerable<MergeRequestKey> toRemove2 = _reviewedCommits.Keys
+         IEnumerable<MergeRequestKey> toRemove2 = _reviewedRevisions.Keys
             .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
                && !_liveSession.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
 
@@ -892,22 +864,22 @@ namespace mrHelper.App.Forms
 
          foreach (MergeRequestKey key in toRemove)
          {
-            _reviewedCommits.Remove(key);
+            _reviewedRevisions.Remove(key);
          }
       }
 
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(MergeRequestKey mrk)
+      private void cleanupReviewedRevisions(MergeRequestKey mrk)
       {
-         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(x => x.Equals(mrk));
+         IEnumerable<MergeRequestKey> toRemove = _reviewedRevisions.Keys.Where(x => x.Equals(mrk));
          if (!toRemove.Any())
          {
             return;
          }
 
-         _reviewedCommits.Remove(toRemove.First());
+         _reviewedRevisions.Remove(toRemove.First());
       }
 
 
@@ -1166,7 +1138,7 @@ namespace mrHelper.App.Forms
 
          if (e.Closed)
          {
-            cleanupReviewedCommits(mrk);
+            cleanupReviewedRevisions(mrk);
          }
 
          updateVisibleMergeRequests();
@@ -1828,28 +1800,22 @@ namespace mrHelper.App.Forms
          MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions,
          ListView listView)
       {
-         // TODO Clear selection?
-         versionBrowser.Enabled = false;
-
          MergeRequestKey? mrk = getMergeRequestKey(listView);
-
          bool hasObjects = commits.Any() || versions.Any();
          if (mrk.HasValue && hasObjects)
          {
-            versionBrowser.Enabled = true;
-
-            VersionBrowserModelData data = new VersionBrowserModelData(commits, versions,
-               latestVersion?.Base_Commit_SHA, mergeRequest.Target_Branch);
-            versionBrowser.SetData(data);
-            //selectNotReviewedCommits(listView == listViewFoundMergeRequests,
-            //   comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
-
+            RevisionBrowserModelData data = new RevisionBrowserModelData(latestVersion?.Base_Commit_SHA,
+               commits, versions, getReviewedRevisions(mrk.Value));
+            revisionBrowser.SetData(data, ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
             enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
+         {
+         revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
+         }
 
          Debug.WriteLine(String.Format(
-            "[MainForm] Loaded comparable entities IsSearchMode={00", isSearchMode().ToString()));
+            "[MainForm] Loaded comparable entities IsSearchMode={0}", isSearchMode().ToString()));
       }
 
       private void disableCommonUIControls()
@@ -1859,9 +1825,7 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
          updateTotalTime(null, null, null, null);
-
-         // TODO Clear selection?
-         versionBrowser.Enabled = false;
+         revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
       }
 
       private MergeRequestFilterState createMergeRequestFilterState()
@@ -1896,30 +1860,35 @@ namespace mrHelper.App.Forms
          buttonReloadList.Enabled = true;
       }
 
-      private void getShaForDiffTool(out string left, out string right)
+      private void getShaForDiffTool(out string left, out string right, out IEnumerable<string> included,
+         out RevisionType? type)
       {
-         string[] selected = versionBrowser.GetSelected();
+         string[] selected = revisionBrowser.GetSelected(out type);
          switch (selected.Count())
          {
             case 0:
                left = String.Empty;
                right = String.Empty;
+               included = new List<string>();
                break;
 
             case 1:
-               left = versionBrowser.GetBaseCommitSha();
+               left = revisionBrowser.GetBaseCommitSha();
                right = selected[0];
+               included = revisionBrowser.GetIncludedSha();
                break;
 
             case 2:
                left = selected[0];
                right = selected[1];
+               included = revisionBrowser.GetIncludedSha();
                break;
 
             default:
                Debug.Assert(false);
                left = String.Empty;
                right = String.Empty;
+               included = new List<string>();
                break;
          }
       }

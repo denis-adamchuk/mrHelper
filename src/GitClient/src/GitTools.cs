@@ -244,8 +244,7 @@ namespace mrHelper.GitClient
 
       public static bool IsSingleCommitFetchSupported(string path)
       {
-         // TODO
-         // Check if it is possible to run commands like `git fetch origin <sha>:refs/keep-around/sha`
+         // TODO Check if it is possible to run commands like `git fetch origin <sha>:refs/keep-around/sha`
          return true;
       }
 

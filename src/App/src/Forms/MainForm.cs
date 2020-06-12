@@ -109,7 +109,8 @@ namespace mrHelper.App.Forms
       private EventFilter _eventFilter;
 
       private string _initialHostName = String.Empty;
-      private Dictionary<MergeRequestKey, HashSet<string>> _reviewedCommits =
+
+      private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();

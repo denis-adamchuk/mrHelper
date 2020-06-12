@@ -154,6 +154,7 @@ namespace mrHelper.App.Forms
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
+         checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
          checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
@@ -387,6 +388,7 @@ namespace mrHelper.App.Forms
       {
          addCustomActions();
          loadConfiguration();
+         resetMinimumSizes();
          disableSSLVerification();
          updateCaption();
          updateTabControlSelection();
