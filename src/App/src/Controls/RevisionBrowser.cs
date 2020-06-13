@@ -33,33 +33,23 @@ namespace mrHelper.App.Controls
          _timestamp.DrawText += row_DrawText;
       }
 
-      internal string[] GetSelected(out RevisionType? type)
-      {
-         type = new Nullable<RevisionType>();
-         IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out type);
-         return leaves.Any() ? leaves.Select(x => x.FullSHA).ToArray() : Array.Empty<string>();
-      }
-
       internal string GetBaseCommitSha()
       {
          return getModel().Data.BaseSha;
       }
 
-      internal IEnumerable<string> GetIncludedSha()
+      internal string[] GetSelectedSha(out RevisionType? type)
+      {
+         type = new RevisionType?();
+         IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out type);
+         return leaves.Select(x => x.FullSHA).ToArray();
+      }
+
+      internal string[] GetIncludedSha()
       {
          IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out RevisionType? type);
-         if (!leaves.Any())
-         {
-            return Array.Empty<string>();
-         }
-
-         RevisionBrowserItem latestSelected = leaves.OrderByDescending(x => x.OriginalTimestamp).First();
-         return _treeView.AllNodes
-            .Where(x => x.Tag is RevisionBrowserItem)
-            .Select(x => x.Tag as RevisionBrowserItem)
-            .OrderByDescending(x => x.OriginalTimestamp)
-            .Where(x => x.OriginalTimestamp <= latestSelected.OriginalTimestamp)
-            .Select(x => x.FullSHA);
+         RevisionBrowserItem latestSelected = leaves.OrderByDescending(x => x.OriginalTimestamp).FirstOrDefault();
+         return getEarlierLeafNodes(latestSelected).Select(x => x.FullSHA).ToArray();
       }
 
       internal void SetData(RevisionBrowserModelData data, RevisionType defaultRevisionType)
@@ -107,39 +97,40 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<RevisionBrowserItem> getSelectedLeafNodes(out RevisionType? type)
       {
-         type = new Nullable<RevisionType>();
+         type = new RevisionType?();
 
-         // Nothing selected
-         if (_treeView.SelectedNodes.Count == 0)
+         int totalSelectedCount = _treeView.SelectedNodes.Count;
+         int selectedLeafCount = _treeView.SelectedNodes
+            .Count(x => x.Tag is RevisionBrowserItem item && item.FullSHA != "N/A");
+         if (totalSelectedCount == 0 || totalSelectedCount != selectedLeafCount)
          {
             return Array.Empty<RevisionBrowserItem>();
          }
 
-         // At least one of selected nodes is a root node
-         if (_treeView.SelectedNodes
-               .Select(x => x.Tag is RevisionBrowserTypeItem)
-               .Where(x => x)
-               .Any())
-         {
-            return Array.Empty<RevisionBrowserItem>();
-         }
-
-         if (_treeView.SelectedNodes
-               .Any(x => (x.Tag as RevisionBrowserItem).FullSHA == "N/A"))
-         {
-            return Array.Empty<RevisionBrowserItem>();
-         }
-
-         Debug.Assert(_treeView.SelectedNodes.Any());
-         Debug.Assert(!_treeView.SelectedNodes.Any(x => !(x.Tag is RevisionBrowserItem)));
          Debug.Assert(_treeView.SelectedNodes.Select(x => x.Parent).Distinct().Count() == 1);
-         type = (_treeView.SelectedNodes[0].Parent.Tag as RevisionBrowserTypeItem).Type;
-         return _treeView.SelectedNodes.Select(x => x.Tag as RevisionBrowserItem);
+         type = (_treeView.SelectedNodes.First().Parent.Tag as RevisionBrowserTypeItem).Type;
+         return _treeView.SelectedNodes.Select(x => x.Tag).Cast<RevisionBrowserItem>();
+      }
+
+      private IEnumerable<RevisionBrowserItem> getEarlierLeafNodes(RevisionBrowserItem item)
+      {
+         if (item == null)
+         {
+            return Array.Empty<RevisionBrowserItem>();
+         }
+
+         return _treeView.AllNodes
+            .Where(x => x.Tag is RevisionBrowserItem)
+            .Select(x => x.Tag)
+            .Cast<RevisionBrowserItem>()
+            .OrderByDescending(x => x.OriginalTimestamp)
+            .Where(x => x.OriginalTimestamp <= item.OriginalTimestamp);
       }
 
       private void autoSelectRevision(TreeNodeAdv revisionTypeNode)
       {
          _treeView.ClearSelection();
+         revisionTypeNode.Expand();
 
          IEnumerable<TreeNodeAdv> sortedChildren = revisionTypeNode?.Children
             .Where(x => x.Tag is RevisionBrowserItem)
@@ -150,26 +141,28 @@ namespace mrHelper.App.Controls
          }
 
          IEnumerable<string> reviewedRevisions = getModel().Data.ReviewedRevisions;
-         TreeNodeAdv newestReviewedRevision = sortedChildren
+         TreeNodeAdv newestRevisionNode = sortedChildren.First();
+         TreeNodeAdv newestReviewedRevisionNode = sortedChildren
             .FirstOrDefault(x => reviewedRevisions.Contains((x.Tag as RevisionBrowserItem).FullSHA));
-         if (newestReviewedRevision == null)
+         if (newestReviewedRevisionNode == null)
          {
-            sortedChildren.First().IsSelected = true;
+            newestRevisionNode.IsSelected = true;
          }
-         else if (Program.Settings.AutoSelectNewestCommit)
+         else if (Program.Settings.AutoSelectNewestRevision)
          {
-            newestReviewedRevision.IsSelected = true;
-            if (newestReviewedRevision != sortedChildren.First())
+            newestReviewedRevisionNode.IsSelected = true;
+            if (newestReviewedRevisionNode != newestRevisionNode)
             {
-               sortedChildren.First().IsSelected = true;
+               newestRevisionNode.IsSelected = true;
             }
          }
          else
          {
-            newestReviewedRevision.IsSelected = true;
-            if (newestReviewedRevision.PreviousNode != null)
+            newestReviewedRevisionNode.IsSelected = true;
+            TreeNodeAdv earliestNotReviewedRevisionNode = newestReviewedRevisionNode.PreviousNode;
+            if (earliestNotReviewedRevisionNode != null)
             {
-               newestReviewedRevision.PreviousNode.IsSelected = true;
+               earliestNotReviewedRevisionNode.IsSelected = true;
             }
          }
       }

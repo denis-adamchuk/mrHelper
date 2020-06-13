@@ -51,7 +51,6 @@
          this._treeView.FullRowSelect = true;
          this._treeView.GridLineStyle = ((Aga.Controls.Tree.GridLineStyle)((Aga.Controls.Tree.GridLineStyle.Horizontal | Aga.Controls.Tree.GridLineStyle.Vertical)));
          this._treeView.LineColor = System.Drawing.SystemColors.ControlDark;
-         this._treeView.LoadOnDemand = true;
          this._treeView.Location = new System.Drawing.Point(0, 0);
          this._treeView.Model = null;
          this._treeView.Name = "_treeView";

@@ -153,7 +153,7 @@ namespace mrHelper.App.Forms
          checkBoxRunWhenWindowsStarts.Checked = Program.Settings.RunWhenWindowsStarts;
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
-         checkBoxAutoSelectNewestCommit.Checked = Program.Settings.AutoSelectNewestCommit;
+         checkBoxAutoSelectNewestRevision.Checked = Program.Settings.AutoSelectNewestRevision;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
          checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 

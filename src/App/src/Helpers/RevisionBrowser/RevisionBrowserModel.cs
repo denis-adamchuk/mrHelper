@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
@@ -65,30 +66,17 @@ namespace mrHelper.App.Helpers
          else
          {
             if (treePath.LastNode is RevisionBrowserTypeItem parent
-             && Data.Revisions != null
+             && Data?.Revisions != null
              && Data.Revisions.TryGetValue(parent.Type, out IEnumerable<object> objects))
             {
-               int iObject = objects.Count();
-               foreach (object o in objects)
+               int iItem = objects.Count();
+               foreach (object item in sortByTimestamp(objects))
                {
-                  if (o is Version version)
-                  {
-                     string fullSha = String.IsNullOrEmpty(version.Head_Commit_SHA) ? "N/A" : version.Head_Commit_SHA;
-                     string sha = fullSha.Substring(0, Math.Min(10, fullSha.Length));
-                     string name = String.Format("Version #{0} ({1})", iObject, sha);
-                     string tooltipText = String.Empty; // Not implemented
-                     items.Add(new RevisionBrowserItem(name, version.Created_At, fullSha, parent, this, tooltipText,
-                        _data.ReviewedRevisions.Contains(fullSha)));
-                     --iObject;
-                  }
-                  else if (o is Commit commit)
-                  {
-                     string name = commit.Title;
-                     string fullSha = commit.Id;
-                     string tooltipText = commit.Message;
-                     items.Add(new RevisionBrowserItem(name, commit.Created_At, fullSha, parent, this, tooltipText,
-                        _data.ReviewedRevisions.Contains(fullSha)));
-                  }
+                  getItemProperties(iItem, item,
+                     out string fullSha, out string name, out DateTime timestamp, out string tooltipText);
+                  bool isReviewed = _data.ReviewedRevisions.Contains(fullSha);
+                  items.Add(new RevisionBrowserItem(name, timestamp, fullSha, parent, this, tooltipText, isReviewed));
+                  --iItem;
                }
             }
          }
@@ -104,6 +92,50 @@ namespace mrHelper.App.Helpers
       public event EventHandler<TreeModelEventArgs> NodesInserted;
       public event EventHandler<TreeModelEventArgs> NodesRemoved;
       public event EventHandler<TreePathEventArgs> StructureChanged;
+
+      private IEnumerable<object> sortByTimestamp(IEnumerable<object> objects)
+      {
+         return objects.OrderByDescending(
+            x =>
+         {
+            if (x is Commit c)
+            {
+               return c.Created_At;
+            }
+            else if (x is Version v)
+            {
+               return v.Created_At;
+            }
+            else
+            {
+               throw new NotImplementedException();
+            }
+         });
+      }
+
+      private void getItemProperties(int iItem, object item,
+         out string fullSha, out string name, out DateTime timestamp, out string tooltipText)
+      {
+         if (item is Version version)
+         {
+            fullSha = String.IsNullOrEmpty(version.Head_Commit_SHA) ? "N/A" : version.Head_Commit_SHA;
+            string sha = fullSha.Substring(0, Math.Min(10, fullSha.Length));
+            name = String.Format("Version #{0} ({1})", iItem, sha);
+            timestamp = version.Created_At;
+            tooltipText = String.Empty; // Not implemented
+         }
+         else if (item is Commit commit)
+         {
+            name = commit.Title;
+            fullSha = commit.Id;
+            timestamp = commit.Created_At;
+            tooltipText = commit.Message;
+         }
+         else
+         {
+            throw new NotImplementedException();
+         }
+      }
 
       private RevisionBrowserModelData _data;
    }

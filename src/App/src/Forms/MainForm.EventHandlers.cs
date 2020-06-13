@@ -560,9 +560,9 @@ namespace mrHelper.App.Forms
          resetMinimumSizes();
       }
 
-      private void checkBoxAutoSelectNewestCommit_CheckedChanged(object sender, EventArgs e)
+      private void checkBoxAutoSelectNewestRevision_CheckedChanged(object sender, EventArgs e)
       {
-         Program.Settings.AutoSelectNewestCommit = (sender as CheckBox).Checked;
+         Program.Settings.AutoSelectNewestRevision = (sender as CheckBox).Checked;
       }
 
       private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)

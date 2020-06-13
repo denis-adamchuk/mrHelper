@@ -215,7 +215,7 @@ namespace mrHelper.App.Helpers
          set { setValue(LocalGitFolderKeyName, value); }
       }
 
-      public bool AutoSelectNewestCommit
+      public bool AutoSelectNewestRevision
       {
          get
          {

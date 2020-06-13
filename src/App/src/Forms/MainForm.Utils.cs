@@ -630,7 +630,7 @@ namespace mrHelper.App.Forms
 
       private void updateDiffToolButtonState()
       {
-         string[] selected = revisionBrowser.GetSelected(out RevisionType? type);
+         string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
          switch (selected.Count())
          {
             case 1:
@@ -1603,9 +1603,9 @@ namespace mrHelper.App.Forms
                 + calcVertDistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
 
          return
-              calcVertDistance(null, groupBoxSelectCommits)
-            + groupBoxSelectCommits.Height
-            + calcVertDistance(groupBoxSelectCommits, groupBoxReview)
+              calcVertDistance(null, groupBoxSelectRevisions)
+            + groupBoxSelectRevisions.Height
+            + calcVertDistance(groupBoxSelectRevisions, groupBoxReview)
             + groupBoxReview.Height
             + calcVertDistance(groupBoxReview, groupBoxTimeTracking)
             + groupBoxTimeTracking.Height
@@ -1863,7 +1863,7 @@ namespace mrHelper.App.Forms
       private void getShaForDiffTool(out string left, out string right, out IEnumerable<string> included,
          out RevisionType? type)
       {
-         string[] selected = revisionBrowser.GetSelected(out type);
+         string[] selected = revisionBrowser.GetSelectedSha(out type);
          switch (selected.Count())
          {
             case 0:
