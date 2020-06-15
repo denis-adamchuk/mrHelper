@@ -120,19 +120,23 @@ namespace mrHelper.App.Helpers
       private static readonly string Notifications_Service_KeyName      = "Notifications_Service";
       private static readonly bool   Notifications_Service_DefaultValue = false;
 
-      private static readonly string ListViewMergeRequestsColumnWidthsKeyName      = "LVMR_ColWidths";
-      private static readonly string ListViewMergeRequestsColumnWidthsDefaultValue = String.Empty;
+      private static readonly string ListViewMergeRequestsColumnWidthsKeyName           = "LVMR_ColWidths";
+      private static readonly string ListViewMergeRequestsColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    ListViewMergeRequestsSingleColumnWidthDefaultValue = 100;
 
-      private static readonly string ListViewMergeRequestsDisplayIndicesKeyName = "LVMR_DisplayIndices";
+      private static readonly string ListViewMergeRequestsDisplayIndicesKeyName      = "LVMR_DisplayIndices";
       private static readonly string ListViewMergeRequestsDisplayIndicesDefaultValue = String.Empty;
 
-      private static readonly string ListViewFoundMergeRequestsColumnWidthsKeyName      = "LVFMR_ColWidths";
-      private static readonly string ListViewFoundMergeRequestsColumnWidthsDefaultValue = String.Empty;
+      private static readonly string ListViewFoundMergeRequestsColumnWidthsKeyName           = "LVFMR_ColWidths";
+      private static readonly string ListViewFoundMergeRequestsColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    ListViewFoundMergeRequestsSingleColumnWidthDefaultValue = 100;
 
-      private static readonly string ListViewFoundMergeRequestsDisplayIndicesKeyName = "LVFMR_DisplayIndices";
+      private static readonly string ListViewFoundMergeRequestsDisplayIndicesKeyName      = "LVFMR_DisplayIndices";
       private static readonly string ListViewFoundMergeRequestsDisplayIndicesDefaultValue = String.Empty;
+
+      private static readonly string RevisionBrowserColumnWidthsKeyName           = "RB_ColWidths";
+      private static readonly string RevisionBrowserColumnWidthsDefaultValue      = String.Empty;
+      private static readonly int    RevisionBrowserSingleColumnWidthDefaultValue = 100;
 
       private static readonly string MainWindowSplitterDistanceKeyName      = "MWSplitterDistance";
       private static readonly int    MainWindowSplitterDistanceDefaultValue = 0;
@@ -527,6 +531,20 @@ namespace mrHelper.App.Helpers
          set
          {
             setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName, value);
+         }
+      }
+
+      public Dictionary<string, int> RevisionBrowserColumnWidths
+      {
+         get
+         {
+            return getStringToIntDictionary(RevisionBrowserColumnWidthsKeyName,
+                                            RevisionBrowserColumnWidthsDefaultValue,
+                                            RevisionBrowserSingleColumnWidthDefaultValue, -1);
+         }
+         set
+         {
+            setStringToIntDictionary(RevisionBrowserColumnWidthsKeyName, value);
          }
       }
 

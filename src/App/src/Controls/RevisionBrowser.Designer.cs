@@ -37,10 +37,9 @@
          // 
          // _treeView
          // 
-         this._treeView.AllowColumnReorder = true;
-         this._treeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                  | System.Windows.Forms.AnchorStyles.Left)
-                  | System.Windows.Forms.AnchorStyles.Right)));
+         this._treeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this._treeView.AutoRowHeight = true;
          this._treeView.BackColor = System.Drawing.SystemColors.Window;
          this._treeView.Columns.Add(this.treeColumn1);
@@ -50,6 +49,7 @@
          this._treeView.DragDropMarkColor = System.Drawing.Color.Black;
          this._treeView.FullRowSelect = true;
          this._treeView.GridLineStyle = ((Aga.Controls.Tree.GridLineStyle)((Aga.Controls.Tree.GridLineStyle.Horizontal | Aga.Controls.Tree.GridLineStyle.Vertical)));
+         this._treeView.HideSelection = true;
          this._treeView.LineColor = System.Drawing.SystemColors.ControlDark;
          this._treeView.Location = new System.Drawing.Point(0, 0);
          this._treeView.Model = null;
@@ -57,10 +57,12 @@
          this._treeView.NodeControls.Add(this._name);
          this._treeView.NodeControls.Add(this._timestamp);
          this._treeView.SelectedNode = null;
+         this._treeView.SelectionMode = Aga.Controls.Tree.TreeSelectionMode.MultiSameParent;
          this._treeView.ShowNodeToolTips = true;
          this._treeView.Size = new System.Drawing.Size(100, 100);
          this._treeView.TabIndex = 0;
          this._treeView.UseColumns = true;
+         this._treeView.ColumnWidthChanged += new System.EventHandler<Aga.Controls.Tree.TreeColumnEventArgs>(this.treeView_ColumnWidthChanged);
          // 
          // treeColumn1
          // 
@@ -101,8 +103,9 @@
          this.Controls.Add(this._treeView);
          this.Name = "RevisionBrowser";
          this.Size = new System.Drawing.Size(100, 100);
+         this.Load += new System.EventHandler(this.RevisionBrowser_Load);
          this.ResumeLayout(false);
-         this.PerformLayout();
+
       }
 
       #endregion

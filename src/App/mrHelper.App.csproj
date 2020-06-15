@@ -232,6 +232,9 @@
     <EmbeddedResource Include="src\Controls\DiscussionSortPanel.resx">
       <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\RevisionBrowser.resx">
+      <DependentUpon>RevisionBrowser.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </EmbeddedResource>

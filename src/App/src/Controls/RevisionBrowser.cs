@@ -21,16 +21,20 @@ namespace mrHelper.App.Controls
          }
       }
 
+      bool _initializing;
       internal RevisionBrowser()
       {
+         _initializing = true;
          InitializeComponent();
+         _initializing = false;
+
          _treeView.Model = new RevisionBrowserModel();
-         _treeView.SelectionMode = Aga.Controls.Tree.TreeSelectionMode.MultiSameParent;
          _treeView.SelectionChanged += (s, e) => SelectionChanged?.Invoke(s, e);
+         _treeView.RowDraw += treeView_DrawRow;
 
          _name.ToolTipProvider = new TooltipProvider();
-         _name.DrawText += row_DrawText;
-         _timestamp.DrawText += row_DrawText;
+         _name.DrawText += treeView_DrawNode;
+         _timestamp.DrawText += treeView_DrawNode;
       }
 
       internal string GetBaseCommitSha()
@@ -67,6 +71,11 @@ namespace mrHelper.App.Controls
          foreach (KeyValuePair<RevisionType, bool> kv in oldExpandedState.Where(x => x.Value))
          {
             getRevisionTypeNode(kv.Key).Expand();
+         }
+
+         if (_treeView.SelectedNode != null)
+         {
+            _treeView.EnsureVisible(_treeView.SelectedNode);
          }
       }
 
@@ -172,11 +181,65 @@ namespace mrHelper.App.Controls
          return _treeView.Model as RevisionBrowserModel;
       }
 
-      private void row_DrawText(object sender, DrawEventArgs e)
+      private void treeView_DrawRow(object sender, TreeViewRowDrawEventArgs e)
       {
+         if (e.Node.IsSelected)
+         {
+            Rectangle focusRect = new Rectangle(
+               _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
+            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
+         }
+      }
+
+      private void treeView_DrawNode(object sender, DrawEventArgs e)
+      {
+         e.BackgroundBrush = null;
          if (e.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
          {
             e.TextColor = Color.LightGray;
+         }
+         else if (e.Node.IsSelected)
+         {
+            e.TextColor = SystemColors.HighlightText;
+         }
+         else
+         {
+            e.TextColor = SystemColors.ControlText;
+         }
+      }
+
+      private void treeView_ColumnWidthChanged(object sender, TreeColumnEventArgs e)
+      {
+         if (!_initializing)
+         {
+            saveColumnWidths(x => Program.Settings.RevisionBrowserColumnWidths = x);
+         }
+      }
+
+      private void RevisionBrowser_Load(object sender, EventArgs e)
+      {
+         loadColumnWidths(Program.Settings.RevisionBrowserColumnWidths);
+      }
+
+      private void saveColumnWidths(Action<Dictionary<string, int>> saveProperty)
+      {
+         Dictionary<string, int> columnWidths = new Dictionary<string, int>();
+         foreach (TreeColumn column in _treeView.Columns)
+         {
+            columnWidths[(string)column.Header] = column.Width;
+         }
+         saveProperty(columnWidths);
+      }
+
+      private void loadColumnWidths(Dictionary<string, int> storedWidths)
+      {
+         foreach (TreeColumn column in _treeView.Columns)
+         {
+            string columnName = (string)column.Header;
+            if (storedWidths.ContainsKey(columnName))
+            {
+               column.Width = storedWidths[columnName];
+            }
          }
       }
 
