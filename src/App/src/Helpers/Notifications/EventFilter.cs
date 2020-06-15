@@ -61,14 +61,13 @@ namespace mrHelper.App.Helpers
             return true;
          }
 
-         bool onMention =
-               (!isCurrentUserActivity(_currentUser, e)               || _settings.Notifications_MyActivity)
-            && (!isServiceEvent(e)                                    || _settings.Notifications_Service)
-            && e.EventType == DiscussionEvent.Type.MentionedCurrentUser && _settings.Notifications_OnMention;
-         if (onMention)
+         if (e.EventType == DiscussionEvent.Type.MentionedCurrentUser)
          {
             // `on mention` is a special case which should work disregarding to the _mergeRequestFilter
-            return false;
+            return
+                (isCurrentUserActivity(_currentUser, e) && !_settings.Notifications_MyActivity)
+             || (isServiceEvent(e)                      && !_settings.Notifications_Service)
+             ||                                            !_settings.Notifications_OnMention;
          }
 
          return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)

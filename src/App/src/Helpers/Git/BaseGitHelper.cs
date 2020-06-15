@@ -27,7 +27,10 @@ namespace mrHelper.App.Helpers
          _contextProviderFactory = updateContextProviderFactory;
 
          _gitFactory = gitFactory;
-         _gitFactory.RepositoryCloned += onRepositoryCloned;
+         if (_gitFactory != null)
+         {
+            _gitFactory.RepositoryCloned += onRepositoryCloned;
+         }
          _synchronizeInvoke = synchronizeInvoke;
 
          scheduleAllProjectsUpdate();
@@ -35,7 +38,10 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _gitFactory.RepositoryCloned -= onRepositoryCloned;
+         if (_gitFactory != null)
+         {
+            _gitFactory.RepositoryCloned -= onRepositoryCloned;
+         }
          _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
       }
 
