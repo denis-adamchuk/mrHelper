@@ -16,6 +16,9 @@ namespace mrHelper.Common.Constants
       public static int MaxLabelRows = 3;
       public static string MoreLabelsHint = "See more labels in tooltip";
 
+      public static string NotStartedTimeTrackingText = "Not Started";
+      public static string NotAllowedTimeTrackingText = "<mine>";
+
       public static string IconSchemeFileName = "icons.json";
       public static string BadgeSchemeFileName = "badges.json";
       public static string ProjectListFileName = "projects.json";
@@ -76,8 +79,8 @@ namespace mrHelper.Common.Constants
       public static int ProjectsInBatch = 10;
       public static int ProjectsInterBatchDelay = 0;
 
-      public static int BranchInBatch = 10;
-      public static int BranchInterBatchDelay = 0;
+      public static int CommitInBatch = 10;
+      public static int CommitInterBatchDelay = 0;
    }
 }
 

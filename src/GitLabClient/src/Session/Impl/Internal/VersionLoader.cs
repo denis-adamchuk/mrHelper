@@ -118,7 +118,7 @@ namespace mrHelper.Client.Session
             }
          }
          await TaskUtils.RunConcurrentFunctionsAsync(missingCommitIds, x => loadMissingCommits(x),
-            10, 0, () => exception != null);
+            Constants.CommitInBatch, Constants.CommitInterBatchDelay, () => exception != null);
          if (exception != null)
          {
             throw exception;

@@ -342,6 +342,11 @@ namespace mrHelper.App.Forms
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
+            else if (e.ColumnIndex == columnHeaderTotalTime.Index)
+            {
+               Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
+               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+            }
             else
             {
                e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);

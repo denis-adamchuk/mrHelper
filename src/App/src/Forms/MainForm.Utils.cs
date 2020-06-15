@@ -567,7 +567,7 @@ namespace mrHelper.App.Forms
             return span.Value.ToString(@"hh\:mm\:ss");
          }
 
-         return isTimeTrackingAllowed ? "Not Started" : "Not Allowed";
+         return isTimeTrackingAllowed ? Constants.NotStartedTimeTrackingText : Constants.NotAllowedTimeTrackingText;
       }
 
       private bool isTimeTrackingAllowed(User mergeRequestAuthor, string hostname)
