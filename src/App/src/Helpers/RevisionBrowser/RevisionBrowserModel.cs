@@ -119,10 +119,13 @@ namespace mrHelper.App.Helpers
          if (item is Version version)
          {
             fullSha = String.IsNullOrEmpty(version.Head_Commit_SHA) ? "N/A" : version.Head_Commit_SHA;
-            string sha = fullSha.Substring(0, Math.Min(10, fullSha.Length));
-            name = String.Format("Version #{0} ({1})", iItem, sha);
             timestamp = version.Created_At;
-            tooltipText = String.Empty; // Not implemented
+
+            string sha = fullSha.Substring(0, Math.Min(10, fullSha.Length));
+            Commit versionCommit = version.Commits?.FirstOrDefault();
+            tooltipText = versionCommit == null ? String.Empty : versionCommit.Message;
+
+            name = String.Format("Version #{0} ({1})", iItem, sha);
          }
          else if (item is Commit commit)
          {
