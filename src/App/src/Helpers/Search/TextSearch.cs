@@ -65,7 +65,7 @@ namespace mrHelper.App.Helpers
       internal TextSearchResult? FindFirst(out int count)
       {
          count = 0;
-         TextSearchResult? result = new Nullable<TextSearchResult>();
+         TextSearchResult? result = new TextSearchResult?();
 
          foreach (Control control in _allControls)
          {

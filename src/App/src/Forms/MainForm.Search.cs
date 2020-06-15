@@ -162,7 +162,7 @@ namespace mrHelper.App.Forms
 
          if (isSearchMode())
          {
-            selectMergeRequest(listViewFoundMergeRequests, new Nullable<MergeRequestKey>(), false);
+            selectMergeRequest(listViewFoundMergeRequests, new MergeRequestKey?(), false);
          }
       }
 

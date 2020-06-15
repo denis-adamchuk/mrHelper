@@ -152,7 +152,7 @@ namespace mrHelper.Client.Discussions
             return;
          }
 
-         int? deletedNoteId = new Nullable<int>();
+         int? deletedNoteId = new int?();
          foreach (Discussion discussion in discussions.Reverse())
          {
             if (discussion.Notes.Count() == 1)

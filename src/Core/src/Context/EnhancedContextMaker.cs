@@ -110,8 +110,8 @@ namespace mrHelper.Core.Context
             linenumber, getLineState(analyzer, linenumber, isRightSideContext));
 
          return new DiffContext.Line(contents.ElementAt(linenumber - 1),
-            isRightSideContext ? new Nullable<DiffContext.Line.Side>() : side,
-            isRightSideContext ? side : new Nullable<DiffContext.Line.Side>());
+            isRightSideContext ? new DiffContext.Line.Side?() : side,
+            isRightSideContext ? side : new DiffContext.Line.Side?());
       }
 
       // linenumber is one-based

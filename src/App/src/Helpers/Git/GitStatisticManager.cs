@@ -47,7 +47,7 @@ namespace mrHelper.App.Helpers
          statusMessage = getStatusMessage(mrk);
          return String.IsNullOrWhiteSpace(statusMessage)
             ? _gitStatistic[mrk].Value.Statistic
-            : new Nullable<DiffStatistic>();
+            : new DiffStatistic?();
       }
 
       private string getStatusMessage(MergeRequestKey mrk)

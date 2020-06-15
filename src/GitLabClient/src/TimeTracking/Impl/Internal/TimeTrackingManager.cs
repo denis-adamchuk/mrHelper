@@ -44,7 +44,7 @@ namespace mrHelper.Client.TimeTracking
 
       public TimeSpan? GetTotalTime(MergeRequestKey mrk)
       {
-         return _times.ContainsKey(mrk) ? _times[mrk] : new Nullable<TimeSpan>();
+         return _times.ContainsKey(mrk) ? _times[mrk] : new TimeSpan?();
       }
 
       async public Task AddSpan(bool add, TimeSpan span, MergeRequestKey mrk)

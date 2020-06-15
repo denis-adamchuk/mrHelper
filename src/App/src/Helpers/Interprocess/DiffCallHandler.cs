@@ -170,7 +170,7 @@ namespace mrHelper.App.Interprocess
          }
 
          NewDiscussionParameters parameters = new NewDiscussionParameters(
-            body, includeContext ? createPositionParameters(position) : new Nullable<PositionParameters>());
+            body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
          MergeRequestKey mergeRequestKey = new MergeRequestKey(
             new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);

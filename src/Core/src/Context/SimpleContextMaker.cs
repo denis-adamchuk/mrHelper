@@ -100,8 +100,8 @@ namespace mrHelper.Core.Context
          // this 'maker' cannot distinguish between modified and unmodified lines
          DiffContext.Line.Side side = new DiffContext.Line.Side(linenumber, DiffContext.Line.State.Changed);
          return new DiffContext.Line(text,
-            isRightSideContext ? new Nullable<DiffContext.Line.Side>() : side,
-            isRightSideContext ? side : new Nullable<DiffContext.Line.Side>());
+            isRightSideContext ? new DiffContext.Line.Side?() : side,
+            isRightSideContext ? side : new DiffContext.Line.Side?());
       }
 
       private readonly IGitRepository _gitRepository;

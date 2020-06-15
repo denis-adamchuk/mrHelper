@@ -447,7 +447,7 @@ namespace mrHelper.Client.Discussions
             calcDiscussionCount(discussions, out int resolvableDiscussionCount, out int resolvedDiscussionCount);
 
             DateTime? prevUpdateTimestamp = _cachedDiscussions.ContainsKey(mrk) ?
-               _cachedDiscussions[mrk].TimeStamp : new Nullable<DateTime>();
+               _cachedDiscussions[mrk].TimeStamp : new DateTime?();
 
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Cached {0} discussions for MR: Project={1}, IId={2},"

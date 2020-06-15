@@ -68,7 +68,7 @@ namespace mrHelper.Common.Tools
             throw new BadPosition();
          }
 
-         return _list[Position] != null ? Position - _nullCount : new Nullable<int>();
+         return _list[Position] != null ? Position - _nullCount : new int?();
       }
 
       /// <summary>
