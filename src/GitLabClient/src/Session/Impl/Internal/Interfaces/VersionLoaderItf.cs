@@ -9,8 +9,6 @@ namespace mrHelper.Client.Session
    internal interface IVersionLoader
    {
       Task LoadVersionsAndCommits(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests);
-      Task LoadCommitsAsync(MergeRequestKey mrk);
-      Task LoadVersionsAsync(MergeRequestKey mrk);
    }
 }
 

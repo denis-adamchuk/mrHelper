@@ -8,6 +8,11 @@ namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)
+      {
+         return settings.ShowVersionsByDefault ? RevisionType.Version : RevisionType.Commit;
+      }
+
       public static string[] GetDisplayFilterKeywords(UserDefinedSettings settings)
       {
          return settings.DisplayFilter

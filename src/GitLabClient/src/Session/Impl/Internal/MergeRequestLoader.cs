@@ -6,6 +6,7 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Session
 {
@@ -29,8 +30,8 @@ namespace mrHelper.Client.Session
          if (mergeRequests.Any())
          {
             _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
-            await _versionLoader.LoadVersionsAsync(mrk);
-            await _versionLoader.LoadCommitsAsync(mrk);
+            await _versionLoader.LoadVersionsAndCommits(
+               new Dictionary<ProjectKey, IEnumerable<MergeRequest>>{ { mrk.ProjectKey,  mergeRequests.Take(1) } });
          }
       }
 

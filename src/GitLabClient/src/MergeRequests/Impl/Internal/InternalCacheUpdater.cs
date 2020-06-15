@@ -55,18 +55,6 @@ namespace mrHelper.Client.MergeRequests
          }
 
          _cache.SetCommits(mrk, commits);
-
-#if DEBUG
-         Commit oldLatestCommit = _cache.GetCommits(mrk).OrderBy(x => x.Created_At).LastOrDefault();
-         Commit newLatestCommit = commits.OrderBy(x => x.Created_At).LastOrDefault();
-
-         if (oldLatestCommit != null && newLatestCommit != null
-          && oldLatestCommit.Created_At > newLatestCommit.Created_At)
-         {
-            Debug.Assert(false);
-            Trace.TraceWarning("[InternalCacheUpdater] Latest commit is older than a previous one");
-         }
-#endif
       }
 
       /// <summary>
@@ -81,18 +69,6 @@ namespace mrHelper.Client.MergeRequests
          }
 
          _cache.SetVersions(mrk, versions);
-
-#if DEBUG
-         Version oldLatestVersion = _cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
-         Version newLatestVersion = versions.OrderBy(x => x.Created_At).LastOrDefault();
-
-         if (oldLatestVersion != null && newLatestVersion != null
-          && oldLatestVersion.Created_At > newLatestVersion.Created_At)
-         {
-            Debug.Assert(false);
-            Trace.TraceWarning("[InternalCacheUpdater] Latest version is older than a previous one");
-         }
-#endif
       }
 
       /// <summary>

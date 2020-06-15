@@ -231,92 +231,13 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private static void selectNotReviewedCommits(bool isSearchMode,
-         ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit, HashSet<string> reviewedCommits)
+      private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
       {
-         Tuple<int, int> getCommitIndices()
+         if (!_reviewedRevisions.ContainsKey(mrk))
          {
-            int DefaultLatestIndex = 0;
-            int DefaultEarliestIndex = comboBoxEarliestCommit.Items.Count - 1;
-
-            int? iNewestReviewedCommitIndex = new Nullable<int>();
-            if (!isSearchMode)
-            {
-               for (int iItem = 0; iItem < comboBoxLatestCommit.Items.Count; ++iItem)
-               {
-                  string sha = ((CommitComboBoxItem)(comboBoxLatestCommit.Items[iItem])).SHA;
-                  if (reviewedCommits.Contains(sha))
-                  {
-                     iNewestReviewedCommitIndex = iItem;
-                     break;
-                  }
-               }
-            }
-
-            if (!iNewestReviewedCommitIndex.HasValue)
-            {
-               return new Tuple<int, int>(DefaultLatestIndex, DefaultEarliestIndex);
-            }
-
-            if (Program.Settings.AutoSelectNewestCommit)
-            {
-               return new Tuple<int, int>(0, Math.Max(0, iNewestReviewedCommitIndex.Value - 1));
-            }
-            else
-            {
-               // note that `earliest` should not be `latest + 1` because Latest CB is shifted comparing to Earliest CB
-               int latest = Math.Max(0, iNewestReviewedCommitIndex.Value - 1);
-               int earliest = Math.Min(latest, comboBoxEarliestCommit.Items.Count - 1);
-               return new Tuple<int, int>(latest, earliest);
-            }
+            _reviewedRevisions[mrk] = new HashSet<string>();
          }
-
-         Debug.Assert(comboBoxLatestCommit.Items.Count == comboBoxEarliestCommit.Items.Count);
-         if (comboBoxEarliestCommit.Items.Count > 0)
-         {
-            Tuple<int, int> indices = getCommitIndices();
-            comboBoxLatestCommit.SelectedIndex = indices.Item1;
-            comboBoxEarliestCommit.SelectedIndex = indices.Item2;
-         }
-      }
-
-      private HashSet<string> getReviewedCommits(MergeRequestKey mrk)
-      {
-         return _reviewedCommits.ContainsKey(mrk) ? _reviewedCommits[mrk] : new HashSet<string>();
-      }
-
-      private static void checkComboboxCommitsOrder(ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit,
-         bool shouldReorderRightCombobox)
-      {
-         if (comboBoxLatestCommit.SelectedItem == null || comboBoxEarliestCommit.SelectedItem == null)
-         {
-            return;
-         }
-
-         // Latest combobox cannot select a commit older than in Earliest combobox (replicating gitlab web ui behavior)
-         CommitComboBoxItem latestCBItem = (CommitComboBoxItem)(comboBoxLatestCommit.SelectedItem);
-         CommitComboBoxItem earliestCBItem = (CommitComboBoxItem)(comboBoxEarliestCommit.SelectedItem);
-         Debug.Assert(latestCBItem.TimeStamp.HasValue);
-
-         if (earliestCBItem.TimeStamp.HasValue)
-         {
-            // Check if order is broken
-            if (latestCBItem.TimeStamp.Value <= earliestCBItem.TimeStamp.Value)
-            {
-               if (shouldReorderRightCombobox)
-               {
-                  comboBoxEarliestCommit.SelectedIndex = comboBoxLatestCommit.SelectedIndex;
-               }
-               else
-               {
-                  comboBoxLatestCommit.SelectedIndex = comboBoxEarliestCommit.SelectedIndex;
-               }
-            }
-         }
-         else
-         {
-            // It is ok because a commit w/o timestamp is the oldest one
-         }
+         return _reviewedRevisions[mrk];
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -703,9 +624,38 @@ namespace mrHelper.App.Forms
       private void enableCommitActions(bool enabled, IEnumerable<string> labels, User author)
       {
          buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
-         buttonDiffTool.Enabled = enabled;
-         checkBoxShowVersions.Enabled = enabled;
+         updateDiffToolButtonState();
          enableCustomActions(enabled, labels, author);
+      }
+
+      private void updateDiffToolButtonState()
+      {
+         string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
+         switch (selected.Count())
+         {
+            case 1:
+               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Text = "Diff to Base";
+               string targetBranch = getMergeRequest(null)?.Target_Branch;
+               if (targetBranch != null)
+               {
+                  this.toolTip.SetToolTip(this.buttonDiffTool, String.Format(
+                     "Launch diff tool to compare selected revision to {0}", targetBranch));
+               }
+               break;
+
+            case 2:
+               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Text = "Diff Tool";
+               this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to compare selected revisions");
+               break;
+
+            case 0:
+            default:
+               buttonDiffTool.Enabled = false;
+               buttonDiffTool.Text = "Diff Tool";
+               break;
+         }
       }
 
       private bool isCustomActionEnabled(IEnumerable<string> labels, User author, string dependency)
@@ -749,93 +699,6 @@ namespace mrHelper.App.Forms
                String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
             control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
          }
-      }
-
-      private static CommitComboBoxItem getItem(Commit commit,
-         ECommitComboBoxItemStatus status, EComparableEntityType type)
-      {
-         Debug.Assert(type == EComparableEntityType.Commit);
-         return new CommitComboBoxItem(commit.Id, commit.Title, commit.Created_At, commit.Message,
-            status, EComparableEntityType.Commit);
-      }
-
-      private static CommitComboBoxItem getItem(GitLabSharp.Entities.Version version, int? index,
-         ECommitComboBoxItemStatus status, EComparableEntityType type)
-      {
-         string sha = version.Head_Commit_SHA;
-         string versionNumber = index.HasValue ? index.ToString() : String.Empty;
-         return new CommitComboBoxItem(
-            /* sha */            sha,
-            /* title */          String.Format("Version {0}", versionNumber),
-            /* timestamp */      version.Created_At,
-            /* commit message */ String.Empty,
-            /* status */         status,
-            /* type */           type);
-      }
-
-      private static void addCommitsToComboBoxes(ComboBox comboBoxLatestCommit, ComboBox comboBoxEarliestCommit,
-         IEnumerable<object> commits, string baseSha, string targetBranch)
-      {
-         EComparableEntityType getType()
-         {
-            if (!commits.Any())
-            {
-               Debug.Assert(false);
-               return EComparableEntityType.Commit;
-            }
-
-            object first = commits.First();
-            if (first is Commit)
-            {
-               return EComparableEntityType.Commit;
-            }
-
-            Debug.Assert(first is GitLabSharp.Entities.Version);
-            return EComparableEntityType.Version;
-         }
-
-         CommitComboBoxItem getCommitItem(object commit, int? index, ECommitComboBoxItemStatus status)
-         {
-            if (commit is Commit c)
-            {
-               return getItem(c, status, getType());
-            }
-            else if (commit is GitLabSharp.Entities.Version v)
-            {
-               return getItem(v, index, status, getType());
-            }
-            return null;
-         }
-
-         comboBoxEarliestCommit.BeginUpdate();
-         comboBoxLatestCommit.BeginUpdate();
-
-         // Add latest commit
-         CommitComboBoxItem latestCommitItem = getCommitItem(commits.First(), null, ECommitComboBoxItemStatus.Latest);
-         comboBoxLatestCommit.Items.Add(latestCommitItem);
-
-         // Add other commits
-         int iCommit = commits.Count() - 1;
-         foreach (object commit in commits.Skip(1))
-         {
-            CommitComboBoxItem item = getCommitItem(commit, iCommit--, ECommitComboBoxItemStatus.Normal);
-
-            if (getType() == EComparableEntityType.Commit
-             && comboBoxLatestCommit.Items.Cast<CommitComboBoxItem>().Any(x => x.SHA == item.SHA))
-            {
-               continue;
-            }
-            comboBoxLatestCommit.Items.Add(item);
-            comboBoxEarliestCommit.Items.Add(item);
-         }
-
-         // Add target branch to the right combo-box
-         CommitComboBoxItem baseCommitItem = new CommitComboBoxItem(baseSha, targetBranch, null, String.Empty,
-            ECommitComboBoxItemStatus.Base, getType());
-         comboBoxEarliestCommit.Items.Add(baseCommitItem);
-
-         comboBoxEarliestCommit.EndUpdate();
-         comboBoxLatestCommit.EndUpdate();
       }
 
       /// <summary>
@@ -971,23 +834,10 @@ namespace mrHelper.App.Forms
          return isSelected ? Color.Orange : Color.Red;
       }
 
-      private System.Drawing.Color getCommitComboBoxItemColor(CommitComboBoxItem item)
-      {
-         if (!getMergeRequestKey(null).HasValue)
-         {
-            return SystemColors.Window;
-         }
-
-         MergeRequestKey mrk = getMergeRequestKey(null).Value;
-         bool wasReviewed = _reviewedCommits.ContainsKey(mrk) && _reviewedCommits[mrk].Contains(item.SHA);
-         return wasReviewed || item.Status == ECommitComboBoxItemStatus.Base ? SystemColors.Window :
-            _colorScheme.GetColorOrDefault("Commits_NotReviewed", SystemColors.Window);
-      }
-
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(string hostname)
+      private void cleanupReviewedRevisions(string hostname)
       {
          if (_liveSession?.MergeRequestCache == null)
          {
@@ -997,11 +847,11 @@ namespace mrHelper.App.Forms
          IEnumerable<ProjectKey> projectKeys = _liveSession.MergeRequestCache.GetProjects();
 
          // gather all MR from projects that no longer in use
-         IEnumerable<MergeRequestKey> toRemove1 = _reviewedCommits.Keys
+         IEnumerable<MergeRequestKey> toRemove1 = _reviewedRevisions.Keys
             .Where(x => !projectKeys.Any(y => y.Equals(x.ProjectKey)));
 
          // gather all closed MR from existing projects
-         IEnumerable<MergeRequestKey> toRemove2 = _reviewedCommits.Keys
+         IEnumerable<MergeRequestKey> toRemove2 = _reviewedRevisions.Keys
             .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
                && !_liveSession.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
 
@@ -1014,22 +864,22 @@ namespace mrHelper.App.Forms
 
          foreach (MergeRequestKey key in toRemove)
          {
-            _reviewedCommits.Remove(key);
+            _reviewedRevisions.Remove(key);
          }
       }
 
       /// <summary>
       /// Clean up records that correspond to merge requests that have been closed
       /// </summary>
-      private void cleanupReviewedCommits(MergeRequestKey mrk)
+      private void cleanupReviewedRevisions(MergeRequestKey mrk)
       {
-         IEnumerable<MergeRequestKey> toRemove = _reviewedCommits.Keys.Where(x => x.Equals(mrk));
+         IEnumerable<MergeRequestKey> toRemove = _reviewedRevisions.Keys.Where(x => x.Equals(mrk));
          if (!toRemove.Any())
          {
             return;
          }
 
-         _reviewedCommits.Remove(toRemove.First());
+         _reviewedRevisions.Remove(toRemove.First());
       }
 
 
@@ -1288,7 +1138,7 @@ namespace mrHelper.App.Forms
 
          if (e.Closed)
          {
-            cleanupReviewedCommits(mrk);
+            cleanupReviewedRevisions(mrk);
          }
 
          updateVisibleMergeRequests();
@@ -1753,9 +1603,9 @@ namespace mrHelper.App.Forms
                 + calcVertDistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
 
          return
-              calcVertDistance(null, groupBoxSelectCommits)
-            + groupBoxSelectCommits.Height
-            + calcVertDistance(groupBoxSelectCommits, groupBoxReview)
+              calcVertDistance(null, groupBoxSelectRevisions)
+            + groupBoxSelectRevisions.Height
+            + calcVertDistance(groupBoxSelectRevisions, groupBoxReview)
             + groupBoxReview.Height
             + calcVertDistance(groupBoxReview, groupBoxTimeTracking)
             + groupBoxTimeTracking.Height
@@ -1947,38 +1797,25 @@ namespace mrHelper.App.Forms
       }
 
       private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, System.Collections.IEnumerable entities, ListView listView)
+         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions,
+         ListView listView)
       {
-         disableComboBox(comboBoxLatestCommit, String.Empty);
-         disableComboBox(comboBoxEarliestCommit, String.Empty);
-
          MergeRequestKey? mrk = getMergeRequestKey(listView);
-
-         IEnumerable<object> objects = entities.Cast<object>();
-         int count = objects.Count();
-         if (mrk.HasValue && count > 0)
+         bool hasObjects = commits.Any() || versions.Any();
+         if (mrk.HasValue && hasObjects)
          {
-            enableComboBox(comboBoxLatestCommit);
-            enableComboBox(comboBoxEarliestCommit);
-
-            addCommitsToComboBoxes(comboBoxLatestCommit, comboBoxEarliestCommit, objects,
-               latestVersion?.Base_Commit_SHA, mergeRequest.Target_Branch);
-            selectNotReviewedCommits(listView == listViewFoundMergeRequests,
-               comboBoxLatestCommit, comboBoxEarliestCommit, getReviewedCommits(mrk.Value));
-
+            RevisionBrowserModelData data = new RevisionBrowserModelData(latestVersion?.Base_Commit_SHA,
+               commits, versions, getReviewedRevisions(mrk.Value));
+            revisionBrowser.SetData(data, ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
             enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
          {
-            if (count == 0)
-            {
-               // Just to be able to switch between versions and commits
-               checkBoxShowVersions.Enabled = true;
-            }
+            revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
          }
 
          Debug.WriteLine(String.Format(
-            "[MainForm] Loaded {0} comparable entities IsSearchMode={1}", count, isSearchMode().ToString()));
+            "[MainForm] Loaded comparable entities IsSearchMode={0}", isSearchMode().ToString()));
       }
 
       private void disableCommonUIControls()
@@ -1988,71 +1825,7 @@ namespace mrHelper.App.Forms
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
          updateTotalTime(null, null, null, null);
-         disableComboBox(comboBoxLatestCommit, String.Empty);
-         disableComboBox(comboBoxEarliestCommit, String.Empty);
-      }
-
-      private static string formatCommitComboboxItem(CommitComboBoxItem item)
-      {
-         switch (item.Type)
-         {
-            case EComparableEntityType.Commit:
-               {
-                  switch (item.Status)
-                  {
-                     case ECommitComboBoxItemStatus.Normal:
-                        return item.Text;
-                     case ECommitComboBoxItemStatus.Base:
-                        return String.Format("{0} [Base]", item.Text);
-                     case ECommitComboBoxItemStatus.Latest:
-                        return String.Format("{0} [Latest]", item.Text);
-                  }
-                  break;
-               }
-
-            case EComparableEntityType.Version:
-               {
-                  string sha = String.IsNullOrWhiteSpace(item.SHA)
-                     ? "No SHA" : (item.SHA.Length > 10 ? item.SHA.Substring(0, 10) : item.SHA);
-                  string timestamp = item.TimeStamp.HasValue ?
-                     item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat) : String.Empty;
-                  switch (item.Status)
-                  {
-                     case ECommitComboBoxItemStatus.Normal:
-                        return String.Format("{0} ({1}) created at {2}", item.Text, sha, timestamp);
-                     case ECommitComboBoxItemStatus.Base:
-                        return String.Format("{0} [Base]", item.Text);
-                     case ECommitComboBoxItemStatus.Latest:
-                        return String.Format("Latest {0} ({1}) created at {2}", item.Text, sha, timestamp);
-                  }
-                  break;
-               }
-         }
-
-         Debug.Assert(false);
-         return item.Text;
-      }
-
-      private static void setCommitComboboxLabels(ComboBox comboBox, Label labelTimestamp)
-      {
-         if (comboBox.SelectedItem == null)
-         {
-            labelTimestamp.Text = "Created at: N/A";
-            return;
-         }
-
-         CommitComboBoxItem item = (CommitComboBoxItem)(comboBox.SelectedItem);
-         if (item.Status == ECommitComboBoxItemStatus.Base)
-         {
-            labelTimestamp.Text = "Created at: N/A";
-            return;
-         }
-
-         if (item.TimeStamp != null)
-         {
-            labelTimestamp.Text = String.Format("Created at: {0}",
-               item.TimeStamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat));
-         }
+         revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
       }
 
       private MergeRequestFilterState createMergeRequestFilterState()
@@ -2085,6 +1858,39 @@ namespace mrHelper.App.Forms
       {
          buttonReloadList.Text = oldButtonText;
          buttonReloadList.Enabled = true;
+      }
+
+      private void getShaForDiffTool(out string left, out string right, out IEnumerable<string> included,
+         out RevisionType? type)
+      {
+         string[] selected = revisionBrowser.GetSelectedSha(out type);
+         switch (selected.Count())
+         {
+            case 0:
+               left = String.Empty;
+               right = String.Empty;
+               included = new List<string>();
+               break;
+
+            case 1:
+               left = revisionBrowser.GetBaseCommitSha();
+               right = selected[0];
+               included = revisionBrowser.GetIncludedSha();
+               break;
+
+            case 2:
+               left = selected[0];
+               right = selected[1];
+               included = revisionBrowser.GetIncludedSha();
+               break;
+
+            default:
+               Debug.Assert(false);
+               left = String.Empty;
+               right = String.Empty;
+               included = new List<string>();
+               break;
+         }
       }
    }
 }

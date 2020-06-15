@@ -79,7 +79,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void switchMergeRequestByUser(FullMergeRequestKey fmk, bool showVersions)
+      private void switchMergeRequestByUser(FullMergeRequestKey fmk)
       {
          Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 
@@ -92,8 +92,7 @@ namespace mrHelper.App.Forms
          IMergeRequestCache cache = _liveSession.MergeRequestCache;
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-         onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
-            showVersions ? (IEnumerable)cache.GetVersions(mrk) : (IEnumerable)cache.GetCommits(mrk));
+         onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest, cache.GetCommits(mrk), cache.GetVersions(mrk));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +163,7 @@ namespace mrHelper.App.Forms
          await _liveSession.Start(hostname, sessionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
-         cleanupReviewedCommits(hostname);
+         cleanupReviewedRevisions(hostname);
       }
 
       private async Task startUserBasedWorkflowAsync(string hostname)
@@ -179,7 +178,7 @@ namespace mrHelper.App.Forms
          await _liveSession.Start(hostname, sessionContext);
 
          onAllMergeRequestsLoaded(hostname, _liveSession.MergeRequestCache.GetProjects());
-         cleanupReviewedCommits(hostname);
+         cleanupReviewedRevisions(hostname);
       }
 
       private void onForbiddenProject(ProjectKey projectKey)
@@ -263,7 +262,7 @@ namespace mrHelper.App.Forms
       }
 
       private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, IEnumerable entities)
+         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions)
       {
          if (isSearchMode())
          {
@@ -271,7 +270,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, entities, listViewMergeRequests);
+         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, commits, versions, listViewMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

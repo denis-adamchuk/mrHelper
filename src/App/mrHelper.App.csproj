@@ -100,6 +100,12 @@
     <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
       <DependentUpon>MergeRequestListView.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\RevisionBrowser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\RevisionBrowser.Designer.cs">
+      <DependentUpon>RevisionBrowser.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -207,6 +213,8 @@
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\FeedbackReporter.cs" />
     <Compile Include="src\Helpers\ServiceManager.cs" />
+    <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
+    <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
@@ -223,6 +231,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionSortPanel.resx">
       <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\RevisionBrowser.resx">
+      <DependentUpon>RevisionBrowser.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
@@ -330,6 +341,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Contracts">
       <Version>10.0.17134.1000</Version>
+    </PackageReference>
+    <PackageReference Include="TreeViewAdv">
+      <Version>1.7.0</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

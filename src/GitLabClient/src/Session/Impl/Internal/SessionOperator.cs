@@ -69,6 +69,17 @@ namespace mrHelper.Client.Session
                      async (gl) =>
                         await gl.Projects.Get(projectName).MergeRequests.Get(iid).Versions.LoadAllTaskAsync())));
       }
+
+      internal Task<Commit> GetCommitAsync(string projectName, string id)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (Commit)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(projectName).Repository.Commits.Get(id).LoadTaskAsync())));
+      }
    }
 }
 

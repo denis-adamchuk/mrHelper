@@ -1,4 +1,5 @@
 ﻿using mrHelper.CommonControls.Controls;
+using System;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
@@ -74,10 +75,9 @@ namespace mrHelper.App.Forms
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
          this.checkBoxShowVersionsByDefault = new System.Windows.Forms.CheckBox();
-         this.checkBoxAutoSelectNewestCommit = new System.Windows.Forms.CheckBox();
+         this.checkBoxAutoSelectNewestRevision = new System.Windows.Forms.CheckBox();
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
-         this.checkBoxShowVersions = new System.Windows.Forms.CheckBox();
          this.checkBoxUseShallowClone = new System.Windows.Forms.CheckBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
          this.buttonEditUsers = new System.Windows.Forms.Button();
@@ -118,6 +118,7 @@ namespace mrHelper.App.Forms
          this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
          this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
+         this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -163,14 +164,10 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
          this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
-         this.groupBoxSelectCommits = new System.Windows.Forms.GroupBox();
-         this.labelEarliestCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxEarliestCommit = new System.Windows.Forms.ComboBox();
-         this.labelLatestCommitTimestampLabel = new System.Windows.Forms.Label();
-         this.comboBoxLatestCommit = new System.Windows.Forms.ComboBox();
+         this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
+         this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -201,7 +198,7 @@ namespace mrHelper.App.Forms
          this.panelBottomMenu.SuspendLayout();
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
-         this.groupBoxSelectCommits.SuspendLayout();
+         this.groupBoxSelectRevisions.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxKnownHosts
@@ -471,24 +468,24 @@ namespace mrHelper.App.Forms
          this.checkBoxShowVersionsByDefault.Name = "checkBoxShowVersionsByDefault";
          this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(232, 17);
          this.checkBoxShowVersionsByDefault.TabIndex = 14;
-         this.checkBoxShowVersionsByDefault.Text = "Show changes between versions by default";
-         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, "When checked, diff tool shows changes between versions by analogy with GitLab Web" +
-        " UI");
+         this.checkBoxShowVersionsByDefault.Text = "Expand list of versions automatically";
+         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, "When checked, revision tree expands a list of versions when merge request is selected.\n" +
+            "When unchecked, revision tree expands a list of commits.\nSelect this box if you would like to see list of revisions by analogy with Changes tab of GitLab Web UI");
          this.checkBoxShowVersionsByDefault.UseVisualStyleBackColor = true;
          this.checkBoxShowVersionsByDefault.CheckedChanged += new System.EventHandler(this.checkBoxShowVersionsByDefault_CheckedChanged);
          // 
          // checkBoxAutoSelectNewestCommit
          // 
-         this.checkBoxAutoSelectNewestCommit.AutoSize = true;
-         this.checkBoxAutoSelectNewestCommit.Location = new System.Drawing.Point(6, 174);
-         this.checkBoxAutoSelectNewestCommit.Name = "checkBoxAutoSelectNewestCommit";
-         this.checkBoxAutoSelectNewestCommit.Size = new System.Drawing.Size(152, 17);
-         this.checkBoxAutoSelectNewestCommit.TabIndex = 13;
-         this.checkBoxAutoSelectNewestCommit.Text = "Auto-select newest commit";
-         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestCommit, "When a merge request is selected, select the most recent available commit for dif" +
+         this.checkBoxAutoSelectNewestRevision.AutoSize = true;
+         this.checkBoxAutoSelectNewestRevision.Location = new System.Drawing.Point(6, 174);
+         this.checkBoxAutoSelectNewestRevision.Name = "checkBoxAutoSelectNewestRevision";
+         this.checkBoxAutoSelectNewestRevision.Size = new System.Drawing.Size(152, 17);
+         this.checkBoxAutoSelectNewestRevision.TabIndex = 13;
+         this.checkBoxAutoSelectNewestRevision.Text = "Auto-select newest commit";
+         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestRevision, "When a merge request is selected, select the most recent available revision for dif" +
         "f tool");
-         this.checkBoxAutoSelectNewestCommit.UseVisualStyleBackColor = true;
-         this.checkBoxAutoSelectNewestCommit.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestCommit_CheckedChanged);
+         this.checkBoxAutoSelectNewestRevision.UseVisualStyleBackColor = true;
+         this.checkBoxAutoSelectNewestRevision.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestRevision_CheckedChanged);
          // 
          // checkBoxDisableSplitterRestrictions
          // 
@@ -513,22 +510,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.checkBoxMinimizeOnClose, "Don\'t exit on closing the main window but minimize the application to the tray");
          this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
          this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
-         // 
-         // checkBoxShowVersions
-         // 
-         this.checkBoxShowVersions.AutoSize = true;
-         this.checkBoxShowVersions.Dock = System.Windows.Forms.DockStyle.Top;
-         this.checkBoxShowVersions.Enabled = false;
-         this.checkBoxShowVersions.Location = new System.Drawing.Point(3, 16);
-         this.checkBoxShowVersions.Name = "checkBoxShowVersions";
-         this.checkBoxShowVersions.Padding = new System.Windows.Forms.Padding(2, 4, 0, 6);
-         this.checkBoxShowVersions.Size = new System.Drawing.Size(920, 27);
-         this.checkBoxShowVersions.TabIndex = 9;
-         this.checkBoxShowVersions.Text = "Show changes between versions";
-         this.toolTip.SetToolTip(this.checkBoxShowVersions, "When checked, diff tool shows changes between versions by analogy with GitLab Web" +
-        " UI");
-         this.checkBoxShowVersions.UseVisualStyleBackColor = true;
-         this.checkBoxShowVersions.CheckedChanged += new System.EventHandler(this.checkBoxShowVersions_CheckedChanged);
          // 
          // checkBoxUseShallowClone
          // 
@@ -953,6 +934,18 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingStart.UseVisualStyleBackColor = true;
          this.buttonTimeTrackingStart.Click += new System.EventHandler(this.ButtonTimeTrackingStart_Click);
          // 
+         // checkBoxRunWhenWindowsStarts
+         // 
+         this.checkBoxRunWhenWindowsStarts.AutoSize = true;
+         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
+         this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
+         this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
+         this.checkBoxRunWhenWindowsStarts.Text = "Run mrHelper when Windows starts";
+         this.toolTip.SetToolTip(this.checkBoxRunWhenWindowsStarts, "Add mrHelper to the list of Startup Apps");
+         this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
+         this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1127,7 +1120,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxOther.Controls.Add(this.checkBoxUseShallowClone);
          this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
-         this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestCommit);
+         this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestRevision);
          this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
          this.groupBoxOther.Controls.Add(this.labelFontSize);
          this.groupBoxOther.Controls.Add(this.comboBoxFonts);
@@ -1304,7 +1297,7 @@ namespace mrHelper.App.Forms
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxActions);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxTimeTracking);
          this.splitContainer2.Panel2.Controls.Add(this.groupBoxReview);
-         this.splitContainer2.Panel2.Controls.Add(this.groupBoxSelectCommits);
+         this.splitContainer2.Panel2.Controls.Add(this.groupBoxSelectRevisions);
          this.splitContainer2.Size = new System.Drawing.Size(926, 858);
          this.splitContainer2.SplitterDistance = 267;
          this.splitContainer2.SplitterWidth = 8;
@@ -1359,10 +1352,10 @@ namespace mrHelper.App.Forms
          this.panelFreeSpace.Controls.Add(this.pictureBox2);
          this.panelFreeSpace.Controls.Add(this.pictureBox1);
          this.panelFreeSpace.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.panelFreeSpace.Location = new System.Drawing.Point(0, 360);
+         this.panelFreeSpace.Location = new System.Drawing.Point(0, 427);
          this.panelFreeSpace.MinimumSize = new System.Drawing.Size(0, 10);
          this.panelFreeSpace.Name = "panelFreeSpace";
-         this.panelFreeSpace.Size = new System.Drawing.Size(926, 137);
+         this.panelFreeSpace.Size = new System.Drawing.Size(926, 70);
          this.panelFreeSpace.TabIndex = 9;
          // 
          // pictureBox2
@@ -1371,7 +1364,7 @@ namespace mrHelper.App.Forms
          this.pictureBox2.Location = new System.Drawing.Point(676, 0);
          this.pictureBox2.MinimumSize = new System.Drawing.Size(250, 100);
          this.pictureBox2.Name = "pictureBox2";
-         this.pictureBox2.Size = new System.Drawing.Size(250, 137);
+         this.pictureBox2.Size = new System.Drawing.Size(250, 100);
          this.pictureBox2.TabIndex = 10;
          this.pictureBox2.TabStop = false;
          this.pictureBox2.Visible = false;
@@ -1382,7 +1375,7 @@ namespace mrHelper.App.Forms
          this.pictureBox1.Location = new System.Drawing.Point(0, 0);
          this.pictureBox1.MinimumSize = new System.Drawing.Size(250, 100);
          this.pictureBox1.Name = "pictureBox1";
-         this.pictureBox1.Size = new System.Drawing.Size(250, 137);
+         this.pictureBox1.Size = new System.Drawing.Size(250, 100);
          this.pictureBox1.TabIndex = 9;
          this.pictureBox1.TabStop = false;
          this.pictureBox1.Visible = false;
@@ -1441,7 +1434,7 @@ namespace mrHelper.App.Forms
          // groupBoxActions
          // 
          this.groupBoxActions.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxActions.Location = new System.Drawing.Point(0, 297);
+         this.groupBoxActions.Location = new System.Drawing.Point(0, 364);
          this.groupBoxActions.Name = "groupBoxActions";
          this.groupBoxActions.Size = new System.Drawing.Size(926, 63);
          this.groupBoxActions.TabIndex = 0;
@@ -1457,7 +1450,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingCancel);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingStart);
          this.groupBoxTimeTracking.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 196);
+         this.groupBoxTimeTracking.Location = new System.Drawing.Point(0, 263);
          this.groupBoxTimeTracking.Name = "groupBoxTimeTracking";
          this.groupBoxTimeTracking.Size = new System.Drawing.Size(926, 101);
          this.groupBoxTimeTracking.TabIndex = 6;
@@ -1494,75 +1487,32 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.Controls.Add(this.buttonDiscussions);
          this.groupBoxReview.Controls.Add(this.buttonNewDiscussion);
          this.groupBoxReview.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxReview.Location = new System.Drawing.Point(0, 133);
+         this.groupBoxReview.Location = new System.Drawing.Point(0, 200);
          this.groupBoxReview.Name = "groupBoxReview";
          this.groupBoxReview.Size = new System.Drawing.Size(926, 63);
          this.groupBoxReview.TabIndex = 2;
          this.groupBoxReview.TabStop = false;
          this.groupBoxReview.Text = "Review";
          // 
-         // groupBoxSelectCommits
+         // groupBoxSelectRevisions
          // 
-         this.groupBoxSelectCommits.Controls.Add(this.labelEarliestCommitTimestampLabel);
-         this.groupBoxSelectCommits.Controls.Add(this.comboBoxEarliestCommit);
-         this.groupBoxSelectCommits.Controls.Add(this.labelLatestCommitTimestampLabel);
-         this.groupBoxSelectCommits.Controls.Add(this.comboBoxLatestCommit);
-         this.groupBoxSelectCommits.Controls.Add(this.checkBoxShowVersions);
-         this.groupBoxSelectCommits.Dock = System.Windows.Forms.DockStyle.Top;
-         this.groupBoxSelectCommits.Location = new System.Drawing.Point(0, 0);
-         this.groupBoxSelectCommits.Name = "groupBoxSelectCommits";
-         this.groupBoxSelectCommits.Size = new System.Drawing.Size(926, 133);
-         this.groupBoxSelectCommits.TabIndex = 4;
-         this.groupBoxSelectCommits.TabStop = false;
-         this.groupBoxSelectCommits.Text = "Select commits for diff tool";
+         this.groupBoxSelectRevisions.Controls.Add(this.revisionBrowser);
+         this.groupBoxSelectRevisions.Dock = System.Windows.Forms.DockStyle.Top;
+         this.groupBoxSelectRevisions.Location = new System.Drawing.Point(0, 0);
+         this.groupBoxSelectRevisions.Name = "groupBoxSelectRevisions";
+         this.groupBoxSelectRevisions.Size = new System.Drawing.Size(926, 200);
+         this.groupBoxSelectRevisions.TabIndex = 4;
+         this.groupBoxSelectRevisions.TabStop = false;
+         this.groupBoxSelectRevisions.Text = "Select revisions for comparison";
          // 
-         // labelEarliestCommitTimestampLabel
+         // revisionBrowser
          // 
-         this.labelEarliestCommitTimestampLabel.AutoEllipsis = true;
-         this.labelEarliestCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelEarliestCommitTimestampLabel.Location = new System.Drawing.Point(3, 109);
-         this.labelEarliestCommitTimestampLabel.Name = "labelEarliestCommitTimestampLabel";
-         this.labelEarliestCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-         this.labelEarliestCommitTimestampLabel.Size = new System.Drawing.Size(920, 22);
-         this.labelEarliestCommitTimestampLabel.TabIndex = 8;
-         this.labelEarliestCommitTimestampLabel.Text = "Created at:";
-         // 
-         // comboBoxEarliestCommit
-         // 
-         this.comboBoxEarliestCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxEarliestCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxEarliestCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxEarliestCommit.FormattingEnabled = true;
-         this.comboBoxEarliestCommit.Location = new System.Drawing.Point(3, 88);
-         this.comboBoxEarliestCommit.Name = "comboBoxEarliestCommit";
-         this.comboBoxEarliestCommit.Size = new System.Drawing.Size(920, 21);
-         this.comboBoxEarliestCommit.TabIndex = 6;
-         this.comboBoxEarliestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxEarliestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxEarliestCommit_SelectedIndexChanged);
-         // 
-         // labelLatestCommitTimestampLabel
-         // 
-         this.labelLatestCommitTimestampLabel.AutoEllipsis = true;
-         this.labelLatestCommitTimestampLabel.Dock = System.Windows.Forms.DockStyle.Top;
-         this.labelLatestCommitTimestampLabel.Location = new System.Drawing.Point(3, 64);
-         this.labelLatestCommitTimestampLabel.Name = "labelLatestCommitTimestampLabel";
-         this.labelLatestCommitTimestampLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 6);
-         this.labelLatestCommitTimestampLabel.Size = new System.Drawing.Size(920, 24);
-         this.labelLatestCommitTimestampLabel.TabIndex = 7;
-         this.labelLatestCommitTimestampLabel.Text = "Created at:";
-         // 
-         // comboBoxLatestCommit
-         // 
-         this.comboBoxLatestCommit.Dock = System.Windows.Forms.DockStyle.Top;
-         this.comboBoxLatestCommit.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-         this.comboBoxLatestCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxLatestCommit.FormattingEnabled = true;
-         this.comboBoxLatestCommit.Location = new System.Drawing.Point(3, 43);
-         this.comboBoxLatestCommit.Name = "comboBoxLatestCommit";
-         this.comboBoxLatestCommit.Size = new System.Drawing.Size(920, 21);
-         this.comboBoxLatestCommit.TabIndex = 5;
-         this.comboBoxLatestCommit.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ComboBoxCommits_DrawItem);
-         this.comboBoxLatestCommit.SelectedIndexChanged += new System.EventHandler(this.ComboBoxLatestCommit_SelectedIndexChanged);
+         this.revisionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.revisionBrowser.Location = new System.Drawing.Point(3, 16);
+         this.revisionBrowser.Name = "revisionBrowser";
+         this.revisionBrowser.Size = new System.Drawing.Size(920, 181);
+         this.revisionBrowser.TabIndex = 0;
+         this.revisionBrowser.SelectionChanged += new System.EventHandler(this.RevisionBrowser_SelectionChanged);
          // 
          // panel4
          // 
@@ -1579,18 +1529,6 @@ namespace mrHelper.App.Forms
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
-         // 
-         // checkBoxRunWhenWindowsStarts
-         // 
-         this.checkBoxRunWhenWindowsStarts.AutoSize = true;
-         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
-         this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
-         this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
-         this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
-         this.checkBoxRunWhenWindowsStarts.Text = "Run mrHelper when Windows starts";
-         this.toolTip.SetToolTip(this.checkBoxRunWhenWindowsStarts, "Add mrHelper to the list of Startup Apps");
-         this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
-         this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
          // 
          // MainForm
          // 
@@ -1641,8 +1579,7 @@ namespace mrHelper.App.Forms
          this.panelBottomMenu.PerformLayout();
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
-         this.groupBoxSelectCommits.ResumeLayout(false);
-         this.groupBoxSelectCommits.PerformLayout();
+         this.groupBoxSelectRevisions.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -1697,10 +1634,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonTimeTrackingStart;
       private System.Windows.Forms.Panel panel1;
       private System.Windows.Forms.GroupBox groupBoxActions;
-      private System.Windows.Forms.GroupBox groupBoxSelectCommits;
+      private System.Windows.Forms.GroupBox groupBoxSelectRevisions;
       private System.Windows.Forms.Button buttonDiffTool;
-      private System.Windows.Forms.ComboBox comboBoxEarliestCommit;
-      private System.Windows.Forms.ComboBox comboBoxLatestCommit;
       private System.Windows.Forms.CheckBox checkBoxShowServiceNotifications;
       private System.Windows.Forms.ComboBox comboBoxThemes;
       private System.Windows.Forms.ComboBox comboBoxFonts;
@@ -1714,8 +1649,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonAddComment;
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Button buttonNewDiscussion;
-        private System.Windows.Forms.Label labelEarliestCommitTimestampLabel;
-        private System.Windows.Forms.Label labelLatestCommitTimestampLabel;
       private System.Windows.Forms.Panel panelStatusBar;
       private System.Windows.Forms.LinkLabel linkLabelAbortGit;
       private System.Windows.Forms.Label labelGitStatus;
@@ -1759,8 +1692,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
         private System.Windows.Forms.RadioButton radioButtonSearchByTargetBranch;
         private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
-      private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestCommit;
-      private System.Windows.Forms.CheckBox checkBoxShowVersions;
+      private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestRevision;
       private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
         private System.Windows.Forms.CheckBox checkBoxUseShallowClone;
         private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
@@ -1769,6 +1701,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
       private System.Windows.Forms.CheckBox checkBoxRunWhenWindowsStarts;
+      private Controls.RevisionBrowser revisionBrowser;
    }
 }
 
