@@ -1811,7 +1811,7 @@ namespace mrHelper.App.Forms
          }
          else
          {
-         revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
+            revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
          }
 
          Debug.WriteLine(String.Format(
