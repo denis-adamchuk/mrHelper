@@ -233,12 +233,7 @@ namespace mrHelper.App.Forms
          }
          labelWorkflowStatus.Text = String.Empty;
 
-         bool canOpenAtLiveTab =
-               // TODO - Opened/WIP should be kept in _liveSesion context and checked here and inside Session
-               (mergeRequest.State == "opened")
-            && (mergeRequest.Work_In_Progress)
-            && checkIfCanOpenAtLiveTab(mrk, true);
-
+         bool canOpenAtLiveTab = mergeRequest.State == "opened" && checkIfCanOpenAtLiveTab(mrk, true);
          bool needReload = (canOpenAtLiveTab && getSession(canOpenAtLiveTab).MergeRequestCache == null)
                         || mrk.ProjectKey.HostName != getHostName();
          if (needReload)

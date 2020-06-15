@@ -13,8 +13,7 @@ namespace mrHelper.Client.Common
    {
       internal MergeRequestSearchProcessor(bool onlyOpen)
       {
-         _wipFilter = onlyOpen
-            ? MergeRequestsFilter.WorkInProgressFilter.Yes : MergeRequestsFilter.WorkInProgressFilter.All;
+         _wipFilter = MergeRequestsFilter.WorkInProgressFilter.All;
          _stateFilter = onlyOpen
             ? MergeRequestsFilter.StateFilter.Open : MergeRequestsFilter.StateFilter.All;
       }
