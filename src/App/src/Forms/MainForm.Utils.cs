@@ -609,8 +609,7 @@ namespace mrHelper.App.Forms
 
       private string getSize(MergeRequestKey mrk)
       {
-         GitStatisticManager.DiffStatistic? diffStatistic =
-            _gitStatManager.GetStatistic(mrk, out string errMsg);
+         DiffStatistic? diffStatistic = _diffStatProvider.GetStatistic(mrk, out string errMsg);
          return diffStatistic?.ToString() ?? errMsg;
       }
 

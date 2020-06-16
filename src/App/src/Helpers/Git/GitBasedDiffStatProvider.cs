@@ -19,9 +19,9 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Traces git diff statistic change for all merge requests within one or more repositories
    /// </summary>
-   internal class GitStatisticManager : BaseGitHelper, IDisposable
+   internal class GitBasedDiffStatProvider : BaseGitHelper, IDisposable, IDiffStatisticProvider
    {
-      internal GitStatisticManager(
+      internal GitBasedDiffStatProvider(
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
          IProjectUpdateContextProviderFactory updateContextProviderFactory,
@@ -31,7 +31,7 @@ namespace mrHelper.App.Helpers
       {
       }
 
-      internal event Action Update;
+      public event Action Update;
 
       public new void Dispose()
       {
@@ -42,11 +42,11 @@ namespace mrHelper.App.Helpers
       /// Returns statistic for the given MR
       /// Statistic is collected for hash tags that match the last version of a merge request
       /// </summary>
-      internal DiffStatistic? GetStatistic(MergeRequestKey mrk, out string statusMessage)
+      public DiffStatistic? GetStatistic(MergeRequestKey mrk, out string statusMessage)
       {
          statusMessage = getStatusMessage(mrk);
          return String.IsNullOrWhiteSpace(statusMessage)
-            ? _gitStatistic[mrk].Value.Statistic
+            ? _statistic[mrk].Value.Statistic
             : new DiffStatistic?();
       }
 
@@ -61,15 +61,15 @@ namespace mrHelper.App.Helpers
          {
             return "N/A (not cloned)";
          }
-         else if (!_gitStatistic.ContainsKey(mrk))
+         else if (!_statistic.ContainsKey(mrk))
          {
             return "N/A";
          }
-         else if (!_gitStatistic[mrk].HasValue)
+         else if (!_statistic[mrk].HasValue)
          {
             return "Checking...";
          }
-         else if (!_gitStatistic[mrk].Value.Statistic.HasValue)
+         else if (!_statistic[mrk].Value.Statistic.HasValue)
          {
             return "Error";
          }
@@ -80,10 +80,10 @@ namespace mrHelper.App.Helpers
       {
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId))
-            .Where(x => !_gitStatistic.ContainsKey(x));
+            .Where(x => !_statistic.ContainsKey(x));
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
-            _gitStatistic[mrk] = null;
+            _statistic[mrk] = null;
          }
          Update?.Invoke();
       }
@@ -128,7 +128,7 @@ namespace mrHelper.App.Helpers
                      "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
                }
             }
-            _gitStatistic[keyValuePair.Key] = new MergeRequestStatistic(keyValuePair.Value.Created_At, diffStat);
+            _statistic[keyValuePair.Key] = new MergeRequestStatistic(keyValuePair.Value.Created_At, diffStat);
             Update?.Invoke();
          }
       }
@@ -143,14 +143,14 @@ namespace mrHelper.App.Helpers
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {
             Version version = _mergeRequestCache.GetLatestVersion(mrk);
-            bool newKey = !_gitStatistic.ContainsKey(mrk) || !_gitStatistic[mrk].HasValue;
-            if (version == null || (!newKey && version.Created_At <= _gitStatistic[mrk].Value.LatestChange))
+            bool newKey = !_statistic.ContainsKey(mrk) || !_statistic[mrk].HasValue;
+            if (version == null || (!newKey && version.Created_At <= _statistic[mrk].Value.LatestChange))
             {
                continue;
             }
 
             Trace.TraceInformation(String.Format(
-               "[GitStatisticManager] Git statistic will be updated for MR: "
+               "[GitBasedSizeCollector] Git statistic will be updated for MR: "
              + "Host={0}, Project={1}, IId={2}. Latest version created at: {3}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
                version.Created_At.ToLocalTime().ToString()));
@@ -172,7 +172,7 @@ namespace mrHelper.App.Helpers
          void traceError(string text)
          {
             Trace.TraceError(String.Format(
-               "[GitStatisticManager] Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
+               "[GitBasedSizeCollector] Cannot parse git diff text {0} obtained by key {3} in the repo {2} (in \"{1}\"). "
              + "This makes impossible to show git statistic for MR with IID {4}", text, repo.Path,
                String.Format("{0}/{1}", args.CommonArgs.Sha1?.ToString() ?? "N/A",
                                         args.CommonArgs.Sha2?.ToString() ?? "N/A"),
@@ -209,26 +209,6 @@ namespace mrHelper.App.Helpers
             parseOrZero(m.Groups["ins"].Value), parseOrZero(m.Groups["del"].Value));
       }
 
-      internal struct DiffStatistic
-      {
-         internal DiffStatistic(int files, int insertions, int deletions)
-         {
-            _filesChanged = files;
-            _insertions = insertions;
-            _deletions = deletions;
-         }
-
-         public override string ToString()
-         {
-            string fileNumber = String.Format("{0} {1}", _filesChanged, _filesChanged > 1 ? "files" : "file");
-            return String.Format("+ {1} / - {2}\n{0}", fileNumber, _insertions, _deletions);
-         }
-
-         private readonly int _filesChanged;
-         private readonly int _insertions;
-         private readonly int _deletions;
-      }
-
       private struct MergeRequestStatistic
       {
          public MergeRequestStatistic(DateTime latestChange, DiffStatistic? statistic)
@@ -241,7 +221,7 @@ namespace mrHelper.App.Helpers
          internal DiffStatistic? Statistic { get; }
       }
 
-      private readonly Dictionary<MergeRequestKey, MergeRequestStatistic?> _gitStatistic =
+      private readonly Dictionary<MergeRequestKey, MergeRequestStatistic?> _statistic =
          new Dictionary<MergeRequestKey, MergeRequestStatistic?>();
    }
 }

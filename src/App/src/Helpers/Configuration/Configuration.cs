@@ -90,6 +90,9 @@ namespace mrHelper.App.Helpers
       private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
       private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
 
+      private static readonly string UseGitBasedSizeCollectionKeyName      = "UseGitBasedSizeCollection";
+      private static readonly bool   UseGitBasedSizeCollectionDefaultValue = false;
+
       private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
       private static readonly bool   DisableSSLVerificationDefaultValue = true;
 
@@ -656,6 +659,17 @@ namespace mrHelper.App.Helpers
                   out int result) ? result : CacheRevisionsPeriodMsDefaultValue;
          }
          set { setValue(CacheRevisionsPeriodMsKeyName, value.ToString()); }
+      }
+
+      public bool UseGitBasedSizeCollection
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               UseGitBasedSizeCollectionKeyName, boolToString(UseGitBasedSizeCollectionDefaultValue)),
+                  out bool result) ? result : UseGitBasedSizeCollectionDefaultValue;
+         }
+         set { setValue(UseGitBasedSizeCollectionKeyName, boolToString(value)); }
       }
 
       public bool DisableSSLVerification

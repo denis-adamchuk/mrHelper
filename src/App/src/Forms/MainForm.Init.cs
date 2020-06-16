@@ -564,10 +564,17 @@ namespace mrHelper.App.Forms
                Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
 
-         _gitStatManager = new GitStatisticManager(
-               session.MergeRequestCache, session.DiscussionCache,
-               session.UpdateContextProviderFactory, this, factory);
-         _gitStatManager.Update += onGitStatisticManagerUpdate;
+         if (Program.Settings.UseGitBasedSizeCollection)
+         {
+            _diffStatProvider = new GitBasedDiffStatProvider(
+                  session.MergeRequestCache, session.DiscussionCache,
+                  session.UpdateContextProviderFactory, this, factory);
+         }
+         else
+         {
+            _diffStatProvider = new DiscussionBasedDiffStatProvider(session.DiscussionCache);
+         }
+         _diffStatProvider.Update += onGitStatisticManagerUpdate;
       }
 
       private void disposeGitHelpers()
@@ -575,14 +582,13 @@ namespace mrHelper.App.Forms
          _gitDataUpdater?.Dispose();
          _gitDataUpdater = null;
 
-         if (_gitStatManager != null)
+         if (_diffStatProvider != null)
          {
-            _gitStatManager.Update -= onGitStatisticManagerUpdate;
-            _gitStatManager.Dispose();
-            _gitStatManager = null;
+            _diffStatProvider.Update -= onGitStatisticManagerUpdate;
+            _diffStatProvider.Dispose();
+            _diffStatProvider = null;
          }
       }
-
 
       private void onGitInitStatusChange(string status)
       {

@@ -103,7 +103,7 @@ namespace mrHelper.App.Forms
       private LocalGitRepositoryFactory _gitClientFactory;
       private GitInteractiveUpdater _gitClientUpdater;
       private GitDataUpdater _gitDataUpdater;
-      private GitStatisticManager _gitStatManager;
+      private IDiffStatisticProvider _diffStatProvider;
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
