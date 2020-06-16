@@ -46,7 +46,7 @@ namespace mrHelper.App.Controls
       {
          type = new RevisionType?();
          IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out type);
-         return leaves.Select(x => x.FullSHA).ToArray();
+         return leaves.OrderBy(x => x.OriginalTimestamp).Select(x => x.FullSHA).ToArray();
       }
 
       internal string[] GetIncludedSha()
