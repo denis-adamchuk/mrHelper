@@ -5,15 +5,18 @@ namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionItemForm : CustomFontForm
    {
-      internal NewDiscussionItemForm(string caption)
+      internal NewDiscussionItemForm(string caption, string initialText = "")
       {
          InitializeComponent();
          this.Text = caption;
+         this.textBox.Text = initialText;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          buttonCancel.ConfirmationCondition =
-            () => textBox.TextLength > MaximumTextLengthTocancelWithoutConfirmation;
+            () => initialText != String.Empty
+                  ? textBox.Text != initialText
+                  : textBox.TextLength > MaximumTextLengthTocancelWithoutConfirmation;
       }
 
       internal string Body => textBox.Text;
