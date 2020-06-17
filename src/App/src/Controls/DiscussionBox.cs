@@ -445,7 +445,7 @@ namespace mrHelper.App.Controls
 
             //updateDiscussionNoteInTextBox(textBox, note);
 
-            HtmlPanel htmlPanel = new HtmlPanel
+            HtmlPanel htmlPanel = new HtmlPanelWithGoodImages
             {
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
@@ -1056,6 +1056,21 @@ namespace mrHelper.App.Controls
       internal class HtmlToolTipWithGoodImages : HtmlToolTip
       {
          internal HtmlToolTipWithGoodImages()
+            : base()
+         {
+            this._htmlContainer.AvoidAsyncImagesLoading = true;
+         }
+      }
+
+      // TODO Check if needed for HtmlPanel textboxes
+      /// <summary>
+      /// The only purpose of this class is to disable async image loading.
+      /// Given feature prevents showing full-size images because their size are unknown
+      /// at the moment of tooltip rendering.
+      /// </summary>
+      internal class HtmlPanelWithGoodImages : HtmlPanel
+      {
+         internal HtmlPanelWithGoodImages()
             : base()
          {
             this._htmlContainer.AvoidAsyncImagesLoading = true;
