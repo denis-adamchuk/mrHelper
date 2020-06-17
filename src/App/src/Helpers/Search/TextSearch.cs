@@ -1,22 +1,20 @@
-using mrHelper.App.Controls;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Helpers
 {
    internal struct TextSearchResult
    {
-      public TextSearchResult(Control control, int insideControlPosition)
+      public TextSearchResult(ITextControl control, int insideControlPosition)
       {
          Control = control;
          InsideControlPosition = insideControlPosition;
       }
 
-      public Control Control { get; }
+      public ITextControl Control { get; }
       public int InsideControlPosition { get; }
    }
 
@@ -51,6 +49,49 @@ namespace mrHelper.App.Helpers
       }
    }
 
+   internal interface ITextControl
+   {
+      string Text { get; }
+
+      void HighlightText(string text, int startPosition);
+   }
+
+   internal static class SearchHelper
+   {
+      internal static bool SearchForward(ITextControl control, SearchQuery query, int startPosition,
+         out int insideControlPosition)
+      {
+         StringComparison stringComparison = query.CaseSensitive ?
+            StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+         int position = control.Text.IndexOf(query.Text, startPosition, stringComparison);
+         if (position != -1)
+         {
+            insideControlPosition = position;
+            return true;
+         }
+         insideControlPosition = -1;
+         return false;
+      }
+
+      internal static bool SearchBackward(ITextControl control, SearchQuery query, int startPosition,
+         out int insideControlPosition)
+      {
+         StringComparison stringComparison = query.CaseSensitive ?
+            StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+         string reverseText = String.Join("", control.Text.Reverse());
+         string reverseQuery = String.Join("", query.Text.Reverse());
+         startPosition = control.Text.Length - startPosition;
+         int position = reverseText.IndexOf(reverseQuery, startPosition, stringComparison);
+         if (position != -1)
+         {
+            insideControlPosition = control.Text.Length - position - query.Text.Length;
+            return true;
+         }
+         insideControlPosition = -1;
+         return false;
+      }
+   };
+
    internal class TextSearch
    {
       internal TextSearch(Control container, SearchQuery query, Func<Control, bool> isSearchableControl)
@@ -69,14 +110,14 @@ namespace mrHelper.App.Helpers
 
          foreach (Control control in _allControls)
          {
-            if (_isSearchableControl(control))
+            if (_isSearchableControl(control) && control is ITextControl textControl)
             {
                int startPosition = 0;
-               while (doesMatchText(control, Query, true, startPosition, out int insideControlPosition))
+               while (doesMatchText(textControl, Query, true, startPosition, out int insideControlPosition))
                {
                   if (!result.HasValue)
                   {
-                     result = new TextSearchResult(control, insideControlPosition);
+                     result = new TextSearchResult(textControl, insideControlPosition);
                   }
                   startPosition = insideControlPosition + 1;
                   ++count;
@@ -85,6 +126,22 @@ namespace mrHelper.App.Helpers
          }
 
          return result;
+      }
+
+      internal TextSearchResult? FindNext(Control control)
+      {
+         int iCurrent = 0;
+         while (_allControls[iCurrent] != control) ++iCurrent;
+
+         return find(0, _allControls.Count(), iCurrent, 0, true);
+      }
+
+      internal TextSearchResult? FindPrev(Control control)
+      {
+         int iCurrent = _allControls.Count() - 1;
+         while (_allControls[iCurrent] != control) --iCurrent;
+
+         return find(_allControls.Count() - 1, -1, iCurrent, 0, false);
       }
 
       internal TextSearchResult? FindNext(TextSearchResult current)
@@ -106,71 +163,65 @@ namespace mrHelper.App.Helpers
       internal TextSearchResult? find(int iStart, int iEnd, int iCurrent, int iCurrentInsideControlPosition, bool forward)
       {
          Control currentControl = _allControls[iCurrent];
-         if (_isSearchableControl(currentControl) &&
-             doesMatchText(currentControl, Query, forward, iCurrentInsideControlPosition, out int insideControlPosition))
+         if (_isSearchableControl(currentControl)
+            && currentControl is ITextControl currentTextControl
+            && doesMatchText(currentTextControl, Query, forward, iCurrentInsideControlPosition,
+               out int insideControlPosition))
          {
-            return new TextSearchResult(currentControl, insideControlPosition);
+            return new TextSearchResult(currentTextControl, insideControlPosition);
          }
 
          for (int iControl = iCurrent + (forward ? 1 : -1); iControl != iEnd; iControl += (forward ? 1 : -1))
          {
             Control control = _allControls[iControl];
-            int startPosition = forward ? 0 : control.Text.Length;
             if (_isSearchableControl(control)
-               && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
+               && control is ITextControl textControl
+               && doesMatchText(textControl, Query, forward, 0, out insideControlPosition))
             {
-               return new TextSearchResult(control, insideControlPosition);
+               return new TextSearchResult(textControl, insideControlPosition);
             }
          }
 
          for (int iControl = iStart; iControl != iCurrent + (forward ? 1 : -1); iControl += (forward ? 1 : -1))
          {
             Control control = _allControls[iControl];
-            int startPosition = forward ? 0 : control.Text.Length;
             if (_isSearchableControl(control)
-               && doesMatchText(control, Query, forward, startPosition, out insideControlPosition))
+               && control is ITextControl textControl
+               && doesMatchText(textControl, Query, forward, 0, out insideControlPosition))
             {
-               return new TextSearchResult(control, insideControlPosition);
+               return new TextSearchResult(textControl, insideControlPosition);
             }
          }
 
          return null;
       }
 
-      private bool doesMatchText(Control control, SearchQuery query, bool forward, int startPosition,
+      private bool doesMatchText(ITextControl control, SearchQuery query, bool forward, int startPosition,
          out int insideControlPosition)
       {
+         if (startPosition == 0 && !forward)
+         {
+            startPosition = control.Text.Length;
+         }
+
          insideControlPosition = -1;
          if (startPosition < 0 || startPosition > control.Text.Length)
          {
             return false;
          }
 
-         StringComparison stringComparison = query.CaseSensitive ?
-            StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
-         if (forward)
-         {
-            int position = control.Text.IndexOf(query.Text, startPosition, stringComparison);
-            if (position != -1)
-            {
-               insideControlPosition = position;
-               return true;
-            }
-         }
-         else
-         {
-            string reverseText = String.Join("", control.Text.Reverse());
-            string reverseQuery = String.Join("", query.Text.Reverse());
-            startPosition = control.Text.Length - startPosition;
-            int position = reverseText.IndexOf(reverseQuery, startPosition, stringComparison);
-            if (position != -1)
-            {
-               insideControlPosition = control.Text.Length - position - query.Text.Length;
-               return true;
-            }
-         }
-
-         return false;
+         return forward
+            ? SearchHelper.SearchForward(control, query, startPosition, out insideControlPosition)
+            : SearchHelper.SearchBackward(control, query, startPosition, out insideControlPosition);
+         //else if (control is ISearchableControl searchableControl)
+         //{
+         //   insideControlPosition = 0;
+         //   if (startPosition == 0 || startPosition == -1)
+         //   {
+         //      return searchableControl.DoesContainText(query.Text, query.CaseSensitive);
+         //   }
+         //   return false;
+         //}
       }
 
       private readonly Control[] _allControls;

@@ -43,3 +43,7 @@ ul, ol {
    margin-left: 0;
 }
 
+.highlight {
+    background-color: blue;
+}
+

@@ -140,11 +140,7 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.Escape)
          {
-            // to not pass Escape keystroke to a textbox being edited
-            if (!isEditing())
-            {
-               resetSearch();
-            }
+            resetSearch();
          }
          else if (e.KeyCode == Keys.Home)
          {
@@ -307,20 +303,11 @@ namespace mrHelper.App.Forms
 
       private void highlightSearchResult(TextSearchResult? result)
       {
-         if (result.HasValue && result.Value.Control is TextBox textbox && TextSearch != null)
+         TextSearchResult = null;
+         if (result.HasValue && TextSearch != null)
          {
-            textbox.Select(result.Value.InsideControlPosition, TextSearch.Query.Text.Length);
-            textbox.Focus();
-
-            Point controlLocationAtScreen = textbox.PointToScreen(new Point(0, -5));
-            Point controlLocationAtForm = this.PointToClient(controlLocationAtScreen);
-
-            if (!ClientRectangle.Contains(controlLocationAtForm))
-            {
-               Point newPosition = new Point(AutoScrollPosition.X, VerticalScroll.Value + controlLocationAtForm.Y);
-               AutoScrollPosition = newPosition;
-               PerformLayout();
-            }
+            result.Value.Control.HighlightText(TextSearch.Query.Text, result.Value.InsideControlPosition);
+            TextSearchResult = result;
          }
       }
 
@@ -445,21 +432,20 @@ namespace mrHelper.App.Forms
 
       private void continueSearch(bool forward)
       {
-         // To not jump inside the current control when it is being edited
-         if (isEditing())
-         {
-            return;
-         }
-
          if (TextSearch != null)
          {
+            Debug.Assert(TextSearchResult.HasValue);
+
             Control startControl = MostRecentFocusedDiscussionControl ?? ActiveControl;
-
-            TextSearchResult current = new TextSearchResult(startControl,
-               ((startControl as TextBox)?.SelectionStart ?? 0)
-              + (forward ? ((startControl as TextBox)?.SelectionLength ?? 0) : 0));
-
-            highlightSearchResult(forward ? TextSearch.FindNext(current) : TextSearch.FindPrev(current));
+            if (startControl is ITextControl textControl)
+            {
+               TextSearchResult searchResult = TextSearchResult.Value;
+               highlightSearchResult(forward ? TextSearch.FindNext(searchResult) : TextSearch.FindPrev(searchResult));
+            }
+            else
+            {
+               highlightSearchResult(forward ? TextSearch.FindNext(startControl) : TextSearch.FindPrev(startControl));
+            }
          }
       }
 
@@ -468,16 +454,11 @@ namespace mrHelper.App.Forms
          TextSearch = null;
          SearchPanel.DisplayFoundCount(null);
          MostRecentFocusedDiscussionControl = null;
+         // TODO Clear highlight
       }
 
       private void updateSearch()
       {
-         // to not change search state in the middle of edit
-         if (isEditing())
-         {
-            return;
-         }
-
          if (TextSearch != null)
          {
             startSearch(TextSearch.Query, false);
@@ -492,15 +473,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private bool isEditing()
-      {
-         return (ActiveControl is TextBox) && !(ActiveControl as TextBox).ReadOnly;
-      }
-
       private bool isSearchableControl(Control control)
       {
-         return control is TextBox &&
-               (control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion));
+         return control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion);
       }
 
       private readonly MergeRequestKey _mergeRequestKey;
@@ -523,6 +498,7 @@ namespace mrHelper.App.Forms
 
       private readonly DiscussionSearchPanel SearchPanel;
       private TextSearch TextSearch;
+      private TextSearchResult? TextSearchResult;
 
       private readonly DiscussionSortPanel SortPanel;
       private readonly DiscussionSort DisplaySort;

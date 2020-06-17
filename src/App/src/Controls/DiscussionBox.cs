@@ -249,6 +249,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(Discussion.Notes.Any());
 
          DiscussionNote firstNote = Discussion.Notes.First();
+         _firstNoteAuthor = firstNote.Author;
 
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
@@ -334,6 +335,28 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private class SearchableTextBox : TextBoxNoWheel, ITextControl
+      {
+         public void HighlightText(string text, int startPosition)
+         {
+            Select(startPosition, text.Length);
+            Focus();
+
+            Form form = Parent.Parent as Form;
+            Point controlLocationAtScreen = form.PointToScreen(new Point(0, -5));
+            Point controlLocationAtForm = form.PointToClient(controlLocationAtScreen);
+
+            if (!ClientRectangle.Contains(controlLocationAtForm))
+            {
+               int x = form.AutoScrollPosition.X;
+               int y = form.VerticalScroll.Value + controlLocationAtForm.Y;
+               Point newPosition = new Point(x, y);
+               form.AutoScrollPosition = newPosition;
+               PerformLayout();
+            }
+         }
+      }
+
       private Control createTextboxFilename(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
@@ -362,7 +385,7 @@ namespace mrHelper.App.Controls
             result = newPath + "\r\n(was " + oldPath + ")";
          }
 
-         TextBox textBox = new TextBoxNoWheel
+         TextBox textBox = new SearchableTextBox
          {
             ReadOnly = true,
             Text = result,
@@ -413,7 +436,6 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      // TODO
       private string getNoteText(DiscussionNote note, User firstNoteAuthor)
       {
          bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
@@ -456,9 +478,10 @@ namespace mrHelper.App.Controls
             htmlPanel.GotFocus += Control_GotFocus;
             htmlPanel.KeyDown += DiscussionNoteHtmlPanel_KeyDown;
             htmlPanel.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, htmlPanel);
-            htmlPanel.FontChanged += (sender, e) => setDiscussionNoteHtmlText(htmlPanel);
+            htmlPanel.FontChanged += (sender, e) =>
+               setDiscussionNoteHtmlText(htmlPanel, (DiscussionNote)htmlPanel.Tag);
 
-            setDiscussionNoteHtmlText(htmlPanel);
+            setDiscussionNoteHtmlText(htmlPanel, note);
 
             return htmlPanel;
          }
@@ -480,28 +503,14 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void updateDiscussionNote(HtmlPanel htmlPanel, DiscussionNote note)
+      internal void setDiscussionNoteHtmlText(HtmlPanel htmlPanel, DiscussionNote note)
       {
-         htmlPanel.Tag = note;
-         if (note != null)
-         {
-            setDiscussionNoteHtmlText(htmlPanel);
-         }
-      }
-
-      private void setDiscussionNoteHtmlText(HtmlPanel htmlPanel)
-      {
-         DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
-         if (note == null)
-         {
-            return;
-         }
-
          htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
          Properties.Resources.Common_CSS,
          WinFormsHelpers.GetFontSizeInPixels(htmlPanel));
 
-         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         string body = MarkDownUtils.ConvertToHtml(getNoteText(note, _firstNoteAuthor),
+            _imagePath, _specialDiscussionNoteMarkdownPipeline);
          htmlPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          htmlPanel.PerformLayout();
 
@@ -852,7 +861,8 @@ namespace mrHelper.App.Controls
          {
             htmlPanel.BackColor = oldColor;
             htmlPanel.ContextMenu = oldMenu;
-            updateDiscussionNote(htmlPanel, note);
+            htmlPanel.Tag = note;
+            setDiscussionNoteHtmlText(htmlPanel, note);
          }
       }
 
@@ -941,7 +951,7 @@ namespace mrHelper.App.Controls
          {
             htmlPanel.BackColor = Color.LightGray;
             htmlPanel.ContextMenu = new ContextMenu();
-            updateDiscussionNote(htmlPanel, null);
+            htmlPanel.Tag = null;
          }
       }
 
@@ -1047,7 +1057,6 @@ namespace mrHelper.App.Controls
          return result;
       }
 
-      // TODO Check if needed for HtmlPanel textboxes
       /// <summary>
       /// The only purpose of this class is to disable async image loading.
       /// Given feature prevents showing full-size images because their size are unknown
@@ -1062,19 +1071,50 @@ namespace mrHelper.App.Controls
          }
       }
 
-      // TODO Check if needed for HtmlPanel textboxes
       /// <summary>
       /// The only purpose of this class is to disable async image loading.
       /// Given feature prevents showing full-size images because their size are unknown
       /// at the moment of tooltip rendering.
       /// </summary>
-      internal class HtmlPanelWithGoodImages : HtmlPanel
+      internal class HtmlPanelWithGoodImages : HtmlPanel, ITextControl
       {
          internal HtmlPanelWithGoodImages()
             : base()
          {
-            this._htmlContainer.AvoidAsyncImagesLoading = true;
+            _htmlContainer.AvoidAsyncImagesLoading = true;
          }
+
+         string ITextControl.Text => Tag == null ? String.Empty : ((DiscussionNote)Tag).Body;
+
+         public void HighlightText(string text, int startPosition)
+         {
+            DiscussionNote note = (DiscussionNote)Tag;
+            if (note == null)
+            {
+               return;
+            }
+
+            string discussionText = note.Body;
+            string prefix = "<span class=\"highlight\">";
+            string suffix = "</span>";
+            string newText = discussionText
+               .Insert(startPosition, prefix)
+               .Insert(startPosition + text.Length + prefix.Length, suffix);
+
+            DiscussionNote newNote = new DiscussionNote(note.Id, newText, note.Created_At, note.Updated_At,
+               note.Author, note.Type, note.System, note.Resolvable, note.Resolved, note.Position);
+            (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, newNote);
+         }
+
+         //public bool DoesContainText(string text, bool caseSensitive)
+         //{
+         //   OnKeyDown(new KeyEventArgs(Keys.Control | Keys.A));
+         //   bool result = caseSensitive
+         //      ? SelectedText.Contains(text)
+         //      : SelectedText.ToLower().Contains(text.ToLower());
+         //   OnMouseDown(new MouseEventArgs(MouseButtons.Left, 1, -1, -1, 0));
+         //   return result;
+         //}
       }
 
       private DiscussionNote getNoteFromHtmlPanel(HtmlPanel htmlPanel)
@@ -1097,6 +1137,7 @@ namespace mrHelper.App.Controls
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
       private readonly string _imagePath;
+      private User _firstNoteAuthor; // may change on Refresh
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
