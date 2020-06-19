@@ -335,28 +335,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private class SearchableTextBox : TextBoxNoWheel, ITextControl
-      {
-         public void HighlightText(string text, int startPosition)
-         {
-            Select(startPosition, text.Length);
-            Focus();
-
-            Form form = Parent.Parent as Form;
-            Point controlLocationAtScreen = form.PointToScreen(new Point(0, -5));
-            Point controlLocationAtForm = form.PointToClient(controlLocationAtScreen);
-
-            if (!ClientRectangle.Contains(controlLocationAtForm))
-            {
-               int x = form.AutoScrollPosition.X;
-               int y = form.VerticalScroll.Value + controlLocationAtForm.Y;
-               Point newPosition = new Point(x, y);
-               form.AutoScrollPosition = newPosition;
-               PerformLayout();
-            }
-         }
-      }
-
       private Control createTextboxFilename(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
@@ -450,23 +428,6 @@ namespace mrHelper.App.Controls
       {
          if (!isServiceDiscussionNote(note))
          {
-            //TextBox textBox = new TextBoxNoWheel()
-            //{
-            //   ReadOnly = true,
-            //   Text = getNoteText(note, firstNoteAuthor),
-            //   Multiline = true,
-            //   BackColor = getNoteColor(note),
-            //   AutoSize = false,
-            //};
-            //textBox.GotFocus += Control_GotFocus;
-            //textBox.LostFocus += TextBox_LostFocus;
-            //textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
-            //textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
-            //textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
-            //textBox.FontChanged += (sender, e) => updateDiscussionNoteInTextBox(textBox, note);
-
-            //updateDiscussionNoteInTextBox(textBox, note);
-
             HtmlPanel htmlPanel = new HtmlPanelWithGoodImages
             {
                BackColor = getNoteColor(note),
@@ -1055,66 +1016,6 @@ namespace mrHelper.App.Controls
             }
          }
          return result;
-      }
-
-      /// <summary>
-      /// The only purpose of this class is to disable async image loading.
-      /// Given feature prevents showing full-size images because their size are unknown
-      /// at the moment of tooltip rendering.
-      /// </summary>
-      internal class HtmlToolTipWithGoodImages : HtmlToolTip
-      {
-         internal HtmlToolTipWithGoodImages()
-            : base()
-         {
-            this._htmlContainer.AvoidAsyncImagesLoading = true;
-         }
-      }
-
-      /// <summary>
-      /// The only purpose of this class is to disable async image loading.
-      /// Given feature prevents showing full-size images because their size are unknown
-      /// at the moment of tooltip rendering.
-      /// </summary>
-      internal class HtmlPanelWithGoodImages : HtmlPanel, ITextControl
-      {
-         internal HtmlPanelWithGoodImages()
-            : base()
-         {
-            _htmlContainer.AvoidAsyncImagesLoading = true;
-         }
-
-         string ITextControl.Text => Tag == null ? String.Empty : ((DiscussionNote)Tag).Body;
-
-         public void HighlightText(string text, int startPosition)
-         {
-            DiscussionNote note = (DiscussionNote)Tag;
-            if (note == null)
-            {
-               return;
-            }
-
-            string discussionText = note.Body;
-            string prefix = "<span class=\"highlight\">";
-            string suffix = "</span>";
-            string newText = discussionText
-               .Insert(startPosition, prefix)
-               .Insert(startPosition + text.Length + prefix.Length, suffix);
-
-            DiscussionNote newNote = new DiscussionNote(note.Id, newText, note.Created_At, note.Updated_At,
-               note.Author, note.Type, note.System, note.Resolvable, note.Resolved, note.Position);
-            (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, newNote);
-         }
-
-         //public bool DoesContainText(string text, bool caseSensitive)
-         //{
-         //   OnKeyDown(new KeyEventArgs(Keys.Control | Keys.A));
-         //   bool result = caseSensitive
-         //      ? SelectedText.Contains(text)
-         //      : SelectedText.ToLower().Contains(text.ToLower());
-         //   OnMouseDown(new MouseEventArgs(MouseButtons.Left, 1, -1, -1, 0));
-         //   return result;
-         //}
       }
 
       private DiscussionNote getNoteFromHtmlPanel(HtmlPanel htmlPanel)

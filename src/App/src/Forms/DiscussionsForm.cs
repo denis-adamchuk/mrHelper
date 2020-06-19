@@ -306,7 +306,23 @@ namespace mrHelper.App.Forms
          TextSearchResult = null;
          if (result.HasValue && TextSearch != null)
          {
-            result.Value.Control.HighlightText(TextSearch.Query.Text, result.Value.InsideControlPosition);
+            result.Value.Control.HighlightFragment(result.Value.InsideControlPosition, TextSearch.Query.Text.Length);
+
+            Control control = (result.Value.Control as Control);
+            control.Focus();
+
+            Point controlLocationAtScreen = control.PointToScreen(new Point(0, -5));
+            Point controlLocationAtForm = this.PointToClient(controlLocationAtScreen);
+
+            if (!ClientRectangle.Contains(controlLocationAtForm))
+            {
+               int x = AutoScrollPosition.X;
+               int y = VerticalScroll.Value + controlLocationAtForm.Y;
+               Point newPosition = new Point(x, y);
+               AutoScrollPosition = newPosition;
+               PerformLayout();
+            }
+
             TextSearchResult = result;
          }
       }
@@ -435,11 +451,13 @@ namespace mrHelper.App.Forms
          if (TextSearch != null)
          {
             Debug.Assert(TextSearchResult.HasValue);
+            TextSearchResult searchResult = TextSearchResult.Value;
+
+            TextSearchResult?.Control.ClearHighlight();
 
             Control startControl = MostRecentFocusedDiscussionControl ?? ActiveControl;
-            if (startControl is ITextControl textControl)
+            if (startControl == searchResult.Control)
             {
-               TextSearchResult searchResult = TextSearchResult.Value;
                highlightSearchResult(forward ? TextSearch.FindNext(searchResult) : TextSearch.FindPrev(searchResult));
             }
             else
@@ -454,7 +472,7 @@ namespace mrHelper.App.Forms
          TextSearch = null;
          SearchPanel.DisplayFoundCount(null);
          MostRecentFocusedDiscussionControl = null;
-         // TODO Clear highlight
+         TextSearchResult?.Control.ClearHighlight();
       }
 
       private void updateSearch()
