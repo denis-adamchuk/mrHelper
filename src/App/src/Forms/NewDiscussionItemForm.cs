@@ -10,6 +10,16 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          this.Text = caption;
          this.textBox.Text = initialText;
+         if (initialText != String.Empty)
+         {
+            // if even extraHeight is negative, it will not cause the Form to be smaller than MinimumSize
+            int extraHeight = textBox.PreferredHeight - textBox.Height;
+            this.Height += extraHeight;
+
+            // a simple solution to disable text auto-selection on Form show (see https://stackoverflow.com/a/3537816)
+            textBox.SelectionStart = initialText.Length;
+            textBox.DeselectAll();
+         }
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 

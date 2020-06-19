@@ -126,8 +126,13 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Edit Discussion Note", note.Body))
+         string currentBody = note.Body.Replace("\n", "\r\n");
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Edit Discussion Note", currentBody))
          {
+            Point locationAtScreen = htmlPanel.PointToScreen(new Point(0, 0));
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = locationAtScreen;
+
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -137,7 +142,7 @@ namespace mrHelper.App.Controls
                   return;
                }
 
-               await submitNewBodyAsync(htmlPanel, form.Body);
+               await submitNewBodyAsync(htmlPanel, form.Body.Replace("\r\n", "\n"));
             }
          }
       }
@@ -155,7 +160,7 @@ namespace mrHelper.App.Controls
                   return;
                }
 
-               await onReplyAsync(form.Body);
+               await onReplyAsync(form.Body.Replace("\r\n", "\n"));
             }
          }
       }
@@ -420,8 +425,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(!appendNoteAuthor || !canBeModified(note));
 
          string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
-         string body = note.Body.Replace("\n", "\r\n");
-         return prefix + body;
+         return prefix + note.Body;
       }
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
@@ -682,7 +686,7 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
-            _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
+            _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
          int remainingPercents = 100

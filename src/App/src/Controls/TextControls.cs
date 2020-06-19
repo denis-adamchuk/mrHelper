@@ -27,7 +27,7 @@ namespace mrHelper.App.Controls
       public readonly int HighlightLength;
    }
 
-   internal class SearchableTextBox : TextBoxNoWheel, ITextControl
+   internal class SearchableTextBox : TextBoxEx, ITextControl
    {
       public HighlightState HighlightState => new HighlightState(SelectionStart, SelectionLength);
 

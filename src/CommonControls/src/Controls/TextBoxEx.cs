@@ -5,7 +5,12 @@ using mrHelper.CommonNative;
 
 namespace mrHelper.CommonControls.Controls
 {
-   public class TextBoxNoWheel : TextBox
+   /// <summary>
+   /// Two things differ this class from its parent:
+   /// - It does not stuck on mouse wheel
+   /// - It calculates full preferred height which is not possible to get from TextBox in multiline mode
+   /// </summary>
+   public class TextBoxEx : TextBox
    {
       protected override void WndProc(ref Message m)
       {
@@ -33,28 +38,13 @@ namespace mrHelper.CommonControls.Controls
          _cachedBorderHeight = 0;
       }
 
-      public new int PreferredHeight
+      public int FullPreferredHeight
       {
          get
          {
-            int numberOfLines = NativeMethods.SendMessage(CachedHandle, NativeMethods.EM_GETLINECOUNT,
+            int numberOfLines = NativeMethods.SendMessage(Handle, NativeMethods.EM_GETLINECOUNT,
                IntPtr.Zero, IntPtr.Zero).ToInt32();
             return calcPreferredHeight(numberOfLines);
-         }
-      }
-
-      // TODO This is risky, because Handle may change when some TextBox property changes (e.g. BorderStyle).
-      // It works in DiscussionBox but in general case should be revisited.
-      private IntPtr CachedHandle
-      {
-         get
-         {
-            if (_cachedHandle == IntPtr.Zero)
-            {
-               _cachedHandle = Handle;
-            }
-            Debug.Assert(_cachedHandle == Handle);
-            return _cachedHandle;
          }
       }
 
