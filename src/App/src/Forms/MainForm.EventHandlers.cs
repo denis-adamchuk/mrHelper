@@ -385,6 +385,9 @@ namespace mrHelper.App.Forms
          ListView listView = (sender as ListView);
          Debug.Assert(listView.SelectedItems.Count < 1);
 
+         Trace.TraceInformation(String.Format("[MainForm] User deselected merge request. IsSearchMode={0}",
+            isSearchMode() ? "Yes" : "No"));
+
          disableCommonUIControls();
          updateGitAbortState(false);
       }
