@@ -444,7 +444,12 @@ namespace mrHelper.App.Controls
             htmlPanel.KeyDown += DiscussionNoteHtmlPanel_KeyDown;
             htmlPanel.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, htmlPanel);
             htmlPanel.FontChanged += (sender, e) =>
-               setDiscussionNoteHtmlText(htmlPanel, (DiscussionNote)htmlPanel.Tag);
+            {
+               if (htmlPanel.Tag != null)
+               {
+                  setDiscussionNoteHtmlText(htmlPanel, (DiscussionNote)htmlPanel.Tag);
+               }
+            };
 
             setDiscussionNoteHtmlText(htmlPanel, note);
 
@@ -820,15 +825,15 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _onContentChanged(this, true);
-
-         if (!htmlPanel.IsDisposed)
+         if (!htmlPanel.IsDisposed && note != null)
          {
             htmlPanel.BackColor = oldColor;
             htmlPanel.ContextMenu = oldMenu;
             htmlPanel.Tag = note;
             setDiscussionNoteHtmlText(htmlPanel, note);
          }
+
+         _onContentChanged(this, true);
       }
 
       async private Task onDeleteNoteAsync(DiscussionNote note)

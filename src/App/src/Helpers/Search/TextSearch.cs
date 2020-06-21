@@ -121,59 +121,24 @@ namespace mrHelper.App.Helpers
          return result;
       }
 
-      internal TextSearchResult? FindNext(Control control)
+      internal TextSearchResult? FindNext(Control control, int startPosition)
       {
-         if (control is ITextControl textControl)
-         {
-            int startPosition = textControl.HighlightState != null
-               ? textControl.HighlightState.HighlightStart + textControl.HighlightState.HighlightLength
-               : 0;
-            TextSearchResult current = new TextSearchResult(textControl, startPosition);
-            return FindNext(current);
-         }
-
          int iCurrent = 0;
          while (_allControls[iCurrent] != control) ++iCurrent;
 
-         return find(0, _allControls.Count(), iCurrent, 0, true);
-      }
-
-      internal TextSearchResult? FindPrev(Control control)
-      {
-         if (control is ITextControl textControl)
-         {
-            int startPosition = textControl.HighlightState != null
-               ? textControl.HighlightState.HighlightStart
-               : textControl.Text.Length;
-            TextSearchResult current = new TextSearchResult(textControl, startPosition);
-            return FindPrev(current);
-         }
-
-         int iCurrent = _allControls.Count() - 1;
-         while (_allControls[iCurrent] != control) --iCurrent;
-
-         return find(_allControls.Count() - 1, -1, iCurrent, 0, false);
-      }
-
-      internal TextSearchResult? FindNext(TextSearchResult current)
-      {
-         int iCurrent = 0;
-         while (_allControls[iCurrent] != current.Control) ++iCurrent;
-
-         int startPosition = current.InsideControlPosition + Query.Text.Length;
          return find(0, _allControls.Count(), iCurrent, startPosition, true);
       }
 
-      internal TextSearchResult? FindPrev(TextSearchResult current)
+      internal TextSearchResult? FindPrev(Control control, int startPosition)
       {
          int iCurrent = _allControls.Count() - 1;
-         while (_allControls[iCurrent] != current.Control) --iCurrent;
+         while (_allControls[iCurrent] != control) --iCurrent;
 
-         int startPosition = current.InsideControlPosition;
          return find(_allControls.Count() - 1, -1, iCurrent, startPosition, false);
       }
 
-      internal TextSearchResult? find(int iStart, int iEnd, int iCurrent, int iCurrentInsideControlPosition, bool forward)
+      internal TextSearchResult? find(int iStart, int iEnd, int iCurrent, int iCurrentInsideControlPosition,
+         bool forward)
       {
          Control currentControl = _allControls[iCurrent];
          if (_isSearchableControl(currentControl)

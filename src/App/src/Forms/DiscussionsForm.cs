@@ -448,22 +448,28 @@ namespace mrHelper.App.Forms
 
       private void continueSearch(bool forward)
       {
-         if (TextSearch != null)
+         if (TextSearch == null)
          {
-            Debug.Assert(TextSearchResult.HasValue);
-            TextSearchResult searchResult = TextSearchResult.Value;
+            return;
+         }
 
-            TextSearchResult?.Control.ClearHighlight();
+         int startPosition = 0;
+         Control control = MostRecentFocusedDiscussionControl ?? ActiveControl;
+         if (control is ITextControl textControl && textControl.HighlightState != null)
+         {
+            startPosition = forward
+               ? textControl.HighlightState.HighlightStart + textControl.HighlightState.HighlightLength
+               : textControl.HighlightState.HighlightStart ;
+            textControl.ClearHighlight();
+         }
 
-            Control startControl = MostRecentFocusedDiscussionControl ?? ActiveControl;
-            if (startControl == searchResult.Control)
-            {
-               highlightSearchResult(forward ? TextSearch.FindNext(searchResult) : TextSearch.FindPrev(searchResult));
-            }
-            else
-            {
-               highlightSearchResult(forward ? TextSearch.FindNext(startControl) : TextSearch.FindPrev(startControl));
-            }
+         TextSearchResult? result = forward
+            ? TextSearch.FindNext(control, startPosition)
+            : TextSearch.FindPrev(control, startPosition);
+
+         if (result != null)
+         {
+            highlightSearchResult(result);
          }
       }
 

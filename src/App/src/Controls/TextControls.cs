@@ -53,13 +53,13 @@ namespace mrHelper.App.Controls
          _htmlContainer.AvoidAsyncImagesLoading = true;
       }
 
-      string ITextControl.Text => Tag == null ? String.Empty : ((DiscussionNote)Tag).Body;
+      string ITextControl.Text => removeCodeBlocks(getOriginalNote()).Body;
 
       public HighlightState HighlightState { get; private set; }
 
       public void HighlightFragment(int startPosition, int length)
       {
-         DiscussionNote note = (DiscussionNote)Tag;
+         DiscussionNote note = removeCodeBlocks(getOriginalNote());
          if (note == null)
          {
             return;
@@ -72,15 +72,13 @@ namespace mrHelper.App.Controls
             .Insert(startPosition, prefix)
             .Insert(startPosition + length + prefix.Length, suffix);
 
-         DiscussionNote newNote = new DiscussionNote(note.Id, newText, note.Created_At, note.Updated_At,
-            note.Author, note.Type, note.System, note.Resolvable, note.Resolved, note.Position);
-         (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, newNote);
+         (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, cloneNoteWithNewText(getOriginalNote(), newText));
          HighlightState = new HighlightState(startPosition, length);
       }
 
       public void ClearHighlight()
       {
-         DiscussionNote note = (DiscussionNote)Tag;
+         DiscussionNote note = getOriginalNote();
          if (note == null)
          {
             return;
@@ -92,14 +90,33 @@ namespace mrHelper.App.Controls
 
       protected override void OnMouseDown(MouseEventArgs e)
       {
-         base.OnMouseDown(e);
          ClearHighlight();
+         base.OnMouseDown(e);
       }
 
       protected override void OnLostFocus(EventArgs e)
       {
-         base.OnLostFocus(e);
          ClearHighlight();
+         base.OnLostFocus(e);
+      }
+
+      private DiscussionNote getOriginalNote()
+      {
+         return (DiscussionNote)Tag;
+      }
+
+      private DiscussionNote removeCodeBlocks(DiscussionNote note)
+      {
+         DiscussionNote originalNote = getOriginalNote();
+         string originalBody = originalNote.Body;
+         string newBody = originalBody.Replace("`", "").Replace("~", "");
+         return cloneNoteWithNewText(originalNote, newBody);
+      }
+
+      private DiscussionNote cloneNoteWithNewText(DiscussionNote note, string text)
+      {
+         return new DiscussionNote(note.Id, text, note.Created_At, note.Updated_At,
+            note.Author, note.Type, note.System, note.Resolvable, note.Resolved, note.Position);
       }
    }
 }
