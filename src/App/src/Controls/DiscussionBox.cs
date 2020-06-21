@@ -432,7 +432,7 @@ namespace mrHelper.App.Controls
       {
          if (!isServiceDiscussionNote(note))
          {
-            HtmlPanel htmlPanel = new HtmlPanelWithGoodImages
+            HtmlPanel htmlPanel = new SearchableHtmlPanel
             {
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,

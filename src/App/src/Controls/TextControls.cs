@@ -42,9 +42,9 @@ namespace mrHelper.App.Controls
       }
    }
 
-   internal class HtmlPanelWithGoodImages : HtmlPanel, ITextControl
+   internal class SearchableHtmlPanel : HtmlPanel, ITextControl
    {
-      internal HtmlPanelWithGoodImages()
+      internal SearchableHtmlPanel()
          : base()
       {
          /// Disable async image loading.
@@ -65,14 +65,9 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         string discussionText = note.Body;
-         string prefix = "<span class=\"highlight\">";
-         string suffix = "</span>";
-         string newText = discussionText
-            .Insert(startPosition, prefix)
-            .Insert(startPosition + length + prefix.Length, suffix);
-
-         (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, cloneNoteWithNewText(getOriginalNote(), newText));
+         string span = wrapTextFragmentInSpan(startPosition, length, note);
+         DiscussionNote updatedNote = cloneNoteWithNewText(getOriginalNote(), span);
+         (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, updatedNote);
          HighlightState = new HighlightState(startPosition, length);
       }
 
@@ -103,6 +98,17 @@ namespace mrHelper.App.Controls
       private DiscussionNote getOriginalNote()
       {
          return (DiscussionNote)Tag;
+      }
+
+      private static string wrapTextFragmentInSpan(int startPosition, int length, DiscussionNote note)
+      {
+         string discussionText = note.Body;
+         string prefix = "<span class=\"highlight\">";
+         string suffix = "</span>";
+         string newText = discussionText
+            .Insert(startPosition, prefix)
+            .Insert(startPosition + length + prefix.Length, suffix);
+         return newText;
       }
 
       private DiscussionNote removeCodeBlocks(DiscussionNote note)

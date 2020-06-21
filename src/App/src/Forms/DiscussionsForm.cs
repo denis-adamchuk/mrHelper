@@ -479,6 +479,7 @@ namespace mrHelper.App.Forms
          SearchPanel.DisplayFoundCount(null);
          MostRecentFocusedDiscussionControl = null;
          TextSearchResult?.Control.ClearHighlight();
+         TextSearchResult = null;
       }
 
       private void updateSearch()
