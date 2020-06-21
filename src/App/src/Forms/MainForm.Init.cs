@@ -388,7 +388,7 @@ namespace mrHelper.App.Forms
       {
          addCustomActions();
          loadConfiguration();
-         resetMinimumSizes();
+         resetMergeRequestTabMinimumSizes();
          disableSSLVerification();
          updateCaption();
          updateTabControlSelection();
@@ -425,12 +425,10 @@ namespace mrHelper.App.Forms
             toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
          }
 
-         radioButtonSearchByTitleAndDescription.Text += String.Format(
-            " (up to {0} results)", Constants.MaxSearchByTitleAndDescriptionResults);
-         radioButtonSearchByTitleAndDescription.Text += "            ";
-         radioButtonSearchByTargetBranch.Location = new System.Drawing.Point(
-            radioButtonSearchByTitleAndDescription.Location.X + radioButtonSearchByTitleAndDescription.Width,
-            radioButtonSearchByTargetBranch.Location.Y);
+         toolTip.SetToolTip(radioButtonSearchByTitleAndDescription,
+            String.Format("{0} (up to {1} results)",
+               toolTip.GetToolTip(radioButtonSearchByTitleAndDescription),
+               Constants.MaxSearchByTitleAndDescriptionResults));
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
       }
@@ -440,13 +438,18 @@ namespace mrHelper.App.Forms
          if (_startMinimized)
          {
             _forceMaximizeOnNextRestore = Program.Settings.WasMaximizedBeforeClose;
+            _applySplitterDistanceOnNextRestore = true;
             WindowState = FormWindowState.Minimized;
          }
          else
          {
             WindowState = Program.Settings.WasMaximizedBeforeClose ? FormWindowState.Maximized : FormWindowState.Normal;
+            applySavedSplitterDistance();
          }
+      }
 
+      private void applySavedSplitterDistance()
+      {
          if (Program.Settings.MainWindowSplitterDistance != 0
             && splitContainer1.Panel1MinSize < Program.Settings.MainWindowSplitterDistance
             && splitContainer1.Width - splitContainer1.Panel2MinSize > Program.Settings.MainWindowSplitterDistance)

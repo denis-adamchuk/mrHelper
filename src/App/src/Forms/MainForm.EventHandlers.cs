@@ -101,15 +101,19 @@ namespace mrHelper.App.Forms
          {
             if (_prevWindowState == FormWindowState.Minimized)
             {
-               if (this.WindowState == FormWindowState.Normal && _forceMaximizeOnNextRestore)
+               bool isRestoring = this.WindowState == FormWindowState.Normal;
+               if (isRestoring && _forceMaximizeOnNextRestore)
                {
                   _forceMaximizeOnNextRestore = false;
                   _prevWindowState = FormWindowState.Maximized; // prevent re-entrance on next line
                   this.WindowState = FormWindowState.Maximized;
                }
 
-               resetMinimumSizes();
-               updateMinimumSizes();
+               if (isRestoring && _applySplitterDistanceOnNextRestore)
+               {
+                  _applySplitterDistanceOnNextRestore = false;
+                  applySavedSplitterDistance();
+               }
             }
          }
 
@@ -565,7 +569,7 @@ namespace mrHelper.App.Forms
       private void CheckBoxDisableSplitterRestrictions_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.DisableSplitterRestrictions = (sender as CheckBox).Checked;
-         resetMinimumSizes();
+         resetMergeRequestTabMinimumSizes();
       }
 
       private void checkBoxAutoSelectNewestRevision_CheckedChanged(object sender, EventArgs e)
@@ -1119,7 +1123,7 @@ namespace mrHelper.App.Forms
          string theme = comboBoxThemes.SelectedItem.ToString();
          Program.Settings.VisualThemeName = theme;
          applyTheme(theme);
-         resetMinimumSizes();
+         resetMergeRequestTabMinimumSizes();
       }
 
       private void comboBoxFonts_SelectionChangeCommitted(object sender, EventArgs e)
@@ -1209,7 +1213,7 @@ namespace mrHelper.App.Forms
 
       private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
       {
-         updateMinimumSizes();
+         initializeMergeRequestTabMinimumSizes();
       }
 
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
@@ -1288,7 +1292,7 @@ namespace mrHelper.App.Forms
 
          updateVisibleMergeRequests(); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
-         resetMinimumSizes();
+         resetMergeRequestTabMinimumSizes();
       }
 
       protected override void OnDpiChanged(DpiChangedEventArgs e)

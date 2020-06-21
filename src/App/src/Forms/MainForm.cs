@@ -90,6 +90,7 @@ namespace mrHelper.App.Forms
 
       bool _startMinimized;
       bool _forceMaximizeOnNextRestore;
+      bool _applySplitterDistanceOnNextRestore;
       FormWindowState _prevWindowState;
       private bool _loadingConfiguration = false;
       private bool _exiting = false;

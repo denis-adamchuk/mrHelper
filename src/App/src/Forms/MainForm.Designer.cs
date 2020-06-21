@@ -797,6 +797,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSearchByTargetBranch.Size = new System.Drawing.Size(107, 17);
          this.radioButtonSearchByTargetBranch.TabIndex = 5;
          this.radioButtonSearchByTargetBranch.Text = "by Target Branch";
+         this.toolTip.SetToolTip(this.radioButtonSearchByTargetBranch, "Search merge requests by target branch name");
          this.radioButtonSearchByTargetBranch.UseVisualStyleBackColor = true;
          // 
          // radioButtonSearchByTitleAndDescription
@@ -809,6 +810,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSearchByTitleAndDescription.TabIndex = 4;
          this.radioButtonSearchByTitleAndDescription.TabStop = true;
          this.radioButtonSearchByTitleAndDescription.Text = "by Title and Description";
+         this.toolTip.SetToolTip(this.radioButtonSearchByTitleAndDescription, "Search merge requests by words from title and description");
          this.radioButtonSearchByTitleAndDescription.UseVisualStyleBackColor = true;
          // 
          // listViewFoundMergeRequests

@@ -1493,7 +1493,7 @@ namespace mrHelper.App.Forms
          return res < 0 && preventOverlap ? 10 : res;
       }
 
-      private void resetMinimumSizes()
+      private void resetMergeRequestTabMinimumSizes()
       {
          int defaultSplitContainerPanelMinSize = 25;
          splitContainer1.Panel1MinSize = defaultSplitContainerPanelMinSize;
@@ -1503,10 +1503,10 @@ namespace mrHelper.App.Forms
 
          this.MinimumSize = new System.Drawing.Size(0, 0);
 
-         _invalidMinSizes = true;
+         _initializedMinimumSizes = false;
       }
 
-      private bool _invalidMinSizes = false;
+      private bool _initializedMinimumSizes = true;
 
       private int getLeftPaneMinWidth()
       {
@@ -1619,17 +1619,16 @@ namespace mrHelper.App.Forms
             + calcVertDistance(panelBottomMenu, null);
       }
 
-      private void updateMinimumSizes()
+      private void initializeMergeRequestTabMinimumSizes()
       {
-         if (!_invalidMinSizes || tabControl.SelectedTab != tabPageMR)
+         if (_initializedMinimumSizes || tabControl.SelectedTab != tabPageMR)
          {
             return;
          }
 
          if (Program.Settings.DisableSplitterRestrictions)
          {
-            resetMinimumSizes();
-            _invalidMinSizes = false;
+            _initializedMinimumSizes = true;
             return;
          }
 
@@ -1674,8 +1673,8 @@ namespace mrHelper.App.Forms
                splitContainer1.Width, leftPaneMinWidth, rightPaneMinWidth,
                splitContainer2.Height, topRightPaneMinHeight, bottomRightPaneMinHeight));
             Debug.Assert(false);
-            resetMinimumSizes();
-            _invalidMinSizes = false;
+            resetMergeRequestTabMinimumSizes();
+            _initializedMinimumSizes = true;
             return;
          }
 
@@ -1689,7 +1688,7 @@ namespace mrHelper.App.Forms
          this.splitContainer1.SplitterDistance = this.splitContainer1.Width - this.splitContainer1.Panel2MinSize;
          this.splitContainer2.SplitterDistance = this.splitContainer2.Height - this.splitContainer2.Panel2MinSize;
 
-         _invalidMinSizes = false;
+         _initializedMinimumSizes = true;
       }
 
       private void repositionCustomCommands()
