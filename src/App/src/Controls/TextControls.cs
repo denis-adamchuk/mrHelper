@@ -67,7 +67,7 @@ namespace mrHelper.App.Controls
 
          string span = wrapTextFragmentInSpan(startPosition, length, note);
          DiscussionNote updatedNote = cloneNoteWithNewText(getOriginalNote(), span);
-         (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, updatedNote);
+         (Parent as DiscussionBox).setDiscussionNoteText(this, updatedNote);
          HighlightState = new HighlightState(startPosition, length);
       }
 
@@ -79,7 +79,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         (Parent as DiscussionBox).setDiscussionNoteHtmlText(this, note);
+         (Parent as DiscussionBox).setDiscussionNoteText(this, note);
          HighlightState = null;
       }
 
@@ -113,10 +113,14 @@ namespace mrHelper.App.Controls
 
       private DiscussionNote removeCodeBlocks(DiscussionNote note)
       {
-         DiscussionNote originalNote = getOriginalNote();
-         string originalBody = originalNote.Body;
-         string newBody = originalBody.Replace("`", "").Replace("~", "");
-         return cloneNoteWithNewText(originalNote, newBody);
+         if (note == null)
+         {
+            return null;
+         }
+
+         string oldBody = note.Body;
+         string newBody = oldBody.Replace("`", "").Replace("~", "");
+         return cloneNoteWithNewText(note, newBody);
       }
 
       private DiscussionNote cloneNoteWithNewText(DiscussionNote note, string text)

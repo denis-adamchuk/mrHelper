@@ -139,7 +139,7 @@ namespace mrHelper.App.Controls
       private void autoSelectRevision(TreeNodeAdv revisionTypeNode)
       {
          _treeView.ClearSelection();
-         revisionTypeNode.Expand();
+         revisionTypeNode?.Expand();
 
          IEnumerable<TreeNodeAdv> sortedChildren = revisionTypeNode?.Children
             .Where(x => x.Tag is RevisionBrowserItem)

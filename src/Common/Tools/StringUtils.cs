@@ -60,6 +60,16 @@ namespace mrHelper.Common.Tools
          return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs),
             "mrHelper", "mrHelper.lnk");
       }
+
+      public static string ConvertNewlineUnixToWindows(string input)
+      {
+         return input.Replace("\n", "\r\n");
+      }
+
+      public static string ConvertNewlineWindowsToUnix(string input)
+      {
+         return input.Replace("\r\n", "\n");
+      }
    }
 }
 
