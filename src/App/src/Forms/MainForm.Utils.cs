@@ -163,20 +163,28 @@ namespace mrHelper.App.Forms
          updateUsersListView();
       }
 
-      private void createListViewGroupsForProjects(ListView listView, IEnumerable<ProjectKey> projects)
+      private void createListViewGroupForProject(ListView listView, ProjectKey projectKey, bool sortNeeded)
       {
-         listView.Items.Clear();
-         listView.Groups.Clear();
-         foreach (ProjectKey projectKey in projects)
-         {
-            createListViewGroupForProject(listView, projectKey);
-         }
-      }
-
-      private void createListViewGroupForProject(ListView listView, ProjectKey projectKey)
-      {
-         ListViewGroup group = listView.Groups.Add(projectKey.ProjectName, projectKey.ProjectName);
+         ListViewGroup group = new ListViewGroup(projectKey.ProjectName, projectKey.ProjectName);
          group.Tag = projectKey;
+         if (!sortNeeded)
+         {
+            // user defines how to sort group here
+            listView.Groups.Add(group);
+            return;
+         }
+
+         // sort groups alphabetically
+         int indexToInsert = listView.Groups.Count;
+         for (int iGroup = 0; iGroup < listView.Groups.Count; ++iGroup)
+         {
+            if (projectKey.ProjectName.CompareTo(listView.Groups[iGroup].Header) < 0)
+            {
+               indexToInsert = iGroup;
+               break;
+            }
+         }
+         listView.Groups.Insert(indexToInsert, group);
       }
 
       private bool selectMergeRequest(ListView listView, MergeRequestKey? mrk, bool exact)
@@ -893,25 +901,32 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.BeginUpdate();
 
-         // Add missing project groups
-         IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
-         foreach (ProjectKey projectKey in allProjects)
+         IEnumerable<ProjectKey> projectKeys;
+         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
-            if (!listViewMergeRequests.Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
-            {
-               createListViewGroupForProject(listViewMergeRequests, projectKey);
-            }
+            projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
          }
-
-         // Remove deleted project groups
-         IEnumerable<ProjectKey> projectKeys =
-            listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
-         for (int index = listViewMergeRequests.Groups.Count - 1; index >= 0; --index)
+         else
          {
-            ListViewGroup group = listViewMergeRequests.Groups[index];
-            if (!allProjects.Any(x => x.Equals((ProjectKey)group.Tag)))
+            // Add missing project groups
+            IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
+            foreach (ProjectKey projectKey in allProjects)
             {
-               listViewMergeRequests.Groups.Remove(group);
+               if (!listViewMergeRequests.Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
+               {
+                  createListViewGroupForProject(listViewMergeRequests, projectKey, true);
+               }
+            }
+
+            // Remove deleted project groups
+            projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
+            for (int index = listViewMergeRequests.Groups.Count - 1; index >= 0; --index)
+            {
+               ListViewGroup group = listViewMergeRequests.Groups[index];
+               if (!allProjects.Any(x => x.Equals((ProjectKey)group.Tag)))
+               {
+                  listViewMergeRequests.Groups.Remove(group);
+               }
             }
          }
 
@@ -923,7 +938,12 @@ namespace mrHelper.App.Forms
                FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
                ListViewItem item = listViewMergeRequests.Items.Cast<ListViewItem>().FirstOrDefault(
                   x => ((FullMergeRequestKey)x.Tag).Equals(fmk)); // item=`null` if not found
-               setListViewItemTag(item ?? addListViewMergeRequestItem(listViewMergeRequests, projectKey), fmk);
+               if (item == null)
+               {
+                  item = createListViewMergeRequestItem(listViewMergeRequests, fmk);
+                  listViewMergeRequests.Items.Add(item);
+               }
+               setListViewSubItemsTags(item, fmk);
             }
          }
 
@@ -947,22 +967,20 @@ namespace mrHelper.App.Forms
          updateTaskbarIcon();
       }
 
-      private ListViewItem addListViewMergeRequestItem(ListView listView, ProjectKey projectKey)
+      private ListViewItem createListViewMergeRequestItem(ListView listView, FullMergeRequestKey fmk)
       {
-         ListViewGroup group = listView.Groups[projectKey.ProjectName];
-         string[] items = Enumerable.Repeat(String.Empty, listView.Columns.Count).ToArray();
-         ListViewItem item = listView.Items.Add(new ListViewItem(items, group));
-         Debug.Assert(item.SubItems.Count == listView.Columns.Count);
+         ListViewGroup group = listView.Groups[fmk.ProjectKey.ProjectName];
+         string[] subitems = Enumerable.Repeat(String.Empty, listView.Columns.Count).ToArray();
+         ListViewItem item = new ListViewItem(subitems, group);
+         item.Tag = fmk;
          return item;
       }
 
-      private void setListViewItemTag(ListViewItem item, FullMergeRequestKey fmk)
+      private void setListViewSubItemsTags(ListViewItem item, FullMergeRequestKey fmk)
       {
          ProjectKey projectKey = fmk.ProjectKey;
          MergeRequest mr = fmk.MergeRequest;
          MergeRequestKey mrk = new MergeRequestKey(projectKey, mr.IId);
-
-         item.Tag = fmk;
 
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Constants.AuthorLabelPrefix, mr.Author.Username);

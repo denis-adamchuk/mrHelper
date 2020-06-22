@@ -144,7 +144,7 @@ namespace mrHelper.App.Forms
             "[MainForm.Search] Project {0} loaded. Loaded {1} merge requests",
            projectKey.ProjectName, mergeRequests.Count()));
 
-         createListViewGroupForProject(listViewFoundMergeRequests, projectKey);
+         createListViewGroupForProject(listViewFoundMergeRequests, projectKey, true);
          fillListViewSearchMergeRequests(projectKey, mergeRequests);
       }
 
@@ -214,8 +214,10 @@ namespace mrHelper.App.Forms
 
          foreach (MergeRequest mergeRequest in mergeRequests)
          {
-            ListViewItem item = addListViewMergeRequestItem(listViewFoundMergeRequests, projectKey);
-            setListViewItemTag(item, new FullMergeRequestKey(projectKey, mergeRequest));
+            FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
+            ListViewItem item = createListViewMergeRequestItem(listViewFoundMergeRequests, fmk);
+            listViewFoundMergeRequests.Items.Add(item);
+            setListViewSubItemsTags(item, fmk);
          }
 
          setListViewRowHeight(listViewFoundMergeRequests, 2);
