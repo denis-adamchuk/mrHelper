@@ -67,7 +67,7 @@
     <Compile Include="src\Controls\ListViewEx.Designer.cs">
       <DependentUpon>ListViewEx.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\TextBoxNoWheel.cs">
+    <Compile Include="src\Controls\TextBoxEx.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Tools\RadioButtonGroup.cs" />

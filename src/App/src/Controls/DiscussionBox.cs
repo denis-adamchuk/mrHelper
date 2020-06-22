@@ -58,31 +58,14 @@ namespace mrHelper.App.Controls
          _htmlDiffContextToolTip = new HtmlToolTip
          {
             AutoPopDelay = 20000, // 20s
-            InitialDelay = 150
+            InitialDelay = 300
          };
 
-         _htmlDiscussionNoteToolTip = new HtmlToolTipWithGoodImages()
+         _htmlDiscussionNoteToolTip = new HtmlToolTip
          {
             AutoPopDelay = 20000, // 20s
-            InitialDelay = 150,
+            InitialDelay = 300,
          };
-
-         _htmlDiscussionNoteToolTipCssEx =
-            "body" +
-            "{" +
-               "width: 800px;" + // for some reason `max-width` does not work for `body` so have to use `width`
-               "height: auto;" +
-            "}" +
-            "body div" +
-            "{" +
-               "border: 0px;" +
-            "}" +
-            "img" +
-            "{" +
-               "max-width: 100%;" +
-               "max-height: auto;" +
-               "padding: 2px;" +
-            "}";
 
          _specialDiscussionNoteMarkdownPipeline = MarkDownUtils.CreatePipeline();
 
@@ -111,94 +94,26 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private void DiscussionNoteTextBox_KeyDown(object sender, KeyEventArgs e)
+      async private void DiscussionNote_KeyDown(object sender, KeyEventArgs e)
       {
-         TextBox textBox = (TextBox)(sender);
+         HtmlPanel noteControl = (HtmlPanel)(sender);
 
-         if (e.KeyCode == Keys.F2 && textBox.ReadOnly)
+         if (e.KeyCode == Keys.F2)
          {
-            DiscussionNote note = getNoteFromTextBox(textBox);
-            if (canBeModified(note))
-            {
-               onStartEditNote(textBox);
-            }
-         }
-         else if (e.KeyCode == Keys.Enter && !textBox.ReadOnly)
-         {
-            if (Control.ModifierKeys == Keys.Control)
-            {
-               await onSubmitNewBodyAsync(textBox);
-            }
+            await onEditDiscussionNoteAsync(noteControl);
          }
          else if (e.KeyCode == Keys.F4)
          {
             if (!Discussion.Individual_Note)
             {
-               if (!textBox.ReadOnly)
-               {
-                  onCancelEditNote(textBox);
-               }
                if (Control.ModifierKeys == Keys.Shift)
                {
                   await onReplyAsyncDone();
                }
-               else if (textBox.Parent?.Parent != null)
+               else if (noteControl.Parent?.Parent != null)
                {
                   await onReplyToDiscussionAsync();
                }
-            }
-         }
-         else if (e.KeyCode == Keys.Escape && !textBox.ReadOnly)
-         {
-            onCancelEditNote(textBox);
-         }
-      }
-
-      private void DiscussionNoteTextBox_KeyUp(object sender, KeyEventArgs e)
-      {
-         TextBox textBox = (TextBox)(sender);
-
-         if (!textBox.ReadOnly)
-         {
-            updateTextboxHeight(textBox);
-         }
-      }
-
-      private void updateTextboxHeight(Control textBox)
-      {
-         int newHeight = (textBox as TextBoxNoWheel).PreferredHeight;
-         if (newHeight != textBox.Height)
-         {
-            textBox.Height = newHeight;
-            _onContentChanged(this, true);
-         }
-      }
-
-      async private void TextBox_LostFocus(object sender, EventArgs e)
-      {
-         TextBox textBox = (TextBox)(sender);
-         if (textBox.ReadOnly)
-         {
-            return;
-         }
-
-         await onSubmitNewBodyAsync(textBox);
-      }
-
-      async private Task onReplyToDiscussionAsync()
-      {
-         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
-         {
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-               if (form.Body.Length == 0)
-               {
-                  MessageBox.Show("Reply text cannot be empty", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return;
-               }
-
-               await onReplyAsync(form.Body);
             }
          }
       }
@@ -206,8 +121,8 @@ namespace mrHelper.App.Controls
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent != null)
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent != null)
          {
             await onReplyToDiscussionAsync();
          }
@@ -216,35 +131,33 @@ namespace mrHelper.App.Controls
       async private void MenuItemReplyDone_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent != null)
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent != null)
          {
             await onReplyAsyncDone();
          }
       }
 
-      private void MenuItemEditNote_Click(object sender, EventArgs e)
+      async private void MenuItemEditNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent == null)
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent == null)
          {
             return;
          }
 
-         onStartEditNote(textBox);
+         await onEditDiscussionNoteAsync(control);
       }
 
       async private void MenuItemDeleteNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent == null)
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent == null)
          {
             return;
          }
-
-         stopEdit(textBox); // prevent submitting body modifications in the current handler
 
          if (MessageBox.Show("This discussion note will be deleted. Are you sure?", "Confirm deletion",
                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
@@ -252,25 +165,19 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         await onDeleteNoteAsync(getNoteFromTextBox(textBox));
+         await onDeleteNoteAsync(getNoteFromControl(control));
       }
 
       async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent == null)
+         HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
+         if (htmlPanel?.Parent?.Parent == null)
          {
             return;
          }
 
-         TextBox editingTextBox = getEditingTextBox();
-         if (editingTextBox != null)
-         {
-            await onSubmitNewBodyAsync(editingTextBox);
-         }
-
-         DiscussionNote note = getNoteFromTextBox(textBox);
+         DiscussionNote note = getNoteFromControl(htmlPanel);
          Debug.Assert(note == null || note.Resolvable);
 
          await onToggleResolveNoteAsync(note);
@@ -279,26 +186,18 @@ namespace mrHelper.App.Controls
       async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
-         TextBox textBox = (TextBox)(menuItem.Tag);
-         if (textBox?.Parent?.Parent == null)
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent == null)
          {
             return;
-         }
-
-         TextBox editingTextBox = getEditingTextBox();
-         if (editingTextBox != null)
-         {
-            await onSubmitNewBodyAsync(editingTextBox);
          }
 
          await onToggleResolveDiscussionAsync();
       }
 
-      internal Size AdjustToWidth(int width)
+      private void Control_GotFocus(object sender, EventArgs e)
       {
-         resizeBoxContent(width);
-         repositionBoxContent(width);
-         return Size;
+         _onControlGotFocus(sender as Control);
       }
 
       private void onCreate()
@@ -306,6 +205,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(Discussion.Notes.Any());
 
          DiscussionNote firstNote = Discussion.Notes.First();
+         _firstNoteAuthor = firstNote.Author;
 
          _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
@@ -321,38 +221,39 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private HtmlPanel createDiffContext(DiscussionNote firstNote)
+      private Control createDiffContext(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
          {
             return null;
          }
 
-         HtmlPanel htmlPanel = new HtmlPanel
+         Control diffContextControl = new HtmlPanel
          {
             BorderStyle = BorderStyle.FixedSingle,
             TabStop = false,
             Tag = firstNote,
             Parent = this
          };
-         htmlPanel.GotFocus += Control_GotFocus;
-         htmlPanel.FontChanged += (sender, e) => setDiffContextText(sender as HtmlPanel);
+         diffContextControl.GotFocus += Control_GotFocus;
+         diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl);
 
-         setDiffContextText(htmlPanel);
+         setDiffContextText(diffContextControl);
 
-         return htmlPanel;
+         return diffContextControl;
       }
 
-      private void setDiffContextText(HtmlPanel htmlPanel)
+      private void setDiffContextText(Control diffContextControl)
       {
-         DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
-         DiffPosition position = PositionConverter.Convert(note.Position);
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(diffContextControl);
+
+         DiscussionNote note = getNoteFromControl(diffContextControl);
          Debug.Assert(note.Type == "DiffNote");
+         DiffPosition position = PositionConverter.Convert(note.Position);
 
-         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
-
-         string html = getContext(_panelContextMaker, position,
-            _diffContextDepth, fontSizePx, out string css);
+         Debug.Assert(diffContextControl is HtmlPanel);
+         HtmlPanel htmlPanel = diffContextControl as HtmlPanel;
+         string html = getContext(_panelContextMaker, position, _diffContextDepth, fontSizePx, out string css);
          htmlPanel.BaseStylesheet = css;
          htmlPanel.Text = html;
 
@@ -391,7 +292,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      // Create a textbox that shows filename
       private Control createTextboxFilename(DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
@@ -420,7 +320,7 @@ namespace mrHelper.App.Controls
             result = newPath + "\r\n(was " + oldPath + ")";
          }
 
-         TextBox textBox = new TextBoxNoWheel
+         TextBox textBox = new SearchableTextBox
          {
             ReadOnly = true,
             Text = result,
@@ -450,7 +350,7 @@ namespace mrHelper.App.Controls
          List<Control> boxes = new List<Control>();
          foreach (DiscussionNote note in notes)
          {
-            if (note.System)
+            if (note == null || note.System)
             {
                // skip spam
                continue;
@@ -477,89 +377,96 @@ namespace mrHelper.App.Controls
          Debug.Assert(!appendNoteAuthor || !canBeModified(note));
 
          string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
-         string body = note.Body.Replace("\n", "\r\n");
-         return prefix + body;
+         return prefix + note.Body;
       }
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
       {
          if (!isServiceDiscussionNote(note))
          {
-            TextBox textBox = new TextBoxNoWheel()
+            Control noteControl = new SearchableHtmlPanel
             {
-               ReadOnly = true,
-               Text = getNoteText(note, firstNoteAuthor),
-               Multiline = true,
                BackColor = getNoteColor(note),
-               AutoSize = false,
+               BorderStyle = BorderStyle.FixedSingle,
+               Tag = note,
+               Parent = this,
+               IsContextMenuEnabled = false
             };
-            textBox.GotFocus += Control_GotFocus;
-            textBox.LostFocus += TextBox_LostFocus;
-            textBox.KeyDown += DiscussionNoteTextBox_KeyDown;
-            textBox.KeyUp += DiscussionNoteTextBox_KeyUp;
-            textBox.ContextMenu = createContextMenuForDiscussionNote(note, discussionResolved, textBox);
-            textBox.FontChanged += (sender, e) => updateDiscussionNoteInTextBox(textBox, note);
+            noteControl.GotFocus += Control_GotFocus;
+            noteControl.KeyDown += DiscussionNote_KeyDown;
+            noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
+            noteControl.FontChanged += (sender, e) =>
+               setDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
 
-            updateDiscussionNoteInTextBox(textBox, note);
+            setDiscussionNoteText(noteControl, note);
 
-            return textBox;
+            return noteControl;
          }
          else
          {
-            HtmlPanel htmlPanel = new HtmlPanel
+            Control noteControl = new HtmlPanel
             {
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
                Tag = note,
                Parent = this
             };
-            htmlPanel.GotFocus += Control_GotFocus;
-            htmlPanel.FontChanged += (sender, e) => setServiceDiscussionNoteHtmlText(htmlPanel);
+            noteControl.GotFocus += Control_GotFocus;
+            noteControl.FontChanged += (sender, e) =>
+               setServiceDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
 
-            setServiceDiscussionNoteHtmlText(htmlPanel);
+            setServiceDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
 
-            return htmlPanel;
+            return noteControl;
          }
       }
 
-      private void updateDiscussionNoteInTextBox(TextBox textBox, DiscussionNote note)
+      internal void setDiscussionNoteText(Control noteControl, DiscussionNote note)
       {
-         textBox.Tag = note;
+         if (note == null)
+         {
+            // this is possible when noteControl detaches from parent
+            return;
+         }
 
-         if (note != null)
-         {
-            string body = getNoteTooltipHtml(note)
-                        + "<br><br>"
-                        + MarkDownUtils.ConvertToHtml(note.Body, _imagePath,
-                           _specialDiscussionNoteMarkdownPipeline);
-            _htmlDiscussionNoteToolTip.BaseStylesheet =
-               String.Format("{0} {1} body div {{ font-size: {2}px; }}",
-                  Properties.Resources.Common_CSS,
-                  _htmlDiscussionNoteToolTipCssEx,
-                  WinFormsHelpers.GetFontSizeInPixels(textBox));
-            _htmlDiscussionNoteToolTip.SetToolTip(textBox, String.Format(MarkDownUtils.HtmlPageTemplate, body));
-         }
-         else if (_htmlDiscussionNoteToolTip.GetToolTip(textBox) != null)
-         {
-            _htmlDiscussionNoteToolTip.SetToolTip(textBox, null);
-         }
+         Debug.Assert(noteControl is HtmlPanel);
+         HtmlPanel htmlPanel = noteControl as HtmlPanel;
+         htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
+
+         string body = MarkDownUtils.ConvertToHtml(getNoteText(note, _firstNoteAuthor),
+            _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         noteControl.PerformLayout();
+
+         _htmlDiscussionNoteToolTip.BaseStylesheet =
+            String.Format("{0} body div {{ font-size: {1}px; }}",
+               Properties.Resources.Common_CSS,
+               WinFormsHelpers.GetFontSizeInPixels(noteControl));
+         _htmlDiscussionNoteToolTip.SetToolTip(noteControl, getNoteTooltipHtml(note));
       }
 
-      private void setServiceDiscussionNoteHtmlText(HtmlPanel htmlPanel)
+      private void setServiceDiscussionNoteText(Control noteControl, DiscussionNote note)
       {
-         DiscussionNote note = (DiscussionNote)htmlPanel.Tag;
+         if (note == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
-         htmlPanel.Width = 0;
-         htmlPanel.Height = 0;
+         noteControl.Width = 0;
+         noteControl.Height = 0;
 
+         Debug.Assert(noteControl is HtmlPanel);
+         HtmlPanel htmlPanel = noteControl as HtmlPanel;
          htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
             Properties.Resources.Common_CSS,
-            WinFormsHelpers.GetFontSizeInPixels(htmlPanel));
+            WinFormsHelpers.GetFontSizeInPixels(noteControl));
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
-         htmlPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
-         htmlPanel.PerformLayout();
+         noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         noteControl.PerformLayout();
 
          // Use computed size as the control size. Height must be set BEFORE Width.
          htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2;
@@ -568,22 +475,23 @@ namespace mrHelper.App.Controls
 
       private bool isServiceDiscussionNote(DiscussionNote note)
       {
+         if (note == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+
          return note.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
       }
 
-      private void Control_GotFocus(object sender, EventArgs e)
+      private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note, Control noteControl,
+         bool discussionResolved)
       {
-         _onControlGotFocus(sender as Control);
-      }
-
-      private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note,
-         bool discussionResolved, TextBox textBox)
-      {
-         var contextMenu = new ContextMenu();
+         ContextMenu contextMenu = new ContextMenu();
 
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
          {
-            Tag = textBox,
+            Tag = noteControl,
             Text = (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
             Enabled = note.Resolvable
          };
@@ -592,7 +500,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemToggleResolve = new MenuItem
          {
-            Tag = textBox,
+            Tag = noteControl,
             Text = (note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note",
             Enabled = note.Resolvable
          };
@@ -601,7 +509,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemDeleteNote = new MenuItem
          {
-            Tag = textBox,
+            Tag = noteControl,
             Enabled = canBeModified(note),
             Text = "Delete Note"
          };
@@ -610,7 +518,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemEditNote = new MenuItem
          {
-            Tag = textBox,
+            Tag = noteControl,
             Enabled = canBeModified(note),
             Text = "Edit Note\t(F2)"
          };
@@ -619,7 +527,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemReply = new MenuItem
          {
-            Tag = textBox,
+            Tag = noteControl,
             Enabled = !Discussion.Individual_Note,
             Text = "Reply\t(F4)"
          };
@@ -628,7 +536,7 @@ namespace mrHelper.App.Controls
 
          MenuItem menuItemReplyDone = new MenuItem
          {
-            Tag = textBox,
+            Tag = noteControl,
             Enabled = !Discussion.Individual_Note,
             Text = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread" + "\t(Shift-F4)"
          };
@@ -640,7 +548,7 @@ namespace mrHelper.App.Controls
 
       private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
       {
-         var contextMenu = new ContextMenu();
+         ContextMenu contextMenu = new ContextMenu();
 
          MenuItem menuItemToggleDiscussionResolve = new MenuItem
          {
@@ -717,16 +625,23 @@ namespace mrHelper.App.Controls
          }
       }
 
+      internal Size AdjustToWidth(int width)
+      {
+         resizeBoxContent(width);
+         repositionBoxContent(width);
+         return Size;
+      }
+
       private void resizeBoxContent(int width)
       {
          if (_textboxesNotes != null)
          {
-            foreach (Control textbox in _textboxesNotes)
+            foreach (Control noteControl in _textboxesNotes)
             {
-               if (textbox is TextBoxNoWheel)
+               if (!isServiceDiscussionNote(getNoteFromControl(noteControl)))
                {
-                  textbox.Width = width * NotesWidth / 100;
-                  textbox.Height = (textbox as TextBoxNoWheel).PreferredHeight;
+                  noteControl.Width = width * NotesWidth / 100;
+                  noteControl.Height = (noteControl as HtmlPanel).AutoScrollMinSize.Height + 2;
                }
             }
          }
@@ -742,7 +657,7 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
-            _textboxFilename.Height = (_textboxFilename as TextBoxNoWheel).PreferredHeight;
+            _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
          int remainingPercents = 100
@@ -811,6 +726,55 @@ namespace mrHelper.App.Controls
          Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
       }
 
+      async private Task onEditDiscussionNoteAsync(Control noteControl)
+      {
+         DiscussionNote note = getNoteFromControl(noteControl);
+         if (note == null)
+         {
+            return;
+         }
+
+         string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Edit Discussion Note", currentBody))
+         {
+            Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = locationAtScreen;
+
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Note text cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
+
+               string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
+               await submitNewBodyAsync(noteControl, proposedBody);
+            }
+         }
+      }
+
+      async private Task onReplyToDiscussionAsync()
+      {
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
+         {
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Reply text cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
+
+               string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
+               await onReplyAsync(proposedBody);
+            }
+         }
+      }
+
       async private Task onReplyAsyncDone()
       {
          await onReplyAsync("Done", true);
@@ -819,7 +783,7 @@ namespace mrHelper.App.Controls
       async private Task onReplyAsync(string body, bool toggleResolve = false)
       {
          bool wasResolved = isDiscussionResolved();
-         disableAllTextBoxes();
+         disableAllNoteControls();
 
          try
          {
@@ -843,64 +807,30 @@ namespace mrHelper.App.Controls
          await refreshDiscussion();
       }
 
-      private void onStartEditNote(TextBox textBox)
+      async private Task submitNewBodyAsync(Control noteControl, string newText)
       {
-         textBox.ReadOnly = false;
-         textBox.BackColor = Color.White;
-         textBox.Focus();
-      }
-
-      private void stopEdit(TextBox textBox)
-      {
-         textBox.ReadOnly = true;
-         if (_textboxesNotes?.Contains(textBox) ?? false)
-         {
-            textBox.BackColor = getNoteColor((DiscussionNote)textBox.Tag);
-         }
-      }
-
-      private void onCancelEditNote(TextBox textBox)
-      {
-         stopEdit(textBox);
-
-         DiscussionNote note = getNoteFromTextBox(textBox);
-         if (note == null)
-         {
-            return;
-         }
-
-         Debug.Assert(Discussion.Notes.Any());
-         textBox.Text = getNoteText(note, Discussion.Notes.First().Author);
-         updateTextboxHeight(textBox);
-      }
-
-      async private Task onSubmitNewBodyAsync(TextBox textBox)
-      {
-         stopEdit(textBox);
-
-         DiscussionNote cachedNote = getNoteFromTextBox(textBox);
-         if (cachedNote == null || textBox.Text == cachedNote.Body)
+         DiscussionNote oldNote = getNoteFromControl(noteControl);
+         if (oldNote == null || newText == oldNote.Body)
          {
             // TextBox.Tag is equal to TextBox.Text ==> text was not changed
             return;
          }
 
-         if (textBox.Text.Length == 0)
+         if (newText.Length == 0)
          {
             MessageBox.Show("Discussion text cannot be empty", "Warning",
                MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            onCancelEditNote(textBox);
             return;
          }
 
-         Color oldColor = textBox.BackColor;
-         ContextMenu oldMenu = textBox.ContextMenu;
-         disableTextBox(textBox); // let's make a visual effect similar to other modifications
+         Color oldColor = noteControl.BackColor;
+         ContextMenu oldMenu = noteControl.ContextMenu;
+         disableNoteControl(noteControl); // let's make a visual effect similar to other modifications
 
-         DiscussionNote note;
+         DiscussionNote newNote;
          try
          {
-            note = await _editor.ModifyNoteBodyAsync(cachedNote.Id, textBox.Text);
+            newNote = await _editor.ModifyNoteBodyAsync(oldNote.Id, newText);
          }
          catch (DiscussionEditorException ex)
          {
@@ -910,14 +840,13 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _onContentChanged(this, true);
-
-         if (!textBox.IsDisposed)
+         if (!noteControl.IsDisposed && newNote != null)
          {
-            textBox.BackColor = oldColor;
-            textBox.ContextMenu = oldMenu;
-            updateDiscussionNoteInTextBox(textBox, note);
+            enableNoteControl(noteControl, oldColor, oldMenu, newNote);
+            setDiscussionNoteText(noteControl, newNote);
          }
+
+         _onContentChanged(this, true);
       }
 
       async private Task onDeleteNoteAsync(DiscussionNote note)
@@ -927,7 +856,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         disableAllTextBoxes();
+         disableAllNoteControls();
 
          try
          {
@@ -951,7 +880,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         disableAllTextBoxes();
+         disableAllNoteControls();
 
          try
          {
@@ -972,7 +901,7 @@ namespace mrHelper.App.Controls
       async private Task onToggleResolveDiscussionAsync()
       {
          bool wasResolved = isDiscussionResolved();
-         disableAllTextBoxes();
+         disableAllNoteControls();
 
          Discussion discussion;
          try
@@ -990,23 +919,34 @@ namespace mrHelper.App.Controls
          await refreshDiscussion(discussion);
       }
 
-      private void disableTextBox(TextBox textBox)
+      private void enableNoteControl(Control noteControl,
+         Color backColor, ContextMenu contextMenu, DiscussionNote note)
       {
-         if (textBox != null)
+         if (noteControl != null)
          {
-            textBox.BackColor = Color.LightGray;
-            textBox.ContextMenu = new ContextMenu();
-            updateDiscussionNoteInTextBox(textBox, null);
+            noteControl.BackColor = backColor;
+            noteControl.ContextMenu = contextMenu;
+            noteControl.Tag = note;
          }
       }
 
-      private void disableAllTextBoxes()
+      private void disableNoteControl(Control noteControl)
+      {
+         if (noteControl != null)
+         {
+            noteControl.BackColor = Color.LightGray;
+            noteControl.ContextMenu = new ContextMenu();
+            noteControl.Tag = null;
+         }
+      }
+
+      private void disableAllNoteControls()
       {
          foreach (Control textBox in _textboxesNotes)
          {
-            disableTextBox(textBox as TextBox);
+            disableNoteControl(textBox);
          }
-         disableTextBox(_textboxFilename as TextBox);
+         disableNoteControl(_textboxFilename);
       }
 
       async private Task refreshDiscussion(Discussion discussion = null)
@@ -1087,11 +1027,11 @@ namespace mrHelper.App.Controls
          bool result = true;
          if (_textboxesNotes != null)
          {
-            foreach (Control textBox in _textboxesNotes)
+            foreach (Control noteControl in _textboxesNotes)
             {
-               if (textBox != null)
+               if (noteControl != null)
                {
-                  DiscussionNote note = getNoteFromTextBox(textBox as TextBox);
+                  DiscussionNote note = getNoteFromControl(noteControl);
                   if (note != null && note.Resolvable && !note.Resolved)
                   {
                      result = false;
@@ -1102,35 +1042,10 @@ namespace mrHelper.App.Controls
          return result;
       }
 
-      /// <summary>
-      /// The only purpose of this class is to disable async image loading.
-      /// Given feature prevents showing full-size images because their size are unknown
-      /// at the moment of tooltip rendering.
-      /// </summary>
-      internal class HtmlToolTipWithGoodImages : HtmlToolTip
+      private DiscussionNote getNoteFromControl(Control noteControl)
       {
-         internal HtmlToolTipWithGoodImages()
-            : base()
-         {
-            this._htmlContainer.AvoidAsyncImagesLoading = true;
-         }
-      }
-
-      private DiscussionNote getNoteFromTextBox(TextBox textBox)
-      {
-         return (textBox == null || textBox.Tag == null) ? null : (DiscussionNote)(textBox.Tag);
-      }
-
-      private TextBox getEditingTextBox()
-      {
-         foreach (Control control in _textboxesNotes)
-         {
-            if (!(control as TextBox).ReadOnly)
-            {
-               return control as TextBox;
-            }
-         }
-         return null;
+         Debug.Assert(noteControl is HtmlPanel);
+         return (noteControl == null || noteControl.Tag == null) ? null : (DiscussionNote)(noteControl.Tag);
       }
 
       // Widths in %
@@ -1148,6 +1063,7 @@ namespace mrHelper.App.Controls
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
       private readonly string _imagePath;
+      private User _firstNoteAuthor; // may change on Refresh
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
@@ -1163,7 +1079,7 @@ namespace mrHelper.App.Controls
 
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiffContextToolTip;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlDiscussionNoteToolTip;
-      private readonly string _htmlDiscussionNoteToolTipCssEx;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }
+

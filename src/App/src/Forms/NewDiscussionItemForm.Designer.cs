@@ -28,14 +28,15 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
+         this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.textBox = new System.Windows.Forms.TextBox();
+         this.textBox = new CommonControls.Controls.TextBoxEx();
          this.SuspendLayout();
          // 
          // buttonCancel
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(537, 88);
          this.buttonCancel.Name = "buttonCancel";
@@ -63,6 +64,7 @@
          this.textBox.Location = new System.Drawing.Point(12, 12);
          this.textBox.Multiline = true;
          this.textBox.Name = "textBox";
+         this.textBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
          this.textBox.Size = new System.Drawing.Size(600, 64);
          this.textBox.TabIndex = 0;
          this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
@@ -90,7 +92,7 @@
 
       #endregion
 
-      private System.Windows.Forms.TextBox textBox;
+      private CommonControls.Controls.TextBoxEx textBox;
       private System.Windows.Forms.Button buttonOK;
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
    }

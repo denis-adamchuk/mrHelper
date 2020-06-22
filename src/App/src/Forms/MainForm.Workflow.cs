@@ -209,7 +209,13 @@ namespace mrHelper.App.Forms
 
       private void onLoadAllMergeRequests(IEnumerable<ProjectKey> projects, string hostname)
       {
-         createListViewGroupsForProjects(listViewMergeRequests, projects);
+         // in Project-based workflow we want to create all groups at once in a user-defined order
+         listViewMergeRequests.Items.Clear();
+         listViewMergeRequests.Groups.Clear();
+         foreach (ProjectKey projectKey in projects)
+         {
+            createListViewGroupForProject(listViewMergeRequests, projectKey, false);
+         }
 
          disableAllUIControls(false);
          labelWorkflowStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",

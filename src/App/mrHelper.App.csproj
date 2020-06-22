@@ -106,6 +106,7 @@
     <Compile Include="src\Controls\RevisionBrowser.Designer.cs">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\TextControls.cs" />
     <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>

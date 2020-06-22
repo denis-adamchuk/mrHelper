@@ -1,16 +1,45 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using mrHelper.Client.Types;
 using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Controls
 {
+   class ListViewItemComparer : IComparer
+   {
+      public ListViewItemComparer()
+      {
+      }
+
+      public int Compare(object x, object y)
+      {
+         ListViewItem item1 = x as ListViewItem;
+         ListViewItem item2 = y as ListViewItem;
+         FullMergeRequestKey key1 = (FullMergeRequestKey)item1.Tag;
+         FullMergeRequestKey key2 = (FullMergeRequestKey)item2.Tag;
+         int id1 = key1.MergeRequest.Id;
+         int id2 = key2.MergeRequest.Id;
+         if (id1 > id2)
+         {
+            return -1;
+         }
+         if (id1 < id2)
+         {
+            return 1;
+         }
+         return 0;
+      }
+   }
+
    public partial class MergeRequestListView : ListViewEx
    {
       public MergeRequestListView()
       {
          InitializeComponent();
+         ListViewItemSorter = new ListViewItemComparer();
 
          _toolTipTimer = new System.Timers.Timer
          {
