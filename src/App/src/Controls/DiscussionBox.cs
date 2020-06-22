@@ -58,13 +58,13 @@ namespace mrHelper.App.Controls
          _htmlDiffContextToolTip = new HtmlToolTip
          {
             AutoPopDelay = 20000, // 20s
-            InitialDelay = 150
+            InitialDelay = 300
          };
 
          _htmlDiscussionNoteToolTip = new HtmlToolTip
          {
             AutoPopDelay = 20000, // 20s
-            InitialDelay = 150,
+            InitialDelay = 300,
          };
 
          _specialDiscussionNoteMarkdownPipeline = MarkDownUtils.CreatePipeline();
@@ -425,7 +425,7 @@ namespace mrHelper.App.Controls
       {
          if (note == null)
          {
-            Debug.Assert(false);
+            // this is possible when noteControl detaches from parent
             return;
          }
 
