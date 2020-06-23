@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
@@ -8,33 +9,48 @@ namespace mrHelper.App.Forms
       internal ViewDiscussionItemForm(string caption, string initialText = "", bool editable = true)
       {
          InitializeComponent();
-         this.Text = caption;
-         this.textBox.Text = initialText;
-         this.textBox.ReadOnly = !editable;
-         if (initialText != String.Empty)
-         {
-            // if even extraHeight is negative, it will not cause the Form to be smaller than MinimumSize
-            int extraHeight = textBox.FullPreferredHeight - textBox.Height;
-            this.Height += extraHeight;
+         Text = caption;
 
-            // a simple solution to disable text auto-selection on Form show (see https://stackoverflow.com/a/3537816)
-            textBox.SelectionStart = initialText.Length;
-            textBox.DeselectAll();
-         }
-
+         createWPFTextBox(initialText, editable);
          applyFont(Program.Settings.MainWindowFontSizeName);
+         adjustFormHeight();
 
          buttonCancel.ConfirmationCondition =
             () => initialText != String.Empty
                   ? textBox.Text != initialText
-                  : textBox.TextLength > MaximumTextLengthTocancelWithoutConfirmation;
+                  : textBox.Text.Length > MaximumTextLengthTocancelWithoutConfirmation;
       }
 
       internal string Body => textBox.Text;
 
-      private void textBox_KeyDown(object sender, KeyEventArgs e)
+      private void createWPFTextBox(string initialText, bool editable)
       {
-         if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
+         textBox = new System.Windows.Controls.TextBox();
+         textBoxHost.Child = this.textBox;
+         textBox.Text = initialText;
+         textBox.IsReadOnly = !editable;
+         textBox.AcceptsReturn = true;
+         textBox.TextWrapping = System.Windows.TextWrapping.Wrap;
+         textBox.SpellCheck.IsEnabled = true;
+         textBox.HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         textBox.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         textBox.KeyDown += textBox_KeyDown;
+      }
+
+      private void adjustFormHeight()
+      {
+         if (textBox.Text != String.Empty)
+         {
+            // if even extraHeight is negative, it will not cause the Form to be smaller than MinimumSize
+            int actualHeight = textBoxHost.Height - textBoxHost.Margin.Bottom - textBoxHost.Margin.Top;
+            int extraHeight = textBoxHost.PreferredSize.Height - actualHeight;
+            this.Height += extraHeight;
+         }
+      }
+
+      private void textBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      {
+         if (e.Key == System.Windows.Input.Key.Enter && Control.ModifierKeys == Keys.Control)
          {
             e.Handled = false;
 
@@ -42,9 +58,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ViewDiscussionItemForm_Load(object sender, EventArgs e)
+      private void ViewDiscussionItemForm_Shown(object sender, System.EventArgs e)
       {
-         this.ActiveControl = textBox;
+         textBox.Focus();
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;

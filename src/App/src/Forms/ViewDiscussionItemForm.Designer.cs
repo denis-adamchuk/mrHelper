@@ -30,7 +30,7 @@
       {
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.textBox = new CommonControls.Controls.TextBoxEx();
+         this.textBoxHost = new System.Windows.Forms.Integration.ElementHost();
          this.SuspendLayout();
          // 
          // buttonCancel
@@ -56,18 +56,17 @@
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
-         // textBox
+         // textBoxHost
          // 
-         this.textBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+         this.textBoxHost.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBox.Location = new System.Drawing.Point(12, 12);
-         this.textBox.Multiline = true;
-         this.textBox.Name = "textBox";
-         this.textBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-         this.textBox.Size = new System.Drawing.Size(600, 64);
-         this.textBox.TabIndex = 0;
-         this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
+         this.textBoxHost.Location = new System.Drawing.Point(12, 11);
+         this.textBoxHost.Name = "textBoxHost";
+         this.textBoxHost.Size = new System.Drawing.Size(600, 71);
+         this.textBoxHost.TabIndex = 3;
+         this.textBoxHost.Text = "textBoxHost";
+         this.textBoxHost.Child = null;
          // 
          // ViewDiscussionItemForm
          // 
@@ -75,25 +74,23 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(624, 123);
+         this.Controls.Add(this.textBoxHost);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonOK);
-         this.Controls.Add(this.textBox);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
          this.MinimumSize = new System.Drawing.Size(640, 162);
          this.Name = "ViewDiscussionItemForm";
          this.Text = "Dialog caption";
-         this.Load += new System.EventHandler(this.ViewDiscussionItemForm_Load);
+         this.Shown += ViewDiscussionItemForm_Shown;
          this.ResumeLayout(false);
-         this.PerformLayout();
-
       }
 
       #endregion
-
-      private CommonControls.Controls.TextBoxEx textBox;
       private System.Windows.Forms.Button buttonOK;
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
+      private System.Windows.Forms.Integration.ElementHost textBoxHost;
+      private System.Windows.Controls.TextBox textBox;
    }
 }

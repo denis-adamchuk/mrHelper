@@ -28,17 +28,18 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
+         this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
          this.textBoxFileName = new System.Windows.Forms.TextBox();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.textBoxDiscussionBody = new System.Windows.Forms.TextBox();
          this.htmlContextCanvas = new System.Windows.Forms.Panel();
+         this.textBoxDiscussionBodyHost = new System.Windows.Forms.Integration.ElementHost();
          this.SuspendLayout();
          // 
          // buttonCancel
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(667, 186);
          this.buttonCancel.Name = "buttonCancel";
@@ -81,18 +82,6 @@
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
-         // textBoxDiscussionBody
-         // 
-         this.textBoxDiscussionBody.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDiscussionBody.Location = new System.Drawing.Point(12, 127);
-         this.textBoxDiscussionBody.Multiline = true;
-         this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
-         this.textBoxDiscussionBody.Size = new System.Drawing.Size(649, 82);
-         this.textBoxDiscussionBody.TabIndex = 1;
-         this.textBoxDiscussionBody.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxDiscussionBody_KeyDown);
-         // 
          // htmlContextCanvas
          // 
          this.htmlContextCanvas.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -103,18 +92,30 @@
          this.htmlContextCanvas.Size = new System.Drawing.Size(730, 83);
          this.htmlContextCanvas.TabIndex = 10;
          // 
+         // textBoxDiscussionBodyHost
+         // 
+         this.textBoxDiscussionBodyHost.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxDiscussionBodyHost.Location = new System.Drawing.Point(12, 127);
+         this.textBoxDiscussionBodyHost.Name = "textBoxDiscussionBodyHost";
+         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(649, 82);
+         this.textBoxDiscussionBodyHost.TabIndex = 11;
+         this.textBoxDiscussionBodyHost.Text = "textBoxDiscussionBodyHost";
+         this.textBoxDiscussionBodyHost.Child = null;
+         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(754, 221);
+         this.Controls.Add(this.textBoxDiscussionBodyHost);
          this.Controls.Add(this.htmlContextCanvas);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.textBoxFileName);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
-         this.Controls.Add(this.textBoxDiscussionBody);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
@@ -129,13 +130,13 @@
       }
 
       #endregion
-
-      private System.Windows.Forms.TextBox textBoxDiscussionBody;
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanel = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
         private System.Windows.Forms.Panel htmlContextCanvas;
-    }
+      private System.Windows.Controls.TextBox textBoxDiscussionBody;
+      private System.Windows.Forms.Integration.ElementHost textBoxDiscussionBodyHost;
+   }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
@@ -24,21 +23,21 @@ namespace mrHelper.App.Forms
          htmlContextCanvas.Controls.Add(htmlPanel);
 
          applyFont(Program.Settings.MainWindowFontSizeName);
+         createWPFTextBox();
 
          this.Text = Constants.StartNewThreadCaption;
-         this.ActiveControl = textBoxDiscussionBody;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
 
          buttonCancel.ConfirmationCondition =
-            () => textBoxDiscussionBody.TextLength > MaximumTextLengthTocancelWithoutConfirmation;
+            () => textBoxDiscussionBody.Text.Length > MaximumTextLengthTocancelWithoutConfirmation;
       }
 
       public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }
       public string Body { get { return textBoxDiscussionBody.Text; } }
 
-      private void TextBoxDiscussionBody_KeyDown(object sender, KeyEventArgs e)
+      private void textBoxDiscussionBody_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
-         if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
+         if (e.Key == System.Windows.Input.Key.Enter && Control.ModifierKeys == Keys.Control)
          {
             e.Handled = false;
 
@@ -50,6 +49,7 @@ namespace mrHelper.App.Forms
       {
          TopMost = false; // disable TopMost property which is initially true
          Win32Tools.ForceWindowIntoForeground(this.Handle);
+         textBoxDiscussionBody.Focus();
       }
 
       /// <summary>
@@ -93,6 +93,18 @@ namespace mrHelper.App.Forms
             new DiffContextFormatter(WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 2);
          stylesheet = formatter.GetStylesheet();
          return formatter.GetBody(context.Value);
+      }
+
+      private void createWPFTextBox()
+      {
+         textBoxDiscussionBody = new System.Windows.Controls.TextBox();
+         textBoxDiscussionBodyHost.Child = this.textBoxDiscussionBody;
+         textBoxDiscussionBody.AcceptsReturn = true;
+         textBoxDiscussionBody.TextWrapping = System.Windows.TextWrapping.Wrap;
+         textBoxDiscussionBody.SpellCheck.IsEnabled = true;
+         textBoxDiscussionBody.HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         textBoxDiscussionBody.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
