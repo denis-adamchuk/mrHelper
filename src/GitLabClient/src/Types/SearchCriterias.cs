@@ -135,7 +135,7 @@ namespace mrHelper.Client.Types
 
       public override string ToString()
       {
-         return String.Format("Text: {0}", Text);
+         return String.Format("Text: \"{0}\"", Text);
       }
    }
 

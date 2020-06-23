@@ -220,7 +220,7 @@ namespace mrHelper.App.Forms
             setListViewSubItemsTags(item, fmk);
          }
 
-         setListViewRowHeight(listViewFoundMergeRequests, 2);
+         recalcRowHeightForMergeRequestListView(listViewFoundMergeRequests);
 
          listViewFoundMergeRequests.EndUpdate();
       }
