@@ -762,7 +762,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Edit Discussion Note", currentBody))
+         using (ViewDiscussionItemForm form = new ViewDiscussionItemForm("Edit Discussion Note", currentBody))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -792,7 +792,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (NewDiscussionItemForm form = new NewDiscussionItemForm("View Discussion Note", currentBody, false))
+         using (ViewDiscussionItemForm form = new ViewDiscussionItemForm("View Discussion Note", currentBody, false))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -803,7 +803,7 @@ namespace mrHelper.App.Controls
 
       async private Task onReplyToDiscussionAsync()
       {
-         using (NewDiscussionItemForm form = new NewDiscussionItemForm("Reply to Discussion"))
+         using (ViewDiscussionItemForm form = new ViewDiscussionItemForm("Reply to Discussion"))
          {
             if (form.ShowDialog() == DialogResult.OK)
             {

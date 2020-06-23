@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Forms
 {
-   partial class NewDiscussionItemForm
+   partial class ViewDiscussionItemForm
    {
       /// <summary>
       /// Required designer variable.
@@ -69,7 +69,7 @@
          this.textBox.TabIndex = 0;
          this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
-         // NewDiscussionItemForm
+         // ViewDiscussionItemForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -82,9 +82,9 @@
          this.MaximizeBox = false;
          this.MinimizeBox = false;
          this.MinimumSize = new System.Drawing.Size(640, 162);
-         this.Name = "NewDiscussionItemForm";
+         this.Name = "ViewDiscussionItemForm";
          this.Text = "Dialog caption";
-         this.Load += new System.EventHandler(this.NewDiscussionItemForm_Load);
+         this.Load += new System.EventHandler(this.ViewDiscussionItemForm_Load);
          this.ResumeLayout(false);
          this.PerformLayout();
 

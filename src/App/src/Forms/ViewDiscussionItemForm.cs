@@ -3,9 +3,9 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class NewDiscussionItemForm : CustomFontForm
+   internal partial class ViewDiscussionItemForm : CustomFontForm
    {
-      internal NewDiscussionItemForm(string caption, string initialText = "", bool editable = true)
+      internal ViewDiscussionItemForm(string caption, string initialText = "", bool editable = true)
       {
          InitializeComponent();
          this.Text = caption;
@@ -42,7 +42,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void NewDiscussionItemForm_Load(object sender, EventArgs e)
+      private void ViewDiscussionItemForm_Load(object sender, EventArgs e)
       {
          this.ActiveControl = textBox;
       }
