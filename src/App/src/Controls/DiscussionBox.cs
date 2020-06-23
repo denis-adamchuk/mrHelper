@@ -67,7 +67,8 @@ namespace mrHelper.App.Controls
             InitialDelay = 300,
          };
 
-         _specialDiscussionNoteMarkdownPipeline = MarkDownUtils.CreatePipeline();
+         _specialDiscussionNoteMarkdownPipeline =
+            MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          onCreate();
       }

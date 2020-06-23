@@ -42,7 +42,8 @@ namespace mrHelper.App.Forms
          checkBoxRunWhenWindowsStarts.Enabled = !_runningAsUwp;
 
          _trayIcon = new TrayIcon(notifyIcon);
-         _mergeRequestDescriptionMarkdownPipeline = MarkDownUtils.CreatePipeline();
+         _mergeRequestDescriptionMarkdownPipeline =
+            MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
          this.linkLabelConnectedTo.Text = String.Empty;

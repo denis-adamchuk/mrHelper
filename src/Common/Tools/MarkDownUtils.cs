@@ -1,3 +1,7 @@
+using Markdig;
+using Markdig.Extensions;
+using Markdig.Extensions.Tables;
+using Markdig.Extensions.JiraLinks;
 using mrHelper.Common.Interfaces;
 using System;
 
@@ -5,15 +9,23 @@ namespace mrHelper.Common.Tools
 {
    public static class MarkDownUtils
    {
-      public static Markdig.MarkdownPipeline CreatePipeline()
+      public static Markdig.MarkdownPipeline CreatePipeline(string jiraBaseUrl)
       {
-         Markdig.Extensions.Tables.PipeTableOptions options = new Markdig.Extensions.Tables.PipeTableOptions
+         PipeTableOptions pipeTableOptions = new PipeTableOptions
          {
             RequireHeaderSeparator = false
          };
-         return Markdig.MarkdownExtensions
-            .UsePipeTables(new Markdig.MarkdownPipelineBuilder(), options)
-            .Build();
+
+         MarkdownPipelineBuilder pipeline = new Markdig.MarkdownPipelineBuilder()
+            .UseAutoLinks() // convert `http://...` into HTML `<a href ...>`
+            .UsePipeTables(pipeTableOptions);
+
+         if (!String.IsNullOrWhiteSpace(jiraBaseUrl))
+         {
+            pipeline.UseJiraLinks(new JiraLinkOptions(jiraBaseUrl));
+         }
+
+         return pipeline.Build();
       }
 
       public static string HtmlPageTemplate
