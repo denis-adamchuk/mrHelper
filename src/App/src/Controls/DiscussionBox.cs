@@ -103,7 +103,7 @@ namespace mrHelper.App.Controls
          {
             await onEditDiscussionNoteAsync(noteControl);
          }
-         else if (e.KeyCode == Keys.F3)
+         else if (e.KeyCode == Keys.F6)
          {
             onViewDiscussionNote(noteControl);
          }
@@ -542,15 +542,6 @@ namespace mrHelper.App.Controls
          menuItemEditNote.Click += MenuItemEditNote_Click;
          contextMenu.MenuItems.Add(menuItemEditNote);
 
-         MenuItem menuItemViewNote = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = true,
-            Text = "View Note as plain text\t(F3)"
-         };
-         menuItemViewNote.Click += MenuItemViewNote_Click;
-         contextMenu.MenuItems.Add(menuItemViewNote);
-
          MenuItem menuItemReply = new MenuItem
          {
             Tag = noteControl,
@@ -568,6 +559,15 @@ namespace mrHelper.App.Controls
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);
+
+         MenuItem menuItemViewNote = new MenuItem
+         {
+            Tag = noteControl,
+            Enabled = true,
+            Text = "View Note as plain text\t(F6)"
+         };
+         menuItemViewNote.Click += MenuItemViewNote_Click;
+         contextMenu.MenuItems.Add(menuItemViewNote);
 
          return contextMenu;
       }
