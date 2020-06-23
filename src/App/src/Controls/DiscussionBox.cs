@@ -103,6 +103,10 @@ namespace mrHelper.App.Controls
          {
             await onEditDiscussionNoteAsync(noteControl);
          }
+         else if (e.KeyCode == Keys.F3)
+         {
+            onViewDiscussionNote(noteControl);
+         }
          else if (e.KeyCode == Keys.F4)
          {
             if (!Discussion.Individual_Note)
@@ -149,6 +153,18 @@ namespace mrHelper.App.Controls
          }
 
          await onEditDiscussionNoteAsync(control);
+      }
+
+      private void MenuItemViewNote_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent == null)
+         {
+            return;
+         }
+
+         onViewDiscussionNote(control);
       }
 
       async private void MenuItemDeleteNote_Click(object sender, EventArgs e)
@@ -526,6 +542,15 @@ namespace mrHelper.App.Controls
          menuItemEditNote.Click += MenuItemEditNote_Click;
          contextMenu.MenuItems.Add(menuItemEditNote);
 
+         MenuItem menuItemViewNote = new MenuItem
+         {
+            Tag = noteControl,
+            Enabled = true,
+            Text = "View Note as plain text\t(F3)"
+         };
+         menuItemViewNote.Click += MenuItemViewNote_Click;
+         contextMenu.MenuItems.Add(menuItemViewNote);
+
          MenuItem menuItemReply = new MenuItem
          {
             Tag = noteControl,
@@ -592,6 +617,7 @@ namespace mrHelper.App.Controls
          }
          result.AppendFormat("Created by <b> {0} </b> at <span style=\"color: blue\">{1}</span>",
             note.Author.Name, note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
+         result.AppendFormat("<br><br>Use context menu to view note as <b>plain text</b>.");
          return result.ToString();
       }
 
@@ -730,7 +756,7 @@ namespace mrHelper.App.Controls
       async private Task onEditDiscussionNoteAsync(Control noteControl)
       {
          DiscussionNote note = getNoteFromControl(noteControl);
-         if (note == null)
+         if (note == null || !canBeModified(note))
          {
             return;
          }
@@ -754,6 +780,24 @@ namespace mrHelper.App.Controls
                string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                await submitNewBodyAsync(noteControl, proposedBody);
             }
+         }
+      }
+
+      private void onViewDiscussionNote(Control noteControl)
+      {
+         DiscussionNote note = getNoteFromControl(noteControl);
+         if (note == null)
+         {
+            return;
+         }
+
+         string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
+         using (NewDiscussionItemForm form = new NewDiscussionItemForm("View Discussion Note", currentBody, false))
+         {
+            Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = locationAtScreen;
+            form.ShowDialog();
          }
       }
 
@@ -852,7 +896,7 @@ namespace mrHelper.App.Controls
 
       async private Task onDeleteNoteAsync(DiscussionNote note)
       {
-         if (note == null)
+         if (note == null || !canBeModified(note))
          {
             return;
          }

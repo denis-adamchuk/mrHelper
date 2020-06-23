@@ -5,15 +5,16 @@ namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionItemForm : CustomFontForm
    {
-      internal NewDiscussionItemForm(string caption, string initialText = "")
+      internal NewDiscussionItemForm(string caption, string initialText = "", bool editable = true)
       {
          InitializeComponent();
          this.Text = caption;
          this.textBox.Text = initialText;
+         this.textBox.ReadOnly = !editable;
          if (initialText != String.Empty)
          {
             // if even extraHeight is negative, it will not cause the Form to be smaller than MinimumSize
-            int extraHeight = textBox.PreferredHeight - textBox.Height;
+            int extraHeight = textBox.FullPreferredHeight - textBox.Height;
             this.Height += extraHeight;
 
             // a simple solution to disable text auto-selection on Form show (see https://stackoverflow.com/a/3537816)
