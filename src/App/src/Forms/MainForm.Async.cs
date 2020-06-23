@@ -175,7 +175,9 @@ namespace mrHelper.App.Forms
          ISession session = getSession(!isSearchMode());
          getShaForDiffTool(out string leftSHA, out string rightSHA, out IEnumerable<string> includedSHA,
             out RevisionType? type);
+         string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
          if (session == null
+          || String.IsNullOrWhiteSpace(accessToken)
           || String.IsNullOrWhiteSpace(leftSHA)
           || String.IsNullOrWhiteSpace(rightSHA)
           || includedSHA == null
@@ -192,17 +194,23 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         launchDiffTool(leftSHA, rightSHA, ref repo, session);
+         launchDiffTool(leftSHA, rightSHA, repo, mrk, accessToken, getSessionName(session));
 
          HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
          foreach (string sha in includedSHA)
          {
             reviewedRevisions.Add(sha);
          }
-         revisionBrowser.UpdateReviewedRevisions(reviewedRevisions, type.Value);
+
+         MergeRequestKey? currentMrk = getMergeRequestKey(null);
+         if (currentMrk.HasValue && currentMrk.Value.Equals(mrk))
+         {
+            revisionBrowser.UpdateReviewedRevisions(reviewedRevisions, type.Value);
+         }
       }
 
-      private void launchDiffTool(string leftSHA, string rightSHA, ref ILocalGitRepository repo, ISession session)
+      private void launchDiffTool(string leftSHA, string rightSHA, ILocalGitRepository repo,
+         MergeRequestKey mrk, string accessToken, string sessionName)
       {
          labelWorkflowStatus.Text = "Launching diff tool...";
 
@@ -236,7 +244,7 @@ namespace mrHelper.App.Forms
          else
          {
             labelWorkflowStatus.Text = "Diff tool launched";
-            saveInterprocessSnapshot(pid, leftSHA, rightSHA, session);
+            saveInterprocessSnapshot(pid, leftSHA, rightSHA, mrk, accessToken, sessionName);
          }
       }
 
@@ -361,18 +369,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, ISession session)
+      private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,
+         string accessToken, string sessionName)
       {
          // leftSHA - Base commit SHA in the source branch
          // rightSHA - SHA referencing HEAD of this merge request
          Snapshot snapshot = new Snapshot(
-            GetCurrentMergeRequestIId(),
-            GetCurrentHostName(),
-            GetCurrentAccessToken(),
-            GetCurrentProjectName(),
+            mrk.IId,
+            mrk.ProjectKey.HostName,
+            accessToken,
+            mrk.ProjectKey.ProjectName,
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
             textBoxLocalGitFolder.Text,
-            getSessionName(session));
+            sessionName);
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          serializer.SerializeToDisk(snapshot, pid);

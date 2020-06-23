@@ -87,12 +87,15 @@ namespace mrHelper.App.Controls
       internal void UpdateReviewedRevisions(HashSet<string> revisions, RevisionType affectedType)
       {
          RevisionBrowserModel model = getModel();
-         RevisionBrowserModelData newData = new RevisionBrowserModelData(
-            model.Data.BaseSha,
-            model.Data.Revisions[RevisionType.Commit].Cast<Commit>(),
-            model.Data.Revisions[RevisionType.Version].Cast<GitLabSharp.Entities.Version>(),
-            revisions);
-         SetData(newData, affectedType);
+         if (model.Data != null && model.Data.BaseSha != null && model.Data.Revisions != null)
+         {
+            RevisionBrowserModelData newData = new RevisionBrowserModelData(
+               model.Data.BaseSha,
+               model.Data.Revisions[RevisionType.Commit].Cast<Commit>(),
+               model.Data.Revisions[RevisionType.Version].Cast<GitLabSharp.Entities.Version>(),
+               revisions);
+            SetData(newData, affectedType);
+         }
       }
 
       public event EventHandler SelectionChanged;

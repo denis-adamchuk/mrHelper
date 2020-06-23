@@ -48,11 +48,15 @@ namespace mrHelper.CustomActions
 
       async public Task Run()
       {
-         GitLabTaskRunner client = new GitLabTaskRunner(_callback.GetCurrentHostName(), _callback.GetCurrentAccessToken());
+         string hostname = _callback.GetCurrentHostName();
+         string accessToken = _callback.GetCurrentAccessToken();
+         string projectName = _callback.GetCurrentProjectName();
+         int iid = _callback.GetCurrentMergeRequestIId();
+
+         GitLabTaskRunner client = new GitLabTaskRunner(hostname, accessToken);
          await client.RunAsync(async (gitlab) =>
-            await gitlab.Projects.Get(_callback.GetCurrentProjectName()).MergeRequests.
-               Get(_callback.GetCurrentMergeRequestIId()).
-                  Notes.CreateNewTaskAsync(new CreateNewNoteParameters(_body)));
+            await gitlab.Projects.Get(projectName).MergeRequests.
+               Get(iid).Notes.CreateNewTaskAsync(new CreateNewNoteParameters(_body)));
       }
 
       private readonly ICommandCallback _callback;
