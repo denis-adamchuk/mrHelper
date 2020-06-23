@@ -191,7 +191,8 @@ namespace mrHelper.DiffTool
       private readonly static string LaunchArguments = " %22%25f1%22 %l1 %22%25f2%22";
 
       private readonly static string ToolName = "Beyond Compare 3";
-      private readonly static string[] ToolRegistryNames = { ToolName, "Beyond Compare Version 3" };
+      private readonly static string[] ToolRegistryNames =
+         { ToolName, "Beyond Compare Version 3", "Beyond Compare version 3" };
       private readonly static string ToolCompanyName = "Scooter Software";
       private readonly static string ConfigFileName = "BCPreferences.xml";
       private readonly static string ConfigFileComment =
