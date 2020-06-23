@@ -347,7 +347,10 @@ namespace mrHelper.App.Forms
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
-         _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+         if (_gitClientUpdater != null)
+         {
+            _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
+         }
 
          unsubscribeFromLiveSession();
 
