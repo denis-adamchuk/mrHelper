@@ -63,6 +63,7 @@ namespace mrHelper.Client.Discussions
 
          _timer?.Stop();
          _timer?.Dispose();
+         _timer = null; // prevent accessing a timer which is disposed while waiting for async call
 
          foreach (System.Timers.Timer timer in _oneShotTimers)
          {
@@ -599,7 +600,7 @@ namespace mrHelper.Client.Discussions
       private readonly DiscussionParser _parser;
       private readonly DiscussionOperator _operator;
 
-      private readonly System.Timers.Timer _timer;
+      private System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
       private class CachedDiscussions
