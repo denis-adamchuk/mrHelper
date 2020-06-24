@@ -930,7 +930,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         // Add missing merge requests
+         // Add missing merge requests and update existing ones
          foreach (ProjectKey projectKey in projectKeys)
          {
             foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
@@ -943,11 +943,15 @@ namespace mrHelper.App.Forms
                   item = createListViewMergeRequestItem(listViewMergeRequests, fmk);
                   listViewMergeRequests.Items.Add(item);
                }
+               else
+               {
+                  item.Tag = fmk;
+               }
                setListViewSubItemsTags(item, fmk);
             }
          }
 
-         // Remove deleted merge requests
+         // Remove deleted merge requests and hide filtered ones
          for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
