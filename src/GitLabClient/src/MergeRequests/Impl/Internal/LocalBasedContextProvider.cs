@@ -10,14 +10,14 @@ namespace mrHelper.Client.MergeRequests
    /// <summary>
    /// Detects the latest change among given versions
    /// </summary>
-   internal class LocalBasedContextProvider : IProjectUpdateContextProvider
+   internal class LocalBasedContextProvider : ICommitStorageUpdateContextProvider
    {
       internal LocalBasedContextProvider(IEnumerable<Version> versions)
       {
          _versions = versions;
       }
 
-      public ProjectUpdateContext GetContext()
+      public CommitStorageUpdateContext GetContext()
       {
          if (_versions == null)
          {

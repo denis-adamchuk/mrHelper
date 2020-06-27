@@ -239,7 +239,11 @@ namespace mrHelper.App.Forms
 
          foreach (ProjectKey projectKey in projects)
          {
-            requestRepositoryUpdate(projectKey);
+            IEnumerable<MergeRequest> mergeRequests = _liveSession.MergeRequestCache.GetMergeRequests(projectKey);
+            foreach (MergeRequestKey mrk in mergeRequests.Select(x => new MergeRequestKey(projectKey, x.IId)))
+            {
+               requestRepositoryUpdate(mrk);
+            }
          }
 
          if (!isSearchMode())
@@ -292,7 +296,7 @@ namespace mrHelper.App.Forms
       private void liveSessionStarted(string hostname, User user)
       {
          subscribeToLiveSessionInternalEvents();
-         createGitHelpers(_liveSession, getLocalGitRepositoryFactory());
+         createGitHelpers(_liveSession, gitCommitStorageFactory());
 
          if (!_currentUser.ContainsKey(hostname))
          {

@@ -13,7 +13,7 @@ namespace mrHelper.Core.Matching
    /// </summary>
    public class LineNumberMatcher
    {
-      public LineNumberMatcher(IGitRepository gitRepository)
+      public LineNumberMatcher(IGitCommitStorage gitRepository)
       {
          _gitRepository = gitRepository;
       }
@@ -79,7 +79,7 @@ namespace mrHelper.Core.Matching
          return itOppositeList.GetLineNumber() == null ? new int?() : itOppositeList.GetLineNumber().Value + 1;
       }
 
-      private readonly IGitRepository _gitRepository;
+      private readonly IGitCommitStorage _gitRepository;
    }
 }
 

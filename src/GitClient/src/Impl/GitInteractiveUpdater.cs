@@ -1,52 +1,71 @@
 using System;
 using System.Linq;
-using System.Windows.Forms;
 using System.Diagnostics;
+using System.Windows.Forms;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.Common.Tools;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.GitClient
 {
-   internal class InteractiveUpdateFailed : ExceptionEx
-   {
-      internal InteractiveUpdateFailed(string message, Exception innerException)
-         : base(message, innerException)
-      {
-      }
-   }
-
-   internal class InteractiveUpdateCancelledException : Exception {}
-   internal class InteractiveUpdateSSLFixedException : Exception {}
-
    /// <summary>
    /// Prepares LocalGitRepository to use.
    /// </summary>
-   internal class GitInteractiveUpdater
+   internal class GitInteractiveUpdater : ILocalGitCommitStorageUpdater, IDisposable
    {
-      internal event Action<string> InitializationStatusChange;
+      /// <summary>
+      /// Bind to the specific LocalGitRepository object
+      /// </summary>
+      internal GitInteractiveUpdater(
+         ISynchronizeInvoke synchronizeInvoke,
+         ILocalGitRepository localGitRepository,
+         IExternalProcessManager operationManager,
+         EUpdateMode mode,
+         Action onCloned,
+         Action<string> onFetched)
+      {
+         _localGitRepository = localGitRepository;
+         _updaterInternal = new LocalGitRepositoryUpdaterInternal(synchronizeInvoke, localGitRepository,
+            operationManager, mode, onCloned, onFetched);
+      }
 
       /// <summary>
       /// Update passed LocalGitRepository object.
       /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async internal Task UpdateAsync(ILocalGitRepository repo, IProjectUpdateContextProvider contextProvider,
+      async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (repo.ExpectingClone && !isCloneAllowed(repo.Path))
+         if (_localGitRepository.ExpectingClone && !isCloneAllowed(_localGitRepository.Path))
          {
-            InitializationStatusChange?.Invoke("Clone rejected");
-            throw new InteractiveUpdateCancelledException();
+            throw new LocalGitCommitStorageUpdaterCancelledException();
          }
 
-         InitializationStatusChange?.Invoke("Updating git repository...");
-
-         await runAsync(repo, async () => await repo.Updater.StartUpdate(
+         await runAsync(_localGitRepository, async () => await _updaterInternal.StartUpdate(
             contextProvider, onProgressChange, onUpdateStateChange));
-         InitializationStatusChange?.Invoke("Git repository updated");
+      }
+
+      public void StopUpdate()
+      {
+         _updaterInternal.StopUpdate();
+      }
+
+      public bool CanBeStopped()
+      {
+         return _updaterInternal.CanBeStopped();
+      }
+
+      public void RequestUpdate(ICommitStorageUpdateContextProvider contextProvider, Action onFinished)
+      {
+         _updaterInternal.RequestUpdate(contextProvider, onFinished);
+      }
+
+      public void Dispose()
+      {
+         _updaterInternal.Dispose();
       }
 
       /// <summary>
@@ -83,18 +102,16 @@ namespace mrHelper.App.Helpers
             string errorMessage = "Cannot initialize git repository";
             if (ex is UpdateCancelledException)
             {
-               InitializationStatusChange?.Invoke("Git repository update cancelled by user");
-               throw new InteractiveUpdateCancelledException();
+               throw new LocalGitCommitStorageUpdaterCancelledException();
             }
 
             if (ex is SSLVerificationException)
             {
-               InitializationStatusChange?.Invoke("Cannot clone due to SSL verification error");
                if (handleSSLCertificateProblem())
                {
-                  throw new InteractiveUpdateSSLFixedException();
+                  throw new LocalGitCommitStorageUpdaterException(String.Empty, ex);
                }
-               throw new InteractiveUpdateCancelledException();
+               throw new LocalGitCommitStorageUpdaterCancelledException();
             }
 
             if (ex is AuthenticationFailedException)
@@ -121,15 +138,13 @@ namespace mrHelper.App.Helpers
 
             if (ex is NotEmptyDirectoryException)
             {
-               InitializationStatusChange?.Invoke("Cannot clone due to bad directory");
                MessageBox.Show(String.Format("git reports that \"{0}\" already exists and is not empty. "
                   + "Please delete this directory and try again.", ex.OriginalMessage), "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               throw new InteractiveUpdateCancelledException();
+               throw new LocalGitCommitStorageUpdaterCancelledException();
             }
 
-            InitializationStatusChange?.Invoke("Git repository update failed");
-            throw new InteractiveUpdateFailed(errorMessage, ex);
+            throw new LocalGitCommitStorageUpdaterFailedException(errorMessage, ex);
          }
       }
 
@@ -152,10 +167,9 @@ namespace mrHelper.App.Helpers
          }
          catch (GitTools.SSLVerificationDisableException ex)
          {
-            throw new InteractiveUpdateFailed("Cannot change global http.verifySSL setting", ex);
+            throw new LocalGitCommitStorageUpdaterFailedException("Cannot change global http.verifySSL setting", ex);
          }
 
-         InitializationStatusChange?.Invoke("SSL certificate verification disabled. Please repeat git operation.");
          Trace.TraceInformation("[GitInteractiveUpdater] SSL certificate verification disabled");
          return true;
       }
@@ -170,13 +184,14 @@ namespace mrHelper.App.Helpers
             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
 
-      async private Task handleAuthenticationFailedException(ILocalGitRepository repo, Func<Task> command)
+      async private Task handleAuthenticationFailedException(ILocalGitCommitStorage repo, Func<Task> command)
       {
          string configKey = "credential.interactive";
          string configValue = "always";
 
-         GitTools.EConfigScope scope = repo.ExpectingClone ? GitTools.EConfigScope.Global : GitTools.EConfigScope.Local;
-         string path = repo.ExpectingClone ? String.Empty : repo.Path;
+         GitTools.EConfigScope scope = _localGitRepository.ExpectingClone ?
+            GitTools.EConfigScope.Global : GitTools.EConfigScope.Local;
+         string path = _localGitRepository.ExpectingClone ? String.Empty : _localGitRepository.Path;
 
          IEnumerable<string> prevValue = GitTools.GetConfigKeyValue(scope, configKey, path);
          string prevInteractiveMode = prevValue.Any() ? prevValue.First() : null; // `null` to unset
@@ -192,7 +207,9 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private HashSet<ILocalGitRepository> _fixingAuthFailed = new HashSet<ILocalGitRepository>();
+      private HashSet<ILocalGitCommitStorage> _fixingAuthFailed = new HashSet<ILocalGitCommitStorage>();
+      private ILocalGitRepository _localGitRepository;
+      private LocalGitRepositoryUpdaterInternal _updaterInternal;
    }
 }
 

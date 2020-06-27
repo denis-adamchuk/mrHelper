@@ -5,14 +5,14 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Helpers
 {
-   internal class CommitBasedContextProvider : IProjectUpdateContextProvider
+   internal class CommitBasedContextProvider : ICommitStorageUpdateContextProvider
    {
       internal CommitBasedContextProvider(IEnumerable<string> shas)
       {
          _shas = shas;
       }
 
-      public ProjectUpdateContext GetContext()
+      public CommitStorageUpdateContext GetContext()
       {
          return new PartialUpdateContext(_shas.Distinct());
       }

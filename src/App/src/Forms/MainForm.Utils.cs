@@ -440,8 +440,8 @@ namespace mrHelper.App.Forms
 
       private void updateGitAbortState(bool resetStatusText)
       {
-         ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
-         ILocalGitRepository repo = projectKey.HasValue ? getRepository(projectKey.Value, false) : null;
+         MergeRequestKey? mrk = getMergeRequestKey(null);
+         ILocalGitCommitStorage repo = mrk.HasValue ? getCommitStorage(mrk.Value, false) : null;
 
          bool enabled = repo?.Updater?.CanBeStopped() ?? false;
          linkLabelAbortGit.Visible = enabled;
@@ -449,7 +449,7 @@ namespace mrHelper.App.Forms
 
          if (resetStatusText)
          {
-            string projectname = projectKey?.ProjectName ?? String.Empty;
+            string projectname = mrk?.ProjectKey.ProjectName ?? String.Empty;
             if (!String.IsNullOrWhiteSpace(projectname))
             {
                labelGitStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
@@ -723,57 +723,58 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory()
+      private ILocalGitCommitStorageFactory gitCommitStorageFactory()
       {
-         if (_gitClientFactory == null)
+         if (_storageFactory == null)
          {
-            try
+            if (Program.Settings.UseGitStorage)
             {
-               _gitClientFactory = new LocalGitRepositoryFactory(
-                  Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone);
-               _gitClientFactory.RepositoryCloned += onRepositoryCloned;
+               try
+               {
+                  _storageFactory = new GitBasedCommitStorageFactory(
+                     Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone);
+               }
+               catch (ArgumentException ex)
+               {
+                  ExceptionHandlers.Handle("Cannot create GitBasedCommitStorageFactory", ex);
+               }
             }
-            catch (ArgumentException ex)
+            else
             {
-               ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
+               _storageFactory = new GitLabBasedCommitStorageFactory(Program.Settings.LocalGitFolder, this);
             }
          }
-         return _gitClientFactory;
+         return _storageFactory;
       }
 
       private void disposeLocalGitRepositoryFactory()
       {
-         if (_gitClientFactory != null)
+         if (_storageFactory != null)
          {
-            _gitClientFactory.RepositoryCloned -= onRepositoryCloned;
-            _gitClientFactory.Dispose();
-            _gitClientFactory = null;
+            _storageFactory.Dispose();
+            _storageFactory = null;
          }
       }
 
-      private void onRepositoryCloned(ILocalGitRepository repo)
-      {
-         requestRepositoryUpdate(repo.ProjectKey);
-      }
-
       /// <summary>
-      /// Make some checks and create a repository
+      /// Make some checks and create a commit storage
       /// </summary>
       /// <returns>null if could not create a repository</returns>
-      private ILocalGitRepository getRepository(ProjectKey key, bool showMessageBoxOnError)
+      private ILocalGitCommitStorage getCommitStorage(MergeRequestKey mrk, bool showMessageBoxOnError)
       {
-         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory();
+         ILocalGitCommitStorageFactory factory = gitCommitStorageFactory();
          if (factory == null)
          {
             return null;
          }
 
-         ILocalGitRepository repo = factory.GetRepository(key);
+         ILocalGitCommitStorage repo = factory.GetStorage(mrk);
          if (repo == null && showMessageBoxOnError)
          {
             MessageBox.Show(String.Format(
-               "Cannot initialize git repository for project {0} in \"{1}\"",
-               key.ProjectName, Program.Settings.LocalGitFolder), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               "Cannot obtain disk storage for project {0} in \"{1}\"",
+               mrk.ProjectKey.ProjectName, Program.Settings.LocalGitFolder),
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return repo;
       }
@@ -1149,13 +1150,13 @@ namespace mrHelper.App.Forms
 
       private void processUpdate(Client.Types.UserEvents.MergeRequestEvent e)
       {
-         if (e.New || e.Commits)
-         {
-            requestRepositoryUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
-
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
+
+         if (e.New || e.Commits)
+         {
+            requestRepositoryUpdate(mrk);
+         }
 
          if (e.Closed)
          {

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
 {

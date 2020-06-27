@@ -282,7 +282,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            GitClient.GitTools.TraceGitConfiguration();
+            GitTools.TraceGitConfiguration();
          }
 
          return true;
@@ -325,9 +325,6 @@ namespace mrHelper.App.Forms
          subscribeToLiveSession();
          createSearchSession();
 
-         _gitClientUpdater = new GitInteractiveUpdater();
-         _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
-
          initializeColorScheme();
          initializeIconScheme();
          initializeBadgeScheme();
@@ -346,11 +343,6 @@ namespace mrHelper.App.Forms
          _requestedUrl.Clear();
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
-
-         if (_gitClientUpdater != null)
-         {
-            _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
-         }
 
          unsubscribeFromLiveSession();
 
@@ -554,7 +546,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createGitHelpers(ISession session, ILocalGitRepositoryFactory factory)
+      private void createGitHelpers(ISession session, ILocalGitCommitStorageFactory factory)
       {
          if (session.MergeRequestCache == null
           || session.DiscussionCache == null

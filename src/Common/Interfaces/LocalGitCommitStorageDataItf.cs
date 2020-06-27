@@ -1,9 +1,7 @@
-using mrHelper.Common.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace mrHelper.GitClient
+namespace mrHelper.Common.Interfaces
 {
    public class LoadFromDiskFailedException : GitDataException
    {
@@ -13,7 +11,7 @@ namespace mrHelper.GitClient
       }
    }
 
-   public interface ILocalGitRepositoryData : IGitRepositoryData
+   public interface ILocalGitCommitStorageData : IGitCommitStorageData
    {
       Task LoadFromDisk(GitDiffArguments arguments);
       Task LoadFromDisk(GitShowRevisionArguments arguments);

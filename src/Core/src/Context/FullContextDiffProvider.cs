@@ -29,7 +29,7 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class FullContextDiffProvider
    {
-      public FullContextDiffProvider(IGitRepository gitRepository)
+      public FullContextDiffProvider(IGitCommitStorage gitRepository)
       {
          _gitRepository = gitRepository;
       }
@@ -103,7 +103,7 @@ namespace mrHelper.Core.Context
          return fullContextDiff;
       }
 
-      private readonly IGitRepository _gitRepository;
+      private readonly IGitCommitStorage _gitRepository;
    }
 }
 

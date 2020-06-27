@@ -47,7 +47,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
+         ILocalGitCommitStorage repo = getCommitStorage(mrk, true);
          if (!await prepareRepositoryForDiscussionsForm(repo, mrk, discussions) || _exiting)
          {
             return;
@@ -55,7 +55,7 @@ namespace mrHelper.App.Forms
          showDiscussionForm(session, repo, currentUser, mrk, discussions, title, author);
       }
 
-      async private Task<bool> prepareRepositoryForDiscussionsForm(ILocalGitRepository repo,
+      async private Task<bool> prepareRepositoryForDiscussionsForm(ILocalGitCommitStorage repo,
          MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          if (repo == null)
@@ -76,36 +76,28 @@ namespace mrHelper.App.Forms
 
          try
          {
-            IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+            ICommitStorageUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
+            await repo.Updater.StartUpdate(contextProvider, updateGitStatusText,
                () => updateGitAbortState(false));
             return true;
          }
          catch (Exception ex)
          {
-            if (ex is InteractiveUpdateSSLFixedException)
-            {
-               // SSL check is disabled
-            }
-            else if (ex is InteractiveUpdateCancelledException)
+            if (ex is LocalGitCommitStorageUpdaterCancelledException)
             {
                MessageBox.Show("Cannot show Discussions without up-to-date git repository", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            else if (ex is InteractiveUpdateFailed inex)
+            else if (ex is LocalGitCommitStorageUpdaterFailedException inex)
             {
                ExceptionHandlers.Handle(ex.Message, ex);
                MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-               Debug.Assert(false);
             }
             return false;
          }
       }
 
-      private void showDiscussionForm(ISession session, ILocalGitRepository repo,
+      private void showDiscussionForm(ISession session, ILocalGitCommitStorage repo,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
@@ -121,10 +113,10 @@ namespace mrHelper.App.Forms
             {
                try
                {
-                  if (repo != null && !repo.ExpectingClone && repo.Updater != null)
+                  if (repo != null && repo.Updater != null)
                   {
-                     IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
-                     await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+                     ICommitStorageUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
+                     await repo.Updater.StartUpdate(contextProvider, updateGitStatusText,
                         () => updateGitAbortState(false));
                   }
                   else
@@ -134,7 +126,7 @@ namespace mrHelper.App.Forms
                         "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                   }
                }
-               catch (RepositoryUpdateException ex)
+               catch (LocalGitCommitStorageUpdaterException ex)
                {
                   ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
                }
@@ -188,7 +180,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
+         ILocalGitCommitStorage repo = getCommitStorage(mrk, true);
          if (!await prepareRepositoryForDiffTool(repo, leftSHA, rightSHA) || _exiting)
          {
             return;
@@ -209,7 +201,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void launchDiffTool(string leftSHA, string rightSHA, ILocalGitRepository repo,
+      private void launchDiffTool(string leftSHA, string rightSHA, ILocalGitCommitStorage repo,
          MergeRequestKey mrk, string accessToken, string sessionName)
       {
          labelWorkflowStatus.Text = "Launching diff tool...";
@@ -248,7 +240,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<bool> prepareRepositoryForDiffTool(ILocalGitRepository repo, string leftSHA, string rightSHA)
+      async private Task<bool> prepareRepositoryForDiffTool(ILocalGitCommitStorage repo, string leftSHA, string rightSHA)
       {
          if (repo == null)
          {
@@ -259,32 +251,24 @@ namespace mrHelper.App.Forms
 
          try
          {
-            IProjectUpdateContextProvider contextProvider =
+            ICommitStorageUpdateContextProvider contextProvider =
                new CommitBasedContextProvider(new string[] { leftSHA, rightSHA });
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
+            await repo.Updater.StartUpdate(contextProvider, updateGitStatusText,
                () => updateGitAbortState(false));
             return true;
          }
          catch (Exception ex)
          {
-            if (ex is InteractiveUpdateSSLFixedException)
-            {
-               // SSL check is disabled
-            }
-            else if (ex is InteractiveUpdateCancelledException)
+            if (ex is LocalGitCommitStorageUpdaterCancelledException)
             {
                // User declined to create a repository
                MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            else if (ex is InteractiveUpdateFailed inex)
+            else if (ex is LocalGitCommitStorageUpdaterFailedException inex)
             {
                ExceptionHandlers.Handle(ex.Message, ex);
                MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-               Debug.Assert(false);
             }
             return false;
          }
@@ -412,16 +396,16 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      private void requestRepositoryUpdate(ProjectKey projectKey)
+      private void requestRepositoryUpdate(MergeRequestKey mrk)
       {
          ISession session = getSession(true /* supported in Live only */);
 
-         IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
-            GetLocalBasedContextProvider(projectKey);
+         ICommitStorageUpdateContextProvider contextProvider = session?.MergeRequestCache?.
+            GetLocalBasedContextProvider(mrk);
+         // contextProvider can be null if session was dropped after this update was scheduled
          if (contextProvider != null)
          {
-            // contextProvider can be null if session was dropped after this update was scheduled
-            ILocalGitRepository repo = getRepository(projectKey, false);
+            ILocalGitCommitStorage repo = getCommitStorage(mrk, false);
             repo?.Updater?.RequestUpdate(contextProvider, null);
          }
       }

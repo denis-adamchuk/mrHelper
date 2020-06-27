@@ -25,7 +25,7 @@ namespace mrHelper.App.Controls
    {
       internal DiscussionBox(
          CustomFontForm parent,
-         IDiscussionEditor editor, IGitRepository gitRepository,
+         IDiscussionEditor editor, IGitCommitStorage gitRepository,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,

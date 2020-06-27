@@ -103,8 +103,7 @@ namespace mrHelper.App.Forms
       private bool _canSwitchTab = true;
       private readonly bool _runningAsUwp = false;
 
-      private LocalGitRepositoryFactory _gitClientFactory;
-      private GitInteractiveUpdater _gitClientUpdater;
+      private ILocalGitCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;
       private IDiffStatisticProvider _diffStatProvider;
       private PersistentStorage _persistentStorage;

@@ -6,9 +6,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Tools;
 
-namespace mrHelper.GitClient
+namespace mrHelper.Common.Tools
 {
    public static class GitTools
    {
@@ -207,7 +206,7 @@ namespace mrHelper.GitClient
             await operationManager.Wait(descriptor);
             return descriptor.StdErr.Count() == 0;
          }
-         catch (GitException)
+         catch (Exception)
          {
             return false;
          }

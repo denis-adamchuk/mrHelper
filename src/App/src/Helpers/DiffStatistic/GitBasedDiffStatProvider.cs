@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
          IDiscussionCache discussionCache,
          IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactory gitFactory)
+         ILocalGitCommitStorageFactory gitFactory)
          : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
       {
       }
@@ -52,14 +52,10 @@ namespace mrHelper.App.Helpers
 
       private string getStatusMessage(MergeRequestKey mrk)
       {
-         ILocalGitRepository repo = getRepository(mrk.ProjectKey);
+         ILocalGitCommitStorage repo = getRepository(mrk);
          if (repo == null)
          {
             return "N/A";
-         }
-         else if (repo.ExpectingClone)
-         {
-            return "N/A (not cloned)";
          }
          else if (!_statistic.ContainsKey(mrk))
          {
@@ -76,33 +72,31 @@ namespace mrHelper.App.Helpers
          return String.Empty;
       }
 
-      protected override void preUpdate(ILocalGitRepository repo)
+      protected override void preUpdate(MergeRequestKey mrk, ILocalGitCommitStorage repo)
       {
-         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
-            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId))
-            .Where(x => !_statistic.ContainsKey(x));
-         foreach (MergeRequestKey mrk in mergeRequestKeys)
+         if (!_statistic.ContainsKey(mrk))
          {
             _statistic[mrk] = null;
          }
          Update?.Invoke();
       }
 
-      async protected override Task doUpdate(ILocalGitRepository repo)
+      async protected override Task doUpdate(MergeRequestKey mrk, ILocalGitCommitStorage repo)
       {
-         foreach (KeyValuePair<MergeRequestKey, Version> keyValuePair in collectLatestVersions(repo))
+         Version latestVersion = getLatestVersion(mrk, repo);
+         if (latestVersion != null)
          {
             DiffStatistic? diffStat = null;
-            if (!String.IsNullOrEmpty(keyValuePair.Value.Base_Commit_SHA)
-             && !String.IsNullOrEmpty(keyValuePair.Value.Head_Commit_SHA))
+            if (!String.IsNullOrEmpty(latestVersion.Base_Commit_SHA)
+             && !String.IsNullOrEmpty(latestVersion.Head_Commit_SHA))
             {
                GitDiffArguments args = new GitDiffArguments
                (
                   GitDiffArguments.DiffMode.ShortStat,
                   new GitDiffArguments.CommonArguments
                   (
-                     keyValuePair.Value.Base_Commit_SHA,
-                     keyValuePair.Value.Head_Commit_SHA,
+                     latestVersion.Base_Commit_SHA,
+                     latestVersion.Head_Commit_SHA,
                      null, null, null
                   ),
                   null
@@ -120,45 +114,34 @@ namespace mrHelper.App.Helpers
                   {
                      await repo.Data.LoadFromDisk(args);
                   }
-                  diffStat = parseGitDiffStatistic(repo, keyValuePair.Key, args);
+                  diffStat = parseGitDiffStatistic(repo, mrk, args);
                }
                catch (LoadFromDiskFailedException ex)
                {
                   ExceptionHandlers.Handle(String.Format(
-                     "Cannot update git statistic for MR with IID {0}", keyValuePair.Key), ex);
+                     "Cannot update git statistic for MR with IID {0}", mrk), ex);
                }
             }
-            _statistic[keyValuePair.Key] = new MergeRequestStatistic(keyValuePair.Value.Created_At, diffStat);
+            _statistic[mrk] = new MergeRequestStatistic(latestVersion.Created_At, diffStat);
             Update?.Invoke();
          }
       }
 
-      private Dictionary<MergeRequestKey, Version> collectLatestVersions(ILocalGitRepository repo)
+      private Version getLatestVersion(MergeRequestKey mrk, ILocalGitCommitStorage repo)
       {
-         Dictionary<MergeRequestKey, Version> result = new Dictionary<MergeRequestKey, Version>();
-
-         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
-            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId));
-
-         foreach (MergeRequestKey mrk in mergeRequestKeys)
+         Version version = _mergeRequestCache.GetLatestVersion(mrk);
+         bool newKey = !_statistic.ContainsKey(mrk) || !_statistic[mrk].HasValue;
+         if (version == null || (!newKey && version.Created_At <= _statistic[mrk].Value.LatestChange))
          {
-            Version version = _mergeRequestCache.GetLatestVersion(mrk);
-            bool newKey = !_statistic.ContainsKey(mrk) || !_statistic[mrk].HasValue;
-            if (version == null || (!newKey && version.Created_At <= _statistic[mrk].Value.LatestChange))
-            {
-               continue;
-            }
-
-            Trace.TraceInformation(String.Format(
-               "[GitBasedSizeCollector] Git statistic will be updated for MR: "
-             + "Host={0}, Project={1}, IId={2}. Latest version created at: {3}",
-               mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
-               version.Created_At.ToLocalTime().ToString()));
-
-            result.Add(mrk, version);
+            return null;
          }
 
-         return result;
+         Trace.TraceInformation(String.Format(
+            "[GitBasedSizeCollector] Git statistic will be updated for MR: "
+          + "Host={0}, Project={1}, IId={2}. Latest version created at: {3}",
+            mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
+            version.Created_At.ToLocalTime().ToString()));
+         return version;
       }
 
       private static readonly Regex gitDiffStatRe =
@@ -166,7 +149,7 @@ namespace mrHelper.App.Helpers
             @"(?'files'\d*) file[s]? changed, ((?'ins'\d*) insertion[s]?\(\+\)(, )?)?((?'del'\d*) deletion[s]?\(\-\))?",
                RegexOptions.Compiled);
 
-      private DiffStatistic? parseGitDiffStatistic(ILocalGitRepository repo, MergeRequestKey mrk,
+      private DiffStatistic? parseGitDiffStatistic(ILocalGitCommitStorage repo, MergeRequestKey mrk,
          GitDiffArguments args)
       {
          void traceError(string text)
@@ -176,7 +159,7 @@ namespace mrHelper.App.Helpers
              + "This makes impossible to show git statistic for MR with IID {4}", text, repo.Path,
                String.Format("{0}/{1}", args.CommonArgs.Sha1?.ToString() ?? "N/A",
                                         args.CommonArgs.Sha2?.ToString() ?? "N/A"),
-               String.Format("{0}:{1}", repo.ProjectKey.HostName, repo.ProjectKey.ProjectName), mrk.IId));
+               repo.ToString(), mrk.IId));
          }
 
          IEnumerable<string> statText = null;

@@ -14,7 +14,7 @@ namespace mrHelper.App.Forms
    internal partial class NewDiscussionForm : CustomFontForm
    {
       internal NewDiscussionForm(string leftSideFileName, string rightSideFileName,
-         DiffPosition position, IGitRepository gitRepository)
+         DiffPosition position, IGitCommitStorage gitRepository)
       {
          InitializeComponent();
          htmlPanel.AutoScroll = false;
@@ -56,7 +56,7 @@ namespace mrHelper.App.Forms
       /// Throws ArgumentException.
       /// </summary>
       private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
-         DiffPosition position, IGitRepository gitRepository)
+         DiffPosition position, IGitCommitStorage gitRepository)
       {
          string html = getContextHtmlText(position, gitRepository, out string stylesheet);
          htmlPanel.BaseStylesheet = stylesheet;
@@ -66,7 +66,7 @@ namespace mrHelper.App.Forms
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, IGitRepository gitRepository, out string stylesheet)
+      private string getContextHtmlText(DiffPosition position, IGitCommitStorage gitRepository, out string stylesheet)
       {
          stylesheet = String.Empty;
 

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace mrHelper.Common.Interfaces
 {
-   public abstract class ProjectUpdateContext
+   public abstract class CommitStorageUpdateContext
    {
-      public ProjectUpdateContext(DateTime? latestChange, IEnumerable<string> sha)
+      public CommitStorageUpdateContext(DateTime? latestChange, IEnumerable<string> sha)
       {
          LatestChange = latestChange;
          Sha = sha;
@@ -31,19 +30,19 @@ namespace mrHelper.Common.Interfaces
       }
    }
 
-   public class FullUpdateContext : ProjectUpdateContext
+   public class FullUpdateContext : CommitStorageUpdateContext
    {
       public FullUpdateContext(DateTime latestChange, IEnumerable<string> sha) : base(latestChange, sha) { }
    }
 
-   public class PartialUpdateContext : ProjectUpdateContext
+   public class PartialUpdateContext : CommitStorageUpdateContext
    {
       public PartialUpdateContext(IEnumerable<string> sha) : base(null, sha) { }
    }
 
-   public interface IProjectUpdateContextProvider
+   public interface ICommitStorageUpdateContextProvider
    {
-      ProjectUpdateContext GetContext();
+      CommitStorageUpdateContext GetContext();
    }
 }
 

@@ -1,45 +1,52 @@
 ﻿using System;
-using System.Collections.Generic;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.GitClient
 {
-   internal class GitException : ExceptionEx
+   internal class RepositoryUpdateException : ExceptionEx
    {
-      internal GitException(string message, Exception innerException)
-         : base(message, innerException)
+      internal RepositoryUpdateException(string message, Exception ex)
+         : base(message, ex)
       {
       }
    }
 
-   internal class BadObjectException : GitException
+   internal class SSLVerificationException : RepositoryUpdateException
    {
-      internal BadObjectException(string message)
-         : base(message, null)
+      internal SSLVerificationException(Exception innerException)
+         : base(String.Empty, innerException)
       {
       }
    }
 
-   internal class GitCallFailedException : GitException
+   internal class AuthenticationFailedException : RepositoryUpdateException
    {
-      internal GitCallFailedException(ExternalProcessFailureException ex)
-         : base(String.Empty, ex)
+      internal AuthenticationFailedException(Exception innerException)
+         : base(String.Empty, innerException)
       {
       }
    }
 
-   internal class OperationCancelledException : GitException
+   internal class CouldNotReadUsernameException : RepositoryUpdateException
    {
-      internal OperationCancelledException()
+      internal CouldNotReadUsernameException(Exception innerException)
+         : base(String.Empty, innerException)
+      {
+      }
+   }
+
+   internal class NotEmptyDirectoryException : RepositoryUpdateException
+   {
+      internal NotEmptyDirectoryException(string path, Exception innerException)
+         : base(path, innerException)
+      {
+      }
+   }
+
+   internal class UpdateCancelledException : RepositoryUpdateException
+   {
+      internal UpdateCancelledException()
          : base(String.Empty, null)
-      {
-      }
-   }
-
-   internal class SystemException : GitException
-   {
-      internal SystemException(Exception systemException)
-         : base(String.Empty, systemException)
       {
       }
    }

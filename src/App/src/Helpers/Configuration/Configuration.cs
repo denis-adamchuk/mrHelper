@@ -29,6 +29,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersionsByDefault";
       private static readonly bool   ShowVersionsDefaultValue = true;
 
+      private static readonly string UseGitStorageKeyName      = "UseGitStorage";
+      private static readonly bool   UseGitStorageDefaultValue = true;
+
       private static readonly string UseShallowCloneKeyName      = "UseShallowClone_New";
       private static readonly bool   UseShallowCloneDefaultValue = true;
 
@@ -242,6 +245,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowVersionsDefaultValue;
          }
          set { setValue(ShowVersionsKeyName, boolToString(value)); }
+      }
+
+      public bool UseGitStorage
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               UseGitStorageKeyName, boolToString(UseGitStorageDefaultValue)),
+                  out bool result) ? result : UseGitStorageDefaultValue;
+         }
+         set { setValue(UseGitStorageKeyName, boolToString(value)); }
       }
 
       public bool UseShallowClone

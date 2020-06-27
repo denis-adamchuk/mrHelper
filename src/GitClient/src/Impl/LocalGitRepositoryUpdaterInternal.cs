@@ -10,17 +10,17 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
 {
+   internal enum EUpdateMode
+   {
+      ShallowClone,                    // "git clone --depth=1" and "git fetch --depth=1 sha:/refs/keep-around/sha"
+      FullCloneWithSingleCommitFetches // "git clone" and "git fetch" and "git fetch sha:/refs/keep-around/sha"
+   }
+
    /// <summary>
    /// Updates attached ILocalGitRepository object
    /// </summary>
-   internal class LocalGitRepositoryUpdater : ILocalGitRepositoryUpdater, IDisposable
+   internal class LocalGitRepositoryUpdaterInternal : ILocalGitCommitStorageUpdater, IDisposable
    {
-      internal enum EUpdateMode
-      {
-         ShallowClone,                    // "git clone --depth=1" and "git fetch --depth=1 sha:/refs/keep-around/sha"
-         FullCloneWithSingleCommitFetches // "git clone" and "git fetch" and "git fetch sha:/refs/keep-around/sha"
-      }
-
       private class InternalUpdateContext
       {
          internal InternalUpdateContext(IEnumerable<string> sha)
@@ -34,7 +34,7 @@ namespace mrHelper.GitClient
       /// <summary>
       /// Bind to the specific LocalGitRepository object
       /// </summary>
-      internal LocalGitRepositoryUpdater(
+      internal LocalGitRepositoryUpdaterInternal(
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitRepository localGitRepository,
          IExternalProcessManager operationManager,
@@ -73,7 +73,7 @@ namespace mrHelper.GitClient
          _isDisposed = true;
       }
 
-      async public Task StartUpdate(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
+      async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
          Action onUpdateStateChange)
       {
          if (onProgressChange == null)
@@ -84,10 +84,10 @@ namespace mrHelper.GitClient
          await update(contextProvider, onProgressChange, onUpdateStateChange, true, false);
       }
 
-      async public Task update(IProjectUpdateContextProvider contextProvider, Action<string> onProgressChange,
+      async public Task update(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
          Action onUpdateStateChange, bool canClone, bool canSplit)
       {
-         ProjectUpdateContext context = contextProvider?.GetContext();
+         CommitStorageUpdateContext context = contextProvider?.GetContext();
          if (contextProvider == null || (context != null && context.Sha == null))
          {
             Debug.Assert(false);
@@ -126,7 +126,7 @@ namespace mrHelper.GitClient
          _onUpdateStateChange = null;
       }
 
-      public void RequestUpdate(IProjectUpdateContextProvider contextProvider, Action onFinished)
+      public void RequestUpdate(ICommitStorageUpdateContextProvider contextProvider, Action onFinished)
       {
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
@@ -143,7 +143,7 @@ namespace mrHelper.GitClient
             }), null);
       }
 
-      private IEnumerable<InternalUpdateContext> splitContext(ProjectUpdateContext context, bool canSplit)
+      private IEnumerable<InternalUpdateContext> splitContext(CommitStorageUpdateContext context, bool canSplit)
       {
          if (!canSplit || _updateMode != EUpdateMode.ShallowClone)
          {
@@ -165,7 +165,7 @@ namespace mrHelper.GitClient
          return splitted;
       }
 
-      async private Task processContext(ProjectUpdateContext context, bool canSplit)
+      async private Task processContext(CommitStorageUpdateContext context, bool canSplit)
       {
          if (!context.Sha.Any())
          {
@@ -223,7 +223,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task doPreProcessContext(ProjectUpdateContext context)
+      async private Task doPreProcessContext(CommitStorageUpdateContext context)
       {
          await TaskUtils.WhileAsync(() => _updatingContext != null);
 
@@ -258,7 +258,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      async private Task doProcessContext(ProjectUpdateContext context, InternalUpdateContext internalUpdateContext)
+      async private Task doProcessContext(CommitStorageUpdateContext context, InternalUpdateContext internalUpdateContext)
       {
          await TaskUtils.WhileAsync(() => _updatingContext != null);
 
@@ -386,7 +386,7 @@ namespace mrHelper.GitClient
          }
       }
 
-      private static bool isWorthNewUpdate(ProjectUpdateContext proposed, ProjectUpdateContext updating)
+      private static bool isWorthNewUpdate(CommitStorageUpdateContext proposed, CommitStorageUpdateContext updating)
       {
          Debug.Assert(proposed != null);
          if (updating == null)
@@ -437,7 +437,7 @@ namespace mrHelper.GitClient
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
       }
 
-      private DateTime updateTimestamp(ProjectUpdateContext context)
+      private DateTime updateTimestamp(CommitStorageUpdateContext context)
       {
          DateTime prevFullUpdateTimestamp = _latestFullFetchTimestamp;
          if (context.LatestChange.HasValue)
@@ -497,7 +497,7 @@ namespace mrHelper.GitClient
       private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
 
       private bool _isDisposed;
-      private ProjectUpdateContext _updatingContext;
+      private CommitStorageUpdateContext _updatingContext;
       private Action<string> _onProgressChange;
       private Action _onUpdateStateChange;
       private DateTime _latestFullFetchTimestamp = DateTime.MinValue;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Interfaces
@@ -21,19 +20,15 @@ namespace mrHelper.Common.Interfaces
       }
    }
 
-   public interface IGitRepositoryData
+   public interface IGitCommitStorageData
    {
       IEnumerable<string> Get(GitShowRevisionArguments arguments);
       IEnumerable<string> Get(GitDiffArguments arguments);
    }
 
-   public interface IGitRepository
+   public interface IGitCommitStorage
    {
-      IGitRepositoryData Data { get; }
-
-      ProjectKey ProjectKey { get; }
-
-      Task<bool> ContainsSHAAsync(string sha);
+      IGitCommitStorageData Data { get; }
    }
 }
 

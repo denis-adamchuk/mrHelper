@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
 {
@@ -15,10 +16,18 @@ namespace mrHelper.GitClient
    internal class LocalGitRepository : ILocalGitRepository, IDisposable
    {
       // @{ IGitRepository
-      IGitRepositoryData IGitRepository.Data => ExpectingClone ? null : _data;
+      IGitCommitStorageData IGitCommitStorage.Data => ExpectingClone ? null : _data;
+      // @{ IGitRepository
 
-      public ProjectKey ProjectKey { get; }
+      // @{ ILocalGitRepository
+      public ILocalGitCommitStorageData Data => ExpectingClone ? null : _data;
 
+      public string Path { get; }
+
+      public ILocalGitCommitStorageUpdater Updater => _updater;
+      // @} ILocalGitRepository
+
+      // @{ ILocalGitRepositoryInternal
       async public Task<bool> ContainsSHAAsync(string sha)
       {
          if (_cached_existingSha.Contains(sha))
@@ -33,17 +42,11 @@ namespace mrHelper.GitClient
          }
          return false;
       }
-      // @{ IGitRepository
-
-      // @{ ILocalGitRepository
-      public ILocalGitRepositoryData Data => ExpectingClone ? null : _data;
-
-      public string Path { get; }
-
-      public ILocalGitRepositoryUpdater Updater => _updater;
 
       public bool ExpectingClone { get; private set; } = true;
-      // @} ILocalGitRepository
+
+      public ProjectKey ProjectKey { get; }
+      // @} ILocalGitRepositoryInternal
 
       /// <summary>
       /// Construct LocalGitRepository with a path that either does not exist or it is empty
@@ -51,7 +54,7 @@ namespace mrHelper.GitClient
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal LocalGitRepository(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, Action<ILocalGitRepository> onClonedRepo)
+         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
       {
          Path = LocalGitRepositoryPathFinder.FindPath(parentFolder, projectKey);
 
@@ -60,9 +63,7 @@ namespace mrHelper.GitClient
             throw new ArgumentException("Cannot work with such repositories");
          }
 
-         LocalGitRepositoryUpdater.EUpdateMode mode = useShallowClone
-            ? LocalGitRepositoryUpdater.EUpdateMode.ShallowClone
-            : LocalGitRepositoryUpdater.EUpdateMode.FullCloneWithSingleCommitFetches;
+         EUpdateMode mode = useShallowClone ? EUpdateMode.ShallowClone : EUpdateMode.FullCloneWithSingleCommitFetches;
 
          // PathFinder must guarantee the following
          Debug.Assert(isEmptyFolder(Path)
@@ -70,8 +71,7 @@ namespace mrHelper.GitClient
                && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
          _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new LocalGitRepositoryUpdater(synchronizeInvoke, this, _operationManager, mode, onCloned, onFetched);
-         _onClonedRepo = onClonedRepo;
+         _updater = new GitInteractiveUpdater(synchronizeInvoke, this, _operationManager, mode, onCloned, onFetched);
          _data = new LocalGitRepositoryData(_operationManager, Path);
 
          ExpectingClone = isEmptyFolder(Path);
@@ -97,6 +97,11 @@ namespace mrHelper.GitClient
          _isDisposed = true;
       }
 
+      public override string ToString()
+      {
+         return String.Format("[LocalGitRepository] {0} at {1}", ProjectKey.ProjectName, ProjectKey.HostName);
+      }
+
       private void onFetched(string sha)
       {
          Debug.Assert(!_cached_existingSha.Contains(sha));
@@ -106,7 +111,6 @@ namespace mrHelper.GitClient
       private void onCloned()
       {
          ExpectingClone = false;
-         _onClonedRepo?.Invoke(this);
       }
 
       private static bool isEmptyFolder(string path)
@@ -116,10 +120,9 @@ namespace mrHelper.GitClient
 
       private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
       private LocalGitRepositoryData _data;
-      private LocalGitRepositoryUpdater _updater;
+      private GitInteractiveUpdater _updater;
       private bool _isDisposed;
       private readonly GitOperationManager _operationManager;
-      private readonly Action<ILocalGitRepository> _onClonedRepo;
    }
 }
 

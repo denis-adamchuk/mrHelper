@@ -10,7 +10,7 @@ namespace mrHelper.Core.Matching
    /// </summary>
    public class FileNameMatcher
    {
-      public FileNameMatcher(IGitRepository gitRepository,
+      public FileNameMatcher(IGitCommitStorage gitRepository,
          Action<string, string> onFileMove, Func<string, string, string, bool> onFileRename, Func<bool> onWrongMatch)
       {
          _gitRepository = gitRepository;
@@ -146,13 +146,13 @@ namespace mrHelper.Core.Matching
          string sourceCurrentName, string sourceOppositeName, string fixedOppositeName)
       {
          Trace.TraceInformation(String.Format(
-            "[FileNameMatcher] {0}. Host: {1}. Project: {2}. DiffRefs: {3}\n"
-          + "sourceCurrentName: {4}\nsourceOppositeName: {5}\nfixedOppositeName: {6}\nIsLeftSide: {7}",
-               action, _gitRepository.ProjectKey.HostName, _gitRepository.ProjectKey.ProjectName, refs.ToString(),
+            "[FileNameMatcher] {0}. Repo: {1}. DiffRefs: {2}\n"
+          + "sourceCurrentName: {3}\nsourceOppositeName: {4}\nfixedOppositeName: {5}\nIsLeftSide: {6}",
+               action, _gitRepository.ToString(), refs.ToString(),
                sourceCurrentName, sourceOppositeName, fixedOppositeName, isLeftSide));
       }
 
-      private readonly IGitRepository _gitRepository;
+      private readonly IGitCommitStorage _gitRepository;
 
       /// <summary>
       /// Notify user about impossible match

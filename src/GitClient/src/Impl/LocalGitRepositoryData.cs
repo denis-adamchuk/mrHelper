@@ -7,7 +7,7 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.GitClient
 {
-   internal class LocalGitRepositoryData : ILocalGitRepositoryData, IDisposable
+   internal class LocalGitRepositoryData : ILocalGitCommitStorageData, IDisposable
    {
       internal LocalGitRepositoryData(IExternalProcessManager operationManager, string path)
       {
@@ -93,7 +93,7 @@ namespace mrHelper.GitClient
             {
                return;
             }
-            if (ex is SystemException || ex is GitCallFailedException)
+            if (ex is Common.Tools.SystemException || ex is GitCallFailedException)
             {
                throw new LoadFromDiskFailedException(ex);
             }

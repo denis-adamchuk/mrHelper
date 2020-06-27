@@ -10,9 +10,9 @@ using mrHelper.App.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Types;
-using mrHelper.GitClient;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Session;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -23,7 +23,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         ISession session, ILocalGitRepository repo,
+         ISession session, ILocalGitCommitStorage repo,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -176,7 +176,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
+      private void onLocalGitRepositoryDisposed(ILocalGitCommitStorage repo)
       {
          this.Close();
       }
@@ -506,7 +506,7 @@ namespace mrHelper.App.Forms
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
-      private readonly ILocalGitRepository _gitRepository;
+      private readonly ILocalGitCommitStorage _gitRepository;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 

@@ -240,7 +240,7 @@ namespace mrHelper.App.Forms
             string newFolder = localGitFolderBrowser.SelectedPath;
             Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
 
-            if (_gitClientFactory == null || _gitClientFactory.ParentFolder != newFolder)
+            if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
             {
                textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
                Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
@@ -784,7 +784,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitRepository repo = getRepository(mrk.Value.ProjectKey, false);
+         ILocalGitCommitStorage repo = getCommitStorage(mrk.Value, false);
          if (repo == null || repo.Updater == null || !repo.Updater.CanBeStopped())
          {
             Debug.Assert(mrk.HasValue);

@@ -11,7 +11,7 @@ namespace mrHelper.GitClient
    ///<summary>
    /// Creates LocalGitRepository objects.
    ///<summary>
-   public class LocalGitRepositoryFactory : ILocalGitRepositoryFactory, IDisposable
+   public class LocalGitRepositoryFactory : IDisposable
    {
       public string ParentFolder { get; }
 
@@ -39,7 +39,7 @@ namespace mrHelper.GitClient
       /// Create a LocalGitRepository object or return it if already cached.
       /// Throws if
       /// </summary>
-      public ILocalGitRepository GetRepository(ProjectKey key)
+      public ILocalGitCommitStorage GetRepository(ProjectKey key)
       {
          if (_isDisposed)
          {
@@ -54,8 +54,7 @@ namespace mrHelper.GitClient
          LocalGitRepository repo;
          try
          {
-            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone,
-               (r) => RepositoryCloned?.Invoke(r));
+            repo = new LocalGitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone);
          }
          catch (ArgumentException ex)
          {
@@ -65,8 +64,6 @@ namespace mrHelper.GitClient
          _repos[key] = repo;
          return repo;
       }
-
-      public event Action<ILocalGitRepository> RepositoryCloned;
 
       public void Dispose()
       {

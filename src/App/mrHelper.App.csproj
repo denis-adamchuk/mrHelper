@@ -100,9 +100,7 @@
     <Compile Include="src\Controls\DiscussionSortPanel.Designer.cs">
       <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\MergeRequestListView.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="src\Controls\MergeRequestListView.cs" />
     <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
       <DependentUpon>MergeRequestListView.cs</DependentUpon>
     </Compile>
@@ -199,18 +197,20 @@
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
     <Compile Include="src\Helpers\Configuration\DictionaryStringHelper.cs" />
+    <Compile Include="src\Helpers\CommitStorage\GitLabBasedCommitStorageFactory.cs" />
+    <Compile Include="src\Helpers\CommitStorage\GitBasedCommitStorageFactory.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
     <Compile Include="src\Helpers\GitLabSharp\PositionConverter.cs" />
     <Compile Include="src\Helpers\Git\BaseGitHelper.cs" />
-    <Compile Include="src\Helpers\Git\DiscussionBasedContextProvider.cs" />
-    <Compile Include="src\Helpers\Git\CommitBasedContextProvider.cs" />
+    <Compile Include="src\Helpers\ContextProviders\DiscussionBasedContextProvider.cs" />
+    <Compile Include="src\Helpers\ContextProviders\CommitBasedContextProvider.cs" />
+    <Compile Include="src\Helpers\CommitStorage\LocalGitCommitStorageFactoryItf.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
-    <Compile Include="src\Helpers\Git\GitInteractiveUpdater.cs" />
-    <Compile Include="src\Helpers\Git\DiscussionBasedDiffStatProvider.cs" />
-    <Compile Include="src\Helpers\Git\GitBasedDiffStatProvider.cs" />
-    <Compile Include="src\Helpers\DiffStatisticProviderItf.cs" />
+    <Compile Include="src\Helpers\DiffStatistic\DiscussionBasedDiffStatProvider.cs" />
+    <Compile Include="src\Helpers\DiffStatistic\GitBasedDiffStatProvider.cs" />
+    <Compile Include="src\Helpers\DiffStatistic\DiffStatisticProviderItf.cs" />
     <Compile Include="src\Helpers\Interprocess\DiffCallHandler.cs" />
     <Compile Include="src\Helpers\Interprocess\DiffArgumentParser.cs" />
     <Compile Include="src\Helpers\Interprocess\Snapshot.cs" />
@@ -307,7 +307,7 @@
       <Name>mrHelper.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\GitClient\mrHelper.GitClient.csproj">
-      <Project>{D75B7B19-B06B-42E9-9363-437F5640A045}</Project>
+      <Project>{d75b7b19-b06b-42e9-9363-437f5640a045}</Project>
       <Name>mrHelper.GitClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
@@ -355,5 +355,6 @@
       <Version>1.7.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

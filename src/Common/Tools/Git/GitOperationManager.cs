@@ -8,7 +8,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using System.Diagnostics;
 
-namespace mrHelper.GitClient
+namespace mrHelper.Common.Tools
 {
    public class GitOperationManager : IExternalProcessManager, IDisposable
    {

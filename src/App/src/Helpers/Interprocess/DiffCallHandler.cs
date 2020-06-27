@@ -24,7 +24,7 @@ namespace mrHelper.App.Interprocess
          _session = session;
       }
 
-      async public Task HandleAsync(IGitRepository gitRepository)
+      async public Task HandleAsync(IGitCommitStorage gitRepository)
       {
          if (gitRepository != null)
          {
@@ -32,27 +32,11 @@ namespace mrHelper.App.Interprocess
             return;
          }
 
-         // This happens when a git parent folder was changed when a diff tool was being launched
-         Trace.TraceWarning(String.Format(
-            "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
-            _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
-
-         ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
-
-         LocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(
-            _snapshot.TempFolder, null, Program.Settings.UseShallowClone);
-         ILocalGitRepository tempRepository = factory.GetRepository(projectKey);
-         if (tempRepository == null)
-         {
-            Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
-            return;
-         }
-         Debug.Assert(!tempRepository.ExpectingClone);
-         await doHandleAsync(tempRepository);
-         factory.Dispose();
+         // This happens when a git parent folder was changed when a diff tool was already launched
+         Debug.Assert(false);
       }
 
-      async public Task doHandleAsync(IGitRepository gitRepository)
+      async public Task doHandleAsync(IGitCommitStorage gitRepository)
       {
          FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
          LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
@@ -102,7 +86,7 @@ namespace mrHelper.App.Interprocess
          }
       }
 
-      private FileNameMatcher getFileNameMatcher(IGitRepository repository)
+      private FileNameMatcher getFileNameMatcher(IGitCommitStorage repository)
       {
          return new FileNameMatcher(repository,
             (currentName, anotherName) =>

@@ -41,7 +41,7 @@ namespace mrHelper.Client.MergeRequests
 
       /// <summary>
       /// </summary>
-      IProjectUpdateContextProvider GetLocalBasedContextProvider(ProjectKey projectKey);
+      ICommitStorageUpdateContextProvider GetLocalBasedContextProvider(MergeRequestKey mrk);
 
       /// <summary>
       /// </summary>

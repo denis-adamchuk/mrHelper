@@ -6,14 +6,14 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Helpers
 {
-   internal class DiscussionBasedContextProvider : IProjectUpdateContextProvider
+   internal class DiscussionBasedContextProvider : ICommitStorageUpdateContextProvider
    {
       internal DiscussionBasedContextProvider(IEnumerable<Discussion> discussions)
       {
          _discussions = discussions;
       }
 
-      public ProjectUpdateContext GetContext()
+      public CommitStorageUpdateContext GetContext()
       {
          IEnumerable<Discussion> diffNotes =
                _discussions

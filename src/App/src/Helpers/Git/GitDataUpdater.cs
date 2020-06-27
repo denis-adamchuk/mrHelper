@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
          IDiscussionCache discussionCache,
          IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactory gitFactory,
+         ILocalGitCommitStorageFactory gitFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
          : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
@@ -57,21 +57,14 @@ namespace mrHelper.App.Helpers
          scheduleAllProjectsUpdate();
       }
 
-      protected override void preUpdate(ILocalGitRepository repo) {}
+      protected override void preUpdate(MergeRequestKey mrk, ILocalGitCommitStorage repo) {}
 
-      async protected override Task doUpdate(ILocalGitRepository repo)
+      async protected override Task doUpdate(MergeRequestKey mrk, ILocalGitCommitStorage repo)
       {
-         IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
-            .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
-            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId));
-
-         foreach (MergeRequestKey mrk in mergeRequestKeys)
-         {
-            await updateGitDataForSingleMergeRequest(mrk, repo);
-         }
+         await updateGitDataForSingleMergeRequest(mrk, repo);
       }
 
-      async private Task updateGitDataForSingleMergeRequest(MergeRequestKey mrk, ILocalGitRepository repo)
+      async private Task updateGitDataForSingleMergeRequest(MergeRequestKey mrk, ILocalGitCommitStorage repo)
       {
          if (repo.Data == null)
          {
@@ -200,7 +193,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      async private static Task doCacheAsync(ILocalGitRepository repo,
+      async private static Task doCacheAsync(ILocalGitCommitStorage repo,
          HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
       {
          // On timer update we may got into situation when not all SHA are already fetched.

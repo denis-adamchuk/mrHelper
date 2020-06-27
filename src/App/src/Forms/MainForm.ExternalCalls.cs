@@ -101,11 +101,12 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            IGitRepository gitRepository = null;
-            if (_gitClientFactory != null && _gitClientFactory.ParentFolder == snapshot.TempFolder)
+            IGitCommitStorage gitRepository = null;
+            MergeRequestKey mrk = new MergeRequestKey(
+               new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
+            if (_storageFactory != null && _storageFactory.ParentFolder == snapshot.TempFolder)
             {
-               ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
-               gitRepository = _gitClientFactory.GetRepository(projectKey);
+               gitRepository = _storageFactory.GetStorage(mrk);
             }
 
             try
@@ -118,8 +119,6 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            MergeRequestKey mrk = new MergeRequestKey(
-               new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
             session.DiscussionCache?.RequestUpdate(mrk,
                new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
          }

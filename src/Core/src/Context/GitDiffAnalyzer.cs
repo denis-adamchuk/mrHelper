@@ -34,7 +34,7 @@ namespace mrHelper.Core.Git
       /// Note: filename1 or filename2 can be 'null'
       /// Throws ContextMakingException.
       /// </summary>
-      public GitDiffAnalyzer(IGitRepository gitRepository,
+      public GitDiffAnalyzer(IGitCommitStorage gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
          _sections = getDiffSections(gitRepository, sha1, sha2, filename1, filename2);
@@ -67,7 +67,7 @@ namespace mrHelper.Core.Git
       /// <summary>
       /// Throws ContextMakingException.
       /// </summary>
-      static private IEnumerable<GitDiffSection> getDiffSections(IGitRepository gitRepository,
+      static private IEnumerable<GitDiffSection> getDiffSections(IGitCommitStorage gitRepository,
          string sha1, string sha2, string filename1, string filename2)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
