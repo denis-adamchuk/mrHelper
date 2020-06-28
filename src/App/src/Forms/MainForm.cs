@@ -11,7 +11,7 @@ using mrHelper.Client.TimeTracking;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
 using mrHelper.Client;
 using mrHelper.Client.Common;

@@ -8,7 +8,7 @@ using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -400,11 +400,10 @@ namespace mrHelper.App.Forms
       {
          ISession session = getSession(true /* supported in Live only */);
 
-         ICommitStorageUpdateContextProvider contextProvider = session?.MergeRequestCache?.
-            GetLocalBasedContextProvider(mrk);
-         // contextProvider can be null if session was dropped after this update was scheduled
-         if (contextProvider != null)
+         IEnumerable<GitLabSharp.Entities.Version> versions = session?.MergeRequestCache?.GetVersions(mrk);
+         if (versions != null)
          {
+            VersionBasedContextProvider contextProvider = new VersionBasedContextProvider(versions);
             ILocalGitCommitStorage repo = getCommitStorage(mrk, false);
             repo?.Updater?.RequestUpdate(contextProvider, null);
          }

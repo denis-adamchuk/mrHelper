@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers
 {

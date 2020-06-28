@@ -197,17 +197,14 @@
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
     <Compile Include="src\Helpers\Configuration\DictionaryStringHelper.cs" />
-    <Compile Include="src\Helpers\CommitStorage\GitLabBasedCommitStorageFactory.cs" />
-    <Compile Include="src\Helpers\CommitStorage\GitBasedCommitStorageFactory.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
     <Compile Include="src\Helpers\GitLabSharp\PositionConverter.cs" />
-    <Compile Include="src\Helpers\Git\BaseGitHelper.cs" />
+    <Compile Include="src\Helpers\ContextProviders\VersionBasedContextProvider.cs" />
     <Compile Include="src\Helpers\ContextProviders\DiscussionBasedContextProvider.cs" />
-    <Compile Include="src\Helpers\ContextProviders\CommitBasedContextProvider.cs" />
-    <Compile Include="src\Helpers\CommitStorage\LocalGitCommitStorageFactoryItf.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
+    <Compile Include="src\Helpers\Git\BaseGitHelper.cs" />
     <Compile Include="src\Helpers\DiffStatistic\DiscussionBasedDiffStatProvider.cs" />
     <Compile Include="src\Helpers\DiffStatistic\GitBasedDiffStatProvider.cs" />
     <Compile Include="src\Helpers\DiffStatistic\DiffStatisticProviderItf.cs" />
@@ -216,9 +213,9 @@
     <Compile Include="src\Helpers\Interprocess\Snapshot.cs" />
     <Compile Include="src\Helpers\Interprocess\SnapshotSerializer.cs" />
     <Compile Include="src\Helpers\Notifications\EventFilter.cs" />
-    <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\Helpers\Notifications\TrayIcon.cs" />
     <Compile Include="src\Helpers\Notifications\UserNotifier.cs" />
+    <Compile Include="src\Helpers\Search\TextSearch.cs" />
     <Compile Include="src\Helpers\ColorScheme.cs" />
     <Compile Include="src\Helpers\FeedbackReporter.cs" />
     <Compile Include="src\Helpers\ServiceManager.cs" />
@@ -306,9 +303,9 @@
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrHelper.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GitClient\mrHelper.GitClient.csproj">
-      <Project>{d75b7b19-b06b-42e9-9363-437f5640a045}</Project>
-      <Name>mrHelper.GitClient</Name>
+    <ProjectReference Include="..\StorageSupport\mrHelper.StorageSupport.csproj">
+      <Project>{B86A3683-7D3C-4AF7-8B4A-6BBF237A818E}</Project>
+      <Name>mrHelper.StorageSupport</Name>
     </ProjectReference>
     <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
       <Project>{4fc6e6ea-32f4-486a-a6d5-a30d72651d15}</Project>

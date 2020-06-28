@@ -89,9 +89,6 @@ namespace mrHelper.Client.Session
 
       public ITotalTimeCache TotalTimeCache => _internal?.TotalTimeCache;
 
-      public IProjectUpdateContextProviderFactory UpdateContextProviderFactory =>
-         _internal?.UpdateContextProviderFactory;
-
       private SessionInternal createSessionInternal(InternalCacheUpdater cacheUpdater,
          string hostname, User user, SessionContext context)
       {

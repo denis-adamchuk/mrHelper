@@ -72,6 +72,10 @@
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\StorageSupport\mrHelper.StorageSupport.csproj">
+      <Project>{B86A3683-7D3C-4AF7-8B4A-6BBF237A818E}</Project>
+      <Name>mrHelper.StorageSupport</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

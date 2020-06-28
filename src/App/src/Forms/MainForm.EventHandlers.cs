@@ -17,7 +17,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonNative;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
 using Newtonsoft.Json.Linq;

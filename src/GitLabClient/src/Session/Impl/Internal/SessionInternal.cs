@@ -31,8 +31,6 @@ namespace mrHelper.Client.Session
 
       public ITotalTimeCache TotalTimeCache => _timeTrackingManager;
 
-      public IProjectUpdateContextProviderFactory UpdateContextProviderFactory => _mergeRequestManager;
-
       public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>
          _timeTrackingManager?.GetTracker(mrk);
 

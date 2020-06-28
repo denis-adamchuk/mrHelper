@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using mrHelper.Common.Interfaces;
 using mrHelper.Core.Context;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Git
 {

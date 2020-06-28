@@ -10,7 +10,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.Client.Session;
 
 namespace mrHelper.App.Interprocess

@@ -12,7 +12,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers
 {
@@ -24,10 +24,9 @@ namespace mrHelper.App.Helpers
       internal GitBasedDiffStatProvider(
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
-         IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitCommitStorageFactory gitFactory)
-         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
+         : base(mergeRequestCache, discussionCache, synchronizeInvoke, gitFactory)
       {
       }
 

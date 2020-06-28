@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
 using System.Diagnostics;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using mrHelper.Common.Interfaces;
 using mrHelper.Core.Matching;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Git
 {

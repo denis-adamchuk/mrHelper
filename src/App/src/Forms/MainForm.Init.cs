@@ -17,7 +17,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Forms
 {
@@ -548,25 +548,21 @@ namespace mrHelper.App.Forms
 
       private void createGitHelpers(ISession session, ILocalGitCommitStorageFactory factory)
       {
-         if (session.MergeRequestCache == null
-          || session.DiscussionCache == null
-          || session.UpdateContextProviderFactory == null)
+         if (session.MergeRequestCache == null || session.DiscussionCache == null)
          {
             return;
          }
 
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
             ? new GitDataUpdater(
-               session.MergeRequestCache, session.DiscussionCache,
-               session.UpdateContextProviderFactory, this, factory,
+               session.MergeRequestCache, session.DiscussionCache, this, factory,
                Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
 
          if (Program.Settings.UseGitBasedSizeCollection)
          {
             _diffStatProvider = new GitBasedDiffStatProvider(
-                  session.MergeRequestCache, session.DiscussionCache,
-                  session.UpdateContextProviderFactory, this, factory);
+               session.MergeRequestCache, session.DiscussionCache, this, factory);
          }
          else
          {

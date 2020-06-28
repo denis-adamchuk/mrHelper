@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Tools;
-using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Context
 {

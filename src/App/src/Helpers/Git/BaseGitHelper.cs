@@ -8,7 +8,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers
 {
@@ -17,7 +17,6 @@ namespace mrHelper.App.Helpers
       internal BaseGitHelper(
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
-         IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitCommitStorageFactory gitFactory)
       {
@@ -25,7 +24,6 @@ namespace mrHelper.App.Helpers
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
 
          _discussionCache = discussionCache;
-         _contextProviderFactory = updateContextProviderFactory;
 
          _gitFactory = gitFactory;
          _synchronizeInvoke = synchronizeInvoke;
@@ -107,7 +105,6 @@ namespace mrHelper.App.Helpers
       private readonly ILocalGitCommitStorageFactory _gitFactory;
       protected readonly IDiscussionCache _discussionCache;
       protected readonly IMergeRequestCache _mergeRequestCache;
-      private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
       protected readonly HashSet<ILocalGitCommitStorage> _updating = new HashSet<ILocalGitCommitStorage>();

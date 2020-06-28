@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Context
 {

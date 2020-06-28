@@ -17,7 +17,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Session;

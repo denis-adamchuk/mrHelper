@@ -18,6 +18,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Client.Discussions;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Controls
 {

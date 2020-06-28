@@ -75,7 +75,6 @@
     <Compile Include="src\Repository\RepositoryManagerItf.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingManagerItf.cs" />
     <Compile Include="src\Common\Impl\GitLabClientManager.cs" />
-    <Compile Include="src\MergeRequests\ProjectUpdateContextProviderFactoryItf.cs" />
     <Compile Include="src\Repository\Impl\Internal\RepositoryOperator.cs" />
     <Compile Include="src\Repository\Impl\Internal\RepositoryManager.cs" />
     <Compile Include="src\Types\MergeRequestFilter.cs" />
@@ -94,7 +93,6 @@
     <Compile Include="src\MergeRequests\Impl\Internal\Interfaces\InternalCacheItf.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\InternalCacheUpdater.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\InternalCacheComparator.cs" />
-    <Compile Include="src\MergeRequests\Impl\Internal\LocalBasedContextProvider.cs" />
     <Compile Include="src\Session\Impl\Internal\MergeRequestListLoaderFactory.cs" />
     <Compile Include="src\Session\Impl\Internal\SessionInternal.cs" />
     <Compile Include="src\Session\Impl\Internal\SearchBasedMergeRequestLoader.cs" />

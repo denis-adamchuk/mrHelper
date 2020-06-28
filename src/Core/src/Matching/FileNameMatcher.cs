@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
-using mrHelper.Common.Interfaces;
 using mrHelper.Core.Git;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Matching
 {

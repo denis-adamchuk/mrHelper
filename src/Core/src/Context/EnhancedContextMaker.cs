@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using mrHelper.Core.Git;
 using mrHelper.Core.Matching;
-using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Context
 {

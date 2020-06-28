@@ -16,7 +16,6 @@ namespace mrHelper.Client.Session
       IMergeRequestCache MergeRequestCache { get; }
       IDiscussionCache DiscussionCache { get; }
       ITotalTimeCache TotalTimeCache { get; }
-      IProjectUpdateContextProviderFactory UpdateContextProviderFactory { get; }
 
       ITimeTracker GetTimeTracker(MergeRequestKey mrk);
       IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId);

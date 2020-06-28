@@ -9,7 +9,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.Client.Types;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Discussions;
@@ -24,12 +24,11 @@ namespace mrHelper.App.Helpers
       internal GitDataUpdater(
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
-         IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
          ILocalGitCommitStorageFactory gitFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
-         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
+         : base(mergeRequestCache, discussionCache, synchronizeInvoke, gitFactory)
       {
          if (autoUpdatePeriodMs < 1)
          {
