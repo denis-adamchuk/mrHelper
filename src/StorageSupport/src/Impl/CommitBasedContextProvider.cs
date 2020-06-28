@@ -1,28 +1,31 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using mrHelper.Common.Interfaces;
 
 namespace mrHelper.StorageSupport
 {
    public class CommitBasedContextProvider : ICommitStorageUpdateContextProvider
    {
-      public CommitBasedContextProvider(IEnumerable<string> shas)
+      public CommitBasedContextProvider(IEnumerable<string> heads, string baseSha)
       {
-         _shas = shas;
+         _heads = heads.Distinct();
+         _baseSha = baseSha;
       }
 
       public CommitStorageUpdateContext GetContext()
       {
-         return new PartialUpdateContext(_shas.Distinct());
+         Dictionary<string, IEnumerable<string>> baseToHeads =
+            new Dictionary<string, IEnumerable<string>>{ { _baseSha, _heads.Where(x => x != _baseSha) } };
+         return new PartialUpdateContext(baseToHeads);
       }
 
       public override string ToString()
       {
-         return String.Format("CommitBasedContextProvider. Sha Count: {0}", _shas.Count());
+         return String.Format("CommitBasedContextProvider. Sha Count: {0}. Base Sha: {1}", _heads.Count(), _baseSha);
       }
 
-      private readonly IEnumerable<string> _shas;
+      private readonly IEnumerable<string> _heads;
+      private readonly string _baseSha;
    }
 }
 

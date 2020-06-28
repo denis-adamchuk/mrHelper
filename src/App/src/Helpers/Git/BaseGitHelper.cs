@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -18,7 +17,7 @@ namespace mrHelper.App.Helpers
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitCommitStorageFactory gitFactory)
+         ILocalCommitStorageFactory gitFactory)
       {
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
@@ -26,6 +25,10 @@ namespace mrHelper.App.Helpers
          _discussionCache = discussionCache;
 
          _gitFactory = gitFactory;
+         if (_gitFactory != null)
+         {
+            _gitFactory.GitRepositoryCloned += onGitRepositoryCloned;
+         }
          _synchronizeInvoke = synchronizeInvoke;
 
          scheduleAllProjectsUpdate();
@@ -33,6 +36,10 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
+         if (_gitFactory != null)
+         {
+            _gitFactory.GitRepositoryCloned -= onGitRepositoryCloned;
+         }
          _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
       }
 
@@ -40,12 +47,7 @@ namespace mrHelper.App.Helpers
       {
          foreach (ProjectKey key in _mergeRequestCache.GetProjects())
          {
-            IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(key)
-               .Select(x => new MergeRequestKey(key, x.IId));
-            foreach (MergeRequestKey mrk in mergeRequestKeys)
-            {
-               scheduleSingleProjectUpdate(mrk);
-            }
+            scheduleSingleProjectUpdate(key);
          }
       }
 
@@ -53,28 +55,31 @@ namespace mrHelper.App.Helpers
       {
          if (e.New || e.Commits)
          {
-            FullMergeRequestKey fmk = e.FullMergeRequestKey;
-            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-            scheduleSingleProjectUpdate(mrk);
+            scheduleSingleProjectUpdate(e.FullMergeRequestKey.ProjectKey);
          }
       }
 
-      private void scheduleSingleProjectUpdate(MergeRequestKey mrk)
+      private void onGitRepositoryCloned(ILocalCommitStorage repo)
       {
-         ILocalGitCommitStorage repo = getRepository(mrk);
+         scheduleSingleProjectUpdate(repo.ProjectKey);
+      }
+
+      private void scheduleSingleProjectUpdate(ProjectKey projectKey)
+      {
+         ILocalCommitStorage repo = getRepository(projectKey);
          if (repo != null)
          {
-            _synchronizeInvoke.BeginInvoke(new Action(async () => await updateAsync(mrk, repo)), null);
+            _synchronizeInvoke.BeginInvoke(new Action(async () => await updateAsync(repo)), null);
          }
       }
 
-      async private Task updateAsync(MergeRequestKey mrk, ILocalGitCommitStorage repo)
+      async private Task updateAsync(ILocalCommitStorage repo)
       {
-         if (repo.Data == null || repo.Updater == null)
+         if (repo.Git == null || repo.Updater == null)
          {
             Debug.WriteLine(String.Format(
-               "[BaseGitHelper] Update failed. Repository is not ready: {0}",
-               repo.ToString()));
+               "[BaseGitHelper] Update failed. Repository is not ready (Host={0}, Project={1})",
+               repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
             return;
          }
 
@@ -82,11 +87,11 @@ namespace mrHelper.App.Helpers
          {
             return;
          }
-         preUpdate(mrk, repo);
+         preUpdate(repo);
 
          try
          {
-            await doUpdate(mrk, repo);
+            await doUpdate(repo);
          }
          finally
          {
@@ -94,19 +99,19 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      protected ILocalGitCommitStorage getRepository(MergeRequestKey mrk)
+      protected ILocalCommitStorage getRepository(ProjectKey projectKey)
       {
-         return _gitFactory?.GetStorage(mrk);
+         return _gitFactory?.GetStorage(projectKey, ConfigurationHelper.GetPreferredStorageType(Program.Settings));
       }
 
-      protected abstract void preUpdate(MergeRequestKey mrk, ILocalGitCommitStorage repo);
-      protected abstract Task doUpdate(MergeRequestKey mrk, ILocalGitCommitStorage repo);
+      protected abstract void preUpdate(ILocalCommitStorage repo);
+      protected abstract Task doUpdate(ILocalCommitStorage repo);
 
-      private readonly ILocalGitCommitStorageFactory _gitFactory;
+      private readonly ILocalCommitStorageFactory _gitFactory;
       protected readonly IDiscussionCache _discussionCache;
       protected readonly IMergeRequestCache _mergeRequestCache;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
-      protected readonly HashSet<ILocalGitCommitStorage> _updating = new HashSet<ILocalGitCommitStorage>();
+      protected readonly HashSet<ILocalCommitStorage> _updating = new HashSet<ILocalCommitStorage>();
    }
 }

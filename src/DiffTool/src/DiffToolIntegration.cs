@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using mrHelper.Common.Tools;
-using mrHelper.Common.Interfaces;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.DiffTool
@@ -11,8 +11,6 @@ namespace mrHelper.DiffTool
    /// </summary>
    public class DiffToolIntegration
    {
-      public const string GitDiffToolName = "mrhelperdiff";
-
       /// <summary>
       /// Throws DiffToolNotInstalledException if diff tool is not installed
       /// Throws DiffToolIntegrationException if integration failed
@@ -28,7 +26,7 @@ namespace mrHelper.DiffTool
          string toolpath = appInfo.InstallPath;
          Trace.TraceInformation(String.Format("Diff Tool installed at: {0}", toolpath));
 
-         registerInGit(diffTool, GitDiffToolName, toolpath);
+         registerInGit(diffTool, toolpath);
 
          try
          {
@@ -36,18 +34,18 @@ namespace mrHelper.DiffTool
          }
          catch (DiffToolIntegrationException)
          {
-            Trace.TraceError(String.Format("Cannot register the application in \"{0}\"", GitDiffToolName));
+            Trace.TraceError(String.Format("Cannot register the application in \"{0}\"", Constants.GitDiffToolName));
 
             try
             {
-               ExternalProcess.Start("git",
-                  "config --global --remove-section difftool." + GitDiffToolName, true, String.Empty);
+               string key = String.Format("difftool.{0}.cmd", Constants.GitDiffToolName);
+               GitTools.SetConfigKeyValue(GitTools.ConfigScope.Global, key, null, String.Empty);
             }
             catch (Exception ex)
             {
                if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
                {
-                  Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", GitDiffToolName));
+                  Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", Constants.GitDiffToolName));
                }
             }
 
@@ -77,10 +75,10 @@ namespace mrHelper.DiffTool
       /// <summary>
       /// Throws ExternalProcessFailureException/ExternalProcessSystemException if registration failed
       /// </summary>
-      private void registerInGit(IIntegratedDiffTool diffTool, string name, string toolpath)
+      private void registerInGit(IIntegratedDiffTool diffTool, string toolpath)
       {
-         ExternalProcess.Start("git",
-            "config --global difftool." + name + ".cmd " + getGitCommand(diffTool, toolpath), true, String.Empty);
+         string value = getGitCommand(diffTool, toolpath);
+         GitTools.SetConfigKeyValue(GitTools.ConfigScope.Global, Constants.GitDiffToolConfigKey, value, String.Empty);
       }
 
       public bool isInstalled(string toolpath)

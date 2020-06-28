@@ -1,89 +1,89 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
-using System.IO;
-using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.Types;
 using mrHelper.Client.Repository;
-using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
    /// <summary>
-   /// Provides access to git repository.
    /// </summary>
    internal class FileStorage : IFileStorage, IDisposable
    {
-      // @{ IGitRepository
-      IGitCommitStorageData IGitCommitStorage.Data => ExpectingClone ? null : _data;
-      // @{ IGitRepository
+      // @{ IGitCommitStorage
+      IGitCommandService ICommitStorage.Git => _commandService;
+      public ProjectKey ProjectKey { get; }
+      // @{ IGitCommitStorage
 
-      // @{ ILocalGitRepository
-      public ILocalGitCommitStorageData Data => ExpectingClone ? null : _data;
-
+      // @{ ILocalGitCommitStorage
       public string Path { get; }
-
-      public ILocalGitCommitStorageUpdater Updater => _updater;
-      // @} ILocalGitRepository
+      public ILocalCommitStorageUpdater Updater => _updater;
+      public IAsyncGitCommandService Git => _commandService;
+      // @} ILocalGitCommitStorage
 
       // @{ IFileStorage
-      public bool ExpectingClone { get; private set; } = true;
-
-      public MergeRequestKey MergeRequestKey { get; }
+      public FileStorageComparisonCache ComparisonCache { get; }
+      public FileStorageDiffCache DiffCache { get; }
+      public FileStorageFileCache FileCache { get; }
       // @} IFileStorage
 
       /// <summary>
       /// </summary>
-      internal FileStorage(string parentFolder, MergeRequestKey mrk,
-         ISynchronizeInvoke synchronizeInvoke, IRepositoryManager repositoryManager)
+      internal FileStorage(string parentFolder, ProjectKey projectKey,
+         ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor)
       {
-         Path = FileStoragePathFinder.FindPath(parentFolder, mrk);
+         Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
+            LocalCommitStorageType.FileStorage);
 
-         _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryManager, onCloned, onFetched);
-         _data = new FileStorageData(_operationManager, Path);
+         string comparisonCachePath = System.IO.Path.Combine(Path, ComparisonCacheSubFolderName);
+         ComparisonCache = new FileStorageComparisonCache(comparisonCachePath);
 
-         ExpectingClone = isEmptyFolder(Path);
-         MergeRequestKey = mrk;
+         string fileCachePath = System.IO.Path.Combine(Path, StorageSubFolderName);
+         FileCache = new FileStorageFileCache(fileCachePath);
+
+         string diffCachePath = System.IO.Path.Combine(Path, DiffSubFolderName);
+         DiffCache = new FileStorageDiffCache(diffCachePath, this);
+
+         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, onCloned, onFetched);
+
+         _processManager = new GitProcessManager(synchronizeInvoke, Path);
+         _commandService = new FileStorageGitCommandService(_processManager, Path, this);
+
+         ProjectKey = projectKey;
+
+         FileStorageUtils.InitalizeFileStorage(Path, ProjectKey);
+
          Trace.TraceInformation(String.Format(
-            "[FileStorage] Created FileStorage at Path {0} for host {1}, project {2}, IId {3}, "
-          + "expecting clone = {4}",
-            Path, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId, ExpectingClone.ToString()));
+            "[FileStorage] Created FileStorage at Path {0} for host {1}, project {2}, ",
+            Path, projectKey.HostName, projectKey.ProjectName));
       }
 
       public void Dispose()
       {
-         Trace.TraceInformation(String.Format("[FileStorage] Disposing LocalGitRepository at path {0}", Path));
+         Trace.TraceInformation(String.Format("[FileStorage] Disposing FileStorage at path {0}", Path));
 
-         _data.Dispose();
-         _data = null;
+         _commandService.Dispose();
+         _commandService = null;
 
          _updater.Dispose();
          _updater = null;
 
-         _operationManager.Dispose();
-
-         _isDisposed = true;
+         _processManager.Dispose();
       }
 
       public override string ToString()
       {
-         return String.Format("[FileStorage] {0}:{1} at {2}",
-            MergeRequestKey.ProjectKey.ProjectName, MergeRequestKey.IId, MergeRequestKey.ProjectKey.HostName);
+         return String.Format("[FileStorage] {0} at {1}", ProjectKey.ProjectName, ProjectKey.HostName);
       }
 
-      private void onFetched(string sha)
+      private void onFetched(FileRevision revision)
       {
-         Debug.Assert(!_cached_existingSha.Contains(sha));
-         _cached_existingSha.Add(sha);
       }
 
       private void onCloned()
       {
-         ExpectingClone = false;
       }
 
       private static bool isEmptyFolder(string path)
@@ -91,11 +91,13 @@ namespace mrHelper.StorageSupport
          return !Directory.Exists(path) || !Directory.EnumerateFileSystemEntries(path).Any();
       }
 
-      private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
-      private FileStorageData _data;
+      private GitCommandService _commandService;
       private FileStorageUpdater _updater;
-      private bool _isDisposed;
-      private readonly GitOperationManager _operationManager;
+      private readonly GitProcessManager _processManager;
+
+      private readonly string StorageSubFolderName = "storage";
+      private readonly string DiffSubFolderName = "diff";
+      private readonly string ComparisonCacheSubFolderName = "comparison";
    }
 }
 

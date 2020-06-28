@@ -13,9 +13,9 @@ namespace mrHelper.Core.Matching
    /// </summary>
    public class LineNumberMatcher
    {
-      public LineNumberMatcher(IGitCommitStorage gitRepository)
+      public LineNumberMatcher(IGitCommandService git)
       {
-         _gitRepository = gitRepository;
+         _git = git;
       }
 
       /// <summary>
@@ -64,7 +64,7 @@ namespace mrHelper.Core.Matching
       private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,
          int lineNumber)
       {
-         FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
+         FullContextDiffProvider provider = new FullContextDiffProvider(_git);
          FullContextDiff context = provider.GetFullContextDiff(
             refs.LeftSHA, refs.RightSHA, leftFileName, rightFileName);
 
@@ -79,7 +79,7 @@ namespace mrHelper.Core.Matching
          return itOppositeList.GetLineNumber() == null ? new int?() : itOppositeList.GetLineNumber().Value + 1;
       }
 
-      private readonly IGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }
 

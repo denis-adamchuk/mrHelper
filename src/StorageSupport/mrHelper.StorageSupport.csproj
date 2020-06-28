@@ -48,33 +48,50 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\Impl\Internal\Common\InternalUpdateContext.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageComparisonCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCacheFolder.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageFileCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageGitCommandService.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageRenameDetector.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageUtils.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageUpdaterException.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryRenameDetector.cs" />
+    <Compile Include="src\Impl\Internal\Git\NativeGitCommandService.cs" />
+    <Compile Include="src\Impl\Internal\Interfaces\GitCommandArgumentConverterItf.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileRevision.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageArgumentConverter.cs" />
+    <Compile Include="src\Impl\Internal\Common\UpdateContextUtils.cs" />
+    <Compile Include="src\Interfaces\FileRenameDetectorItf.cs" />
     <Compile Include="src\Interfaces\CommitStorageUpdateContextItf.cs" />
     <Compile Include="src\Interfaces\GitCommandArguments.cs" />
-    <Compile Include="src\Interfaces\GitCommitStorageItf.cs" />
-    <Compile Include="src\Interfaces\LocalGitCommitStorageItf.cs" />
-    <Compile Include="src\Interfaces\LocalGitCommitStorageDataItf.cs" />
-    <Compile Include="src\Interfaces\LocalGitCommitStorageFactoryItf.cs" />
-    <Compile Include="src\Interfaces\LocalGitCommitStorageUpdaterItf.cs" />
+    <Compile Include="src\Interfaces\GitCommandServiceItf.cs" />
+    <Compile Include="src\Interfaces\CommitStorageItf.cs" />
+    <Compile Include="src\Interfaces\LocalCommitStorageItf.cs" />
+    <Compile Include="src\Interfaces\LocalCommitStorageFactoryItf.cs" />
+    <Compile Include="src\Interfaces\AsyncGitCommandServiceItf.cs" />
+    <Compile Include="src\Interfaces\LocalCommitStorageUpdaterItf.cs" />
     <Compile Include="src\Impl\CommitBasedContextProvider.cs" />
-    <Compile Include="src\Impl\GitBasedCommitStorageFactory.cs" />
-    <Compile Include="src\Impl\GitLabBasedCommitStorageFactory.cs" />
-    <Compile Include="src\Impl\Internal\Common\GitException.cs" />
-    <Compile Include="src\Impl\Internal\Common\GitOperationManager.cs" />
-    <Compile Include="src\Impl\Internal\Git\GitClientInternalExceptions.cs" />
-    <Compile Include="src\Impl\Internal\Git\GitInteractiveUpdater.cs" />
-    <Compile Include="src\Impl\Internal\Git\LocalGitRepository.cs" />
-    <Compile Include="src\Impl\Internal\Git\LocalGitRepositoryData.cs" />
-    <Compile Include="src\Impl\Internal\Git\LocalGitRepositoryFactory.cs" />
-    <Compile Include="src\Impl\Internal\Git\LocalGitRepositoryItf.cs" />
-    <Compile Include="src\Impl\Internal\Git\LocalGitRepositoryPathFinder.cs" />
-    <Compile Include="src\Impl\Internal\Git\LocalGitRepositoryUpdaterInternal.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitCommandException.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitProcessManager.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryUpdaterException.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryUpdater.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepository.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitCommandService.cs" />
+    <Compile Include="src\Impl\LocalCommitStorageFactory.cs" />
+    <Compile Include="src\Impl\Internal\Interfaces\GitRepositoryItf.cs" />
+    <Compile Include="src\Impl\Internal\Common\LocalCommitStoragePathFinder.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryUpdaterInternal.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorage.cs" />
-    <Compile Include="src\Impl\Internal\GitLab\FileStorageData.cs" />
-    <Compile Include="src\Impl\Internal\GitLab\FileStorageItf.cs" />
+    <Compile Include="src\Impl\Internal\Interfaces\FileStorageItf.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageUpdater.cs" />
-    <Compile Include="src\Impl\Internal\GitLab\FileStoragePathFinder.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\submodules\GitLabSharp\GitLabSharp.csproj">
+      <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
+      <Name>GitLabSharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\mrHelper.Common.csproj">
       <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
       <Name>mrHelper.Common</Name>

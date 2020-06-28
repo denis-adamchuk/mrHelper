@@ -5,39 +5,25 @@ namespace mrHelper.StorageSupport
 {
    public abstract class CommitStorageUpdateContext
    {
-      public CommitStorageUpdateContext(DateTime? latestChange, IEnumerable<string> sha)
+      public CommitStorageUpdateContext(DateTime? latestChange, Dictionary<string, IEnumerable<string>> baseToHeads)
       {
          LatestChange = latestChange;
-         Sha = sha;
+         BaseToHeads = baseToHeads;
       }
 
       public DateTime? LatestChange { get; }
-      public IEnumerable<string> Sha { get; }
-
-      public override bool Equals(object obj)
-      {
-         return obj is FullUpdateContext context &&
-                LatestChange == context.LatestChange &&
-                EqualityComparer<IEnumerable<string>>.Default.Equals(Sha, context.Sha);
-      }
-
-      public override int GetHashCode()
-      {
-         int hashCode = -2039341489;
-         hashCode = hashCode * -1521134295 + LatestChange.GetHashCode();
-         hashCode = hashCode * -1521134295 + EqualityComparer<IEnumerable<string>>.Default.GetHashCode(Sha);
-         return hashCode;
-      }
+      public Dictionary<string, IEnumerable<string>> BaseToHeads { get; }
    }
 
    public class FullUpdateContext : CommitStorageUpdateContext
    {
-      public FullUpdateContext(DateTime latestChange, IEnumerable<string> sha) : base(latestChange, sha) { }
+      public FullUpdateContext(DateTime latestChange, Dictionary<string, IEnumerable<string>> baseToHeads)
+         : base(latestChange, baseToHeads) { }
    }
 
    public class PartialUpdateContext : CommitStorageUpdateContext
    {
-      public PartialUpdateContext(IEnumerable<string> sha) : base(null, sha) { }
+      public PartialUpdateContext(Dictionary<string, IEnumerable<string>> baseToHeads) : base(null, baseToHeads) { }
    }
 
    public interface ICommitStorageUpdateContextProvider

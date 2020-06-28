@@ -11,15 +11,14 @@ namespace mrHelper.Common.Tools
 {
    public static class GitTools
    {
-      public enum EConfigScope
+      public enum ConfigScope
       {
          Local,
          Global,
          System
       }
 
-
-      public static IEnumerable<string> GetConfigKeyValue(EConfigScope scope, string key, string path)
+      public static IEnumerable<string> GetConfigKeyValue(ConfigScope scope, string key, string path = "")
       {
          try
          {
@@ -38,14 +37,11 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public static void SetConfigKeyValue(EConfigScope scope, string key, string value, string path)
+      public static void SetConfigKeyValue(ConfigScope scope, string key, string value, string path = "")
       {
          try
          {
-            string mode = value == null ? "unset" : "";
-            string scopeString = scope.ToString().ToLower();
-            string config = String.Format("config --{0} --{1} {2} {3}", scopeString, mode, key, value ?? "");
-            ExternalProcess.Start("git", config, true, path);
+            setConfigKeyValueUnsafe(scope, key, value, path);
          }
          catch (Exception ex)
          {
@@ -69,7 +65,7 @@ namespace mrHelper.Common.Tools
       {
          try
          {
-            ExternalProcess.Start("git", "config --global http.sslVerify false", true, String.Empty);
+            setConfigKeyValueUnsafe(ConfigScope.Global, "http.sslVerify", "false", String.Empty);
          }
          catch (Exception ex)
          {
@@ -139,6 +135,22 @@ namespace mrHelper.Common.Tools
             new Regex(@"git version (?'major'\d+).(?'minor'\d+).(?'build'\d+)");
       }
 
+      public static bool IsGit2Installed()
+      {
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
+         return appInfo != null && !String.IsNullOrEmpty(appInfo.InstallPath);
+      }
+
+      public static string GetBinaryFolder()
+      {
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
+         if (appInfo != null && !String.IsNullOrEmpty(appInfo.InstallPath))
+         {
+            return System.IO.Path.Combine(appInfo.InstallPath, "bin");
+         }
+         return String.Empty;
+      }
+
       public static bool SupportsFetchNoTags()
       {
          try
@@ -197,7 +209,7 @@ namespace mrHelper.Common.Tools
          try
          {
             ExternalProcess.AsyncTaskDescriptor descriptor =
-               operationManager.CreateDescriptor("git", arguments, path, null);
+               operationManager.CreateDescriptor("git", arguments, path, null, null);
             if (descriptor == null)
             {
                return false;
@@ -245,6 +257,14 @@ namespace mrHelper.Common.Tools
       {
          // TODO Check if it is possible to run commands like `git fetch origin <sha>:refs/keep-around/sha`
          return true;
+      }
+
+      private static void setConfigKeyValueUnsafe(ConfigScope scope, string key, string value, string path)
+      {
+         string mode = value == null ? "unset" : "";
+         string scopeString = scope.ToString().ToLower();
+         string config = String.Format("config --{0} --{1} {2} {3}", scopeString, mode, key, value ?? "");
+         ExternalProcess.Start("git", config, true, path);
       }
 
       private static string getRepositoryName(string path)

@@ -103,7 +103,7 @@ namespace mrHelper.App.Forms
       private bool _canSwitchTab = true;
       private readonly bool _runningAsUwp = false;
 
-      private ILocalGitCommitStorageFactory _storageFactory;
+      private ILocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;
       private IDiffStatisticProvider _diffStatProvider;
       private PersistentStorage _persistentStorage;
@@ -151,7 +151,7 @@ namespace mrHelper.App.Forms
          internal string AccessToken { get; }
       }
 
-      private enum ECommitComboBoxItemStatus
+      private enum CommitComboBoxItemStatus
       {
          Normal,
          Base,
@@ -168,13 +168,13 @@ namespace mrHelper.App.Forms
       {
          internal string SHA { get; }
          internal string Text { get; }
-         internal ECommitComboBoxItemStatus Status { get; }
+         internal CommitComboBoxItemStatus Status { get; }
          internal EComparableEntityType Type { get; }
          internal DateTime? TimeStamp { get; }
          internal string Message { get; }
 
          internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp, string message,
-            ECommitComboBoxItemStatus status, EComparableEntityType type)
+            CommitComboBoxItemStatus status, EComparableEntityType type)
          {
             SHA = sha;
             Text = text;

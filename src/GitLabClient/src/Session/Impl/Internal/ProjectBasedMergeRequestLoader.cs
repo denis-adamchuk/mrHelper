@@ -71,7 +71,7 @@ namespace mrHelper.Client.Session
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
-            Constants.ProjectsInBatch, Constants.ProjectsInterBatchDelay, () => exception != null);
+            Constants.MaxProjectsInBatch, Constants.ProjectsInterBatchDelay, () => exception != null);
          if (exception != null)
          {
             throw exception;

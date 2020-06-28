@@ -69,9 +69,9 @@ namespace mrHelper.App.Forms
             {
                snapshot = serializer.DeserializeFromDisk(diffRequest.GitPID);
             }
-            catch (System.IO.IOException ex)
+            catch (Exception ex)
             {
-               ExceptionHandlers.Handle("Cannot de-serialize snapshot", ex);
+               ExceptionHandlers.Handle("Cannot read serialized Snapshot object", ex);
                MessageBox.Show(
                   "Make sure that diff tool was launched from Merge Request Helper which is still running",
                   "Cannot create a discussion",
@@ -102,17 +102,16 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            IGitCommitStorage gitRepository = null;
-            MergeRequestKey mrk = new MergeRequestKey(
-               new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
+            ICommitStorage storage = null;
             if (_storageFactory != null && _storageFactory.ParentFolder == snapshot.TempFolder)
             {
-               gitRepository = _storageFactory.GetStorage(mrk);
+               ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+               storage = getCommitStorage(projectKey, false);
             }
 
             try
             {
-               await handler.HandleAsync(gitRepository);
+               await handler.HandleAsync(storage);
             }
             catch (DiscussionCreatorException)
             {
@@ -120,6 +119,8 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            MergeRequestKey mrk = new MergeRequestKey(
+               new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
             session.DiscussionCache?.RequestUpdate(mrk,
                new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
          }

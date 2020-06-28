@@ -17,10 +17,10 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class EnhancedContextMaker : IContextMaker
    {
-      public EnhancedContextMaker(IGitCommitStorage gitRepository)
+      public EnhancedContextMaker(IGitCommandService git)
       {
-         Debug.Assert(gitRepository != null);
-         _gitRepository = gitRepository;
+         Debug.Assert(git != null);
+         _git = git;
       }
 
       /// <summary>
@@ -40,7 +40,7 @@ namespace mrHelper.Core.Context
                String.Format("Bad \"depth\": {0}", depth.ToString()));
          }
 
-         GitDiffAnalyzer analyzer = new GitDiffAnalyzer(_gitRepository,
+         GitDiffAnalyzer analyzer = new GitDiffAnalyzer(_git,
             position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath);
 
          // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
@@ -54,7 +54,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> contents;
          try
          {
-            contents = _gitRepository.Data?.Get(arguments);
+            contents = _git?.ShowRevision(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
@@ -129,6 +129,6 @@ namespace mrHelper.Core.Context
          }
       }
 
-      private readonly IGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }

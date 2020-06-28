@@ -1,6 +1,7 @@
 ﻿using System;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Repository;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.Types;
 
@@ -11,11 +12,13 @@ namespace mrHelper.Client.Session
       internal SessionInternal(
          MergeRequestManager mergeRequestManager,
          DiscussionManager discussionManager,
-         TimeTrackingManager timeTrackingManager)
+         TimeTrackingManager timeTrackingManager,
+         RepositoryManager repositoryManager)
       {
          _mergeRequestManager = mergeRequestManager;
          _discussionManager = discussionManager;
          _timeTrackingManager = timeTrackingManager;
+         _repositoryManager = repositoryManager;
       }
 
       public void Dispose()
@@ -40,9 +43,13 @@ namespace mrHelper.Client.Session
       public IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk) =>
          _discussionManager?.GetDiscussionCreator(mrk);
 
+      public IRepositoryAccessor GetRepositoryAccessor() =>
+         _repositoryManager?.GetRepositoryAccessor();
+
       private MergeRequestManager _mergeRequestManager;
       private DiscussionManager _discussionManager;
       private TimeTrackingManager _timeTrackingManager;
+      private RepositoryManager _repositoryManager;
    }
 }
 

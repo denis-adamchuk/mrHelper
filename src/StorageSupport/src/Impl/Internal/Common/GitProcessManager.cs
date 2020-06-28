@@ -10,16 +10,16 @@ using System.Diagnostics;
 
 namespace mrHelper.StorageSupport
 {
-   internal class GitOperationManager : IExternalProcessManager, IDisposable
+   internal class GitProcessManager : IExternalProcessManager, IDisposable
    {
-      internal GitOperationManager(ISynchronizeInvoke synchronizeInvoke, string path)
+      internal GitProcessManager(ISynchronizeInvoke synchronizeInvoke, string path)
       {
          _path = path;
          _externalProcessManager = new ExternalProcessManager(synchronizeInvoke);
       }
 
       public ExternalProcess.AsyncTaskDescriptor CreateDescriptor(
-         string name, string arguments, string path, Action<string> onProgressChange)
+         string name, string arguments, string path, Action<string> onProgressChange, int[] successCodes)
       {
          if (_isDisposed)
          {
@@ -29,7 +29,7 @@ namespace mrHelper.StorageSupport
          traceOperationStatus(arguments, "start");
          try
          {
-            return _externalProcessManager.CreateDescriptor(name, arguments, path, onProgressChange);
+            return _externalProcessManager.CreateDescriptor(name, arguments, path, onProgressChange, successCodes);
          }
          catch (ExternalProcessSystemException ex)
          {

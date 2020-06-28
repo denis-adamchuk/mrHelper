@@ -3,15 +3,15 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
-   internal class GitException : ExceptionEx
+   internal class GitCommandException : ExceptionEx
    {
-      internal GitException(string message, Exception innerException)
+      internal GitCommandException(string message, Exception innerException)
          : base(message, innerException)
       {
       }
    }
 
-   internal class BadObjectException : GitException
+   internal class BadObjectException : GitCommandException
    {
       internal BadObjectException(string message)
          : base(message, null)
@@ -19,7 +19,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class GitCallFailedException : GitException
+   internal class GitCallFailedException : GitCommandException
    {
       internal GitCallFailedException(ExternalProcessFailureException ex)
          : base(String.Empty, ex)
@@ -27,7 +27,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class OperationCancelledException : GitException
+   internal class OperationCancelledException : GitCommandException
    {
       internal OperationCancelledException()
          : base(String.Empty, null)
@@ -35,7 +35,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class SystemException : GitException
+   internal class SystemException : GitCommandException
    {
       internal SystemException(Exception systemException)
          : base(String.Empty, systemException)

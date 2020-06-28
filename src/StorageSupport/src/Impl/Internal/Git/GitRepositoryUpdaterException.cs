@@ -3,15 +3,15 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
-   internal class RepositoryUpdateException : ExceptionEx
+   internal class GitRepositoryUpdaterException : ExceptionEx
    {
-      internal RepositoryUpdateException(string message, Exception ex)
+      internal GitRepositoryUpdaterException(string message, Exception ex)
          : base(message, ex)
       {
       }
    }
 
-   internal class SSLVerificationException : RepositoryUpdateException
+   internal class SSLVerificationException : GitRepositoryUpdaterException
    {
       internal SSLVerificationException(Exception innerException)
          : base(String.Empty, innerException)
@@ -19,7 +19,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class AuthenticationFailedException : RepositoryUpdateException
+   internal class AuthenticationFailedException : GitRepositoryUpdaterException
    {
       internal AuthenticationFailedException(Exception innerException)
          : base(String.Empty, innerException)
@@ -27,7 +27,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class CouldNotReadUsernameException : RepositoryUpdateException
+   internal class CouldNotReadUsernameException : GitRepositoryUpdaterException
    {
       internal CouldNotReadUsernameException(Exception innerException)
          : base(String.Empty, innerException)
@@ -35,7 +35,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class NotEmptyDirectoryException : RepositoryUpdateException
+   internal class NotEmptyDirectoryException : GitRepositoryUpdaterException
    {
       internal NotEmptyDirectoryException(string path, Exception innerException)
          : base(path, innerException)
@@ -43,7 +43,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   internal class UpdateCancelledException : RepositoryUpdateException
+   internal class UpdateCancelledException : GitRepositoryUpdaterException
    {
       internal UpdateCancelledException()
          : base(String.Empty, null)

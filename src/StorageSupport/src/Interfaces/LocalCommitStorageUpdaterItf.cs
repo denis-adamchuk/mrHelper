@@ -4,28 +4,28 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
-   public class LocalGitCommitStorageUpdaterException : ExceptionEx
+   public class LocalCommitStorageUpdaterException : ExceptionEx
    {
-      public LocalGitCommitStorageUpdaterException(string message, Exception ex)
+      public LocalCommitStorageUpdaterException(string message, Exception ex)
          : base(message, ex)
       {
       }
    }
 
-   public class LocalGitCommitStorageUpdaterFailedException : LocalGitCommitStorageUpdaterException
+   public class LocalCommitStorageUpdaterFailedException : LocalCommitStorageUpdaterException
    {
-      public LocalGitCommitStorageUpdaterFailedException(string message, Exception ex)
+      public LocalCommitStorageUpdaterFailedException(string message, Exception ex)
          : base(message, ex)
       {
       }
    }
 
-   public class LocalGitCommitStorageUpdaterCancelledException : Exception {}
+   public class LocalCommitStorageUpdaterCancelledException : Exception {}
 
    /// <summary>
-   /// Updates attached LocalGitRepository object
+   /// Updates attached GitRepository object
    /// </summary>
-   public interface ILocalGitCommitStorageUpdater
+   public interface ILocalCommitStorageUpdater
    {
       /// <summary>
       /// Async version of Update.

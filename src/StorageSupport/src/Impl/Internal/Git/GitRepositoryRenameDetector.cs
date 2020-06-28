@@ -1,23 +1,24 @@
-﻿using System.Linq;
-using System.Diagnostics;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
-using mrHelper.Core.Matching;
-using mrHelper.StorageSupport;
+using System.Threading.Tasks;
 
-namespace mrHelper.Core.Git
+namespace mrHelper.StorageSupport
 {
    /// <summary>
    /// Detects if a file was renamed between two commits. Uses default git threshold.
    /// </summary>
-   public class GitRenameDetector
+   internal class GitRepositoryRenameDetector : IFileRenameDetector
    {
       private static readonly Regex diffRenameRe = new Regex(
          @"(?'added'\d+)\s+(?'deleted'\d+)\s+(?'left_name'.+)\s\=\>\s(?'right_name'.+)", RegexOptions.Compiled);
 
-      public GitRenameDetector(IGitCommitStorage gitRepository)
+      public GitRepositoryRenameDetector(IGitCommandService git)
       {
-         _gitRepository = gitRepository;
+         _git = git;
       }
 
       /// <summary>
@@ -34,16 +35,16 @@ namespace mrHelper.Core.Git
          IEnumerable<string> renames;
          try
          {
-            renames = _gitRepository.Data?.Get(arguments);
+            renames = _git?.ShowDiff(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
-            throw new MatchingException("Cannot obtain list of renamed files", ex);
+            throw new FileRenameDetectorException("Cannot obtain list of renamed files", ex);
          }
 
          if (renames == null)
          {
-            throw new MatchingException("Cannot obtain list of renamed files", null);
+            throw new FileRenameDetectorException("Cannot obtain list of renamed files", null);
          }
 
          moved = false;
@@ -101,6 +102,7 @@ namespace mrHelper.Core.Git
          return filename;
       }
 
-      private readonly IGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }
+

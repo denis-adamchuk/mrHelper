@@ -16,10 +16,10 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class CombinedContextMaker : IContextMaker
    {
-      public CombinedContextMaker(IGitCommitStorage gitRepository)
+      public CombinedContextMaker(IGitCommandService git)
       {
-         Debug.Assert(gitRepository != null);
-         _gitRepository = gitRepository;
+         Debug.Assert(git != null);
+         _git = git;
       }
 
       /// <summary>
@@ -47,7 +47,7 @@ namespace mrHelper.Core.Context
          string leftSHA = position.Refs.LeftSHA;
          string rightSHA = position.Refs.RightSHA;
 
-         FullContextDiffProvider provider = new FullContextDiffProvider(_gitRepository);
+         FullContextDiffProvider provider = new FullContextDiffProvider(_git);
          FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, leftFilename, rightFilename);
          Debug.Assert(context.Left.Count == context.Right.Count);
          if (linenumber > context.Left.Count)
@@ -152,7 +152,7 @@ namespace mrHelper.Core.Context
          return new DiffContext.Line(text, leftSide, rightSide);
       }
 
-      private readonly IGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }
 

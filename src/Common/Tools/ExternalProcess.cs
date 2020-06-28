@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -12,14 +13,14 @@ namespace mrHelper.Common.Tools
    {
       public class Result
       {
-         public Result(int exitCode, IEnumerable<string> stdOut, IEnumerable<string> stdErr)
+         public Result(int pid, IEnumerable<string> stdOut, IEnumerable<string> stdErr)
          {
-            ExitCode = exitCode;
+            PID = pid;
             StdOut = stdOut;
             StdErr = stdErr;
          }
 
-         public int ExitCode { get; }
+         public int PID { get; }
          public IEnumerable<string> StdOut { get; }
          public IEnumerable<string> StdErr { get; }
       };
@@ -28,8 +29,10 @@ namespace mrHelper.Common.Tools
       /// Launch a process with arguments passed and waits for process completion if needed.
       /// Return StdOutput content if process exited with exit code 0, otherwise throws.
       /// </summary>
-      static public Result Start(string name, string arguments, bool wait, string path)
+      static public Result Start(string name, string arguments, bool wait, string path, int[] succesCodes = null)
       {
+         succesCodes = succesCodes ?? new int[] { 0 };
+
          using (Process process = new Process
          {
             StartInfo = new ProcessStartInfo
@@ -96,7 +99,7 @@ namespace mrHelper.Common.Tools
                throw new ExternalProcessSystemException(ex);
             }
 
-            if (exitcode != 0)
+            if (!succesCodes.Contains(exitcode))
             {
                throw new ExternalProcessFailureException(name, arguments, exitcode, standardError);
             }
@@ -119,8 +122,10 @@ namespace mrHelper.Common.Tools
       /// Create a task to start a process asynchronously
       /// </summary>
       static public AsyncTaskDescriptor StartAsync(string name, string arguments, string path,
-         Action<string> onProgressChange, ISynchronizeInvoke synchronizeInvoke)
+         Action<string> onProgressChange, ISynchronizeInvoke synchronizeInvoke, int[] successCodes = null)
       {
+         successCodes = successCodes ?? new int[] { 0 };
+
          Process process = new Process
          {
             StartInfo = new ProcessStartInfo
@@ -132,7 +137,8 @@ namespace mrHelper.Common.Tools
                RedirectStandardOutput = true,
                RedirectStandardError = true,
                CreateNoWindow = true,
-               WorkingDirectory = path
+               WorkingDirectory = path,
+               WindowStyle = ProcessWindowStyle.Hidden
             },
             EnableRaisingEvents = true,
             SynchronizingObject = synchronizeInvoke
@@ -159,7 +165,7 @@ namespace mrHelper.Common.Tools
          {
             process.EnableRaisingEvents = false;
             process.Exited -= onExited;
-            if (process.ExitCode != 0)
+            if (!successCodes.Contains(process.ExitCode))
             {
                tcs.SetException(new ExternalProcessFailureException(name, arguments, process.ExitCode,
                   standardError)); // don't copy standardError because it might be not ready yet

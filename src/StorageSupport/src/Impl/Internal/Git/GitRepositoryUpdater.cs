@@ -11,40 +11,40 @@ using mrHelper.Common.Tools;
 namespace mrHelper.StorageSupport
 {
    /// <summary>
-   /// Prepares LocalGitRepository to use.
+   /// Prepares GitRepository to use.
    /// </summary>
-   internal class GitInteractiveUpdater : ILocalGitCommitStorageUpdater, IDisposable
+   internal class GitRepositoryUpdater : ILocalCommitStorageUpdater, IDisposable
    {
       /// <summary>
-      /// Bind to the specific LocalGitRepository object
+      /// Bind to the specific GitRepository object
       /// </summary>
-      internal GitInteractiveUpdater(
+      internal GitRepositoryUpdater(
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepository localGitRepository,
+         IGitRepository gitRepository,
          IExternalProcessManager operationManager,
-         EUpdateMode mode,
+         UpdateMode mode,
          Action onCloned,
          Action<string> onFetched)
       {
-         _localGitRepository = localGitRepository;
-         _updaterInternal = new LocalGitRepositoryUpdaterInternal(synchronizeInvoke, localGitRepository,
+         _gitRepository = gitRepository;
+         _updaterInternal = new GitRepositoryUpdaterInternal(synchronizeInvoke, gitRepository,
             operationManager, mode, onCloned, onFetched);
       }
 
       /// <summary>
-      /// Update passed LocalGitRepository object.
+      /// Update passed GitRepository object.
       /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
       async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (_localGitRepository.ExpectingClone && !isCloneAllowed(_localGitRepository.Path))
+         if (_gitRepository.ExpectingClone && !isCloneAllowed(_gitRepository.Path))
          {
-            throw new LocalGitCommitStorageUpdaterCancelledException();
+            throw new LocalCommitStorageUpdaterCancelledException();
          }
 
-         await runAsync(_localGitRepository, async () => await _updaterInternal.StartUpdate(
+         await runAsync(_gitRepository, async () => await _updaterInternal.StartUpdate(
             contextProvider, onProgressChange, onUpdateStateChange));
       }
 
@@ -91,27 +91,27 @@ namespace mrHelper.StorageSupport
       /// Throw InteractiveUpdaterException on unrecoverable errors.
       /// Throw CancelledByUserException and RepeatOperationException.
       /// </summary>
-      async private Task runAsync(ILocalGitRepository repo, Func<Task> command)
+      async private Task runAsync(IGitRepository repo, Func<Task> command)
       {
          try
          {
             await command();
          }
-         catch (RepositoryUpdateException ex)
+         catch (GitRepositoryUpdaterException ex)
          {
             string errorMessage = "Cannot initialize git repository";
             if (ex is UpdateCancelledException)
             {
-               throw new LocalGitCommitStorageUpdaterCancelledException();
+               throw new LocalCommitStorageUpdaterCancelledException();
             }
 
             if (ex is SSLVerificationException)
             {
                if (handleSSLCertificateProblem())
                {
-                  throw new LocalGitCommitStorageUpdaterException(String.Empty, ex);
+                  throw new LocalCommitStorageUpdaterException(String.Empty, ex);
                }
-               throw new LocalGitCommitStorageUpdaterCancelledException();
+               throw new LocalCommitStorageUpdaterCancelledException();
             }
 
             if (ex is AuthenticationFailedException)
@@ -141,10 +141,10 @@ namespace mrHelper.StorageSupport
                MessageBox.Show(String.Format("git reports that \"{0}\" already exists and is not empty. "
                   + "Please delete this directory and try again.", ex.OriginalMessage), "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               throw new LocalGitCommitStorageUpdaterCancelledException();
+               throw new LocalCommitStorageUpdaterCancelledException();
             }
 
-            throw new LocalGitCommitStorageUpdaterFailedException(errorMessage, ex);
+            throw new LocalCommitStorageUpdaterFailedException(errorMessage, ex);
          }
       }
 
@@ -167,7 +167,7 @@ namespace mrHelper.StorageSupport
          }
          catch (GitTools.SSLVerificationDisableException ex)
          {
-            throw new LocalGitCommitStorageUpdaterFailedException("Cannot change global http.verifySSL setting", ex);
+            throw new LocalCommitStorageUpdaterFailedException("Cannot change global http.verifySSL setting", ex);
          }
 
          Trace.TraceInformation("[GitInteractiveUpdater] SSL certificate verification disabled");
@@ -184,14 +184,14 @@ namespace mrHelper.StorageSupport
             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
 
-      async private Task handleAuthenticationFailedException(ILocalGitCommitStorage repo, Func<Task> command)
+      async private Task handleAuthenticationFailedException(ILocalCommitStorage repo, Func<Task> command)
       {
          string configKey = "credential.interactive";
          string configValue = "always";
 
-         GitTools.EConfigScope scope = _localGitRepository.ExpectingClone ?
-            GitTools.EConfigScope.Global : GitTools.EConfigScope.Local;
-         string path = _localGitRepository.ExpectingClone ? String.Empty : _localGitRepository.Path;
+         GitTools.ConfigScope scope = _gitRepository.ExpectingClone ?
+            GitTools.ConfigScope.Global : GitTools.ConfigScope.Local;
+         string path = _gitRepository.ExpectingClone ? String.Empty : _gitRepository.Path;
 
          IEnumerable<string> prevValue = GitTools.GetConfigKeyValue(scope, configKey, path);
          string prevInteractiveMode = prevValue.Any() ? prevValue.First() : null; // `null` to unset
@@ -207,9 +207,9 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      private HashSet<ILocalGitCommitStorage> _fixingAuthFailed = new HashSet<ILocalGitCommitStorage>();
-      private ILocalGitRepository _localGitRepository;
-      private LocalGitRepositoryUpdaterInternal _updaterInternal;
+      private HashSet<ILocalCommitStorage> _fixingAuthFailed = new HashSet<ILocalCommitStorage>();
+      private IGitRepository _gitRepository;
+      private GitRepositoryUpdaterInternal _updaterInternal;
    }
 }
 

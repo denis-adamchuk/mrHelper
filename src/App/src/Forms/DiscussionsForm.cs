@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         ISession session, ILocalGitCommitStorage repo,
+         ISession session, IGitCommandService git,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -34,7 +34,7 @@ namespace mrHelper.App.Forms
          _mergeRequestTitle = mergeRequestTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
-         _gitRepository = repo;
+         _git = git;
          _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
@@ -175,11 +175,6 @@ namespace mrHelper.App.Forms
             PerformLayout();
             e.Handled = true;
          }
-      }
-
-      private void onLocalGitRepositoryDisposed(ILocalGitCommitStorage repo)
-      {
-         this.Close();
       }
 
       private async Task onRefresh()
@@ -338,7 +333,7 @@ namespace mrHelper.App.Forms
             }
 
             IDiscussionEditor editor = _session.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
-            DiscussionBox box = new DiscussionBox(this, editor, _gitRepository, _currentUser,
+            DiscussionBox box = new DiscussionBox(this, editor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme,
                // pre-content-change
@@ -507,7 +502,7 @@ namespace mrHelper.App.Forms
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
-      private readonly ILocalGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 

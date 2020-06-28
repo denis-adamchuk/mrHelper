@@ -27,10 +27,10 @@ namespace mrHelper.Client.Discussions
          _discussionCache.DiscussionsLoadedInternal -= onDiscussionsLoaded;
       }
 
-      internal event Action<UserEvents.DiscussionEvent, DateTime, EDiscussionUpdateType> DiscussionEvent;
+      internal event Action<UserEvents.DiscussionEvent, DateTime, DiscussionUpdateType> DiscussionEvent;
 
       private void onDiscussionsLoaded(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
-         EDiscussionUpdateType type)
+         DiscussionUpdateType type)
       {
          if (discussions.Count() == 0)
          {

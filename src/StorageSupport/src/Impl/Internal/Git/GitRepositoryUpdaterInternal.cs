@@ -7,44 +7,35 @@ using System.ComponentModel;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.StorageSupport
 {
-   internal enum EUpdateMode
+   internal enum UpdateMode
    {
       ShallowClone,                    // "git clone --depth=1" and "git fetch --depth=1 sha:/refs/keep-around/sha"
       FullCloneWithSingleCommitFetches // "git clone" and "git fetch" and "git fetch sha:/refs/keep-around/sha"
    }
 
    /// <summary>
-   /// Updates attached ILocalGitRepository object
+   /// Updates attached IGitRepository object
    /// </summary>
-   internal class LocalGitRepositoryUpdaterInternal : ILocalGitCommitStorageUpdater, IDisposable
+   internal class GitRepositoryUpdaterInternal : ILocalCommitStorageUpdater, IDisposable
    {
-      private class InternalUpdateContext
-      {
-         internal InternalUpdateContext(IEnumerable<string> sha)
-         {
-            Sha = sha;
-         }
-
-         internal IEnumerable<string> Sha { get; }
-      }
-
       /// <summary>
-      /// Bind to the specific LocalGitRepository object
+      /// Bind to the specific GitRepository object
       /// </summary>
-      internal LocalGitRepositoryUpdaterInternal(
+      internal GitRepositoryUpdaterInternal(
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepository localGitRepository,
+         IGitRepository gitRepository,
          IExternalProcessManager operationManager,
-         EUpdateMode mode,
+         UpdateMode mode,
          Action onCloned,
          Action<string> onFetched)
       {
          _synchronizeInvoke = synchronizeInvoke;
-         _localGitRepository = localGitRepository;
-         _operationManager = operationManager;
+         _gitRepository = gitRepository;
+         _processManager = operationManager;
          _updateMode = mode;
          _onCloned = onCloned;
          _onFetched = onFetched;
@@ -57,7 +48,7 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         _operationManager.Cancel(_updateOperationDescriptor);
+         _processManager.Cancel(_updateOperationDescriptor);
       }
 
       public bool CanBeStopped()
@@ -65,7 +56,7 @@ namespace mrHelper.StorageSupport
          return !_isDisposed
             && _updateOperationDescriptor != null                    // update is running
             && _updateOperationDescriptor.OnProgressChange != null   // update is caused by StartUpdate() call
-            && _localGitRepository.ExpectingClone;                   // update is 'git clone'
+            && _gitRepository.ExpectingClone;                        // update is 'git clone'
       }
 
       public void Dispose()
@@ -88,13 +79,13 @@ namespace mrHelper.StorageSupport
          Action onUpdateStateChange, bool canClone, bool canSplit)
       {
          CommitStorageUpdateContext context = contextProvider?.GetContext();
-         if (contextProvider == null || (context != null && context.Sha == null))
+         if (contextProvider == null || (context != null && context.BaseToHeads == null))
          {
             Debug.Assert(false);
             return;
          }
 
-         if (_isDisposed || context == null || (_localGitRepository.ExpectingClone && !canClone))
+         if (_isDisposed || context == null || (_gitRepository.ExpectingClone && !canClone))
          {
             return;
          }
@@ -113,7 +104,7 @@ namespace mrHelper.StorageSupport
             _onUpdateStateChange?.Invoke();
          }
 
-         if (isWorthNewUpdate(context, _updatingContext))
+         if (UpdateContextUtils.IsWorthNewUpdate(context, _updatingContext))
          {
             await processContext(context, canSplit);
          }
@@ -136,40 +127,18 @@ namespace mrHelper.StorageSupport
                   await update(contextProvider, null, null, false, true);
                   onFinished?.Invoke();
                }
-               catch (RepositoryUpdateException ex)
+               catch (GitRepositoryUpdaterException ex)
                {
                   ExceptionHandlers.Handle("Silent update failed", ex);
                }
             }), null);
       }
 
-      private IEnumerable<InternalUpdateContext> splitContext(CommitStorageUpdateContext context, bool canSplit)
-      {
-         if (!canSplit || _updateMode != EUpdateMode.ShallowClone)
-         {
-            return new InternalUpdateContext[] { new InternalUpdateContext(context.Sha.Distinct()) };
-         }
-
-         List<InternalUpdateContext> splitted = new List<InternalUpdateContext>();
-         IEnumerable<string> sha = context.Sha.Distinct();
-         int remaining = sha.Count();
-         while (remaining > 0)
-         {
-            string[] shaChunk = sha
-               .Skip(sha.Count() - remaining)
-               .Take(ShaInChunk)
-               .ToArray();
-            remaining -= shaChunk.Length;
-            splitted.Add(new InternalUpdateContext(shaChunk));
-         }
-         return splitted;
-      }
-
       async private Task processContext(CommitStorageUpdateContext context, bool canSplit)
       {
-         if (!context.Sha.Any())
+         if (!context.BaseToHeads.Any())
          {
-            if (!_localGitRepository.ExpectingClone && _updateMode == EUpdateMode.ShallowClone)
+            if (!_gitRepository.ExpectingClone && _updateMode == UpdateMode.ShallowClone)
             {
                return; // optimization. cannot do anything without Sha list
             }
@@ -180,16 +149,19 @@ namespace mrHelper.StorageSupport
          {
             await doPreProcessContext(context);
 
-            IEnumerable<InternalUpdateContext> splitted = splitContext(context, canSplit);
+            IEnumerable<InternalUpdateContext> splitted = canSplit && _updateMode == UpdateMode.ShallowClone
+               ? new InternalUpdateContext(context.BaseToHeads).Split(Constants.MaxShaInChunk)
+               : new InternalUpdateContext[] { new InternalUpdateContext(context.BaseToHeads) };
             foreach (InternalUpdateContext internalContext in splitted)
             {
                await doProcessContext(context, internalContext);
 
                // this allows others to interleave with their (shorter) requests
-               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed, DelayBetweenChunksMs);
+               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed,
+                  Constants.DelayBetweenChunksMs);
             }
          }
-         catch (GitException ex)
+         catch (GitCommandException ex)
          {
             if (ex is OperationCancelledException)
             {
@@ -205,7 +177,7 @@ namespace mrHelper.StorageSupport
                   && gfex2.InnerException is ExternalProcessFailureException pfex2
                   && String.Join("\n", pfex2.Errors).Contains("already exists and is not an empty directory"))
             {
-               throw new NotEmptyDirectoryException(_localGitRepository.Path, ex);
+               throw new NotEmptyDirectoryException(_gitRepository.Path, ex);
             }
             else if (ex is GitCallFailedException gfex3
                   && gfex3.InnerException is ExternalProcessFailureException pfex3
@@ -219,7 +191,7 @@ namespace mrHelper.StorageSupport
             {
                throw new CouldNotReadUsernameException(ex);
             }
-            throw new RepositoryUpdateException("Cannot update git repository", ex);
+            throw new GitRepositoryUpdaterException("Cannot update git repository", ex);
          }
       }
 
@@ -236,13 +208,13 @@ namespace mrHelper.StorageSupport
 
             DateTime prevFullUpdateTimestamp = updateTimestamp(context);
 
-            if (_localGitRepository.ExpectingClone)
+            if (_gitRepository.ExpectingClone)
             {
-               await cloneAsync(_updateMode == EUpdateMode.ShallowClone);
+               await cloneAsync(_updateMode == UpdateMode.ShallowClone);
                traceInformation("Repository cloned.");
                _onCloned?.Invoke();
             }
-            else if (_updateMode != EUpdateMode.ShallowClone
+            else if (_updateMode != UpdateMode.ShallowClone
                   && context.LatestChange.HasValue
                   && context.LatestChange.Value > prevFullUpdateTimestamp)
             {
@@ -258,7 +230,8 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      async private Task doProcessContext(CommitStorageUpdateContext context, InternalUpdateContext internalUpdateContext)
+      async private Task doProcessContext(
+         CommitStorageUpdateContext context, InternalUpdateContext internalUpdateContext)
       {
          await TaskUtils.WhileAsync(() => _updatingContext != null);
 
@@ -269,8 +242,8 @@ namespace mrHelper.StorageSupport
             _updatingContext = context;
             traceDebug(String.Format("[LOCK] by {0}", context.GetType()));
 
-            IEnumerable<string> missingSha = await getMissingSha(internalUpdateContext.Sha);
-            await fetchCommitsAsync(missingSha, _updateMode == EUpdateMode.ShallowClone);
+            IEnumerable<string> missingSha = await getMissingSha(internalUpdateContext.BaseToHeads);
+            await fetchCommitsAsync(missingSha, _updateMode == UpdateMode.ShallowClone);
 
             Debug.Assert(_updateOperationDescriptor == null);
          }
@@ -285,9 +258,9 @@ namespace mrHelper.StorageSupport
       {
          string arguments = String.Format("clone {0} {1}/{2} {3}",
             getCloneArguments(shallowClone),
-            _localGitRepository.ProjectKey.HostName,
-            _localGitRepository.ProjectKey.ProjectName,
-            StringUtils.EscapeSpaces(_localGitRepository.Path));
+            _gitRepository.ProjectKey.HostName,
+            _gitRepository.ProjectKey.ProjectName,
+            StringUtils.EscapeSpaces(_gitRepository.Path));
          await doUpdateOperationAsync(arguments, String.Empty);
       }
 
@@ -297,7 +270,7 @@ namespace mrHelper.StorageSupport
 
          string arguments = String.Format("fetch {0}",
             getFetchArguments(null, shallowFetch));
-         await doUpdateOperationAsync(arguments, _localGitRepository.Path);
+         await doUpdateOperationAsync(arguments, _gitRepository.Path);
       }
 
       async private Task fetchCommitsAsync(IEnumerable<string> shas, bool shallowFetch)
@@ -306,7 +279,7 @@ namespace mrHelper.StorageSupport
          foreach (string sha in shas)
          {
             string arguments = String.Format("fetch {0}", getFetchArguments(sha, shallowFetch));
-            await doUpdateOperationAsync(arguments, _localGitRepository.Path);
+            await doUpdateOperationAsync(arguments, _gitRepository.Path);
             _onFetched?.Invoke(sha);
             ++iCommit;
          }
@@ -317,11 +290,15 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      async private Task<IEnumerable<string>> getMissingSha(IEnumerable<string> sha)
+      async private Task<IEnumerable<string>> getMissingSha(Dictionary<string, IEnumerable<string>> baseToHeads)
       {
+         List<string> allSha = new List<string>();
+         allSha.AddRange(baseToHeads.Keys);
+         foreach (IEnumerable<string> heads in baseToHeads.Values) allSha.AddRange(heads);
+
          Exception exception = null;
          List<string> missingSha = new List<string>();
-         await TaskUtils.RunConcurrentFunctionsAsync(sha,
+         await TaskUtils.RunConcurrentFunctionsAsync(allSha.Distinct(),
             async x =>
             {
                if (exception != null)
@@ -331,7 +308,7 @@ namespace mrHelper.StorageSupport
 
                try
                {
-                  if (!await _localGitRepository.ContainsSHAAsync(x))
+                  if (!await _gitRepository.ContainsSHAAsync(x))
                   {
                      missingSha.Add(x);
                   }
@@ -362,8 +339,8 @@ namespace mrHelper.StorageSupport
 
       private ExternalProcess.AsyncTaskDescriptor startUpdateOperation(string arguments, string path)
       {
-         return _operationManager.CreateDescriptor("git", arguments, path,
-            _onProgressChange == null ? null : new Action<string>(status => _onProgressChange?.Invoke(status)));
+         return _processManager.CreateDescriptor("git", arguments, path,
+            _onProgressChange == null ? null : new Action<string>(status => _onProgressChange?.Invoke(status)), null);
       }
 
       private async Task waitUpdateOperationAsync(
@@ -374,43 +351,16 @@ namespace mrHelper.StorageSupport
             _updateOperationDescriptor = descriptor;
             _onUpdateStateChange?.Invoke();
             traceInformation(String.Format("START git with arguments \"{0}\" in \"{1}\" for {2}",
-               arguments, _localGitRepository.Path, _localGitRepository.ProjectKey.ProjectName));
-            await _operationManager.Wait(descriptor);
+               arguments, _gitRepository.Path, _gitRepository.ProjectKey.ProjectName));
+            await _processManager.Wait(descriptor);
          }
          finally
          {
             traceInformation(String.Format("FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
-               arguments, _localGitRepository.Path, _localGitRepository.ProjectKey.ProjectName));
+               arguments, _gitRepository.Path, _gitRepository.ProjectKey.ProjectName));
             _updateOperationDescriptor = null;
             _onUpdateStateChange?.Invoke();
          }
-      }
-
-      private static bool isWorthNewUpdate(CommitStorageUpdateContext proposed, CommitStorageUpdateContext updating)
-      {
-         Debug.Assert(proposed != null);
-         if (updating == null)
-         {
-            return true;
-         }
-
-         if (updating.LatestChange.HasValue && proposed.LatestChange.HasValue)
-         {
-            return proposed.LatestChange  > updating.LatestChange
-               || (proposed.LatestChange == updating.LatestChange
-                  && !areEqualShaCollections(proposed.Sha, updating.Sha));
-         }
-         else if (updating.LatestChange.HasValue || proposed.LatestChange.HasValue)
-         {
-            return true;
-         }
-
-         return !areEqualShaCollections(proposed.Sha, updating.Sha);
-      }
-
-      private static bool areEqualShaCollections(IEnumerable<string> a, IEnumerable<string> b)
-      {
-         return Enumerable.SequenceEqual(a.Distinct().OrderBy(x => x), b.Distinct().OrderBy(x => x));
       }
 
       private static string getCloneArguments(bool shallow)
@@ -465,32 +415,32 @@ namespace mrHelper.StorageSupport
 
       private void traceDebug(string message)
       {
-         Debug.WriteLine(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
-            _localGitRepository.ProjectKey.ProjectName, message));
+         Debug.WriteLine(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
+            _gitRepository.ProjectKey.ProjectName, message));
       }
 
       private void traceInformation(string message)
       {
-         Trace.TraceInformation(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
-            _localGitRepository.ProjectKey.ProjectName, message));
+         Trace.TraceInformation(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
+            _gitRepository.ProjectKey.ProjectName, message));
       }
 
       private void traceWarning(string message)
       {
-         Trace.TraceWarning(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
-            _localGitRepository.ProjectKey.ProjectName, message));
+         Trace.TraceWarning(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
+            _gitRepository.ProjectKey.ProjectName, message));
       }
 
       private void traceError(string message)
       {
-         Trace.TraceError(String.Format("[LocalGitRepositoryUpdater] ({0}) {1}",
-            _localGitRepository.ProjectKey.ProjectName, message));
+         Trace.TraceError(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
+            _gitRepository.ProjectKey.ProjectName, message));
       }
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-      private readonly ILocalGitRepository _localGitRepository;
-      private readonly IExternalProcessManager _operationManager;
-      private readonly EUpdateMode _updateMode;
+      private readonly IGitRepository _gitRepository;
+      private readonly IExternalProcessManager _processManager;
+      private readonly UpdateMode _updateMode;
       private readonly Action _onCloned;
       private readonly Action<string> _onFetched;
 
@@ -501,9 +451,6 @@ namespace mrHelper.StorageSupport
       private Action<string> _onProgressChange;
       private Action _onUpdateStateChange;
       private DateTime _latestFullFetchTimestamp = DateTime.MinValue;
-
-      private const int ShaInChunk = 2;
-      private const int DelayBetweenChunksMs = 50;
    }
 }
 

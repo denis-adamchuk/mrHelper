@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace mrHelper.Common.Constants
 {
    public static class Constants
    {
+      public static string GitDiffToolName = "mrhelperdiff";
+      public static string GitDiffToolConfigKey = "difftool.mrhelperdiff.cmd";
       public static string CustomProtocolName = "mrhelper";
       public static string UWP_Launcher_Name = "mrHelper.Launcher.exe";
       public static string MainWindowCaption  = "Merge Request Helper";
@@ -67,20 +66,30 @@ namespace mrHelper.Common.Constants
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
 
-      public static int GitInstancesInBatch = 10;
+      public static int MaxGitInstancesInBatch = 10;
       public static int GitInstancesInterBatchDelay = 1000; // ms
 
-      public static int MergeRequestsInBatch = 10;
+      public static int MaxMergeRequestsInBatch = 10;
       public static int MergeRequestsInterBatchDelay = 0;
 
-      public static int CrossProjectMergeRequestsInBatch = 20;
+      public static int MaxCrossProjectMergeRequestsInBatch = 20;
       public static int CrossProjectMergeRequestsInterBatchDelay = 200;
 
-      public static int ProjectsInBatch = 10;
+      public static int MaxProjectsInBatch = 10;
       public static int ProjectsInterBatchDelay = 0;
 
-      public static int CommitInBatch = 10;
+      public static int MaxCommitInBatch = 10;
       public static int CommitInterBatchDelay = 0;
+
+      public static int MaxShaInChunk = 2;
+      public static int MaxDiffInChunk = 2;
+      public static int DelayBetweenChunksMs = 50;
+
+      public static int MaxFilesInBatch = 20; // unrelated to MaxDiffInChunk when updates are not split
+      public static int FilesInterBatchDelay = 100;
+
+      public static int MaxComparisonInBatch = 20; // unrelated to MaxShaInChunk when updates are not split
+      public static int ComparisionInterBatchDelay = 100;
    }
 }
 

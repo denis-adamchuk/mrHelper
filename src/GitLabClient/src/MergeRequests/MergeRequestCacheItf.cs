@@ -37,6 +37,10 @@ namespace mrHelper.Client.MergeRequests
 
       /// <summary>
       /// </summary>
+      IEnumerable<GitLabSharp.Entities.Version> GetVersions(ProjectKey projectKey);
+
+      /// <summary>
+      /// </summary>
       IEnumerable<GitLabSharp.Entities.Commit> GetCommits(MergeRequestKey mrk);
 
       /// <summary>

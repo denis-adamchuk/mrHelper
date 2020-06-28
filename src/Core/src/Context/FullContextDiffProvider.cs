@@ -29,9 +29,9 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class FullContextDiffProvider
    {
-      public FullContextDiffProvider(IGitCommitStorage gitRepository)
+      public FullContextDiffProvider(IGitCommandService git)
       {
-         _gitRepository = gitRepository;
+         _git = git;
       }
 
       /// <summary>
@@ -50,7 +50,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> fullDiff;
          try
          {
-            fullDiff = _gitRepository.Data?.Get(arguments);
+            fullDiff = _git?.ShowDiff(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
@@ -61,6 +61,8 @@ namespace mrHelper.Core.Context
          {
             throw new ContextMakingException("Cannot obtain git diff", null);
          }
+
+         fullDiff = fullDiff.Where(x => !String.IsNullOrEmpty(x));
 
          if (fullDiff.Count() == 0)
          {
@@ -103,7 +105,7 @@ namespace mrHelper.Core.Context
          return fullContextDiff;
       }
 
-      private readonly IGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }
 

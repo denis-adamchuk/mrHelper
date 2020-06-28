@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using mrHelper.Common.Exceptions;
 
@@ -20,15 +20,13 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   public interface IGitCommitStorageData
+   public interface IGitCommandService
    {
-      IEnumerable<string> Get(GitShowRevisionArguments arguments);
-      IEnumerable<string> Get(GitDiffArguments arguments);
-   }
+      IEnumerable<string> ShowRevision(GitShowRevisionArguments arguments);
+      IEnumerable<string> ShowDiff(GitDiffArguments arguments);
+      int LaunchDiffTool(DiffToolArguments arguments);
 
-   public interface IGitCommitStorage
-   {
-      IGitCommitStorageData Data { get; }
+      IFileRenameDetector RenameDetector { get; }
    }
 }
 

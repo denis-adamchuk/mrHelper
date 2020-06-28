@@ -236,5 +236,50 @@ namespace mrHelper.StorageSupport
          return hashCode;
       }
    }
+
+   public struct DiffToolArguments : IEquatable<DiffToolArguments>
+   {
+      public DiffToolArguments(bool dirDiff, string toolName, string leftSHA, string rightSHA)
+      {
+         DirDiff = dirDiff;
+         ToolName = toolName;
+         LeftSHA = leftSHA;
+         RightSHA = rightSHA;
+      }
+
+      public bool DirDiff { get; }
+      public string ToolName { get; }
+      public string LeftSHA { get; }
+      public string RightSHA { get; }
+
+      public override string ToString()
+      {
+         return String.Format("difftool {0} --tool={1} {2} {3}",
+            DirDiff ? "--dir-diff" : String.Empty, ToolName, LeftSHA, RightSHA);
+      }
+
+      public override bool Equals(object obj)
+      {
+         return obj is DiffToolArguments && Equals((DiffToolArguments)obj);
+      }
+
+      public bool Equals(DiffToolArguments other)
+      {
+         return DirDiff == other.DirDiff &&
+                ToolName == other.ToolName &&
+                LeftSHA == other.LeftSHA &&
+                RightSHA == other.RightSHA;
+      }
+
+      public override int GetHashCode()
+      {
+         var hashCode = -1869096446;
+         hashCode = hashCode * -1521134295 + DirDiff.GetHashCode();
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ToolName);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LeftSHA);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightSHA);
+         return hashCode;
+      }
+   }
 }
 

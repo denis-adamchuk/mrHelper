@@ -2,12 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using GitLabSharp.Entities;
+using mrHelper.StorageSupport;
 using Newtonsoft.Json;
 
 namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
+      {
+         return Program.Settings.UseGitStorage
+            ? LocalCommitStorageType.GitRepository : LocalCommitStorageType.FileStorage;
+      }
+
       public static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)
       {
          return settings.ShowVersionsByDefault ? RevisionType.Version : RevisionType.Commit;

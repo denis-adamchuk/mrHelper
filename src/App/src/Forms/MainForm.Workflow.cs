@@ -239,11 +239,7 @@ namespace mrHelper.App.Forms
 
          foreach (ProjectKey projectKey in projects)
          {
-            IEnumerable<MergeRequest> mergeRequests = _liveSession.MergeRequestCache.GetMergeRequests(projectKey);
-            foreach (MergeRequestKey mrk in mergeRequests.Select(x => new MergeRequestKey(projectKey, x.IId)))
-            {
-               requestRepositoryUpdate(mrk);
-            }
+            requestCommitStorageUpdate(projectKey);
          }
 
          if (!isSearchMode())

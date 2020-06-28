@@ -3,12 +3,11 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.StorageSupport
 {
-   internal interface ILocalGitRepository : ILocalGitCommitStorage
+   internal interface IGitRepository : ILocalCommitStorage
    {
       Task<bool> ContainsSHAAsync(string sha);
 
       bool ExpectingClone { get; }
-
-      ProjectKey ProjectKey { get; }
    }
 }
+

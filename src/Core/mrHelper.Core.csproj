@@ -57,7 +57,6 @@
     <Compile Include="src\Context\EnhancedContextMaker.cs" />
     <Compile Include="src\Context\SimpleContextMaker.cs" />
     <Compile Include="src\Context\DiffContextFormatter.cs" />
-    <Compile Include="src\Matching\GitRenameDetector.cs" />
     <Compile Include="src\Context\GitDiffAnalyzer.cs" />
     <Compile Include="src\Matching\FileNameMatcher.cs" />
     <Compile Include="src\Matching\MatchInfo.cs" />

@@ -10,10 +10,10 @@ namespace mrHelper.Core.Matching
    /// </summary>
    public class FileNameMatcher
    {
-      public FileNameMatcher(IGitCommitStorage gitRepository,
+      public FileNameMatcher(IGitCommandService git,
          Action<string, string> onFileMove, Func<string, string, string, bool> onFileRename, Func<bool> onWrongMatch)
       {
-         _gitRepository = gitRepository;
+         _git = git;
          _onFileMove = onFileMove;
          _onFileRename = onFileRename;
          _onWrongMatch = onWrongMatch;
@@ -51,9 +51,7 @@ namespace mrHelper.Core.Matching
       {
          Debug.Assert(sourceCurrentName != String.Empty);
 
-         GitRenameDetector renameChecker = new GitRenameDetector(_gitRepository);
-         string anotherName = renameChecker.IsRenamed(refs.LeftSHA, refs.RightSHA,
-            sourceCurrentName, isLeftSide, out bool moved);
+         getOppositeNameInternal(refs, isLeftSide, sourceCurrentName, out string anotherName, out bool moved);
          if (moved)
          {
             _onFileMove(sourceCurrentName, anotherName);
@@ -142,17 +140,31 @@ namespace mrHelper.Core.Matching
          }
       }
 
+      private void getOppositeNameInternal(DiffRefs refs, bool isLeftSide, string sourceCurrentName,
+         out string anotherName, out bool moved)
+      {
+         try
+         {
+            anotherName = _git.RenameDetector.IsRenamed(refs.LeftSHA, refs.RightSHA,
+               sourceCurrentName, isLeftSide, out moved);
+         }
+         catch (FileRenameDetectorException ex)
+         {
+            throw new MatchingException("Cannot detect if a file was renamed", ex);
+         }
+      }
+
       private void trace(string action, bool isLeftSide, DiffRefs refs,
          string sourceCurrentName, string sourceOppositeName, string fixedOppositeName)
       {
          Trace.TraceInformation(String.Format(
             "[FileNameMatcher] {0}. Repo: {1}. DiffRefs: {2}\n"
           + "sourceCurrentName: {3}\nsourceOppositeName: {4}\nfixedOppositeName: {5}\nIsLeftSide: {6}",
-               action, _gitRepository.ToString(), refs.ToString(),
+               action, _git.ToString(), refs.ToString(),
                sourceCurrentName, sourceOppositeName, fixedOppositeName, isLeftSide));
       }
 
-      private readonly IGitCommitStorage _gitRepository;
+      private readonly IGitCommandService _git;
 
       /// <summary>
       /// Notify user about impossible match

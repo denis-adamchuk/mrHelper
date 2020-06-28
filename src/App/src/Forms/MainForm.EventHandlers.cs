@@ -232,18 +232,18 @@ namespace mrHelper.App.Forms
          doClose();
       }
 
-      private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
+      private void ButtonBrowseStorageFolder_Click(object sender, EventArgs e)
       {
-         localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
-         if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
+         storageFolderBrowser.SelectedPath = textBoxStorageFolder.Text;
+         if (storageFolderBrowser.ShowDialog() == DialogResult.OK)
          {
-            string newFolder = localGitFolderBrowser.SelectedPath;
+            string newFolder = storageFolderBrowser.SelectedPath;
             Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
 
             if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
             {
-               textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
-               Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
+               textBoxStorageFolder.Text = storageFolderBrowser.SelectedPath;
+               Program.Settings.LocalGitFolder = storageFolderBrowser.SelectedPath;
 
                MessageBox.Show("Git folder is changed.\n" +
                                "It is recommended to restart Diff Tool if you have already launched it.",
@@ -473,12 +473,12 @@ namespace mrHelper.App.Forms
             }
 
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
-            GitLabClientManager.EConnectionCheckStatus status =
+            GitLabClientManager.ConnectionCheckStatus status =
                await _gitlabClientManager.VerifyConnection(hostname, form.AccessToken);
-            if (status != GitLabClientManager.EConnectionCheckStatus.OK)
+            if (status != GitLabClientManager.ConnectionCheckStatus.OK)
             {
                string message =
-                  status == GitLabClientManager.EConnectionCheckStatus.BadAccessToken
+                  status == GitLabClientManager.ConnectionCheckStatus.BadAccessToken
                      ? "Bad access token"
                      : "Invalid hostname";
                MessageBox.Show(message, "Cannot connect to the host",
@@ -775,7 +775,7 @@ namespace mrHelper.App.Forms
          await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
-      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      private void LinkLabelAbortGitClone_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          MergeRequestKey? mrk = getMergeRequestKey(null);
          if (!mrk.HasValue)
@@ -784,7 +784,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitCommitStorage repo = getCommitStorage(mrk.Value, false);
+         ILocalCommitStorage repo = getCommitStorage(mrk.Value.ProjectKey, false);
          if (repo == null || repo.Updater == null || !repo.Updater.CanBeStopped())
          {
             Debug.Assert(mrk.HasValue);
@@ -1258,6 +1258,24 @@ namespace mrHelper.App.Forms
             }
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
+            switchHostToSelected();
+         }
+      }
+
+      private void radioButtonUseGit_CheckedChanged(object sender, EventArgs e)
+      {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         Debug.Assert(radioButtonDontUseGit.Checked != radioButtonUseGit.Checked);
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.UseGitStorage = radioButtonUseGit.Checked;
+            checkBoxUseShallowClone.Enabled = Program.Settings.UseGitStorage;
+
+            Trace.TraceInformation("[MainForm] Reloading merge request list after storage type change");
             switchHostToSelected();
          }
       }

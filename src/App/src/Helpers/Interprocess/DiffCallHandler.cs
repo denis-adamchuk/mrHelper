@@ -24,22 +24,38 @@ namespace mrHelper.App.Interprocess
          _session = session;
       }
 
-      async public Task HandleAsync(IGitCommitStorage gitRepository)
+      async public Task HandleAsync(ICommitStorage gitRepository)
       {
          if (gitRepository != null)
          {
-            await doHandleAsync(gitRepository);
+            await doHandleAsync(gitRepository.Git);
             return;
          }
 
          // This happens when a git parent folder was changed when a diff tool was already launched
-         Debug.Assert(false);
+         Trace.TraceWarning(String.Format(
+            "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
+            _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
+
+         ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
+
+         LocalCommitStorageFactory factory = new LocalCommitStorageFactory(
+            _snapshot.TempFolder, null, Program.Settings.UseShallowClone, _session);
+         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
+         if (tempRepository == null)
+         {
+            Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
+            return;
+         }
+         await doHandleAsync(tempRepository.Git);
+         factory.Dispose();
       }
 
-      async public Task doHandleAsync(IGitCommitStorage gitRepository)
+      async public Task doHandleAsync(IGitCommandService git)
       {
-         FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
-         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
+         FileNameMatcher fileNameMatcher = getFileNameMatcher(git);
+         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(git);
 
          DiffPosition position = new DiffPosition(null, null, null, null, _snapshot.Refs);
 
@@ -66,7 +82,7 @@ namespace mrHelper.App.Interprocess
          }
 
          using (NewDiscussionForm form = new NewDiscussionForm(
-            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository))
+            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, git))
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -86,9 +102,9 @@ namespace mrHelper.App.Interprocess
          }
       }
 
-      private FileNameMatcher getFileNameMatcher(IGitCommitStorage repository)
+      private FileNameMatcher getFileNameMatcher(IGitCommandService git)
       {
-         return new FileNameMatcher(repository,
+         return new FileNameMatcher(git,
             (currentName, anotherName) =>
          {
             MessageBox.Show(

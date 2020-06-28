@@ -7,16 +7,16 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
-   internal static class LocalGitRepositoryPathFinder
+   internal static class LocalCommitStoragePathFinder
    {
       /// <summary>
       /// Returns either a path to empty folder or a path to a folder with already cloned repository
       /// </summary>
-      internal static string FindPath(string parentFolder, ProjectKey projectKey)
+      internal static string FindPath(string parentFolder, ProjectKey projectKey, LocalCommitStorageType type)
       {
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepositoryPathFinder] Searching for a path for project {0} in \"{1}\"...",
-            projectKey.ProjectName, parentFolder));
+            "[LocalGitCommitStoragePathFinder] Searching for a storage of type {0} for project {1} in \"{2}\"...",
+            type.ToString(), projectKey.ProjectName, parentFolder));
 
          string[] splitted = projectKey.ProjectName.Split('/');
          if (splitted.Length < 2)
@@ -24,22 +24,22 @@ namespace mrHelper.StorageSupport
             throw new ArgumentException("Bad project name \"" + projectKey.ProjectName + "\"");
          }
 
-         return findRepositoryAtDisk(parentFolder, projectKey, out string repositoryPath)
-            ? repositoryPath : cookRepositoryName(parentFolder, projectKey);
+         return findRepositoryAtDisk(parentFolder, projectKey, type, out string repositoryPath)
+            ? repositoryPath : cookRepositoryName(parentFolder, projectKey, type);
       }
 
       private static bool findRepositoryAtDisk(string parentFolder, ProjectKey projectKey,
-         out string repositoryPath)
+         LocalCommitStorageType type, out string repositoryPath)
       {
          string[] childFolders = Directory.GetDirectories(parentFolder);
          foreach (string childFolder in childFolders)
          {
             repositoryPath = Path.Combine(parentFolder, childFolder);
-            ProjectKey? projectAtPath = GitTools.GetRepositoryProjectKey(repositoryPath);
+            ProjectKey? projectAtPath = getRepositoryProjectKey(repositoryPath, type);
             if (projectAtPath == null)
             {
                Trace.TraceWarning(String.Format(
-                  "[LocalGitRepositoryPathFinder] Path \"{0}\" is not a valid git repository",
+                  "[LocalGitCommitStoragePathFinder] Path \"{0}\" is not a valid git repository",
                   repositoryPath));
                continue;
             }
@@ -47,7 +47,7 @@ namespace mrHelper.StorageSupport
             if (projectAtPath.Value.Equals(projectKey))
             {
                Trace.TraceInformation(String.Format(
-                  "[LocalGitRepositoryPathFinder] Found repository at \"{0}\"", repositoryPath));
+                  "[LocalGitCommitStoragePathFinder] Found repository at \"{0}\"", repositoryPath));
                return true;
             }
          }
@@ -56,7 +56,8 @@ namespace mrHelper.StorageSupport
          return false;
       }
 
-      private static string cookRepositoryName(string parentFolder, ProjectKey projectKey)
+      private static string cookRepositoryName(string parentFolder, ProjectKey projectKey,
+         LocalCommitStorageType type)
       {
          Debug.Assert(projectKey.ProjectName.Count(x => x == '/') == 1);
          string defaultName = projectKey.ProjectName.Replace('/', '_');
@@ -70,8 +71,19 @@ namespace mrHelper.StorageSupport
          }
 
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepositoryPathFinder] Proposed repository path is \"{0}\"", proposedPath));
+            "[LocalGitCommitStoragePathFinder] Proposed repository path is \"{0}\"", proposedPath));
          return proposedPath;
+      }
+
+      private static ProjectKey? getRepositoryProjectKey(string path, LocalCommitStorageType type)
+      {
+         if (type == LocalCommitStorageType.GitRepository)
+         {
+            return GitTools.GetRepositoryProjectKey(path);
+         }
+
+         Debug.Assert(type == LocalCommitStorageType.FileStorage);
+         return FileStorageUtils.GetFileStorageProjectKey(path);
       }
    }
 }

@@ -30,20 +30,24 @@ namespace mrHelper.App.Helpers
             return null;
          }
 
-         HashSet<string> shas = new HashSet<string>();
+         Dictionary<string, HashSet<string>> baseToHeads = new Dictionary<string, HashSet<string>>();
          foreach (Version version in _versions)
          {
-            if (version.Base_Commit_SHA != null)
+            string baseSha = version.Base_Commit_SHA;
+            string headSha = version.Head_Commit_SHA;
+            if (baseSha != null && headSha != null && baseSha != headSha)
             {
-               shas.Add(version.Base_Commit_SHA);
-            }
-            if (version.Head_Commit_SHA != null)
-            {
-               shas.Add(version.Head_Commit_SHA);
+               if (!baseToHeads.ContainsKey(baseSha))
+               {
+                  baseToHeads[baseSha] = new HashSet<string>();
+               }
+               baseToHeads[baseSha].Add(headSha);
             }
          }
 
-         return new FullUpdateContext(_versions.OrderBy(x => x.Created_At).LastOrDefault().Created_At, shas);
+         Version latestVersion = _versions.OrderBy(x => x.Created_At).LastOrDefault();
+         return new FullUpdateContext(latestVersion.Created_At,
+            baseToHeads.ToDictionary(item => item.Key, item => item.Value.AsEnumerable()));
       }
 
       public override string ToString()

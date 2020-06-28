@@ -5,7 +5,7 @@ using mrHelper.Client.Types;
 
 namespace mrHelper.Client.Discussions
 {
-   public enum EDiscussionUpdateType
+   public enum DiscussionUpdateType
    {
       InitialSnapshot,
       PeriodicUpdate,
@@ -14,7 +14,7 @@ namespace mrHelper.Client.Discussions
 
    internal interface IDiscussionCacheInternal : IDiscussionCache
    {
-      event Action<MergeRequestKey, IEnumerable<Discussion>, EDiscussionUpdateType> DiscussionsLoadedInternal;
+      event Action<MergeRequestKey, IEnumerable<Discussion>, DiscussionUpdateType> DiscussionsLoadedInternal;
    }
 }
 

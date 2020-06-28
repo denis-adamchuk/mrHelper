@@ -146,7 +146,7 @@ namespace mrHelper.App.Forms
             Program.Settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
          }
 
-         textBoxLocalGitFolder.Text = Program.Settings.LocalGitFolder;
+         textBoxStorageFolder.Text = Program.Settings.LocalGitFolder;
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
@@ -176,6 +176,15 @@ namespace mrHelper.App.Forms
          else
          {
             radioButtonSelectByUsernames.Checked = true;
+         }
+
+         if (Program.Settings.UseGitStorage)
+         {
+            radioButtonUseGit.Checked = true;
+         }
+         else
+         {
+            radioButtonDontUseGit.Checked = true;
          }
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
@@ -235,8 +244,7 @@ namespace mrHelper.App.Forms
 
       private bool integrateInTools()
       {
-         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
-         if (appInfo == null || String.IsNullOrEmpty(appInfo.InstallPath))
+         if (!GitTools.IsGit2Installed())
          {
             MessageBox.Show(
                "Git for Windows (version 2) is not installed. "
@@ -245,9 +253,8 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         string gitBinaryFolder = Path.Combine(appInfo.InstallPath, "bin");
          string pathEV = System.Environment.GetEnvironmentVariable("PATH");
-         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + gitBinaryFolder);
+         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + GitTools.GetBinaryFolder());
          Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
             System.Environment.GetEnvironmentVariable("PATH")));
          System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
@@ -546,7 +553,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createGitHelpers(ISession session, ILocalGitCommitStorageFactory factory)
+      private void createGitHelpers(ISession session, ILocalCommitStorageFactory factory)
       {
          if (session.MergeRequestCache == null || session.DiscussionCache == null)
          {
@@ -584,6 +591,7 @@ namespace mrHelper.App.Forms
          }
       }
 
+      // TODO Update status
       private void onGitInitStatusChange(string status)
       {
          labelWorkflowStatus.Text = status;
@@ -649,7 +657,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            ConfigurationHelper.InitializeSelectedProjects(JsonFileReader.
+            ConfigurationHelper.InitializeSelectedProjects(JsonUtils.
                LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
                   Constants.ProjectListFileName), Program.Settings);
          }

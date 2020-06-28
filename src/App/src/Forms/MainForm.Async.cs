@@ -47,7 +47,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitCommitStorage repo = getCommitStorage(mrk, true);
+         ILocalCommitStorage repo = getCommitStorage(mrk.ProjectKey, true);
          if (!await prepareRepositoryForDiscussionsForm(repo, mrk, discussions) || _exiting)
          {
             return;
@@ -55,7 +55,7 @@ namespace mrHelper.App.Forms
          showDiscussionForm(session, repo, currentUser, mrk, discussions, title, author);
       }
 
-      async private Task<bool> prepareRepositoryForDiscussionsForm(ILocalGitCommitStorage repo,
+      async private Task<bool> prepareRepositoryForDiscussionsForm(ILocalCommitStorage repo,
          MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          if (repo == null)
@@ -83,12 +83,12 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            if (ex is LocalGitCommitStorageUpdaterCancelledException)
+            if (ex is LocalCommitStorageUpdaterCancelledException)
             {
                MessageBox.Show("Cannot show Discussions without up-to-date git repository", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            else if (ex is LocalGitCommitStorageUpdaterFailedException inex)
+            else if (ex is LocalCommitStorageUpdaterFailedException inex)
             {
                ExceptionHandlers.Handle(ex.Message, ex);
                MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -97,7 +97,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void showDiscussionForm(ISession session, ILocalGitCommitStorage repo,
+      private void showDiscussionForm(ISession session, ILocalCommitStorage repo,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
@@ -106,16 +106,16 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(session, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(session, repo.Git,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               async (key, discussions2) =>
+               async (key, discussionsUpdated) =>
             {
                try
                {
                   if (repo != null && repo.Updater != null)
                   {
-                     ICommitStorageUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
+                     var contextProvider = new DiscussionBasedContextProvider(discussionsUpdated);
                      await repo.Updater.StartUpdate(contextProvider, updateGitStatusText,
                         () => updateGitAbortState(false));
                   }
@@ -126,7 +126,7 @@ namespace mrHelper.App.Forms
                         "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                   }
                }
-               catch (LocalGitCommitStorageUpdaterException ex)
+               catch (LocalCommitStorageUpdaterException ex)
                {
                   ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
                }
@@ -165,11 +165,12 @@ namespace mrHelper.App.Forms
       {
          // Keep data before async/await
          ISession session = getSession(!isSearchMode());
-         getShaForDiffTool(out string leftSHA, out string rightSHA, out IEnumerable<string> includedSHA,
-            out RevisionType? type);
+         getShaForDiffTool(out string baseSHA, out string leftSHA, out string rightSHA,
+            out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
          if (session == null
           || String.IsNullOrWhiteSpace(accessToken)
+          || String.IsNullOrWhiteSpace(baseSHA)
           || String.IsNullOrWhiteSpace(leftSHA)
           || String.IsNullOrWhiteSpace(rightSHA)
           || includedSHA == null
@@ -180,13 +181,21 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitCommitStorage repo = getCommitStorage(mrk, true);
-         if (!await prepareRepositoryForDiffTool(repo, leftSHA, rightSHA) || _exiting)
+         Debug.WriteLine(String.Format(
+            "[MainForm.Async] Preparing to open diff tool for project {0}: {1} vs {2}...",
+            mrk.ProjectKey.ProjectName, leftSHA, rightSHA));
+
+         ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
+         if (!await prepareRepositoryForDiffTool(storage, baseSHA, leftSHA, rightSHA) || _exiting)
          {
             return;
          }
 
-         launchDiffTool(leftSHA, rightSHA, repo, mrk, accessToken, getSessionName(session));
+         Debug.WriteLine(String.Format(
+            "[MainForm.Async] Ready to open diff tool for project {0}: {1} vs {2}!",
+            mrk.ProjectKey.ProjectName, leftSHA, rightSHA));
+
+         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, getSessionName(session));
 
          HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
          foreach (string sha in includedSHA)
@@ -201,7 +210,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void launchDiffTool(string leftSHA, string rightSHA, ILocalGitCommitStorage repo,
+      private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage repo,
          MergeRequestKey mrk, string accessToken, string sessionName)
       {
          labelWorkflowStatus.Text = "Launching diff tool...";
@@ -209,9 +218,8 @@ namespace mrHelper.App.Forms
          int pid;
          try
          {
-            string arguments = "difftool --no-symlinks --dir-diff --tool=" +
-               DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
-            pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;
+            DiffToolArguments arg = new DiffToolArguments(true, Constants.GitDiffToolName, leftSHA, rightSHA);
+            pid = repo.Git.LaunchDiffTool(arg);
          }
          catch (Exception ex)
          {
@@ -240,7 +248,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<bool> prepareRepositoryForDiffTool(ILocalGitCommitStorage repo, string leftSHA, string rightSHA)
+      async private Task<bool> prepareRepositoryForDiffTool(ILocalCommitStorage repo,
+         string baseSHA, string leftSHA, string rightSHA)
       {
          if (repo == null)
          {
@@ -252,20 +261,20 @@ namespace mrHelper.App.Forms
          try
          {
             ICommitStorageUpdateContextProvider contextProvider =
-               new CommitBasedContextProvider(new string[] { leftSHA, rightSHA });
+               new CommitBasedContextProvider(new string[] { rightSHA }, leftSHA);
             await repo.Updater.StartUpdate(contextProvider, updateGitStatusText,
                () => updateGitAbortState(false));
             return true;
          }
          catch (Exception ex)
          {
-            if (ex is LocalGitCommitStorageUpdaterCancelledException)
+            if (ex is LocalCommitStorageUpdaterCancelledException)
             {
                // User declined to create a repository
                MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            else if (ex is LocalGitCommitStorageUpdaterFailedException inex)
+            else if (ex is LocalCommitStorageUpdaterFailedException inex)
             {
                ExceptionHandlers.Handle(ex.Message, ex);
                MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -364,11 +373,18 @@ namespace mrHelper.App.Forms
             accessToken,
             mrk.ProjectKey.ProjectName,
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
-            textBoxLocalGitFolder.Text,
+            textBoxStorageFolder.Text,
             sessionName);
 
          SnapshotSerializer serializer = new SnapshotSerializer();
-         serializer.SerializeToDisk(snapshot, pid);
+         try
+         {
+            serializer.SerializeToDisk(snapshot, pid);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle("Cannot serialize Snapshot object", ex);
+         }
       }
 
       async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
@@ -396,15 +412,15 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      private void requestRepositoryUpdate(MergeRequestKey mrk)
+      private void requestCommitStorageUpdate(ProjectKey projectKey)
       {
          ISession session = getSession(true /* supported in Live only */);
 
-         IEnumerable<GitLabSharp.Entities.Version> versions = session?.MergeRequestCache?.GetVersions(mrk);
+         IEnumerable<GitLabSharp.Entities.Version> versions = session?.MergeRequestCache?.GetVersions(projectKey);
          if (versions != null)
          {
             VersionBasedContextProvider contextProvider = new VersionBasedContextProvider(versions);
-            ILocalGitCommitStorage repo = getCommitStorage(mrk, false);
+            ILocalCommitStorage repo = getCommitStorage(projectKey, false);
             repo?.Updater?.RequestUpdate(contextProvider, null);
          }
       }

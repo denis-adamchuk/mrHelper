@@ -74,6 +74,11 @@ namespace mrHelper.Client.MergeRequests
          return _cacheUpdater.Cache.GetVersions(mrk);
       }
 
+      public IEnumerable<GitLabSharp.Entities.Version> GetVersions(ProjectKey projectKey)
+      {
+         return getAllVersions(projectKey);
+      }
+
       public IEnumerable<GitLabSharp.Entities.Commit> GetCommits(MergeRequestKey mrk)
       {
          return _cacheUpdater.Cache.GetCommits(mrk);

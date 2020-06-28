@@ -13,21 +13,21 @@ namespace mrHelper.StorageSupport
    /// <summary>
    /// Provides access to git repository.
    /// </summary>
-   internal class LocalGitRepository : ILocalGitRepository, IDisposable
+   internal class GitRepository : IGitRepository, IDisposable
    {
-      // @{ IGitRepository
-      IGitCommitStorageData IGitCommitStorage.Data => ExpectingClone ? null : _data;
-      // @{ IGitRepository
+      // @{ IGitCommitStorage
+      IGitCommandService ICommitStorage.Git => ExpectingClone ? null : _commandService;
 
-      // @{ ILocalGitRepository
-      public ILocalGitCommitStorageData Data => ExpectingClone ? null : _data;
+      public ProjectKey ProjectKey { get; }
+      // @{ IGitCommitStorage
 
+      // @{ ILocalGitCommitStorage
       public string Path { get; }
 
-      public ILocalGitCommitStorageUpdater Updater => _updater;
-      // @} ILocalGitRepository
+      public ILocalCommitStorageUpdater Updater => _updater;
+      // @} ILocalGitCommitStorage
 
-      // @{ ILocalGitRepositoryInternal
+      // @{ IGitRepository
       async public Task<bool> ContainsSHAAsync(string sha)
       {
          if (_cached_existingSha.Contains(sha))
@@ -35,7 +35,7 @@ namespace mrHelper.StorageSupport
             return true;
          }
 
-         if (!_isDisposed && await GitTools.DoesEntityExistAtPathAsync(_operationManager, Path, sha))
+         if (!_isDisposed && await GitTools.DoesEntityExistAtPathAsync(_processManager, Path, sha))
          {
             _cached_existingSha.Add(sha);
             return true;
@@ -45,61 +45,64 @@ namespace mrHelper.StorageSupport
 
       public bool ExpectingClone { get; private set; } = true;
 
-      public ProjectKey ProjectKey { get; }
-      // @} ILocalGitRepositoryInternal
+      public IAsyncGitCommandService Git => ExpectingClone ? null : _commandService;
+      // @} IGitRepository
 
       /// <summary>
-      /// Construct LocalGitRepository with a path that either does not exist or it is empty
+      /// Construct GitRepository with a path that either does not exist or it is empty
       /// or points to a valid git repository
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
-      internal LocalGitRepository(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone)
+      internal GitRepository(string parentFolder, ProjectKey projectKey,
+         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, Action<IGitRepository> onClonedRepo)
       {
-         Path = LocalGitRepositoryPathFinder.FindPath(parentFolder, projectKey);
+         Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
+            LocalCommitStorageType.GitRepository);
 
          if (!GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
          {
             throw new ArgumentException("Cannot work with such repositories");
          }
 
-         EUpdateMode mode = useShallowClone ? EUpdateMode.ShallowClone : EUpdateMode.FullCloneWithSingleCommitFetches;
+         UpdateMode mode = useShallowClone ? UpdateMode.ShallowClone : UpdateMode.FullCloneWithSingleCommitFetches;
 
          // PathFinder must guarantee the following
          Debug.Assert(isEmptyFolder(Path)
             || (GitTools.GetRepositoryProjectKey(Path).HasValue
                && GitTools.GetRepositoryProjectKey(Path).Value.Equals(projectKey)));
 
-         _operationManager = new GitOperationManager(synchronizeInvoke, Path);
-         _updater = new GitInteractiveUpdater(synchronizeInvoke, this, _operationManager, mode, onCloned, onFetched);
-         _data = new LocalGitRepositoryData(_operationManager, Path);
+         _processManager = new GitProcessManager(synchronizeInvoke, Path);
+         _updater = new GitRepositoryUpdater(synchronizeInvoke, this, _processManager, mode, onCloned, onFetched);
+         _onClonedRepo = onClonedRepo;
+
+         _commandService = new NativeGitCommandService(_processManager, Path);
 
          ExpectingClone = isEmptyFolder(Path);
          ProjectKey = projectKey;
          Trace.TraceInformation(String.Format(
-            "[LocalGitRepository] Created LocalGitRepository at Path {0} for host {1} and project {2}, "
+            "[GitRepository] Created GitRepository at Path {0} for host {1} and project {2}, "
           + "expecting clone = {3}",
             Path, ProjectKey.HostName, ProjectKey.ProjectName, ExpectingClone.ToString()));
       }
 
       public void Dispose()
       {
-         Trace.TraceInformation(String.Format("[LocalGitRepository] Disposing LocalGitRepository at path {0}", Path));
+         Trace.TraceInformation(String.Format("[GitRepository] Disposing GitRepository at path {0}", Path));
 
-         _data.Dispose();
-         _data = null;
+         _commandService.Dispose();
+         _commandService = null;
 
          _updater.Dispose();
          _updater = null;
 
-         _operationManager.Dispose();
+         _processManager.Dispose();
 
          _isDisposed = true;
       }
 
       public override string ToString()
       {
-         return String.Format("[LocalGitRepository] {0} at {1}", ProjectKey.ProjectName, ProjectKey.HostName);
+         return String.Format("[GitRepository] {0} at {1}", ProjectKey.ProjectName, ProjectKey.HostName);
       }
 
       private void onFetched(string sha)
@@ -111,6 +114,7 @@ namespace mrHelper.StorageSupport
       private void onCloned()
       {
          ExpectingClone = false;
+         _onClonedRepo?.Invoke(this);
       }
 
       private static bool isEmptyFolder(string path)
@@ -119,10 +123,11 @@ namespace mrHelper.StorageSupport
       }
 
       private readonly HashSet<string> _cached_existingSha = new HashSet<string>();
-      private LocalGitRepositoryData _data;
-      private GitInteractiveUpdater _updater;
+      private GitCommandService _commandService;
+      private GitRepositoryUpdater _updater;
       private bool _isDisposed;
-      private readonly GitOperationManager _operationManager;
+      private readonly GitProcessManager _processManager;
+      private readonly Action<IGitRepository> _onClonedRepo;
    }
 }
 

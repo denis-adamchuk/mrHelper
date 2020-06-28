@@ -24,7 +24,6 @@ namespace mrHelper.App.Forms
 
          _liveSession?.Dispose();
          _searchSession?.Dispose();
-         _gitlabClientManager?.Dispose();
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -52,15 +51,16 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
          this.listViewKnownHosts = new System.Windows.Forms.ListView();
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.buttonBrowseLocalGitFolder = new System.Windows.Forms.Button();
-         this.textBoxLocalGitFolder = new System.Windows.Forms.TextBox();
-         this.labelLocalGitFolder = new System.Windows.Forms.Label();
+         this.buttonBrowseStorageFolder = new System.Windows.Forms.Button();
+         this.textBoxStorageFolder = new System.Windows.Forms.TextBox();
+         this.labelLocalStorageFolder = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.buttonEditTime = new System.Windows.Forms.Button();
@@ -115,7 +115,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.linkLabelAbortGit = new System.Windows.Forms.LinkLabel();
+         this.linkLabelAbortGitClone = new System.Windows.Forms.LinkLabel();
          this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
@@ -123,7 +123,7 @@ namespace mrHelper.App.Forms
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-         this.localGitFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
+         this.storageFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
          this.tabControl = new System.Windows.Forms.TabControl();
          this.tabPageSettings = new System.Windows.Forms.TabPage();
          this.groupBoxNotifications = new System.Windows.Forms.GroupBox();
@@ -143,7 +143,7 @@ namespace mrHelper.App.Forms
          this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
          this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelDepth = new System.Windows.Forms.Label();
-         this.groupBoxGit = new System.Windows.Forms.GroupBox();
+         this.groupBoxStorage = new System.Windows.Forms.GroupBox();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -156,7 +156,7 @@ namespace mrHelper.App.Forms
          this.pictureBox2 = new System.Windows.Forms.PictureBox();
          this.pictureBox1 = new System.Windows.Forms.PictureBox();
          this.panelStatusBar = new System.Windows.Forms.Panel();
-         this.labelGitStatus = new System.Windows.Forms.Label();
+         this.labelStorageStatus = new System.Windows.Forms.Label();
          this.labelWorkflowStatus = new System.Windows.Forms.Label();
          this.panelBottomMenu = new System.Windows.Forms.Panel();
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
@@ -168,6 +168,8 @@ namespace mrHelper.App.Forms
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.radioButtonUseGit = new System.Windows.Forms.RadioButton();
+         this.radioButtonDontUseGit = new System.Windows.Forms.RadioButton();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -178,7 +180,7 @@ namespace mrHelper.App.Forms
          this.tabPageSettings.SuspendLayout();
          this.groupBoxNotifications.SuspendLayout();
          this.groupBoxOther.SuspendLayout();
-         this.groupBoxGit.SuspendLayout();
+         this.groupBoxStorage.SuspendLayout();
          this.groupBoxHost.SuspendLayout();
          this.tabPageMR.SuspendLayout();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -263,35 +265,35 @@ namespace mrHelper.App.Forms
          this.columnHeaderAccessToken.Text = "AccessToken";
          this.columnHeaderAccessToken.Width = 180;
          // 
-         // buttonBrowseLocalGitFolder
+         // buttonBrowseStorageFolder
          // 
-         this.buttonBrowseLocalGitFolder.Location = new System.Drawing.Point(424, 31);
-         this.buttonBrowseLocalGitFolder.Name = "buttonBrowseLocalGitFolder";
-         this.buttonBrowseLocalGitFolder.Size = new System.Drawing.Size(83, 27);
-         this.buttonBrowseLocalGitFolder.TabIndex = 4;
-         this.buttonBrowseLocalGitFolder.Text = "Browse...";
-         this.toolTip.SetToolTip(this.buttonBrowseLocalGitFolder, "Select a folder where repositories will be stored");
-         this.buttonBrowseLocalGitFolder.UseVisualStyleBackColor = true;
-         this.buttonBrowseLocalGitFolder.Click += new System.EventHandler(this.ButtonBrowseLocalGitFolder_Click);
+         this.buttonBrowseStorageFolder.Location = new System.Drawing.Point(424, 31);
+         this.buttonBrowseStorageFolder.Name = "buttonBrowseStorageFolder";
+         this.buttonBrowseStorageFolder.Size = new System.Drawing.Size(83, 27);
+         this.buttonBrowseStorageFolder.TabIndex = 4;
+         this.buttonBrowseStorageFolder.Text = "Browse...";
+         this.toolTip.SetToolTip(this.buttonBrowseStorageFolder, "Select a folder where repositories will be stored");
+         this.buttonBrowseStorageFolder.UseVisualStyleBackColor = true;
+         this.buttonBrowseStorageFolder.Click += new System.EventHandler(this.ButtonBrowseStorageFolder_Click);
          // 
-         // textBoxLocalGitFolder
+         // textBoxStorageFolder
          // 
-         this.textBoxLocalGitFolder.Location = new System.Drawing.Point(6, 35);
-         this.textBoxLocalGitFolder.Name = "textBoxLocalGitFolder";
-         this.textBoxLocalGitFolder.ReadOnly = true;
-         this.textBoxLocalGitFolder.Size = new System.Drawing.Size(412, 20);
-         this.textBoxLocalGitFolder.TabIndex = 1;
-         this.textBoxLocalGitFolder.TabStop = false;
-         this.toolTip.SetToolTip(this.textBoxLocalGitFolder, "A folder where repositories are stored");
+         this.textBoxStorageFolder.Location = new System.Drawing.Point(6, 35);
+         this.textBoxStorageFolder.Name = "textBoxStorageFolder";
+         this.textBoxStorageFolder.ReadOnly = true;
+         this.textBoxStorageFolder.Size = new System.Drawing.Size(412, 20);
+         this.textBoxStorageFolder.TabIndex = 1;
+         this.textBoxStorageFolder.TabStop = false;
+         this.toolTip.SetToolTip(this.textBoxStorageFolder, "A folder where repositories are stored");
          // 
-         // labelLocalGitFolder
+         // labelLocalStorageFolder
          // 
-         this.labelLocalGitFolder.AutoSize = true;
-         this.labelLocalGitFolder.Location = new System.Drawing.Point(6, 19);
-         this.labelLocalGitFolder.Name = "labelLocalGitFolder";
-         this.labelLocalGitFolder.Size = new System.Drawing.Size(152, 13);
-         this.labelLocalGitFolder.TabIndex = 8;
-         this.labelLocalGitFolder.Text = "Parent folder for git repositories";
+         this.labelLocalStorageFolder.AutoSize = true;
+         this.labelLocalStorageFolder.Location = new System.Drawing.Point(6, 19);
+         this.labelLocalStorageFolder.Name = "labelLocalStorageFolder";
+         this.labelLocalStorageFolder.Size = new System.Drawing.Size(121, 13);
+         this.labelLocalStorageFolder.TabIndex = 8;
+         this.labelLocalStorageFolder.Text = "Folder for temporary files";
          // 
          // toolTip
          // 
@@ -466,15 +468,14 @@ namespace mrHelper.App.Forms
          this.checkBoxShowVersionsByDefault.AutoSize = true;
          this.checkBoxShowVersionsByDefault.Location = new System.Drawing.Point(6, 197);
          this.checkBoxShowVersionsByDefault.Name = "checkBoxShowVersionsByDefault";
-         this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(232, 17);
+         this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(195, 17);
          this.checkBoxShowVersionsByDefault.TabIndex = 14;
          this.checkBoxShowVersionsByDefault.Text = "Expand list of versions automatically";
-         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, "When checked, revision tree expands a list of versions when merge request is selected.\n" +
-            "When unchecked, revision tree expands a list of commits.\nSelect this box if you would like to see list of revisions by analogy with Changes tab of GitLab Web UI");
+         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, resources.GetString("checkBoxShowVersionsByDefault.ToolTip"));
          this.checkBoxShowVersionsByDefault.UseVisualStyleBackColor = true;
          this.checkBoxShowVersionsByDefault.CheckedChanged += new System.EventHandler(this.checkBoxShowVersionsByDefault_CheckedChanged);
          // 
-         // checkBoxAutoSelectNewestCommit
+         // checkBoxAutoSelectNewestRevision
          // 
          this.checkBoxAutoSelectNewestRevision.AutoSize = true;
          this.checkBoxAutoSelectNewestRevision.Location = new System.Drawing.Point(6, 174);
@@ -482,8 +483,8 @@ namespace mrHelper.App.Forms
          this.checkBoxAutoSelectNewestRevision.Size = new System.Drawing.Size(152, 17);
          this.checkBoxAutoSelectNewestRevision.TabIndex = 13;
          this.checkBoxAutoSelectNewestRevision.Text = "Auto-select newest commit";
-         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestRevision, "When a merge request is selected, select the most recent available revision for dif" +
-        "f tool");
+         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestRevision, "When a merge request is selected, select the most recent available revision for d" +
+        "iff tool");
          this.checkBoxAutoSelectNewestRevision.UseVisualStyleBackColor = true;
          this.checkBoxAutoSelectNewestRevision.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestRevision_CheckedChanged);
          // 
@@ -896,18 +897,18 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundTargetBranch.Text = "Target Branch";
          this.columnHeaderFoundTargetBranch.Width = 100;
          // 
-         // linkLabelAbortGit
+         // linkLabelAbortGitClone
          // 
-         this.linkLabelAbortGit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.linkLabelAbortGit.Location = new System.Drawing.Point(887, 31);
-         this.linkLabelAbortGit.Name = "linkLabelAbortGit";
-         this.linkLabelAbortGit.Size = new System.Drawing.Size(32, 15);
-         this.linkLabelAbortGit.TabIndex = 15;
-         this.linkLabelAbortGit.TabStop = true;
-         this.linkLabelAbortGit.Text = "Abort";
-         this.toolTip.SetToolTip(this.linkLabelAbortGit, "Abort current git operation");
-         this.linkLabelAbortGit.Visible = false;
-         this.linkLabelAbortGit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGit_LinkClicked);
+         this.linkLabelAbortGitClone.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelAbortGitClone.Location = new System.Drawing.Point(887, 31);
+         this.linkLabelAbortGitClone.Name = "linkLabelAbortGitClone";
+         this.linkLabelAbortGitClone.Size = new System.Drawing.Size(32, 15);
+         this.linkLabelAbortGitClone.TabIndex = 15;
+         this.linkLabelAbortGitClone.TabStop = true;
+         this.linkLabelAbortGitClone.Text = "Abort";
+         this.toolTip.SetToolTip(this.linkLabelAbortGitClone, "Abort git clone operation");
+         this.linkLabelAbortGitClone.Visible = false;
+         this.linkLabelAbortGitClone.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelAbortGitClone_LinkClicked);
          // 
          // buttonTimeTrackingCancel
          // 
@@ -979,10 +980,10 @@ namespace mrHelper.App.Forms
          this.notifyIcon.Visible = true;
          this.notifyIcon.DoubleClick += new System.EventHandler(this.NotifyIcon_DoubleClick);
          // 
-         // localGitFolderBrowser
+         // storageFolderBrowser
          // 
-         this.localGitFolderBrowser.Description = "Select a folder where git repository will be stored locally";
-         this.localGitFolderBrowser.RootFolder = System.Environment.SpecialFolder.MyComputer;
+         this.storageFolderBrowser.Description = "Select a folder where temp files will be stored";
+         this.storageFolderBrowser.RootFolder = System.Environment.SpecialFolder.MyComputer;
          // 
          // tabControl
          // 
@@ -1001,7 +1002,7 @@ namespace mrHelper.App.Forms
          // 
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
          this.tabPageSettings.Controls.Add(this.groupBoxOther);
-         this.tabPageSettings.Controls.Add(this.groupBoxGit);
+         this.tabPageSettings.Controls.Add(this.groupBoxStorage);
          this.tabPageSettings.Controls.Add(this.groupBoxKnownHosts);
          this.tabPageSettings.Controls.Add(this.groupBoxHost);
          this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
@@ -1022,7 +1023,7 @@ namespace mrHelper.App.Forms
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowUpdatedMergeRequests);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowMergedMergeRequests);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowNewMergeRequests);
-         this.groupBoxNotifications.Location = new System.Drawing.Point(6, 222);
+         this.groupBoxNotifications.Location = new System.Drawing.Point(6, 250);
          this.groupBoxNotifications.Name = "groupBoxNotifications";
          this.groupBoxNotifications.Size = new System.Drawing.Size(513, 135);
          this.groupBoxNotifications.TabIndex = 4;
@@ -1133,7 +1134,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.labelDepth);
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
-         this.groupBoxOther.Location = new System.Drawing.Point(6, 363);
+         this.groupBoxOther.Location = new System.Drawing.Point(6, 391);
          this.groupBoxOther.Name = "groupBoxOther";
          this.groupBoxOther.Size = new System.Drawing.Size(301, 270);
          this.groupBoxOther.TabIndex = 2;
@@ -1206,17 +1207,19 @@ namespace mrHelper.App.Forms
          this.labelDepth.TabIndex = 5;
          this.labelDepth.Text = "Diff Context Depth";
          // 
-         // groupBoxGit
+         // groupBoxStorage
          // 
-         this.groupBoxGit.Controls.Add(this.buttonBrowseLocalGitFolder);
-         this.groupBoxGit.Controls.Add(this.labelLocalGitFolder);
-         this.groupBoxGit.Controls.Add(this.textBoxLocalGitFolder);
-         this.groupBoxGit.Location = new System.Drawing.Point(6, 147);
-         this.groupBoxGit.Name = "groupBoxGit";
-         this.groupBoxGit.Size = new System.Drawing.Size(513, 69);
-         this.groupBoxGit.TabIndex = 1;
-         this.groupBoxGit.TabStop = false;
-         this.groupBoxGit.Text = "git";
+         this.groupBoxStorage.Controls.Add(this.radioButtonDontUseGit);
+         this.groupBoxStorage.Controls.Add(this.radioButtonUseGit);
+         this.groupBoxStorage.Controls.Add(this.buttonBrowseStorageFolder);
+         this.groupBoxStorage.Controls.Add(this.labelLocalStorageFolder);
+         this.groupBoxStorage.Controls.Add(this.textBoxStorageFolder);
+         this.groupBoxStorage.Location = new System.Drawing.Point(6, 147);
+         this.groupBoxStorage.Name = "groupBoxStorage";
+         this.groupBoxStorage.Size = new System.Drawing.Size(513, 88);
+         this.groupBoxStorage.TabIndex = 1;
+         this.groupBoxStorage.TabStop = false;
+         this.groupBoxStorage.Text = "File Storage";
          // 
          // groupBoxHost
          // 
@@ -1386,8 +1389,8 @@ namespace mrHelper.App.Forms
          // 
          this.panelStatusBar.BackColor = System.Drawing.Color.WhiteSmoke;
          this.panelStatusBar.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.panelStatusBar.Controls.Add(this.linkLabelAbortGit);
-         this.panelStatusBar.Controls.Add(this.labelGitStatus);
+         this.panelStatusBar.Controls.Add(this.linkLabelAbortGitClone);
+         this.panelStatusBar.Controls.Add(this.labelStorageStatus);
          this.panelStatusBar.Controls.Add(this.labelWorkflowStatus);
          this.panelStatusBar.Dock = System.Windows.Forms.DockStyle.Bottom;
          this.panelStatusBar.Location = new System.Drawing.Point(0, 497);
@@ -1395,18 +1398,18 @@ namespace mrHelper.App.Forms
          this.panelStatusBar.Size = new System.Drawing.Size(926, 52);
          this.panelStatusBar.TabIndex = 10;
          // 
-         // labelGitStatus
+         // labelStorageStatus
          // 
-         this.labelGitStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.labelStorageStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.labelGitStatus.AutoEllipsis = true;
-         this.labelGitStatus.Location = new System.Drawing.Point(0, 31);
-         this.labelGitStatus.Name = "labelGitStatus";
-         this.labelGitStatus.Size = new System.Drawing.Size(881, 16);
-         this.labelGitStatus.TabIndex = 1;
-         this.labelGitStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
+         this.labelStorageStatus.AutoEllipsis = true;
+         this.labelStorageStatus.Location = new System.Drawing.Point(0, 31);
+         this.labelStorageStatus.Name = "labelStorageStatus";
+         this.labelStorageStatus.Size = new System.Drawing.Size(881, 16);
+         this.labelStorageStatus.TabIndex = 1;
+         this.labelStorageStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore";
-         this.labelGitStatus.Visible = false;
+         this.labelStorageStatus.Visible = false;
          // 
          // labelWorkflowStatus
          // 
@@ -1532,6 +1535,29 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // radioButtonUseGit
+         // 
+         this.radioButtonUseGit.AutoSize = true;
+         this.radioButtonUseGit.Location = new System.Drawing.Point(6, 61);
+         this.radioButtonUseGit.Name = "radioButtonUseGit";
+         this.radioButtonUseGit.Size = new System.Drawing.Size(185, 17);
+         this.radioButtonUseGit.TabIndex = 9;
+         this.radioButtonUseGit.TabStop = true;
+         this.radioButtonUseGit.Text = "Use git for repository management";
+         this.radioButtonUseGit.UseVisualStyleBackColor = true;
+         this.radioButtonUseGit.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
+         // 
+         // radioButtonDontUseGit
+         // 
+         this.radioButtonDontUseGit.AutoSize = true;
+         this.radioButtonDontUseGit.Location = new System.Drawing.Point(234, 61);
+         this.radioButtonDontUseGit.Name = "radioButtonDontUseGit";
+         this.radioButtonDontUseGit.Size = new System.Drawing.Size(229, 17);
+         this.radioButtonDontUseGit.TabIndex = 10;
+         this.radioButtonDontUseGit.TabStop = true;
+         this.radioButtonDontUseGit.Text = "Don\'t use git (no need to clone repositories)";
+         this.radioButtonDontUseGit.UseVisualStyleBackColor = true;
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1558,8 +1584,8 @@ namespace mrHelper.App.Forms
          this.groupBoxNotifications.PerformLayout();
          this.groupBoxOther.ResumeLayout(false);
          this.groupBoxOther.PerformLayout();
-         this.groupBoxGit.ResumeLayout(false);
-         this.groupBoxGit.PerformLayout();
+         this.groupBoxStorage.ResumeLayout(false);
+         this.groupBoxStorage.PerformLayout();
          this.groupBoxHost.ResumeLayout(false);
          this.groupBoxHost.PerformLayout();
          this.tabPageMR.ResumeLayout(false);
@@ -1594,13 +1620,13 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ToolStripMenuItem restoreToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
       private System.Windows.Forms.NotifyIcon notifyIcon;
-      private System.Windows.Forms.Label labelLocalGitFolder;
-      private System.Windows.Forms.FolderBrowserDialog localGitFolderBrowser;
-      private System.Windows.Forms.Button buttonBrowseLocalGitFolder;
-      private System.Windows.Forms.TextBox textBoxLocalGitFolder;
+      private System.Windows.Forms.Label labelLocalStorageFolder;
+      private System.Windows.Forms.FolderBrowserDialog storageFolderBrowser;
+      private System.Windows.Forms.Button buttonBrowseStorageFolder;
+      private System.Windows.Forms.TextBox textBoxStorageFolder;
       private System.Windows.Forms.TabControl tabControl;
       private System.Windows.Forms.TabPage tabPageSettings;
-      private System.Windows.Forms.GroupBox groupBoxGit;
+      private System.Windows.Forms.GroupBox groupBoxStorage;
       private System.Windows.Forms.TabPage tabPageMR;
       private System.Windows.Forms.GroupBox groupBoxOther;
       private System.Windows.Forms.Button buttonRemoveKnownHost;
@@ -1652,8 +1678,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Button buttonNewDiscussion;
       private System.Windows.Forms.Panel panelStatusBar;
-      private System.Windows.Forms.LinkLabel linkLabelAbortGit;
-      private System.Windows.Forms.Label labelGitStatus;
+      private System.Windows.Forms.LinkLabel linkLabelAbortGitClone;
+      private System.Windows.Forms.Label labelStorageStatus;
       private System.Windows.Forms.Label labelWorkflowStatus;
       private System.Windows.Forms.Panel panelBottomMenu;
       private System.Windows.Forms.LinkLabel linkLabelHelp;
@@ -1704,6 +1730,8 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
       private System.Windows.Forms.CheckBox checkBoxRunWhenWindowsStarts;
       private Controls.RevisionBrowser revisionBrowser;
+      private RadioButton radioButtonDontUseGit;
+      private RadioButton radioButtonUseGit;
    }
 }
 

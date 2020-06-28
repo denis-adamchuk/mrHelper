@@ -14,7 +14,7 @@ namespace mrHelper.App.Forms
    internal partial class NewDiscussionForm : CustomFontForm
    {
       internal NewDiscussionForm(string leftSideFileName, string rightSideFileName,
-         DiffPosition position, IGitCommitStorage gitRepository)
+         DiffPosition position, IGitCommandService git)
       {
          InitializeComponent();
          htmlPanel.AutoScroll = false;
@@ -26,7 +26,7 @@ namespace mrHelper.App.Forms
          createWPFTextBox();
 
          this.Text = Constants.StartNewThreadCaption;
-         showDiscussionContext(leftSideFileName, rightSideFileName, position, gitRepository);
+         showDiscussionContext(leftSideFileName, rightSideFileName, position, git);
 
          buttonCancel.ConfirmationCondition =
             () => textBoxDiscussionBody.Text.Length > MaximumTextLengthTocancelWithoutConfirmation;
@@ -56,9 +56,9 @@ namespace mrHelper.App.Forms
       /// Throws ArgumentException.
       /// </summary>
       private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
-         DiffPosition position, IGitCommitStorage gitRepository)
+         DiffPosition position, IGitCommandService git)
       {
-         string html = getContextHtmlText(position, gitRepository, out string stylesheet);
+         string html = getContextHtmlText(position, git, out string stylesheet);
          htmlPanel.BaseStylesheet = stylesheet;
          htmlPanel.Text = html;
 
@@ -66,7 +66,7 @@ namespace mrHelper.App.Forms
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, IGitCommitStorage gitRepository, out string stylesheet)
+      private string getContextHtmlText(DiffPosition position, IGitCommandService git, out string stylesheet)
       {
          stylesheet = String.Empty;
 
@@ -74,7 +74,7 @@ namespace mrHelper.App.Forms
          try
          {
             ContextDepth depth = new ContextDepth(0, 3);
-            IContextMaker textContextMaker = new SimpleContextMaker(gitRepository);
+            IContextMaker textContextMaker = new SimpleContextMaker(git);
             context = textContextMaker.GetContext(position, depth);
          }
          catch (Exception ex)

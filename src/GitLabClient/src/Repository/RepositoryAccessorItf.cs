@@ -6,15 +6,15 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.Repository
 {
-   public class RepositoryManagerException : ExceptionEx
+   public class RepositoryAccessorException : ExceptionEx
    {
-      internal RepositoryManagerException(string message, Exception innerException)
+      internal RepositoryAccessorException(string message, Exception innerException)
          : base(message, innerException)
       {
       }
    }
 
-   public interface IRepositoryManager
+   public interface IRepositoryAccessor : IDisposable
    {
       Task<Comparison> Compare(ProjectKey projectKey, string from, string to);
 
@@ -25,6 +25,8 @@ namespace mrHelper.Client.Repository
       Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha);
 
       Task DeleteBranch(ProjectKey projectKey, string name);
+
+      void Cancel();
    }
 }
 

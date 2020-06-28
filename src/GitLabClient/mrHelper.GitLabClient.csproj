@@ -65,6 +65,8 @@
     <Compile Include="src\Discussions\Impl\Internal\DiscussionParser.cs" />
     <Compile Include="src\Common\GitLabClientContext.cs" />
     <Compile Include="src\Common\UpdateTokenItf.cs" />
+    <Compile Include="src\Repository\Impl\Internal\RepositoryAccessor.cs" />
+    <Compile Include="src\Repository\RepositoryAccessorItf.cs" />
     <Compile Include="src\Session\Impl\Internal\CurrentUserLoader.cs" />
     <Compile Include="src\Session\SessionException.cs" />
     <Compile Include="src\TimeTracking\TimeTrackerItf.cs" />
@@ -72,7 +74,6 @@
     <Compile Include="src\Session\Impl\Internal\Session.cs" />
     <Compile Include="src\Session\Impl\Internal\SessionManager.cs" />
     <Compile Include="src\Session\Impl\Internal\Interfaces\MergeRequestLoaderItf.cs" />
-    <Compile Include="src\Repository\RepositoryManagerItf.cs" />
     <Compile Include="src\TimeTracking\TimeTrackingManagerItf.cs" />
     <Compile Include="src\Common\Impl\GitLabClientManager.cs" />
     <Compile Include="src\Repository\Impl\Internal\RepositoryOperator.cs" />

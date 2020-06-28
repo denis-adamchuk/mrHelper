@@ -366,12 +366,12 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _iconScheme = JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+            _iconScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
                Constants.IconSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
-         catch (Exception ex) // whatever de-deserialization exception
+         catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle("Cannot load icon scheme", ex);
          }
@@ -386,12 +386,12 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _badgeScheme = JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+            _badgeScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
                Constants.BadgeSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
-         catch (Exception ex) // whatever de-deserialization exception
+         catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle("Cannot load badge scheme", ex);
          }
@@ -440,19 +440,19 @@ namespace mrHelper.App.Forms
 
       private void updateGitAbortState(bool resetStatusText)
       {
-         MergeRequestKey? mrk = getMergeRequestKey(null);
-         ILocalGitCommitStorage repo = mrk.HasValue ? getCommitStorage(mrk.Value, false) : null;
+         ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
+         ILocalCommitStorage repo = projectKey.HasValue ? getCommitStorage(projectKey.Value, false) : null;
 
          bool enabled = repo?.Updater?.CanBeStopped() ?? false;
-         linkLabelAbortGit.Visible = enabled;
-         labelGitStatus.Visible = enabled;
+         linkLabelAbortGitClone.Visible = enabled;
+         labelStorageStatus.Visible = enabled;
 
          if (resetStatusText)
          {
-            string projectname = mrk?.ProjectKey.ProjectName ?? String.Empty;
+            string projectname = projectKey?.ProjectName ?? String.Empty;
             if (!String.IsNullOrWhiteSpace(projectname))
             {
-               labelGitStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
+               labelStorageStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
             }
          }
       }
@@ -617,6 +617,11 @@ namespace mrHelper.App.Forms
 
       private string getSize(MergeRequestKey mrk)
       {
+         if (_diffStatProvider == null)
+         {
+            return String.Empty;
+         }
+
          DiffStatistic? diffStatistic = _diffStatProvider.GetStatistic(mrk, out string errMsg);
          return diffStatistic?.ToString() ?? errMsg;
       }
@@ -713,35 +718,29 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void updateGitStatusText(string text)
       {
-         if (labelGitStatus.InvokeRequired)
+         if (labelStorageStatus.InvokeRequired)
          {
             Invoke(new Action<string>(updateGitStatusText), new object [] { text });
          }
          else
          {
-            labelGitStatus.Text = text;
+            labelStorageStatus.Text = text;
          }
       }
 
-      private ILocalGitCommitStorageFactory gitCommitStorageFactory()
+      private ILocalCommitStorageFactory gitCommitStorageFactory()
       {
          if (_storageFactory == null)
          {
-            if (Program.Settings.UseGitStorage)
+            try
             {
-               try
-               {
-                  _storageFactory = new GitBasedCommitStorageFactory(
-                     Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone);
-               }
-               catch (ArgumentException ex)
-               {
-                  ExceptionHandlers.Handle("Cannot create GitBasedCommitStorageFactory", ex);
-               }
+               _storageFactory = new LocalCommitStorageFactory(
+                  Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone, getSession(true));
+               _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
-            else
+            catch (ArgumentException ex)
             {
-               _storageFactory = new GitLabBasedCommitStorageFactory(Program.Settings.LocalGitFolder, this);
+               ExceptionHandlers.Handle("Cannot create LocalGitCommitStorageFactory", ex);
             }
          }
          return _storageFactory;
@@ -751,29 +750,36 @@ namespace mrHelper.App.Forms
       {
          if (_storageFactory != null)
          {
+            _storageFactory.GitRepositoryCloned -= onGitRepositoryCloned;
             _storageFactory.Dispose();
             _storageFactory = null;
          }
+      }
+
+      private void onGitRepositoryCloned(ILocalCommitStorage storage)
+      {
+         requestCommitStorageUpdate(storage.ProjectKey);
       }
 
       /// <summary>
       /// Make some checks and create a commit storage
       /// </summary>
       /// <returns>null if could not create a repository</returns>
-      private ILocalGitCommitStorage getCommitStorage(MergeRequestKey mrk, bool showMessageBoxOnError)
+      private ILocalCommitStorage getCommitStorage(ProjectKey projectKey, bool showMessageBoxOnError)
       {
-         ILocalGitCommitStorageFactory factory = gitCommitStorageFactory();
+         ILocalCommitStorageFactory factory = gitCommitStorageFactory();
          if (factory == null)
          {
             return null;
          }
 
-         ILocalGitCommitStorage repo = factory.GetStorage(mrk);
+         var type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         ILocalCommitStorage repo = factory.GetStorage(projectKey, type);
          if (repo == null && showMessageBoxOnError)
          {
             MessageBox.Show(String.Format(
                "Cannot obtain disk storage for project {0} in \"{1}\"",
-               mrk.ProjectKey.ProjectName, Program.Settings.LocalGitFolder),
+               projectKey.ProjectName, Program.Settings.LocalGitFolder),
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return repo;
@@ -1150,13 +1156,13 @@ namespace mrHelper.App.Forms
 
       private void processUpdate(Client.Types.UserEvents.MergeRequestEvent e)
       {
-         MergeRequestKey mrk = new MergeRequestKey(
-            e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
-
          if (e.New || e.Commits)
          {
-            requestRepositoryUpdate(mrk);
+            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
          }
+
+         MergeRequestKey mrk = new MergeRequestKey(
+            e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
          if (e.Closed)
          {
@@ -1731,8 +1737,8 @@ namespace mrHelper.App.Forms
       private void updateTabControlSelection()
       {
          bool configured = listViewKnownHosts.Items.Count > 0
-                        && textBoxLocalGitFolder.Text.Length > 0
-                        && Directory.Exists(textBoxLocalGitFolder.Text);
+                        && textBoxStorageFolder.Text.Length > 0
+                        && Directory.Exists(textBoxStorageFolder.Text);
          if (configured)
          {
             tabControl.SelectedTab = tabPageMR;
@@ -1881,25 +1887,28 @@ namespace mrHelper.App.Forms
          buttonReloadList.Enabled = true;
       }
 
-      private void getShaForDiffTool(out string left, out string right, out IEnumerable<string> included,
-         out RevisionType? type)
+      private void getShaForDiffTool(out string baseSha, out string left, out string right,
+         out IEnumerable<string> included, out RevisionType? type)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out type);
          switch (selected.Count())
          {
             case 0:
+               baseSha = String.Empty;
                left = String.Empty;
                right = String.Empty;
                included = new List<string>();
                break;
 
             case 1:
-               left = revisionBrowser.GetBaseCommitSha();
+               baseSha = revisionBrowser.GetBaseCommitSha();
+               left = baseSha;
                right = selected[0];
                included = revisionBrowser.GetIncludedSha();
                break;
 
             case 2:
+               baseSha = revisionBrowser.GetBaseCommitSha();
                left = selected[0];
                right = selected[1];
                included = revisionBrowser.GetIncludedSha();
@@ -1907,6 +1916,7 @@ namespace mrHelper.App.Forms
 
             default:
                Debug.Assert(false);
+               baseSha = String.Empty;
                left = String.Empty;
                right = String.Empty;
                included = new List<string>();
