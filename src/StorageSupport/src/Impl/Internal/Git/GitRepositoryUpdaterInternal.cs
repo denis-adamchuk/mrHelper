@@ -64,8 +64,8 @@ namespace mrHelper.StorageSupport
          _isDisposed = true;
       }
 
-      async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         Action onUpdateStateChange)
+      async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
+         Action<string> onProgressChange, Action onUpdateStateChange)
       {
          if (onProgressChange == null)
          {
@@ -75,8 +75,8 @@ namespace mrHelper.StorageSupport
          await update(contextProvider, onProgressChange, onUpdateStateChange, true, false);
       }
 
-      async public Task update(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         Action onUpdateStateChange, bool canClone, bool canSplit)
+      async public Task update(ICommitStorageUpdateContextProvider contextProvider,
+         Action<string> onProgressChange, Action onUpdateStateChange, bool canClone, bool canSplit)
       {
          CommitStorageUpdateContext context = contextProvider?.GetContext();
          if (contextProvider == null || (context != null && context.BaseToHeads == null))
@@ -100,7 +100,7 @@ namespace mrHelper.StorageSupport
          if (_updateOperationDescriptor != null)
          {
             // already started, joining it
-            _updateOperationDescriptor.OnProgressChange = onProgressChange;
+            _updateOperationDescriptor.OnProgressChange = getProgressChangeFunctor();
             _onUpdateStateChange?.Invoke();
          }
 
@@ -110,6 +110,7 @@ namespace mrHelper.StorageSupport
          }
          else
          {
+            // TODO This is wrong, we need to check for something more stable than _updatingContext which maybe set and unset
             await TaskUtils.WhileAsync(() => _updatingContext != null);
          }
 
@@ -150,15 +151,14 @@ namespace mrHelper.StorageSupport
             await doPreProcessContext(context);
 
             IEnumerable<InternalUpdateContext> splitted = canSplit && _updateMode == UpdateMode.ShallowClone
-               ? new InternalUpdateContext(context.BaseToHeads).Split(Constants.MaxShaInChunk)
+               ? new InternalUpdateContext(context.BaseToHeads).Split(MaxShaInChunk)
                : new InternalUpdateContext[] { new InternalUpdateContext(context.BaseToHeads) };
             foreach (InternalUpdateContext internalContext in splitted)
             {
                await doProcessContext(context, internalContext);
 
                // this allows others to interleave with their (shorter) requests
-               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed,
-                  Constants.DelayBetweenChunksMs);
+               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed, DelayBetweenChunksMs);
             }
          }
          catch (GitCommandException ex)
@@ -339,8 +339,13 @@ namespace mrHelper.StorageSupport
 
       private ExternalProcess.AsyncTaskDescriptor startUpdateOperation(string arguments, string path)
       {
-         return _processManager.CreateDescriptor("git", arguments, path,
-            _onProgressChange == null ? null : new Action<string>(status => _onProgressChange?.Invoke(status)), null);
+         return _processManager.CreateDescriptor("git", arguments, path, getProgressChangeFunctor(), null);
+      }
+
+      private Action<string> getProgressChangeFunctor()
+      {
+         return _onProgressChange == null ?
+            null : new Action<string>(status => _onProgressChange?.Invoke(status));
       }
 
       private async Task waitUpdateOperationAsync(
@@ -425,18 +430,6 @@ namespace mrHelper.StorageSupport
             _gitRepository.ProjectKey.ProjectName, message));
       }
 
-      private void traceWarning(string message)
-      {
-         Trace.TraceWarning(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
-            _gitRepository.ProjectKey.ProjectName, message));
-      }
-
-      private void traceError(string message)
-      {
-         Trace.TraceError(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
-            _gitRepository.ProjectKey.ProjectName, message));
-      }
-
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly IGitRepository _gitRepository;
       private readonly IExternalProcessManager _processManager;
@@ -451,6 +444,9 @@ namespace mrHelper.StorageSupport
       private Action<string> _onProgressChange;
       private Action _onUpdateStateChange;
       private DateTime _latestFullFetchTimestamp = DateTime.MinValue;
+
+      private static int MaxShaInChunk = 2;
+      private static int DelayBetweenChunksMs = 50;
    }
 }
 

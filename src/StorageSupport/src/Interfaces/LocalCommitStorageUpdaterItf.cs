@@ -33,8 +33,8 @@ namespace mrHelper.StorageSupport
       /// - Can clone
       /// - Processes context in a single chunk
       /// </summary>
-      Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         Action onUpdateStateChange);
+      Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
+         Action<string> onProgressChange, Action onUpdateStateChange);
       void StopUpdate();
       bool CanBeStopped();
 

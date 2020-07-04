@@ -1409,7 +1409,7 @@ namespace mrHelper.App.Forms
          this.labelStorageStatus.TabIndex = 1;
          this.labelStorageStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore";
-         this.labelStorageStatus.Visible = false;
+         this.labelStorageStatus.Visible = true;
          // 
          // labelWorkflowStatus
          // 

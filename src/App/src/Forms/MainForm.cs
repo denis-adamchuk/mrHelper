@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -6,15 +7,13 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Client.Types;
 using mrHelper.Client.Session;
-using mrHelper.Client.Discussions;
 using mrHelper.Client.TimeTracking;
-using mrHelper.Client.MergeRequests;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
-using mrHelper.Client;
 using mrHelper.Client.Common;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -151,39 +150,9 @@ namespace mrHelper.App.Forms
          internal string AccessToken { get; }
       }
 
-      private enum CommitComboBoxItemStatus
-      {
-         Normal,
-         Base,
-         Latest
-      }
-
-      public enum EComparableEntityType
-      {
-         Commit,
-         Version
-      }
-
-      private class CommitComboBoxItem
-      {
-         internal string SHA { get; }
-         internal string Text { get; }
-         internal CommitComboBoxItemStatus Status { get; }
-         internal EComparableEntityType Type { get; }
-         internal DateTime? TimeStamp { get; }
-         internal string Message { get; }
-
-         internal CommitComboBoxItem(string sha, string text, DateTime? timeStamp, string message,
-            CommitComboBoxItemStatus status, EComparableEntityType type)
-         {
-            SHA = sha;
-            Text = text;
-            TimeStamp = timeStamp;
-            Message = message;
-            Status = status;
-            Type = type;
-         }
-      }
+      private readonly List<MergeRequestKey> _mergeRequestsUpdatingByUserRequest = new List<MergeRequestKey>();
+      private readonly Dictionary<MergeRequestKey, string> _latestStorageUpdateStatus =
+         new Dictionary<MergeRequestKey, string>();
 
       private MergeRequestFilter _mergeRequestFilter;
 

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
@@ -33,14 +35,16 @@ namespace mrHelper.StorageSupport
       protected IEnumerable<string> getSyncTyped(GitDiffArguments arguments)
       {
          ConvertedArguments converted = _argumentConverter.Convert(arguments);
-         return getSyncFromExternalProcess(converted.App, converted.Arguments, _path, new int[] { 0, 1 });
+         return getSyncFromExternalProcess(converted.App, converted.Arguments, _path, new int[] { 0, 1 })
+            .Where(x => !String.IsNullOrEmpty(x));
       }
 
       protected IEnumerable<string> getSyncTyped(GitShowRevisionArguments arguments)
       {
          FileRevision fileRevision = new FileRevision(arguments.Filename, arguments.Sha);
          string fileRevisionPath = _fileCache.GetFileRevisionPath(fileRevision);
-         return System.IO.File.ReadLines(fileRevisionPath);
+         var content = System.IO.File.ReadAllText(fileRevisionPath);
+         return StringUtils.ConvertNewlineWindowsToUnix(content).Split('\n');
       }
 
       protected override Task<IEnumerable<string>> getAsync<T>(T arguments)
@@ -51,14 +55,14 @@ namespace mrHelper.StorageSupport
       async protected Task<IEnumerable<string>> getAsyncTyped(GitDiffArguments arguments)
       {
          ConvertedArguments converted = _argumentConverter.Convert(arguments);
-         return await fetchAsyncFromExternalProcess(converted.App, converted.Arguments, _path, new int[] { 0, 1 });
+         IEnumerable<string> result =
+            await fetchAsyncFromExternalProcess(converted.App, converted.Arguments, _path, new int[] { 0, 1 });
+         return result.Where(x => !String.IsNullOrEmpty(x));
       }
 
       protected Task<IEnumerable<string>> getAsyncTyped(GitShowRevisionArguments arguments)
       {
-         FileRevision fileRevision = new FileRevision(arguments.Filename, arguments.Sha);
-         string fileRevisionPath = _fileCache.GetFileRevisionPath(fileRevision);
-         return Task.FromResult<IEnumerable<string>>(System.IO.File.ReadLines(fileRevisionPath));
+         return Task.FromResult<IEnumerable<string>>(getSyncTyped(arguments));
       }
 
       private readonly FileStorageArgumentConverter _argumentConverter;

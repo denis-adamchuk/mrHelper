@@ -81,15 +81,11 @@ namespace mrHelper.Common.Constants
       public static int MaxCommitInBatch = 10;
       public static int CommitInterBatchDelay = 0;
 
-      public static int MaxShaInChunk = 2;
-      public static int MaxDiffInChunk = 2;
-      public static int DelayBetweenChunksMs = 50;
+      public static int MaxFilesInBatch = 10;
+      public static int FilesInterBatchDelay = 20;
 
-      public static int MaxFilesInBatch = 20; // unrelated to MaxDiffInChunk when updates are not split
-      public static int FilesInterBatchDelay = 100;
-
-      public static int MaxComparisonInBatch = 20; // unrelated to MaxShaInChunk when updates are not split
-      public static int ComparisionInterBatchDelay = 100;
+      public static int MaxComparisonInBatch = 10;
+      public static int ComparisionInterBatchDelay = 20;
    }
 }
 

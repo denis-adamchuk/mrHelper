@@ -25,7 +25,7 @@ namespace mrHelper.StorageSupport
       {
          if (!Directory.Exists(parentFolder))
          {
-            throw new ArgumentException("Bad parent folder \"" + parentFolder + "\"");
+            Directory.CreateDirectory(parentFolder);
          }
 
          ParentFolder = parentFolder;

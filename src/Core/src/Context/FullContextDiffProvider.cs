@@ -62,8 +62,6 @@ namespace mrHelper.Core.Context
             throw new ContextMakingException("Cannot obtain git diff", null);
          }
 
-         fullDiff = fullDiff.Where(x => !String.IsNullOrEmpty(x));
-
          if (fullDiff.Count() == 0)
          {
             Trace.TraceWarning(String.Format(

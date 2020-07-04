@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -20,22 +19,6 @@ namespace mrHelper.StorageSupport
          Diffs = diffs;
          this.BaseSha = baseSha;
          this.HeadSha = headSha;
-      }
-
-      internal IEnumerable<ComparisonInternal> Split(int chunkSize)
-      {
-         List<ComparisonInternal> splitted = new List<ComparisonInternal>();
-         int remaining = Diffs.Count();
-         while (remaining > 0)
-         {
-            DiffStruct[] diffsChunk = Diffs
-               .Skip(Diffs.Count() - remaining)
-               .Take(chunkSize)
-               .ToArray();
-            remaining -= diffsChunk.Length;
-            splitted.Add(new ComparisonInternal(diffsChunk, BaseSha, HeadSha));
-         }
-         return splitted;
       }
 
       internal IEnumerable<DiffStruct> Diffs { get; }
@@ -63,18 +46,10 @@ namespace mrHelper.StorageSupport
          _onFetched = onFetched;
       }
 
-      public void StopUpdate()
-      {
-         if (!CanBeStopped())
-         {
-            return;
-         }
-
-         _repositoryAccessor.Cancel();
-      }
-
+      public void StopUpdate() { }
       public bool CanBeStopped()
       {
+         // TODO It is a nice extra feature to allow stop downloading
          return false;
       }
 
@@ -84,8 +59,8 @@ namespace mrHelper.StorageSupport
          _isDisposed = true;
       }
 
-      async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         Action onUpdateStateChange)
+      async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
+         Action<string> onProgressChange, Action _)
       {
          if (onProgressChange == null)
          {
@@ -94,7 +69,7 @@ namespace mrHelper.StorageSupport
 
          try
          {
-            await update(contextProvider, onProgressChange, onUpdateStateChange, true, false);
+            await doUpdate(contextProvider, onProgressChange);
          }
          catch (FileStorageUpdaterException ex)
          {
@@ -106,41 +81,6 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      async public Task update(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange,
-         Action onUpdateStateChange, bool canClone, bool canSplit)
-      {
-         CommitStorageUpdateContext context = contextProvider?.GetContext();
-         if (contextProvider == null || (context != null && context.BaseToHeads == null))
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         if (_isDisposed || context == null)
-         {
-            return;
-         }
-
-         if (onProgressChange != null)
-         {
-            // save callbacks for operations that may start
-            _onProgressChange = onProgressChange;
-            _onUpdateStateChange = onUpdateStateChange;
-         }
-
-         if (UpdateContextUtils.IsWorthNewUpdate(context, _updatingContext))
-         {
-            await processContext(context, canSplit);
-         }
-         else
-         {
-            await TaskUtils.WhileAsync(() => _updatingContext != null);
-         }
-
-         _onProgressChange = null;
-         _onUpdateStateChange = null;
-      }
-
       public void RequestUpdate(ICommitStorageUpdateContextProvider contextProvider, Action onFinished)
       {
          _synchronizeInvoke.BeginInvoke(new Action(
@@ -148,7 +88,7 @@ namespace mrHelper.StorageSupport
             {
                try
                {
-                  await update(contextProvider, null, null, false, true);
+                  await doUpdate(contextProvider, null);
                   onFinished?.Invoke();
                }
                catch (FileStorageUpdaterException ex)
@@ -158,158 +98,61 @@ namespace mrHelper.StorageSupport
             }), null);
       }
 
-      async private Task processContext(CommitStorageUpdateContext context, bool canSplit)
+      async public Task doUpdate(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange)
       {
-         if (!context.BaseToHeads.Any())
+         CommitStorageUpdateContext context = contextProvider?.GetContext();
+         if (contextProvider == null || context == null || context.BaseToHeads == null || _isDisposed)
          {
-            traceDebug("Empty context");
-            return; // optimization. cannot do anything without Sha list
+            return;
          }
 
          try
          {
-            List<ComparisonInternal> completeComparisons = new List<ComparisonInternal>();
-            IEnumerable<InternalUpdateContext> splitted = canSplit
-               ? new InternalUpdateContext(context.BaseToHeads).Split(Constants.MaxShaInChunk)
-               : new InternalUpdateContext[] { new InternalUpdateContext(context.BaseToHeads) };
-            foreach (InternalUpdateContext internalContext in splitted)
-            {
-               IEnumerable<ComparisonInternal> comparisons = await doPreProcessContext(context, internalContext);
-               completeComparisons.AddRange(comparisons);
+            reportProgress(onProgressChange, "Downloading meta-information...");
+            IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(context, onProgressChange);
+            traceInformation(String.Format("Got {0} comparisons, onProgressChange is {1} null",
+               comparisons.Count(), onProgressChange == null ? "" : "not"));
 
-               // this allows others to interleave with their (shorter) requests
-               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed,
-                  Constants.DelayBetweenChunksMs);
+            reportProgress(onProgressChange, "Meta-information downloaded. Starting to download commit contents...");
+
+            traceInformation("List of comparisons to process:");
+            foreach (ComparisonInternal comparison in comparisons)
+            {
+               traceInformation(String.Format("{0} vs {1} ({2} files)",
+                  comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
             }
 
-            foreach (ComparisonInternal completeComparison in completeComparisons)
-            {
-               IEnumerable<ComparisonInternal> splittedComparisons = canSplit
-                  ? completeComparison.Split(Constants.MaxDiffInChunk)
-                  : new ComparisonInternal[] { completeComparison };
-
-               foreach (ComparisonInternal comparison in splittedComparisons)
-               {
-                  await doProcessContext(context, comparison);
-
-                  // this allows others to interleave with their (shorter) requests
-                  await TaskUtils.IfAsync(() => comparison != splittedComparisons.Last() && !_isDisposed,
-                     Constants.DelayBetweenChunksMs);
-               }
-            }
+            await processComparisonsAsync(context, onProgressChange, comparisons);
+            reportProgress(onProgressChange, "Commit contents downloaded");
          }
          catch (RepositoryAccessorException ex)
          {
-            throw new FileStorageUpdaterException("Cannot download a file from GitLab", ex);
-         }
-      }
-
-      async private Task<IEnumerable<ComparisonInternal>> doPreProcessContext(CommitStorageUpdateContext context,
-         InternalUpdateContext internalContext)
-      {
-         await TaskUtils.WhileAsync(() => _updatingContext != null);
-
-         try
-         {
-            _updatingContext = context;
-
-            List<Tuple<string, string>> baseToHeads = internalContext.BaseToHeads
-               .SelectMany(x => x.Value, (kv, headSha) => new Tuple<string, string>(kv.Key, headSha))
-               .ToList();
-
-            traceDebug(String.Format("[LOCK][PRE] by {0} to download {1} comparisons",
-               context.GetType(), baseToHeads.Count()));
-            return await getComparisons(baseToHeads);
+            throw new FileStorageUpdaterException("Cannot process commit storage update request", ex);
          }
          finally
          {
-            traceDebug(String.Format("[UNLOCK][PRE] by {0}", context.GetType()));
-            _updatingContext = null;
+            reportProgress(onProgressChange, String.Empty);
          }
       }
 
-      async private Task doProcessContext(CommitStorageUpdateContext context, ComparisonInternal comparison)
+      async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(
+         CommitStorageUpdateContext context, Action<string> onProgressChange)
       {
-         await TaskUtils.WhileAsync(() => _updatingContext != null);
+         List<Tuple<string, string>> baseToHeads = context.BaseToHeads
+            .SelectMany(x => x.Value, (kv, headSha) => new Tuple<string, string>(kv.Key, headSha))
+            .ToList();
 
-         try
-         {
-            _updatingContext = context;
-
-            IEnumerable<FileRevision> missingRevisions = getMissingFileRevisions(comparison);
-
-            traceDebug(String.Format("[LOCK] by {0} to download {1} files",
-               context.GetType(), missingRevisions.Count()));
-            await fetchCommitsAsync(missingRevisions);
-         }
-         finally
-         {
-            traceDebug(String.Format("[UNLOCK] by {0}", context.GetType()));
-            _updatingContext = null;
-         }
-      }
-
-      async private Task fetchCommitsAsync(IEnumerable<FileRevision> revisions)
-      {
-         bool cancelled = false;
-         async Task loadRevision(FileRevision revision)
+         bool cancelled = _isDisposed;
+         List<ComparisonInternal> comparisons = new List<ComparisonInternal>();
+         async Task doFetch(Tuple<string, string> baseShaToHeadSha)
          {
             if (cancelled)
             {
                return;
             }
 
-            GitLabSharp.Entities.File file = null;
-            try
-            {
-               traceDebug(String.Format("Starting to download file \"{0}\" with SHA {1}...",
-                  revision.GitFilePath.Value, revision.SHA));
-               file = await _repositoryAccessor.LoadFile(
-                  _fileStorage.ProjectKey, revision.GitFilePath.Value, revision.SHA);
-            }
-            finally
-            {
-               string action = file == null ? "Cancelled" : "Finished";
-               traceDebug(String.Format("{0} downloading file \"{1}\" with SHA {2}",
-                  action, revision.GitFilePath.Value, revision.SHA));
-            }
-            if (file == null)
-            {
-               cancelled = true;
-               return;
-            }
-
-            string content = StringUtils.Base64Decode(file?.Content).Replace("\n", "\r\n");
-            _fileStorage.FileCache.WriteFileRevision(revision, content);
-
-            // TODO Report progress
-            _onProgressChange?.Invoke("");
-            _onUpdateStateChange?.Invoke();
-         }
-
-         await TaskUtils.RunConcurrentFunctionsAsync(revisions, loadRevision,
-            Constants.MaxFilesInBatch, Constants.FilesInterBatchDelay, () => cancelled);
-      }
-
-      private IEnumerable<FileRevision> getMissingFileRevisions(ComparisonInternal comparison)
-      {
-         IEnumerable<FileRevision> baseFiles = FileStorageUtils.CreateFileRevisions(
-            comparison.Diffs, comparison.BaseSha, true);
-         IEnumerable<FileRevision> headFiles = FileStorageUtils.CreateFileRevisions(
-            comparison.Diffs, comparison.HeadSha, false);
-         return baseFiles
-            .Concat(headFiles)
-            .Where(x => !_fileStorage.FileCache.ContainsFileRevision(x));
-      }
-
-      async private Task<IEnumerable<ComparisonInternal>> getComparisons(IEnumerable<Tuple<string, string>> baseToHeads)
-      {
-         bool cancelled = false;
-         List<ComparisonInternal> comparisons = new List<ComparisonInternal>();
-         async Task loadComparison(Tuple<string, string> baseShaToHeadSha)
-         {
-            Comparison comparison = await getComparison(baseShaToHeadSha.Item1, baseShaToHeadSha.Item2);
-            if (comparison == null)
+            Comparison comparison = await fetchSingleComparisonAsync(baseShaToHeadSha.Item1, baseShaToHeadSha.Item2);
+            if (comparison == null || _isDisposed)
             {
                cancelled = true;
                return;
@@ -317,12 +160,12 @@ namespace mrHelper.StorageSupport
             comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, loadComparison,
+         await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
             Constants.MaxComparisonInBatch, Constants.ComparisionInterBatchDelay, () => cancelled);
          return comparisons;
       }
 
-      async private Task<Comparison> getComparison(string baseSha, string headSha)
+      async private Task<Comparison> fetchSingleComparisonAsync(string baseSha, string headSha)
       {
          Comparison comparison = _fileStorage.ComparisonCache.LoadComparison(baseSha, headSha);
          if (comparison != null)
@@ -330,16 +173,7 @@ namespace mrHelper.StorageSupport
             return comparison;
          }
 
-         try
-         {
-            traceDebug(String.Format("Starting to download comparison of {0} vs {1}...", baseSha, headSha));
-            comparison = await _repositoryAccessor.Compare(_fileStorage.ProjectKey, baseSha, headSha);
-         }
-         finally
-         {
-            string action = comparison == null ? "Cancelled" : "Finished";
-            traceDebug(String.Format("{0} downloading comparison of {1} vs {2}...", action, baseSha, headSha));
-         }
+         comparison = await _repositoryAccessor.Compare(_fileStorage.ProjectKey, baseSha, headSha);
          if (comparison == null)
          {
             return null;
@@ -347,6 +181,117 @@ namespace mrHelper.StorageSupport
 
          _fileStorage.ComparisonCache.SaveComparison(baseSha, headSha, comparison);
          return comparison;
+      }
+
+      private async Task processComparisonsAsync(CommitStorageUpdateContext context,
+         Action<string> onProgressChange, IEnumerable<ComparisonInternal> comparisons)
+      {
+         List<FileRevision> allRevisions = new List<FileRevision>();
+         allRevisions.AddRange(comparisons.SelectMany(x => extractRevisionsFromComparison(x)));
+
+         int calculateTotalExpectedCount() =>
+            onProgressChange == null ? 0 : getMissingFileRevisions(allRevisions).Count();
+
+         IEnumerable<FileRevision> missingRevisions = getMissingFileRevisions(allRevisions).ToArray();
+         traceInformation(String.Format("Total: {0}, Missing: {1}, onProgressChange is {2} null",
+            allRevisions.Count(), missingRevisions.Count(), onProgressChange == null ? "" : "not"));
+
+         if (!missingRevisions.Any())
+         {
+            return;
+         }
+
+         int initialTotalExpectedCount = calculateTotalExpectedCount();
+         await fetchRevisionsAsync(missingRevisions, onProgressChange,
+            initialTotalExpectedCount, () => initialTotalExpectedCount - calculateTotalExpectedCount());
+
+         IEnumerable<FileRevision> getRest() => missingRevisions.Intersect(_currentDownloads);
+         traceInformation(String.Format("Waiting for remaining {0} revisions", getRest().Count()));
+         await TaskUtils.WhileAsync(() => getRest().Any());
+      }
+
+      async private Task fetchRevisionsAsync(IEnumerable<FileRevision> revisions,
+         Action<string> onProgressChange, int totalExpectedCount, Func<int> getActualFetchedCount)
+      {
+         bool cancelled = _isDisposed;
+
+         int fetchedByMeCount = 0;
+         int actualFetchedCount = getActualFetchedCount();
+         async Task doFetch(FileRevision revision)
+         {
+            if (cancelled || _fileStorage.FileCache.ContainsFileRevision(revision) || !_currentDownloads.Add(revision))
+            {
+               return;
+            }
+
+            try
+            {
+               if (!await fetchSingleRevisionAsync(revision) || _isDisposed)
+               {
+                  cancelled = true;
+                  return;
+               }
+
+               if (onProgressChange != null)
+               {
+                  fetchedByMeCount++;
+                  int percentage = calculateCompletionPercentage(
+                     totalExpectedCount, fetchedByMeCount + actualFetchedCount);
+                  reportProgress(onProgressChange, String.Format(
+                     "Commit contents download progress: {0}%", percentage));
+               }
+            }
+            finally
+            {
+               _currentDownloads.Remove(revision);
+            }
+         }
+
+         await TaskUtils.RunConcurrentFunctionsAsync(revisions, doFetch,
+            Constants.MaxFilesInBatch, Constants.FilesInterBatchDelay,
+            () =>
+            {
+               if (onProgressChange != null)
+               {
+                  actualFetchedCount = getActualFetchedCount();
+                  fetchedByMeCount = 0;
+               }
+               return cancelled;
+            });
+      }
+
+      async private Task<bool> fetchSingleRevisionAsync(FileRevision revision)
+      {
+         GitLabSharp.Entities.File file = await _repositoryAccessor.LoadFile(
+            _fileStorage.ProjectKey, revision.GitFilePath.Value, revision.SHA);
+         if (file == null)
+         {
+            return false;
+         }
+
+         string content = StringUtils.Base64Decode(file.Content).Replace("\n", "\r\n");
+         _fileStorage.FileCache.WriteFileRevision(revision, content);
+         traceDebug(String.Format("Saved file {0} with SHA {1}", revision.GitFilePath.Value, revision.SHA));
+         return true;
+      }
+
+      private IEnumerable<FileRevision> extractRevisionsFromComparison(ComparisonInternal comparison)
+      {
+         IEnumerable<FileRevision> baseFiles = FileStorageUtils.CreateFileRevisions(
+            comparison.Diffs, comparison.BaseSha, true);
+         IEnumerable<FileRevision> headFiles = FileStorageUtils.CreateFileRevisions(
+            comparison.Diffs, comparison.HeadSha, false);
+         return baseFiles.Concat(headFiles);
+      }
+
+      private IEnumerable<FileRevision> getMissingFileRevisions(IEnumerable<FileRevision> revisions)
+      {
+         return revisions.Where(x => !_fileStorage.FileCache.ContainsFileRevision(x));
+      }
+
+      private void reportProgress(Action<string> onProgressChange, string message)
+      {
+         onProgressChange?.Invoke(message);
       }
 
       private void traceDebug(string message)
@@ -361,16 +306,9 @@ namespace mrHelper.StorageSupport
             _fileStorage.ProjectKey.ProjectName, message));
       }
 
-      private void traceWarning(string message)
+      private int calculateCompletionPercentage(int totalCount, int completeCount)
       {
-         Trace.TraceWarning(String.Format("[FileStorageUpdater] ({0}) {1}",
-            _fileStorage.ProjectKey.ProjectName, message));
-      }
-
-      private void traceError(string message)
-      {
-         Trace.TraceError(String.Format("[FileStorageUpdater] ({0}) {1}",
-            _fileStorage.ProjectKey.ProjectName, message));
+         return Convert.ToInt32(Convert.ToDouble(completeCount) / totalCount * 100);
       }
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
@@ -378,11 +316,9 @@ namespace mrHelper.StorageSupport
       private readonly IRepositoryAccessor _repositoryAccessor;
       private readonly Action _onCloned;
       private readonly Action<FileRevision> _onFetched;
+      private readonly HashSet<FileRevision> _currentDownloads = new HashSet<FileRevision>();
 
       private bool _isDisposed;
-      private CommitStorageUpdateContext _updatingContext;
-      private Action<string> _onProgressChange;
-      private Action _onUpdateStateChange;
    }
 }
 

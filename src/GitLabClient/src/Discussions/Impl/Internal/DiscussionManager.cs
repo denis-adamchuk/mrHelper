@@ -116,6 +116,11 @@ namespace mrHelper.Client.Discussions
          }
          catch (OperatorException ex)
          {
+            if (ex.Cancelled)
+            {
+               return null;
+            }
+
             throw new DiscussionCacheException(String.Format(
                "Cannot update discussions for MR: Host={0}, Project={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);

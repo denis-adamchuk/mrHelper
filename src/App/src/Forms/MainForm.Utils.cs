@@ -438,23 +438,77 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void updateGitAbortState(bool resetStatusText)
+      private void onStorageUpdateStateChange()
+      {
+         updateAbortGitCloneButtonState();
+      }
+
+      private void updateAbortGitCloneButtonState()
       {
          ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
          ILocalCommitStorage repo = projectKey.HasValue ? getCommitStorage(projectKey.Value, false) : null;
 
          bool enabled = repo?.Updater?.CanBeStopped() ?? false;
          linkLabelAbortGitClone.Visible = enabled;
-         labelStorageStatus.Visible = enabled;
+      }
 
-         if (resetStatusText)
+      private void onStorageUpdateProgressChange(string text, MergeRequestKey mrk)
+      {
+         if (labelStorageStatus.InvokeRequired)
          {
-            string projectname = projectKey?.ProjectName ?? String.Empty;
-            if (!String.IsNullOrWhiteSpace(projectname))
+            Invoke(new Action<string, MergeRequestKey>(onStorageUpdateProgressChange), new object [] { text, mrk });
+         }
+         else
+         {
+            _latestStorageUpdateStatus[mrk] = text;
+
+            // TODO Test git repo updater, if it sends an empty string at the end of updates
+
+            MergeRequestKey? currentMRK = getMergeRequestKey(null);
+            if (currentMRK.HasValue && currentMRK.Value.Equals(mrk))
             {
-               labelStorageStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
+               updateStorageStatusText(text, mrk);
             }
          }
+      }
+
+      private void updateStorageStatusText(string text, MergeRequestKey? mrk)
+      {
+         string message = String.IsNullOrEmpty(text) || !mrk.HasValue
+            ? String.Empty
+            : String.Format("{0} #{1}: {2}", mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString(), text);
+         labelStorageStatus.Text = message;
+      }
+
+      private string getStorageSummaryUpdateInformation()
+      {
+         if (!_mergeRequestsUpdatingByUserRequest.Any())
+         {
+            return String.Empty;
+         }
+
+         var mergeRequestGroups = _mergeRequestsUpdatingByUserRequest
+            .Distinct()
+            .GroupBy(
+               group => group.ProjectKey,
+               group => group,
+               (group, groupedMergeRequests) => new
+               {
+                  Project = group.ProjectName,
+                  MergeRequests = groupedMergeRequests
+               });
+
+         List<string> storages = new List<string>();
+         foreach (var group in mergeRequestGroups)
+         {
+            IEnumerable<string> mergeRequestIds = group.MergeRequests.Select(x => String.Format("#{0}", x.IId));
+            string mergeRequestIdsString = String.Join(", ", mergeRequestIds);
+            string storage = String.Format("{0} ({1})", group.Project, mergeRequestIdsString);
+            storages.Add(storage);
+         }
+
+         return String.Format("Updating storage{0}: {1}...",
+            storages.Count() > 1 ? "s" : "", String.Join(", ", storages));
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -633,20 +687,20 @@ namespace mrHelper.App.Forms
          buttonNewDiscussion.Enabled = enabled;
       }
 
-      private void enableCommitActions(bool enabled, IEnumerable<string> labels, User author)
+      private void updateStorageDependentControlState(MergeRequestKey? mrk)
       {
-         buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
-         updateDiffToolButtonState();
-         enableCustomActions(enabled, labels, author);
+         bool isEnabled = mrk.HasValue && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value);
+         buttonDiscussions.Enabled = isEnabled;
+         updateDiffToolButtonState(isEnabled, mrk);
       }
 
-      private void updateDiffToolButtonState()
+      private void updateDiffToolButtonState(bool isEnabled, MergeRequestKey? mrk)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
          switch (selected.Count())
          {
             case 1:
-               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Enabled = isEnabled;
                buttonDiffTool.Text = "Diff to Base";
                string targetBranch = getMergeRequest(null)?.Target_Branch;
                if (targetBranch != null)
@@ -657,7 +711,7 @@ namespace mrHelper.App.Forms
                break;
 
             case 2:
-               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Enabled = isEnabled;
                buttonDiffTool.Text = "Diff Tool";
                this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to compare selected revisions");
                break;
@@ -710,21 +764,6 @@ namespace mrHelper.App.Forms
             string resolvedDependency =
                String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
             control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
-         }
-      }
-
-      /// <summary>
-      /// Typically called from another thread
-      /// </summary>
-      private void updateGitStatusText(string text)
-      {
-         if (labelStorageStatus.InvokeRequired)
-         {
-            Invoke(new Action<string>(updateGitStatusText), new object [] { text });
-         }
-         else
-         {
-            labelStorageStatus.Text = text;
          }
       }
 
@@ -1080,16 +1119,17 @@ namespace mrHelper.App.Forms
          };
 
          var query = fmk.MergeRequest.Labels
-            .GroupBy(label => label
-               .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
-                  ? label.Substring(0, label.IndexOf('-'))
-                  : label,
-            (label) => label,
-            (baseLabel, labels) => new
-            {
-               Labels = labels,
-               Priority = getPriority(labels)
-            });
+            .GroupBy(
+               label => label
+                  .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
+                     ? label.Substring(0, label.IndexOf('-'))
+                     : label,
+               label => label,
+               (baseLabel, labels) => new
+               {
+                  Labels = labels,
+                  Priority = getPriority(labels)
+               });
 
          string joinLabels(IEnumerable<string> labels) => String.Format("{0}\n", String.Join(",", labels));
 
@@ -1817,7 +1857,11 @@ namespace mrHelper.App.Forms
             true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
             fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
-         updateGitAbortState(true);
+         updateAbortGitCloneButtonState();
+
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
+         updateStorageStatusText(status, mrk);
 
          Debug.WriteLine(String.Format(
             "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
@@ -1834,7 +1878,8 @@ namespace mrHelper.App.Forms
             RevisionBrowserModelData data = new RevisionBrowserModelData(latestVersion?.Base_Commit_SHA,
                commits, versions, getReviewedRevisions(mrk.Value));
             revisionBrowser.SetData(data, ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
-            enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
+            updateStorageDependentControlState(mrk);
+            enableCustomActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
          {
@@ -1848,7 +1893,8 @@ namespace mrHelper.App.Forms
       private void disableCommonUIControls()
       {
          enableMergeRequestActions(false);
-         enableCommitActions(false, null, null);
+         enableCustomActions(false, null, null);
+         updateStorageDependentControlState(null);
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
          updateTotalTime(null, null, null, null);

@@ -231,6 +231,11 @@ namespace mrHelper.App.Forms
             return null;
          }
 
+         if (discussions == null)
+         {
+            return null;
+         }
+
          this.Text = DefaultCaption + "   (Checking for new commits)";
          await _updateGit(_mergeRequestKey, discussions);
          this.Text = DefaultCaption;

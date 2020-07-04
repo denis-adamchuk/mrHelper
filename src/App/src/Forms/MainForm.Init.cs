@@ -404,7 +404,7 @@ namespace mrHelper.App.Forms
       {
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
-         updateGitStatusText(String.Empty);
+         labelStorageStatus.Text = String.Empty;
 
          if (_keywords == null)
          {
@@ -589,13 +589,6 @@ namespace mrHelper.App.Forms
             _diffStatProvider.Dispose();
             _diffStatProvider = null;
          }
-      }
-
-      // TODO Update status
-      private void onGitInitStatusChange(string status)
-      {
-         labelWorkflowStatus.Text = status;
-         labelWorkflowStatus.Update();
       }
 
       private void onGitStatisticManagerUpdate()

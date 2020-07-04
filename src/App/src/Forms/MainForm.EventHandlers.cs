@@ -393,7 +393,8 @@ namespace mrHelper.App.Forms
             isSearchMode() ? "Yes" : "No"));
 
          disableCommonUIControls();
-         updateGitAbortState(false);
+         updateAbortGitCloneButtonState();
+         updateStorageStatusText(null, null);
       }
 
       private void ListViewMergeRequests_ItemSelectionChanged(
@@ -1329,7 +1330,7 @@ namespace mrHelper.App.Forms
 
       private void RevisionBrowser_SelectionChanged(object sender, EventArgs e)
       {
-         updateDiffToolButtonState();
+         updateStorageDependentControlState(getMergeRequestKey(null));
       }
    }
 }
