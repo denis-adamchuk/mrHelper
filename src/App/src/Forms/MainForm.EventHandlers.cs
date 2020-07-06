@@ -322,6 +322,16 @@ namespace mrHelper.App.Forms
                FormatFlags = StringFormatFlags.NoWrap
             };
 
+         bool isLabelsColumnItem() =>
+            e.Item.ListView == listViewMergeRequests ?
+               e.ColumnIndex == columnHeaderLabels.Index : e.ColumnIndex == columnHeaderFoundLabels.Index;
+
+         bool isResolvedColumnItem() =>
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderResolved.Index; 
+
+         bool isTotalTimeColumnItem() =>
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderTotalTime.Index; 
+
          if (isClickable)
          {
             using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
@@ -332,21 +342,21 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            if (isSelected && e.ColumnIndex == columnHeaderLabels.Index)
+            if (isSelected && isLabelsColumnItem())
             {
                using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest, SystemColors.Window)))
                {
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
-            else if (e.ColumnIndex == columnHeaderResolved.Index)
+            else if (isResolvedColumnItem())
             {
                using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
                {
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
-            else if (e.ColumnIndex == columnHeaderTotalTime.Index)
+            else if (isTotalTimeColumnItem())
             {
                Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
