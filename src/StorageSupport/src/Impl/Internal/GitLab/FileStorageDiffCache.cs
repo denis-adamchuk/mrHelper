@@ -11,6 +11,8 @@ namespace mrHelper.StorageSupport
       {
          _path = path;
          _fileStorage = fileStorage;
+
+         cleanupOldDiffs();
       }
 
       internal FileStorageDiffCacheFolder GetDiffFolder(string baseSha, string headSha)
@@ -102,6 +104,14 @@ namespace mrHelper.StorageSupport
       {
          string prefix = System.IO.Path.Combine(_fileStorage.FileCache.Path, fileRevision.SHA);
          return fileRevision.GitFilePath.ToDiskPath(prefix);
+      }
+
+      private void cleanupOldDiffs()
+      {
+         if (Directory.Exists(_path))
+         {
+            Directory.Delete(_path, true);
+         }
       }
 
       private readonly string _path;

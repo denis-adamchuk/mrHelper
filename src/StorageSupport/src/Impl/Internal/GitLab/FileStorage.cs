@@ -36,6 +36,8 @@ namespace mrHelper.StorageSupport
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
             LocalCommitStorageType.FileStorage);
+         ProjectKey = projectKey;
+         FileStorageUtils.InitalizeFileStorage(Path, ProjectKey);
 
          string comparisonCachePath = System.IO.Path.Combine(Path, ComparisonCacheSubFolderName);
          ComparisonCache = new FileStorageComparisonCache(comparisonCachePath);
@@ -50,10 +52,6 @@ namespace mrHelper.StorageSupport
 
          _processManager = new GitProcessManager(synchronizeInvoke, Path);
          _commandService = new FileStorageGitCommandService(_processManager, Path, this);
-
-         ProjectKey = projectKey;
-
-         FileStorageUtils.InitalizeFileStorage(Path, ProjectKey);
 
          Trace.TraceInformation(String.Format(
             "[FileStorage] Created FileStorage at Path {0} for host {1}, project {2}, ",
