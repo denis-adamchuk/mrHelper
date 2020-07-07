@@ -66,7 +66,7 @@ namespace mrHelper.StorageSupport
       }
 
       private readonly FileStorageArgumentConverter _argumentConverter;
-      private readonly FileStorageFileCache _fileCache;
+      private readonly FileStorageRevisionCache _fileCache;
       private readonly string _path;
    }
 }

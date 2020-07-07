@@ -40,7 +40,7 @@ namespace mrHelper.App.Interprocess
          ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
 
          LocalCommitStorageFactory factory = new LocalCommitStorageFactory(
-            _snapshot.TempFolder, null, Program.Settings.UseShallowClone, _session);
+            _snapshot.TempFolder, null, Program.Settings.UseShallowClone, _session, Program.Settings.RevisionsToKeep);
          LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
          ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
          if (tempRepository == null)

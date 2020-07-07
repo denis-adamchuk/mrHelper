@@ -4,7 +4,7 @@
    {
       FileStorageComparisonCache ComparisonCache { get; }
       FileStorageDiffCache DiffCache { get; }
-      FileStorageFileCache FileCache { get; }
+      FileStorageRevisionCache FileCache { get; }
    }
 }
 

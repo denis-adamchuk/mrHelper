@@ -52,7 +52,7 @@
     <Compile Include="src\Impl\Internal\GitLab\FileStorageComparisonCache.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCache.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCacheFolder.cs" />
-    <Compile Include="src\Impl\Internal\GitLab\FileStorageFileCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageRevisionCache.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageGitCommandService.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageRenameDetector.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageUtils.cs" />

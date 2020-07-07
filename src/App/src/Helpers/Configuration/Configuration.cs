@@ -102,6 +102,9 @@ namespace mrHelper.App.Helpers
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
 
+      private static readonly string RevisionsToKeepKeyName = "RevisionsToKeep";
+      private static readonly int    RevisionsToKeepDefaultValue = 50;
+
       private static readonly string Notifications_NewMergeRequests_KeyName      = "Notifications_NewMergeRequests";
       private static readonly bool   Notifications_NewMergeRequests_DefaultValue = true;
 
@@ -404,9 +407,20 @@ namespace mrHelper.App.Helpers
          {
             return int.TryParse(getValue(
                LogFilesToKeepKeyName, LogFilesToKeepDefaultValue.ToString()),
-                  out int result) ? LogFilesToKeepDefaultValue : result;
+                  out int result) ? result : LogFilesToKeepDefaultValue;
          }
          set { setValue(LogFilesToKeepKeyName, value.ToString()); }
+      }
+
+      public int RevisionsToKeep
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               RevisionsToKeepKeyName, RevisionsToKeepDefaultValue.ToString()),
+                  out int result) ? result : RevisionsToKeepDefaultValue;
+         }
+         set { setValue(RevisionsToKeepKeyName, value.ToString()); }
       }
 
       public bool Notifications_NewMergeRequests

@@ -26,13 +26,13 @@ namespace mrHelper.StorageSupport
       // @{ IFileStorage
       public FileStorageComparisonCache ComparisonCache { get; }
       public FileStorageDiffCache DiffCache { get; }
-      public FileStorageFileCache FileCache { get; }
+      public FileStorageRevisionCache FileCache { get; }
       // @} IFileStorage
 
       /// <summary>
       /// </summary>
       internal FileStorage(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor)
+         ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor, int revisionsToKeep)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
             LocalCommitStorageType.FileStorage);
@@ -42,8 +42,8 @@ namespace mrHelper.StorageSupport
          string comparisonCachePath = System.IO.Path.Combine(Path, ComparisonCacheSubFolderName);
          ComparisonCache = new FileStorageComparisonCache(comparisonCachePath);
 
-         string fileCachePath = System.IO.Path.Combine(Path, StorageSubFolderName);
-         FileCache = new FileStorageFileCache(fileCachePath);
+         string fileCachePath = System.IO.Path.Combine(Path, RevisionsSubFolderName);
+         FileCache = new FileStorageRevisionCache(fileCachePath, revisionsToKeep);
 
          string diffCachePath = System.IO.Path.Combine(Path, DiffSubFolderName);
          DiffCache = new FileStorageDiffCache(diffCachePath, this);
@@ -93,7 +93,7 @@ namespace mrHelper.StorageSupport
       private FileStorageUpdater _updater;
       private readonly GitProcessManager _processManager;
 
-      private readonly string StorageSubFolderName = "storage";
+      private readonly string RevisionsSubFolderName = "revisions";
       private readonly string DiffSubFolderName = "diff";
       private readonly string ComparisonCacheSubFolderName = "comparison";
    }

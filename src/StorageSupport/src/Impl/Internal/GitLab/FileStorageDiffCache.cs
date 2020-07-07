@@ -102,8 +102,7 @@ namespace mrHelper.StorageSupport
 
       private string getFileRevisionPath(FileRevision fileRevision)
       {
-         string prefix = System.IO.Path.Combine(_fileStorage.FileCache.Path, fileRevision.SHA);
-         return fileRevision.GitFilePath.ToDiskPath(prefix);
+         return _fileStorage.FileCache.GetFileRevisionPath(fileRevision);
       }
 
       private void cleanupOldDiffs()

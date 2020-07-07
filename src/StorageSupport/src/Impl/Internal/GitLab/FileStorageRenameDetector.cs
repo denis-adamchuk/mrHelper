@@ -48,7 +48,7 @@
 
       private readonly IGitCommandService _commandService;
       private readonly FileStorageComparisonCache _comparisonCache;
-      private readonly FileStorageFileCache _fileCache;
+      private readonly FileStorageRevisionCache _fileCache;
    }
 }
 

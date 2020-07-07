@@ -21,7 +21,7 @@ namespace mrHelper.StorageSupport
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
       public LocalCommitStorageFactory(string parentFolder,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, ISession session)
+         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, ISession session, int revisionsToKeep)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -32,6 +32,7 @@ namespace mrHelper.StorageSupport
          _synchronizeInvoke = synchronizeInvoke;
          _useShallowClone = useShallowClone;
          _session = session;
+         _revisionsToKeep = revisionsToKeep;
 
          Trace.TraceInformation(String.Format(
             "[LocalCommitStorageFactory] Created a factory for parentFolder {0}", parentFolder));
@@ -63,7 +64,8 @@ namespace mrHelper.StorageSupport
             }
             else if (type == LocalCommitStorageType.FileStorage)
             {
-               storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, _session.GetRepositoryAccessor());
+               storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, _session.GetRepositoryAccessor(),
+                  _revisionsToKeep);
             }
             else
             {
@@ -98,8 +100,9 @@ namespace mrHelper.StorageSupport
          new Dictionary<ProjectKey, ILocalCommitStorage>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ISession _session;
-
       private readonly bool _useShallowClone;
+      private readonly int _revisionsToKeep;
+
       private bool _isDisposed;
    }
 }
