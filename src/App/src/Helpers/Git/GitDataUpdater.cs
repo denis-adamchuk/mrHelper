@@ -201,28 +201,14 @@ namespace mrHelper.App.Helpers
 
       async private static Task fetchMissingData(ILocalCommitStorage repo, IEnumerable<Discussion> discussions)
       {
-         Dictionary<string, HashSet<string>> baseToHeads = new Dictionary<string, HashSet<string>>();
-         foreach (Discussion discussion in discussions)
-         {
-            Position position = discussion.Notes.First().Position;
-            if (!baseToHeads.ContainsKey(position.Base_SHA))
-            {
-               baseToHeads[position.Base_SHA] = new HashSet<string>();
-            }
-            baseToHeads[position.Base_SHA].Add(position.Head_SHA);
-         }
-
          // On timer update we may got into situation when not all SHA are already fetched.
          // For example, if we just cloned the repository and still in progress of initial
          // fetching. A simple solution is to request updates using CommitBasedContext.
          // Update() call will return from `await` only when all ongoing updates within
          // the project are finished.
-         foreach (KeyValuePair<string, HashSet<string>> kv in baseToHeads)
-         {
-            bool finished = repo?.Updater == null;
-            repo?.Updater?.RequestUpdate(new CommitBasedContextProvider(kv.Value, kv.Key), () => finished = true);
-            await TaskUtils.WhileAsync(() => !finished);
-         }
+         bool finished = repo?.Updater == null;
+         repo?.Updater?.RequestUpdate(new DiscussionBasedContextProvider(discussions), () => finished = true);
+         await TaskUtils.WhileAsync(() => !finished);
       }
 
       async private static Task doCacheAsync(ILocalCommitStorage repo,

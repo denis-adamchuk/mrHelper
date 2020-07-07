@@ -66,13 +66,13 @@ namespace mrHelper.Common.Constants
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
 
-      public static int MaxGitInstancesInBatch = 10;
-      public static int GitInstancesInterBatchDelay = 1000; // ms
+      public static int MaxGitInstancesInBatch = 5;
+      public static int GitInstancesInterBatchDelay = 500; // ms
 
       public static int MaxMergeRequestsInBatch = 10;
       public static int MergeRequestsInterBatchDelay = 0;
 
-      public static int MaxCrossProjectMergeRequestsInBatch = 20;
+      public static int MaxCrossProjectMergeRequestsInBatch = 10;
       public static int CrossProjectMergeRequestsInterBatchDelay = 200;
 
       public static int MaxProjectsInBatch = 10;
@@ -81,11 +81,19 @@ namespace mrHelper.Common.Constants
       public static int MaxCommitInBatch = 10;
       public static int CommitInterBatchDelay = 0;
 
-      public static int MaxFilesInBatch = 10;
-      public static int FilesInterBatchDelay = 20;
+      public static int MaxFilesInBatch = 20;
+      public static int FilesInterBatchDelay = 0;
 
-      public static int MaxComparisonInBatch = 10;
-      public static int ComparisionInterBatchDelay = 20;
+      public static int MaxFilesInBatchBackground = 5;
+      public static int FilesInterBatchDelayBackground = 200;
+
+      public static int MaxComparisonInBatch = 20;
+      public static int ComparisionInterBatchDelay = 0;
+
+      public static int MaxComparisonInBatchBackground = 2;
+      public static int ComparisionInterBatchDelayBackground = 200;
+
+      public static int MaxMergeRequestStorageUpdatesInParallel = 3;
    }
 }
 

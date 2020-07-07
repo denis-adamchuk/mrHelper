@@ -160,8 +160,11 @@ namespace mrHelper.StorageSupport
             comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
          }
 
+         bool needTraceProgress = onProgressChange != null;
          await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
-            Constants.MaxComparisonInBatch, Constants.ComparisionInterBatchDelay, () => cancelled);
+            needTraceProgress ? Constants.MaxComparisonInBatch : Constants.MaxComparisonInBatchBackground,
+            needTraceProgress ? Constants.ComparisionInterBatchDelay : Constants.ComparisionInterBatchDelayBackground,
+            () => cancelled);
          return comparisons;
       }
 
@@ -189,37 +192,53 @@ namespace mrHelper.StorageSupport
          List<FileRevision> allRevisions = new List<FileRevision>();
          allRevisions.AddRange(comparisons.SelectMany(x => extractRevisionsFromComparison(x)));
 
-         int calculateTotalExpectedCount() =>
-            onProgressChange == null ? 0 : getMissingFileRevisions(allRevisions).Count();
+         IEnumerable<FileRevision> getMissingRevisions() => getMissingFileRevisions(allRevisions);
 
-         IEnumerable<FileRevision> missingRevisions = getMissingFileRevisions(allRevisions).ToArray();
+         bool needTraceProgress = onProgressChange != null;
+         int initialTotalCount = needTraceProgress ? getMissingRevisions().Count() : 0;
+         int calculateFetchedCount() => needTraceProgress ? initialTotalCount - getMissingRevisions().Count() : 0;
+
+         IEnumerable<FileRevision> missingRevisions = getMissingRevisions().ToArray();
          traceInformation(String.Format("Total: {0}, Missing: {1}, onProgressChange is {2} null",
             allRevisions.Count(), missingRevisions.Count(), onProgressChange == null ? "" : "not"));
-
          if (!missingRevisions.Any())
          {
             return;
          }
 
-         int initialTotalExpectedCount = calculateTotalExpectedCount();
-         await fetchRevisionsAsync(missingRevisions, onProgressChange,
-            initialTotalExpectedCount, () => initialTotalExpectedCount - calculateTotalExpectedCount());
+         await fetchRevisionsAsync(missingRevisions, onProgressChange, initialTotalCount, () => calculateFetchedCount());
 
-         IEnumerable<FileRevision> getRest() => missingRevisions.Intersect(_currentDownloads);
-         traceInformation(String.Format("Waiting for remaining {0} revisions", getRest().Count()));
-         await TaskUtils.WhileAsync(() => getRest().Any());
+         IEnumerable<FileRevision> getRemainingMissingRevisions() => missingRevisions.Intersect(_currentDownloads);
+         traceInformation(String.Format("Waiting for remaining {0} revisions", getRemainingMissingRevisions().Count()));
+         await TaskUtils.WhileAsync(
+            () =>
+         {
+            if (_isDisposed || !getRemainingMissingRevisions().Any())
+            {
+               return false;
+            }
+
+            if (needTraceProgress)
+            {
+               int actualFetchedCount = calculateFetchedCount();
+               int percentage = calculateCompletionPercentage(initialTotalCount, actualFetchedCount);
+               reportProgress(onProgressChange, String.Format("Commit contents download progress: {0}%", percentage));
+            }
+            return true;
+         });
       }
 
       async private Task fetchRevisionsAsync(IEnumerable<FileRevision> revisions,
          Action<string> onProgressChange, int totalExpectedCount, Func<int> getActualFetchedCount)
       {
+         bool needTraceProgress = onProgressChange != null;
          bool cancelled = _isDisposed;
 
          int fetchedByMeCount = 0;
-         int actualFetchedCount = getActualFetchedCount();
+         int fetchedCount = getActualFetchedCount();
          async Task doFetch(FileRevision revision)
          {
-            if (cancelled || _fileStorage.FileCache.ContainsFileRevision(revision) || !_currentDownloads.Add(revision))
+            if (cancelled || !isMissingRevision(revision) || !_currentDownloads.Add(revision))
             {
                return;
             }
@@ -232,13 +251,11 @@ namespace mrHelper.StorageSupport
                   return;
                }
 
-               if (onProgressChange != null)
+               if (needTraceProgress)
                {
                   fetchedByMeCount++;
-                  int percentage = calculateCompletionPercentage(
-                     totalExpectedCount, fetchedByMeCount + actualFetchedCount);
-                  reportProgress(onProgressChange, String.Format(
-                     "Commit contents download progress: {0}%", percentage));
+                  int percentage = calculateCompletionPercentage(totalExpectedCount, fetchedByMeCount + fetchedCount);
+                  reportProgress(onProgressChange, String.Format("Commit contents download progress: {0}%", percentage));
                }
             }
             finally
@@ -248,12 +265,13 @@ namespace mrHelper.StorageSupport
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(revisions, doFetch,
-            Constants.MaxFilesInBatch, Constants.FilesInterBatchDelay,
+            needTraceProgress ? Constants.MaxFilesInBatch : Constants.MaxFilesInBatchBackground,
+            needTraceProgress ? Constants.FilesInterBatchDelay : Constants.FilesInterBatchDelayBackground,
             () =>
             {
-               if (onProgressChange != null)
+               if (needTraceProgress)
                {
-                  actualFetchedCount = getActualFetchedCount();
+                  fetchedCount = getActualFetchedCount();
                   fetchedByMeCount = 0;
                }
                return cancelled;
@@ -262,8 +280,7 @@ namespace mrHelper.StorageSupport
 
       async private Task<bool> fetchSingleRevisionAsync(FileRevision revision)
       {
-         GitLabSharp.Entities.File file = await _repositoryAccessor.LoadFile(
-            _fileStorage.ProjectKey, revision.GitFilePath.Value, revision.SHA);
+         File file = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey, revision.GitFilePath.Value, revision.SHA);
          if (file == null)
          {
             return false;
@@ -286,7 +303,12 @@ namespace mrHelper.StorageSupport
 
       private IEnumerable<FileRevision> getMissingFileRevisions(IEnumerable<FileRevision> revisions)
       {
-         return revisions.Where(x => !_fileStorage.FileCache.ContainsFileRevision(x));
+         return revisions.Where(x => isMissingRevision(x));
+      }
+
+      private bool isMissingRevision(FileRevision fileRevision)
+      {
+         return !_fileStorage.FileCache.ContainsFileRevision(fileRevision);
       }
 
       private void reportProgress(Action<string> onProgressChange, string message)

@@ -689,7 +689,9 @@ namespace mrHelper.App.Forms
 
       private void updateStorageDependentControlState(MergeRequestKey? mrk)
       {
-         bool isEnabled = mrk.HasValue && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value);
+         bool isEnabled = mrk.HasValue
+            && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value)
+            &&  _mergeRequestsUpdatingByUserRequest.Count() <= Constants.MaxMergeRequestStorageUpdatesInParallel;
          buttonDiscussions.Enabled = isEnabled;
          updateDiffToolButtonState(isEnabled, mrk);
       }
