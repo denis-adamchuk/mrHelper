@@ -5,33 +5,28 @@ namespace mrHelper.StorageSupport
 {
    internal class InternalUpdateContext
    {
-      internal InternalUpdateContext(Dictionary<string, IEnumerable<string>> baseToHeads)
+      internal InternalUpdateContext(IEnumerable<string> sha)
       {
-         BaseToHeads = baseToHeads;
+         Sha = sha;
       }
 
       internal IEnumerable<InternalUpdateContext> Split(int chunkSize)
       {
          List<InternalUpdateContext> splitted = new List<InternalUpdateContext>();
-         foreach (KeyValuePair<string, IEnumerable<string>> kv in BaseToHeads)
+         int remaining = Sha.Count();
+         while (remaining > 0)
          {
-            string baseSha = kv.Key;
-            int remaining = kv.Value.Count();
-            while (remaining > 0)
-            {
-               string[] headsChunk = kv.Value
-                  .Skip(kv.Value.Count() - remaining)
-                  .Take(chunkSize)
-                  .ToArray();
-               remaining -= headsChunk.Length;
-               var chunk = new Dictionary<string, IEnumerable<string>> { { baseSha, headsChunk } };
-               splitted.Add(new InternalUpdateContext(chunk));
-            }
+            string[] chunk = Sha
+               .Skip(Sha.Count() - remaining)
+               .Take(chunkSize)
+               .ToArray();
+            remaining -= chunk.Length;
+            splitted.Add(new InternalUpdateContext(chunk));
          }
          return splitted;
       }
 
-      internal Dictionary<string, IEnumerable<string>> BaseToHeads { get; }
+      internal IEnumerable<string> Sha { get; }
    }
 }
 

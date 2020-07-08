@@ -20,8 +20,8 @@ namespace mrHelper.StorageSupport
       /// Create a factory
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
-      public LocalCommitStorageFactory(string parentFolder,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, ISession session, int revisionsToKeep)
+      public LocalCommitStorageFactory(ISynchronizeInvoke synchronizeInvoke,
+         ISession session, string parentFolder, bool useShallowClone, int revisionsToKeep)
       {
          if (!Directory.Exists(parentFolder))
          {

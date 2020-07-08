@@ -113,6 +113,7 @@ namespace mrHelper.StorageSupport
 
       private void onCloned()
       {
+         Trace.TraceInformation(String.Format("[GitRepository] ({0}) Repository cloned", ProjectKey.ProjectName));
          ExpectingClone = false;
          _onClonedRepo?.Invoke(this);
       }

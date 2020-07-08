@@ -438,6 +438,15 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
+      private void updateStorageDependentControlState(MergeRequestKey? mrk)
+      {
+         bool isEnabled = mrk.HasValue
+            && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value)
+            &&  _mergeRequestsUpdatingByUserRequest.Count() < Constants.MaxMergeRequestStorageUpdatesInParallel;
+         buttonDiscussions.Enabled = isEnabled;
+         updateDiffToolButtonState(isEnabled, mrk);
+      }
+
       private void onStorageUpdateStateChange()
       {
          updateAbortGitCloneButtonState();
@@ -461,8 +470,6 @@ namespace mrHelper.App.Forms
          else
          {
             _latestStorageUpdateStatus[mrk] = text;
-
-            // TODO Test git repo updater, if it sends an empty string at the end of updates
 
             MergeRequestKey? currentMRK = getMergeRequestKey(null);
             if (currentMRK.HasValue && currentMRK.Value.Equals(mrk))
@@ -687,15 +694,6 @@ namespace mrHelper.App.Forms
          buttonNewDiscussion.Enabled = enabled;
       }
 
-      private void updateStorageDependentControlState(MergeRequestKey? mrk)
-      {
-         bool isEnabled = mrk.HasValue
-            && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value)
-            &&  _mergeRequestsUpdatingByUserRequest.Count() <= Constants.MaxMergeRequestStorageUpdatesInParallel;
-         buttonDiscussions.Enabled = isEnabled;
-         updateDiffToolButtonState(isEnabled, mrk);
-      }
-
       private void updateDiffToolButtonState(bool isEnabled, MergeRequestKey? mrk)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
@@ -775,9 +773,8 @@ namespace mrHelper.App.Forms
          {
             try
             {
-               _storageFactory = new LocalCommitStorageFactory(
-                  Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone, getSession(true),
-                  Program.Settings.RevisionsToKeep);
+               _storageFactory = new LocalCommitStorageFactory(this, getSession(true),
+                  Program.Settings.LocalGitFolder, Program.Settings.UseShallowClone, Program.Settings.RevisionsToKeep);
                _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
             catch (ArgumentException ex)

@@ -56,7 +56,6 @@
     <Compile Include="src\Impl\Internal\GitLab\FileStorageGitCommandService.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageRenameDetector.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageUtils.cs" />
-    <Compile Include="src\Impl\Internal\GitLab\FileStorageUpdaterException.cs" />
     <Compile Include="src\Impl\Internal\Git\GitRepositoryRenameDetector.cs" />
     <Compile Include="src\Impl\Internal\Git\NativeGitCommandService.cs" />
     <Compile Include="src\Impl\Internal\Interfaces\GitCommandArgumentConverterItf.cs" />

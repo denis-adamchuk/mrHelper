@@ -48,15 +48,13 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         _processManager.Cancel(_updateOperationDescriptor);
+         Debug.Assert(_currentUpdateType.HasValue);
+         _processManager.Cancel(_currentUpdateOperationDescriptor);
       }
 
       public bool CanBeStopped()
       {
-         return !_isDisposed
-            && _updateOperationDescriptor != null                    // update is running
-            && _updateOperationDescriptor.OnProgressChange != null   // update is caused by StartUpdate() call
-            && _gitRepository.ExpectingClone;                        // update is 'git clone'
+         return !_isDisposed && _currentUpdateOperationDescriptor != null && _gitRepository.ExpectingClone;
       }
 
       public void Dispose()
@@ -67,55 +65,28 @@ namespace mrHelper.StorageSupport
       async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (onProgressChange == null)
+         if (onProgressChange == null || onUpdateStateChange == null)
          {
-            return;
+            throw new NotImplementedException(); // not tested cases
          }
 
-         await update(contextProvider, onProgressChange, onUpdateStateChange, true, false);
-      }
-
-      async public Task update(ICommitStorageUpdateContextProvider contextProvider,
-         Action<string> onProgressChange, Action onUpdateStateChange, bool canClone, bool canSplit)
-      {
-         CommitStorageUpdateContext context = contextProvider?.GetContext();
-         if (contextProvider == null || (context != null && context.BaseToHeads == null))
+         try
          {
-            Debug.Assert(false);
-            return;
+            traceInformation(String.Format("StartUpdate() called with context of type {0}",
+               contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
+            registerCallbacks(onProgressChange, onUpdateStateChange);
+            await doUpdate(true, contextProvider?.GetContext(), onProgressChange, onUpdateStateChange);
          }
-
-         if (_isDisposed || context == null || (_gitRepository.ExpectingClone && !canClone))
+         catch (GitCommandException ex)
          {
-            return;
+            handleException(ex);
          }
-
-         if (onProgressChange != null)
+         finally
          {
-            // save callbacks for operations that may start
-            _onProgressChange = onProgressChange;
-            _onUpdateStateChange = onUpdateStateChange;
+            unregisterCallbacks(onProgressChange, onUpdateStateChange);
+            reportProgress(onProgressChange, String.Empty);
+            traceInformation("StartUpdate() finished");
          }
-
-         if (_updateOperationDescriptor != null)
-         {
-            // already started, joining it
-            _updateOperationDescriptor.OnProgressChange = getProgressChangeFunctor();
-            _onUpdateStateChange?.Invoke();
-         }
-
-         if (UpdateContextUtils.IsWorthNewUpdate(context, _updatingContext))
-         {
-            await processContext(context, canSplit);
-         }
-         else
-         {
-            // TODO This is wrong, we need to check for something more stable than _updatingContext which maybe set and unset
-            await TaskUtils.WhileAsync(() => _updatingContext != null);
-         }
-
-         _onProgressChange = null;
-         _onUpdateStateChange = null;
       }
 
       public void RequestUpdate(ICommitStorageUpdateContextProvider contextProvider, Action onFinished)
@@ -123,182 +94,98 @@ namespace mrHelper.StorageSupport
          _synchronizeInvoke.BeginInvoke(new Action(
             async () =>
             {
+               if (_gitRepository.ExpectingClone)
+               {
+                  traceInformation("RequestUpdate() does nothing because repository is not cloned");
+                  return;
+               }
+
                try
                {
-                  await update(contextProvider, null, null, false, true);
+                  traceInformation(String.Format("RequestUpdate() called with context of type {0}",
+                     contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
+
+                  await doUpdate(false, contextProvider?.GetContext(), null, null);
                   onFinished?.Invoke();
                }
-               catch (GitRepositoryUpdaterException ex)
+               catch (GitCommandException ex)
                {
                   ExceptionHandlers.Handle("Silent update failed", ex);
+               }
+               finally
+               {
+                  traceInformation("RequestUpdate() finished");
                }
             }), null);
       }
 
-      async private Task processContext(CommitStorageUpdateContext context, bool canSplit)
+      async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
+         Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (!context.BaseToHeads.Any())
+         if (context == null || context.BaseToHeads == null || _isDisposed)
          {
-            if (!_gitRepository.ExpectingClone && _updateMode == UpdateMode.ShallowClone)
-            {
-               return; // optimization. cannot do anything without Sha list
-            }
-            traceDebug("Empty context");
+            return;
          }
 
-         try
+         var flatContext = flattenDictionary(context.BaseToHeads);
+         int totalShaCount = flatContext.Count();
+         traceInformation(String.Format("Context commits: {0}, latest change: {1}",
+            totalShaCount, context.LatestChange?.ToLocalTime().ToString() ?? "N/A"));
+
+         await cloneAsync(isAwaitedUpdate);
+         await fetchAllAsync(isAwaitedUpdate, context.LatestChange);
+         if (totalShaCount == 0)
          {
-            await doPreProcessContext(context);
-
-            IEnumerable<InternalUpdateContext> splitted = canSplit && _updateMode == UpdateMode.ShallowClone
-               ? new InternalUpdateContext(context.BaseToHeads).Split(MaxShaInChunk)
-               : new InternalUpdateContext[] { new InternalUpdateContext(context.BaseToHeads) };
-            foreach (InternalUpdateContext internalContext in splitted)
-            {
-               await doProcessContext(context, internalContext);
-
-               // this allows others to interleave with their (shorter) requests
-               await TaskUtils.IfAsync(() => internalContext != splitted.Last() && !_isDisposed, DelayBetweenChunksMs);
-            }
+            return;
          }
-         catch (GitCommandException ex)
+
+         int fetchedShaCount = 0; // accumulator
+         IEnumerable<InternalUpdateContext> internalContexts = createInternalContexts(flatContext, !isAwaitedUpdate);
+         traceDebug(String.Format("Number of internal contexts is {0}", internalContexts.Count()));
+         foreach (InternalUpdateContext internalContext in internalContexts)
          {
-            if (ex is OperationCancelledException)
-            {
-               throw new UpdateCancelledException();
-            }
-            else if (ex is GitCallFailedException gfex
-                  && gfex.InnerException is ExternalProcessFailureException pfex
-                  && String.Join("\n", pfex.Errors).Contains("SSL certificate problem"))
-            {
-               throw new SSLVerificationException(ex);
-            }
-            else if (ex is GitCallFailedException gfex2
-                  && gfex2.InnerException is ExternalProcessFailureException pfex2
-                  && String.Join("\n", pfex2.Errors).Contains("already exists and is not an empty directory"))
-            {
-               throw new NotEmptyDirectoryException(_gitRepository.Path, ex);
-            }
-            else if (ex is GitCallFailedException gfex3
-                  && gfex3.InnerException is ExternalProcessFailureException pfex3
-                  && String.Join("\n", pfex3.Errors).Contains("Authentication failed"))
-            {
-               throw new AuthenticationFailedException(ex);
-            }
-            else if (ex is GitCallFailedException gfex4
-                  && gfex4.InnerException is ExternalProcessFailureException pfex4
-                  && String.Join("\n", pfex4.Errors).Contains("could not read Username"))
-            {
-               throw new CouldNotReadUsernameException(ex);
-            }
-            throw new GitRepositoryUpdaterException("Cannot update git repository", ex);
+            await fetchCommitsAsync(isAwaitedUpdate, totalShaCount, fetchedShaCount, internalContext.Sha,
+               onProgressChange, onUpdateStateChange);
+            fetchedShaCount += internalContext.Sha.Count();
+            await suspendToProcessOtherRequests(isAwaitedUpdate, fetchedShaCount < totalShaCount);
          }
       }
 
-      async private Task doPreProcessContext(CommitStorageUpdateContext context)
+      private async Task suspendToProcessOtherRequests(bool isAwaitedUpdate, bool areRemainingCommits)
       {
-         await TaskUtils.WhileAsync(() => _updatingContext != null);
-
-         try
-         {
-            Debug.Assert(_updateOperationDescriptor == null);
-
-            _updatingContext = context;
-            traceDebug(String.Format("[LOCK][PRE] by {0}", context.GetType()));
-
-            DateTime prevFullUpdateTimestamp = updateTimestamp(context);
-
-            if (_gitRepository.ExpectingClone)
-            {
-               await cloneAsync(_updateMode == UpdateMode.ShallowClone);
-               traceInformation("Repository cloned.");
-               _onCloned?.Invoke();
-            }
-            else if (_updateMode != UpdateMode.ShallowClone
-                  && context.LatestChange.HasValue
-                  && context.LatestChange.Value > prevFullUpdateTimestamp)
-            {
-               await fetchAsync(false);
-            }
-
-            Debug.Assert(_updateOperationDescriptor == null);
-         }
-         finally
-         {
-            traceDebug(String.Format("[UNLOCK][PRE] by {0}", context.GetType()));
-            _updatingContext = null;
-         }
+         bool needSuspendFetch =
+               !_isDisposed
+            && !isAwaitedUpdate
+            && (_pendingAwaitedUpdateCount > 0 || _pendingNonAwaitedUpdateCount > 0)
+            && areRemainingCommits;
+         traceDebug(String.Format("Suspending fetch loop: {0}", needSuspendFetch.ToString()));
+         await TaskUtils.IfAsync(() => needSuspendFetch, FetchSuspendDelayMs);
       }
 
-      async private Task doProcessContext(
-         CommitStorageUpdateContext context, InternalUpdateContext internalUpdateContext)
+      private IEnumerable<InternalUpdateContext> createInternalContexts(IEnumerable<string> flatContext,
+         bool canSplitContext)
       {
-         await TaskUtils.WhileAsync(() => _updatingContext != null);
-
-         try
-         {
-            Debug.Assert(_updateOperationDescriptor == null);
-
-            _updatingContext = context;
-            traceDebug(String.Format("[LOCK] by {0}", context.GetType()));
-
-            IEnumerable<string> missingSha = await getMissingSha(internalUpdateContext.BaseToHeads);
-            await fetchCommitsAsync(missingSha, _updateMode == UpdateMode.ShallowClone);
-
-            Debug.Assert(_updateOperationDescriptor == null);
-         }
-         finally
-         {
-            traceDebug(String.Format("[UNLOCK] by {0}", context.GetType()));
-            _updatingContext = null;
-         }
+         return canSplitContext
+            ? new InternalUpdateContext(flatContext).Split(MaxShaInChunk)
+            : new InternalUpdateContext[] { new InternalUpdateContext(flatContext) };
       }
 
-      async private Task cloneAsync(bool shallowClone)
+      static private IEnumerable<string> flattenDictionary(Dictionary<string, IEnumerable<string>> dict)
       {
-         string arguments = String.Format("clone {0} {1}/{2} {3}",
-            getCloneArguments(shallowClone),
-            _gitRepository.ProjectKey.HostName,
-            _gitRepository.ProjectKey.ProjectName,
-            StringUtils.EscapeSpaces(_gitRepository.Path));
-         await doUpdateOperationAsync(arguments, String.Empty);
-      }
-
-      async private Task fetchAsync(bool shallowFetch)
-      {
-         Debug.Assert(shallowFetch == false); // we don't support shallow fetch here
-
-         string arguments = String.Format("fetch {0}",
-            getFetchArguments(null, shallowFetch));
-         await doUpdateOperationAsync(arguments, _gitRepository.Path);
-      }
-
-      async private Task fetchCommitsAsync(IEnumerable<string> shas, bool shallowFetch)
-      {
-         int iCommit = 0;
-         foreach (string sha in shas)
+         List<string> result = new List<string>();
+         result.AddRange(dict.Keys);
+         foreach (IEnumerable<string> values in dict.Values)
          {
-            string arguments = String.Format("fetch {0}", getFetchArguments(sha, shallowFetch));
-            await doUpdateOperationAsync(arguments, _gitRepository.Path);
-            _onFetched?.Invoke(sha);
-            ++iCommit;
+            result.AddRange(values);
          }
-
-         if (iCommit > 0)
-         {
-            traceInformation(String.Format("Fetched commits: {0}", iCommit));
-         }
+         return result;
       }
 
-      async private Task<IEnumerable<string>> getMissingSha(Dictionary<string, IEnumerable<string>> baseToHeads)
+      async private Task<IEnumerable<string>> selectMissingSha(IEnumerable<string> sha)
       {
-         List<string> allSha = new List<string>();
-         allSha.AddRange(baseToHeads.Keys);
-         foreach (IEnumerable<string> heads in baseToHeads.Values) allSha.AddRange(heads);
-
          Exception exception = null;
          List<string> missingSha = new List<string>();
-         await TaskUtils.RunConcurrentFunctionsAsync(allSha.Distinct(),
+         await TaskUtils.RunConcurrentFunctionsAsync(sha.Distinct(),
             async x =>
             {
                if (exception != null)
@@ -318,7 +205,7 @@ namespace mrHelper.StorageSupport
                   exception = ex;
                }
             },
-            20, 50, () => exception != null);
+            Constants.GetMissingShaInBatch, Constants.GetMissingShaInterBatchDelay, () => exception != null);
 
          if (exception != null)
          {
@@ -328,33 +215,165 @@ namespace mrHelper.StorageSupport
          return missingSha;
       }
 
-      async private Task doUpdateOperationAsync(string arguments, string path)
+      async private Task cloneAsync(bool isAwaitedUpdate)
       {
-         if (!_isDisposed)
+         if (!_gitRepository.ExpectingClone)
          {
-            ExternalProcess.AsyncTaskDescriptor descriptor = startUpdateOperation(arguments, path);
-            await waitUpdateOperationAsync(arguments, descriptor);
+            return;
+         }
+
+         traceInformation(String.Format("Pending clone. Already locked = {0}. Is awaited update = {1}",
+            _currentUpdateType.HasValue.ToString(), isAwaitedUpdate.ToString()));
+
+         await doExclusiveUpdateOperationAsync(isAwaitedUpdate,
+            async () =>
+         {
+            if (!_gitRepository.ExpectingClone)
+            {
+               traceInformation("Clone is no longer needed");
+               return;
+            }
+
+            string arguments = String.Format("clone {0} {1}/{2} {3}",
+               getCloneArguments(isShallowCloneEnabled()), _gitRepository.ProjectKey.HostName,
+               _gitRepository.ProjectKey.ProjectName, StringUtils.EscapeSpaces(_gitRepository.Path));
+            await doGitUpdateAsync(arguments, String.Empty);
+            _onCloned?.Invoke();
+         });
+      }
+
+      async private Task fetchAllAsync(bool isAwaitedUpdate, DateTime? latestChange)
+      {
+         DateTime prevFullUpdateTimestamp = updateTimestamp(latestChange);
+         if (isShallowCloneEnabled() || !latestChange.HasValue || latestChange.Value <= prevFullUpdateTimestamp)
+         {
+            return;
+         }
+
+         traceInformation(String.Format("Pending full fetch. Already locked = {0}. Is awaited update = {1}",
+            _currentUpdateType.HasValue.ToString(), isAwaitedUpdate.ToString()));
+
+         await doExclusiveUpdateOperationAsync(isAwaitedUpdate,
+            async () =>
+         {
+            string arguments = String.Format("fetch {0}", getFetchArguments(null, false));
+            await doGitUpdateAsync(arguments, _gitRepository.Path);
+         });
+      }
+
+      async private Task fetchCommitsAsync(bool isAwaitedUpdate, int totalMissingShaCount, int fetchedShaCount,
+         IEnumerable<string> shas, Action<string> onProgressChange, Action onUpdateStateChange)
+      {
+         traceInformation(String.Format("Pending per-commit fetch. Already locked = {0}. Is awaited update = {1}",
+            _currentUpdateType.HasValue.ToString(), isAwaitedUpdate.ToString()));
+
+         // don't report git internal messages to user, report completion progress manually
+         unregisterCallbacks(onProgressChange, null);
+         reportWaitingReason(onProgressChange);
+
+         await doExclusiveUpdateOperationAsync(isAwaitedUpdate,
+            async () =>
+         {
+            reportProgress(onProgressChange, "Checking for missing commits...");
+            IEnumerable<string> missingSha = await selectMissingSha(shas);
+            traceDebug(String.Format("Selected {0} missing commits from {1} requested commits",
+               missingSha.Count(), shas.Count()));
+            if (!missingSha.Any())
+            {
+               reportCompletionProgress(totalMissingShaCount, fetchedShaCount, onProgressChange);
+            }
+
+            foreach (string sha in missingSha)
+            {
+               string arguments = String.Format("fetch {0}", getFetchArguments(sha, isShallowCloneEnabled()));
+               await doGitUpdateAsync(arguments, _gitRepository.Path);
+               _onFetched?.Invoke(sha);
+
+               ++fetchedShaCount;
+               reportCompletionProgress(totalMissingShaCount, fetchedShaCount, onProgressChange);
+            }
+         });
+      }
+
+      private void reportWaitingReason(Action<string> onProgressChange)
+      {
+         if (_currentUpdateType.HasValue)
+         {
+            if (_currentUpdateType.Value == UpdateType.Awaited)
+            {
+               reportProgress(onProgressChange, "Waiting for completion of a concurrent update...");
+            }
+            else
+            {
+               // TODO This status does not change when _currentUpdateType changes,
+               // consider wrapping _currentUpdateType into a property which triggers
+               // some event on its change and notifies interested waiters.
+               reportProgress(onProgressChange, "Suspending background updates...");
+            }
          }
       }
 
-      private ExternalProcess.AsyncTaskDescriptor startUpdateOperation(string arguments, string path)
+      async private Task doExclusiveUpdateOperationAsync(bool isAwaitedUpdate, Func<Task> updateOperation)
       {
-         return _processManager.CreateDescriptor("git", arguments, path, getProgressChangeFunctor(), null);
-      }
+         _pendingAwaitedUpdateCount    += (isAwaitedUpdate ? 1 : 0);
+         _pendingNonAwaitedUpdateCount += (isAwaitedUpdate ? 0 : 1);
 
-      private Action<string> getProgressChangeFunctor()
-      {
-         return _onProgressChange == null ?
-            null : new Action<string>(status => _onProgressChange?.Invoke(status));
-      }
+         bool isLocked() => _currentUpdateType.HasValue || (!isAwaitedUpdate && _pendingAwaitedUpdateCount != 0);
+         await TaskUtils.WhileAsync(() => isLocked(), RequestCheckIntervalMs);
 
-      private async Task waitUpdateOperationAsync(
-         string arguments, ExternalProcess.AsyncTaskDescriptor descriptor)
-      {
+         _pendingAwaitedUpdateCount    -= (isAwaitedUpdate ? 1 : 0);
+         _pendingNonAwaitedUpdateCount -= (isAwaitedUpdate ? 0 : 1);
+
          try
          {
-            _updateOperationDescriptor = descriptor;
-            _onUpdateStateChange?.Invoke();
+            traceDebug(String.Format(
+               "LOCK. isAwaitedUpdate={0}, _pendingAwaitedUpdateCount={1}, _pendingNonAwaitedUpdateCount={2}",
+               isAwaitedUpdate, _pendingAwaitedUpdateCount, _pendingNonAwaitedUpdateCount));
+            Debug.Assert(_currentUpdateOperationDescriptor == null);
+            _currentUpdateType = isAwaitedUpdate ? UpdateType.Awaited : UpdateType.NonAwaited;
+            await updateOperation?.Invoke();
+         }
+         finally
+         {
+            traceDebug(String.Format(
+               "UNLOCK. isAwaitedUpdate={0}, _pendingAwaitedUpdateCount={1}, _pendingNonAwaitedUpdateCount={2}",
+               isAwaitedUpdate, _pendingAwaitedUpdateCount, _pendingNonAwaitedUpdateCount));
+            Debug.Assert(_currentUpdateOperationDescriptor == null);
+            _currentUpdateType = null;
+         }
+      }
+
+      private void registerCallbacks(Action<string> onProgressChange, Action onUpdateStateChange)
+      {
+         _onProgressChangeCallbacks.Add(onProgressChange);
+         _onUpdateStateChangeCallbacks.Add(onUpdateStateChange);
+      }
+
+      private void unregisterCallbacks(Action<string> onProgressChange, Action onUpdateStateChange)
+      {
+         _onProgressChangeCallbacks.Remove(onProgressChange);
+         _onUpdateStateChangeCallbacks.Remove(onUpdateStateChange);
+      }
+
+      async private Task doGitUpdateAsync(string arguments, string path)
+      {
+         Debug.Assert(_currentUpdateType.HasValue);
+         Debug.Assert(_currentUpdateOperationDescriptor == null);
+         if (_isDisposed)
+         {
+            return;
+         }
+
+         void onProgressChangeAggregate(string status) => _onProgressChangeCallbacks?.ForEach(x => x?.Invoke(status));
+         void onUpdateStateChangeAggregate() => _onUpdateStateChangeCallbacks?.ForEach(x => x?.Invoke());
+
+         ExternalProcess.AsyncTaskDescriptor descriptor = _processManager.CreateDescriptor(
+            "git", arguments, path, onProgressChangeAggregate, null);
+
+         try
+         {
+            _currentUpdateOperationDescriptor = descriptor;
+            onUpdateStateChangeAggregate();
             traceInformation(String.Format("START git with arguments \"{0}\" in \"{1}\" for {2}",
                arguments, _gitRepository.Path, _gitRepository.ProjectKey.ProjectName));
             await _processManager.Wait(descriptor);
@@ -363,8 +382,8 @@ namespace mrHelper.StorageSupport
          {
             traceInformation(String.Format("FINISH git with arguments \"{0}\" in \"{1}\" for {2}",
                arguments, _gitRepository.Path, _gitRepository.ProjectKey.ProjectName));
-            _updateOperationDescriptor = null;
-            _onUpdateStateChange?.Invoke();
+            _currentUpdateOperationDescriptor = null;
+            onUpdateStateChangeAggregate();
          }
       }
 
@@ -392,23 +411,18 @@ namespace mrHelper.StorageSupport
             GitTools.SupportsFetchAutoGC() ? "--no-auto-gc" : String.Empty);
       }
 
-      private DateTime updateTimestamp(CommitStorageUpdateContext context)
+      private DateTime updateTimestamp(DateTime? latestChange)
       {
          DateTime prevFullUpdateTimestamp = _latestFullFetchTimestamp;
-         if (context.LatestChange.HasValue)
+         if (latestChange.HasValue)
          {
-            Debug.Assert(context is FullUpdateContext);
-            if (context.LatestChange.Value > _latestFullFetchTimestamp)
+            if (latestChange.Value > _latestFullFetchTimestamp)
             {
                traceInformation(String.Format("Updating LatestChange timestamp to {0}",
-                  context.LatestChange.Value.ToLocalTime().ToString()));
-               _latestFullFetchTimestamp = context.LatestChange.Value;
+                  latestChange.Value.ToLocalTime().ToString()));
+               _latestFullFetchTimestamp = latestChange.Value;
             }
-            else if (context.LatestChange == _latestFullFetchTimestamp)
-            {
-               traceDebug("Timestamp not updated");
-            }
-            else if (context.LatestChange < _latestFullFetchTimestamp)
+            else if (latestChange < _latestFullFetchTimestamp)
             {
                // This is not a problem and may happen when, for example, a Merge Request with the most newest
                // version has been closed.
@@ -416,6 +430,44 @@ namespace mrHelper.StorageSupport
             }
          }
          return prevFullUpdateTimestamp;
+      }
+
+      private bool isShallowCloneEnabled()
+      {
+         return _updateMode == UpdateMode.ShallowClone;
+      }
+
+      private void handleException(GitCommandException ex)
+      {
+         if (ex is OperationCancelledException)
+         {
+            throw new UpdateCancelledException();
+         }
+         else if (ex is GitCallFailedException gfex
+               && gfex.InnerException is ExternalProcessFailureException pfex
+               && String.Join("\n", pfex.Errors).Contains("SSL certificate problem"))
+         {
+            throw new SSLVerificationException(ex);
+         }
+         else if (ex is GitCallFailedException gfex2
+               && gfex2.InnerException is ExternalProcessFailureException pfex2
+               && String.Join("\n", pfex2.Errors).Contains("already exists and is not an empty directory"))
+         {
+            throw new NotEmptyDirectoryException(_gitRepository.Path, ex);
+         }
+         else if (ex is GitCallFailedException gfex3
+               && gfex3.InnerException is ExternalProcessFailureException pfex3
+               && String.Join("\n", pfex3.Errors).Contains("Authentication failed"))
+         {
+            throw new AuthenticationFailedException(ex);
+         }
+         else if (ex is GitCallFailedException gfex4
+               && gfex4.InnerException is ExternalProcessFailureException pfex4
+               && String.Join("\n", pfex4.Errors).Contains("could not read Username"))
+         {
+            throw new CouldNotReadUsernameException(ex);
+         }
+         throw new GitRepositoryUpdaterException("Cannot update git repository", ex);
       }
 
       private void traceDebug(string message)
@@ -430,6 +482,31 @@ namespace mrHelper.StorageSupport
             _gitRepository.ProjectKey.ProjectName, message));
       }
 
+      private void reportProgress(Action<string> onProgressChange, string message)
+      {
+         onProgressChange?.Invoke(message);
+         if (onProgressChange != null)
+         {
+            traceInformation(String.Format("Reported to user: \"{0}\"", message));
+         }
+      }
+
+      private int calculateCompletionPercentage(int totalCount, int completeCount)
+      {
+         return Convert.ToInt32(Convert.ToDouble(completeCount) / totalCount * 100);
+      }
+
+      private void reportCompletionProgress(int totalMissingShaCount, int fetchedShaCount,
+         Action<string> onProgressChange)
+      {
+         if (onProgressChange != null)
+         {
+            int percentage = calculateCompletionPercentage(totalMissingShaCount, fetchedShaCount);
+            string message = String.Format("Commits download progress: {0}%", percentage);
+            reportProgress(onProgressChange, message);
+         }
+      }
+
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly IGitRepository _gitRepository;
       private readonly IExternalProcessManager _processManager;
@@ -437,16 +514,30 @@ namespace mrHelper.StorageSupport
       private readonly Action _onCloned;
       private readonly Action<string> _onFetched;
 
-      private ExternalProcess.AsyncTaskDescriptor _updateOperationDescriptor;
-
       private bool _isDisposed;
-      private CommitStorageUpdateContext _updatingContext;
-      private Action<string> _onProgressChange;
-      private Action _onUpdateStateChange;
+      private int _pendingAwaitedUpdateCount;
+      private int _pendingNonAwaitedUpdateCount;
       private DateTime _latestFullFetchTimestamp = DateTime.MinValue;
 
-      private static int MaxShaInChunk = 2;
-      private static int DelayBetweenChunksMs = 50;
+      private enum UpdateType
+      {
+         Awaited,
+         NonAwaited
+      }
+      private UpdateType? _currentUpdateType;
+      private ExternalProcess.AsyncTaskDescriptor _currentUpdateOperationDescriptor;
+
+      /// <summary>
+      /// These callbacks react on everything related to the _currentUpdateOperationDescriptor
+      /// </summary>
+      private readonly List<Action<string>> _onProgressChangeCallbacks = new List<Action<string>>();
+      private readonly List<Action> _onUpdateStateChangeCallbacks = new List<Action>();
+
+      private static int MaxShaInChunk = 1;
+      private static int RequestCheckIntervalMs = 50;
+
+      // suspend delay shall be big enough to allow other to check for a lock and acquire it
+      private static int FetchSuspendDelayMs = RequestCheckIntervalMs * 4;
    }
 }
 

@@ -71,13 +71,13 @@ namespace mrHelper.StorageSupport
          {
             await doUpdate(contextProvider, onProgressChange);
          }
-         catch (FileStorageUpdaterException ex)
+         catch (RepositoryAccessorException ex)
          {
-            if (ex is FileStorageUpdateCancelledException)
-            {
-               throw new LocalCommitStorageUpdaterCancelledException();
-            }
             throw new LocalCommitStorageUpdaterFailedException("Cannot update file storage", ex);
+         }
+         finally
+         {
+            reportProgress(onProgressChange, String.Empty);
          }
       }
 
@@ -91,7 +91,7 @@ namespace mrHelper.StorageSupport
                   await doUpdate(contextProvider, null);
                   onFinished?.Invoke();
                }
-               catch (FileStorageUpdaterException ex)
+               catch (RepositoryAccessorException ex)
                {
                   ExceptionHandlers.Handle("Silent update failed", ex);
                }
@@ -106,33 +106,22 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         try
-         {
-            reportProgress(onProgressChange, "Downloading meta-information...");
-            IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(context, onProgressChange);
-            traceInformation(String.Format("Got {0} comparisons, onProgressChange is {1} null",
-               comparisons.Count(), onProgressChange == null ? "" : "not"));
+         reportProgress(onProgressChange, "Downloading meta-information...");
+         IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(context, onProgressChange);
+         traceInformation(String.Format("Got {0} comparisons, onProgressChange is {1} null",
+            comparisons.Count(), onProgressChange == null ? "" : "not"));
 
-            reportProgress(onProgressChange, "Meta-information downloaded. Starting to download commit contents...");
+         reportProgress(onProgressChange, "Meta-information downloaded. Starting to download commit contents...");
 
-            traceInformation("List of comparisons to process:");
-            foreach (ComparisonInternal comparison in comparisons)
-            {
-               traceInformation(String.Format("{0} vs {1} ({2} files)",
-                  comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
-            }
+         traceInformation("List of comparisons to process:");
+         foreach (ComparisonInternal comparison in comparisons)
+         {
+            traceInformation(String.Format("{0} vs {1} ({2} files)",
+               comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
+         }
 
-            await processComparisonsAsync(context, onProgressChange, comparisons);
-            reportProgress(onProgressChange, "Commit contents downloaded");
-         }
-         catch (RepositoryAccessorException ex)
-         {
-            throw new FileStorageUpdaterException("Cannot process commit storage update request", ex);
-         }
-         finally
-         {
-            reportProgress(onProgressChange, String.Empty);
-         }
+         await processComparisonsAsync(context, onProgressChange, comparisons);
+         reportProgress(onProgressChange, "Commit contents downloaded");
       }
 
       async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(
@@ -221,8 +210,7 @@ namespace mrHelper.StorageSupport
             if (needTraceProgress)
             {
                int actualFetchedCount = calculateFetchedCount();
-               int percentage = calculateCompletionPercentage(initialTotalCount, actualFetchedCount);
-               reportProgress(onProgressChange, String.Format("Commit contents download progress: {0}%", percentage));
+               reportCompletionProgress(initialTotalCount, actualFetchedCount, onProgressChange);
             }
             return true;
          });
@@ -234,7 +222,7 @@ namespace mrHelper.StorageSupport
          bool needTraceProgress = onProgressChange != null;
          bool cancelled = _isDisposed;
 
-         int fetchedByMeCount = 0;
+         int fetchedByMeCount = 0; // this counter allows to not call getActualFetchedCount() on each iteration
          int fetchedCount = getActualFetchedCount();
          async Task doFetch(FileRevision revision)
          {
@@ -254,8 +242,7 @@ namespace mrHelper.StorageSupport
                if (needTraceProgress)
                {
                   fetchedByMeCount++;
-                  int percentage = calculateCompletionPercentage(totalExpectedCount, fetchedByMeCount + fetchedCount);
-                  reportProgress(onProgressChange, String.Format("Commit contents download progress: {0}%", percentage));
+                  reportCompletionProgress(totalExpectedCount, fetchedByMeCount + fetchedCount, onProgressChange);
                }
             }
             finally
@@ -314,6 +301,10 @@ namespace mrHelper.StorageSupport
       private void reportProgress(Action<string> onProgressChange, string message)
       {
          onProgressChange?.Invoke(message);
+         if (onProgressChange != null)
+         {
+            traceInformation(String.Format("Reported to user: \"{0}\"", message));
+         }
       }
 
       private void traceDebug(string message)
@@ -331,6 +322,17 @@ namespace mrHelper.StorageSupport
       private int calculateCompletionPercentage(int totalCount, int completeCount)
       {
          return Convert.ToInt32(Convert.ToDouble(completeCount) / totalCount * 100);
+      }
+
+      private void reportCompletionProgress(int totalMissingShaCount, int fetchedShaCount,
+         Action<string> onProgressChange)
+      {
+         if (onProgressChange != null)
+         {
+            int percentage = calculateCompletionPercentage(totalMissingShaCount, fetchedShaCount);
+            string message = String.Format("Commits download progress: {0}%", percentage);
+            reportProgress(onProgressChange, message);
+         }
       }
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;

@@ -94,6 +94,9 @@ namespace mrHelper.Common.Constants
       public static int ComparisionInterBatchDelayBackground = 200;
 
       public static int MaxMergeRequestStorageUpdatesInParallel = 3;
+
+      public static int GetMissingShaInBatch = 20;
+      public static int GetMissingShaInterBatchDelay = 50;
    }
 }
 
