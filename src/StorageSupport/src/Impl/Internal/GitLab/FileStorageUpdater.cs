@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
-using mrHelper.Common.Exceptions;
-using mrHelper.Common.Tools;
-using mrHelper.Client.Repository;
 using GitLabSharp.Entities;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
+using mrHelper.Client.Repository;
 
 namespace mrHelper.StorageSupport
 {
@@ -60,16 +60,18 @@ namespace mrHelper.StorageSupport
       }
 
       async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
-         Action<string> onProgressChange, Action _)
+         Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (onProgressChange == null)
+         if (onProgressChange == null || onUpdateStateChange == null)
          {
-            return;
+            throw new NotImplementedException(); // not tested cases
          }
 
          try
          {
-            await doUpdate(contextProvider, onProgressChange);
+            traceInformation(String.Format("StartUpdate() called with context of type {0}",
+               contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
+            await doUpdate(true, contextProvider?.GetContext(), onProgressChange);
          }
          catch (RepositoryAccessorException ex)
          {
@@ -78,6 +80,7 @@ namespace mrHelper.StorageSupport
          finally
          {
             reportProgress(onProgressChange, String.Empty);
+            traceInformation("StartUpdate() finished");
          }
       }
 
@@ -88,31 +91,35 @@ namespace mrHelper.StorageSupport
             {
                try
                {
-                  await doUpdate(contextProvider, null);
+                  traceInformation(String.Format("RequestUpdate() called with context of type {0}",
+                     contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
+
+                  await doUpdate(false, contextProvider?.GetContext(), null);
                   onFinished?.Invoke();
                }
                catch (RepositoryAccessorException ex)
                {
                   ExceptionHandlers.Handle("Silent update failed", ex);
                }
+               finally
+               {
+                  traceInformation("RequestUpdate() finished");
+               }
             }), null);
       }
 
-      async public Task doUpdate(ICommitStorageUpdateContextProvider contextProvider, Action<string> onProgressChange)
+      async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
+         Action<string> onProgressChange)
       {
-         CommitStorageUpdateContext context = contextProvider?.GetContext();
-         if (contextProvider == null || context == null || context.BaseToHeads == null || _isDisposed)
+         if (context == null || context.BaseToHeads == null || _isDisposed)
          {
             return;
          }
 
          reportProgress(onProgressChange, "Downloading meta-information...");
-         IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(context, onProgressChange);
-         traceInformation(String.Format("Got {0} comparisons, onProgressChange is {1} null",
-            comparisons.Count(), onProgressChange == null ? "" : "not"));
-
-         reportProgress(onProgressChange, "Meta-information downloaded. Starting to download commit contents...");
-
+         IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(isAwaitedUpdate, context);
+         traceInformation(String.Format("Got {0} comparisons, isAwaitedUpdate={1}",
+            comparisons.Count(), isAwaitedUpdate.ToString()));
          traceInformation("List of comparisons to process:");
          foreach (ComparisonInternal comparison in comparisons)
          {
@@ -120,12 +127,13 @@ namespace mrHelper.StorageSupport
                comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
          }
 
-         await processComparisonsAsync(context, onProgressChange, comparisons);
+         reportProgress(onProgressChange, "Meta-information downloaded. Starting to download commit contents...");
+         await processComparisonsAsync(isAwaitedUpdate, context, onProgressChange, comparisons);
          reportProgress(onProgressChange, "Commit contents downloaded");
       }
 
-      async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(
-         CommitStorageUpdateContext context, Action<string> onProgressChange)
+      async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(bool isAwaitedUpdate,
+         CommitStorageUpdateContext context)
       {
          List<Tuple<string, string>> baseToHeads = context.BaseToHeads
             .SelectMany(x => x.Value, (kv, headSha) => new Tuple<string, string>(kv.Key, headSha))
@@ -149,10 +157,9 @@ namespace mrHelper.StorageSupport
             comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
          }
 
-         bool needTraceProgress = onProgressChange != null;
          await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
-            needTraceProgress ? Constants.MaxComparisonInBatch : Constants.MaxComparisonInBatchBackground,
-            needTraceProgress ? Constants.ComparisionInterBatchDelay : Constants.ComparisionInterBatchDelayBackground,
+            isAwaitedUpdate ? Constants.MaxComparisonInBatch : Constants.MaxComparisonInBatchBackground,
+            isAwaitedUpdate ? Constants.ComparisionInterBatchDelay : Constants.ComparisionInterBatchDelayBackground,
             () => cancelled);
          return comparisons;
       }
@@ -175,7 +182,7 @@ namespace mrHelper.StorageSupport
          return comparison;
       }
 
-      private async Task processComparisonsAsync(CommitStorageUpdateContext context,
+      private async Task processComparisonsAsync(bool isAwaitedUpdate, CommitStorageUpdateContext context,
          Action<string> onProgressChange, IEnumerable<ComparisonInternal> comparisons)
       {
          List<FileRevision> allRevisions = new List<FileRevision>();
@@ -188,14 +195,15 @@ namespace mrHelper.StorageSupport
          int calculateFetchedCount() => needTraceProgress ? initialTotalCount - getMissingRevisions().Count() : 0;
 
          IEnumerable<FileRevision> missingRevisions = getMissingRevisions().ToArray();
-         traceInformation(String.Format("Total: {0}, Missing: {1}, onProgressChange is {2} null",
-            allRevisions.Count(), missingRevisions.Count(), onProgressChange == null ? "" : "not"));
+         traceInformation(String.Format("Downloading file revisions. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
+            allRevisions.Count(), missingRevisions.Count(), isAwaitedUpdate.ToString()));
          if (!missingRevisions.Any())
          {
             return;
          }
 
-         await fetchRevisionsAsync(missingRevisions, onProgressChange, initialTotalCount, () => calculateFetchedCount());
+         await fetchRevisionsAsync(isAwaitedUpdate, missingRevisions, onProgressChange, initialTotalCount,
+            () => calculateFetchedCount());
 
          IEnumerable<FileRevision> getRemainingMissingRevisions() => missingRevisions.Intersect(_currentDownloads);
          traceInformation(String.Format("Waiting for remaining {0} revisions", getRemainingMissingRevisions().Count()));
@@ -207,19 +215,14 @@ namespace mrHelper.StorageSupport
                return false;
             }
 
-            if (needTraceProgress)
-            {
-               int actualFetchedCount = calculateFetchedCount();
-               reportCompletionProgress(initialTotalCount, actualFetchedCount, onProgressChange);
-            }
+            reportCompletionProgress(initialTotalCount, calculateFetchedCount(), onProgressChange);
             return true;
          });
       }
 
-      async private Task fetchRevisionsAsync(IEnumerable<FileRevision> revisions,
+      async private Task fetchRevisionsAsync(bool isAwaitedUpdate, IEnumerable<FileRevision> revisions,
          Action<string> onProgressChange, int totalExpectedCount, Func<int> getActualFetchedCount)
       {
-         bool needTraceProgress = onProgressChange != null;
          bool cancelled = _isDisposed;
 
          int fetchedByMeCount = 0; // this counter allows to not call getActualFetchedCount() on each iteration
@@ -239,11 +242,8 @@ namespace mrHelper.StorageSupport
                   return;
                }
 
-               if (needTraceProgress)
-               {
-                  fetchedByMeCount++;
-                  reportCompletionProgress(totalExpectedCount, fetchedByMeCount + fetchedCount, onProgressChange);
-               }
+               fetchedByMeCount++;
+               reportCompletionProgress(totalExpectedCount, fetchedByMeCount + fetchedCount, onProgressChange);
             }
             finally
             {
@@ -252,22 +252,21 @@ namespace mrHelper.StorageSupport
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(revisions, doFetch,
-            needTraceProgress ? Constants.MaxFilesInBatch : Constants.MaxFilesInBatchBackground,
-            needTraceProgress ? Constants.FilesInterBatchDelay : Constants.FilesInterBatchDelayBackground,
+            isAwaitedUpdate ? Constants.MaxFilesInBatch : Constants.MaxFilesInBatchBackground,
+            isAwaitedUpdate ? Constants.FilesInterBatchDelay : Constants.FilesInterBatchDelayBackground,
             () =>
             {
-               if (needTraceProgress)
-               {
-                  fetchedCount = getActualFetchedCount();
-                  fetchedByMeCount = 0;
-               }
+               fetchedCount = getActualFetchedCount();
+               fetchedByMeCount = 0;
                return cancelled;
             });
       }
 
       async private Task<bool> fetchSingleRevisionAsync(FileRevision revision)
       {
-         File file = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey, revision.GitFilePath.Value, revision.SHA);
+         traceDebug(String.Format("Fetching file {0} with SHA {1}...", revision.GitFilePath.Value, revision.SHA));
+         File file = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey,
+            revision.GitFilePath.Value, revision.SHA);
          if (file == null)
          {
             return false;
@@ -303,7 +302,7 @@ namespace mrHelper.StorageSupport
          onProgressChange?.Invoke(message);
          if (onProgressChange != null)
          {
-            traceInformation(String.Format("Reported to user: \"{0}\"", message));
+            traceDebug(String.Format("Reported to user: \"{0}\"", message));
          }
       }
 

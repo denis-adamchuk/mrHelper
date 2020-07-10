@@ -487,7 +487,7 @@ namespace mrHelper.StorageSupport
          onProgressChange?.Invoke(message);
          if (onProgressChange != null)
          {
-            traceInformation(String.Format("Reported to user: \"{0}\"", message));
+            traceDebug(String.Format("Reported to user: \"{0}\"", message));
          }
       }
 

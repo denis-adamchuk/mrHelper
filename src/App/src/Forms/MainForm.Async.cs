@@ -374,7 +374,11 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = message;
             return null;
          }
-         labelWorkflowStatus.Text = "Discussions loaded";
+
+         bool anyDiscussions = discussions == null || !discussions.Any();
+         labelWorkflowStatus.Text = anyDiscussions
+            ? "Discussions loaded"
+            : "There are no discussions in this Merge Request";
          return discussions;
       }
 
