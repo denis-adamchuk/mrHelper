@@ -29,11 +29,8 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersionsByDefault";
       private static readonly bool   ShowVersionsDefaultValue = true;
 
-      private static readonly string UseGitStorageKeyName      = "UseGitStorage";
-      private static readonly bool   UseGitStorageDefaultValue = true;
-
-      private static readonly string UseShallowCloneKeyName      = "UseShallowClone_New";
-      private static readonly bool   UseShallowCloneDefaultValue = true;
+      private static readonly string GitUsageForStorageKeyName       = "GitUsageForStorage";
+      private static readonly string GitUsageForStorageDefaultValue  = "DontUseGit";
 
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
@@ -250,26 +247,10 @@ namespace mrHelper.App.Helpers
          set { setValue(ShowVersionsKeyName, boolToString(value)); }
       }
 
-      public bool UseGitStorage
+      public string GitUsageForStorage
       {
-         get
-         {
-            return bool.TryParse(getValue(
-               UseGitStorageKeyName, boolToString(UseGitStorageDefaultValue)),
-                  out bool result) ? result : UseGitStorageDefaultValue;
-         }
-         set { setValue(UseGitStorageKeyName, boolToString(value)); }
-      }
-
-      public bool UseShallowClone
-      {
-         get
-         {
-            return bool.TryParse(getValue(
-               UseShallowCloneKeyName, boolToString(UseShallowCloneDefaultValue)),
-                  out bool result) ? result : UseShallowCloneDefaultValue;
-         }
-         set { setValue(UseShallowCloneKeyName, boolToString(value)); }
+         get { return getValue(GitUsageForStorageKeyName, GitUsageForStorageDefaultValue); }
+         set { setValue(GitUsageForStorageKeyName, value); }
       }
 
       public bool AllowAuthorToTrackTime

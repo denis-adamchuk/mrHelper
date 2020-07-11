@@ -155,7 +155,6 @@ namespace mrHelper.App.Forms
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestRevision.Checked = Program.Settings.AutoSelectNewestRevision;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
-         checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;
@@ -178,9 +177,16 @@ namespace mrHelper.App.Forms
             radioButtonSelectByUsernames.Checked = true;
          }
 
-         if (Program.Settings.UseGitStorage)
+         if (ConfigurationHelper.GetPreferredStorageType(Program.Settings) == LocalCommitStorageType.GitRepository)
          {
-            radioButtonUseGit.Checked = true;
+            if (ConfigurationHelper.IsShallowCloneAllowed(Program.Settings))
+            {
+               radioButtonUseGitShallowClone.Checked = true;
+            }
+            else
+            {
+               radioButtonUseGitFullClone.Checked = true;
+            }
          }
          else
          {

@@ -588,19 +588,6 @@ namespace mrHelper.App.Forms
          Program.Settings.AutoSelectNewestRevision = (sender as CheckBox).Checked;
       }
 
-      private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
-      {
-         if (_loadingConfiguration)
-         {
-            return;
-         }
-
-         Program.Settings.UseShallowClone = checkBoxUseShallowClone.Checked;
-
-         Trace.TraceInformation(String.Format("[MainForm] Shallow clone setting has been selected"));
-         switchHostToSelected();
-      }
-
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
       {
          bool state = (sender as CheckBox).Checked;
@@ -1280,11 +1267,13 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.Assert(radioButtonDontUseGit.Checked != radioButtonUseGit.Checked);
+         Debug.Assert(radioButtonDontUseGit.Checked != radioButtonUseGitFullClone.Checked);
          if (!_loadingConfiguration)
          {
-            Program.Settings.UseGitStorage = radioButtonUseGit.Checked;
-            checkBoxUseShallowClone.Enabled = Program.Settings.UseGitStorage;
+            LocalCommitStorageType type = radioButtonDontUseGit.Checked ?
+               LocalCommitStorageType.FileStorage : LocalCommitStorageType.GitRepository;
+            bool useShallowClone = useShallowClone = radioButtonUseGitShallowClone.Checked;
+            ConfigurationHelper.SelectPreferredStorageType(Program.Settings, type, useShallowClone);
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after storage type change");
             switchHostToSelected();

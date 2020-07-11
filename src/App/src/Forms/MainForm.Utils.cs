@@ -774,7 +774,8 @@ namespace mrHelper.App.Forms
             try
             {
                _storageFactory = new LocalCommitStorageFactory(this, getSession(true),
-                  Program.Settings.LocalGitFolder, Program.Settings.UseShallowClone, Program.Settings.RevisionsToKeep);
+                  Program.Settings.LocalGitFolder, ConfigurationHelper.IsShallowCloneAllowed(Program.Settings),
+                  Program.Settings.RevisionsToKeep);
                _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
             catch (ArgumentException ex)

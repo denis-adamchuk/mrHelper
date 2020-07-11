@@ -11,8 +11,30 @@ namespace mrHelper.App.Helpers
    {
       public static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
       {
-         return Program.Settings.UseGitStorage
-            ? LocalCommitStorageType.GitRepository : LocalCommitStorageType.FileStorage;
+         return Program.Settings.GitUsageForStorage == "DontUseGit"
+            ? LocalCommitStorageType.FileStorage : LocalCommitStorageType.GitRepository;
+      }
+
+      public static bool IsShallowCloneAllowed(UserDefinedSettings settings)
+      {
+         return Program.Settings.GitUsageForStorage == "UseGitWithShallowClone";
+      }
+
+      public static void SelectPreferredStorageType(UserDefinedSettings settings, LocalCommitStorageType type,
+         bool isShallowCloneAllowed)
+      {
+         if (type == LocalCommitStorageType.FileStorage)
+         {
+            Program.Settings.GitUsageForStorage = "DontUseGit";
+         }
+         else if (isShallowCloneAllowed)
+         {
+            Program.Settings.GitUsageForStorage = "UseGitWithShallowClone";
+         }
+         else if (isShallowCloneAllowed)
+         {
+            Program.Settings.GitUsageForStorage = "UseGitWithFullClone";
+         }
       }
 
       public static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)

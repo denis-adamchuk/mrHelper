@@ -78,7 +78,6 @@ namespace mrHelper.App.Forms
          this.checkBoxAutoSelectNewestRevision = new System.Windows.Forms.CheckBox();
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
-         this.checkBoxUseShallowClone = new System.Windows.Forms.CheckBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.listViewUsers = new System.Windows.Forms.ListView();
@@ -144,6 +143,8 @@ namespace mrHelper.App.Forms
          this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxStorage = new System.Windows.Forms.GroupBox();
+         this.radioButtonDontUseGit = new System.Windows.Forms.RadioButton();
+         this.radioButtonUseGitFullClone = new System.Windows.Forms.RadioButton();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -168,8 +169,7 @@ namespace mrHelper.App.Forms
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.radioButtonUseGit = new System.Windows.Forms.RadioButton();
-         this.radioButtonDontUseGit = new System.Windows.Forms.RadioButton();
+         this.radioButtonUseGitShallowClone = new System.Windows.Forms.RadioButton();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -511,18 +511,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.checkBoxMinimizeOnClose, "Don\'t exit on closing the main window but minimize the application to the tray");
          this.checkBoxMinimizeOnClose.UseVisualStyleBackColor = true;
          this.checkBoxMinimizeOnClose.CheckedChanged += new System.EventHandler(this.CheckBoxMinimizeOnClose_CheckedChanged);
-         // 
-         // checkBoxUseShallowClone
-         // 
-         this.checkBoxUseShallowClone.AutoSize = true;
-         this.checkBoxUseShallowClone.Location = new System.Drawing.Point(6, 220);
-         this.checkBoxUseShallowClone.Name = "checkBoxUseShallowClone";
-         this.checkBoxUseShallowClone.Size = new System.Drawing.Size(112, 17);
-         this.checkBoxUseShallowClone.TabIndex = 15;
-         this.checkBoxUseShallowClone.Text = "Use shallow clone";
-         this.toolTip.SetToolTip(this.checkBoxUseShallowClone, "Use depth=1 in git clone and fetch commands");
-         this.checkBoxUseShallowClone.UseVisualStyleBackColor = true;
-         this.checkBoxUseShallowClone.CheckedChanged += new System.EventHandler(this.checkBoxUseShallowClone_CheckedChanged);
          // 
          // radioButtonSelectByProjects
          // 
@@ -940,7 +928,7 @@ namespace mrHelper.App.Forms
          // checkBoxRunWhenWindowsStarts
          // 
          this.checkBoxRunWhenWindowsStarts.AutoSize = true;
-         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 220);
          this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
          this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
          this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
@@ -1023,7 +1011,7 @@ namespace mrHelper.App.Forms
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowUpdatedMergeRequests);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowMergedMergeRequests);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowNewMergeRequests);
-         this.groupBoxNotifications.Location = new System.Drawing.Point(6, 250);
+         this.groupBoxNotifications.Location = new System.Drawing.Point(6, 284);
          this.groupBoxNotifications.Name = "groupBoxNotifications";
          this.groupBoxNotifications.Size = new System.Drawing.Size(513, 135);
          this.groupBoxNotifications.TabIndex = 4;
@@ -1121,7 +1109,6 @@ namespace mrHelper.App.Forms
          // groupBoxOther
          // 
          this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
-         this.groupBoxOther.Controls.Add(this.checkBoxUseShallowClone);
          this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
          this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestRevision);
          this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
@@ -1134,9 +1121,9 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.labelDepth);
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
-         this.groupBoxOther.Location = new System.Drawing.Point(6, 391);
+         this.groupBoxOther.Location = new System.Drawing.Point(6, 425);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 270);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 246);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -1209,17 +1196,43 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxStorage
          // 
+         this.groupBoxStorage.Controls.Add(this.radioButtonUseGitShallowClone);
          this.groupBoxStorage.Controls.Add(this.radioButtonDontUseGit);
-         this.groupBoxStorage.Controls.Add(this.radioButtonUseGit);
+         this.groupBoxStorage.Controls.Add(this.radioButtonUseGitFullClone);
          this.groupBoxStorage.Controls.Add(this.buttonBrowseStorageFolder);
          this.groupBoxStorage.Controls.Add(this.labelLocalStorageFolder);
          this.groupBoxStorage.Controls.Add(this.textBoxStorageFolder);
          this.groupBoxStorage.Location = new System.Drawing.Point(6, 147);
          this.groupBoxStorage.Name = "groupBoxStorage";
-         this.groupBoxStorage.Size = new System.Drawing.Size(513, 88);
+         this.groupBoxStorage.Size = new System.Drawing.Size(513, 131);
          this.groupBoxStorage.TabIndex = 1;
          this.groupBoxStorage.TabStop = false;
          this.groupBoxStorage.Text = "File Storage";
+         // 
+         // radioButtonDontUseGit
+         // 
+         this.radioButtonDontUseGit.AutoSize = true;
+         this.radioButtonDontUseGit.Location = new System.Drawing.Point(6, 107);
+         this.radioButtonDontUseGit.Name = "radioButtonDontUseGit";
+         this.radioButtonDontUseGit.Size = new System.Drawing.Size(455, 17);
+         this.radioButtonDontUseGit.TabIndex = 10;
+         this.radioButtonDontUseGit.TabStop = true;
+         this.radioButtonDontUseGit.Text = "Don\'t use git as file storage. Copies files from GitLab and does not require any " +
+    "kind of clone.";
+         this.radioButtonDontUseGit.UseVisualStyleBackColor = true;
+         // 
+         // radioButtonUseGitFullClone
+         // 
+         this.radioButtonUseGitFullClone.AutoSize = true;
+         this.radioButtonUseGitFullClone.Location = new System.Drawing.Point(6, 61);
+         this.radioButtonUseGitFullClone.Name = "radioButtonUseGitFullClone";
+         this.radioButtonUseGitFullClone.Size = new System.Drawing.Size(469, 17);
+         this.radioButtonUseGitFullClone.TabIndex = 9;
+         this.radioButtonUseGitFullClone.TabStop = true;
+         this.radioButtonUseGitFullClone.Text = "Use git and clone full repositories. Slow on big repositories, but allows to reus" +
+    "e existing folders..";
+         this.radioButtonUseGitFullClone.UseVisualStyleBackColor = true;
+         this.radioButtonUseGitFullClone.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
          // groupBoxHost
          // 
@@ -1409,7 +1422,6 @@ namespace mrHelper.App.Forms
          this.labelStorageStatus.TabIndex = 1;
          this.labelStorageStatus.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor in" +
     "cididunt ut labore et dolore";
-         this.labelStorageStatus.Visible = true;
          // 
          // labelWorkflowStatus
          // 
@@ -1535,28 +1547,17 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // radioButtonUseGit
+         // radioButtonUseGitShallowClone
          // 
-         this.radioButtonUseGit.AutoSize = true;
-         this.radioButtonUseGit.Location = new System.Drawing.Point(6, 61);
-         this.radioButtonUseGit.Name = "radioButtonUseGit";
-         this.radioButtonUseGit.Size = new System.Drawing.Size(185, 17);
-         this.radioButtonUseGit.TabIndex = 9;
-         this.radioButtonUseGit.TabStop = true;
-         this.radioButtonUseGit.Text = "Use git for repository management";
-         this.radioButtonUseGit.UseVisualStyleBackColor = true;
-         this.radioButtonUseGit.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
-         // 
-         // radioButtonDontUseGit
-         // 
-         this.radioButtonDontUseGit.AutoSize = true;
-         this.radioButtonDontUseGit.Location = new System.Drawing.Point(234, 61);
-         this.radioButtonDontUseGit.Name = "radioButtonDontUseGit";
-         this.radioButtonDontUseGit.Size = new System.Drawing.Size(229, 17);
-         this.radioButtonDontUseGit.TabIndex = 10;
-         this.radioButtonDontUseGit.TabStop = true;
-         this.radioButtonDontUseGit.Text = "Don\'t use git (no need to clone repositories)";
-         this.radioButtonDontUseGit.UseVisualStyleBackColor = true;
+         this.radioButtonUseGitShallowClone.AutoSize = true;
+         this.radioButtonUseGitShallowClone.Location = new System.Drawing.Point(6, 84);
+         this.radioButtonUseGitShallowClone.Name = "radioButtonUseGitShallowClone";
+         this.radioButtonUseGitShallowClone.Size = new System.Drawing.Size(477, 17);
+         this.radioButtonUseGitShallowClone.TabIndex = 11;
+         this.radioButtonUseGitShallowClone.TabStop = true;
+         this.radioButtonUseGitShallowClone.Text = "Use git in shallow clone mode. Faster clone, but does not allow to reuse existing" +
+    " working copies.";
+         this.radioButtonUseGitShallowClone.UseVisualStyleBackColor = true;
          // 
          // MainForm
          // 
@@ -1722,7 +1723,6 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
       private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestRevision;
       private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
-        private System.Windows.Forms.CheckBox checkBoxUseShallowClone;
         private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
         private System.Windows.Forms.Button buttonEditUsers;
         private System.Windows.Forms.ListView listViewUsers;
@@ -1731,7 +1731,8 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxRunWhenWindowsStarts;
       private Controls.RevisionBrowser revisionBrowser;
       private RadioButton radioButtonDontUseGit;
-      private RadioButton radioButtonUseGit;
+      private RadioButton radioButtonUseGitFullClone;
+      private RadioButton radioButtonUseGitShallowClone;
    }
 }
 
