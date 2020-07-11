@@ -65,7 +65,7 @@ namespace mrHelper.StorageSupport
             else if (type == LocalCommitStorageType.FileStorage)
             {
                storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, _session.GetRepositoryAccessor(),
-                  _revisionsToKeep);
+                  _revisionsToKeep, () => _storages.Count);
             }
             else
             {

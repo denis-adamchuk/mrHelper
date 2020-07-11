@@ -162,19 +162,11 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.WriteLine(String.Format(
-            "[MainForm.Async] Preparing to open diff tool for project {0}: {1} vs {2}...",
-            mrk.ProjectKey.ProjectName, leftSHA, rightSHA));
-
          ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
          if (!await prepareStorageForDiffTool(mrk, storage, baseSHA, leftSHA, rightSHA) || _exiting)
          {
             return;
          }
-
-         Debug.WriteLine(String.Format(
-            "[MainForm.Async] Ready to open diff tool for project {0}: {1} vs {2}!",
-            mrk.ProjectKey.ProjectName, leftSHA, rightSHA));
 
          launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, getSessionName(session));
 

@@ -222,7 +222,7 @@ namespace mrHelper.App.Helpers
                   await repo.Git.FetchAsync(x);
                }
             },
-            Constants.MaxGitInstancesInBatch, Constants.GitInstancesInterBatchDelay, () => repo.Git == null);
+            () => Constants.GitDataUpdaterBatchLimits, () => repo.Git == null);
 
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
@@ -232,7 +232,7 @@ namespace mrHelper.App.Helpers
                   await repo.Git.FetchAsync(x);
                }
             },
-            Constants.MaxGitInstancesInBatch, Constants.GitInstancesInterBatchDelay, () => repo.Git == null);
+            () => Constants.GitDataUpdaterBatchLimits, () => repo.Git == null);
       }
 
       private DateTime getLatestChange(MergeRequestKey mrk)

@@ -1862,9 +1862,6 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
          updateStorageStatusText(status, mrk);
-
-         Debug.WriteLine(String.Format(
-            "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
       }
 
       private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
@@ -1885,9 +1882,6 @@ namespace mrHelper.App.Forms
          {
             revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
          }
-
-         Debug.WriteLine(String.Format(
-            "[MainForm] Loaded comparable entities IsSearchMode={0}", isSearchMode().ToString()));
       }
 
       private void disableCommonUIControls()

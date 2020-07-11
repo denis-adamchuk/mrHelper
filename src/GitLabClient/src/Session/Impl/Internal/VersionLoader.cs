@@ -51,7 +51,7 @@ namespace mrHelper.Client.Session
                .Select(x => new Tuple<MergeRequestKey, bool>(x, false)));
 
          await TaskUtils.RunConcurrentFunctionsAsync(duplicateKeys, x => loadVersionsLocal(x),
-            Constants.MaxMergeRequestsInBatch, Constants.MergeRequestsInterBatchDelay, () => exception != null);
+            () => Constants.VersionLoaderMergeRequestBatchLimits, () => exception != null);
          if (exception != null)
          {
             throw exception;
@@ -118,7 +118,7 @@ namespace mrHelper.Client.Session
             }
          }
          await TaskUtils.RunConcurrentFunctionsAsync(missingCommitIds, x => loadMissingCommits(x),
-            Constants.MaxCommitInBatch, Constants.CommitInterBatchDelay, () => exception != null);
+            () => Constants.VersionLoaderCommitBatchLimits, () => exception != null);
          if (exception != null)
          {
             throw exception;

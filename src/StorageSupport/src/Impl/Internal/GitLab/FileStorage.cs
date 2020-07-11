@@ -32,7 +32,8 @@ namespace mrHelper.StorageSupport
       /// <summary>
       /// </summary>
       internal FileStorage(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor, int revisionsToKeep)
+         ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor, int revisionsToKeep,
+         Func<int> getStorageCount)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
             LocalCommitStorageType.FileStorage);
@@ -48,7 +49,7 @@ namespace mrHelper.StorageSupport
          string diffCachePath = System.IO.Path.Combine(Path, DiffSubFolderName);
          DiffCache = new FileStorageDiffCache(diffCachePath, this);
 
-         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, onCloned, onFetched);
+         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, getStorageCount);
 
          _processManager = new GitProcessManager(synchronizeInvoke, Path);
          _commandService = new FileStorageGitCommandService(_processManager, Path, this);
@@ -74,14 +75,6 @@ namespace mrHelper.StorageSupport
       public override string ToString()
       {
          return String.Format("[FileStorage] {0} at {1}", ProjectKey.ProjectName, ProjectKey.HostName);
-      }
-
-      private void onFetched(FileRevision revision)
-      {
-      }
-
-      private void onCloned()
-      {
       }
 
       private static bool isEmptyFolder(string path)

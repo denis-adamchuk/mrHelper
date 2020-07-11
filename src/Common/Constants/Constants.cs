@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Common.Constants
 {
@@ -9,7 +10,7 @@ namespace mrHelper.Common.Constants
       public static string GitDiffToolConfigKey = "difftool.mrhelperdiff.cmd";
       public static string CustomProtocolName = "mrhelper";
       public static string UWP_Launcher_Name = "mrHelper.Launcher.exe";
-      public static string MainWindowCaption  = "Merge Request Helper";
+      public static string MainWindowCaption = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start New Thread";
 
       public static int MaxLabelRows = 3;
@@ -66,37 +67,75 @@ namespace mrHelper.Common.Constants
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
 
-      public static int MaxGitInstancesInBatch = 5;
-      public static int GitInstancesInterBatchDelay = 500; // ms
+      public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
 
-      public static int MaxMergeRequestsInBatch = 10;
-      public static int MergeRequestsInterBatchDelay = 0;
+      public static TaskUtils.BatchLimits VersionLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
 
-      public static int MaxCrossProjectMergeRequestsInBatch = 10;
-      public static int CrossProjectMergeRequestsInterBatchDelay = 200;
+      public static TaskUtils.BatchLimits VersionLoaderCommitBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
 
-      public static int MaxProjectsInBatch = 10;
-      public static int ProjectsInterBatchDelay = 0;
+      public static TaskUtils.BatchLimits DiscussionLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000
+      };
 
-      public static int MaxCommitInBatch = 10;
-      public static int CommitInterBatchDelay = 0;
+      // @{ FileStorageUpdater
+      public static TaskUtils.BatchLimits ComparisonLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 1000
+      };
 
-      public static int MaxFilesInBatch = 20;
-      public static int FilesInterBatchDelay = 0;
+      public static TaskUtils.BatchLimits FileRevisionLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000
+      };
 
-      public static int MaxFilesInBatchBackground = 5;
-      public static int FilesInterBatchDelayBackground = 200;
+      public static TaskUtils.BatchLimits ComparisonLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 1000 // this is multiplied by number of storages
+      };
 
-      public static int MaxComparisonInBatch = 20;
-      public static int ComparisionInterBatchDelay = 0;
-
-      public static int MaxComparisonInBatchBackground = 2;
-      public static int ComparisionInterBatchDelayBackground = 200;
+      public static TaskUtils.BatchLimits FileRevisionLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000 // this is multiplied by number of storages
+      };
+      // @} FileStorageUpdater
 
       public static int MaxMergeRequestStorageUpdatesInParallel = 3;
 
-      public static int GetMissingShaInBatch = 20;
-      public static int GetMissingShaInterBatchDelay = 50;
+      /// <summary>
+      /// Missing SHA checks don't make requests to GitLab and run locally
+      /// </summary>
+      public static TaskUtils.BatchLimits MissingShaCheckBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 20
+      };
+
+      /// <summary>
+      /// Git data update requests don't make requests to GitLab and run locally
+      /// </summary>
+      public static TaskUtils.BatchLimits GitDataUpdaterBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 5,
+         Delay = 500
+      };
    }
 }
 

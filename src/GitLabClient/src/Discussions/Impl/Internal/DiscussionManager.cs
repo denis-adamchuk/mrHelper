@@ -250,12 +250,12 @@ namespace mrHelper.Client.Discussions
 
             await TaskUtils.RunConcurrentFunctionsAsync(matchingFilter,
                x => updateDiscussions(x, scheduledUpdate.Type),
-               Constants.MaxCrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+               () => Constants.DiscussionLoaderMergeRequestBatchLimits,
                () => _reconnect);
 
             await TaskUtils.RunConcurrentFunctionsAsync(nonMatchingFilter,
                x => updateDiscussions(x, scheduledUpdate.Type),
-               Constants.MaxCrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+               () => Constants.DiscussionLoaderMergeRequestBatchLimits,
                () => _reconnect);
          }
          else
@@ -266,7 +266,7 @@ namespace mrHelper.Client.Discussions
 
             await TaskUtils.RunConcurrentFunctionsAsync(scheduledUpdate.MergeRequests,
                x => updateDiscussions(x, scheduledUpdate.Type),
-               Constants.MaxCrossProjectMergeRequestsInBatch, Constants.CrossProjectMergeRequestsInterBatchDelay,
+               () => Constants.DiscussionLoaderMergeRequestBatchLimits,
                () => _reconnect);
          }
 

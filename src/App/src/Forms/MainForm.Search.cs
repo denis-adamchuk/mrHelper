@@ -140,10 +140,6 @@ namespace mrHelper.App.Forms
       private void onProjectSearchMergeRequestsLoaded(ProjectKey projectKey,
          IEnumerable<MergeRequest> mergeRequests)
       {
-         Debug.WriteLine(String.Format(
-            "[MainForm.Search] Project {0} loaded. Loaded {1} merge requests",
-           projectKey.ProjectName, mergeRequests.Count()));
-
          createListViewGroupForProject(listViewFoundMergeRequests, projectKey, true);
          fillListViewSearchMergeRequests(projectKey, mergeRequests);
       }

@@ -147,11 +147,11 @@ namespace mrHelper.StorageSupport
             await fetchCommitsAsync(isAwaitedUpdate, totalShaCount, fetchedShaCount, internalContext.Sha,
                onProgressChange, onUpdateStateChange);
             fetchedShaCount += internalContext.Sha.Count();
-            await suspendToProcessOtherRequests(isAwaitedUpdate, fetchedShaCount < totalShaCount);
+            await suspendProcessingOfNonAwaitedUpdate(isAwaitedUpdate, fetchedShaCount < totalShaCount);
          }
       }
 
-      private async Task suspendToProcessOtherRequests(bool isAwaitedUpdate, bool areRemainingCommits)
+      private async Task suspendProcessingOfNonAwaitedUpdate(bool isAwaitedUpdate, bool areRemainingCommits)
       {
          bool needSuspendFetch =
                !_isDisposed
@@ -205,7 +205,7 @@ namespace mrHelper.StorageSupport
                   exception = ex;
                }
             },
-            Constants.GetMissingShaInBatch, Constants.GetMissingShaInterBatchDelay, () => exception != null);
+            () => Constants.MissingShaCheckBatchLimits, () => exception != null);
 
          if (exception != null)
          {
@@ -472,8 +472,10 @@ namespace mrHelper.StorageSupport
 
       private void traceDebug(string message)
       {
-         Debug.WriteLine(String.Format("[GitRepositoryUpdaterInternal] ({0}) {1}",
+#if DEBUG
+         Trace.TraceInformation(String.Format("[DEBUG] [GitRepositoryUpdaterInternal] ({0}) {1}",
             _gitRepository.ProjectKey.ProjectName, message));
+#endif
       }
 
       private void traceInformation(string message)

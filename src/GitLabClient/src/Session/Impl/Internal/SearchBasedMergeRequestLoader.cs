@@ -70,7 +70,7 @@ namespace mrHelper.Client.Session
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(groupMergeRequestsByProject(allMergeRequests), x => resolve(x),
-            Constants.MaxProjectsInBatch, Constants.ProjectsInterBatchDelay, () => exception != null);
+            () => Constants.MergeRequestLoaderProjectBatchLimits, () => exception != null);
          if (exception != null)
          {
             throw exception;

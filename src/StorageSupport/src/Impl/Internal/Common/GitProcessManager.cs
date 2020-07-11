@@ -101,9 +101,11 @@ namespace mrHelper.StorageSupport
 
       private void traceOperationStatus(string operation, string status)
       {
-         string message = String.Format("[ExternalProcessManager] async operation -- {0} -- {1} for {2}",
+#if DEBUG
+         string message = String.Format("[DEBUG] [ExternalProcessManager] async operation -- {0} -- {1} for {2}",
             status, operation, _path);
-         Debug.WriteLine(message);
+         Trace.TraceInformation(message);
+#endif
       }
 
       private static readonly int cancellationExitCode = 130;

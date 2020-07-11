@@ -30,11 +30,12 @@ namespace mrHelper.Client.MergeRequests
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
          {
             IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(kv.Key);
-            if (previouslyCachedMergeRequests != null && mergeRequests.Count() != previouslyCachedMergeRequests.Count())
+            IEnumerable<MergeRequest> newMergeRequests = kv.Value;
+            if (previouslyCachedMergeRequests != null && newMergeRequests.Count() != previouslyCachedMergeRequests.Count())
             {
                Debug.WriteLine(String.Format(
                   "[InternalCacheUpdater] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
-                  kv.Key.ProjectName, kv.Key.HostName, mergeRequests.Count(), previouslyCachedMergeRequests.Count()));
+                  kv.Key.ProjectName, kv.Key.HostName, newMergeRequests.Count(), previouslyCachedMergeRequests.Count()));
             }
 
             cleanupOldRecords(kv.Key, previouslyCachedMergeRequests, kv.Value);
