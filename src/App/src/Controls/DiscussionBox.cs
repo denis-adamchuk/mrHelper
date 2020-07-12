@@ -830,6 +830,7 @@ namespace mrHelper.App.Controls
          bool wasResolved = isDiscussionResolved();
          disableAllNoteControls();
 
+         Discussion discussion = null;
          try
          {
             if (toggleResolve)
@@ -846,10 +847,10 @@ namespace mrHelper.App.Controls
             string message = "Cannot create a reply to discussion";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            discussion = Discussion;
          }
 
-         await refreshDiscussion();
+         await refreshDiscussion(discussion);
       }
 
       async private Task submitNewBodyAsync(Control noteControl, string newText)
@@ -882,7 +883,7 @@ namespace mrHelper.App.Controls
             string message = "Cannot update discussion text";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            newNote = oldNote;
          }
 
          if (!noteControl.IsDisposed && newNote != null)
@@ -903,6 +904,7 @@ namespace mrHelper.App.Controls
 
          disableAllNoteControls();
 
+         Discussion discussion = null;
          try
          {
             await _editor.DeleteNoteAsync(note.Id);
@@ -912,10 +914,10 @@ namespace mrHelper.App.Controls
             string message = "Cannot delete a note";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            discussion = Discussion;
          }
 
-         await refreshDiscussion();
+         await refreshDiscussion(discussion);
       }
 
       async private Task onToggleResolveNoteAsync(DiscussionNote note)
@@ -927,6 +929,7 @@ namespace mrHelper.App.Controls
 
          disableAllNoteControls();
 
+         Discussion discussion = null;
          try
          {
             bool wasResolved = note.Resolved;
@@ -937,10 +940,10 @@ namespace mrHelper.App.Controls
             string message = "Cannot toggle 'Resolved' state of a note";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            discussion = Discussion;
          }
 
-         await refreshDiscussion();
+         await refreshDiscussion(discussion);
       }
 
       async private Task onToggleResolveDiscussionAsync()
@@ -958,7 +961,7 @@ namespace mrHelper.App.Controls
             string message = "Cannot toggle 'Resolved' state of a thread";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            discussion = Discussion;
          }
 
          await refreshDiscussion(discussion);
@@ -1032,20 +1035,15 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            ExceptionHandlers.Handle("Not an error - last discussion item has been deleted", ex);
-
-            // it is not an error here, we treat it as 'last discussion item has been deleted'
-            // Seems it was the only note in the discussion, remove ourselves from parents controls
-            prepareToRefresh();
-            Parent?.Controls.Remove(this);
-            _onContentChanged(this, false);
-            return;
+            ExceptionHandlers.Handle("Cannot refresh discussion", ex);
+            Discussion = null;
          }
 
-         if (Discussion.Notes.Count() == 0 || Discussion.Notes.First().System)
+         if (Discussion == null || Discussion.Notes.Count() == 0 || Discussion.Notes.First().System)
          {
-            // It happens when Discussion has System notes like 'a line changed ...'
-            // along with a user note that has been just deleted
+            // Possible cases:
+            // - deleted note was the only discussion item
+            // - deleted note was the only visible discussion item but there are System notes like 'a line changed ...'
             prepareToRefresh();
             Parent?.Controls.Remove(this);
             _onContentChanged(this, false);

@@ -37,6 +37,20 @@ namespace mrHelper.Client.Discussions
          }
          catch (OperatorException ex)
          {
+            if (ex.InnerException is GitLabSharp.Accessors.GitLabRequestException rx)
+            {
+               if (rx.InnerException is System.Net.WebException wx)
+               {
+                  System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+                  if (response != null && response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                  {
+                     // it is not an error here, we treat it as 'last discussion item has been deleted'
+                     // Seems it was the only note in the discussion, remove ourselves from parents controls
+                     return null;
+                  }
+               }
+            }
+
             throw new DiscussionEditorException("Cannot obtain discussion", ex);
          }
       }
