@@ -389,13 +389,13 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private string getNoteText(DiscussionNote note, User firstNoteAuthor)
+      private string addPrefix(string body, DiscussionNote note, User firstNoteAuthor)
       {
          bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
          Debug.Assert(!appendNoteAuthor || !canBeModified(note));
 
          string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
-         return prefix + note.Body;
+         return prefix + body;
       }
 
       private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
@@ -452,9 +452,8 @@ namespace mrHelper.App.Controls
          htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
             Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
 
-         string body = MarkDownUtils.ConvertToHtml(getNoteText(note, _firstNoteAuthor),
-            _imagePath, _specialDiscussionNoteMarkdownPipeline);
-         noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, addPrefix(body, note, _firstNoteAuthor));
          noteControl.PerformLayout();
 
          _htmlDiscussionNoteToolTip.BaseStylesheet =
