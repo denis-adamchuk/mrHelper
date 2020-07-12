@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using mrHelper.Client.Types;
 
 namespace mrHelper.Client.TimeTracking
 {
@@ -12,6 +13,8 @@ namespace mrHelper.Client.TimeTracking
       void Cancel();
 
       TimeSpan Elapsed { get; }
+
+      MergeRequestKey MergeRequest { get; }
    }
 }
 

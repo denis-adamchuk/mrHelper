@@ -77,7 +77,7 @@
          this.treeColumn2.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
          this.treeColumn2.TooltipText = "Created at";
-         this.treeColumn2.Width = 110;
+         this.treeColumn2.Width = 140;
          // 
          // _name
          // 

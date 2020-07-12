@@ -1,7 +1,6 @@
-﻿using GitLabSharp.Entities;
+﻿using System;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using System;
-using System.Collections.Generic;
 
 namespace mrHelper.Client.Types
 {

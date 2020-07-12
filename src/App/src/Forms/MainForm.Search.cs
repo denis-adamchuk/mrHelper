@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void switchSearchMergeRequestByUser(FullMergeRequestKey fmk)
+      private void onSearchMergeRequestSelectionChanged(FullMergeRequestKey fmk)
       {
          Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 

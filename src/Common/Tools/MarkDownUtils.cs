@@ -38,6 +38,11 @@ namespace mrHelper.Common.Tools
 
       public static string ConvertToHtml(string text, string uploadsPrefix, Markdig.MarkdownPipeline pipeline)
       {
+         if (String.IsNullOrEmpty(text))
+         {
+            return String.Empty;
+         }
+
          return System.Net.WebUtility
             .HtmlDecode(Markdig.Markdown.ToHtml(System.Net.WebUtility.HtmlEncode(text), pipeline))
             .Replace("<a href=\"/uploads/", String.Format("<a href=\"{0}/uploads/", uploadsPrefix))

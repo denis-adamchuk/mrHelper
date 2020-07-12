@@ -538,22 +538,34 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void updateMergeRequestDetails(FullMergeRequestKey? fmk)
+      private void updateMergeRequestDetails(FullMergeRequestKey? fmkOpt)
       {
-         string body = fmk.HasValue
-            ? MarkDownUtils.ConvertToHtml(
-               fmk.Value.MergeRequest.Description,
-               String.Format("{0}/{1}",
-                  StringUtils.GetHostWithPrefix(fmk.Value.ProjectKey.HostName), fmk.Value.ProjectKey.ProjectName),
-               _mergeRequestDescriptionMarkdownPipeline)
-            : String.Empty;
+         if (!fmkOpt.HasValue)
+         {
+            richTextBoxMergeRequestDescription.Text = String.Empty;
+            linkLabelConnectedTo.Text = String.Empty;
+         }
+         else
+         {
+            FullMergeRequestKey fmk = fmkOpt.Value;
 
-         richTextBoxMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+            string uploadsPrefix = String.Format("{0}/{1}",
+               StringUtils.GetHostWithPrefix(fmk.ProjectKey.HostName), fmk.ProjectKey.ProjectName);
+
+            string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
+            string title = MarkDownUtils.ConvertToHtml(rawTitle, uploadsPrefix, _mdPipeline);
+
+            string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
+               ? fmk.MergeRequest.Description : "Description is empty";
+            string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline);
+
+            string body = String.Format("<b>Title</b><br>{0}<br><b>Description</b><br>{1}", title, description);
+            richTextBoxMergeRequestDescription.Text =  String.Format(MarkDownUtils.HtmlPageTemplate, body);
+            linkLabelConnectedTo.Text = fmk.MergeRequest.Web_Url;
+         }
+
          richTextBoxMergeRequestDescription.Update();
-
-         string url = fmk.HasValue ? fmk.Value.MergeRequest.Web_Url : String.Empty;
-         linkLabelConnectedTo.Text = url;
-         toolTip.SetToolTip(linkLabelConnectedTo, url);
+         toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
       }
 
       private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey, User author)
@@ -568,16 +580,16 @@ namespace mrHelper.App.Forms
             enabled = false;
          }
 
-         labelTimeTrackingMergeRequestName.Visible = enabled;
+         linkLabelTimeTrackingMergeRequest.Visible = enabled;
          buttonTimeTrackingStart.Enabled = enabled;
 
          if (enabled)
          {
             Debug.Assert(!String.IsNullOrEmpty(title) && !projectKey.Equals(default(ProjectKey)));
-            labelTimeTrackingMergeRequestName.Text = String.Format("{0}   [{1}]", title, projectKey.ProjectName);
+            linkLabelTimeTrackingMergeRequest.Text = String.Format("{0}   [{1}]", title, projectKey.ProjectName);
          }
 
-         labelTimeTrackingMergeRequestName.Refresh();
+         linkLabelTimeTrackingMergeRequest.Refresh();
       }
 
       private void updateTotalTime(MergeRequestKey? mrk, User author, string hostname, ITotalTimeCache totalTimeCache)

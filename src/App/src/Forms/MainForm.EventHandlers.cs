@@ -162,7 +162,8 @@ namespace mrHelper.App.Forms
 
          if (isTrackingTime())
          {
-            await onStopTimer(true, session?.TotalTimeCache);
+            await onStopTimer(true);
+            onTimerStopped(session?.TotalTimeCache);
          }
          else
          {
@@ -173,7 +174,8 @@ namespace mrHelper.App.Forms
       async private void ButtonTimeTrackingCancel_Click(object sender, EventArgs e)
       {
          Debug.Assert(isTrackingTime());
-         await onStopTimer(false, getSession(!isSearchMode())?.TotalTimeCache);
+         await onStopTimer(false);
+         onTimerStopped(getSession(!isSearchMode())?.TotalTimeCache);
       }
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
@@ -415,14 +417,18 @@ namespace mrHelper.App.Forms
          listView.EnsureVisible(listView.SelectedIndices[0]);
 
          FullMergeRequestKey fmk = (FullMergeRequestKey)(listView.SelectedItems[0].Tag);
+         onMergeRequestSelectionChangedByUser(fmk);
+      }
 
+      private void onMergeRequestSelectionChangedByUser(FullMergeRequestKey fmk)
+      {
          if (isSearchMode())
          {
-            switchSearchMergeRequestByUser(fmk);
+            onSearchMergeRequestSelectionChanged(fmk);
          }
          else
          {
-            switchMergeRequestByUser(fmk);
+            onLiveMergeRequestSelectionChanged(fmk);
             if (getMergeRequestKey(listViewMergeRequests) != null)
             {
                _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
@@ -948,6 +954,7 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
+         _timeTrackingSession = session;
          _timeTracker = session?.GetTimeTracker(getMergeRequestKey(null).Value);
          _timeTracker?.Start();
 
@@ -958,7 +965,7 @@ namespace mrHelper.App.Forms
          updateTaskbarIcon();
       }
 
-      async private Task onStopTimer(bool send, ITotalTimeCache totalTimeCache)
+      async private Task onStopTimer(bool send)
       {
          if (!isTrackingTime())
          {
@@ -971,6 +978,7 @@ namespace mrHelper.App.Forms
          // Reset member right now to not send tracked time again on re-entrance
          ITimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
+         _timeTrackingSession = null;
 
          // Stop stopwatch and send tracked time
          if (send)
@@ -1010,8 +1018,10 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingStart.BackColor = System.Drawing.Color.Transparent;
          buttonTimeTrackingCancel.Enabled = false;
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
+      }
 
-         // Show actual merge request details
+      private void onTimerStopped(ITotalTimeCache totalTimeCache)
+      {
          bool isMergeRequestSelected = getMergeRequest(null) != null && getMergeRequestKey(null).HasValue;
          if (isMergeRequestSelected)
          {
@@ -1031,6 +1041,22 @@ namespace mrHelper.App.Forms
 
          updateTrayIcon();
          updateTaskbarIcon();
+      }
+
+      private void linkLabelTimeTrackingMergeRequest_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         if (_timeTracker == null || _timeTrackingSession == null)
+         {
+            return;
+         }
+
+         if (_timeTrackingSession != getSession(!isSearchMode()))
+         {
+            tabControlMode.SelectedTab = isSearchMode() ? tabPageLive : tabPageSearch;
+         }
+
+         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
+         selectMergeRequest(currentListView, _timeTracker.MergeRequest, true);
       }
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)
@@ -1216,12 +1242,16 @@ namespace mrHelper.App.Forms
 
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
+         onSessionSelectionChanged(tabControlMode.SelectedTab == tabPageLive);
+      }
+
+      private void onSessionSelectionChanged(bool isLiveSessionSelected)
+      {
          deselectAllListViewItems(listViewMergeRequests);
          deselectAllListViewItems(listViewFoundMergeRequests);
 
-         bool isLiveMode = tabControlMode.SelectedTab == tabPageLive;
-         labelTimeTrackingTrackedLabel.Visible = isLiveMode;
-         buttonEditTime.Visible = isLiveMode;
+         labelTimeTrackingTrackedLabel.Visible = isLiveSessionSelected;
+         buttonEditTime.Visible = isLiveSessionSelected;
          labelWorkflowStatus.Text = String.Empty;
          disableCommonUIControls();
       }

@@ -64,6 +64,8 @@ namespace mrHelper.Client.TimeTracking
          _stopwatch.Stop();
       }
 
+      public MergeRequestKey MergeRequest => _mergeRequestKey;
+
       public TimeSpan Elapsed { get { return _stopwatch.Elapsed; } }
 
       private MergeRequestKey _mergeRequestKey;

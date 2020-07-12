@@ -79,7 +79,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void switchMergeRequestByUser(FullMergeRequestKey fmk)
+      private void onLiveMergeRequestSelectionChanged(FullMergeRequestKey fmk)
       {
          Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
 

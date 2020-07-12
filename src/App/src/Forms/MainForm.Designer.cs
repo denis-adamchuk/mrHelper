@@ -163,7 +163,7 @@ namespace mrHelper.App.Forms
          this.groupBoxActions = new System.Windows.Forms.GroupBox();
          this.groupBoxTimeTracking = new System.Windows.Forms.GroupBox();
          this.labelTimeTrackingTrackedLabel = new System.Windows.Forms.Label();
-         this.labelTimeTrackingMergeRequestName = new System.Windows.Forms.Label();
+         this.linkLabelTimeTrackingMergeRequest = new System.Windows.Forms.LinkLabel();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
@@ -1463,7 +1463,7 @@ namespace mrHelper.App.Forms
          // groupBoxTimeTracking
          // 
          this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingTrackedLabel);
-         this.groupBoxTimeTracking.Controls.Add(this.labelTimeTrackingMergeRequestName);
+         this.groupBoxTimeTracking.Controls.Add(this.linkLabelTimeTrackingMergeRequest);
          this.groupBoxTimeTracking.Controls.Add(this.buttonEditTime);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingCancel);
          this.groupBoxTimeTracking.Controls.Add(this.buttonTimeTrackingStart);
@@ -1486,17 +1486,18 @@ namespace mrHelper.App.Forms
          this.labelTimeTrackingTrackedLabel.TabIndex = 2;
          this.labelTimeTrackingTrackedLabel.Text = "Total Time";
          // 
-         // labelTimeTrackingMergeRequestName
+         // linkLabelTimeTrackingMergeRequest
          // 
-         this.labelTimeTrackingMergeRequestName.AutoEllipsis = true;
-         this.labelTimeTrackingMergeRequestName.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.labelTimeTrackingMergeRequestName.Location = new System.Drawing.Point(3, 76);
-         this.labelTimeTrackingMergeRequestName.Name = "labelTimeTrackingMergeRequestName";
-         this.labelTimeTrackingMergeRequestName.Padding = new System.Windows.Forms.Padding(0, 0, 0, 4);
-         this.labelTimeTrackingMergeRequestName.Size = new System.Drawing.Size(920, 22);
-         this.labelTimeTrackingMergeRequestName.TabIndex = 5;
-         this.labelTimeTrackingMergeRequestName.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
-         this.labelTimeTrackingMergeRequestName.Visible = false;
+         this.linkLabelTimeTrackingMergeRequest.AutoEllipsis = true;
+         this.linkLabelTimeTrackingMergeRequest.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.linkLabelTimeTrackingMergeRequest.Location = new System.Drawing.Point(3, 76);
+         this.linkLabelTimeTrackingMergeRequest.Name = "linkLabelTimeTrackingMergeRequest";
+         this.linkLabelTimeTrackingMergeRequest.Padding = new System.Windows.Forms.Padding(0, 0, 0, 4);
+         this.linkLabelTimeTrackingMergeRequest.Size = new System.Drawing.Size(920, 22);
+         this.linkLabelTimeTrackingMergeRequest.TabIndex = 5;
+         this.linkLabelTimeTrackingMergeRequest.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+         this.linkLabelTimeTrackingMergeRequest.Visible = false;
+         this.linkLabelTimeTrackingMergeRequest.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelTimeTrackingMergeRequest_LinkClicked);
          // 
          // groupBoxReview
          // 
@@ -1658,7 +1659,7 @@ namespace mrHelper.App.Forms
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel richTextBoxMergeRequestDescription;
       private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
       private System.Windows.Forms.GroupBox groupBoxTimeTracking;
-      private System.Windows.Forms.Label labelTimeTrackingMergeRequestName;
+      private System.Windows.Forms.LinkLabel linkLabelTimeTrackingMergeRequest;
       private System.Windows.Forms.Button buttonEditTime;
       private System.Windows.Forms.Label labelTimeTrackingTrackedLabel;
       private CommonControls.Controls.ConfirmCancelButton buttonTimeTrackingCancel;

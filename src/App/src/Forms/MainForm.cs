@@ -41,7 +41,7 @@ namespace mrHelper.App.Forms
          checkBoxRunWhenWindowsStarts.Enabled = !_runningAsUwp;
 
          _trayIcon = new TrayIcon(notifyIcon);
-         _mergeRequestDescriptionMarkdownPipeline =
+         _mdPipeline =
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
@@ -98,7 +98,7 @@ namespace mrHelper.App.Forms
       private bool _userIsMovingSplitter1 = false;
       private bool _userIsMovingSplitter2 = false;
       private readonly TrayIcon _trayIcon;
-      private readonly Markdig.MarkdownPipeline _mergeRequestDescriptionMarkdownPipeline;
+      private readonly Markdig.MarkdownPipeline _mdPipeline;
       private bool _canSwitchTab = true;
       private readonly bool _runningAsUwp = false;
 
@@ -122,6 +122,7 @@ namespace mrHelper.App.Forms
       private ISession getSessionByName(string name) => name == "Live" ? _liveSession : _searchSession;
       private string getSessionName(ISession session) => session == _liveSession ? "Live" : "Search";
 
+      private ISession _timeTrackingSession;
       private ITimeTracker _timeTracker;
       private GitLabClientManager _gitlabClientManager;
 

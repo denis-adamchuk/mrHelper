@@ -93,7 +93,8 @@ namespace mrHelper.App.Forms
 
                if (command.GetStopTimer())
                {
-                  await onStopTimer(true, totalTimeCache);
+                  await onStopTimer(true);
+                  onTimerStopped(totalTimeCache);
                }
 
                bool reload = command.GetReload();
