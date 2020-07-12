@@ -97,13 +97,7 @@ namespace mrHelper.App.Forms
 
       private void createWPFTextBox()
       {
-         textBoxDiscussionBody = new System.Windows.Controls.TextBox();
-         textBoxDiscussionBodyHost.Child = this.textBoxDiscussionBody;
-         textBoxDiscussionBody.AcceptsReturn = true;
-         textBoxDiscussionBody.TextWrapping = System.Windows.TextWrapping.Wrap;
-         textBoxDiscussionBody.SpellCheck.IsEnabled = true;
-         textBoxDiscussionBody.HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
-         textBoxDiscussionBody.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost, false, String.Empty);
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
       }
 

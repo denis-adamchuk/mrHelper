@@ -128,6 +128,7 @@
     </Compile>
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
+    <Compile Include="src\Forms\Helpers\WPFHelpers.cs" />
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>

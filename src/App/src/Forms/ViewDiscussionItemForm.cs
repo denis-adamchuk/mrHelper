@@ -25,15 +25,7 @@ namespace mrHelper.App.Forms
 
       private void createWPFTextBox(string initialText, bool editable)
       {
-         textBox = new System.Windows.Controls.TextBox();
-         textBoxHost.Child = this.textBox;
-         textBox.Text = initialText;
-         textBox.IsReadOnly = !editable;
-         textBox.AcceptsReturn = true;
-         textBox.TextWrapping = System.Windows.TextWrapping.Wrap;
-         textBox.SpellCheck.IsEnabled = true;
-         textBox.HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
-         textBox.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         textBox = Helpers.WPFHelpers.CreateWPFTextBox(textBoxHost, !editable, initialText);
          textBox.KeyDown += textBox_KeyDown;
       }
 
