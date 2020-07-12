@@ -54,17 +54,17 @@ namespace mrHelper.StorageSupport
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal GitRepository(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, bool useShallowClone, Action<IGitRepository> onClonedRepo)
+         ISynchronizeInvoke synchronizeInvoke, LocalCommitStorageType type, Action<IGitRepository> onClonedRepo)
       {
-         Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
-            LocalCommitStorageType.GitRepository);
+         Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, type);
 
          if (!GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
          {
             throw new ArgumentException("Cannot work with such repositories");
          }
 
-         UpdateMode mode = useShallowClone ? UpdateMode.ShallowClone : UpdateMode.FullCloneWithSingleCommitFetches;
+         bool isShallowCloneAllowed = type == LocalCommitStorageType.ShallowGitRepository;
+         UpdateMode mode = isShallowCloneAllowed ? UpdateMode.ShallowClone : UpdateMode.FullCloneWithSingleCommitFetches;
 
          // PathFinder must guarantee the following
          Debug.Assert(isEmptyFolder(Path)

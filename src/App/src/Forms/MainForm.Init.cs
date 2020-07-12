@@ -177,20 +177,18 @@ namespace mrHelper.App.Forms
             radioButtonSelectByUsernames.Checked = true;
          }
 
-         if (ConfigurationHelper.GetPreferredStorageType(Program.Settings) == LocalCommitStorageType.GitRepository)
+         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         switch (type)
          {
-            if (ConfigurationHelper.IsShallowCloneAllowed(Program.Settings))
-            {
-               radioButtonUseGitShallowClone.Checked = true;
-            }
-            else
-            {
+            case LocalCommitStorageType.FileStorage:
+               radioButtonDontUseGit.Checked = true;
+               break;
+            case LocalCommitStorageType.FullGitRepository:
                radioButtonUseGitFullClone.Checked = true;
-            }
-         }
-         else
-         {
-            radioButtonDontUseGit.Checked = true;
+               break;
+            case LocalCommitStorageType.ShallowGitRepository:
+               radioButtonUseGitShallowClone.Checked = true;
+               break;
          }
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))

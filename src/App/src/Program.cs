@@ -208,7 +208,7 @@ namespace mrHelper.App
             // TODO Don't create BC3Tool explicitly here and inside MainForm, use a factory
             string diffToolName = System.IO.Path.GetFileNameWithoutExtension(new DiffTool.BC3Tool().GetToolCommand());
             StorageSupport.LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-            string toolProcessName = type == StorageSupport.LocalCommitStorageType.GitRepository ? "git" : diffToolName;
+            string toolProcessName = type == StorageSupport.LocalCommitStorageType.FileStorage ? diffToolName : "git";
             parentToolPID = getParentProcessId(context.CurrentProcess, toolProcessName);
          }
          catch (Exception ex)

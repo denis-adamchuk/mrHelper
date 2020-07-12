@@ -1220,6 +1220,7 @@ namespace mrHelper.App.Forms
          this.radioButtonDontUseGit.Text = "Don\'t use git as file storage. Copies files from GitLab and does not require any " +
     "kind of clone.";
          this.radioButtonDontUseGit.UseVisualStyleBackColor = true;
+         this.radioButtonDontUseGit.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
          // radioButtonUseGitFullClone
          // 
@@ -1556,8 +1557,9 @@ namespace mrHelper.App.Forms
          this.radioButtonUseGitShallowClone.TabIndex = 11;
          this.radioButtonUseGitShallowClone.TabStop = true;
          this.radioButtonUseGitShallowClone.Text = "Use git in shallow clone mode. Faster clone, but does not allow to reuse existing" +
-    " working copies.";
+    " folders.";
          this.radioButtonUseGitShallowClone.UseVisualStyleBackColor = true;
+         this.radioButtonUseGitShallowClone.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
          // MainForm
          // 

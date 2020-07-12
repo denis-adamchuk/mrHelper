@@ -21,7 +21,7 @@ namespace mrHelper.StorageSupport
       /// Throws ArgumentException if passed ParentFolder does not exist
       /// </summary>
       public LocalCommitStorageFactory(ISynchronizeInvoke synchronizeInvoke,
-         ISession session, string parentFolder, bool useShallowClone, int revisionsToKeep)
+         ISession session, string parentFolder, int revisionsToKeep)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -30,7 +30,6 @@ namespace mrHelper.StorageSupport
 
          ParentFolder = parentFolder;
          _synchronizeInvoke = synchronizeInvoke;
-         _useShallowClone = useShallowClone;
          _session = session;
          _revisionsToKeep = revisionsToKeep;
 
@@ -57,20 +56,18 @@ namespace mrHelper.StorageSupport
          ILocalCommitStorage storage;
          try
          {
-            if (type == LocalCommitStorageType.GitRepository)
-            {
-               storage = new GitRepository(ParentFolder, key, _synchronizeInvoke, _useShallowClone,
-                  (r) => GitRepositoryCloned?.Invoke(r));
-            }
-            else if (type == LocalCommitStorageType.FileStorage)
+            if (type == LocalCommitStorageType.FileStorage)
             {
                storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, _session.GetRepositoryAccessor(),
                   _revisionsToKeep, () => _storages.Count);
             }
             else
             {
-               Debug.Assert(false);
-               return null;
+               Debug.Assert(type == LocalCommitStorageType.FullGitRepository
+                         || type == LocalCommitStorageType.ShallowGitRepository);
+
+               storage = new GitRepository(ParentFolder, key, _synchronizeInvoke, type,
+                  (r) => GitRepositoryCloned?.Invoke(r));
             }
          }
          catch (ArgumentException ex)
@@ -100,7 +97,6 @@ namespace mrHelper.StorageSupport
          new Dictionary<ProjectKey, ILocalCommitStorage>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ISession _session;
-      private readonly bool _useShallowClone;
       private readonly int _revisionsToKeep;
 
       private bool _isDisposed;

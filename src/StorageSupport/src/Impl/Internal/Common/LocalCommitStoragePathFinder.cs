@@ -77,13 +77,20 @@ namespace mrHelper.StorageSupport
 
       private static ProjectKey? getRepositoryProjectKey(string path, LocalCommitStorageType type)
       {
-         if (type == LocalCommitStorageType.GitRepository)
+         if (type == LocalCommitStorageType.FileStorage)
          {
-            return GitTools.GetRepositoryProjectKey(path);
+            return FileStorageUtils.GetFileStorageProjectKey(path);
          }
 
-         Debug.Assert(type == LocalCommitStorageType.FileStorage);
-         return FileStorageUtils.GetFileStorageProjectKey(path);
+         ProjectKey? key = GitTools.GetRepositoryProjectKey(path);
+         if (key == null)
+         {
+            return null;
+         }
+
+         bool isShallowRepository = File.Exists(Path.Combine(path, ".git", "shallow"));
+         bool isAskingForShallowRepository = type == LocalCommitStorageType.ShallowGitRepository;
+         return isShallowRepository == isAskingForShallowRepository ? key : null;
       }
    }
 }

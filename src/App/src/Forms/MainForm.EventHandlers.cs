@@ -1267,13 +1267,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Debug.Assert(radioButtonDontUseGit.Checked != radioButtonUseGitFullClone.Checked);
          if (!_loadingConfiguration)
          {
-            LocalCommitStorageType type = radioButtonDontUseGit.Checked ?
-               LocalCommitStorageType.FileStorage : LocalCommitStorageType.GitRepository;
-            bool useShallowClone = useShallowClone = radioButtonUseGitShallowClone.Checked;
-            ConfigurationHelper.SelectPreferredStorageType(Program.Settings, type, useShallowClone);
+            LocalCommitStorageType type = radioButtonDontUseGit.Checked
+               ? LocalCommitStorageType.FileStorage
+               : (radioButtonUseGitFullClone.Checked
+                  ? LocalCommitStorageType.FullGitRepository
+                  : LocalCommitStorageType.ShallowGitRepository);
+            ConfigurationHelper.SelectPreferredStorageType(Program.Settings, type);
 
             Trace.TraceInformation("[MainForm] Reloading merge request list after storage type change");
             switchHostToSelected();

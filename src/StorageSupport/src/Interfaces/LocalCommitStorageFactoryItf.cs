@@ -5,7 +5,8 @@ namespace mrHelper.StorageSupport
 {
    public enum LocalCommitStorageType
    {
-      GitRepository,
+      FullGitRepository,
+      ShallowGitRepository,
       FileStorage
    }
 
