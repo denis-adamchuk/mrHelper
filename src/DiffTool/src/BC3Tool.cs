@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml;
-using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.DiffTool
 {

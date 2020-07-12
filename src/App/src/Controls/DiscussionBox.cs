@@ -18,6 +18,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Client.Discussions;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Controls
 {
@@ -25,7 +26,7 @@ namespace mrHelper.App.Controls
    {
       internal DiscussionBox(
          CustomFontForm parent,
-         IDiscussionEditor editor, IGitRepository gitRepository,
+         IDiscussionEditor editor, IGitCommandService git,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -44,10 +45,10 @@ namespace mrHelper.App.Controls
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
-         if (gitRepository != null)
+         if (git != null)
          {
-            _panelContextMaker = new EnhancedContextMaker(gitRepository);
-            _tooltipContextMaker = new CombinedContextMaker(gitRepository);
+            _panelContextMaker = new EnhancedContextMaker(git);
+            _tooltipContextMaker = new CombinedContextMaker(git);
          }
          _colorScheme = colorScheme;
 

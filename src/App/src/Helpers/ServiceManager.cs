@@ -16,7 +16,7 @@ namespace mrHelper.App.Helpers
          {
             try
             {
-               _services = JsonFileReader.LoadFromFile<Service[]>(ServiceListFileName);
+               _services = JsonUtils.LoadFromFile<Service[]>(ServiceListFileName);
             }
             catch (Exception ex) // whatever de-serialization exception
             {

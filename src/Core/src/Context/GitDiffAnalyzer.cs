@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using mrHelper.Common.Interfaces;
 using mrHelper.Core.Context;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Git
 {
@@ -34,10 +34,10 @@ namespace mrHelper.Core.Git
       /// Note: filename1 or filename2 can be 'null'
       /// Throws ContextMakingException.
       /// </summary>
-      public GitDiffAnalyzer(IGitRepository gitRepository,
+      public GitDiffAnalyzer(IGitCommandService git,
          string sha1, string sha2, string filename1, string filename2)
       {
-         _sections = getDiffSections(gitRepository, sha1, sha2, filename1, filename2);
+         _sections = getDiffSections(git, sha1, sha2, filename1, filename2);
       }
 
       public bool IsLineAddedOrModified(int linenumber)
@@ -67,7 +67,7 @@ namespace mrHelper.Core.Git
       /// <summary>
       /// Throws ContextMakingException.
       /// </summary>
-      static private IEnumerable<GitDiffSection> getDiffSections(IGitRepository gitRepository,
+      static private IEnumerable<GitDiffSection> getDiffSections(IGitCommandService git,
          string sha1, string sha2, string filename1, string filename2)
       {
          List<GitDiffSection> sections = new List<GitDiffSection>();
@@ -80,7 +80,7 @@ namespace mrHelper.Core.Git
          IEnumerable<string> diff;
          try
          {
-            diff = gitRepository.Data?.Get(arguments);
+            diff = git?.ShowDiff(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {

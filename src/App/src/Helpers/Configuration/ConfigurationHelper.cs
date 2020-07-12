@@ -1,13 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using GitLabSharp.Entities;
+using mrHelper.StorageSupport;
 using Newtonsoft.Json;
 
 namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
+      {
+         if (Program.Settings.GitUsageForStorage == "UseGitWithFullClone")
+         {
+            return LocalCommitStorageType.FullGitRepository;
+         }
+         else if (Program.Settings.GitUsageForStorage == "UseGitWithShallowClone")
+         {
+            return LocalCommitStorageType.ShallowGitRepository;
+         }
+         else
+         {
+            Debug.Assert(Program.Settings.GitUsageForStorage == "DontUseGit");
+            return LocalCommitStorageType.FileStorage;
+         }
+      }
+
+      public static void SelectPreferredStorageType(UserDefinedSettings settings, LocalCommitStorageType type)
+      {
+         switch (type)
+         {
+            case LocalCommitStorageType.FileStorage:
+               Program.Settings.GitUsageForStorage = "DontUseGit";
+               break;
+            case LocalCommitStorageType.FullGitRepository:
+               Program.Settings.GitUsageForStorage = "UseGitWithFullClone";
+               break;
+            case LocalCommitStorageType.ShallowGitRepository:
+               Program.Settings.GitUsageForStorage = "UseGitWithShallowClone";
+               break;
+         }
+      }
+
       public static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)
       {
          return settings.ShowVersionsByDefault ? RevisionType.Version : RevisionType.Commit;

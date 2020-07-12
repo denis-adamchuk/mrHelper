@@ -18,9 +18,9 @@ namespace mrHelper.Common.Tools
 
       /// Throws ExternalProcessSystemException
       public ExternalProcess.AsyncTaskDescriptor CreateDescriptor(
-         string name, string arguments, string path, Action<string> onProgressChange)
+         string name, string arguments, string path, Action<string> onProgressChange, int[] successCodes)
       {
-         return ExternalProcess.StartAsync(name, arguments, path, onProgressChange, _synchronizeInvoke);
+         return ExternalProcess.StartAsync(name, arguments, path, onProgressChange, _synchronizeInvoke, successCodes);
       }
 
       public void Dispose()

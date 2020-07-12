@@ -7,7 +7,7 @@ namespace mrHelper.Common.Interfaces
    public interface IExternalProcessManager
    {
       ExternalProcess.AsyncTaskDescriptor CreateDescriptor(
-         string name, string arguments, string path, Action<string> onProgressChange);
+         string name, string arguments, string path, Action<string> onProgressChange, int[] successCodes);
 
       Task Wait(ExternalProcess.AsyncTaskDescriptor descriptor);
 

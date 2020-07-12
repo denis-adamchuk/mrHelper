@@ -10,9 +10,10 @@ using mrHelper.App.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Types;
-using mrHelper.GitClient;
 using mrHelper.Common.Exceptions;
 using mrHelper.Client.Session;
+using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Forms
 {
@@ -23,7 +24,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         ISession session, ILocalGitRepository repo,
+         ISession session, IGitCommandService git,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -33,7 +34,7 @@ namespace mrHelper.App.Forms
          _mergeRequestTitle = mergeRequestTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
 
-         _gitRepository = repo;
+         _git = git;
          _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
@@ -176,11 +177,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onLocalGitRepositoryDisposed(ILocalGitRepository repo)
-      {
-         this.Close();
-      }
-
       private async Task onRefresh()
       {
          Trace.TraceInformation("[DiscussionsForm] Refreshing by user request");
@@ -232,6 +228,11 @@ namespace mrHelper.App.Forms
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return null;
+         }
+
+         if (discussions == null)
+         {
             return null;
          }
 
@@ -337,7 +338,7 @@ namespace mrHelper.App.Forms
             }
 
             IDiscussionEditor editor = _session.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
-            DiscussionBox box = new DiscussionBox(this, editor, _gitRepository, _currentUser,
+            DiscussionBox box = new DiscussionBox(this, editor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme,
                // pre-content-change
@@ -506,7 +507,7 @@ namespace mrHelper.App.Forms
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
-      private readonly ILocalGitRepository _gitRepository;
+      private readonly IGitCommandService _git;
       private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 

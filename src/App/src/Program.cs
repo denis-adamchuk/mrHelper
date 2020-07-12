@@ -202,28 +202,32 @@ namespace mrHelper.App
             return;
          }
 
-         int gitPID = -1;
+         int parentToolPID = -1;
          try
          {
-            gitPID = getGitParentProcessId(context.CurrentProcess);
+            // TODO Don't create BC3Tool explicitly here and inside MainForm, use a factory
+            string diffToolName = System.IO.Path.GetFileNameWithoutExtension(new DiffTool.BC3Tool().GetToolCommand());
+            StorageSupport.LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+            string toolProcessName = type == StorageSupport.LocalCommitStorageType.FileStorage ? diffToolName : "git";
+            parentToolPID = getParentProcessId(context.CurrentProcess, toolProcessName);
          }
          catch (Exception ex)
          {
-            ExceptionHandlers.Handle("Cannot find parent git process", ex);
+            ExceptionHandlers.Handle("Cannot find parent diff tool process", ex);
          }
 
-         if (gitPID == -1)
+         if (parentToolPID == -1)
          {
-            Trace.TraceError("Cannot find parent git process");
+            Trace.TraceError("Cannot find parent diff tool process");
             MessageBox.Show(
-               "Cannot find parent git process. Discussion cannot be created. Is Merge Request Helper running?",
+               "Cannot find parent diff tool process. Discussion cannot be created. Is Merge Request Helper running?",
                "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             return;
          }
 
          string[] argumentsEx = new string[context.Arguments.Length + 1];
          Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
-         argumentsEx[argumentsEx.Length - 1] = gitPID.ToString();
+         argumentsEx[argumentsEx.Length - 1] = parentToolPID.ToString();
 
          string message = String.Join("|", argumentsEx);
          IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
@@ -272,9 +276,9 @@ namespace mrHelper.App
 
       /// <summary>
       /// Traverse process tree up to a process with the same name as the current process.
-      /// Return process id of `git` process that is a child of a found process and parent of the current one.
+      /// Return process id of a process with a given name that is a child of a found process and parent of the current one.
       /// </summary>
-      private static int getGitParentProcessId(Process currentProcess)
+      private static int getParentProcessId(Process currentProcess, string parentProcessName)
       {
          Process previousParent = null;
          Process parent = ParentProcessUtilities.GetParentProcess(currentProcess);
@@ -285,7 +289,7 @@ namespace mrHelper.App
             parent = ParentProcessUtilities.GetParentProcess(parent);
          }
 
-         if (previousParent == null || previousParent.ProcessName != "git")
+         if (previousParent == null || previousParent.ProcessName != parentProcessName)
          {
             return -1;
          }

@@ -12,8 +12,7 @@ namespace mrHelper.Client.MergeRequests
 {
    internal class MergeRequestManager :
       IDisposable,
-      IMergeRequestCache,
-      IProjectUpdateContextProviderFactory
+      IMergeRequestCache
    {
       internal MergeRequestManager(GitLabClientContext clientContext, InternalCacheUpdater cacheUpdater,
          string hostname, SessionContext context)
@@ -60,11 +59,6 @@ namespace mrHelper.Client.MergeRequests
          return mergeRequests.FirstOrDefault(x => x.IId == mrk.IId); // `null` if not found
       }
 
-      public IProjectUpdateContextProvider GetLocalBasedContextProvider(ProjectKey projectKey)
-      {
-         return new LocalBasedContextProvider(getAllVersions(projectKey));
-      }
-
       public Version GetLatestVersion(MergeRequestKey mrk)
       {
          return _cacheUpdater.Cache.GetVersions(mrk).OrderBy(x => x.Created_At).LastOrDefault();
@@ -78,6 +72,11 @@ namespace mrHelper.Client.MergeRequests
       public IEnumerable<GitLabSharp.Entities.Version> GetVersions(MergeRequestKey mrk)
       {
          return _cacheUpdater.Cache.GetVersions(mrk);
+      }
+
+      public IEnumerable<GitLabSharp.Entities.Version> GetVersions(ProjectKey projectKey)
+      {
+         return getAllVersions(projectKey);
       }
 
       public IEnumerable<GitLabSharp.Entities.Commit> GetCommits(MergeRequestKey mrk)

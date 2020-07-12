@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
-using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Context
 {
@@ -29,9 +29,9 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class FullContextDiffProvider
    {
-      public FullContextDiffProvider(IGitRepository gitRepository)
+      public FullContextDiffProvider(IGitCommandService git)
       {
-         _gitRepository = gitRepository;
+         _git = git;
       }
 
       /// <summary>
@@ -50,7 +50,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> fullDiff;
          try
          {
-            fullDiff = _gitRepository.Data?.Get(arguments);
+            fullDiff = _git?.ShowDiff(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
@@ -103,7 +103,7 @@ namespace mrHelper.Core.Context
          return fullContextDiff;
       }
 
-      private readonly IGitRepository _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }
 

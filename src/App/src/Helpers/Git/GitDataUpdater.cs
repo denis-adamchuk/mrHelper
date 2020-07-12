@@ -9,7 +9,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.Client.Types;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Discussions;
@@ -24,12 +24,11 @@ namespace mrHelper.App.Helpers
       internal GitDataUpdater(
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
-         IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactory gitFactory,
+         ILocalCommitStorageFactory gitFactory,
          int autoUpdatePeriodMs,
          MergeRequestFilter mergeRequestFilter)
-         : base(mergeRequestCache, discussionCache, updateContextProviderFactory, synchronizeInvoke, gitFactory)
+         : base(mergeRequestCache, discussionCache, synchronizeInvoke, gitFactory)
       {
          if (autoUpdatePeriodMs < 1)
          {
@@ -57,9 +56,9 @@ namespace mrHelper.App.Helpers
          scheduleAllProjectsUpdate();
       }
 
-      protected override void preUpdate(ILocalGitRepository repo) {}
+      protected override void preUpdate(ILocalCommitStorage repo) {}
 
-      async protected override Task doUpdate(ILocalGitRepository repo)
+      async protected override Task doUpdate(ILocalCommitStorage repo)
       {
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
             .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
@@ -71,9 +70,9 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      async private Task updateGitDataForSingleMergeRequest(MergeRequestKey mrk, ILocalGitRepository repo)
+      async private Task updateGitDataForSingleMergeRequest(MergeRequestKey mrk, ILocalCommitStorage repo)
       {
-         if (repo.Data == null)
+         if (repo.Git == null)
          {
             return;
          }
@@ -82,7 +81,7 @@ namespace mrHelper.App.Helpers
          IEnumerable<Discussion> newDiscussions = await loadNewDiscussionsAsync(mrk, prevLatestChange);
 
          int totalCount = newDiscussions?.Count() ?? 0;
-         if (totalCount == 0 || repo.Data == null)
+         if (totalCount == 0 || repo.Git == null)
          {
             return;
          }
@@ -107,7 +106,7 @@ namespace mrHelper.App.Helpers
          gatherArguments(newDiscussions,
             out HashSet<GitDiffArguments> diffArgs,
             out HashSet<GitShowRevisionArguments> revisionArgs);
-
+         await fetchMissingData(repo, newDiscussions);
          await doCacheAsync(repo, diffArgs, revisionArgs);
 
          Debug.WriteLine(String.Format(
@@ -200,51 +199,40 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      async private static Task doCacheAsync(ILocalGitRepository repo,
-         HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
+      async private static Task fetchMissingData(ILocalCommitStorage repo, IEnumerable<Discussion> discussions)
       {
          // On timer update we may got into situation when not all SHA are already fetched.
          // For example, if we just cloned the repository and still in progress of initial
          // fetching. A simple solution is to request updates using CommitBasedContext.
          // Update() call will return from `await` only when all ongoing updates within
          // the project are finished.
-
-         HashSet<string> sha = new HashSet<string>();
-
-         foreach (GitDiffArguments args in diffArgs)
-         {
-            sha.Add(args.CommonArgs.Sha1);
-            sha.Add(args.CommonArgs.Sha2);
-         }
-
-         foreach (GitShowRevisionArguments args in revisionArgs)
-         {
-            sha.Add(args.Sha);
-         }
-
          bool finished = repo?.Updater == null;
-         repo?.Updater?.RequestUpdate(new CommitBasedContextProvider(sha), () => finished = true);
+         repo?.Updater?.RequestUpdate(new DiscussionBasedContextProvider(discussions), () => finished = true);
          await TaskUtils.WhileAsync(() => !finished);
+      }
 
+      async private static Task doCacheAsync(ILocalCommitStorage repo,
+         HashSet<GitDiffArguments> diffArgs, HashSet<GitShowRevisionArguments> revisionArgs)
+      {
          await TaskUtils.RunConcurrentFunctionsAsync(diffArgs,
             async x =>
             {
-               if (repo.Data != null)
+               if (repo.Git != null)
                {
-                  await repo.Data.LoadFromDisk(x);
+                  await repo.Git.FetchAsync(x);
                }
             },
-            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, () => repo.Data == null);
+            () => Constants.GitDataUpdaterBatchLimits, () => repo.Git == null);
 
          await TaskUtils.RunConcurrentFunctionsAsync(revisionArgs,
             async x =>
             {
-               if (repo.Data != null)
+               if (repo.Git != null)
                {
-                  await repo.Data.LoadFromDisk(x);
+                  await repo.Git.FetchAsync(x);
                }
             },
-            Constants.GitInstancesInBatch, Constants.GitInstancesInterBatchDelay, () => repo.Data == null);
+            () => Constants.GitDataUpdaterBatchLimits, () => repo.Git == null);
       }
 
       private DateTime getLatestChange(MergeRequestKey mrk)

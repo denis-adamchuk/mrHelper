@@ -10,7 +10,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.Client.Session;
 
 namespace mrHelper.App.Interprocess
@@ -24,38 +24,38 @@ namespace mrHelper.App.Interprocess
          _session = session;
       }
 
-      async public Task HandleAsync(IGitRepository gitRepository)
+      async public Task HandleAsync(ICommitStorage gitRepository)
       {
          if (gitRepository != null)
          {
-            await doHandleAsync(gitRepository);
+            await doHandleAsync(gitRepository.Git);
             return;
          }
 
-         // This happens when a git parent folder was changed when a diff tool was being launched
+         // This happens when a git parent folder was changed when a diff tool was already launched
          Trace.TraceWarning(String.Format(
             "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
          ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
 
-         LocalGitRepositoryFactory factory = new LocalGitRepositoryFactory(
-            _snapshot.TempFolder, null, Program.Settings.UseShallowClone);
-         ILocalGitRepository tempRepository = factory.GetRepository(projectKey);
+         LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, _session, _snapshot.TempFolder,
+            Program.Settings.RevisionsToKeep);
+         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
          if (tempRepository == null)
          {
             Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
             return;
          }
-         Debug.Assert(!tempRepository.ExpectingClone);
-         await doHandleAsync(tempRepository);
+         await doHandleAsync(tempRepository.Git);
          factory.Dispose();
       }
 
-      async public Task doHandleAsync(IGitRepository gitRepository)
+      async public Task doHandleAsync(IGitCommandService git)
       {
-         FileNameMatcher fileNameMatcher = getFileNameMatcher(gitRepository);
-         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(gitRepository);
+         FileNameMatcher fileNameMatcher = getFileNameMatcher(git);
+         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(git);
 
          DiffPosition position = new DiffPosition(null, null, null, null, _snapshot.Refs);
 
@@ -82,7 +82,7 @@ namespace mrHelper.App.Interprocess
          }
 
          using (NewDiscussionForm form = new NewDiscussionForm(
-            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, gitRepository))
+            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, git))
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -102,9 +102,9 @@ namespace mrHelper.App.Interprocess
          }
       }
 
-      private FileNameMatcher getFileNameMatcher(IGitRepository repository)
+      private FileNameMatcher getFileNameMatcher(IGitCommandService git)
       {
-         return new FileNameMatcher(repository,
+         return new FileNameMatcher(git,
             (currentName, anotherName) =>
          {
             MessageBox.Show(

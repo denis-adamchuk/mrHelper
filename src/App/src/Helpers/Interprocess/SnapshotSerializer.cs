@@ -14,9 +14,8 @@ namespace mrHelper.App.Interprocess
       /// </summary>
       public void SerializeToDisk(Snapshot snapshot, int pid)
       {
-         string json = Newtonsoft.Json.JsonConvert.SerializeObject(snapshot);
          string filename = String.Format("mrHelper.snapshot.{0}.json", pid);
-         System.IO.File.WriteAllText(System.IO.Path.Combine(snapshotPath, filename), json);
+         Common.Tools.JsonUtils.SaveToFile(System.IO.Path.Combine(snapshotPath, filename), snapshot);
       }
 
       /// <summary>
@@ -33,9 +32,7 @@ namespace mrHelper.App.Interprocess
                String.Format("Cannot find interprocess snapshot at path \"{0}\"", fullSnapshotName));
          }
 
-         string jsonStr = System.IO.File.ReadAllText(fullSnapshotName);
-
-         return Newtonsoft.Json.JsonConvert.DeserializeObject<Snapshot>(jsonStr);
+         return Common.Tools.JsonUtils.LoadFromFile<Snapshot>(fullSnapshotName);
       }
 
       /// <summary>

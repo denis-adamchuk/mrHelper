@@ -17,7 +17,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Forms
 {
@@ -146,7 +146,7 @@ namespace mrHelper.App.Forms
             Program.Settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
          }
 
-         textBoxLocalGitFolder.Text = Program.Settings.LocalGitFolder;
+         textBoxStorageFolder.Text = Program.Settings.LocalGitFolder;
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
@@ -155,7 +155,6 @@ namespace mrHelper.App.Forms
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestRevision.Checked = Program.Settings.AutoSelectNewestRevision;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
-         checkBoxUseShallowClone.Checked = Program.Settings.UseShallowClone;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;
@@ -176,6 +175,20 @@ namespace mrHelper.App.Forms
          else
          {
             radioButtonSelectByUsernames.Checked = true;
+         }
+
+         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         switch (type)
+         {
+            case LocalCommitStorageType.FileStorage:
+               radioButtonDontUseGit.Checked = true;
+               break;
+            case LocalCommitStorageType.FullGitRepository:
+               radioButtonUseGitFullClone.Checked = true;
+               break;
+            case LocalCommitStorageType.ShallowGitRepository:
+               radioButtonUseGitShallowClone.Checked = true;
+               break;
          }
 
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
@@ -235,8 +248,7 @@ namespace mrHelper.App.Forms
 
       private bool integrateInTools()
       {
-         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
-         if (appInfo == null || String.IsNullOrEmpty(appInfo.InstallPath))
+         if (!GitTools.IsGit2Installed())
          {
             MessageBox.Show(
                "Git for Windows (version 2) is not installed. "
@@ -245,9 +257,8 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         string gitBinaryFolder = Path.Combine(appInfo.InstallPath, "bin");
          string pathEV = System.Environment.GetEnvironmentVariable("PATH");
-         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + gitBinaryFolder);
+         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + GitTools.GetBinaryFolder());
          Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
             System.Environment.GetEnvironmentVariable("PATH")));
          System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
@@ -282,7 +293,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            GitClient.GitTools.TraceGitConfiguration();
+            GitTools.TraceGitConfiguration();
          }
 
          return true;
@@ -325,9 +336,6 @@ namespace mrHelper.App.Forms
          subscribeToLiveSession();
          createSearchSession();
 
-         _gitClientUpdater = new GitInteractiveUpdater();
-         _gitClientUpdater.InitializationStatusChange += onGitInitStatusChange;
-
          initializeColorScheme();
          initializeIconScheme();
          initializeBadgeScheme();
@@ -346,11 +354,6 @@ namespace mrHelper.App.Forms
          _requestedUrl.Clear();
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
-
-         if (_gitClientUpdater != null)
-         {
-            _gitClientUpdater.InitializationStatusChange -= onGitInitStatusChange;
-         }
 
          unsubscribeFromLiveSession();
 
@@ -405,7 +408,7 @@ namespace mrHelper.App.Forms
       {
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelWorkflowStatus.Text = String.Empty;
-         updateGitStatusText(String.Empty);
+         labelStorageStatus.Text = String.Empty;
 
          if (_keywords == null)
          {
@@ -554,27 +557,23 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void createGitHelpers(ISession session, ILocalGitRepositoryFactory factory)
+      private void createGitHelpers(ISession session, ILocalCommitStorageFactory factory)
       {
-         if (session.MergeRequestCache == null
-          || session.DiscussionCache == null
-          || session.UpdateContextProviderFactory == null)
+         if (session.MergeRequestCache == null || session.DiscussionCache == null)
          {
             return;
          }
 
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
             ? new GitDataUpdater(
-               session.MergeRequestCache, session.DiscussionCache,
-               session.UpdateContextProviderFactory, this, factory,
+               session.MergeRequestCache, session.DiscussionCache, this, factory,
                Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
             : null;
 
          if (Program.Settings.UseGitBasedSizeCollection)
          {
             _diffStatProvider = new GitBasedDiffStatProvider(
-                  session.MergeRequestCache, session.DiscussionCache,
-                  session.UpdateContextProviderFactory, this, factory);
+               session.MergeRequestCache, session.DiscussionCache, this, factory);
          }
          else
          {
@@ -594,12 +593,6 @@ namespace mrHelper.App.Forms
             _diffStatProvider.Dispose();
             _diffStatProvider = null;
          }
-      }
-
-      private void onGitInitStatusChange(string status)
-      {
-         labelWorkflowStatus.Text = status;
-         labelWorkflowStatus.Update();
       }
 
       private void onGitStatisticManagerUpdate()
@@ -661,7 +654,7 @@ namespace mrHelper.App.Forms
 
          try
          {
-            ConfigurationHelper.InitializeSelectedProjects(JsonFileReader.
+            ConfigurationHelper.InitializeSelectedProjects(JsonUtils.
                LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
                   Constants.ProjectListFileName), Program.Settings);
          }

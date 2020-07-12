@@ -8,7 +8,7 @@ using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -47,65 +47,38 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
-         if (!await prepareRepositoryForDiscussionsForm(repo, mrk, discussions) || _exiting)
+         ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
+         if (!await prepareStorageForDiscussionsForm(mrk, storage, discussions) || _exiting)
          {
             return;
          }
-         showDiscussionForm(session, repo, currentUser, mrk, discussions, title, author);
+         showDiscussionForm(session, storage, currentUser, mrk, discussions, title, author);
       }
 
-      async private Task<bool> prepareRepositoryForDiscussionsForm(ILocalGitRepository repo,
-         MergeRequestKey mrk, IEnumerable<Discussion> discussions)
+      async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
+         ILocalCommitStorage storage, IEnumerable<Discussion> discussions)
       {
-         if (repo == null)
+         if (storage == null)
          {
-            if (MessageBox.Show("Without git repository, context code snippets will be missing. "
+            if (MessageBox.Show("Without a storage, context code snippets will be missing. "
                + "Do you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) ==
                   DialogResult.No)
             {
-               Trace.TraceInformation("[MainForm] User rejected to show discussions without git repository");
+               Trace.TraceInformation("[MainForm] User rejected to show discussions without a storage");
                return false;
             }
             else
             {
-               Trace.TraceInformation("[MainForm] User decided to show Discussions w/o git repository");
+               Trace.TraceInformation("[MainForm] User decided to show Discussions without a storage");
                return true;
             }
          }
 
-         try
-         {
-            IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
-               () => updateGitAbortState(false));
-            return true;
-         }
-         catch (Exception ex)
-         {
-            if (ex is InteractiveUpdateSSLFixedException)
-            {
-               // SSL check is disabled
-            }
-            else if (ex is InteractiveUpdateCancelledException)
-            {
-               MessageBox.Show("Cannot show Discussions without up-to-date git repository", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            else if (ex is InteractiveUpdateFailed inex)
-            {
-               ExceptionHandlers.Handle(ex.Message, ex);
-               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-               Debug.Assert(false);
-            }
-            return false;
-         }
+         ICommitStorageUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
+         return await prepareCommitStorage(mrk, storage, contextProvider);
       }
 
-      private void showDiscussionForm(ISession session, ILocalGitRepository repo,
+      private void showDiscussionForm(ISession session, ILocalCommitStorage storage,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
@@ -114,29 +87,29 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(session, repo,
+            DiscussionsForm discussionsForm = new DiscussionsForm(session, storage?.Git,
                currentUser, mrk, discussions, title, author,
                int.Parse(comboBoxDCDepth.Text), _colorScheme,
-               async (key, discussions2) =>
+               async (key, discussionsUpdated) =>
             {
                try
                {
-                  if (repo != null && !repo.ExpectingClone && repo.Updater != null)
+                  if (storage != null && storage.Updater != null)
                   {
-                     IProjectUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions2);
-                     await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
-                        () => updateGitAbortState(false));
+                     var contextProvider = new DiscussionBasedContextProvider(discussionsUpdated);
+                     await storage.Updater.StartUpdate(contextProvider,
+                        status => onStorageUpdateProgressChange(status, mrk), () => onStorageUpdateStateChange());
                   }
                   else
                   {
-                     Trace.TraceInformation("[MainForm] User tried to refresh Discussions w/o git repository");
-                     MessageBox.Show("Cannot update git folder, some context code snippets may be missing. ",
+                     Trace.TraceInformation("[MainForm] User tried to refresh Discussions without a storage");
+                     MessageBox.Show("Cannot update a storage, some context code snippets may be missing. ",
                         "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                   }
                }
-               catch (RepositoryUpdateException ex)
+               catch (LocalCommitStorageUpdaterException ex)
                {
-                  ExceptionHandlers.Handle("Cannot update git repository on refreshing discussions", ex);
+                  ExceptionHandlers.Handle("Cannot update a storage on refreshing discussions", ex);
                }
             },
             () => session?.DiscussionCache?.RequestUpdate(mrk,
@@ -162,7 +135,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Refresh();
 
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
-            mrk.IId, (repo?.Path ?? "null")));
+            mrk.IId, (storage?.Path ?? "null")));
 
          form.Show();
 
@@ -173,11 +146,12 @@ namespace mrHelper.App.Forms
       {
          // Keep data before async/await
          ISession session = getSession(!isSearchMode());
-         getShaForDiffTool(out string leftSHA, out string rightSHA, out IEnumerable<string> includedSHA,
-            out RevisionType? type);
+         getShaForDiffTool(out string baseSHA, out string leftSHA, out string rightSHA,
+            out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
          if (session == null
           || String.IsNullOrWhiteSpace(accessToken)
+          || String.IsNullOrWhiteSpace(baseSHA)
           || String.IsNullOrWhiteSpace(leftSHA)
           || String.IsNullOrWhiteSpace(rightSHA)
           || includedSHA == null
@@ -188,13 +162,13 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitRepository repo = getRepository(mrk.ProjectKey, true);
-         if (!await prepareRepositoryForDiffTool(repo, leftSHA, rightSHA) || _exiting)
+         ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
+         if (!await prepareStorageForDiffTool(mrk, storage, baseSHA, leftSHA, rightSHA) || _exiting)
          {
             return;
          }
 
-         launchDiffTool(leftSHA, rightSHA, repo, mrk, accessToken, getSessionName(session));
+         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, getSessionName(session));
 
          HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
          foreach (string sha in includedSHA)
@@ -209,17 +183,16 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void launchDiffTool(string leftSHA, string rightSHA, ILocalGitRepository repo,
+      private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
          MergeRequestKey mrk, string accessToken, string sessionName)
       {
          labelWorkflowStatus.Text = "Launching diff tool...";
 
-         int pid;
+         int? pid;
          try
          {
-            string arguments = "difftool --no-symlinks --dir-diff --tool=" +
-               DiffTool.DiffToolIntegration.GitDiffToolName + " " + leftSHA + " " + rightSHA;
-            pid = ExternalProcess.Start("git", arguments, false, repo.Path).ExitCode;
+            DiffToolArguments arg = new DiffToolArguments(true, Constants.GitDiffToolName, leftSHA, rightSHA);
+            pid = storage.Git?.LaunchDiffTool(arg) ?? null;
          }
          catch (Exception ex)
          {
@@ -234,8 +207,13 @@ namespace mrHelper.App.Forms
             throw;
          }
 
+         if (!pid.HasValue)
+         {
+            return; // e.g. storage.Git got disposed
+         }
+
          Trace.TraceInformation(String.Format("[MainForm] Launched DiffTool for SHA {0} vs SHA {1} (at {2}). PID {3}",
-            leftSHA, rightSHA, repo.Path, pid.ToString()));
+            leftSHA, rightSHA, storage.Path, pid.Value.ToString()));
 
          if (pid == -1)
          {
@@ -244,50 +222,23 @@ namespace mrHelper.App.Forms
          else
          {
             labelWorkflowStatus.Text = "Diff tool launched";
-            saveInterprocessSnapshot(pid, leftSHA, rightSHA, mrk, accessToken, sessionName);
+            saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, accessToken, sessionName);
          }
       }
 
-      async private Task<bool> prepareRepositoryForDiffTool(ILocalGitRepository repo, string leftSHA, string rightSHA)
+      async private Task<bool> prepareStorageForDiffTool(MergeRequestKey mrk, ILocalCommitStorage storage,
+         string baseSHA, string leftSHA, string rightSHA)
       {
-         if (repo == null)
+         if (storage == null)
          {
-            MessageBox.Show("Cannot launch a diff tool without up-to-date git repository. Check git folder in Settings",
+            MessageBox.Show("Cannot launch a diff tool without up-to-date storage.",
                "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return false;
          }
 
-         try
-         {
-            IProjectUpdateContextProvider contextProvider =
-               new CommitBasedContextProvider(new string[] { leftSHA, rightSHA });
-            await _gitClientUpdater.UpdateAsync(repo, contextProvider, updateGitStatusText,
-               () => updateGitAbortState(false));
-            return true;
-         }
-         catch (Exception ex)
-         {
-            if (ex is InteractiveUpdateSSLFixedException)
-            {
-               // SSL check is disabled
-            }
-            else if (ex is InteractiveUpdateCancelledException)
-            {
-               // User declined to create a repository
-               MessageBox.Show("Cannot launch a diff tool without up-to-date git repository", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            else if (ex is InteractiveUpdateFailed inex)
-            {
-               ExceptionHandlers.Handle(ex.Message, ex);
-               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-               Debug.Assert(false);
-            }
-            return false;
-         }
+         ICommitStorageUpdateContextProvider contextProvider =
+            new CommitBasedContextProvider(new string[] { rightSHA }, leftSHA);
+         return await prepareCommitStorage(mrk, storage, contextProvider);
       }
 
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
@@ -380,11 +331,18 @@ namespace mrHelper.App.Forms
             accessToken,
             mrk.ProjectKey.ProjectName,
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
-            textBoxLocalGitFolder.Text,
+            textBoxStorageFolder.Text,
             sessionName);
 
          SnapshotSerializer serializer = new SnapshotSerializer();
-         serializer.SerializeToDisk(snapshot, pid);
+         try
+         {
+            serializer.SerializeToDisk(snapshot, pid);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle("Cannot serialize Snapshot object", ex);
+         }
       }
 
       async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
@@ -408,21 +366,24 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = message;
             return null;
          }
-         labelWorkflowStatus.Text = "Discussions loaded";
+
+         bool anyDiscussions = discussions == null || !discussions.Any();
+         labelWorkflowStatus.Text = anyDiscussions
+            ? "Discussions loaded"
+            : "There are no discussions in this Merge Request";
          return discussions;
       }
 
-      private void requestRepositoryUpdate(ProjectKey projectKey)
+      private void requestCommitStorageUpdate(ProjectKey projectKey)
       {
          ISession session = getSession(true /* supported in Live only */);
 
-         IProjectUpdateContextProvider contextProvider = session?.MergeRequestCache?.
-            GetLocalBasedContextProvider(projectKey);
-         if (contextProvider != null)
+         IEnumerable<GitLabSharp.Entities.Version> versions = session?.MergeRequestCache?.GetVersions(projectKey);
+         if (versions != null)
          {
-            // contextProvider can be null if session was dropped after this update was scheduled
-            ILocalGitRepository repo = getRepository(projectKey, false);
-            repo?.Updater?.RequestUpdate(contextProvider, null);
+            VersionBasedContextProvider contextProvider = new VersionBasedContextProvider(versions);
+            ILocalCommitStorage storage = getCommitStorage(projectKey, false);
+            storage?.Updater?.RequestUpdate(contextProvider, null);
          }
       }
 
@@ -434,6 +395,42 @@ namespace mrHelper.App.Forms
          onUpdating();
          requestUpdates(null, new int[] { 1 }, () => { updateReceived = true; onUpdated(oldButtonText); });
          await TaskUtils.WhileAsync(() => !updateReceived);
+      }
+
+      private async Task<bool> prepareCommitStorage(
+         MergeRequestKey mrk, ILocalCommitStorage storage, ICommitStorageUpdateContextProvider contextProvider)
+      {
+         try
+         {
+            _mergeRequestsUpdatingByUserRequest.Add(mrk);
+            updateStorageDependentControlState(mrk);
+            labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+            await storage.Updater.StartUpdate(contextProvider, status => onStorageUpdateProgressChange(status, mrk),
+               () => onStorageUpdateStateChange());
+            return true;
+         }
+         catch (Exception ex)
+         {
+            if (ex is LocalCommitStorageUpdaterCancelledException)
+            {
+               MessageBox.Show("Cannot perform requested action without up-to-date storage", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               labelWorkflowStatus.Text = "Storage update cancelled by user";
+            }
+            else if (ex is LocalCommitStorageUpdaterFailedException inex)
+            {
+               ExceptionHandlers.Handle(ex.Message, ex);
+               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               labelWorkflowStatus.Text = "Failed to update storage";
+            }
+            return false;
+         }
+         finally
+         {
+            _mergeRequestsUpdatingByUserRequest.Remove(mrk);
+            updateStorageDependentControlState(mrk);
+            labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+         }
       }
    }
 }

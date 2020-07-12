@@ -17,7 +17,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Session;
@@ -366,12 +366,12 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _iconScheme = JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+            _iconScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
                Constants.IconSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
-         catch (Exception ex) // whatever de-deserialization exception
+         catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle("Cannot load icon scheme", ex);
          }
@@ -386,12 +386,12 @@ namespace mrHelper.App.Forms
 
          try
          {
-            _badgeScheme = JsonFileReader.LoadFromFile<Dictionary<string, object>>(
+            _badgeScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
                Constants.BadgeSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
-         catch (Exception ex) // whatever de-deserialization exception
+         catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle("Cannot load badge scheme", ex);
          }
@@ -438,23 +438,84 @@ namespace mrHelper.App.Forms
          comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
       }
 
-      private void updateGitAbortState(bool resetStatusText)
+      private void updateStorageDependentControlState(MergeRequestKey? mrk)
+      {
+         bool isEnabled = mrk.HasValue
+            && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value)
+            &&  _mergeRequestsUpdatingByUserRequest.Count() < Constants.MaxMergeRequestStorageUpdatesInParallel;
+         buttonDiscussions.Enabled = isEnabled;
+         updateDiffToolButtonState(isEnabled, mrk);
+      }
+
+      private void onStorageUpdateStateChange()
+      {
+         updateAbortGitCloneButtonState();
+      }
+
+      private void updateAbortGitCloneButtonState()
       {
          ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
-         ILocalGitRepository repo = projectKey.HasValue ? getRepository(projectKey.Value, false) : null;
+         ILocalCommitStorage repo = projectKey.HasValue ? getCommitStorage(projectKey.Value, false) : null;
 
          bool enabled = repo?.Updater?.CanBeStopped() ?? false;
-         linkLabelAbortGit.Visible = enabled;
-         labelGitStatus.Visible = enabled;
+         linkLabelAbortGitClone.Visible = enabled;
+      }
 
-         if (resetStatusText)
+      private void onStorageUpdateProgressChange(string text, MergeRequestKey mrk)
+      {
+         if (labelStorageStatus.InvokeRequired)
          {
-            string projectname = projectKey?.ProjectName ?? String.Empty;
-            if (!String.IsNullOrWhiteSpace(projectname))
+            Invoke(new Action<string, MergeRequestKey>(onStorageUpdateProgressChange), new object [] { text, mrk });
+         }
+         else
+         {
+            _latestStorageUpdateStatus[mrk] = text;
+
+            MergeRequestKey? currentMRK = getMergeRequestKey(null);
+            if (currentMRK.HasValue && currentMRK.Value.Equals(mrk))
             {
-               labelGitStatus.Text = String.Format("git clone for {0} is in progress...", projectname);
+               updateStorageStatusText(text, mrk);
             }
          }
+      }
+
+      private void updateStorageStatusText(string text, MergeRequestKey? mrk)
+      {
+         string message = String.IsNullOrEmpty(text) || !mrk.HasValue
+            ? String.Empty
+            : String.Format("{0} #{1}: {2}", mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString(), text);
+         labelStorageStatus.Text = message;
+      }
+
+      private string getStorageSummaryUpdateInformation()
+      {
+         if (!_mergeRequestsUpdatingByUserRequest.Any())
+         {
+            return String.Empty;
+         }
+
+         var mergeRequestGroups = _mergeRequestsUpdatingByUserRequest
+            .Distinct()
+            .GroupBy(
+               group => group.ProjectKey,
+               group => group,
+               (group, groupedMergeRequests) => new
+               {
+                  Project = group.ProjectName,
+                  MergeRequests = groupedMergeRequests
+               });
+
+         List<string> storages = new List<string>();
+         foreach (var group in mergeRequestGroups)
+         {
+            IEnumerable<string> mergeRequestIds = group.MergeRequests.Select(x => String.Format("#{0}", x.IId));
+            string mergeRequestIdsString = String.Join(", ", mergeRequestIds);
+            string storage = String.Format("{0} ({1})", group.Project, mergeRequestIdsString);
+            storages.Add(storage);
+         }
+
+         return String.Format("Updating storage{0}: {1}...",
+            storages.Count() > 1 ? "s" : "", String.Join(", ", storages));
       }
 
       private void enableMergeRequestFilterControls(bool enabled)
@@ -617,6 +678,11 @@ namespace mrHelper.App.Forms
 
       private string getSize(MergeRequestKey mrk)
       {
+         if (_diffStatProvider == null)
+         {
+            return String.Empty;
+         }
+
          DiffStatistic? diffStatistic = _diffStatProvider.GetStatistic(mrk, out string errMsg);
          return diffStatistic?.ToString() ?? errMsg;
       }
@@ -628,20 +694,13 @@ namespace mrHelper.App.Forms
          buttonNewDiscussion.Enabled = enabled;
       }
 
-      private void enableCommitActions(bool enabled, IEnumerable<string> labels, User author)
-      {
-         buttonDiscussions.Enabled = enabled; // not a commit action but depends on git
-         updateDiffToolButtonState();
-         enableCustomActions(enabled, labels, author);
-      }
-
-      private void updateDiffToolButtonState()
+      private void updateDiffToolButtonState(bool isEnabled, MergeRequestKey? mrk)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
          switch (selected.Count())
          {
             case 1:
-               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Enabled = isEnabled;
                buttonDiffTool.Text = "Diff to Base";
                string targetBranch = getMergeRequest(null)?.Target_Branch;
                if (targetBranch != null)
@@ -652,7 +711,7 @@ namespace mrHelper.App.Forms
                break;
 
             case 2:
-               buttonDiffTool.Enabled = true;
+               buttonDiffTool.Enabled = isEnabled;
                buttonDiffTool.Text = "Diff Tool";
                this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to compare selected revisions");
                break;
@@ -708,72 +767,59 @@ namespace mrHelper.App.Forms
          }
       }
 
-      /// <summary>
-      /// Typically called from another thread
-      /// </summary>
-      private void updateGitStatusText(string text)
+      private ILocalCommitStorageFactory gitCommitStorageFactory()
       {
-         if (labelGitStatus.InvokeRequired)
-         {
-            Invoke(new Action<string>(updateGitStatusText), new object [] { text });
-         }
-         else
-         {
-            labelGitStatus.Text = text;
-         }
-      }
-
-      private ILocalGitRepositoryFactory getLocalGitRepositoryFactory()
-      {
-         if (_gitClientFactory == null)
+         if (_storageFactory == null)
          {
             try
             {
-               _gitClientFactory = new LocalGitRepositoryFactory(
-                  Program.Settings.LocalGitFolder, this, Program.Settings.UseShallowClone);
-               _gitClientFactory.RepositoryCloned += onRepositoryCloned;
+               _storageFactory = new LocalCommitStorageFactory(this, getSession(true),
+                  Program.Settings.LocalGitFolder, Program.Settings.RevisionsToKeep);
+               _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(String.Format("Cannot create LocalGitRepositoryFactory"), ex);
+               ExceptionHandlers.Handle("Cannot create LocalGitCommitStorageFactory", ex);
             }
          }
-         return _gitClientFactory;
+         return _storageFactory;
       }
 
       private void disposeLocalGitRepositoryFactory()
       {
-         if (_gitClientFactory != null)
+         if (_storageFactory != null)
          {
-            _gitClientFactory.RepositoryCloned -= onRepositoryCloned;
-            _gitClientFactory.Dispose();
-            _gitClientFactory = null;
+            _storageFactory.GitRepositoryCloned -= onGitRepositoryCloned;
+            _storageFactory.Dispose();
+            _storageFactory = null;
          }
       }
 
-      private void onRepositoryCloned(ILocalGitRepository repo)
+      private void onGitRepositoryCloned(ILocalCommitStorage storage)
       {
-         requestRepositoryUpdate(repo.ProjectKey);
+         requestCommitStorageUpdate(storage.ProjectKey);
       }
 
       /// <summary>
-      /// Make some checks and create a repository
+      /// Make some checks and create a commit storage
       /// </summary>
       /// <returns>null if could not create a repository</returns>
-      private ILocalGitRepository getRepository(ProjectKey key, bool showMessageBoxOnError)
+      private ILocalCommitStorage getCommitStorage(ProjectKey projectKey, bool showMessageBoxOnError)
       {
-         ILocalGitRepositoryFactory factory = getLocalGitRepositoryFactory();
+         ILocalCommitStorageFactory factory = gitCommitStorageFactory();
          if (factory == null)
          {
             return null;
          }
 
-         ILocalGitRepository repo = factory.GetRepository(key);
+         var type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         ILocalCommitStorage repo = factory.GetStorage(projectKey, type);
          if (repo == null && showMessageBoxOnError)
          {
             MessageBox.Show(String.Format(
-               "Cannot initialize git repository for project {0} in \"{1}\"",
-               key.ProjectName, Program.Settings.LocalGitFolder), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               "Cannot obtain disk storage for project {0} in \"{1}\"",
+               projectKey.ProjectName, Program.Settings.LocalGitFolder),
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return repo;
       }
@@ -1073,16 +1119,17 @@ namespace mrHelper.App.Forms
          };
 
          var query = fmk.MergeRequest.Labels
-            .GroupBy(label => label
-               .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
-                  ? label.Substring(0, label.IndexOf('-'))
-                  : label,
-            (label) => label,
-            (baseLabel, labels) => new
-            {
-               Labels = labels,
-               Priority = getPriority(labels)
-            });
+            .GroupBy(
+               label => label
+                  .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
+                     ? label.Substring(0, label.IndexOf('-'))
+                     : label,
+               label => label,
+               (baseLabel, labels) => new
+               {
+                  Labels = labels,
+                  Priority = getPriority(labels)
+               });
 
          string joinLabels(IEnumerable<string> labels) => String.Format("{0}\n", String.Join(",", labels));
 
@@ -1151,7 +1198,7 @@ namespace mrHelper.App.Forms
       {
          if (e.New || e.Commits)
          {
-            requestRepositoryUpdate(e.FullMergeRequestKey.ProjectKey);
+            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
          }
 
          MergeRequestKey mrk = new MergeRequestKey(
@@ -1730,8 +1777,8 @@ namespace mrHelper.App.Forms
       private void updateTabControlSelection()
       {
          bool configured = listViewKnownHosts.Items.Count > 0
-                        && textBoxLocalGitFolder.Text.Length > 0
-                        && Directory.Exists(textBoxLocalGitFolder.Text);
+                        && textBoxStorageFolder.Text.Length > 0
+                        && Directory.Exists(textBoxStorageFolder.Text);
          if (configured)
          {
             tabControl.SelectedTab = tabPageMR;
@@ -1810,10 +1857,11 @@ namespace mrHelper.App.Forms
             true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
             fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
-         updateGitAbortState(true);
+         updateAbortGitCloneButtonState();
 
-         Debug.WriteLine(String.Format(
-            "[MainForm] Merge request loaded IsSearchMode={0}", isSearchMode().ToString()));
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
+         updateStorageStatusText(status, mrk);
       }
 
       private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
@@ -1827,21 +1875,20 @@ namespace mrHelper.App.Forms
             RevisionBrowserModelData data = new RevisionBrowserModelData(latestVersion?.Base_Commit_SHA,
                commits, versions, getReviewedRevisions(mrk.Value));
             revisionBrowser.SetData(data, ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
-            enableCommitActions(true, mergeRequest.Labels, mergeRequest.Author);
+            updateStorageDependentControlState(mrk);
+            enableCustomActions(true, mergeRequest.Labels, mergeRequest.Author);
          }
          else
          {
             revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
          }
-
-         Debug.WriteLine(String.Format(
-            "[MainForm] Loaded comparable entities IsSearchMode={0}", isSearchMode().ToString()));
       }
 
       private void disableCommonUIControls()
       {
          enableMergeRequestActions(false);
-         enableCommitActions(false, null, null);
+         enableCustomActions(false, null, null);
+         updateStorageDependentControlState(null);
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
          updateTotalTime(null, null, null, null);
@@ -1880,25 +1927,28 @@ namespace mrHelper.App.Forms
          buttonReloadList.Enabled = true;
       }
 
-      private void getShaForDiffTool(out string left, out string right, out IEnumerable<string> included,
-         out RevisionType? type)
+      private void getShaForDiffTool(out string baseSha, out string left, out string right,
+         out IEnumerable<string> included, out RevisionType? type)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out type);
          switch (selected.Count())
          {
             case 0:
+               baseSha = String.Empty;
                left = String.Empty;
                right = String.Empty;
                included = new List<string>();
                break;
 
             case 1:
-               left = revisionBrowser.GetBaseCommitSha();
+               baseSha = revisionBrowser.GetBaseCommitSha();
+               left = baseSha;
                right = selected[0];
                included = revisionBrowser.GetIncludedSha();
                break;
 
             case 2:
+               baseSha = revisionBrowser.GetBaseCommitSha();
                left = selected[0];
                right = selected[1];
                included = revisionBrowser.GetIncludedSha();
@@ -1906,6 +1956,7 @@ namespace mrHelper.App.Forms
 
             default:
                Debug.Assert(false);
+               baseSha = String.Empty;
                left = String.Empty;
                right = String.Empty;
                included = new List<string>();

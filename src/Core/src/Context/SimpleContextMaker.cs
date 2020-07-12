@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using mrHelper.Core.Matching;
-using mrHelper.Common.Interfaces;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Context
 {
@@ -16,10 +16,10 @@ namespace mrHelper.Core.Context
    /// </summary>
    public class SimpleContextMaker : IContextMaker
    {
-      public SimpleContextMaker(IGitRepository gitRepository)
+      public SimpleContextMaker(IGitCommandService git)
       {
-         Debug.Assert(gitRepository != null);
-         _gitRepository = gitRepository;
+         Debug.Assert(git != null);
+         _git = git;
       }
 
       /// <summary>
@@ -49,7 +49,7 @@ namespace mrHelper.Core.Context
          IEnumerable<string> contents;
          try
          {
-            contents = _gitRepository.Data?.Get(arguments);
+            contents = _git?.ShowRevision(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
@@ -104,7 +104,7 @@ namespace mrHelper.Core.Context
             isRightSideContext ? side : new DiffContext.Line.Side?());
       }
 
-      private readonly IGitRepository _gitRepository;
+      private readonly IGitCommandService _git;
    }
 }
 

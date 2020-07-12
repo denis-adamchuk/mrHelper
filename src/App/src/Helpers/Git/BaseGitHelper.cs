@@ -7,7 +7,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers
 {
@@ -16,20 +16,18 @@ namespace mrHelper.App.Helpers
       internal BaseGitHelper(
          IMergeRequestCache mergeRequestCache,
          IDiscussionCache discussionCache,
-         IProjectUpdateContextProviderFactory updateContextProviderFactory,
          ISynchronizeInvoke synchronizeInvoke,
-         ILocalGitRepositoryFactory gitFactory)
+         ILocalCommitStorageFactory gitFactory)
       {
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
 
          _discussionCache = discussionCache;
-         _contextProviderFactory = updateContextProviderFactory;
 
          _gitFactory = gitFactory;
          if (_gitFactory != null)
          {
-            _gitFactory.RepositoryCloned += onRepositoryCloned;
+            _gitFactory.GitRepositoryCloned += onGitRepositoryCloned;
          }
          _synchronizeInvoke = synchronizeInvoke;
 
@@ -40,7 +38,7 @@ namespace mrHelper.App.Helpers
       {
          if (_gitFactory != null)
          {
-            _gitFactory.RepositoryCloned -= onRepositoryCloned;
+            _gitFactory.GitRepositoryCloned -= onGitRepositoryCloned;
          }
          _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
       }
@@ -61,23 +59,23 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onRepositoryCloned(ILocalGitRepository repo)
+      private void onGitRepositoryCloned(ILocalCommitStorage repo)
       {
          scheduleSingleProjectUpdate(repo.ProjectKey);
       }
 
       private void scheduleSingleProjectUpdate(ProjectKey projectKey)
       {
-         ILocalGitRepository repo = getRepository(projectKey);
+         ILocalCommitStorage repo = getRepository(projectKey);
          if (repo != null)
          {
             _synchronizeInvoke.BeginInvoke(new Action(async () => await updateAsync(repo)), null);
          }
       }
 
-      async private Task updateAsync(ILocalGitRepository repo)
+      async private Task updateAsync(ILocalCommitStorage repo)
       {
-         if (repo.Data == null || repo.Updater == null || repo.ExpectingClone)
+         if (repo.Git == null || repo.Updater == null)
          {
             Debug.WriteLine(String.Format(
                "[BaseGitHelper] Update failed. Repository is not ready (Host={0}, Project={1})",
@@ -101,20 +99,19 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      protected ILocalGitRepository getRepository(ProjectKey projectKey)
+      protected ILocalCommitStorage getRepository(ProjectKey projectKey)
       {
-         return _gitFactory?.GetRepository(projectKey);
+         return _gitFactory?.GetStorage(projectKey, ConfigurationHelper.GetPreferredStorageType(Program.Settings));
       }
 
-      protected abstract void preUpdate(ILocalGitRepository repo);
-      protected abstract Task doUpdate(ILocalGitRepository repo);
+      protected abstract void preUpdate(ILocalCommitStorage repo);
+      protected abstract Task doUpdate(ILocalCommitStorage repo);
 
-      private readonly ILocalGitRepositoryFactory _gitFactory;
+      private readonly ILocalCommitStorageFactory _gitFactory;
       protected readonly IDiscussionCache _discussionCache;
       protected readonly IMergeRequestCache _mergeRequestCache;
-      private readonly IProjectUpdateContextProviderFactory _contextProviderFactory;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
-      protected readonly HashSet<ILocalGitRepository> _updating = new HashSet<ILocalGitRepository>();
+      protected readonly HashSet<ILocalCommitStorage> _updating = new HashSet<ILocalCommitStorage>();
    }
 }

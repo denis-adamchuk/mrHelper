@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B86A3683-7D3C-4AF7-8B4A-6BBF237A818E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>mrHelper.StorageSupport</RootNamespace>
+    <AssemblyName>mrHelper.StorageSupport</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\Debug</IntermediateOutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\Release</IntermediateOutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Properties\SharedAssemblyInfo.cs">
+      <Link>SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="src\Impl\Internal\Common\InternalUpdateContext.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageComparisonCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCacheFolder.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageRevisionCache.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageGitCommandService.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageRenameDetector.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageUtils.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryRenameDetector.cs" />
+    <Compile Include="src\Impl\Internal\Git\NativeGitCommandService.cs" />
+    <Compile Include="src\Impl\Internal\Interfaces\GitCommandArgumentConverterItf.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileRevision.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageArgumentConverter.cs" />
+    <Compile Include="src\Impl\Internal\Common\UpdateContextUtils.cs" />
+    <Compile Include="src\Interfaces\FileRenameDetectorItf.cs" />
+    <Compile Include="src\Interfaces\CommitStorageUpdateContextItf.cs" />
+    <Compile Include="src\Interfaces\GitCommandArguments.cs" />
+    <Compile Include="src\Interfaces\GitCommandServiceItf.cs" />
+    <Compile Include="src\Interfaces\CommitStorageItf.cs" />
+    <Compile Include="src\Interfaces\LocalCommitStorageItf.cs" />
+    <Compile Include="src\Interfaces\LocalCommitStorageFactoryItf.cs" />
+    <Compile Include="src\Interfaces\AsyncGitCommandServiceItf.cs" />
+    <Compile Include="src\Interfaces\LocalCommitStorageUpdaterItf.cs" />
+    <Compile Include="src\Impl\CommitBasedContextProvider.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitCommandException.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitProcessManager.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryUpdaterException.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryUpdater.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepository.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitCommandService.cs" />
+    <Compile Include="src\Impl\LocalCommitStorageFactory.cs" />
+    <Compile Include="src\Impl\Internal\Interfaces\GitRepositoryItf.cs" />
+    <Compile Include="src\Impl\Internal\Common\LocalCommitStoragePathFinder.cs" />
+    <Compile Include="src\Impl\Internal\Git\GitRepositoryUpdaterInternal.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorage.cs" />
+    <Compile Include="src\Impl\Internal\Interfaces\FileStorageItf.cs" />
+    <Compile Include="src\Impl\Internal\GitLab\FileStorageUpdater.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\submodules\GitLabSharp\GitLabSharp.csproj">
+      <Project>{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}</Project>
+      <Name>GitLabSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
+      <Project>{5d0ce433-f70e-448e-b9f5-eccb7abd880a}</Project>
+      <Name>mrHelper.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GitLabClient\mrHelper.GitLabClient.csproj">
+      <Project>{4FC6E6EA-32F4-486A-A6D5-A30D72651D15}</Project>
+      <Name>mrHelper.GitLabClient</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -17,7 +17,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonNative;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitClient;
+using mrHelper.StorageSupport;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
 using Newtonsoft.Json.Linq;
@@ -232,18 +232,18 @@ namespace mrHelper.App.Forms
          doClose();
       }
 
-      private void ButtonBrowseLocalGitFolder_Click(object sender, EventArgs e)
+      private void ButtonBrowseStorageFolder_Click(object sender, EventArgs e)
       {
-         localGitFolderBrowser.SelectedPath = textBoxLocalGitFolder.Text;
-         if (localGitFolderBrowser.ShowDialog() == DialogResult.OK)
+         storageFolderBrowser.SelectedPath = textBoxStorageFolder.Text;
+         if (storageFolderBrowser.ShowDialog() == DialogResult.OK)
          {
-            string newFolder = localGitFolderBrowser.SelectedPath;
+            string newFolder = storageFolderBrowser.SelectedPath;
             Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
 
-            if (_gitClientFactory == null || _gitClientFactory.ParentFolder != newFolder)
+            if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
             {
-               textBoxLocalGitFolder.Text = localGitFolderBrowser.SelectedPath;
-               Program.Settings.LocalGitFolder = localGitFolderBrowser.SelectedPath;
+               textBoxStorageFolder.Text = storageFolderBrowser.SelectedPath;
+               Program.Settings.LocalGitFolder = storageFolderBrowser.SelectedPath;
 
                MessageBox.Show("Git folder is changed.\n" +
                                "It is recommended to restart Diff Tool if you have already launched it.",
@@ -322,6 +322,16 @@ namespace mrHelper.App.Forms
                FormatFlags = StringFormatFlags.NoWrap
             };
 
+         bool isLabelsColumnItem() =>
+            e.Item.ListView == listViewMergeRequests ?
+               e.ColumnIndex == columnHeaderLabels.Index : e.ColumnIndex == columnHeaderFoundLabels.Index;
+
+         bool isResolvedColumnItem() =>
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderResolved.Index; 
+
+         bool isTotalTimeColumnItem() =>
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderTotalTime.Index; 
+
          if (isClickable)
          {
             using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
@@ -332,21 +342,21 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            if (isSelected && e.ColumnIndex == columnHeaderLabels.Index)
+            if (isSelected && isLabelsColumnItem())
             {
                using (Brush brush = new SolidBrush(getMergeRequestColor(fmk.MergeRequest, SystemColors.Window)))
                {
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
-            else if (e.ColumnIndex == columnHeaderResolved.Index)
+            else if (isResolvedColumnItem())
             {
                using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
                {
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
-            else if (e.ColumnIndex == columnHeaderTotalTime.Index)
+            else if (isTotalTimeColumnItem())
             {
                Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
@@ -393,7 +403,8 @@ namespace mrHelper.App.Forms
             isSearchMode() ? "Yes" : "No"));
 
          disableCommonUIControls();
-         updateGitAbortState(false);
+         updateAbortGitCloneButtonState();
+         updateStorageStatusText(null, null);
       }
 
       private void ListViewMergeRequests_ItemSelectionChanged(
@@ -473,12 +484,12 @@ namespace mrHelper.App.Forms
             }
 
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
-            GitLabClientManager.EConnectionCheckStatus status =
+            GitLabClientManager.ConnectionCheckStatus status =
                await _gitlabClientManager.VerifyConnection(hostname, form.AccessToken);
-            if (status != GitLabClientManager.EConnectionCheckStatus.OK)
+            if (status != GitLabClientManager.ConnectionCheckStatus.OK)
             {
                string message =
-                  status == GitLabClientManager.EConnectionCheckStatus.BadAccessToken
+                  status == GitLabClientManager.ConnectionCheckStatus.BadAccessToken
                      ? "Bad access token"
                      : "Invalid hostname";
                MessageBox.Show(message, "Cannot connect to the host",
@@ -575,19 +586,6 @@ namespace mrHelper.App.Forms
       private void checkBoxAutoSelectNewestRevision_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.AutoSelectNewestRevision = (sender as CheckBox).Checked;
-      }
-
-      private void checkBoxUseShallowClone_CheckedChanged(object sender, EventArgs e)
-      {
-         if (_loadingConfiguration)
-         {
-            return;
-         }
-
-         Program.Settings.UseShallowClone = checkBoxUseShallowClone.Checked;
-
-         Trace.TraceInformation(String.Format("[MainForm] Shallow clone setting has been selected"));
-         switchHostToSelected();
       }
 
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
@@ -775,7 +773,7 @@ namespace mrHelper.App.Forms
          await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
       }
 
-      private void LinkLabelAbortGit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      private void LinkLabelAbortGitClone_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          MergeRequestKey? mrk = getMergeRequestKey(null);
          if (!mrk.HasValue)
@@ -784,7 +782,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ILocalGitRepository repo = getRepository(mrk.Value.ProjectKey, false);
+         ILocalCommitStorage repo = getCommitStorage(mrk.Value.ProjectKey, false);
          if (repo == null || repo.Updater == null || !repo.Updater.CanBeStopped())
          {
             Debug.Assert(mrk.HasValue);
@@ -1262,6 +1260,27 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void radioButtonUseGit_CheckedChanged(object sender, EventArgs e)
+      {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         if (!_loadingConfiguration)
+         {
+            LocalCommitStorageType type = radioButtonDontUseGit.Checked
+               ? LocalCommitStorageType.FileStorage
+               : (radioButtonUseGitFullClone.Checked
+                  ? LocalCommitStorageType.FullGitRepository
+                  : LocalCommitStorageType.ShallowGitRepository);
+            ConfigurationHelper.SelectPreferredStorageType(Program.Settings, type);
+
+            Trace.TraceInformation("[MainForm] Reloading merge request list after storage type change");
+            switchHostToSelected();
+         }
+      }
+
       protected override void OnFontChanged(EventArgs e)
       {
          base.OnFontChanged(e);
@@ -1311,7 +1330,7 @@ namespace mrHelper.App.Forms
 
       private void RevisionBrowser_SelectionChanged(object sender, EventArgs e)
       {
-         updateDiffToolButtonState();
+         updateStorageDependentControlState(getMergeRequestKey(null));
       }
    }
 }

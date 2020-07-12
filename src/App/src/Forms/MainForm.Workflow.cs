@@ -239,7 +239,7 @@ namespace mrHelper.App.Forms
 
          foreach (ProjectKey projectKey in projects)
          {
-            requestRepositoryUpdate(projectKey);
+            requestCommitStorageUpdate(projectKey);
          }
 
          if (!isSearchMode())
@@ -292,7 +292,7 @@ namespace mrHelper.App.Forms
       private void liveSessionStarted(string hostname, User user)
       {
          subscribeToLiveSessionInternalEvents();
-         createGitHelpers(_liveSession, getLocalGitRepositoryFactory());
+         createGitHelpers(_liveSession, gitCommitStorageFactory());
 
          if (!_currentUser.ContainsKey(hostname))
          {

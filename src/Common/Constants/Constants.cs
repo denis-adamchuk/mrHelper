@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Common.Constants
 {
    public static class Constants
    {
+      public static string GitDiffToolName = "mrhelperdiff";
+      public static string GitDiffToolConfigKey = "difftool.mrhelperdiff.cmd";
       public static string CustomProtocolName = "mrhelper";
       public static string UWP_Launcher_Name = "mrHelper.Launcher.exe";
-      public static string MainWindowCaption  = "Merge Request Helper";
+      public static string MainWindowCaption = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start New Thread";
 
       public static int MaxLabelRows = 3;
@@ -67,20 +67,75 @@ namespace mrHelper.Common.Constants
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
 
-      public static int GitInstancesInBatch = 10;
-      public static int GitInstancesInterBatchDelay = 1000; // ms
+      public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
 
-      public static int MergeRequestsInBatch = 10;
-      public static int MergeRequestsInterBatchDelay = 0;
+      public static TaskUtils.BatchLimits VersionLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
 
-      public static int CrossProjectMergeRequestsInBatch = 20;
-      public static int CrossProjectMergeRequestsInterBatchDelay = 200;
+      public static TaskUtils.BatchLimits VersionLoaderCommitBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
 
-      public static int ProjectsInBatch = 10;
-      public static int ProjectsInterBatchDelay = 0;
+      public static TaskUtils.BatchLimits DiscussionLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000
+      };
 
-      public static int CommitInBatch = 10;
-      public static int CommitInterBatchDelay = 0;
+      // @{ FileStorageUpdater
+      public static TaskUtils.BatchLimits ComparisonLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 1000
+      };
+
+      public static TaskUtils.BatchLimits FileRevisionLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000
+      };
+
+      public static TaskUtils.BatchLimits ComparisonLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 1000 // this is multiplied by number of storages
+      };
+
+      public static TaskUtils.BatchLimits FileRevisionLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000 // this is multiplied by number of storages
+      };
+      // @} FileStorageUpdater
+
+      public static int MaxMergeRequestStorageUpdatesInParallel = 3;
+
+      /// <summary>
+      /// Missing SHA checks don't make requests to GitLab and run locally
+      /// </summary>
+      public static TaskUtils.BatchLimits MissingShaCheckBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 20
+      };
+
+      /// <summary>
+      /// Git data update requests don't make requests to GitLab and run locally
+      /// </summary>
+      public static TaskUtils.BatchLimits GitDataUpdaterBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 5,
+         Delay = 500
+      };
    }
 }
 

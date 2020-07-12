@@ -15,6 +15,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Forms
 {
@@ -68,9 +69,9 @@ namespace mrHelper.App.Forms
             {
                snapshot = serializer.DeserializeFromDisk(diffRequest.GitPID);
             }
-            catch (System.IO.IOException ex)
+            catch (Exception ex)
             {
-               ExceptionHandlers.Handle("Cannot de-serialize snapshot", ex);
+               ExceptionHandlers.Handle("Cannot read serialized Snapshot object", ex);
                MessageBox.Show(
                   "Make sure that diff tool was launched from Merge Request Helper which is still running",
                   "Cannot create a discussion",
@@ -101,16 +102,16 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            IGitRepository gitRepository = null;
-            if (_gitClientFactory != null && _gitClientFactory.ParentFolder == snapshot.TempFolder)
+            ICommitStorage storage = null;
+            if (_storageFactory != null && _storageFactory.ParentFolder == snapshot.TempFolder)
             {
                ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
-               gitRepository = _gitClientFactory.GetRepository(projectKey);
+               storage = getCommitStorage(projectKey, false);
             }
 
             try
             {
-               await handler.HandleAsync(gitRepository);
+               await handler.HandleAsync(storage);
             }
             catch (DiscussionCreatorException)
             {

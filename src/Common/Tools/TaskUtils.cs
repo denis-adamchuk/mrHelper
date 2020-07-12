@@ -26,24 +26,36 @@ namespace mrHelper.Common.Tools
          }
       }
 
+      public struct BatchLimits
+      {
+         public int Size;
+         public int Delay;
+      }
+
       /// <summary>
       /// Runs a batch of functions of the given type simultaneously.
       /// Each function receives a single argument of type T which can be treated as a parallelized loop variable.
       /// </summary>
       async public static Task RunConcurrentFunctionsAsync<T>(IEnumerable<T> args, Func<T, Task> func,
-         int concurrent, int interBatchDelay, Func<bool> shouldStop)
+         Func<BatchLimits> getBatchLimits, Func<bool> onBatchFinished)
       {
-         Debug.Assert(concurrent > 0);
-         Debug.Assert(interBatchDelay >= 0);
+         Debug.Assert(getBatchLimits != null);
+         Debug.Assert(onBatchFinished != null);
          Debug.Assert(args != null);
          Debug.Assert(func != null);
 
          int remaining = args.Count();
          while (true)
          {
+            BatchLimits limits = getBatchLimits();
+            if (limits.Size <= 0 || limits.Delay < 0)
+            {
+               throw new NotImplementedException();
+            }
+
             Task[] tasks = args
                .Skip(args.Count() - remaining)
-               .Take(concurrent)
+               .Take(limits.Size)
                .Select(x => func(x))
                .ToArray();
             remaining -= tasks.Length;
@@ -68,12 +80,12 @@ namespace mrHelper.Common.Tools
                }
             }
 
-            if ((shouldStop?.Invoke() ?? false) || remaining <= 0)
+            if ((onBatchFinished?.Invoke() ?? false) || remaining <= 0)
             {
                break;
             }
 
-            await IfAsync(() => interBatchDelay > 0, interBatchDelay);
+            await IfAsync(() => limits.Delay > 0, limits.Delay);
          }
       }
    }

@@ -29,8 +29,8 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowVersionsKeyName      = "ShowVersionsByDefault";
       private static readonly bool   ShowVersionsDefaultValue = true;
 
-      private static readonly string UseShallowCloneKeyName      = "UseShallowClone_New";
-      private static readonly bool   UseShallowCloneDefaultValue = true;
+      private static readonly string GitUsageForStorageKeyName       = "GitUsageForStorage";
+      private static readonly string GitUsageForStorageDefaultValue  = "DontUseGit";
 
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
@@ -98,6 +98,9 @@ namespace mrHelper.App.Helpers
 
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
+
+      private static readonly string RevisionsToKeepKeyName = "RevisionsToKeep";
+      private static readonly int    RevisionsToKeepDefaultValue = 50;
 
       private static readonly string Notifications_NewMergeRequests_KeyName      = "Notifications_NewMergeRequests";
       private static readonly bool   Notifications_NewMergeRequests_DefaultValue = true;
@@ -244,15 +247,10 @@ namespace mrHelper.App.Helpers
          set { setValue(ShowVersionsKeyName, boolToString(value)); }
       }
 
-      public bool UseShallowClone
+      public string GitUsageForStorage
       {
-         get
-         {
-            return bool.TryParse(getValue(
-               UseShallowCloneKeyName, boolToString(UseShallowCloneDefaultValue)),
-                  out bool result) ? result : UseShallowCloneDefaultValue;
-         }
-         set { setValue(UseShallowCloneKeyName, boolToString(value)); }
+         get { return getValue(GitUsageForStorageKeyName, GitUsageForStorageDefaultValue); }
+         set { setValue(GitUsageForStorageKeyName, value); }
       }
 
       public bool AllowAuthorToTrackTime
@@ -390,9 +388,20 @@ namespace mrHelper.App.Helpers
          {
             return int.TryParse(getValue(
                LogFilesToKeepKeyName, LogFilesToKeepDefaultValue.ToString()),
-                  out int result) ? LogFilesToKeepDefaultValue : result;
+                  out int result) ? result : LogFilesToKeepDefaultValue;
          }
          set { setValue(LogFilesToKeepKeyName, value.ToString()); }
+      }
+
+      public int RevisionsToKeep
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               RevisionsToKeepKeyName, RevisionsToKeepDefaultValue.ToString()),
+                  out int result) ? result : RevisionsToKeepDefaultValue;
+         }
+         set { setValue(RevisionsToKeepKeyName, value.ToString()); }
       }
 
       public bool Notifications_NewMergeRequests
