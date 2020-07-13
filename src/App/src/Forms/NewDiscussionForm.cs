@@ -17,6 +17,8 @@ namespace mrHelper.App.Forms
          DiffPosition position, IGitCommandService git)
       {
          InitializeComponent();
+         this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
+
          htmlPanel.AutoScroll = false;
          htmlPanel.BorderStyle = BorderStyle.None;
          htmlPanel.Dock = DockStyle.Fill;
@@ -47,7 +49,6 @@ namespace mrHelper.App.Forms
 
       private void NewDiscussionForm_Shown(object sender, EventArgs e)
       {
-         TopMost = false; // disable TopMost property which is initially true
          Win32Tools.ForceWindowIntoForeground(this.Handle);
          textBoxDiscussionBody.Focus();
       }

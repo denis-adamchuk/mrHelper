@@ -573,6 +573,11 @@ namespace mrHelper.App.Forms
          Program.Settings.MinimizeOnClose = (sender as CheckBox).Checked;
       }
 
+      private void CheckBoxNewDiscussionIsTopMostForm_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.NewDiscussionIsTopMostForm = (sender as CheckBox).Checked;
+      }
+
       private void checkBoxRunWhenWindowsStarts_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.RunWhenWindowsStarts = (sender as CheckBox).Checked;

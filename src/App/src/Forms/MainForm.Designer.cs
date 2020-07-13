@@ -143,6 +143,7 @@ namespace mrHelper.App.Forms
          this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxStorage = new System.Windows.Forms.GroupBox();
+         this.radioButtonUseGitShallowClone = new System.Windows.Forms.RadioButton();
          this.radioButtonDontUseGit = new System.Windows.Forms.RadioButton();
          this.radioButtonUseGitFullClone = new System.Windows.Forms.RadioButton();
          this.groupBoxHost = new System.Windows.Forms.GroupBox();
@@ -169,7 +170,7 @@ namespace mrHelper.App.Forms
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.radioButtonUseGitShallowClone = new System.Windows.Forms.RadioButton();
+         this.checkBoxNewDiscussionIsTopMostForm = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -1108,6 +1109,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOther
          // 
+         this.groupBoxOther.Controls.Add(this.checkBoxNewDiscussionIsTopMostForm);
          this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
          this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestRevision);
@@ -1123,7 +1125,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 425);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 246);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 267);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -1208,6 +1210,19 @@ namespace mrHelper.App.Forms
          this.groupBoxStorage.TabIndex = 1;
          this.groupBoxStorage.TabStop = false;
          this.groupBoxStorage.Text = "File Storage";
+         // 
+         // radioButtonUseGitShallowClone
+         // 
+         this.radioButtonUseGitShallowClone.AutoSize = true;
+         this.radioButtonUseGitShallowClone.Location = new System.Drawing.Point(6, 84);
+         this.radioButtonUseGitShallowClone.Name = "radioButtonUseGitShallowClone";
+         this.radioButtonUseGitShallowClone.Size = new System.Drawing.Size(437, 17);
+         this.radioButtonUseGitShallowClone.TabIndex = 11;
+         this.radioButtonUseGitShallowClone.TabStop = true;
+         this.radioButtonUseGitShallowClone.Text = "Use git in shallow clone mode. Faster clone, but does not allow to reuse existing" +
+    " folders.";
+         this.radioButtonUseGitShallowClone.UseVisualStyleBackColor = true;
+         this.radioButtonUseGitShallowClone.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
          // radioButtonDontUseGit
          // 
@@ -1495,6 +1510,7 @@ namespace mrHelper.App.Forms
          this.linkLabelTimeTrackingMergeRequest.Padding = new System.Windows.Forms.Padding(0, 0, 0, 4);
          this.linkLabelTimeTrackingMergeRequest.Size = new System.Drawing.Size(920, 22);
          this.linkLabelTimeTrackingMergeRequest.TabIndex = 5;
+         this.linkLabelTimeTrackingMergeRequest.TabStop = true;
          this.linkLabelTimeTrackingMergeRequest.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
          this.linkLabelTimeTrackingMergeRequest.Visible = false;
          this.linkLabelTimeTrackingMergeRequest.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelTimeTrackingMergeRequest_LinkClicked);
@@ -1549,18 +1565,17 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // radioButtonUseGitShallowClone
+         // checkBoxNewDiscussionIsTopMostForm
          // 
-         this.radioButtonUseGitShallowClone.AutoSize = true;
-         this.radioButtonUseGitShallowClone.Location = new System.Drawing.Point(6, 84);
-         this.radioButtonUseGitShallowClone.Name = "radioButtonUseGitShallowClone";
-         this.radioButtonUseGitShallowClone.Size = new System.Drawing.Size(477, 17);
-         this.radioButtonUseGitShallowClone.TabIndex = 11;
-         this.radioButtonUseGitShallowClone.TabStop = true;
-         this.radioButtonUseGitShallowClone.Text = "Use git in shallow clone mode. Faster clone, but does not allow to reuse existing" +
-    " folders.";
-         this.radioButtonUseGitShallowClone.UseVisualStyleBackColor = true;
-         this.radioButtonUseGitShallowClone.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
+         this.checkBoxNewDiscussionIsTopMostForm.AutoSize = true;
+         this.checkBoxNewDiscussionIsTopMostForm.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxNewDiscussionIsTopMostForm.Name = "checkBoxNewDiscussionIsTopMostForm";
+         this.checkBoxNewDiscussionIsTopMostForm.Size = new System.Drawing.Size(286, 17);
+         this.checkBoxNewDiscussionIsTopMostForm.TabIndex = 17;
+         this.checkBoxNewDiscussionIsTopMostForm.Text = "Show New Discussion window on top of all applications";
+         this.toolTip.SetToolTip(this.checkBoxNewDiscussionIsTopMostForm, "Forces Create New Discussion window to be a topmost one");
+         this.checkBoxNewDiscussionIsTopMostForm.UseVisualStyleBackColor = true;
+         this.checkBoxNewDiscussionIsTopMostForm.CheckedChanged += new System.EventHandler(this.CheckBoxNewDiscussionIsTopMostForm_CheckedChanged);
          // 
          // MainForm
          // 
@@ -1736,6 +1751,7 @@ namespace mrHelper.App.Forms
       private RadioButton radioButtonDontUseGit;
       private RadioButton radioButtonUseGitFullClone;
       private RadioButton radioButtonUseGitShallowClone;
+      private CheckBox checkBoxNewDiscussionIsTopMostForm;
    }
 }
 

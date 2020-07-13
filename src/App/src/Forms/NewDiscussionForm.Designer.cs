@@ -122,7 +122,6 @@
          this.MinimumSize = new System.Drawing.Size(770, 260);
          this.Name = "NewDiscussionForm";
          this.Text = "Start New Thread";
-         this.TopMost = true;
          this.Shown += new System.EventHandler(this.NewDiscussionForm_Shown);
          this.ResumeLayout(false);
          this.PerformLayout();

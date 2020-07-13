@@ -156,6 +156,7 @@ namespace mrHelper.App.Forms
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxAutoSelectNewestRevision.Checked = Program.Settings.AutoSelectNewestRevision;
          checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
+         checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;

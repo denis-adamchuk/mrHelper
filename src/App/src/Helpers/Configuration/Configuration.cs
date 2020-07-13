@@ -59,6 +59,9 @@ namespace mrHelper.App.Helpers
       private static readonly string DisableSplitterRestrictionsKeyName = "DisableSplitterRestrictions";
       private static readonly bool   DisableSplitterRestrictionsDefaultValue = false;
 
+      private static readonly string NewDiscussionIsTopMostFormKeyName        = "NewDiscussionIsTopMostForm";
+      private static readonly bool   NewDiscussionIsTopMostFormDefaultValue   = false;
+
       private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
       private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
 
@@ -334,6 +337,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : DisableSplitterRestrictionsDefaultValue;
          }
          set { setValue(DisableSplitterRestrictionsKeyName, boolToString(value)); }
+      }
+
+      public bool NewDiscussionIsTopMostForm
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               NewDiscussionIsTopMostFormKeyName, boolToString(NewDiscussionIsTopMostFormDefaultValue)),
+                  out bool result) ? result : NewDiscussionIsTopMostFormDefaultValue;
+         }
+         set { setValue(NewDiscussionIsTopMostFormKeyName, boolToString(value)); }
       }
 
       public bool ShowWarningOnReloadList
