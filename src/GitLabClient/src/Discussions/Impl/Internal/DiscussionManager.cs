@@ -326,22 +326,22 @@ namespace mrHelper.Client.Discussions
             return;
          }
 
+         if (_reconnect)
+         {
+            return;
+         }
+
          try
          {
             _updating.Add(mrk);
+
+            Tuple<Note, int> mostRecentNoteAndNoteCount = await _operator.GetMostRecentUpdatedNoteAndCountAsync(mrk);
             if (_reconnect)
             {
                return;
             }
 
-            Note mostRecentNote = await _operator.GetMostRecentUpdatedNoteAsync(mrk);
-            if (mostRecentNote == null)
-            {
-               return;
-            }
-
-            int noteCount = await _operator.GetNoteCount(mrk);
-            if (_reconnect || !needToLoadDiscussions(mostRecentNote, mrk, noteCount))
+            if (!isCacheUpdateNeeded(mostRecentNoteAndNoteCount.Item1, mostRecentNoteAndNoteCount.Item2, mrk))
             {
                return;
             }
@@ -404,24 +404,8 @@ namespace mrHelper.Client.Discussions
          return _updating.Contains(mrk);
       }
 
-      private bool needToLoadDiscussions(Note mostRecentNote, MergeRequestKey mrk, int noteCount)
+      private bool isCacheUpdateNeeded(Note mostRecentNote, int noteCount, MergeRequestKey mrk)
       {
-         DateTime mergeRequestUpdatedAt = mostRecentNote.Updated_At;
-         if (_cachedDiscussions.ContainsKey(mrk)
-          && mergeRequestUpdatedAt <= _cachedDiscussions[mrk].TimeStamp
-          && noteCount == _cachedDiscussions[mrk].NoteCount)
-         {
-            Debug.WriteLine(String.Format(
-               "[DiscussionManager] Discussions are up-to-date (Project={0}, IId={1}), "
-             + "remote time stamp {2}, cached time stamp {3}, note count {4}, resolved {5}, resolvable {6}",
-               mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
-               mergeRequestUpdatedAt.ToLocalTime().ToString(),
-               _cachedDiscussions[mrk].TimeStamp.ToLocalTime().ToString(),
-               noteCount,
-               _cachedDiscussions[mrk].ResolvedDiscussionCount, _cachedDiscussions[mrk].ResolvableDiscussionCount));
-            return false;
-         }
-
          if (_closed.Contains(mrk))
          {
             Trace.TraceInformation(String.Format(
@@ -431,13 +415,38 @@ namespace mrHelper.Client.Discussions
             return false;
          }
 
-         return true;
+         if (!_cachedDiscussions.TryGetValue(mrk, out var cached))
+         {
+            return mostRecentNote != null && noteCount > 0;
+         }
+
+         if (mostRecentNote == null || noteCount == 0)
+         {
+            // Need to refresh discussions if we've already cached something for this MR. Seems all notes got deleted.
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Detected that mostRecentNote is null. cached TimeStamp is {0}",
+               cached.TimeStamp.ToLocalTime().ToString()));
+            return cached.TimeStamp != default(DateTime);
+         }
+
+         return cached.TimeStamp < mostRecentNote.Updated_At || cached.NoteCount != noteCount;
       }
 
       private void cacheDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
+         if (_closed.Contains(mrk))
+         {
+            Trace.TraceInformation(String.Format(
+               "[DiscussionManager] Will not cache MR because it is closed: Project={0}, IId={1}",
+               mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
+            _closed.Remove(mrk);
+         }
+
          if (discussions == null || !discussions.Any())
          {
+            _cachedDiscussions.Remove(mrk);
+            Trace.TraceInformation(String.Format("[DiscussionManager] MR removed from cache: Project={0}, IId={1}",
+               mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             return;
          }
 
@@ -466,13 +475,6 @@ namespace mrHelper.Client.Discussions
             _cachedDiscussions[mrk] = new CachedDiscussions(
                prevUpdateTimestamp, latestNoteTimestamp, noteCount,
                discussions, resolvableDiscussionCount, resolvedDiscussionCount);
-         }
-         else
-         {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Will not cache MR because it is closed: Project={0}, IId={1}",
-               mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
-            _closed.Remove(mrk);
          }
       }
 

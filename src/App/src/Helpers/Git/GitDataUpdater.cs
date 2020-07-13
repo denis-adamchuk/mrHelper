@@ -70,6 +70,8 @@ namespace mrHelper.App.Helpers
          }
       }
 
+      protected override void onProjectUpdate(ProjectKey projectKey) {}
+
       async private Task updateGitDataForSingleMergeRequest(MergeRequestKey mrk, ILocalCommitStorage repo)
       {
          if (repo.Git == null)

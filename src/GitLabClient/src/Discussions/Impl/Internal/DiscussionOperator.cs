@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -19,29 +20,20 @@ namespace mrHelper.Client.Discussions
       {
       }
 
-      internal Task<Note> GetMostRecentUpdatedNoteAsync(MergeRequestKey mrk)
+      internal Task<Tuple<Note, int>> GetMostRecentUpdatedNoteAndCountAsync(MergeRequestKey mrk)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
-                  ((IEnumerable<Note>)(await client.RunAsync(
+               {
+                  Tuple<IEnumerable<Note>, int> notesAndCount = (Tuple<IEnumerable<Note>, int>)(await client.RunAsync(
                      async (gl) =>
                         await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                           Notes.LoadTaskAsync(new PageFilter(1, 1), new SortFilter(false, "updated_at")))))
-                              .FirstOrDefault()));
-      }
-
-      internal Task<int> GetNoteCount(MergeRequestKey mrk)
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  async () =>
-                     (int)(await client.RunAsync(
-                        async (gl) =>
-                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
-                              Notes.CountAsync()))));
+                           Notes.LoadAndCalculateTotalCountAsync(new PageFilter(1, 1),
+                              new SortFilter(false, "updated_at"))));
+                  return new Tuple<Note, int>(notesAndCount.Item1.FirstOrDefault(), notesAndCount.Item2);
+               }));
       }
 
       internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)

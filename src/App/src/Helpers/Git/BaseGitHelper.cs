@@ -30,8 +30,6 @@ namespace mrHelper.App.Helpers
             _gitFactory.GitRepositoryCloned += onGitRepositoryCloned;
          }
          _synchronizeInvoke = synchronizeInvoke;
-
-         scheduleAllProjectsUpdate();
       }
 
       public void Dispose()
@@ -55,7 +53,7 @@ namespace mrHelper.App.Helpers
       {
          if (e.New || e.Commits)
          {
-            scheduleSingleProjectUpdate(e.FullMergeRequestKey.ProjectKey);
+            onProjectUpdate(e.FullMergeRequestKey.ProjectKey);
          }
       }
 
@@ -64,7 +62,7 @@ namespace mrHelper.App.Helpers
          scheduleSingleProjectUpdate(repo.ProjectKey);
       }
 
-      private void scheduleSingleProjectUpdate(ProjectKey projectKey)
+      protected void scheduleSingleProjectUpdate(ProjectKey projectKey)
       {
          ILocalCommitStorage repo = getRepository(projectKey);
          if (repo != null)
@@ -106,6 +104,7 @@ namespace mrHelper.App.Helpers
 
       protected abstract void preUpdate(ILocalCommitStorage repo);
       protected abstract Task doUpdate(ILocalCommitStorage repo);
+      protected abstract void onProjectUpdate(ProjectKey projectKey);
 
       private readonly ILocalCommitStorageFactory _gitFactory;
       protected readonly IDiscussionCache _discussionCache;

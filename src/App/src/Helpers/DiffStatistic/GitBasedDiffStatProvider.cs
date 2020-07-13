@@ -28,6 +28,7 @@ namespace mrHelper.App.Helpers
          ILocalCommitStorageFactory gitFactory)
          : base(mergeRequestCache, discussionCache, synchronizeInvoke, gitFactory)
       {
+         scheduleAllProjectsUpdate();
       }
 
       public event Action Update;
@@ -126,6 +127,11 @@ namespace mrHelper.App.Helpers
             _statistic[keyValuePair.Key] = new MergeRequestStatistic(keyValuePair.Value.Created_At, diffStat);
             Update?.Invoke();
          }
+      }
+
+      protected override void onProjectUpdate(ProjectKey projectKey)
+      {
+         scheduleSingleProjectUpdate(projectKey);
       }
 
       private Dictionary<MergeRequestKey, Version> collectLatestVersions(ILocalCommitStorage repo)

@@ -537,6 +537,6 @@ namespace mrHelper.App.Forms
       private Control MostRecentFocusedDiscussionControl;
    }
 
-   internal class NoDiscussionsToShow : ArgumentException { };
+   internal class NoDiscussionsToShow : Exception { };
 }
 

@@ -1,4 +1,6 @@
-﻿namespace mrHelper.StorageSupport
+﻿using System;
+
+namespace mrHelper.StorageSupport
 {
    internal class FileStorageRenameDetector : IFileRenameDetector
    {
@@ -28,7 +30,8 @@
             {
                FileRevision oppositeRevision = new FileRevision(diff.New_Path, rightcommit);
                string oppositeRevisionPath = _fileCache.GetFileRevisionPath(oppositeRevision);
-               string oppositeFileContent = System.IO.File.ReadAllText(oppositeRevisionPath);
+               string oppositeFileContent = oppositeRevisionPath == String.Empty ?
+                  String.Empty : System.IO.File.ReadAllText(oppositeRevisionPath);
                moved = fileContent == oppositeFileContent && diff.Old_Path != diff.New_Path;
                return diff.New_Path;
             }
@@ -36,7 +39,8 @@
             {
                FileRevision oppositeRevision = new FileRevision(diff.Old_Path, leftcommit);
                string oppositeRevisionPath = _fileCache.GetFileRevisionPath(oppositeRevision);
-               string oppositeFileContent = System.IO.File.ReadAllText(oppositeRevisionPath);
+               string oppositeFileContent = oppositeRevisionPath == String.Empty ?
+                  String.Empty : System.IO.File.ReadAllText(oppositeRevisionPath);
                moved = fileContent == oppositeFileContent && diff.Old_Path != diff.New_Path;
                return diff.Old_Path;
             }
