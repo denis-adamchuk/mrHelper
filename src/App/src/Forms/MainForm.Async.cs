@@ -87,29 +87,28 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            DiscussionsForm discussionsForm = new DiscussionsForm(session, storage?.Git,
-               currentUser, mrk, discussions, title, author,
-               int.Parse(comboBoxDCDepth.Text), _colorScheme,
+            IAsyncGitCommandService git = storage?.Git;
+            DiscussionsForm discussionsForm = new DiscussionsForm(session, git, currentUser, mrk, discussions, title,
+               author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
-               try
+               if (storage != null && storage.Updater != null)
                {
-                  if (storage != null && storage.Updater != null)
+                  try
                   {
-                     var contextProvider = new DiscussionBasedContextProvider(discussionsUpdated);
-                     await storage.Updater.StartUpdate(contextProvider,
+                     await storage.Updater.StartUpdate(new DiscussionBasedContextProvider(discussionsUpdated),
                         status => onStorageUpdateProgressChange(status, mrk), () => onStorageUpdateStateChange());
                   }
-                  else
+                  catch (LocalCommitStorageUpdaterException ex)
                   {
-                     Trace.TraceInformation("[MainForm] User tried to refresh Discussions without a storage");
-                     MessageBox.Show("Cannot update a storage, some context code snippets may be missing. ",
-                        "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                     ExceptionHandlers.Handle("Cannot update a storage on refreshing discussions", ex);
                   }
                }
-               catch (LocalCommitStorageUpdaterException ex)
+               else
                {
-                  ExceptionHandlers.Handle("Cannot update a storage on refreshing discussions", ex);
+                  Trace.TraceInformation("[MainForm] User tried to refresh Discussions without a storage");
+                  MessageBox.Show("Cannot update a storage, some context code snippets may be missing. ",
+                     "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
             },
             () => session?.DiscussionCache?.RequestUpdate(mrk,
