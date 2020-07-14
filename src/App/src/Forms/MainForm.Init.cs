@@ -566,10 +566,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         LocalCommitStorageType storageType = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         bool isGitStorageUsed = storageType == LocalCommitStorageType.FullGitRepository
+                              || storageType == LocalCommitStorageType.ShallowGitRepository;
+
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
             ? new GitDataUpdater(
                session.MergeRequestCache, session.DiscussionCache, this, factory,
-               Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter)
+               Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter, isGitStorageUsed)
             : null;
 
          if (Program.Settings.UseGitBasedSizeCollection)

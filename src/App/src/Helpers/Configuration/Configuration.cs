@@ -90,8 +90,8 @@ namespace mrHelper.App.Helpers
       private static readonly int    OneShotUpdateOnNewMergeRequestSecondChanceDelayMsDefaultValue   =
          60 * 1000; // 60 seconds
 
-      private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs2";
-      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 11 * 60 * 1000; // 11 minutes
+      private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
+      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
 
       private static readonly string UseGitBasedSizeCollectionKeyName      = "UseGitBasedSizeCollection";
       private static readonly bool   UseGitBasedSizeCollectionDefaultValue = false;

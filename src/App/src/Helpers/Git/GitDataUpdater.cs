@@ -27,7 +27,8 @@ namespace mrHelper.App.Helpers
          ISynchronizeInvoke synchronizeInvoke,
          ILocalCommitStorageFactory gitFactory,
          int autoUpdatePeriodMs,
-         MergeRequestFilter mergeRequestFilter)
+         MergeRequestFilter mergeRequestFilter,
+         bool isInitialUpdateNeeded)
          : base(mergeRequestCache, discussionCache, synchronizeInvoke, gitFactory)
       {
          if (autoUpdatePeriodMs < 1)
@@ -40,6 +41,11 @@ namespace mrHelper.App.Helpers
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = synchronizeInvoke;
          _timer.Start();
+
+         if (isInitialUpdateNeeded)
+         {
+            scheduleAllProjectsUpdate();
+         }
       }
 
       public new void Dispose()
