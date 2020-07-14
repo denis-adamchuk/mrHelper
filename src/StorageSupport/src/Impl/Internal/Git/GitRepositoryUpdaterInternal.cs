@@ -504,7 +504,7 @@ namespace mrHelper.StorageSupport
          if (onProgressChange != null)
          {
             int percentage = calculateCompletionPercentage(totalMissingShaCount, fetchedShaCount);
-            string message = String.Format("Commits download progress: {0}%", percentage);
+            string message = String.Format("Commit download progress: {0}%", percentage);
             reportProgress(onProgressChange, message);
          }
       }

@@ -127,9 +127,9 @@ namespace mrHelper.StorageSupport
                comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
          }
 
-         reportProgress(onProgressChange, "Meta-information downloaded. Starting to download commit contents...");
+         reportProgress(onProgressChange, "Starting to download files from GitLab...");
          await processComparisonsAsync(isAwaitedUpdate, context, onProgressChange, comparisons);
-         reportProgress(onProgressChange, "Commit contents downloaded");
+         reportProgress(onProgressChange, "Files downloaded");
       }
 
       async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(bool isAwaitedUpdate,
@@ -315,7 +315,7 @@ namespace mrHelper.StorageSupport
          if (onProgressChange != null)
          {
             int percentage = calculateCompletionPercentage(totalMissingShaCount, fetchedShaCount);
-            string message = String.Format("Commits download progress: {0}%", percentage);
+            string message = String.Format("File download progress: {0}%", percentage);
             reportProgress(onProgressChange, message);
          }
       }
