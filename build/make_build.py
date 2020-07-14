@@ -304,7 +304,7 @@ class DeployHelper:
    def deploy(self, version, installer_filepath):
       return self._copy_to_remote(version, installer_filepath)
 
-   def update_version_information(version, json):
+   def update_version_information(self, version, json):
       self._update_version_information_at_remote(version, json)
 
    def _copy_to_remote(self, version, installer_filepath):
@@ -366,21 +366,22 @@ try:
    builder = Builder()
 
    msi_filename = config.msi_target_name_template().replace("{Version}", args.version())
+   msi_filepath = os.path.join(config.bin(), msi_filename)
    msix_filename = config.msix_target_name_template().replace("{Version}", args.version())
+   msix_filepath = os.path.join(config.msix_bin(), msix_filename)
 
-   builder.build(config.build_script(), os.path.join(config.bin(), msi_filename))
+   builder.build(config.build_script(), msi_filepath)
    if args.msix():
-      builder.build(config.msix_build_script(),\
-          os.path.join(config.msix_bin(), msix_filename) + " " + config.msix_manifest())
+      builder.build(config.msix_build_script(), msix_filepath + " " + config.msix_manifest())
 
    if args.deploy():
       deployer = DeployHelper(config.deploy_path())
-      dest_msi = deployer.deploy(args.version(), msi_filename).replace("\\", "/")
+      dest_msi = deployer.deploy(args.version(), msi_filepath).replace("\\", "/")
       if args.msix():
-         dest_msix = deployer.deploy(args.version(), msix_filename).replace("\\", "/") if args.msix() else ""
-         json = f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{dest_msi}", "XInstallerFilePath": "{dest_msix}" }}'
+         dest_msix = deployer.deploy(args.version(), msix_filepath).replace("\\", "/")
+         json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}", "XInstallerFilePath": "{dest_msix}" }}'
       else:
-         json = f'{{ "VersionNumber": "{version}", "InstallerFilePath": "{dest_msi}" }}'
+         json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}" }}'
       deployer.update_version_information(args.version(), json)
 
    if args.push():
