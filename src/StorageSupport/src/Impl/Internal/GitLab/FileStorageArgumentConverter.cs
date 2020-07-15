@@ -109,7 +109,7 @@ namespace mrHelper.StorageSupport
          FileRevision fileRevision = new FileRevision(gitFilepath, sha);
          if (!_fileStorage.FileCache.ContainsFileRevision(fileRevision))
          {
-            _fileStorage.FileCache.WriteFileRevision(fileRevision, String.Empty);
+            _fileStorage.FileCache.WriteFileRevision(gitFilepath, sha, Array.Empty<byte>());
          }
       }
 

@@ -28,9 +28,9 @@ namespace mrHelper.StorageSupport
          return getFileRevisionPath(fileRevision);
       }
 
-      internal void WriteFileRevision(FileRevision fileRevision, string content)
+      internal void WriteFileRevision(string path, string sha, byte[] content)
       {
-         writeFileRevision(fileRevision, content);
+         writeFileRevision(path, sha, content);
       }
 
       private bool doesFileRevisionExist(FileRevision fileRevision)
@@ -38,8 +38,9 @@ namespace mrHelper.StorageSupport
          return File.Exists(getFileRevisionPath(fileRevision));
       }
 
-      public void writeFileRevision(FileRevision fileRevision, string content)
+      public void writeFileRevision(string path, string sha, byte[] content)
       {
+         FileRevision fileRevision = new FileRevision(path, sha);
          string fileRevisionPath = getFileRevisionPath(fileRevision);
          string fileRevisionDirName = System.IO.Path.GetDirectoryName(fileRevisionPath);
          if (!Directory.Exists(fileRevisionDirName))
@@ -47,7 +48,24 @@ namespace mrHelper.StorageSupport
             Directory.CreateDirectory(fileRevisionDirName);
          }
 
-         System.IO.File.WriteAllText(fileRevisionPath, content);
+         bool isBinary = isBinaryData(content);
+         if (isBinary)
+         {
+            File.WriteAllBytes(fileRevisionPath, content);
+         }
+         else
+         {
+            string contentAsString = System.Text.Encoding.UTF8.GetString(content);
+            contentAsString = Common.Tools.StringUtils.ConvertNewlineUnixToWindows(contentAsString);
+            File.WriteAllText(fileRevisionPath, contentAsString);
+         }
+      }
+
+      // From https://git.kernel.org/pub/scm/git/git.git/tree/xdiff-interface.c#n187
+      private static int FirstFewBytes = 8000;
+      private static bool isBinaryData(byte[] data)
+      {
+         return data.Take(FirstFewBytes).Any(x => x == 0);
       }
 
       private string getFileRevisionPath(FileRevision fileRevision)

@@ -26,6 +26,19 @@ namespace mrHelper.StorageSupport
       internal string HeadSha { get; }
    }
 
+   internal class FileInternal
+   {
+      // public constructor allows to use Activator.CreateInstance()
+      public FileInternal(string path, string sha)
+      {
+         Path = path;
+         SHA = sha;
+      }
+
+      internal string Path { get; }
+      internal string SHA { get; }
+   }
+
    /// <summary>
    /// </summary>
    internal class FileStorageUpdater : ILocalCommitStorageUpdater, IDisposable
@@ -192,51 +205,51 @@ namespace mrHelper.StorageSupport
       private async Task processComparisonsAsync(bool isAwaitedUpdate, CommitStorageUpdateContext context,
          Action<string> onProgressChange, IEnumerable<ComparisonInternal> comparisons)
       {
-         List<FileRevision> allRevisions = new List<FileRevision>();
-         allRevisions.AddRange(comparisons.SelectMany(x => extractRevisionsFromComparison(x)));
+         List<FileInternal> allFiles = new List<FileInternal>();
+         allFiles.AddRange(comparisons.SelectMany(x => extractFilesFromComparison(x)));
 
-         FileRevision[] initialMissingRevisions = selectMissingFileRevisions(allRevisions).ToArray();
-         int initialMissingCount = initialMissingRevisions.Length;
-         traceInformation(String.Format("Downloading file revisions. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
-            allRevisions.Count(), initialMissingCount, isAwaitedUpdate.ToString()));
+         FileInternal[] initialMissingFiles = selectMissingFiles(allFiles).ToArray();
+         int initialMissingCount = initialMissingFiles.Length;
+         traceInformation(String.Format("Downloading file files. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
+            allFiles.Count(), initialMissingCount, isAwaitedUpdate.ToString()));
          if (initialMissingCount == 0)
          {
             return;
          }
 
          bool needTraceProgress = onProgressChange != null;
-         await fetchRevisionsAsync(isAwaitedUpdate, initialMissingRevisions, onProgressChange,
-            () => needTraceProgress ? initialMissingCount - selectMissingFileRevisions(allRevisions).Count() : 0);
+         await fetchFilesAsync(isAwaitedUpdate, initialMissingFiles, onProgressChange,
+            () => needTraceProgress ? initialMissingCount - selectMissingFiles(allFiles).Count() : 0);
       }
 
-      async private Task fetchRevisionsAsync(bool isAwaitedUpdate, IEnumerable<FileRevision> missingRevisions,
+      async private Task fetchFilesAsync(bool isAwaitedUpdate, IEnumerable<FileInternal> missingFiles,
          Action<string> onProgressChange, Func<int> getActualFetchedCount)
       {
          bool cancelled = _isDisposed;
 
          int fetchedByMeCount = 0; // this counter allows to not call getActualFetchedCount() on each iteration
          int fetchedCount = getActualFetchedCount();
-         async Task doFetch(FileRevision revision)
+         async Task doFetch(FileInternal file)
          {
-            if (cancelled || !isMissingRevision(revision))
+            if (cancelled || !isMissingFile(file))
             {
-               traceDebug(String.Format("Skipped file {0} with SHA {1}", revision.GitFilePath.Value, revision.SHA));
+               traceDebug(String.Format("Skipped file {0} with SHA {1}", file.Path, file.SHA));
                return;
             }
 
             await suspendProcessingOfNonAwaitedUpdate(isAwaitedUpdate);
-            if (!await fetchSingleRevisionAsync(revision) || _isDisposed)
+            if (!await fetchSingleFileAsync(file) || _isDisposed)
             {
                cancelled = true;
                return;
             }
 
             fetchedByMeCount++;
-            reportCompletionProgress(missingRevisions.Count(), fetchedByMeCount + fetchedCount, onProgressChange);
+            reportCompletionProgress(missingFiles.Count(), fetchedByMeCount + fetchedCount, onProgressChange);
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(missingRevisions, doFetch,
-            () => getFileRevisionBatchLimits(isAwaitedUpdate),
+         await TaskUtils.RunConcurrentFunctionsAsync(missingFiles, doFetch,
+            () => getFileFetchBatchLimits(isAwaitedUpdate),
             () =>
             {
                traceDebug("Batch completed");
@@ -246,39 +259,41 @@ namespace mrHelper.StorageSupport
             });
       }
 
-      async private Task<bool> fetchSingleRevisionAsync(FileRevision revision)
+      async private Task<bool> fetchSingleFileAsync(FileInternal file)
       {
-         traceDebug(String.Format("Fetching file {0} with SHA {1}...", revision.GitFilePath.Value, revision.SHA));
-         File file = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey,
-            revision.GitFilePath.Value, revision.SHA);
-         if (file == null)
+         traceDebug(String.Format("Fetching file {0} with SHA {1}...", file.Path, file.SHA));
+         File gitlabFile = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey, file.Path, file.SHA);
+         if (gitlabFile == null)
          {
             return false;
          }
 
-         string content = StringUtils.Base64Decode(file.Content).Replace("\n", "\r\n");
-         _fileStorage.FileCache.WriteFileRevision(revision, content);
-         traceDebug(String.Format("Saved file {0} with SHA {1}", revision.GitFilePath.Value, revision.SHA));
+         byte[] content = System.Convert.FromBase64String(gitlabFile.Content);
+         _fileStorage.FileCache.WriteFileRevision(file.Path, file.SHA, content);
+         traceDebug(String.Format("Saved file {0} with SHA {1}", file.Path, file.SHA));
          return true;
       }
 
-      private IEnumerable<FileRevision> extractRevisionsFromComparison(ComparisonInternal comparison)
+      private IEnumerable<FileInternal> extractFilesFromComparison(ComparisonInternal comparison)
       {
-         IEnumerable<FileRevision> baseFiles = FileStorageUtils.CreateFileRevisions(
-            comparison.Diffs, comparison.BaseSha, true);
-         IEnumerable<FileRevision> headFiles = FileStorageUtils.CreateFileRevisions(
-            comparison.Diffs, comparison.HeadSha, false);
+         IEnumerable<FileInternal> baseFiles = converDiffToFiles(comparison.Diffs, comparison.BaseSha, true);
+         IEnumerable<FileInternal> headFiles = converDiffToFiles(comparison.Diffs, comparison.HeadSha, false);
          return baseFiles.Concat(headFiles);
       }
 
-      private IEnumerable<FileRevision> selectMissingFileRevisions(IEnumerable<FileRevision> revisions)
+      private IEnumerable<FileInternal> converDiffToFiles(IEnumerable<DiffStruct> diffs, string sha, bool old)
       {
-         return revisions.Where(x => isMissingRevision(x));
+         return FileStorageUtils.TransformDiffs<FileInternal>(diffs, sha, old);
       }
 
-      private bool isMissingRevision(FileRevision fileRevision)
+      private IEnumerable<FileInternal> selectMissingFiles(IEnumerable<FileInternal> files)
       {
-         return !_fileStorage.FileCache.ContainsFileRevision(fileRevision);
+         return files.Where(x => isMissingFile(x));
+      }
+
+      private bool isMissingFile(FileInternal file)
+      {
+         return !_fileStorage.FileCache.ContainsFileRevision(new FileRevision(file.Path, file.SHA));
       }
 
       private void reportProgress(Action<string> onProgressChange, string message)
@@ -334,17 +349,17 @@ namespace mrHelper.StorageSupport
          };
       }
 
-      private TaskUtils.BatchLimits getFileRevisionBatchLimits(bool isAwaitedUpdate)
+      private TaskUtils.BatchLimits getFileFetchBatchLimits(bool isAwaitedUpdate)
       {
          if (isAwaitedUpdate)
          {
-            return Constants.FileRevisionLoadingForAwaitedUpdateBatchLimits;
+            return Constants.FileLoadingForAwaitedUpdateBatchLimits;
          }
 
          return new TaskUtils.BatchLimits
          {
-            Size = Constants.FileRevisionLoadingForNonAwaitedUpdateBatchLimits.Size,
-            Delay = Constants.FileRevisionLoadingForNonAwaitedUpdateBatchLimits.Delay * _getStorageCount()
+            Size = Constants.FileLoadingForNonAwaitedUpdateBatchLimits.Size,
+            Delay = Constants.FileLoadingForNonAwaitedUpdateBatchLimits.Delay * _getStorageCount()
          };
       }
 

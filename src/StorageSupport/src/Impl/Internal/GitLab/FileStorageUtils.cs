@@ -56,21 +56,27 @@ namespace mrHelper.StorageSupport
          return null;
       }
 
-      internal static IEnumerable<FileRevision> CreateFileRevisions(IEnumerable<DiffStruct> diffs, string sha, bool old)
+      internal static IEnumerable<FileRevision> ConvertDiffsToFileRevisions(
+         IEnumerable<DiffStruct> diffs, string sha, bool old)
       {
-         List<FileRevision> revisions = new List<FileRevision>();
+         return TransformDiffs<FileRevision>(diffs, sha, old);
+      }
+
+      internal static IEnumerable<T> TransformDiffs<T>(IEnumerable<DiffStruct> diffs, string sha, bool old)
+      {
+         List<T> result = new List<T>();
          foreach (DiffStruct diff in diffs)
          {
             if (old && !String.IsNullOrWhiteSpace(diff.Old_Path) && !diff.New_File)
             {
-               revisions.Add(new FileRevision(diff.Old_Path, sha));
+               result.Add((T)Activator.CreateInstance(typeof(T), diff.Old_Path, sha));
             }
             else if (!old && !String.IsNullOrWhiteSpace(diff.New_Path) && !diff.Deleted_File)
             {
-               revisions.Add(new FileRevision(diff.New_Path, sha));
+               result.Add((T)Activator.CreateInstance(typeof(T), diff.New_Path, sha));
             }
          }
-         return revisions;
+         return result;
       }
 
       private class FileStorageDescription

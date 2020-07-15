@@ -26,7 +26,8 @@ namespace mrHelper.StorageSupport
 
    internal struct FileRevision
    {
-      internal FileRevision(string gitFilepath, string sha)
+      // public constructor allows to use Activator.CreateInstance()
+      public FileRevision(string gitFilepath, string sha)
       {
          GitFilePath = new GitFilePath(gitFilepath);
          SHA = sha;

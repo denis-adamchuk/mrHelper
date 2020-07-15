@@ -98,7 +98,7 @@ namespace mrHelper.Common.Constants
          Delay = 1000
       };
 
-      public static TaskUtils.BatchLimits FileRevisionLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits FileLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 10,
          Delay = 1000
@@ -110,7 +110,7 @@ namespace mrHelper.Common.Constants
          Delay = 1000 // this is multiplied by number of storages
       };
 
-      public static TaskUtils.BatchLimits FileRevisionLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits FileLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 10,
          Delay = 1000 // this is multiplied by number of storages

@@ -65,8 +65,8 @@ namespace mrHelper.StorageSupport
             return null;
          }
 
-         copyFiles(FileStorageUtils.CreateFileRevisions(comparison.Diffs, baseSha, true), tempDiffLeftSubFolderPath);
-         copyFiles(FileStorageUtils.CreateFileRevisions(comparison.Diffs, headSha, false), tempDiffRightSubFolderPath);
+         copyFiles(FileStorageUtils.ConvertDiffsToFileRevisions(comparison.Diffs, baseSha, true), tempDiffLeftSubFolderPath);
+         copyFiles(FileStorageUtils.ConvertDiffsToFileRevisions(comparison.Diffs, headSha, false), tempDiffRightSubFolderPath);
          Directory.Move(tempDiffFolderPath, diffFolderPath);
          return new FileStorageDiffCacheFolder(diffFolderPath);
       }
