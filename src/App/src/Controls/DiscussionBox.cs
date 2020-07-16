@@ -449,7 +449,8 @@ namespace mrHelper.App.Controls
 
          Debug.Assert(noteControl is HtmlPanel);
          HtmlPanel htmlPanel = noteControl as HtmlPanel;
-         htmlPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+         htmlPanel.BaseStylesheet = String.Format(
+            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: 4px; }}",
             Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
