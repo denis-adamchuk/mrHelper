@@ -74,7 +74,7 @@
     <Compile Include="src\Session\Impl\Internal\Session.cs" />
     <Compile Include="src\Session\Impl\Internal\SessionManager.cs" />
     <Compile Include="src\Session\Impl\Internal\Interfaces\MergeRequestLoaderItf.cs" />
-    <Compile Include="src\TimeTracking\TimeTrackingManagerItf.cs" />
+    <Compile Include="src\TimeTracking\TotalTimeCacheItf.cs" />
     <Compile Include="src\Common\Impl\GitLabClientManager.cs" />
     <Compile Include="src\Repository\Impl\Internal\RepositoryOperator.cs" />
     <Compile Include="src\Repository\Impl\Internal\RepositoryManager.cs" />

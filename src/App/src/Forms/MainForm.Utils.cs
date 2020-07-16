@@ -602,17 +602,17 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!mrk.HasValue || !isTimeTrackingAllowed(author, hostname))
+         if (!mrk.HasValue || !isTimeTrackingAllowed(author, hostname) || totalTimeCache == null)
          {
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             buttonEditTime.Enabled = false;
          }
          else
          {
-            TimeSpan? span = getTotalTime(mrk.Value, totalTimeCache);
+            TrackedTime trackedTime = totalTimeCache.GetTotalTime(mrk.Value);
             labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
-               convertTotalTimeToText(span, true));
-            buttonEditTime.Enabled = span.HasValue;
+               convertTotalTimeToText(trackedTime, true));
+            buttonEditTime.Enabled = trackedTime.Amount.HasValue;
          }
 
          // Update total time column in the table
@@ -620,32 +620,22 @@ namespace mrHelper.App.Forms
          labelTimeTrackingTrackedLabel.Refresh();
       }
 
-      private TimeSpan? getTotalTime(MergeRequestKey? mrk, ITotalTimeCache totalTimeCache)
+      private string convertTotalTimeToText(TrackedTime trackedTime, bool isTimeTrackingAllowed)
       {
-         if (!mrk.HasValue)
-         {
-            return null;
-         }
-
-         return totalTimeCache?.GetTotalTime(mrk.Value);
-      }
-
-      private string convertTotalTimeToText(TimeSpan? span, bool isTimeTrackingAllowed)
-      {
-         if (!span.HasValue)
+         if (trackedTime.Status == TrackedTime.EStatus.NotAvailable)
          {
             return "N/A";
          }
 
-         // See comment for TimeSpan.MinValue in TimeTrackingManager
-         if (span.Value == TimeSpan.MinValue)
+         if (trackedTime.Status == TrackedTime.EStatus.Loading)
          {
             return "Loading...";
          }
 
-         if (span.Value != TimeSpan.Zero)
+         Debug.Assert(trackedTime.Amount.HasValue);
+         if (trackedTime.Amount.Value != TimeSpan.Zero)
          {
-            return span.Value.ToString(@"hh\:mm\:ss");
+            return trackedTime.Amount.Value.ToString(@"hh\:mm\:ss");
          }
 
          return isTimeTrackingAllowed ? Constants.NotStartedTimeTrackingText : Constants.NotAllowedTimeTrackingText;
@@ -1062,7 +1052,12 @@ namespace mrHelper.App.Forms
          string getTotalTimeText(MergeRequestKey key)
          {
             ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
-            return convertTotalTimeToText(getTotalTime(key, totalTimeCache),
+            if (totalTimeCache == null)
+            {
+               return String.Empty;
+            }
+
+            return convertTotalTimeToText(totalTimeCache.GetTotalTime(key),
                isTimeTrackingAllowed(mr.Author, projectKey.HostName));
          }
 

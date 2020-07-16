@@ -189,13 +189,13 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(!isSearchMode());
          ISession session = getSession(true /* supported in Live only */);
-         ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
-         if (totalTimeCache == null)
+         TimeSpan? oldSpanOpt = session?.TotalTimeCache?.GetTotalTime(mrk).Amount;
+         if (!oldSpanOpt.HasValue)
          {
             return;
          }
 
-         TimeSpan oldSpan = getTotalTime(mrk, totalTimeCache) ?? TimeSpan.Zero;
+         TimeSpan oldSpan = oldSpanOpt.Value;
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
             if (form.ShowDialog() == DialogResult.OK)
@@ -203,11 +203,11 @@ namespace mrHelper.App.Forms
                TimeSpan newSpan = form.TimeSpan;
                bool add = newSpan > oldSpan;
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
-               if (diff != TimeSpan.Zero)
+               if (diff != TimeSpan.Zero && session?.TotalTimeCache != null)
                {
                   try
                   {
-                     await totalTimeCache.AddSpan(add, diff, mrk);
+                     await session.TotalTimeCache.AddSpan(add, diff, mrk);
                   }
                   catch (TimeTrackingException ex)
                   {
@@ -217,7 +217,7 @@ namespace mrHelper.App.Forms
                      return;
                   }
 
-                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, totalTimeCache);
+                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, session.TotalTimeCache);
 
                   labelWorkflowStatus.Text = "Total spent time updated";
 

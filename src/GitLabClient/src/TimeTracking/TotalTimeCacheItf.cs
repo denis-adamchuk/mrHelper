@@ -5,6 +5,25 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.TimeTracking
 {
+   public struct TrackedTime
+   {
+      public TrackedTime(TimeSpan? amount, EStatus status)
+      {
+         Amount = amount;
+         Status = status;
+      }
+
+      public enum EStatus
+      {
+         NotAvailable,
+         Loading,
+         Ready
+      }
+
+      public TimeSpan? Amount { get; }
+      public EStatus Status { get; }
+   }
+
    public class TimeTrackingException : ExceptionEx
    {
       internal TimeTrackingException(string message, Exception innerException)
@@ -15,7 +34,7 @@ namespace mrHelper.Client.TimeTracking
 
    public interface ITotalTimeCache : ITotalTimeLoader
    {
-      TimeSpan? GetTotalTime(MergeRequestKey mrk);
+      TrackedTime GetTotalTime(MergeRequestKey mrk);
 
       Task AddSpan(bool add, TimeSpan span, MergeRequestKey mrk);
    }

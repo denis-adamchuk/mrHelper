@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Client.Types;
 using mrHelper.Client.Common;
-using mrHelper.Client.Session;
 using mrHelper.Client.Discussions;
 
 namespace mrHelper.Client.TimeTracking
@@ -42,9 +41,22 @@ namespace mrHelper.Client.TimeTracking
          _operator.Dispose();
       }
 
-      public TimeSpan? GetTotalTime(MergeRequestKey mrk)
+      public TrackedTime GetTotalTime(MergeRequestKey mrk)
       {
-         return _times.ContainsKey(mrk) ? _times[mrk] : new TimeSpan?();
+         TimeSpan? amount = null;
+         TrackedTime.EStatus status = TrackedTime.EStatus.NotAvailable;
+
+         if (_loading.Contains(mrk))
+         {
+            status = TrackedTime.EStatus.Loading;
+         }
+         else if (_cachedTrackedTime.ContainsKey(mrk))
+         {
+            status = TrackedTime.EStatus.Ready;
+            amount = _cachedTrackedTime[mrk];
+         }
+
+         return new TrackedTime(amount, status);
       }
 
       async public Task AddSpan(bool add, TimeSpan span, MergeRequestKey mrk)
@@ -58,18 +70,18 @@ namespace mrHelper.Client.TimeTracking
             throw new TimeTrackingException("Cannot add a span", ex);
          }
 
-         if (!_times.ContainsKey(mrk))
+         if (!_cachedTrackedTime.ContainsKey(mrk))
          {
             Debug.Assert(add);
-            _times[mrk] = span;
+            _cachedTrackedTime[mrk] = span;
          }
          else if (add)
          {
-            _times[mrk] += span;
+            _cachedTrackedTime[mrk] += span;
          }
          else
          {
-            _times[mrk] -= span;
+            _cachedTrackedTime[mrk] -= span;
          }
       }
 
@@ -85,6 +97,8 @@ namespace mrHelper.Client.TimeTracking
 
       private void processDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
+         _loading.Remove(mrk);
+
          TimeSpan span = TimeSpan.Zero;
          foreach (Discussion discussion in discussions)
          {
@@ -117,20 +131,24 @@ namespace mrHelper.Client.TimeTracking
             }
          }
 
-         _times[mrk] = span;
+         _cachedTrackedTime[mrk] = span;
          TotalTimeLoaded?.Invoke(this, mrk);
       }
 
-      public void preProcessDiscussions(MergeRequestKey mrk)
+      private void preProcessDiscussions(MergeRequestKey mrk)
       {
-         // TODO TimeSpan.MinValue is a bad design decision, consider implementing States
-         // by analogy with DiscussionManager.GetDiscussionCount()
-         _times[mrk] = TimeSpan.MinValue;
+         _loading.Add(mrk);
          TotalTimeLoading?.Invoke(this, mrk);
       }
 
+      /// <summary>
+      /// temporary collection to track Loading status
+      /// It cannot be a single value because we load multiple MR at once
+      /// </summary>
+      private readonly HashSet<MergeRequestKey> _loading = new HashSet<MergeRequestKey>();
+
       private readonly TimeTrackingOperator _operator;
-      private readonly Dictionary<MergeRequestKey, TimeSpan> _times =
+      private readonly Dictionary<MergeRequestKey, TimeSpan> _cachedTrackedTime =
          new Dictionary<MergeRequestKey, TimeSpan>();
       private readonly User _currentUser;
       private readonly IDiscussionLoader _discussionLoader;
