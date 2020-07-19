@@ -19,7 +19,14 @@ namespace mrHelper.StorageSupport
 
          if (!System.IO.Directory.Exists(path))
          {
-            System.IO.Directory.CreateDirectory(path);
+            try
+            {
+               System.IO.Directory.CreateDirectory(path);
+            }
+            catch (Exception ex)
+            {
+               throw new ArgumentException(String.Format("Cannot create a file storage at {0}", path), ex);
+            }
          }
 
          FileStorageDescription fileStorageDescription = new FileStorageDescription
@@ -34,7 +41,7 @@ namespace mrHelper.StorageSupport
          }
          catch (Exception ex)
          {
-            ExceptionHandlers.Handle("Cannot serialize FileStorageDescription object", ex);
+            throw new ArgumentException(String.Format("Cannot initialize a file storage at {0}", path), ex);
          }
       }
 
@@ -54,12 +61,6 @@ namespace mrHelper.StorageSupport
             }
          }
          return null;
-      }
-
-      internal static IEnumerable<FileRevision> ConvertDiffsToFileRevisions(
-         IEnumerable<DiffStruct> diffs, string sha, bool old)
-      {
-         return TransformDiffs<FileRevision>(diffs, sha, old);
       }
 
       internal static IEnumerable<T> TransformDiffs<T>(IEnumerable<DiffStruct> diffs, string sha, bool old)

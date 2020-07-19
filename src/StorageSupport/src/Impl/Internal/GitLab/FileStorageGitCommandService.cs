@@ -19,50 +19,68 @@ namespace mrHelper.StorageSupport
          RenameDetector = new FileStorageRenameDetector(this, fileStorage);
       }
 
-      public override int LaunchDiffTool(DiffToolArguments arguments)
-      {
-         ConvertedArguments converted = _argumentConverter.Convert(arguments);
-         return ExternalProcess.Start(converted.App, converted.Arguments, false, _path).PID;
-      }
-
       public override IFileRenameDetector RenameDetector { get; }
 
-      protected override IEnumerable<string> getSync<T>(T arguments)
+      protected override object runCommand(GitDiffArguments arguments)
       {
-         return getSyncTyped((dynamic)arguments);
+         try
+         {
+            ConvertedArguments converted = _argumentConverter.Convert(arguments);
+            return startExternalProcess(converted.App, converted.Arguments, _path, true, new int[] { 0, 1 })
+               .StdOut.Where(x => !String.IsNullOrEmpty(x));
+         }
+         catch (ArgumentConversionException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
+         }
       }
 
-      protected IEnumerable<string> getSyncTyped(GitDiffArguments arguments)
-      {
-         ConvertedArguments converted = _argumentConverter.Convert(arguments);
-         return getSyncFromExternalProcess(converted.App, converted.Arguments, _path, new int[] { 0, 1 })
-            .Where(x => !String.IsNullOrEmpty(x));
-      }
-
-      protected IEnumerable<string> getSyncTyped(GitShowRevisionArguments arguments)
+      protected override object runCommand(GitShowRevisionArguments arguments)
       {
          FileRevision fileRevision = new FileRevision(arguments.Filename, arguments.Sha);
          string fileRevisionPath = _fileCache.GetFileRevisionPath(fileRevision);
-         var content = System.IO.File.ReadAllText(fileRevisionPath);
-         return StringUtils.ConvertNewlineWindowsToUnix(content).Split('\n');
+         try
+         {
+            string content = System.IO.File.ReadAllText(fileRevisionPath);
+            return StringUtils.ConvertNewlineWindowsToUnix(content).Split('\n');
+         }
+         catch (Exception ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
+         }
       }
 
-      protected override Task<IEnumerable<string>> getAsync<T>(T arguments)
+      protected override object runCommand(DiffToolArguments arguments)
       {
-         return getAsyncTyped((dynamic)arguments);
+         try
+         {
+            ConvertedArguments converted = _argumentConverter.Convert(arguments);
+            return startExternalProcess(converted.App, converted.Arguments, _path, false, null).PID;
+         }
+         catch (ArgumentConversionException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
+         }
       }
 
-      async protected Task<IEnumerable<string>> getAsyncTyped(GitDiffArguments arguments)
+      async protected override Task<object> runCommandAsync(GitDiffArguments arguments)
       {
-         ConvertedArguments converted = _argumentConverter.Convert(arguments);
-         IEnumerable<string> result =
-            await fetchAsyncFromExternalProcess(converted.App, converted.Arguments, _path, new int[] { 0, 1 });
-         return result.Where(x => !String.IsNullOrEmpty(x));
+         try
+         {
+            ConvertedArguments converted = _argumentConverter.Convert(arguments);
+            IEnumerable<string> result =
+               (await startExternalProcessAsync(converted.App, converted.Arguments, _path, new int[] { 0, 1 })).StdOut;
+            return result.Where(x => !String.IsNullOrEmpty(x));
+         }
+         catch (ArgumentConversionException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
+         }
       }
 
-      protected Task<IEnumerable<string>> getAsyncTyped(GitShowRevisionArguments arguments)
+      protected override Task<object> runCommandAsync(GitShowRevisionArguments arguments)
       {
-         return Task.FromResult<IEnumerable<string>>(getSyncTyped(arguments));
+         return Task.FromResult<object>(runCommand(arguments));
       }
 
       private readonly FileStorageArgumentConverter _argumentConverter;

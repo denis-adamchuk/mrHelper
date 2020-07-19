@@ -1,10 +1,20 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
+   public class FileStorageDiffCacheException : ExceptionEx
+   {
+      public FileStorageDiffCacheException(string message, Exception ex)
+         : base(message, ex)
+      {
+      }
+   }
+
    internal class FileStorageDiffCache
    {
       internal FileStorageDiffCache(string path, IFileStorage fileStorage)
@@ -17,58 +27,130 @@ namespace mrHelper.StorageSupport
 
       internal FileStorageDiffCacheFolder GetDiffFolder(string baseSha, string headSha)
       {
-         if (getExistingDiffFolder(baseSha, headSha, out FileStorageDiffCacheFolder diffFolder))
-         {
-            return diffFolder;
-         }
-         return createDiffFolder(baseSha, headSha);
+         return getExistingDiffFolder(baseSha, headSha) ?? createDiffFolder(baseSha, headSha);
       }
 
-      private bool getExistingDiffFolder(string baseSha, string headSha, out FileStorageDiffCacheFolder diffFolder)
+      private FileStorageDiffCacheFolder getExistingDiffFolder(string baseSha, string headSha)
       {
          string diffFolderPath = getDiffFolderPath(baseSha, headSha);
-         string diffLeftSubFolderPath = System.IO.Path.Combine(diffFolderPath, "left");
-         string diffRightSubFolderPath = System.IO.Path.Combine(diffFolderPath, "right");
-         if (Directory.Exists(diffFolderPath))
+         if (!Directory.Exists(diffFolderPath))
          {
-            if (Directory.Exists(diffLeftSubFolderPath) && Directory.Exists(diffRightSubFolderPath))
-            {
-               diffFolder = new FileStorageDiffCacheFolder(diffFolderPath);
-               return true;
-            }
-            Directory.Delete(diffFolderPath, true);
+            return null;
          }
 
-         diffFolder = null;
-         return false;
+         FileStorageDiffCacheFolder diffFolderCandidate = new FileStorageDiffCacheFolder(diffFolderPath);
+         if (!verifyDiffFolder(baseSha, headSha, diffFolderCandidate))
+         {
+            Trace.TraceWarning(String.Format(
+               "[FileStorageDiffCache] Detected invalid diff folder at path \"{0}\"", diffFolderPath));
+            try
+            {
+               Directory.Delete(diffFolderPath, true);
+            }
+            catch (Exception ex)
+            {
+               throw new FileStorageDiffCacheException("Cannot delete invalid diff folder", ex);
+            }
+            return null;
+         }
+         return diffFolderCandidate;
+      }
+
+      private bool verifyDiffFolder(string baseSha, string headSha, FileStorageDiffCacheFolder diffFolder)
+      {
+         if (!Directory.Exists(diffFolder.LeftSubfolder) || !Directory.Exists(diffFolder.RightSubfolder))
+         {
+            return false;
+         }
+
+         getRevisions(baseSha, headSha, out var baseRevisions, out var headRevisions);
+         if (baseRevisions == null || headRevisions == null)
+         {
+            return false;
+         }
+
+         return baseRevisions.Select(x => x.GitFilePath.ToDiskPath(diffFolder.LeftSubfolder)).All(x => File.Exists(x))
+             && headRevisions.Select(x => x.GitFilePath.ToDiskPath(diffFolder.RightSubfolder)).All(x => File.Exists(x));
       }
 
       private FileStorageDiffCacheFolder createDiffFolder(string baseSha, string headSha)
       {
          string diffFolderPath = getDiffFolderPath(baseSha, headSha);
          string tempDiffFolderPath = getDiffFolderPath("~" + baseSha, headSha);
-         if (Directory.Exists(tempDiffFolderPath))
-         {
-            Directory.Delete(tempDiffFolderPath, true);
-         }
          string tempDiffLeftSubFolderPath = System.IO.Path.Combine(tempDiffFolderPath, "left");
          string tempDiffRightSubFolderPath = System.IO.Path.Combine(tempDiffFolderPath, "right");
-         Directory.CreateDirectory(tempDiffFolderPath);
-         Directory.CreateDirectory(tempDiffLeftSubFolderPath);
-         Directory.CreateDirectory(tempDiffRightSubFolderPath);
+         createTempFolders(tempDiffFolderPath, tempDiffLeftSubFolderPath, tempDiffRightSubFolderPath);
 
+         getRevisions(baseSha, headSha, out var baseRevisions, out var headRevisions);
+         if (baseRevisions == null || headRevisions == null)
+         {
+            return null;
+         }
+
+         copyFiles(baseRevisions, tempDiffLeftSubFolderPath);
+         copyFiles(headRevisions, tempDiffRightSubFolderPath);
+
+         renameTempToPermanentFolder(diffFolderPath, tempDiffFolderPath);
+         return new FileStorageDiffCacheFolder(diffFolderPath);
+      }
+
+      private void getRevisions(string baseSha, string headSha,
+         out IEnumerable<FileRevision> baseRevisions, out IEnumerable<FileRevision> headRevisions)
+      {
          GitLabSharp.Entities.Comparison comparison = _fileStorage.ComparisonCache.LoadComparison(baseSha, headSha);
          if (comparison == null)
          {
             Trace.TraceWarning(String.Format(
                "[FileStorageDiffCache] Cannot find a Comparison object. BaseSHA={0}, HeadSHA={1}", baseSha, headSha));
-            return null;
+            baseRevisions = null;
+            headRevisions = null;
+            return;
          }
 
-         copyFiles(FileStorageUtils.ConvertDiffsToFileRevisions(comparison.Diffs, baseSha, true), tempDiffLeftSubFolderPath);
-         copyFiles(FileStorageUtils.ConvertDiffsToFileRevisions(comparison.Diffs, headSha, false), tempDiffRightSubFolderPath);
-         Directory.Move(tempDiffFolderPath, diffFolderPath);
-         return new FileStorageDiffCacheFolder(diffFolderPath);
+         baseRevisions = FileStorageUtils.TransformDiffs<FileRevision>(comparison.Diffs, baseSha, true);
+         headRevisions = FileStorageUtils.TransformDiffs<FileRevision>(comparison.Diffs, headSha, false);
+      }
+
+      private static void renameTempToPermanentFolder(string diffFolderPath, string tempDiffFolderPath)
+      {
+         try
+         {
+            Directory.Move(tempDiffFolderPath, diffFolderPath);
+         }
+         catch (Exception ex)
+         {
+            throw new FileStorageDiffCacheException(String.Format(
+               "Cannot rename a temp folder {0} to {1}", tempDiffFolderPath, diffFolderPath), ex);
+         }
+      }
+
+      private static void createTempFolders(string tempDiffFolderPath, string tempDiffLeftSubFolderPath,
+         string tempDiffRightSubFolderPath)
+      {
+         if (Directory.Exists(tempDiffFolderPath))
+         {
+            try
+            {
+               Directory.Delete(tempDiffFolderPath, true);
+            }
+            catch (Exception ex)
+            {
+               throw new FileStorageDiffCacheException(String.Format(
+                  "Cannot delete temp diff folder {0}", tempDiffFolderPath), ex);
+            }
+         }
+
+         try
+         {
+            Directory.CreateDirectory(tempDiffFolderPath);
+            Directory.CreateDirectory(tempDiffLeftSubFolderPath);
+            Directory.CreateDirectory(tempDiffRightSubFolderPath);
+         }
+         catch (Exception ex)
+         {
+            throw new FileStorageDiffCacheException(String.Format(
+               "Cannot create a temp folder {0} or one of its subfolders", tempDiffFolderPath), ex);
+         }
       }
 
       private void copyFiles(IEnumerable<FileRevision> revisions, string tempDiffFolderPath)
@@ -82,15 +164,24 @@ namespace mrHelper.StorageSupport
                   revision.SHA, revision.GitFilePath.Value));
                continue;
             }
+
             string sourceFilePath = getFileRevisionPath(revision);
             string destFilePath = revision.GitFilePath.ToDiskPath(tempDiffFolderPath);
-            string subfolder = System.IO.Path.GetDirectoryName(destFilePath);
-            if (!Directory.Exists(subfolder))
-            {
-               Directory.CreateDirectory(subfolder);
-            }
 
-            System.IO.File.Copy(sourceFilePath, destFilePath);
+            try
+            {
+               string subfolder = System.IO.Path.GetDirectoryName(destFilePath);
+               if (!Directory.Exists(subfolder))
+               {
+                  Directory.CreateDirectory(subfolder);
+               }
+               System.IO.File.Copy(sourceFilePath, destFilePath, true);
+            }
+            catch (Exception ex)
+            {
+               throw new FileStorageDiffCacheException(String.Format(
+                  "Cannot copy file revision {0} to {1}", sourceFilePath, destFilePath), ex);
+            }
          }
       }
 
@@ -107,9 +198,16 @@ namespace mrHelper.StorageSupport
 
       private void cleanupOldDiffs()
       {
-         if (Directory.Exists(_path))
+         try
          {
-            Directory.Delete(_path, true);
+            if (Directory.Exists(_path))
+            {
+               Directory.Delete(_path, true);
+            }
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(String.Format("Cannot delete a diff folder {0}", _path), ex);
          }
       }
 

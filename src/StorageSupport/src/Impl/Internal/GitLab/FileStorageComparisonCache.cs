@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
@@ -8,9 +10,11 @@ namespace mrHelper.StorageSupport
 {
    internal class FileStorageComparisonCache
    {
-      internal FileStorageComparisonCache(string path)
+      internal FileStorageComparisonCache(string path, int comparisonsToKeep)
       {
          _path = path;
+
+         cleanupOldComparisons(comparisonsToKeep);
       }
 
       internal Comparison LoadComparison(string baseSha, string headSha)
@@ -53,6 +57,41 @@ namespace mrHelper.StorageSupport
       {
          string comparisonCacheFileName = String.Format("{0}_{1}.json", baseSha, headSha);
          return Path.Combine(_path, comparisonCacheFileName);
+      }
+
+      private void cleanupOldComparisons(int comparisonsToKeep)
+      {
+         if (!Directory.Exists(_path))
+         {
+            return;
+         }
+
+         IEnumerable<string> allFiles = null;
+         try
+         {
+            allFiles = Directory.GetFiles(_path);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(String.Format("Cannot obtain a list of comparisons at {0}", _path), ex);
+            return;
+         }
+
+         IEnumerable<string> filesToBeDeleted =
+            allFiles
+            .OrderByDescending(x => System.IO.File.GetLastAccessTime(x))
+            .Skip(comparisonsToKeep);
+         foreach (string file in filesToBeDeleted)
+         {
+            try
+            {
+               System.IO.File.Delete(file);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(String.Format("Cannot delete old comparison {0}", file), ex);
+            }
+         }
       }
 
       private readonly string _path;

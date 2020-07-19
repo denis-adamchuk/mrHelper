@@ -769,20 +769,26 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private ILocalCommitStorageFactory gitCommitStorageFactory()
+      private ILocalCommitStorageFactory getCommitStorageFactory(bool showMessageBoxOnError)
       {
          if (_storageFactory == null)
          {
             try
             {
                _storageFactory = new LocalCommitStorageFactory(this, getSession(true),
-                  Program.Settings.LocalGitFolder, Program.Settings.RevisionsToKeep);
+                  Program.Settings.LocalGitFolder, Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep);
                _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
             catch (ArgumentException ex)
             {
                ExceptionHandlers.Handle("Cannot create LocalGitCommitStorageFactory", ex);
             }
+         }
+
+         if (_storageFactory == null && showMessageBoxOnError)
+         {
+            MessageBox.Show(String.Format("Cannot create folder {0}", Program.Settings.LocalGitFolder),
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return _storageFactory;
       }
@@ -808,13 +814,13 @@ namespace mrHelper.App.Forms
       /// <returns>null if could not create a repository</returns>
       private ILocalCommitStorage getCommitStorage(ProjectKey projectKey, bool showMessageBoxOnError)
       {
-         ILocalCommitStorageFactory factory = gitCommitStorageFactory();
+         ILocalCommitStorageFactory factory = getCommitStorageFactory(showMessageBoxOnError);
          if (factory == null)
          {
             return null;
          }
 
-         var type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
          ILocalCommitStorage repo = factory.GetStorage(projectKey, type);
          if (repo == null && showMessageBoxOnError)
          {

@@ -17,7 +17,7 @@ using mrHelper.Client.Discussions;
 namespace mrHelper.App.Helpers
 {
    /// <summary>
-   /// Pre-loads file revisions into git repository cache to speed up Discussions view rendering
+   /// Pre-loads file revisions into from disk file storage into memory to speed up Discussions view rendering
    /// </summary>
    internal class GitDataUpdater : BaseGitHelper, IDisposable
    {

@@ -69,8 +69,9 @@ namespace mrHelper.App.Helpers
              && Data?.Revisions != null
              && Data.Revisions.TryGetValue(parent.Type, out IEnumerable<object> objects))
             {
-               int iItem = objects.Count();
-               foreach (object item in sortByTimestamp(objects))
+               IEnumerable<object> filteredObjects = sortAndFilter(objects);
+               int iItem = filteredObjects.Count();
+               foreach (object item in filteredObjects)
                {
                   getItemProperties(iItem, item,
                      out string fullSha, out string name, out DateTime timestamp, out string tooltipText);
@@ -93,10 +94,9 @@ namespace mrHelper.App.Helpers
       public event EventHandler<TreeModelEventArgs> NodesRemoved;
       public event EventHandler<TreePathEventArgs> StructureChanged;
 
-      private IEnumerable<object> sortByTimestamp(IEnumerable<object> objects)
+      private IEnumerable<object> sortAndFilter(IEnumerable<object> objects)
       {
-         return objects.OrderByDescending(
-            x =>
+         DateTime getTimeStamp(object x)
          {
             if (x is Commit c)
             {
@@ -110,7 +110,29 @@ namespace mrHelper.App.Helpers
             {
                throw new NotImplementedException();
             }
-         });
+         };
+
+         string getSha(object x)
+         {
+            if (x is Commit c)
+            {
+               return c.Id;
+            }
+            else if (x is Version v)
+            {
+               return v.Head_Commit_SHA;
+            }
+            else
+            {
+               throw new NotImplementedException();
+            }
+         };
+
+         return objects
+            .OrderByDescending(x => getTimeStamp(x))
+            // filter out versions pointing to the same HEAD:
+            .GroupBy(x => getSha(x))
+            .Select(g => g.First());
       }
 
       private void getItemProperties(int iItem, object item,

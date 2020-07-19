@@ -1,9 +1,10 @@
+using mrHelper.Common.Exceptions;
 using System;
 using System.Threading.Tasks;
 
 namespace mrHelper.StorageSupport
 {
-   public class FetchFailedException : GitDataException
+   public class FetchFailedException : ExceptionEx
    {
       public FetchFailedException(Exception ex)
          : base(String.Empty, ex)

@@ -288,7 +288,7 @@ namespace mrHelper.App.Controls
          stylesheet = String.Empty;
          if (contextMaker == null)
          {
-            return "<html><body>Cannot access git repository and render diff context</body></html>";
+            return "<html><body>Cannot access file storage and render diff context</body></html>";
          }
 
          try

@@ -4,17 +4,17 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
-   public class GitDataException : ExceptionEx
+   public class GitNotAvailableDataException : ExceptionEx
    {
-      public GitDataException(string message, Exception ex)
-         : base(message, ex)
+      public GitNotAvailableDataException(Exception ex)
+         : base(String.Empty, ex)
       {
       }
    }
 
-   public class GitNotAvailableDataException : GitDataException
+   public class DiffToolLaunchException : ExceptionEx
    {
-      public GitNotAvailableDataException(Exception ex)
+      public DiffToolLaunchException(Exception ex)
          : base(String.Empty, ex)
       {
       }

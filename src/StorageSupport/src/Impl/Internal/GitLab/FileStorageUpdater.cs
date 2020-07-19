@@ -269,8 +269,15 @@ namespace mrHelper.StorageSupport
          }
 
          byte[] content = System.Convert.FromBase64String(gitlabFile.Content);
-         _fileStorage.FileCache.WriteFileRevision(file.Path, file.SHA, content);
-         traceDebug(String.Format("Saved file {0} with SHA {1}", file.Path, file.SHA));
+         try
+         {
+            _fileStorage.FileCache.WriteFileRevision(file.Path, file.SHA, content);
+            traceDebug(String.Format("Saved file {0} with SHA {1}", file.Path, file.SHA));
+         }
+         catch (FileStorageRevisionCacheException ex)
+         {
+            ExceptionHandlers.Handle(String.Format("Cannot save a file {0} with SHA {1}", file.Path, file.SHA), ex);
+         }
          return true;
       }
 

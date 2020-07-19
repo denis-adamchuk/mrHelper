@@ -18,20 +18,28 @@ namespace mrHelper.StorageSupport
 
       /// <summary>
       /// Create a factory
-      /// Throws ArgumentException if passed ParentFolder does not exist
+      /// Throws ArgumentException if passed ParentFolder does not exist and cannot be created
       /// </summary>
       public LocalCommitStorageFactory(ISynchronizeInvoke synchronizeInvoke,
-         ISession session, string parentFolder, int revisionsToKeep)
+         ISession session, string parentFolder, int revisionsToKeep, int comparisonsToKeep)
       {
          if (!Directory.Exists(parentFolder))
          {
-            Directory.CreateDirectory(parentFolder);
+            try
+            {
+               Directory.CreateDirectory(parentFolder);
+            }
+            catch (Exception ex)
+            {
+               throw new ArgumentException(String.Format("Cannot create folder \"{0}\"", parentFolder), ex);
+            }
          }
 
          ParentFolder = parentFolder;
          _synchronizeInvoke = synchronizeInvoke;
          _session = session;
          _revisionsToKeep = revisionsToKeep;
+         _comparisonsToKeep = comparisonsToKeep;
 
          Trace.TraceInformation(String.Format(
             "[LocalCommitStorageFactory] Created a factory for parentFolder {0}", parentFolder));
@@ -59,7 +67,7 @@ namespace mrHelper.StorageSupport
             if (type == LocalCommitStorageType.FileStorage)
             {
                storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, _session.GetRepositoryAccessor(),
-                  _revisionsToKeep, () => _storages.Count);
+                  _revisionsToKeep, _comparisonsToKeep, () => _storages.Count);
             }
             else
             {
@@ -98,6 +106,7 @@ namespace mrHelper.StorageSupport
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ISession _session;
       private readonly int _revisionsToKeep;
+      private readonly int _comparisonsToKeep;
 
       private bool _isDisposed;
    }

@@ -7,6 +7,14 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
+   internal class GitCommandServiceInternalException : ExceptionEx
+   {
+      public GitCommandServiceInternalException(Exception ex)
+         : base(String.Empty, ex)
+      {
+      }
+   }
+
    internal abstract class GitCommandService : IAsyncGitCommandService, IDisposable
    {
       internal GitCommandService(IExternalProcessManager processManager)
@@ -16,25 +24,68 @@ namespace mrHelper.StorageSupport
 
       public IEnumerable<string> ShowRevision(GitShowRevisionArguments arguments)
       {
-         return runCommandAndCacheResult(arguments, _cachedRevisions);
+         try
+         {
+            return runCommandAndCacheResult(arguments, _cachedRevisions);
+         }
+         catch (GitCommandServiceInternalException ex)
+         {
+            ExceptionHandlers.Handle(ex.Message, ex);
+            throw new GitNotAvailableDataException(ex);
+         }
       }
 
       public Task FetchAsync(GitShowRevisionArguments arguments)
       {
-         return runCommandAndCacheResultAsync(arguments, _cachedRevisions);
+         try
+         {
+            return runCommandAndCacheResultAsync(arguments, _cachedRevisions);
+         }
+         catch (GitCommandServiceInternalException ex)
+         {
+            ExceptionHandlers.Handle(ex.Message, ex);
+            throw new FetchFailedException(ex);
+         }
       }
 
       public IEnumerable<string> ShowDiff(GitDiffArguments arguments)
       {
-         return runCommandAndCacheResult(arguments, _cachedDiffs);
+         try
+         {
+            return runCommandAndCacheResult(arguments, _cachedDiffs);
+         }
+         catch (GitCommandServiceInternalException ex)
+         {
+            ExceptionHandlers.Handle(ex.Message, ex);
+            throw new GitNotAvailableDataException(ex);
+         }
       }
 
       public Task FetchAsync(GitDiffArguments arguments)
       {
-         return runCommandAndCacheResultAsync(arguments, _cachedDiffs);
+         try
+         {
+            return runCommandAndCacheResultAsync(arguments, _cachedDiffs);
+         }
+         catch (GitCommandServiceInternalException ex)
+         {
+            ExceptionHandlers.Handle(ex.Message, ex);
+            throw new FetchFailedException(ex);
+         }
       }
 
-      abstract public int LaunchDiffTool(DiffToolArguments arguments);
+      public int LaunchDiffTool(DiffToolArguments arguments)
+      {
+         try
+         {
+            return (int)runCommand(arguments);
+         }
+         catch (GitCommandServiceInternalException ex)
+         {
+            ExceptionHandlers.Handle(ex.Message, ex);
+            throw new DiffToolLaunchException(ex);
+         }
+      }
 
       abstract public IFileRenameDetector RenameDetector { get; }
 
@@ -43,8 +94,11 @@ namespace mrHelper.StorageSupport
          _isDisposed = true;
       }
 
-      abstract protected IEnumerable<string> getSync<T>(T arguments);
-      abstract protected Task<IEnumerable<string>> getAsync<T>(T arguments);
+      abstract protected object runCommand(GitDiffArguments arguments);
+      abstract protected object runCommand(GitShowRevisionArguments arguments);
+      abstract protected object runCommand(DiffToolArguments arguments);
+      abstract protected Task<object> runCommandAsync(GitDiffArguments arguments);
+      abstract protected Task<object> runCommandAsync(GitShowRevisionArguments arguments);
 
       private IEnumerable<string> runCommandAndCacheResult<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
       {
@@ -63,7 +117,7 @@ namespace mrHelper.StorageSupport
             return null;
          }
 
-         IEnumerable<string> result = getSync(arguments);
+         IEnumerable<string> result = (IEnumerable<string>)runCommand((dynamic)arguments);
          if (result != null)
          {
             cache.Add(arguments, result);
@@ -78,7 +132,7 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         IEnumerable<string> result = await getAsync(arguments);
+         IEnumerable<string> result = (IEnumerable<string>)(await runCommandAsync((dynamic)arguments));
          if (result == null)
          {
             return;
@@ -86,27 +140,24 @@ namespace mrHelper.StorageSupport
          cache[arguments] = result;
       }
 
-      protected IEnumerable<string> getSyncFromExternalProcess(
-         string appName, string arguments, string path, int[] successcodes)
+      protected ExternalProcess.Result startExternalProcess(
+         string appName, string arguments, string path, bool wait, int[] successcodes)
       {
          try
          {
-            IEnumerable<string> stdOut = ExternalProcess.Start(appName, arguments, true, path, successcodes).StdOut;
-            return stdOut;
+            return ExternalProcess.Start(appName, arguments, wait, path, successcodes);
          }
          catch (Exception ex)
          {
-            if (ex is ExternalProcessFailureException
-             || ex is ExternalProcessSystemException
-             || ex is ArgumentConversionException)
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
             {
-               throw new GitNotAvailableDataException(ex);
+               throw new GitCommandServiceInternalException(ex);
             }
             throw;
          }
       }
 
-      async protected Task<IEnumerable<string>> fetchAsyncFromExternalProcess(
+      async protected Task<ExternalProcess.AsyncTaskDescriptor> startExternalProcessAsync(
          string appName, string arguments, string path, int[] successCodes)
       {
          try
@@ -114,7 +165,7 @@ namespace mrHelper.StorageSupport
             ExternalProcess.AsyncTaskDescriptor d = _processManager.CreateDescriptor(
                appName, arguments, path, null, successCodes);
             await _processManager.Wait(d);
-            return d.StdOut;
+            return d;
          }
          catch (Exception ex)
          {
@@ -122,9 +173,9 @@ namespace mrHelper.StorageSupport
             {
                return null;
             }
-            if (ex is SystemException || ex is GitCallFailedException || ex is ArgumentConversionException)
+            if (ex is SystemException || ex is GitCallFailedException)
             {
-               throw new FetchFailedException(ex);
+               throw new GitCommandServiceInternalException(ex);
             }
             throw;
          }

@@ -1,14 +1,24 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
+   public class FileStorageRevisionCacheException : ExceptionEx
+   {
+      public FileStorageRevisionCacheException(string message, Exception ex)
+         : base(message, ex)
+      {
+      }
+   }
+
    internal class FileStorageRevisionCache
    {
       internal FileStorageRevisionCache(string path, int revisionsToKeep)
       {
-         _path = path;
+         Path = path;
 
          cleanupOldRevisions(revisionsToKeep);
       }
@@ -28,6 +38,8 @@ namespace mrHelper.StorageSupport
          return getFileRevisionPath(fileRevision);
       }
 
+      internal string Path { get; }
+
       internal void WriteFileRevision(string path, string sha, byte[] content)
       {
          writeFileRevision(path, sha, content);
@@ -42,22 +54,38 @@ namespace mrHelper.StorageSupport
       {
          FileRevision fileRevision = new FileRevision(path, sha);
          string fileRevisionPath = getFileRevisionPath(fileRevision);
-         string fileRevisionDirName = System.IO.Path.GetDirectoryName(fileRevisionPath);
-         if (!Directory.Exists(fileRevisionDirName))
+         try
          {
-            Directory.CreateDirectory(fileRevisionDirName);
+            string fileRevisionDirName = System.IO.Path.GetDirectoryName(fileRevisionPath);
+            if (!Directory.Exists(fileRevisionDirName))
+            {
+               Directory.CreateDirectory(fileRevisionDirName);
+            }
+         }
+         catch (Exception ex)
+         {
+            throw new FileStorageRevisionCacheException(String.Format(
+               "Cannot create a directory for revision {0}", fileRevisionPath), ex);
          }
 
-         bool isBinary = isBinaryData(content);
-         if (isBinary)
+         try
          {
-            File.WriteAllBytes(fileRevisionPath, content);
+            bool isBinary = isBinaryData(content);
+            if (isBinary)
+            {
+               File.WriteAllBytes(fileRevisionPath, content);
+            }
+            else
+            {
+               string contentAsString = System.Text.Encoding.UTF8.GetString(content);
+               contentAsString = Common.Tools.StringUtils.ConvertNewlineUnixToWindows(contentAsString);
+               File.WriteAllText(fileRevisionPath, contentAsString);
+            }
          }
-         else
+         catch (Exception ex)
          {
-            string contentAsString = System.Text.Encoding.UTF8.GetString(content);
-            contentAsString = Common.Tools.StringUtils.ConvertNewlineUnixToWindows(contentAsString);
-            File.WriteAllText(fileRevisionPath, contentAsString);
+            throw new FileStorageRevisionCacheException(String.Format(
+               "Cannot write a file revision at {0}", fileRevisionPath), ex);
          }
       }
 
@@ -70,29 +98,44 @@ namespace mrHelper.StorageSupport
 
       private string getFileRevisionPath(FileRevision fileRevision)
       {
-         string prefix = System.IO.Path.Combine(_path, fileRevision.SHA);
+         string prefix = System.IO.Path.Combine(Path, fileRevision.SHA);
          return fileRevision.GitFilePath.ToDiskPath(prefix);
       }
 
       private void cleanupOldRevisions(int revisionsToKeep)
       {
-         if (!Directory.Exists(_path))
+         if (!Directory.Exists(Path))
          {
             return;
          }
 
-         IEnumerable<string> allSubdirectories = Directory.GetDirectories(_path, "*", SearchOption.TopDirectoryOnly);
+         IEnumerable<string> allSubdirectories = null;
+         try
+         {
+            allSubdirectories = Directory.GetDirectories(Path, "*", SearchOption.TopDirectoryOnly);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(String.Format("Cannot obtain a list of subdirectories at {0}", Path), ex);
+            return;
+         }
+
          IEnumerable<string> subdirectoriesToBeDeleted =
             allSubdirectories
             .OrderByDescending(x => Directory.GetLastAccessTime(x))
             .Skip(revisionsToKeep);
          foreach (string directory in subdirectoriesToBeDeleted)
          {
-            Directory.Delete(directory, true);
+            try
+            {
+               Directory.Delete(directory, true);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(String.Format("Cannot delete old folder {0}", directory), ex);
+            }
          }
       }
-
-      private string _path;
    }
 }
 

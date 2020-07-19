@@ -292,7 +292,7 @@ namespace mrHelper.App.Forms
       private void liveSessionStarted(string hostname, User user)
       {
          subscribeToLiveSessionInternalEvents();
-         createGitHelpers(_liveSession, gitCommitStorageFactory());
+         createGitHelpers(_liveSession, getCommitStorageFactory(false));
 
          if (!_currentUser.ContainsKey(hostname))
          {

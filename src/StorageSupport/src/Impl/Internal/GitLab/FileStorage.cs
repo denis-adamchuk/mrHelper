@@ -33,7 +33,7 @@ namespace mrHelper.StorageSupport
       /// </summary>
       internal FileStorage(string parentFolder, ProjectKey projectKey,
          ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor, int revisionsToKeep,
-         Func<int> getStorageCount)
+         int comparisonsToKeep, Func<int> getStorageCount)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey,
             LocalCommitStorageType.FileStorage);
@@ -41,7 +41,7 @@ namespace mrHelper.StorageSupport
          FileStorageUtils.InitalizeFileStorage(Path, ProjectKey);
 
          string comparisonCachePath = System.IO.Path.Combine(Path, ComparisonCacheSubFolderName);
-         ComparisonCache = new FileStorageComparisonCache(comparisonCachePath);
+         ComparisonCache = new FileStorageComparisonCache(comparisonCachePath, comparisonsToKeep);
 
          string fileCachePath = System.IO.Path.Combine(Path, RevisionsSubFolderName);
          FileCache = new FileStorageRevisionCache(fileCachePath, revisionsToKeep);

@@ -187,23 +187,16 @@ namespace mrHelper.App.Forms
       {
          labelWorkflowStatus.Text = "Launching diff tool...";
 
-         int? pid;
+         int? pid = null;
          try
          {
             DiffToolArguments arg = new DiffToolArguments(true, Constants.GitDiffToolName, leftSHA, rightSHA);
             pid = storage.Git?.LaunchDiffTool(arg) ?? null;
          }
-         catch (Exception ex)
+         catch (DiffToolLaunchException)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               string message = "Could not launch diff tool";
-               ExceptionHandlers.Handle(message, ex);
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               labelWorkflowStatus.Text = message;
-               return;
-            }
-            throw;
+            MessageBox.Show("Cannot launch diff tool", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            labelWorkflowStatus.Text = String.Empty;
          }
 
          if (!pid.HasValue)

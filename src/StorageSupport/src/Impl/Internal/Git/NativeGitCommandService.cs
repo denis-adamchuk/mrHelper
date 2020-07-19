@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
@@ -15,21 +12,31 @@ namespace mrHelper.StorageSupport
          RenameDetector = new GitRepositoryRenameDetector(this);
       }
 
-      public override int LaunchDiffTool(DiffToolArguments arguments)
-      {
-         return ExternalProcess.Start("git", arguments.ToString(), false, _path).PID;
-      }
-
       public override IFileRenameDetector RenameDetector { get; }
 
-      protected override IEnumerable<string> getSync<T>(T arguments)
+      protected override object runCommand(GitDiffArguments arguments)
       {
-         return getSyncFromExternalProcess("git", arguments.ToString(), _path, null);
+         return startExternalProcess("git", arguments.ToString(), _path, true, null).StdOut;
       }
 
-      protected override Task<IEnumerable<string>> getAsync<T>(T arguments)
+      protected override object runCommand(GitShowRevisionArguments arguments)
       {
-         return fetchAsyncFromExternalProcess("git", arguments.ToString(), _path, null);
+         return startExternalProcess("git", arguments.ToString(), _path, true, null).StdOut;
+      }
+
+      protected override object runCommand(DiffToolArguments arguments)
+      {
+         return startExternalProcess("git", arguments.ToString(), _path, true, null).PID;
+      }
+
+      async protected override Task<object> runCommandAsync(GitDiffArguments arguments)
+      {
+         return (await startExternalProcessAsync("git", arguments.ToString(), _path, null)).StdOut;
+      }
+
+      async protected override Task<object> runCommandAsync(GitShowRevisionArguments arguments)
+      {
+         return (await startExternalProcessAsync("git", arguments.ToString(), _path, null)).StdOut;
       }
 
       private readonly string _path;

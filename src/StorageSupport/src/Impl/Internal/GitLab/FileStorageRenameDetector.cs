@@ -17,9 +17,24 @@ namespace mrHelper.StorageSupport
          GitLabSharp.Entities.Comparison comparison = _comparisonCache.LoadComparison(leftcommit, rightcommit);
          if (comparison == null)
          {
-            throw new FileRenameDetectorException("Cannot load Comparison object", null);
+            throw new FileRenameDetectorException(String.Format(
+               "Cannot find Comparison object for {0} vs {1}", leftcommit, rightcommit), null);
          }
 
+         try
+         {
+            return isRenamed(leftcommit, rightcommit, filename, leftsidename, out moved, comparison);
+         }
+         catch (Exception ex)
+         {
+            throw new FileRenameDetectorException(String.Format(
+               "Cannot process Comparison object for {0} vs {1}", leftcommit, rightcommit), ex);
+         }
+      }
+
+      private string isRenamed(string leftcommit, string rightcommit, string filename, bool leftsidename, out bool moved,
+         GitLabSharp.Entities.Comparison comparison)
+      {
          FileRevision fileRevision = new FileRevision(filename, leftsidename ? leftcommit : rightcommit);
          string fileRevisionPath = _fileCache.GetFileRevisionPath(fileRevision);
          string fileContent = System.IO.File.ReadAllText(fileRevisionPath);
