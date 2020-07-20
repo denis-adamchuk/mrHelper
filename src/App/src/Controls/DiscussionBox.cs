@@ -271,9 +271,16 @@ namespace mrHelper.App.Controls
 
          Debug.Assert(diffContextControl is HtmlPanel);
          HtmlPanel htmlPanel = diffContextControl as HtmlPanel;
+
+         // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
+         int prevWidth = htmlPanel.Width;
+         htmlPanel.Width = 0;
+         htmlPanel.Height = 0;
+
          string html = getContext(_panelContextMaker, position, _diffContextDepth, fontSizePx, out string css);
          htmlPanel.BaseStylesheet = css;
          htmlPanel.Text = html;
+         resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
 
          string tooltipHtml = getContext(_tooltipContextMaker, position,
             _tooltipContextDepth, fontSizePx, out string tooltipCSS);
@@ -450,12 +457,17 @@ namespace mrHelper.App.Controls
          Debug.Assert(noteControl is HtmlPanel);
          HtmlPanel htmlPanel = noteControl as HtmlPanel;
          htmlPanel.BaseStylesheet = String.Format(
-            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: 4px; }}",
+            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: 6px; }}",
             Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
+
+         // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
+         int prevWidth = noteControl.Width;
+         noteControl.Width = 0;
+         noteControl.Height = 0;
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
          noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, addPrefix(body, note, _firstNoteAuthor));
-         noteControl.PerformLayout();
+         resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
 
          _htmlDiscussionNoteToolTip.BaseStylesheet =
             String.Format("{0} body div {{ font-size: {1}px; }}",
@@ -484,11 +496,22 @@ namespace mrHelper.App.Controls
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
          noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
-         noteControl.PerformLayout();
 
+         resizeFullSizeHtmlPanel(noteControl as HtmlPanel);
+      }
+
+      private void resizeFullSizeHtmlPanel(HtmlPanel htmlPanel)
+      {
          // Use computed size as the control size. Height must be set BEFORE Width.
          htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2;
          htmlPanel.Width = htmlPanel.AutoScrollMinSize.Width + 2;
+      }
+
+      private void resizeLimitedWidthHtmlPanel(HtmlPanel htmlPanel, int width)
+      {
+         htmlPanel.Width = width;
+         int extraHeight = htmlPanel.HorizontalScroll.Visible ? SystemInformation.HorizontalScrollBarHeight : 0;
+         htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2 + extraHeight;
       }
 
       private bool isServiceDiscussionNote(DiscussionNote note)
@@ -666,10 +689,14 @@ namespace mrHelper.App.Controls
          {
             foreach (Control noteControl in _textboxesNotes)
             {
+               HtmlPanel htmlPanel = noteControl as HtmlPanel;
                if (!isServiceDiscussionNote(getNoteFromControl(noteControl)))
                {
-                  noteControl.Width = width * NotesWidth / 100;
-                  noteControl.Height = (noteControl as HtmlPanel).AutoScrollMinSize.Height + 2;
+                  resizeLimitedWidthHtmlPanel(htmlPanel, width * NotesWidth / 100);
+               }
+               else
+               {
+                  resizeFullSizeHtmlPanel(htmlPanel);
                }
             }
          }
@@ -697,8 +724,7 @@ namespace mrHelper.App.Controls
 
          if (_panelContext != null)
          {
-            _panelContext.Width = width * remainingPercents / 100;
-            _panelContext.Height = (_panelContext as HtmlPanel).AutoScrollMinSize.Height + 2;
+            resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, width * remainingPercents / 100);
             _htmlDiffContextToolTip.MaximumSize = new Size(_panelContext.Width, 0 /* auto-height */);
          }
       }
