@@ -1592,13 +1592,12 @@ namespace mrHelper.App.Forms
          // buttonCreateNew
          // 
          this.buttonCreateNew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonCreateNew.Enabled = false;
          this.buttonCreateNew.Location = new System.Drawing.Point(400, 10);
          this.buttonCreateNew.Name = "buttonCreateNew";
          this.buttonCreateNew.Size = new System.Drawing.Size(96, 32);
          this.buttonCreateNew.TabIndex = 4;
          this.buttonCreateNew.Text = "Create New...";
-         this.toolTip.SetToolTip(this.buttonCreateNew, "Update merge request list in the background");
+         this.toolTip.SetToolTip(this.buttonCreateNew, "Create a new merge request");
          this.buttonCreateNew.UseVisualStyleBackColor = true;
          this.buttonCreateNew.Click += new System.EventHandler(this.buttonCreateNew_Click);
          // 

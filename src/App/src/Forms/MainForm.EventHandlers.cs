@@ -21,6 +21,7 @@ using mrHelper.StorageSupport;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
 using Newtonsoft.Json.Linq;
+using mrHelper.App.src.Forms;
 
 namespace mrHelper.App.Forms
 {
@@ -1380,7 +1381,8 @@ namespace mrHelper.App.Forms
 
       private void buttonCreateNew_Click(object sender, EventArgs e)
       {
-
+         CreateNewMergeRequestForm form = new CreateNewMergeRequestForm();
+         form.Show();
       }
    }
 }

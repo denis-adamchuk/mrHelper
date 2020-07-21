@@ -117,6 +117,12 @@
     <Compile Include="src\Forms\AddItemForm.Designer.cs">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\CreateNewMergeRequestForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\CreateNewMergeRequestForm.Designer.cs">
+      <DependentUpon>CreateNewMergeRequestForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\EditOrderedListViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -244,6 +250,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\CreateNewMergeRequestForm.resx">
+      <DependentUpon>CreateNewMergeRequestForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\EditOrderedListViewForm.resx">
       <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
