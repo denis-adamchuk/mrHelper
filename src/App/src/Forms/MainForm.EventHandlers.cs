@@ -329,10 +329,10 @@ namespace mrHelper.App.Forms
                e.ColumnIndex == columnHeaderLabels.Index : e.ColumnIndex == columnHeaderFoundLabels.Index;
 
          bool isResolvedColumnItem() =>
-            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderResolved.Index; 
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderResolved.Index;
 
          bool isTotalTimeColumnItem() =>
-            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderTotalTime.Index; 
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderTotalTime.Index;
 
          if (isClickable)
          {
@@ -1376,6 +1376,11 @@ namespace mrHelper.App.Forms
          {
             openBrowser(helpUrl);
          }
+      }
+
+      private void buttonCreateNew_Click(object sender, EventArgs e)
+      {
+
       }
    }
 }

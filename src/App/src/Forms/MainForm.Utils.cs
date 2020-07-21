@@ -1602,7 +1602,9 @@ namespace mrHelper.App.Forms
           + 100 /* cannot use textBoxLabels.MinimumSize.Width, see 9b65d7413c */
           + calcHorzDistance(textBoxDisplayFilter, buttonReloadList, true)
           + buttonReloadList.Size.Width
-          + calcHorzDistance(buttonReloadList, null)
+          + calcHorzDistance(buttonReloadList, buttonCreateNew)
+          + buttonCreateNew.Size.Width
+          + calcHorzDistance(buttonCreateNew, null)
           + calcHorzDistance(groupBoxSelectMergeRequest, null),
             calcHorzDistance(null, groupBoxSelectMergeRequest)
           + calcHorzDistance(null, radioButtonSearchByTitleAndDescription)
