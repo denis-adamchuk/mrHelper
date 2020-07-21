@@ -1367,6 +1367,16 @@ namespace mrHelper.App.Forms
       {
          updateStorageDependentControlState(getMergeRequestKey(null));
       }
+
+      private void linkLabelCommitStorageDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         Trace.TraceInformation("Clicked on link label for commit storage selection");
+         string helpUrl = Program.ServiceManager.GetHelpUrl();
+         if (helpUrl != String.Empty)
+         {
+            openBrowser(helpUrl);
+         }
+      }
    }
 }
 

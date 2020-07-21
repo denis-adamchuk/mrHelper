@@ -66,6 +66,9 @@ namespace mrHelper.Common.Constants
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
+      public static int MaxCommitsToLoad = 50;
+      public static int MaxAllowedCommitsInComparison = 50;
+      public static int MaxAllowedDiffsInComparison = 1000;
 
       public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
       {

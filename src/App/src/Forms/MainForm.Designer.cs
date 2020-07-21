@@ -118,6 +118,7 @@ namespace mrHelper.App.Forms
          this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
          this.checkBoxRunWhenWindowsStarts = new System.Windows.Forms.CheckBox();
+         this.checkBoxNewDiscussionIsTopMostForm = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -170,7 +171,7 @@ namespace mrHelper.App.Forms
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.checkBoxNewDiscussionIsTopMostForm = new System.Windows.Forms.CheckBox();
+         this.linkLabelCommitStorageDescription = new System.Windows.Forms.LinkLabel();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -938,6 +939,18 @@ namespace mrHelper.App.Forms
          this.checkBoxRunWhenWindowsStarts.UseVisualStyleBackColor = true;
          this.checkBoxRunWhenWindowsStarts.CheckedChanged += new System.EventHandler(this.checkBoxRunWhenWindowsStarts_CheckedChanged);
          // 
+         // checkBoxNewDiscussionIsTopMostForm
+         // 
+         this.checkBoxNewDiscussionIsTopMostForm.AutoSize = true;
+         this.checkBoxNewDiscussionIsTopMostForm.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxNewDiscussionIsTopMostForm.Name = "checkBoxNewDiscussionIsTopMostForm";
+         this.checkBoxNewDiscussionIsTopMostForm.Size = new System.Drawing.Size(288, 17);
+         this.checkBoxNewDiscussionIsTopMostForm.TabIndex = 17;
+         this.checkBoxNewDiscussionIsTopMostForm.Text = "Show New Discussion window on top of all applications";
+         this.toolTip.SetToolTip(this.checkBoxNewDiscussionIsTopMostForm, "Forces Create New Discussion window to be a topmost one");
+         this.checkBoxNewDiscussionIsTopMostForm.UseVisualStyleBackColor = true;
+         this.checkBoxNewDiscussionIsTopMostForm.CheckedChanged += new System.EventHandler(this.CheckBoxNewDiscussionIsTopMostForm_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1012,7 +1025,7 @@ namespace mrHelper.App.Forms
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowUpdatedMergeRequests);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowMergedMergeRequests);
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowNewMergeRequests);
-         this.groupBoxNotifications.Location = new System.Drawing.Point(6, 284);
+         this.groupBoxNotifications.Location = new System.Drawing.Point(6, 264);
          this.groupBoxNotifications.Name = "groupBoxNotifications";
          this.groupBoxNotifications.Size = new System.Drawing.Size(513, 135);
          this.groupBoxNotifications.TabIndex = 4;
@@ -1123,7 +1136,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.labelDepth);
          this.groupBoxOther.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
-         this.groupBoxOther.Location = new System.Drawing.Point(6, 425);
+         this.groupBoxOther.Location = new System.Drawing.Point(6, 405);
          this.groupBoxOther.Name = "groupBoxOther";
          this.groupBoxOther.Size = new System.Drawing.Size(301, 267);
          this.groupBoxOther.TabIndex = 2;
@@ -1198,6 +1211,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxStorage
          // 
+         this.groupBoxStorage.Controls.Add(this.linkLabelCommitStorageDescription);
          this.groupBoxStorage.Controls.Add(this.radioButtonUseGitShallowClone);
          this.groupBoxStorage.Controls.Add(this.radioButtonDontUseGit);
          this.groupBoxStorage.Controls.Add(this.radioButtonUseGitFullClone);
@@ -1206,7 +1220,7 @@ namespace mrHelper.App.Forms
          this.groupBoxStorage.Controls.Add(this.textBoxStorageFolder);
          this.groupBoxStorage.Location = new System.Drawing.Point(6, 147);
          this.groupBoxStorage.Name = "groupBoxStorage";
-         this.groupBoxStorage.Size = new System.Drawing.Size(513, 131);
+         this.groupBoxStorage.Size = new System.Drawing.Size(513, 111);
          this.groupBoxStorage.TabIndex = 1;
          this.groupBoxStorage.TabStop = false;
          this.groupBoxStorage.Text = "File Storage";
@@ -1216,24 +1230,22 @@ namespace mrHelper.App.Forms
          this.radioButtonUseGitShallowClone.AutoSize = true;
          this.radioButtonUseGitShallowClone.Location = new System.Drawing.Point(6, 84);
          this.radioButtonUseGitShallowClone.Name = "radioButtonUseGitShallowClone";
-         this.radioButtonUseGitShallowClone.Size = new System.Drawing.Size(437, 17);
+         this.radioButtonUseGitShallowClone.Size = new System.Drawing.Size(168, 17);
          this.radioButtonUseGitShallowClone.TabIndex = 11;
          this.radioButtonUseGitShallowClone.TabStop = true;
-         this.radioButtonUseGitShallowClone.Text = "Use git in shallow clone mode. Faster clone, but does not allow to reuse existing" +
-    " folders.";
+         this.radioButtonUseGitShallowClone.Text = "Use git in shallow clone mode";
          this.radioButtonUseGitShallowClone.UseVisualStyleBackColor = true;
          this.radioButtonUseGitShallowClone.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
          // radioButtonDontUseGit
          // 
          this.radioButtonDontUseGit.AutoSize = true;
-         this.radioButtonDontUseGit.Location = new System.Drawing.Point(6, 107);
+         this.radioButtonDontUseGit.Location = new System.Drawing.Point(339, 64);
          this.radioButtonDontUseGit.Name = "radioButtonDontUseGit";
-         this.radioButtonDontUseGit.Size = new System.Drawing.Size(455, 17);
+         this.radioButtonDontUseGit.Size = new System.Drawing.Size(155, 17);
          this.radioButtonDontUseGit.TabIndex = 10;
          this.radioButtonDontUseGit.TabStop = true;
-         this.radioButtonDontUseGit.Text = "Don\'t use git as file storage. Copies files from GitLab and does not require any " +
-    "kind of clone.";
+         this.radioButtonDontUseGit.Text = "Don\'t use git as file storage";
          this.radioButtonDontUseGit.UseVisualStyleBackColor = true;
          this.radioButtonDontUseGit.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
@@ -1242,11 +1254,10 @@ namespace mrHelper.App.Forms
          this.radioButtonUseGitFullClone.AutoSize = true;
          this.radioButtonUseGitFullClone.Location = new System.Drawing.Point(6, 61);
          this.radioButtonUseGitFullClone.Name = "radioButtonUseGitFullClone";
-         this.radioButtonUseGitFullClone.Size = new System.Drawing.Size(469, 17);
+         this.radioButtonUseGitFullClone.Size = new System.Drawing.Size(183, 17);
          this.radioButtonUseGitFullClone.TabIndex = 9;
          this.radioButtonUseGitFullClone.TabStop = true;
-         this.radioButtonUseGitFullClone.Text = "Use git and clone full repositories. Slow on big repositories, but allows to reus" +
-    "e existing folders..";
+         this.radioButtonUseGitFullClone.Text = "Use git and clone full repositories";
          this.radioButtonUseGitFullClone.UseVisualStyleBackColor = true;
          this.radioButtonUseGitFullClone.CheckedChanged += new System.EventHandler(this.radioButtonUseGit_CheckedChanged);
          // 
@@ -1565,17 +1576,16 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // checkBoxNewDiscussionIsTopMostForm
+         // linkLabelCommitStorageDescription
          // 
-         this.checkBoxNewDiscussionIsTopMostForm.AutoSize = true;
-         this.checkBoxNewDiscussionIsTopMostForm.Location = new System.Drawing.Point(6, 243);
-         this.checkBoxNewDiscussionIsTopMostForm.Name = "checkBoxNewDiscussionIsTopMostForm";
-         this.checkBoxNewDiscussionIsTopMostForm.Size = new System.Drawing.Size(286, 17);
-         this.checkBoxNewDiscussionIsTopMostForm.TabIndex = 17;
-         this.checkBoxNewDiscussionIsTopMostForm.Text = "Show New Discussion window on top of all applications";
-         this.toolTip.SetToolTip(this.checkBoxNewDiscussionIsTopMostForm, "Forces Create New Discussion window to be a topmost one");
-         this.checkBoxNewDiscussionIsTopMostForm.UseVisualStyleBackColor = true;
-         this.checkBoxNewDiscussionIsTopMostForm.CheckedChanged += new System.EventHandler(this.CheckBoxNewDiscussionIsTopMostForm_CheckedChanged);
+         this.linkLabelCommitStorageDescription.AutoSize = true;
+         this.linkLabelCommitStorageDescription.Location = new System.Drawing.Point(336, 88);
+         this.linkLabelCommitStorageDescription.Name = "linkLabelCommitStorageDescription";
+         this.linkLabelCommitStorageDescription.Size = new System.Drawing.Size(128, 13);
+         this.linkLabelCommitStorageDescription.TabIndex = 12;
+         this.linkLabelCommitStorageDescription.TabStop = true;
+         this.linkLabelCommitStorageDescription.Text = "Show detailed description";
+         this.linkLabelCommitStorageDescription.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelCommitStorageDescription_LinkClicked);
          // 
          // MainForm
          // 
@@ -1752,6 +1762,7 @@ namespace mrHelper.App.Forms
       private RadioButton radioButtonUseGitFullClone;
       private RadioButton radioButtonUseGitShallowClone;
       private CheckBox checkBoxNewDiscussionIsTopMostForm;
+      private LinkLabel linkLabelCommitStorageDescription;
    }
 }
 

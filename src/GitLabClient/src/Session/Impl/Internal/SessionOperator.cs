@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
@@ -5,6 +6,7 @@ using mrHelper.Client.Common;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.Client.Session
 {
@@ -50,13 +52,16 @@ namespace mrHelper.Client.Session
 
       internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid)
       {
+         // If MaxCommitsToLoad exceeds 100, need to call LoadAllTaskAsync() w/o PageFilter
+         Debug.Assert(Constants.MaxCommitsToLoad <= 100);
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
                      (IEnumerable<Commit>)await client.RunAsync(
                         async (gl) =>
-                           await gl.Projects.Get(projectName).MergeRequests.Get(iid).Commits.LoadAllTaskAsync())));
+                           await gl.Projects.Get(projectName).MergeRequests.Get(iid).Commits.LoadTaskAsync(
+                              new GitLabSharp.Accessors.PageFilter(Constants.MaxCommitsToLoad, 1)))));
       }
 
       internal Task<IEnumerable<Version>> GetVersionsAsync(string projectName, int iid)

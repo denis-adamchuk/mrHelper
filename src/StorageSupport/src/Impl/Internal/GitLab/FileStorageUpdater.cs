@@ -110,8 +110,9 @@ namespace mrHelper.StorageSupport
                   await doUpdate(false, contextProvider?.GetContext(), null);
                   onFinished?.Invoke();
                }
-               catch (RepositoryAccessorException ex)
+               catch (Exception ex)
                {
+                  Debug.Assert(ex is RepositoryAccessorException || ex is LocalCommitStorageUpdaterFailedException);
                   ExceptionHandlers.Handle("Silent update failed", ex);
                }
                finally
@@ -131,6 +132,16 @@ namespace mrHelper.StorageSupport
 
          reportProgress(onProgressChange, "Downloading meta-information...");
          IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(isAwaitedUpdate, context);
+         if (comparisons == null)
+         {
+            return;
+         }
+         if (!comparisons.Any())
+         {
+            throw new LocalCommitStorageUpdaterFailedException(
+               "Cannot compare given objects (e.g. too big difference)", null);
+         }
+
          traceInformation(String.Format("Got {0} comparisons, isAwaitedUpdate={1}",
             comparisons.Count(), isAwaitedUpdate.ToString()));
          traceInformation("List of comparisons to process:");
@@ -168,12 +179,22 @@ namespace mrHelper.StorageSupport
                cancelled = true;
                return;
             }
-            comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
+            if (isValidComparison(comparison))
+            {
+               comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
+            }
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
             () => getComparisonBatchLimits(isAwaitedUpdate), () => cancelled);
-         return comparisons;
+         return cancelled ? null : comparisons;
+      }
+
+      private static bool isValidComparison(Comparison comparison)
+      {
+         return comparison.Commits.Count() < Constants.MaxAllowedCommitsInComparison
+            &&  comparison.Diffs.Count()   < Constants.MaxAllowedDiffsInComparison
+            && !comparison.Compare_Timeout;
       }
 
       private static async Task suspendProcessingOfNonAwaitedUpdate(bool isAwaitedUpdate)
