@@ -75,7 +75,7 @@ namespace mrHelper.App.Forms
          }
 
          ICommitStorageUpdateContextProvider contextProvider = new DiscussionBasedContextProvider(discussions);
-         return await prepareCommitStorage(mrk, storage, contextProvider);
+         return await prepareCommitStorage(mrk, storage, contextProvider, false);
       }
 
       private void showDiscussionForm(ISession session, ILocalCommitStorage storage,
@@ -230,7 +230,7 @@ namespace mrHelper.App.Forms
 
          ICommitStorageUpdateContextProvider contextProvider =
             new CommitBasedContextProvider(new string[] { rightSHA }, leftSHA);
-         return await prepareCommitStorage(mrk, storage, contextProvider);
+         return await prepareCommitStorage(mrk, storage, contextProvider, true);
       }
 
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
@@ -390,7 +390,8 @@ namespace mrHelper.App.Forms
       }
 
       private async Task<bool> prepareCommitStorage(
-         MergeRequestKey mrk, ILocalCommitStorage storage, ICommitStorageUpdateContextProvider contextProvider)
+         MergeRequestKey mrk, ILocalCommitStorage storage, ICommitStorageUpdateContextProvider contextProvider,
+         bool isLimitExceptionFatal)
       {
          try
          {
@@ -409,10 +410,20 @@ namespace mrHelper.App.Forms
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
                labelWorkflowStatus.Text = "Storage update cancelled by user";
             }
-            else if (ex is LocalCommitStorageUpdaterFailedException inex)
+            else if (ex is LocalCommitStorageUpdaterFailedException fex)
             {
                ExceptionHandlers.Handle(ex.Message, ex);
-               MessageBox.Show(inex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               MessageBox.Show(fex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               labelWorkflowStatus.Text = "Failed to update storage";
+            }
+            else if (ex is LocalCommitStorageUpdaterLimitException mex)
+            {
+               ExceptionHandlers.Handle(ex.Message, mex);
+               if (!isLimitExceptionFatal)
+               {
+                  return true;
+               }
+               MessageBox.Show(mex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                labelWorkflowStatus.Text = "Failed to update storage";
             }
             return false;

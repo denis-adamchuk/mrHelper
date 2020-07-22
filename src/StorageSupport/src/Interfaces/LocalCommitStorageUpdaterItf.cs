@@ -20,6 +20,14 @@ namespace mrHelper.StorageSupport
       }
    }
 
+   public class LocalCommitStorageUpdaterLimitException : LocalCommitStorageUpdaterException
+   {
+      public LocalCommitStorageUpdaterLimitException(string message)
+         : base(message, null)
+      {
+      }
+   }
+
    public class LocalCommitStorageUpdaterCancelledException : Exception {}
 
    /// <summary>

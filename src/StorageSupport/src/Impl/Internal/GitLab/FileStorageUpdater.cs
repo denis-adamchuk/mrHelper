@@ -112,7 +112,7 @@ namespace mrHelper.StorageSupport
                }
                catch (Exception ex)
                {
-                  Debug.Assert(ex is RepositoryAccessorException || ex is LocalCommitStorageUpdaterFailedException);
+                  Debug.Assert(ex is RepositoryAccessorException || ex is LocalCommitStorageUpdaterLimitException);
                   ExceptionHandlers.Handle("Silent update failed", ex);
                }
                finally
@@ -135,11 +135,6 @@ namespace mrHelper.StorageSupport
          if (comparisons == null)
          {
             return;
-         }
-         if (!comparisons.Any())
-         {
-            throw new LocalCommitStorageUpdaterFailedException(
-               "Cannot compare given objects (e.g. too big difference)", null);
          }
 
          traceInformation(String.Format("Got {0} comparisons, isAwaitedUpdate={1}",
@@ -164,6 +159,7 @@ namespace mrHelper.StorageSupport
             .ToList();
 
          bool cancelled = _isDisposed;
+         Exception exception = null;
          List<ComparisonInternal> comparisons = new List<ComparisonInternal>();
          async Task doFetch(Tuple<string, string> baseShaToHeadSha)
          {
@@ -179,22 +175,40 @@ namespace mrHelper.StorageSupport
                cancelled = true;
                return;
             }
-            if (isValidComparison(comparison))
+
+            try
             {
-               comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
+               throwOnBadComparison(comparison);
             }
+            catch (Exception ex)
+            {
+               exception = ex;
+               cancelled = true;
+               return;
+            }
+            comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
             () => getComparisonBatchLimits(isAwaitedUpdate), () => cancelled);
+         if (exception != null)
+         {
+            throw exception;
+         }
          return cancelled ? null : comparisons;
       }
 
-      private static bool isValidComparison(Comparison comparison)
+      private static void throwOnBadComparison(Comparison comparison)
       {
-         return comparison.Commits.Count() < Constants.MaxAllowedCommitsInComparison
-            &&  comparison.Diffs.Count()   < Constants.MaxAllowedDiffsInComparison
-            && !comparison.Compare_Timeout;
+         if (comparison.Diffs.Count() > Constants.MaxAllowedDiffsInComparison)
+         {
+            throw new LocalCommitStorageUpdaterLimitException("Too many files in diff");
+         }
+
+         if (comparison.Compare_Timeout)
+         {
+            throw new LocalCommitStorageUpdaterLimitException("GitLab failed to compare selected revisions");
+         }
       }
 
       private static async Task suspendProcessingOfNonAwaitedUpdate(bool isAwaitedUpdate)
