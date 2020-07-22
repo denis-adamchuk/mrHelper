@@ -5,7 +5,6 @@ using GitLabSharp.Entities;
 using mrHelper.Client.Common;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Repository;
 using mrHelper.Client.TimeTracking;
 using mrHelper.Client.Types;
 
@@ -84,9 +83,6 @@ namespace mrHelper.Client.Session
       public IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk) =>
          _internal?.GetDiscussionCreator(mrk);
 
-      public IRepositoryAccessor GetRepositoryAccessor() =>
-         _internal?.GetRepositoryAccessor();
-
       public IMergeRequestCache MergeRequestCache => _internal?.MergeRequestCache;
 
       public IDiscussionCache DiscussionCache => _internal?.DiscussionCache;
@@ -102,9 +98,7 @@ namespace mrHelper.Client.Session
             new DiscussionManager(_clientContext, hostname, user, mergeRequestManager, context);
          TimeTrackingManager timeTrackingManager =
             new TimeTrackingManager(_clientContext, hostname, user, discussionManager);
-         RepositoryManager repositoryManager =
-            new RepositoryManager(_clientContext, hostname);
-         return new SessionInternal(mergeRequestManager, discussionManager, timeTrackingManager, repositoryManager);
+         return new SessionInternal(mergeRequestManager, discussionManager, timeTrackingManager);
       }
 
       private SessionOperator _operator;

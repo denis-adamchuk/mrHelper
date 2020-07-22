@@ -1,9 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using mrHelper.Client.Session;
-using mrHelper.Client.Repository;
+﻿using System.Threading.Tasks;
 using GitLabSharp;
 using GitLabSharp.Accessors;
+using mrHelper.Client.Session;
 
 namespace mrHelper.Client.Common
 {
@@ -13,6 +11,7 @@ namespace mrHelper.Client.Common
       {
          SessionManager = new SessionManager(clientContext);
          SearchManager = new SearchManager(clientContext.HostProperties);
+         GitLabAccessor = new GitLabAccessor(clientContext.HostProperties);
       }
 
       public enum ConnectionCheckStatus
@@ -49,6 +48,7 @@ namespace mrHelper.Client.Common
 
       public ISessionManager SessionManager { get; }
       public ISearchManager SearchManager { get; }
+      public IGitLabAccessor GitLabAccessor { get; }
    }
 }
 

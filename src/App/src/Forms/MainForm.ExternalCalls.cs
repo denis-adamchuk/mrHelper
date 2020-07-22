@@ -91,7 +91,7 @@ namespace mrHelper.App.Forms
             DiffCallHandler handler;
             try
             {
-               handler = new DiffCallHandler(diffArgumentParser.Parse(getDiffTempFolder(snapshot)), snapshot, session);
+               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, getProjectAccessor(), session);
             }
             catch (ArgumentException ex)
             {

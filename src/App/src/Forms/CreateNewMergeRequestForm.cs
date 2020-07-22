@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
+using mrHelper.Client.Projects;
 using mrHelper.Client.Repository;
-using mrHelper.Client.Session;
 
 namespace mrHelper.App.src.Forms
 {
    public partial class CreateNewMergeRequestForm : CustomFontForm
    {
-      public CreateNewMergeRequestForm(ISession session)
+      public CreateNewMergeRequestForm(IProjectAccessor projectAccessor)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -20,7 +21,7 @@ namespace mrHelper.App.src.Forms
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
-         _repositoryAccessor = session.GetRepositoryAccessor();
+         _projectAccessor = projectAccessor;
       }
 
       async private void CreateNewMergeRequestForm_Load(object sender, EventArgs e)
@@ -46,19 +47,21 @@ namespace mrHelper.App.src.Forms
          onTargetBranchSearchFinish(targetBranch?.Name);
       }
 
-      async private Task<IEnumerable<Project>> loadProjectListAsync()
+      private Task<IEnumerable<Project>> loadProjectListAsync()
       {
-         throw new NotImplementedException();
+         return _projectAccessor.GetProjects();
       }
 
       async private Task<IEnumerable<Branch>> loadBranchListAsync()
       {
-         return await _repositoryAccessor.GetBranches(getProjectName());
+         Debug.Assert(_repositoryAccessor != null);
+         return await _repositoryAccessor.GetBranches();
       }
 
       async private Task<Branch> searchTargetBranchAsync()
       {
-         return await _repositoryAccessor.FindPreferredTargetBranch(getProjectName(), getSourceBranchName());
+         Debug.Assert(_repositoryAccessor != null);
+         return await _repositoryAccessor.FindPreferredTargetBranch(getSourceBranchName());
       }
 
       private void onProjectListLoadStart()
@@ -85,6 +88,8 @@ namespace mrHelper.App.src.Forms
          comboBoxProject.Enabled = false;
          comboBoxSourceBranch.Enabled = false;
          comboBoxTargetBranch.Enabled = false;
+
+         createRepositoryAccessor();
       }
 
       private void onBranchListLoadFinish(IEnumerable<Branch> branchList)
@@ -125,21 +130,22 @@ namespace mrHelper.App.src.Forms
 
       private string getSourceBranchName()
       {
-         if (comboBoxSourceBranch.SelectedIndex == -1)
-         {
-            return String.Empty;
-         }
-
-         return comboBoxSourceBranch.Text;
+         return comboBoxSourceBranch.SelectedIndex == -1 ? String.Empty : comboBoxSourceBranch.Text;
       }
 
       private string getProjectName()
       {
-         return "";
+         return comboBoxProject.SelectedIndex == -1 ? String.Empty : comboBoxProject.Text;
+      }
+
+      private void createRepositoryAccessor()
+      {
+         _repositoryAccessor = _projectAccessor.GetSingleProjectAccessor(getProjectName()).RepositoryAccessor;
       }
 
       private readonly string DefaultTargetBranchName = "master";
-      private readonly IRepositoryAccessor _repositoryAccessor;
+      private readonly IProjectAccessor _projectAccessor;
+      private IRepositoryAccessor _repositoryAccessor;
    }
 }
 

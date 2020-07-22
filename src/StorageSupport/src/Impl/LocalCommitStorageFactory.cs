@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Session;
+using mrHelper.Client.Projects;
 
 namespace mrHelper.StorageSupport
 {
@@ -21,7 +21,7 @@ namespace mrHelper.StorageSupport
       /// Throws ArgumentException if passed ParentFolder does not exist and cannot be created
       /// </summary>
       public LocalCommitStorageFactory(ISynchronizeInvoke synchronizeInvoke,
-         ISession session, string parentFolder, int revisionsToKeep, int comparisonsToKeep)
+         IProjectAccessor projectAccessor, string parentFolder, int revisionsToKeep, int comparisonsToKeep)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -37,7 +37,7 @@ namespace mrHelper.StorageSupport
 
          ParentFolder = parentFolder;
          _synchronizeInvoke = synchronizeInvoke;
-         _session = session;
+         _projectAccessor = projectAccessor;
          _revisionsToKeep = revisionsToKeep;
          _comparisonsToKeep = comparisonsToKeep;
 
@@ -66,7 +66,8 @@ namespace mrHelper.StorageSupport
          {
             if (type == LocalCommitStorageType.FileStorage)
             {
-               storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, _session.GetRepositoryAccessor(),
+               storage = new FileStorage(ParentFolder, key, _synchronizeInvoke,
+                  _projectAccessor.GetSingleProjectAccessor(key.ProjectName).RepositoryAccessor,
                   _revisionsToKeep, _comparisonsToKeep, () => _storages.Count);
             }
             else
@@ -104,7 +105,7 @@ namespace mrHelper.StorageSupport
       private readonly Dictionary<ProjectKey, ILocalCommitStorage> _storages =
          new Dictionary<ProjectKey, ILocalCommitStorage>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-      private readonly ISession _session;
+      private readonly IProjectAccessor _projectAccessor;
       private readonly int _revisionsToKeep;
       private readonly int _comparisonsToKeep;
 

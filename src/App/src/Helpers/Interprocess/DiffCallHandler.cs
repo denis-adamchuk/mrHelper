@@ -12,15 +12,18 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
 using mrHelper.Client.Session;
+using mrHelper.Client.Projects;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot, ISession session)
+      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
+         IProjectAccessor projectAccessor, ISession session)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
+         _projectAccessor = projectAccessor;
          _session = session;
       }
 
@@ -39,8 +42,8 @@ namespace mrHelper.App.Interprocess
 
          ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
 
-         LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, _session, _snapshot.TempFolder,
-            Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep);
+         LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, _projectAccessor,
+            _snapshot.TempFolder, Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep);
          LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
          ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
          if (tempRepository == null)
@@ -211,6 +214,7 @@ namespace mrHelper.App.Interprocess
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
       private readonly ISession _session;
+      private readonly IProjectAccessor _projectAccessor;
    }
 }
 

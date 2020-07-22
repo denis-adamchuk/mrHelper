@@ -22,7 +22,6 @@ using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Session;
 using mrHelper.Client.TimeTracking;
-using mrHelper.App.Interprocess;
 
 namespace mrHelper.App.Forms
 {
@@ -770,14 +769,22 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private IProjectAccessor getProjectAccessor()
+      {
+         return _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(getHostName()).ProjectAccessor;
+      }
+
       private ILocalCommitStorageFactory getCommitStorageFactory(bool showMessageBoxOnError)
       {
          if (_storageFactory == null)
          {
             try
             {
-               _storageFactory = new LocalCommitStorageFactory(this, getSession(true),
-                  Program.Settings.LocalGitFolder, Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep);
+               _storageFactory = new LocalCommitStorageFactory(this,
+                  getProjectAccessor(),
+                  Program.Settings.LocalGitFolder,
+                  Program.Settings.RevisionsToKeep,
+                  Program.Settings.ComparisonsToKeep);
                _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
             catch (ArgumentException ex)

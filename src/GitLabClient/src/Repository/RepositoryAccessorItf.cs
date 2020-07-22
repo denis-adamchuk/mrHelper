@@ -16,19 +16,19 @@ namespace mrHelper.Client.Repository
 
    public interface IRepositoryAccessor : IDisposable
    {
-      Task<Comparison> Compare(string projectName, string from, string to);
+      Task<Comparison> Compare(string from, string to);
 
-      Task<File> LoadFile(string projectName, string filename, string sha);
+      Task<File> LoadFile(string filename, string sha);
 
-      Task<Commit> LoadCommit(string projectName, string sha);
+      Task<Commit> LoadCommit(string sha);
 
-      Task<IEnumerable<Branch>> GetBranches(string projectName);
+      Task<IEnumerable<Branch>> GetBranches();
 
-      Task<Branch> CreateNewBranch(string projectName, string name, string sha);
+      Task<Branch> CreateNewBranch(string name, string sha);
 
-      Task<Branch> FindPreferredTargetBranch(string projectName, string sourceBranchName);
+      Task<Branch> FindPreferredTargetBranch(string sourceBranchName);
 
-      Task DeleteBranch(string projectName, string name);
+      Task DeleteBranch(string name);
 
       void Cancel();
    }

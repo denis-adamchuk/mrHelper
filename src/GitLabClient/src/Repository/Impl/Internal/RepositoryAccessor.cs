@@ -10,50 +10,50 @@ namespace mrHelper.Client.Repository
 {
    internal class RepositoryAccessor : IRepositoryAccessor
    {
-      internal RepositoryAccessor(IHostProperties settings, string hostname)
+      internal RepositoryAccessor(IHostProperties settings, ProjectKey projectKey)
       {
-         _hostname = hostname;
          _settings = settings;
+         _projectKey = projectKey;
       }
 
-      public Task<Comparison> Compare(string projectName, string from, string to)
+      public Task<Comparison> Compare(string from, string to)
       {
-         return call(() => _operator.CompareAsync(projectName, from, to),
+         return call(() => _operator.CompareAsync(_projectKey.ProjectName, from, to),
                "Cancelled Compare() call", "Failed Compare() call");
       }
 
-      public Task<File> LoadFile(string projectName, string filename, string sha)
+      public Task<File> LoadFile(string filename, string sha)
       {
-         return call(() => _operator.LoadFileAsync(projectName, filename, sha),
+         return call(() => _operator.LoadFileAsync(_projectKey.ProjectName, filename, sha),
             "File loading cancelled", "Cannot load file");
       }
 
-      public Task<Commit> LoadCommit(string projectName, string sha)
+      public Task<Commit> LoadCommit(string sha)
       {
-         return call(() => _operator.LoadCommitAsync(projectName, sha),
+         return call(() => _operator.LoadCommitAsync(_projectKey.ProjectName, sha),
             "Commit loading cancelled", "Cannot load commit");
       }
 
-      public Task<IEnumerable<Branch>> GetBranches(string projectName)
+      public Task<IEnumerable<Branch>> GetBranches()
       {
-         return call(() => _operator.GetBranches(projectName),
+         return call(() => _operator.GetBranches(_projectKey.ProjectName),
             "Branch list loading cancelled", "Cannot load list of branches");
       }
 
-      public Task<Branch> CreateNewBranch(string projectName, string name, string sha)
+      public Task<Branch> CreateNewBranch(string name, string sha)
       {
-         return call(() => _operator.CreateNewBranchAsync(projectName, name, sha),
+         return call(() => _operator.CreateNewBranchAsync(_projectKey.ProjectName, name, sha),
             "Branch creation cancelled", "Cannot create a new branch");
       }
 
-      public Task<Branch> FindPreferredTargetBranch(string projectName, string sourceBranchName)
+      public Task<Branch> FindPreferredTargetBranch(string sourceBranchName)
       {
          throw new NotImplementedException();
       }
 
-      public Task DeleteBranch(string projectName, string name)
+      public Task DeleteBranch(string name)
       {
-         return call(() => _operator.DeleteBranchAsync(projectName, name),
+         return call(() => _operator.DeleteBranchAsync(_projectKey.ProjectName, name),
             "Branch deletion cancelled", "Cannot delete a branch");
       }
 
@@ -72,7 +72,7 @@ namespace mrHelper.Client.Repository
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_hostname, _settings);
+            _operator = new RepositoryOperator(_projectKey.HostName, _settings);
          }
 
          try
@@ -94,7 +94,7 @@ namespace mrHelper.Client.Repository
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_hostname, _settings);
+            _operator = new RepositoryOperator(_projectKey.HostName, _settings);
          }
 
          try
@@ -112,7 +112,7 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      private readonly string _hostname;
+      private readonly ProjectKey _projectKey;
       private readonly IHostProperties _settings;
 
       private RepositoryOperator _operator;
