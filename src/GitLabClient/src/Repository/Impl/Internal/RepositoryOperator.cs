@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.Client.Common;
@@ -47,6 +48,16 @@ namespace mrHelper.Client.Repository
                      (Commit)(await client.RunAsync(
                         async (gitlab) =>
                            await gitlab.Projects.Get(projectname).Repository.Commits.Get(sha).LoadTaskAsync()))));
+      }
+
+      internal Task<IEnumerable<Branch>> GetBranches(string projectname)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<Branch>)(await client.RunAsync(async (gl) =>
+                        await gl.Projects.Get(projectname).Repository.Branches.LoadAllTaskAsync()))));
       }
 
       internal Task<Branch> CreateNewBranchAsync(string projectname, string name, string sha)

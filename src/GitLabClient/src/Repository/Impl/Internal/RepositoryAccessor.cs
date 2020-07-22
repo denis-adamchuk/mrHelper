@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Common;
@@ -15,33 +16,44 @@ namespace mrHelper.Client.Repository
          _settings = settings;
       }
 
-      public Task<Comparison> Compare(ProjectKey projectKey, string from, string to)
+      public Task<Comparison> Compare(string projectName, string from, string to)
       {
-         return call(projectKey, () => _operator.CompareAsync(projectKey.ProjectName, from, to),
+         return call(() => _operator.CompareAsync(projectName, from, to),
                "Cancelled Compare() call", "Failed Compare() call");
       }
 
-      public Task<File> LoadFile(ProjectKey projectKey, string filename, string sha)
+      public Task<File> LoadFile(string projectName, string filename, string sha)
       {
-         return call(projectKey, () => _operator.LoadFileAsync(projectKey.ProjectName, filename, sha),
+         return call(() => _operator.LoadFileAsync(projectName, filename, sha),
             "File loading cancelled", "Cannot load file");
       }
 
-      public Task<Commit> LoadCommit(ProjectKey projectKey, string sha)
+      public Task<Commit> LoadCommit(string projectName, string sha)
       {
-         return call(projectKey, () => _operator.LoadCommitAsync(projectKey.ProjectName, sha),
+         return call(() => _operator.LoadCommitAsync(projectName, sha),
             "Commit loading cancelled", "Cannot load commit");
       }
 
-      public Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha)
+      public Task<IEnumerable<Branch>> GetBranches(string projectName)
       {
-         return call(projectKey, () => _operator.CreateNewBranchAsync(projectKey.ProjectName, name, sha),
+         return call(() => _operator.GetBranches(projectName),
+            "Branch list loading cancelled", "Cannot load list of branches");
+      }
+
+      public Task<Branch> CreateNewBranch(string projectName, string name, string sha)
+      {
+         return call(() => _operator.CreateNewBranchAsync(projectName, name, sha),
             "Branch creation cancelled", "Cannot create a new branch");
       }
 
-      public Task DeleteBranch(ProjectKey projectKey, string name)
+      public Task<Branch> FindPreferredTargetBranch(string projectName, string sourceBranchName)
       {
-         return call(projectKey, () => _operator.DeleteBranchAsync(projectKey.ProjectName, name),
+         throw new NotImplementedException();
+      }
+
+      public Task DeleteBranch(string projectName, string name)
+      {
+         return call(() => _operator.DeleteBranchAsync(projectName, name),
             "Branch deletion cancelled", "Cannot delete a branch");
       }
 
@@ -56,7 +68,7 @@ namespace mrHelper.Client.Repository
          _operator = null;
       }
 
-      async private Task call(ProjectKey projectKey, Func<Task> func, string cancelMessage, string errorMessage)
+      async private Task call(Func<Task> func, string cancelMessage, string errorMessage)
       {
          if (_operator == null)
          {
@@ -78,7 +90,7 @@ namespace mrHelper.Client.Repository
          }
       }
 
-      async private Task<T> call<T>(ProjectKey projectKey, Func<Task<T>> func, string cancelMessage, string errorMessage)
+      async private Task<T> call<T>(Func<Task<T>> func, string cancelMessage, string errorMessage)
       {
          if (_operator == null)
          {

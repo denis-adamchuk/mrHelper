@@ -1381,7 +1381,7 @@ namespace mrHelper.App.Forms
 
       private void buttonCreateNew_Click(object sender, EventArgs e)
       {
-         CreateNewMergeRequestForm form = new CreateNewMergeRequestForm();
+         CreateNewMergeRequestForm form = new CreateNewMergeRequestForm(_liveSession);
          form.Show();
       }
    }

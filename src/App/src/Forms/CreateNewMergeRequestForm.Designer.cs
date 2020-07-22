@@ -18,6 +18,8 @@
             components.Dispose();
          }
          base.Dispose(disposing);
+
+         _repositoryAccessor.Dispose();
       }
 
       #region Windows Form Designer generated code
@@ -45,19 +47,23 @@
          this.checkBoxDeleteSourceBranch = new System.Windows.Forms.CheckBox();
          this.buttonSubmit = new System.Windows.Forms.Button();
          this.buttonCancel = new System.Windows.Forms.Button();
+         this.groupBoxProject = new System.Windows.Forms.GroupBox();
+         this.comboBoxProject = new System.Windows.Forms.ComboBox();
          this.groupBoxSource.SuspendLayout();
          this.groupBoxTarget.SuspendLayout();
          this.groupBox3.SuspendLayout();
          this.groupBoxDescription.SuspendLayout();
          this.groupBoxOptions.SuspendLayout();
+         this.groupBoxProject.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxSource
          // 
+         this.groupBoxSource.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxSource.Controls.Add(this.comboBoxSourceBranch);
-         this.groupBoxSource.Location = new System.Drawing.Point(12, 12);
+         this.groupBoxSource.Location = new System.Drawing.Point(208, 12);
          this.groupBoxSource.Name = "groupBoxSource";
-         this.groupBoxSource.Size = new System.Drawing.Size(275, 56);
+         this.groupBoxSource.Size = new System.Drawing.Size(183, 56);
          this.groupBoxSource.TabIndex = 0;
          this.groupBoxSource.TabStop = false;
          this.groupBoxSource.Text = "Source Branch";
@@ -68,16 +74,17 @@
          this.comboBoxSourceBranch.FormattingEnabled = true;
          this.comboBoxSourceBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxSourceBranch.Name = "comboBoxSourceBranch";
-         this.comboBoxSourceBranch.Size = new System.Drawing.Size(263, 21);
+         this.comboBoxSourceBranch.Size = new System.Drawing.Size(171, 21);
          this.comboBoxSourceBranch.TabIndex = 0;
+         this.comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
          // 
          // groupBoxTarget
          // 
          this.groupBoxTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxTarget.Controls.Add(this.comboBoxTargetBranch);
-         this.groupBoxTarget.Location = new System.Drawing.Point(305, 12);
+         this.groupBoxTarget.Location = new System.Drawing.Point(397, 12);
          this.groupBoxTarget.Name = "groupBoxTarget";
-         this.groupBoxTarget.Size = new System.Drawing.Size(275, 56);
+         this.groupBoxTarget.Size = new System.Drawing.Size(183, 56);
          this.groupBoxTarget.TabIndex = 1;
          this.groupBoxTarget.TabStop = false;
          this.groupBoxTarget.Text = "Target Branch";
@@ -88,7 +95,7 @@
          this.comboBoxTargetBranch.FormattingEnabled = true;
          this.comboBoxTargetBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxTargetBranch.Name = "comboBoxTargetBranch";
-         this.comboBoxTargetBranch.Size = new System.Drawing.Size(263, 21);
+         this.comboBoxTargetBranch.Size = new System.Drawing.Size(171, 21);
          this.comboBoxTargetBranch.TabIndex = 1;
          // 
          // groupBox3
@@ -230,11 +237,32 @@
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
+         // groupBoxProject
+         // 
+         this.groupBoxProject.Controls.Add(this.comboBoxProject);
+         this.groupBoxProject.Location = new System.Drawing.Point(12, 12);
+         this.groupBoxProject.Name = "groupBoxProject";
+         this.groupBoxProject.Size = new System.Drawing.Size(183, 56);
+         this.groupBoxProject.TabIndex = 1;
+         this.groupBoxProject.TabStop = false;
+         this.groupBoxProject.Text = "Project";
+         // 
+         // comboBoxProject
+         // 
+         this.comboBoxProject.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxProject.FormattingEnabled = true;
+         this.comboBoxProject.Location = new System.Drawing.Point(6, 19);
+         this.comboBoxProject.Name = "comboBoxProject";
+         this.comboBoxProject.Size = new System.Drawing.Size(171, 21);
+         this.comboBoxProject.TabIndex = 0;
+         this.comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
+         // 
          // CreateNewMergeRequestForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(592, 387);
+         this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonSubmit);
          this.Controls.Add(this.groupBoxOptions);
@@ -246,12 +274,14 @@
          this.MinimumSize = new System.Drawing.Size(608, 426);
          this.Name = "CreateNewMergeRequestForm";
          this.Text = "Create New Merge Request";
+         this.Load += new System.EventHandler(this.CreateNewMergeRequestForm_Load);
          this.groupBoxSource.ResumeLayout(false);
          this.groupBoxTarget.ResumeLayout(false);
          this.groupBox3.ResumeLayout(false);
          this.groupBoxDescription.ResumeLayout(false);
          this.groupBoxOptions.ResumeLayout(false);
          this.groupBoxOptions.PerformLayout();
+         this.groupBoxProject.ResumeLayout(false);
          this.ResumeLayout(false);
 
       }
@@ -259,9 +289,7 @@
       #endregion
 
       private System.Windows.Forms.GroupBox groupBoxSource;
-      private System.Windows.Forms.ComboBox comboBoxSourceBranch;
       private System.Windows.Forms.GroupBox groupBoxTarget;
-      private System.Windows.Forms.ComboBox comboBoxTargetBranch;
       private System.Windows.Forms.GroupBox groupBox3;
       private System.Windows.Forms.Button buttonToggleWIP;
       private System.Windows.Forms.Button buttonEditTitle;
@@ -274,5 +302,9 @@
       private System.Windows.Forms.CheckBox checkBoxDeleteSourceBranch;
       private System.Windows.Forms.Button buttonSubmit;
       private System.Windows.Forms.Button buttonCancel;
+      private System.Windows.Forms.ComboBox comboBoxSourceBranch;
+      private System.Windows.Forms.ComboBox comboBoxTargetBranch;
+      private System.Windows.Forms.GroupBox groupBoxProject;
+      private System.Windows.Forms.ComboBox comboBoxProject;
    }
 }

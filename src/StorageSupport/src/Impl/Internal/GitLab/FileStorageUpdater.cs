@@ -226,7 +226,7 @@ namespace mrHelper.StorageSupport
          }
 
          traceDebug(String.Format("Fetching comparison {0} vs {1}...", baseSha, headSha));
-         comparison = await _repositoryAccessor.Compare(_fileStorage.ProjectKey, baseSha, headSha);
+         comparison = await _repositoryAccessor.Compare(_fileStorage.ProjectKey.ProjectName, baseSha, headSha);
          if (comparison == null)
          {
             return null;
@@ -297,7 +297,7 @@ namespace mrHelper.StorageSupport
       async private Task<bool> fetchSingleFileAsync(FileInternal file)
       {
          traceDebug(String.Format("Fetching file {0} with SHA {1}...", file.Path, file.SHA));
-         File gitlabFile = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey, file.Path, file.SHA);
+         File gitlabFile = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey.ProjectName, file.Path, file.SHA);
          if (gitlabFile == null)
          {
             return false;

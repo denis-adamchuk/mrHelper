@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
+using System.Collections.Generic;
 
 namespace mrHelper.Client.Repository
 {
@@ -16,15 +16,19 @@ namespace mrHelper.Client.Repository
 
    public interface IRepositoryAccessor : IDisposable
    {
-      Task<Comparison> Compare(ProjectKey projectKey, string from, string to);
+      Task<Comparison> Compare(string projectName, string from, string to);
 
-      Task<File> LoadFile(ProjectKey projectKey, string filename, string sha);
+      Task<File> LoadFile(string projectName, string filename, string sha);
 
-      Task<Commit> LoadCommit(ProjectKey projectKey, string sha);
+      Task<Commit> LoadCommit(string projectName, string sha);
 
-      Task<Branch> CreateNewBranch(ProjectKey projectKey, string name, string sha);
+      Task<IEnumerable<Branch>> GetBranches(string projectName);
 
-      Task DeleteBranch(ProjectKey projectKey, string name);
+      Task<Branch> CreateNewBranch(string projectName, string name, string sha);
+
+      Task<Branch> FindPreferredTargetBranch(string projectName, string sourceBranchName);
+
+      Task DeleteBranch(string projectName, string name);
 
       void Cancel();
    }
