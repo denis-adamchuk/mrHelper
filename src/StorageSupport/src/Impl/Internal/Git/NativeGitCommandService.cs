@@ -26,7 +26,7 @@ namespace mrHelper.StorageSupport
 
       protected override object runCommand(DiffToolArguments arguments)
       {
-         return startExternalProcess("git", arguments.ToString(), _path, true, null).PID;
+         return startExternalProcess("git", arguments.ToString(), _path, false, null).PID;
       }
 
       async protected override Task<object> runCommandAsync(GitDiffArguments arguments)
