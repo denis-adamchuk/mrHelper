@@ -19,7 +19,7 @@ namespace mrHelper.StorageSupport
    {
       internal FileStorageDiffCache(string path, IFileStorage fileStorage)
       {
-         _path = path;
+         _path = Path.Combine(path, DiffSubFolderName);
          _fileStorage = fileStorage;
 
          cleanupOldDiffs();
@@ -32,32 +32,26 @@ namespace mrHelper.StorageSupport
 
       private FileStorageDiffCacheFolder getExistingDiffFolder(string baseSha, string headSha)
       {
-         string diffFolderPath = getDiffFolderPath(baseSha, headSha);
-         if (!Directory.Exists(diffFolderPath))
+         string indexedDir = _index.GetDirectory(baseSha, headSha);
+         if (String.IsNullOrEmpty(indexedDir))
          {
             return null;
          }
 
-         FileStorageDiffCacheFolder diffFolderCandidate = new FileStorageDiffCacheFolder(diffFolderPath);
-         if (!verifyDiffFolder(baseSha, headSha, diffFolderCandidate))
+         string diffFolderPath = Path.Combine(_path, indexedDir);
+         if (!Directory.Exists(diffFolderPath) || !verifyDiffFolder(baseSha, headSha, diffFolderPath))
          {
-            Trace.TraceWarning(String.Format(
-               "[FileStorageDiffCache] Detected invalid diff folder at path \"{0}\"", diffFolderPath));
-            try
-            {
-               Directory.Delete(diffFolderPath, true);
-            }
-            catch (Exception ex)
-            {
-               throw new FileStorageDiffCacheException("Cannot delete invalid diff folder", ex);
-            }
+            Trace.TraceWarning("[FileStorageDiffCache] Detected invalid diff folder at path \"{0}\"", diffFolderPath);
+            FileStorageUtils.DeleteDirectoryIfExists(diffFolderPath);
+            _index.RemoveDirectory(baseSha, headSha);
             return null;
          }
-         return diffFolderCandidate;
+         return new FileStorageDiffCacheFolder(diffFolderPath);
       }
 
-      private bool verifyDiffFolder(string baseSha, string headSha, FileStorageDiffCacheFolder diffFolder)
+      private bool verifyDiffFolder(string baseSha, string headSha, string diffFolderPath)
       {
+         FileStorageDiffCacheFolder diffFolder = new FileStorageDiffCacheFolder(diffFolderPath);
          if (!Directory.Exists(diffFolder.LeftSubfolder) || !Directory.Exists(diffFolder.RightSubfolder))
          {
             return false;
@@ -75,8 +69,9 @@ namespace mrHelper.StorageSupport
 
       private FileStorageDiffCacheFolder createDiffFolder(string baseSha, string headSha)
       {
-         string diffFolderPath = getDiffFolderPath(baseSha, headSha);
-         string tempDiffFolderPath = getDiffFolderPath("~" + baseSha, headSha);
+         string diffFolderName = cookDirectoryName();
+         string diffFolderPath = Path.Combine(_path, diffFolderName);
+         string tempDiffFolderPath = System.IO.Path.Combine(_path, "temp");
          string tempDiffLeftSubFolderPath = System.IO.Path.Combine(tempDiffFolderPath, "left");
          string tempDiffRightSubFolderPath = System.IO.Path.Combine(tempDiffFolderPath, "right");
          createTempFolders(tempDiffFolderPath, tempDiffLeftSubFolderPath, tempDiffRightSubFolderPath);
@@ -91,6 +86,7 @@ namespace mrHelper.StorageSupport
          copyFiles(headRevisions, tempDiffRightSubFolderPath);
 
          renameTempToPermanentFolder(diffFolderPath, tempDiffFolderPath);
+         _index.AddDirectory(baseSha, headSha, diffFolderName);
          return new FileStorageDiffCacheFolder(diffFolderPath);
       }
 
@@ -113,6 +109,8 @@ namespace mrHelper.StorageSupport
 
       private static void renameTempToPermanentFolder(string diffFolderPath, string tempDiffFolderPath)
       {
+         FileStorageUtils.DeleteDirectoryIfExists(diffFolderPath);
+
          try
          {
             Directory.Move(tempDiffFolderPath, diffFolderPath);
@@ -127,18 +125,7 @@ namespace mrHelper.StorageSupport
       private static void createTempFolders(string tempDiffFolderPath, string tempDiffLeftSubFolderPath,
          string tempDiffRightSubFolderPath)
       {
-         if (Directory.Exists(tempDiffFolderPath))
-         {
-            try
-            {
-               Directory.Delete(tempDiffFolderPath, true);
-            }
-            catch (Exception ex)
-            {
-               throw new FileStorageDiffCacheException(String.Format(
-                  "Cannot delete temp diff folder {0}", tempDiffFolderPath), ex);
-            }
-         }
+         FileStorageUtils.DeleteDirectoryIfExists(tempDiffFolderPath);
 
          try
          {
@@ -185,12 +172,6 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      private string getDiffFolderPath(string baseSha, string headSha)
-      {
-         string diffFolderName = String.Format("{0}_{1}", baseSha, headSha);
-         return System.IO.Path.Combine(_path, diffFolderName);
-      }
-
       private string getFileRevisionPath(FileRevision fileRevision)
       {
          return _fileStorage.FileCache.GetFileRevisionPath(fileRevision);
@@ -198,21 +179,51 @@ namespace mrHelper.StorageSupport
 
       private void cleanupOldDiffs()
       {
-         try
+         FileStorageUtils.DeleteDirectoryIfExists(_path);
+      }
+
+      private string cookDirectoryName()
+      {
+         int index = 1;
+         string cookName() => String.Format("d{0:00}", index);
+         while (Directory.Exists(Path.Combine(_path, cookName())))
          {
-            if (Directory.Exists(_path))
-            {
-               Directory.Delete(_path, true);
-            }
+            ++index;
          }
-         catch (Exception ex)
+         return cookName();
+      }
+
+      private class DirectoryIndex
+      {
+         internal string GetDirectory(string baseSha, string headSha)
          {
-            ExceptionHandlers.Handle(String.Format("Cannot delete a diff folder {0}", _path), ex);
+            return _data.TryGetValue(getIndexKey(baseSha, headSha), out string value) ? value : String.Empty;
          }
+
+         internal void RemoveDirectory(string baseSha, string headSha)
+         {
+            _data.Remove(getIndexKey(baseSha, headSha));
+         }
+
+         internal void AddDirectory(string baseSha, string headSha, string dir)
+         {
+            _data[getIndexKey(baseSha, headSha)] = dir;
+         }
+
+         private static Tuple<string, string> getIndexKey(string baseSha, string headSha)
+         {
+            return new Tuple<string, string>(baseSha, headSha);
+         }
+
+         private readonly Dictionary<Tuple<string, string>, string> _data =
+            new Dictionary<Tuple<string, string>, string>();
       }
 
       private readonly string _path;
       private readonly IFileStorage _fileStorage;
+      private readonly DirectoryIndex _index = new DirectoryIndex();
+
+      private readonly string DiffSubFolderName = "diff";
    }
 }
 

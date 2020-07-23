@@ -12,7 +12,9 @@ namespace mrHelper.StorageSupport
    {
       internal FileStorageComparisonCache(string path, int comparisonsToKeep)
       {
-         _path = path;
+         _path = Path.Combine(path, ComparisonCacheSubFolderName);
+         string oldPath = Path.Combine(path, OldComparisonCacheSubFolderName);
+         FileStorageUtils.MigrateDirectory(oldPath, _path);
 
          cleanupOldComparisons(comparisonsToKeep);
       }
@@ -95,6 +97,9 @@ namespace mrHelper.StorageSupport
       }
 
       private readonly string _path;
+
+      private readonly string OldComparisonCacheSubFolderName = "comparison";
+      private readonly string ComparisonCacheSubFolderName = "cmp";
    }
 }
 

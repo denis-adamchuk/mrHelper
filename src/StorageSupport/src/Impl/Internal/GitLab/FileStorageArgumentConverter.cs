@@ -108,7 +108,7 @@ namespace mrHelper.StorageSupport
 
       private string getPath(string sha)
       {
-         return System.IO.Path.Combine(_fileStorage.FileCache.Path, sha);
+         return _fileStorage.FileCache.GetRevisionPath(sha);
       }
 
       private Comparison getComparison(string baseSha, string headSha)

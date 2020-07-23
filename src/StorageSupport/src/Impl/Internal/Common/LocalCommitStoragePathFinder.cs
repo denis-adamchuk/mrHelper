@@ -60,19 +60,29 @@ namespace mrHelper.StorageSupport
          LocalCommitStorageType type)
       {
          Debug.Assert(projectKey.ProjectName.Count(x => x == '/') == 1);
-         string defaultName = projectKey.ProjectName.Replace('/', '_');
+         string defaultName = getDefaultPath(projectKey, type, 1);
          string defaultPath = Path.Combine(parentFolder, defaultName);
 
          int index = 2;
          string proposedPath = defaultPath;
          while (Directory.Exists(proposedPath))
          {
-            proposedPath = String.Format("{0}_{1}", defaultPath, index++);
+            string proposedName = getDefaultPath(projectKey, type, index);
+            proposedPath = Path.Combine(parentFolder, proposedName);
+            ++index;
          }
 
          Trace.TraceInformation(String.Format(
             "[LocalGitCommitStoragePathFinder] Proposed repository path is \"{0}\"", proposedPath));
          return proposedPath;
+      }
+
+      private static string getDefaultPath(ProjectKey projectKey, LocalCommitStorageType type, int index)
+      {
+         string projectName = projectKey.ProjectName.Replace('/', '_');
+         return type == LocalCommitStorageType.FileStorage
+            ? String.Format("fs{0:00}", index)
+            : (index < 2 ? projectName : String.Format("{0}_{1}", projectName, index));
       }
 
       private static ProjectKey? getRepositoryProjectKey(string path, LocalCommitStorageType type)

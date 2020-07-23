@@ -18,9 +18,12 @@ namespace mrHelper.StorageSupport
    {
       internal FileStorageRevisionCache(string path, int revisionsToKeep)
       {
-         Path = path;
+         Path = System.IO.Path.Combine(path, RevisionsSubFolderName);
+         string oldPath = System.IO.Path.Combine(path, OldRevisionsSubFolderName);
+         FileStorageUtils.MigrateDirectory(oldPath, Path);
 
          cleanupOldRevisions(revisionsToKeep);
+         renameOldRevisions();
       }
 
       internal bool ContainsFileRevision(FileRevision fileRevision)
@@ -36,6 +39,11 @@ namespace mrHelper.StorageSupport
          }
 
          return getFileRevisionPath(fileRevision);
+      }
+
+      internal string GetRevisionPath(string sha)
+      {
+         return getRevisionPath(sha);
       }
 
       internal string Path { get; }
@@ -98,8 +106,13 @@ namespace mrHelper.StorageSupport
 
       private string getFileRevisionPath(FileRevision fileRevision)
       {
-         string prefix = System.IO.Path.Combine(Path, fileRevision.SHA);
+         string prefix = getRevisionPath(fileRevision.SHA);
          return fileRevision.GitFilePath.ToDiskPath(prefix);
+      }
+
+      private string getRevisionPath(string sha)
+      {
+         return System.IO.Path.Combine(Path, FileStorageUtils.ConvertShaToRevision(sha));
       }
 
       private void cleanupOldRevisions(int revisionsToKeep)
@@ -126,16 +139,54 @@ namespace mrHelper.StorageSupport
             .Skip(revisionsToKeep);
          foreach (string directory in subdirectoriesToBeDeleted)
          {
+            FileStorageUtils.DeleteDirectoryIfExists(directory);
+         }
+      }
+
+      private void renameOldRevisions()
+      {
+         if (!Directory.Exists(Path))
+         {
+            return;
+         }
+
+         IEnumerable<string> allSubdirectories = null;
+         try
+         {
+            allSubdirectories = Directory.GetDirectories(Path, "*", SearchOption.TopDirectoryOnly);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(String.Format("Cannot obtain a list of subdirectories at {0}", Path), ex);
+            return;
+         }
+
+         foreach (string oldPath in allSubdirectories)
+         {
+            string oldRevisionDirName = null;
             try
             {
-               Directory.Delete(directory, true);
+               oldRevisionDirName = System.IO.Path.GetFileName(oldPath);
+               if (oldRevisionDirName.Length != FileStorageUtils.FullShaLength)
+               {
+                  continue;
+               }
             }
             catch (Exception ex)
             {
-               ExceptionHandlers.Handle(String.Format("Cannot delete old folder {0}", directory), ex);
+               ExceptionHandlers.Handle(String.Format("Cannot obtain directory name from path {0}", oldPath), ex);
+               continue;
             }
+
+            // oldRevisionDirName is a full git SHA
+            string newRevisionDirName = FileStorageUtils.ConvertShaToRevision(oldRevisionDirName);
+            string newPath = System.IO.Path.Combine(Path, newRevisionDirName);
+            FileStorageUtils.MigrateDirectory(oldPath, newPath);
          }
       }
+
+      private readonly string OldRevisionsSubFolderName = "revisions";
+      private readonly string RevisionsSubFolderName = "rev";
    }
 }
 

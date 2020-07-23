@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
@@ -9,8 +10,18 @@ namespace mrHelper.StorageSupport
 {
    internal static class FileStorageUtils
    {
+      internal const int FullShaLength = 40;
+      internal const int RevisionLength = 8;
+
+      internal static string ConvertShaToRevision(string sha)
+      {
+         return sha.Substring(0, RevisionLength);
+      }
+
       internal static void InitalizeFileStorage(string path, ProjectKey projectKey)
       {
+         System.Diagnostics.Debug.Assert(FullShaLength >= RevisionLength);
+
          string descriptionFilepath = System.IO.Path.Combine(path, FileStorageConfig);
          if (System.IO.File.Exists(descriptionFilepath))
          {
@@ -78,6 +89,43 @@ namespace mrHelper.StorageSupport
             }
          }
          return result;
+      }
+
+      internal static void MigrateDirectory(string oldPath, string newPath)
+      {
+         if (Directory.Exists(newPath))
+         {
+            DeleteDirectoryIfExists(oldPath);
+         }
+         else if (Directory.Exists(oldPath))
+         {
+            try
+            {
+               Directory.Move(oldPath, newPath);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(String.Format("Cannot rename directory at path {0}", oldPath), ex);
+               DeleteDirectoryIfExists(oldPath);
+            }
+         }
+      }
+
+      internal static void DeleteDirectoryIfExists(string path)
+      {
+         if (!Directory.Exists(path))
+         {
+            return;
+         }
+
+         try
+         {
+            Directory.Delete(path, true);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(String.Format("Cannot delete directory at path {0}", path), ex);
+         }
       }
 
       private class FileStorageDescription
