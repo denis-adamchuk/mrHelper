@@ -74,7 +74,8 @@ namespace mrHelper.Common.Tools
       private string getFilePath()
       {
          return System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mrHelper", storageFileName);
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Constants.Constants.ApplicationDataFolderName, storageFileName);
       }
    }
 }

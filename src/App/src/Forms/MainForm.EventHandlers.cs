@@ -1091,7 +1091,7 @@ namespace mrHelper.App.Forms
 
          JObject reviewedRevisionsObj = (JObject)reader.Get("ReviewedCommits");
          Dictionary<string, object> reviewedRevisions =
-            reviewedRevisionsObj.ToObject<Dictionary<string, object>>();
+            reviewedRevisionsObj?.ToObject<Dictionary<string, object>>();
          if (reviewedRevisions != null)
          {
             _reviewedRevisions = reviewedRevisions.ToDictionary(
@@ -1119,7 +1119,7 @@ namespace mrHelper.App.Forms
 
          JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");
          Dictionary<string, object> lastMergeRequestsByHosts =
-            lastMergeRequestsByHostsObj.ToObject<Dictionary<string, object>>();
+            lastMergeRequestsByHostsObj?.ToObject<Dictionary<string, object>>();
          if (lastMergeRequestsByHosts != null)
          {
             _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Tools
 {
@@ -7,6 +8,16 @@ namespace mrHelper.Common.Tools
    {
       public CustomTraceListener(string filename, string firstRecord) : base(filename)
       {
+         try
+         {
+            string directory = System.IO.Path.GetDirectoryName(filename);
+            System.IO.Directory.CreateDirectory(directory);
+         }
+         catch (Exception ex)
+         {
+            throw new ArgumentException("Bad filename", ex);
+         }
+
          Trace.AutoFlush = true;
          FileName = filename;
          _firstRecord = firstRecord;

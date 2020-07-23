@@ -178,11 +178,11 @@ namespace mrHelper.App.Helpers
 
       public event PropertyChangedEventHandler PropertyChanged;
 
-      internal UserDefinedSettings(bool changesAllowed)
+      internal UserDefinedSettings()
       {
          string configFilePath = System.IO.Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-               "mrHelper", "mrHelper.exe.config");
+               Constants.ApplicationDataFolderName, "mrHelper.exe.config");
 
          ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap
          {
@@ -190,17 +190,10 @@ namespace mrHelper.App.Helpers
          };
 
          _config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
-
-         _changesAllowed = changesAllowed;
       }
 
       internal void Update()
       {
-         if (!_changesAllowed)
-         {
-            throw new ChangesNotAllowedException();
-         }
-
          try
          {
             _config.Save(ConfigurationSaveMode.Full);
@@ -793,11 +786,6 @@ namespace mrHelper.App.Helpers
 
       private void setValue(string key, string value)
       {
-         if (!_changesAllowed)
-         {
-            throw new ChangesNotAllowedException();
-         }
-
          if (_config.AppSettings.Settings[key] != null)
          {
             if (_config.AppSettings.Settings[key].Value != value)
@@ -853,7 +841,6 @@ namespace mrHelper.App.Helpers
       }
 
       private readonly Configuration _config;
-      private readonly bool _changesAllowed;
    }
 }
 

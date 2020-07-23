@@ -44,7 +44,7 @@ namespace mrHelper.App
          @"({0}:\/\/)?{1}", Constants.CustomProtocolName, GitLabSharp.UrlParser.RegEx),
          RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-      internal static UserDefinedSettings Settings = new UserDefinedSettings(true);
+      internal static UserDefinedSettings Settings = new UserDefinedSettings();
       internal static ServiceManager ServiceManager;
       internal static FeedbackReporter FeedbackReporter;
 
@@ -59,10 +59,19 @@ namespace mrHelper.App
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
 
             string currentLogFileName = getLogFileName(context);
-            CustomTraceListener listener = new CustomTraceListener(currentLogFileName,
-               String.Format("Merge Request Helper {0} started. PID {1}",
-                  Application.ProductVersion, Process.GetCurrentProcess().Id));
-            Trace.Listeners.Add(listener);
+            CustomTraceListener listener = null;
+            try
+            {
+                listener = new CustomTraceListener(currentLogFileName,
+                  String.Format("Merge Request Helper {0} started. PID {1}",
+                     Application.ProductVersion, Process.GetCurrentProcess().Id));
+               Trace.Listeners.Add(listener);
+            }
+            catch (ArgumentException)
+            {
+               // Cannot do anything good here
+               return;
+            }
 
             Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
             ServiceManager = new ServiceManager();
@@ -76,10 +85,17 @@ namespace mrHelper.App
             },
                () =>
             {
-               listener = new CustomTraceListener(currentLogFileName, null);
-               Trace.Listeners.Add(listener);
+               try
+               {
+                  listener = new CustomTraceListener(currentLogFileName, null);
+                  Trace.Listeners.Add(listener);
+               }
+               catch (Exception)
+               {
+                  // Cannot do anything good here
+               }
             },
-            getFullLogPath());
+            getApplicationDataPath());
 
             if (context.IsRunningSingleInstance)
             {
@@ -297,11 +313,10 @@ namespace mrHelper.App
          return previousParent.Id;
       }
 
-      private static string getFullLogPath()
+      private static string getApplicationDataPath()
       {
-         string logFolderName = "mrHelper";
          string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-         return System.IO.Path.Combine(appData, logFolderName);
+         return System.IO.Path.Combine(appData, Constants.ApplicationDataFolderName);
       }
 
       private static string getLogFileName(LaunchContext context)
@@ -313,18 +328,28 @@ namespace mrHelper.App
          string filename = String.Format("{0}.{1}{2}.log", filenamePrefix,
             DateTime.Now.ToString(Constants.TimeStampLogFilenameFormat), filenameSuffix);
 
-         return Path.Combine(getFullLogPath(), filename);
+         return Path.Combine(getApplicationDataPath(), filename);
       }
 
       private static void cleanupLogFiles(UserDefinedSettings settings)
       {
-         string path = getFullLogPath();
+         string path = getApplicationDataPath();
+         if (!Directory.Exists(path))
+         {
+            return;
+         }
 
          // erase old style log files
-         File.Delete(Path.Combine(path, "mrHelper.main.log"));
+         string oldStyleLogPath = Path.Combine(path, "mrHelper.main.log");
+         if (File.Exists(oldStyleLogPath))
+         {
+            File.Delete(oldStyleLogPath);
+         }
 
          foreach (string filename in Directory.GetFiles(path, "mrHelper.secondary.*.log"))
+         {
             File.Delete(Path.Combine(path, filename));
+         }
 
          // erase all log files except N most recent ones
          string[] logfilemasks = { "mrHelper.main.*.log", "mrHelper.second.instance.*.log" };

@@ -15,9 +15,16 @@ namespace mrHelper.Integration
       static void Main(string[] args)
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         Trace.Listeners.Add(new CustomTraceListener(Path.Combine(getFullLogPath(), logfilename),
-            String.Format("Merge Request Helper Integration Tool {0} started. PID {1}",
-               Application.ProductVersion, Process.GetCurrentProcess().Id)));
+         try
+         {
+            Trace.Listeners.Add(new CustomTraceListener(Path.Combine(getApplicationDataPath(), logfilename),
+               String.Format("Merge Request Helper Integration Tool {0} started. PID {1}",
+                  Application.ProductVersion, Process.GetCurrentProcess().Id)));
+         }
+         catch (ArgumentException)
+         {
+            return;
+         }
 
          if (args.Length < 1)
          {
@@ -43,11 +50,10 @@ namespace mrHelper.Integration
          }
       }
 
-      private static string getFullLogPath()
+      private static string getApplicationDataPath()
       {
-         string logFolderName = "mrHelper";
          string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-         return System.IO.Path.Combine(appData, logFolderName);
+         return System.IO.Path.Combine(appData, Constants.ApplicationDataFolderName);
       }
 
       private static void HandleUnhandledException(Exception ex)

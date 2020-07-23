@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.RevertMSI
 {
@@ -14,9 +15,16 @@ namespace mrHelper.RevertMSI
       static void Main(string[] args)
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
-         Trace.Listeners.Add(new CustomTraceListener(Path.Combine(getFullLogPath(), logfilename),
-            String.Format("Merge Request Helper Revert MSI Tool {0} started. PID {1}",
-               Application.ProductVersion, Process.GetCurrentProcess().Id)));
+         try
+         {
+            Trace.Listeners.Add(new CustomTraceListener(Path.Combine(getApplicationDataPath(), logfilename),
+               String.Format("Merge Request Helper Revert MSI Tool {0} started. PID {1}",
+                  Application.ProductVersion, Process.GetCurrentProcess().Id)));
+         }
+         catch (ArgumentException)
+         {
+            return;
+         }
 
          DesktopBridge.Helpers helpers = new DesktopBridge.Helpers();
          if (!helpers.IsRunningAsUwp())
@@ -34,11 +42,10 @@ namespace mrHelper.RevertMSI
          }
       }
 
-      private static string getFullLogPath()
+      private static string getApplicationDataPath()
       {
-         string logFolderName = "mrHelper";
          string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-         return System.IO.Path.Combine(appData, logFolderName);
+         return System.IO.Path.Combine(appData, Constants.ApplicationDataFolderName);
       }
 
       private static void HandleUnhandledException(Exception ex)
