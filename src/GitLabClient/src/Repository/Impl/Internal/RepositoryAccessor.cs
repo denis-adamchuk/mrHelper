@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Client.Common;
+using System.Linq;
 
 namespace mrHelper.Client.Repository
 {
@@ -18,42 +19,59 @@ namespace mrHelper.Client.Repository
 
       public Task<Comparison> Compare(string from, string to)
       {
-         return call(() => _operator.CompareAsync(_projectKey.ProjectName, from, to),
+         return call(() => _operator.CompareAsync(from, to),
                "Cancelled Compare() call", "Failed Compare() call");
       }
 
       public Task<File> LoadFile(string filename, string sha)
       {
-         return call(() => _operator.LoadFileAsync(_projectKey.ProjectName, filename, sha),
+         return call(() => _operator.LoadFileAsync(filename, sha),
             "File loading cancelled", "Cannot load file");
       }
 
       public Task<Commit> LoadCommit(string sha)
       {
-         return call(() => _operator.LoadCommitAsync(_projectKey.ProjectName, sha),
+         return call(() => _operator.LoadCommitAsync(sha),
             "Commit loading cancelled", "Cannot load commit");
       }
 
       public Task<IEnumerable<Branch>> GetBranches()
       {
-         return call(() => _operator.GetBranches(_projectKey.ProjectName),
+         return call(() => _operator.GetBranches(),
             "Branch list loading cancelled", "Cannot load list of branches");
       }
 
       public Task<Branch> CreateNewBranch(string name, string sha)
       {
-         return call(() => _operator.CreateNewBranchAsync(_projectKey.ProjectName, name, sha),
+         return call(() => _operator.CreateNewBranchAsync(name, sha),
             "Branch creation cancelled", "Cannot create a new branch");
       }
 
-      public Task<Branch> FindPreferredTargetBranch(string sourceBranchName)
+      async public Task<string> FindPreferredTargetBranchName(string sourceBranchName, string sourceBranchCommitParentSha)
       {
-         throw new NotImplementedException();
+         if (String.IsNullOrEmpty(sourceBranchName) || String.IsNullOrEmpty(sourceBranchCommitParentSha))
+         {
+            return null; // TODO Is it really neeeded?
+         }
+
+         const int MaxCommitDepth = 5;
+         for (int iDepth = 0; iDepth < MaxCommitDepth; ++iDepth)
+         {
+            string sha = String.Format("{0}{1}", sourceBranchCommitParentSha, new string('^', iDepth));
+            IEnumerable<CommitRef> refs = await call(() => _operator.LoadCommitRefsAsync(sha),
+               "Commit refs loading cancelled", "Cannot load commit refs");
+            CommitRef r = refs?.FirstOrDefault(x => x.Type == "branch" && x.Name != sourceBranchName);
+            if (r != null)
+            {
+               return r.Name;
+            }
+         }
+         return null;
       }
 
       public Task DeleteBranch(string name)
       {
-         return call(() => _operator.DeleteBranchAsync(_projectKey.ProjectName, name),
+         return call(() => _operator.DeleteBranchAsync(name),
             "Branch deletion cancelled", "Cannot delete a branch");
       }
 
@@ -72,7 +90,7 @@ namespace mrHelper.Client.Repository
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_projectKey.HostName, _settings);
+            _operator = new RepositoryOperator(_projectKey, _settings);
          }
 
          try
@@ -94,7 +112,7 @@ namespace mrHelper.Client.Repository
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_projectKey.HostName, _settings);
+            _operator = new RepositoryOperator(_projectKey, _settings);
          }
 
          try

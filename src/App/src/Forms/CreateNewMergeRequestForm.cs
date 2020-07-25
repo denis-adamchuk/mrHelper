@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
+using mrHelper.App.Forms.Helpers;
 using mrHelper.Client.Projects;
 using mrHelper.Client.Repository;
 
 namespace mrHelper.App.src.Forms
 {
-   public partial class CreateNewMergeRequestForm : CustomFontForm
+   internal partial class CreateNewMergeRequestForm : CustomFontForm
    {
-      public CreateNewMergeRequestForm(IProjectAccessor projectAccessor)
+      internal CreateNewMergeRequestForm(
+         IProjectAccessor projectAccessor,
+         User currentUser,
+         CreateNewMergeRequestState initialState)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -22,129 +27,165 @@ namespace mrHelper.App.src.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          _projectAccessor = projectAccessor;
+         _currentUser = currentUser;
+         _initialState = initialState;
       }
 
       async private void CreateNewMergeRequestForm_Load(object sender, EventArgs e)
       {
-         onProjectListLoadStart();
-         IEnumerable<Project> projects = await loadProjectListAsync();
-         onProjectListLoadFinish(projects);
+         applyInitialState();
+
+         await loadProjectListAsync();
       }
 
       async private void comboBoxProject_SelectedIndexChanged(object sender, EventArgs e)
       {
-         onBranchListLoadStart();
-         IEnumerable<Branch> branchList = await loadBranchListAsync();
-         onBranchListLoadFinish(branchList);
+         _repositoryAccessor?.Cancel();
+         createRepositoryAccessor();
+
+         await loadBranchListAsync();
       }
 
       async private void comboBoxSourceBranch_SelectedIndexChanged(object sender, System.EventArgs e)
       {
-         _repositoryAccessor.Cancel();
+         _repositoryAccessor?.Cancel();
 
+         await searchTargetBranchNameAsync();
+      }
+
+      async private Task loadProjectListAsync()
+      {
+         onProjectListLoadStart();
+
+         IEnumerable<Project> projects = await _projectAccessor.LoadProjects();
+
+         onProjectListLoadFinish(projects);
+      }
+
+      async private Task loadBranchListAsync()
+      {
+         onBranchListLoadStart();
+
+         Debug.Assert(_repositoryAccessor != null);
+         IEnumerable<Branch> branchList = await _repositoryAccessor.GetBranches();
+
+         onBranchListLoadFinish(branchList);
+      }
+
+      async private Task searchTargetBranchNameAsync()
+      {
          onTargetBranchSearchStart();
-         Branch targetBranch = await searchTargetBranchAsync();
-         onTargetBranchSearchFinish(targetBranch?.Name);
-      }
 
-      private Task<IEnumerable<Project>> loadProjectListAsync()
-      {
-         return _projectAccessor.GetProjects();
-      }
-
-      async private Task<IEnumerable<Branch>> loadBranchListAsync()
-      {
          Debug.Assert(_repositoryAccessor != null);
-         return await _repositoryAccessor.GetBranches();
-      }
+         Branch sourceBranch = getSourceBranch();
+         string targetBranchName = await _repositoryAccessor.FindPreferredTargetBranchName(
+            sourceBranch?.Name, sourceBranch?.Commit.Parent_Ids.FirstOrDefault());
 
-      async private Task<Branch> searchTargetBranchAsync()
-      {
-         Debug.Assert(_repositoryAccessor != null);
-         return await _repositoryAccessor.FindPreferredTargetBranch(getSourceBranchName());
+         onTargetBranchSearchFinish(targetBranchName);
       }
 
       private void onProjectListLoadStart()
       {
-         comboBoxProject.Enabled = false;
-         comboBoxSourceBranch.Enabled = false;
-         comboBoxTargetBranch.Enabled = false;
+         updateRepositoryActionsState(false);
       }
 
       private void onProjectListLoadFinish(IEnumerable<Project> projectList)
       {
-         comboBoxProject.Enabled = true;
-         comboBoxSourceBranch.Enabled = true;
-         comboBoxTargetBranch.Enabled = true;
+         updateRepositoryActionsState(true);
 
          string[] projectArray = projectList.Select(x => x.Path_With_Namespace).ToArray();
          comboBoxProject.Items.AddRange(projectArray);
 
-         selectTargetBranch(DefaultTargetBranchName);
+         if (projectArray.Any())
+         {
+            int defaultProjectIndex = comboBoxProject.Items.IndexOf(_initialState.DefaultProject);
+            comboBoxProject.SelectedIndex = defaultProjectIndex == -1 ? 0 : defaultProjectIndex;
+         }
       }
 
       private void onBranchListLoadStart()
       {
-         comboBoxProject.Enabled = false;
-         comboBoxSourceBranch.Enabled = false;
-         comboBoxTargetBranch.Enabled = false;
-
-         createRepositoryAccessor();
+         updateRepositoryActionsState(false);
       }
 
       private void onBranchListLoadFinish(IEnumerable<Branch> branchList)
       {
-         comboBoxProject.Enabled = true;
-         comboBoxSourceBranch.Enabled = true;
-         comboBoxTargetBranch.Enabled = true;
+         updateRepositoryActionsState(true);
 
-         string[] branchArray = branchList.Select(x => x.Name).ToArray();
+         Branch[] branchArray = branchList.ToArray();
          comboBoxSourceBranch.Items.AddRange(branchArray);
          comboBoxTargetBranch.Items.AddRange(branchArray);
 
-         selectTargetBranch(DefaultTargetBranchName);
+         selectBranch(comboBoxSourceBranch, x => x.Name.Contains(String.Format("/{0}/", _currentUser.Username)));
       }
 
       private void onTargetBranchSearchStart()
       {
-         comboBoxProject.Enabled = false;
-         comboBoxSourceBranch.Enabled = false;
-         comboBoxTargetBranch.Enabled = false;
+         updateRepositoryActionsState(false);
       }
 
       private void onTargetBranchSearchFinish(string targetBranchName)
       {
-         comboBoxProject.Enabled = true;
-         comboBoxSourceBranch.Enabled = true;
-         comboBoxTargetBranch.Enabled = true;
+         updateRepositoryActionsState(true);
 
-         selectTargetBranch(targetBranchName);
+         selectBranch(comboBoxTargetBranch, x => x.Name == targetBranchName);
       }
 
-      private void selectTargetBranch(string name)
+      private void selectBranch(ComboBox comboBox, Func<Branch, bool> predicate)
       {
-         int index = comboBoxTargetBranch.Items.IndexOf(name);
-         int masterIndex = comboBoxTargetBranch.Items.IndexOf(DefaultTargetBranchName);
-         comboBoxTargetBranch.SelectedIndex = index == -1 ? masterIndex : index;
+         if (comboBox.Items.Count == 0)
+         {
+            return;
+         }
+
+         Branch preferredBranch = comboBox.Items.Cast<Branch>().FirstOrDefault(predicate);
+         Branch defaultBranch = comboBox.Items.Cast<Branch>().FirstOrDefault(x => x.Name == DefaultBranchName);
+         Branch selectedBranch = preferredBranch != null ? preferredBranch : defaultBranch;
+         int selectedBranchIndex = comboBox.Items.IndexOf(selectedBranch);
+         if (selectedBranchIndex != -1)
+         {
+            comboBox.SelectedIndex = selectedBranchIndex;
+         }
       }
 
-      private string getSourceBranchName()
+      private Branch getSourceBranch()
       {
-         return comboBoxSourceBranch.SelectedIndex == -1 ? String.Empty : comboBoxSourceBranch.Text;
+         return comboBoxSourceBranch.SelectedItem as Branch;
       }
 
       private string getProjectName()
       {
-         return comboBoxProject.SelectedIndex == -1 ? String.Empty : comboBoxProject.Text;
+         return comboBoxProject.SelectedItem as string;
       }
 
       private void createRepositoryAccessor()
       {
-         _repositoryAccessor = _projectAccessor.GetSingleProjectAccessor(getProjectName()).RepositoryAccessor;
+         string projectName = getProjectName();
+         if (projectName == null)
+         {
+            return;
+         }
+
+         _repositoryAccessor = _projectAccessor.GetSingleProjectAccessor(projectName).RepositoryAccessor;
       }
 
-      private readonly string DefaultTargetBranchName = "master";
+      private void updateRepositoryActionsState(bool enabled)
+      {
+         comboBoxProject.Enabled = enabled;
+         comboBoxSourceBranch.Enabled = enabled;
+         comboBoxTargetBranch.Enabled = enabled;
+      }
+
+      private void applyInitialState()
+      {
+         checkBoxSquash.Checked = _initialState.IsSquashNeeded;
+         checkBoxDeleteSourceBranch.Checked = _initialState.IsBranchDeletionNeeded;
+      }
+
+      private readonly string DefaultBranchName = "master";
       private readonly IProjectAccessor _projectAccessor;
+      private readonly User _currentUser;
+      private readonly CreateNewMergeRequestState _initialState;
       private IRepositoryAccessor _repositoryAccessor;
    }
 }

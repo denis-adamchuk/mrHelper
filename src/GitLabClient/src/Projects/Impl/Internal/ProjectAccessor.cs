@@ -13,7 +13,7 @@ namespace mrHelper.Client.Projects
          _hostname = hostname;
       }
 
-      public Task<IEnumerable<Project>> GetProjects()
+      public Task<IEnumerable<Project>> LoadProjects()
       {
          // TODO Project list changes very rarely and must be cached
          _operator?.Dispose();

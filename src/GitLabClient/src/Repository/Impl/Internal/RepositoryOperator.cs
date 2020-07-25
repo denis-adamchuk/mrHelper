@@ -12,12 +12,13 @@ namespace mrHelper.Client.Repository
    /// </summary>
    internal class RepositoryOperator : BaseOperator
    {
-      internal RepositoryOperator(string hostname, IHostProperties settings)
-         : base(hostname, settings)
+      internal RepositoryOperator(ProjectKey projectKey, IHostProperties settings)
+         : base(projectKey.HostName, settings)
       {
+         _projectname = projectKey.ProjectName;
       }
 
-      internal Task<Comparison> CompareAsync(string projectname, string from, string to)
+      internal Task<Comparison> CompareAsync(string from, string to)
       {
          return callWithSharedClient(
             async (client) =>
@@ -25,10 +26,10 @@ namespace mrHelper.Client.Repository
                   async () =>
                      (Comparison)await client.RunAsync(
                         async (gl) =>
-                           await gl.Projects.Get(projectname).Repository.CompareAsync(new CompareParameters(from, to)))));
+                           await gl.Projects.Get(_projectname).Repository.CompareAsync(new CompareParameters(from, to)))));
       }
 
-      internal Task<File> LoadFileAsync(string projectname, string filename, string sha)
+      internal Task<File> LoadFileAsync(string filename, string sha)
       {
          return callWithSharedClient(
             async (client) =>
@@ -36,10 +37,10 @@ namespace mrHelper.Client.Repository
                   async () =>
                      (File)(await client.RunAsync(
                         async (gl) =>
-                           await gl.Projects.Get(projectname).Repository.Files. Get(filename).LoadTaskAsync(sha)))));
+                           await gl.Projects.Get(_projectname).Repository.Files. Get(filename).LoadTaskAsync(sha)))));
       }
 
-      internal Task<Commit> LoadCommitAsync(string projectname, string sha)
+      internal Task<Commit> LoadCommitAsync(string sha)
       {
          return callWithSharedClient(
             async (client) =>
@@ -47,31 +48,42 @@ namespace mrHelper.Client.Repository
                   async () =>
                      (Commit)(await client.RunAsync(
                         async (gitlab) =>
-                           await gitlab.Projects.Get(projectname).Repository.Commits.Get(sha).LoadTaskAsync()))));
+                           await gitlab.Projects.Get(_projectname).Repository.Commits.Get(sha).LoadTaskAsync()))));
       }
 
-      internal Task<IEnumerable<Branch>> GetBranches(string projectname)
+      internal Task<IEnumerable<CommitRef>> LoadCommitRefsAsync(string sha)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<CommitRef>)(await client.RunAsync(
+                        async (gitlab) =>
+                           await gitlab.Projects.Get(_projectname).Repository.Commits.Get(sha).LoadRefsTaskAsync()))));
+      }
+
+      internal Task<IEnumerable<Branch>> GetBranches()
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
                      (IEnumerable<Branch>)(await client.RunAsync(async (gl) =>
-                        await gl.Projects.Get(projectname).Repository.Branches.LoadAllTaskAsync()))));
+                        await gl.Projects.Get(_projectname).Repository.Branches.LoadAllTaskAsync()))));
       }
 
-      internal Task<Branch> CreateNewBranchAsync(string projectname, string name, string sha)
+      internal Task<Branch> CreateNewBranchAsync(string name, string sha)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
                      (Branch)(await client.RunAsync(async (gl) =>
-                        await gl.Projects.Get(projectname).Repository.Branches.CreateNewTaskAsync(
+                        await gl.Projects.Get(_projectname).Repository.Branches.CreateNewTaskAsync(
                            new CreateNewBranchParameters(name, sha))))));
       }
 
-      internal Task DeleteBranchAsync(string projectname, string name)
+      internal Task DeleteBranchAsync(string name)
       {
          return callWithSharedClient(
             async (client) =>
@@ -79,8 +91,10 @@ namespace mrHelper.Client.Repository
                   async () =>
                      await client.RunAsync(
                         async (gl) =>
-                           await gl.Projects.Get(projectname).Repository.Branches.Get(name).DeleteTaskAsync())));
+                           await gl.Projects.Get(_projectname).Repository.Branches.Get(name).DeleteTaskAsync())));
       }
+
+      private readonly string _projectname;
    }
 }
 

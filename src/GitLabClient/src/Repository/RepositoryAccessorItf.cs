@@ -26,7 +26,7 @@ namespace mrHelper.Client.Repository
 
       Task<Branch> CreateNewBranch(string name, string sha);
 
-      Task<Branch> FindPreferredTargetBranch(string sourceBranchName);
+      Task<string> FindPreferredTargetBranchName(string sourceBranchName, string sourceBranchCommitParentSha);
 
       Task DeleteBranch(string name);
 
