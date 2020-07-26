@@ -16,6 +16,8 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.Types;
 using mrHelper.Client.Discussions;
 using mrHelper.Client.Session;
+using mrHelper.Client.Projects;
+using mrHelper.Client.MergeRequests;
 
 namespace mrHelper.App.Forms
 {
@@ -247,8 +249,14 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ISession session = getSession(!isSearchMode());
-               IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
+               // TODO Avoid replicating this code
+               ISingleProjectAccessor singleProjectAccessor =
+                  getProjectAccessor().GetSingleProjectAccessor(mrk.ProjectKey.ProjectName);
+               IMergeRequestAccessor mergeRequestAccessor =
+                  singleProjectAccessor.MergeRequestAccessor;
+               ISingleMergeRequestAccessor singleMergeRequestAccessor =
+                  mergeRequestAccessor.GetSingleMergeRequestAccessor(mrk.IId);
+               IDiscussionCreator creator = singleMergeRequestAccessor.GetDiscussionCreator(_currentUser[getHostName()]);
                if (creator == null)
                {
                   return;
@@ -285,8 +293,15 @@ namespace mrHelper.App.Forms
                   return;
                }
 
+               // TODO Avoid replicating this code
                ISession session = getSession(!isSearchMode());
-               IDiscussionCreator creator = session?.GetDiscussionCreator(mrk);
+               ISingleProjectAccessor singleProjectAccessor =
+                  getProjectAccessor().GetSingleProjectAccessor(mrk.ProjectKey.ProjectName);
+               IMergeRequestAccessor mergeRequestAccessor =
+                  singleProjectAccessor.MergeRequestAccessor;
+               ISingleMergeRequestAccessor singleMergeRequestAccessor =
+                  mergeRequestAccessor.GetSingleMergeRequestAccessor(mrk.IId);
+               IDiscussionCreator creator = singleMergeRequestAccessor.GetDiscussionCreator(_currentUser[getHostName()]);
                if (creator == null)
                {
                   return;

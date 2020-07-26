@@ -37,9 +37,6 @@ namespace mrHelper.Client.Session
       public IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId) =>
          _discussionManager?.GetDiscussionEditor(mrk, discussionId);
 
-      public IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk) =>
-         _discussionManager?.GetDiscussionCreator(mrk);
-
       private MergeRequestManager _mergeRequestManager;
       private DiscussionManager _discussionManager;
       private TimeTrackingManager _timeTrackingManager;

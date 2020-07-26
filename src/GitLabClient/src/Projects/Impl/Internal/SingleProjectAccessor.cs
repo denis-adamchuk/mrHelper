@@ -1,4 +1,5 @@
-﻿using mrHelper.Client.Repository;
+﻿using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Repository;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Projects
@@ -13,6 +14,9 @@ namespace mrHelper.Client.Projects
 
       public IRepositoryAccessor RepositoryAccessor =>
          new RepositoryAccessor(_settings, _projectKey);
+
+      public IMergeRequestAccessor MergeRequestAccessor =>
+         new MergeRequestAccessor(_settings, _projectKey);
 
       private readonly ProjectKey _projectKey;
       private readonly IHostProperties _settings;

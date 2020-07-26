@@ -13,18 +13,20 @@ using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
 using mrHelper.Client.Session;
 using mrHelper.Client.Projects;
+using mrHelper.Client.MergeRequests;
+using GitLabSharp.Entities;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
       internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
-         IProjectAccessor projectAccessor, ISession session)
+         IProjectAccessor projectAccessor, User currentUser)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
          _projectAccessor = projectAccessor;
-         _session = session;
+         _currentUser = currentUser;
       }
 
       async public Task HandleAsync(ICommitStorage gitRepository)
@@ -175,9 +177,13 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         MergeRequestKey mergeRequestKey = new MergeRequestKey(
-            new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-         IDiscussionCreator creator = _session.GetDiscussionCreator(mergeRequestKey);
+         ISingleProjectAccessor singleProjectAccessor =
+            _projectAccessor.GetSingleProjectAccessor(snapshot.Project);
+         IMergeRequestAccessor mergeRequestAccessor =
+            singleProjectAccessor.MergeRequestAccessor;
+         ISingleMergeRequestAccessor singleMergeRequestAccessor =
+            mergeRequestAccessor.GetSingleMergeRequestAccessor(snapshot.MergeRequestIId);
+         IDiscussionCreator creator = singleMergeRequestAccessor.GetDiscussionCreator(_currentUser);
 
          try
          {
@@ -213,8 +219,8 @@ namespace mrHelper.App.Interprocess
 
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
-      private readonly ISession _session;
       private readonly IProjectAccessor _projectAccessor;
+      private readonly User _currentUser;
    }
 }
 

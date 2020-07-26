@@ -80,9 +80,6 @@ namespace mrHelper.Client.Session
       public IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId) =>
          _internal?.GetDiscussionEditor(mrk, discussionId);
 
-      public IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk) =>
-         _internal?.GetDiscussionCreator(mrk);
-
       public IMergeRequestCache MergeRequestCache => _internal?.MergeRequestCache;
 
       public IDiscussionCache DiscussionCache => _internal?.DiscussionCache;

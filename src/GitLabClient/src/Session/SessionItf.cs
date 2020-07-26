@@ -20,7 +20,6 @@ namespace mrHelper.Client.Session
 
       ITimeTracker GetTimeTracker(MergeRequestKey mrk);
       IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId);
-      IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk);
 
       event Action Stopped;
       event Action<string, User> Started;

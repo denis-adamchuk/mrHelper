@@ -43,6 +43,7 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Discussions\DiscussionCreatorItf.cs" />
     <Compile Include="src\GitLab\GitLabAccessorItf.cs" />
     <Compile Include="src\Common\Impl\Helpers.cs" />
     <Compile Include="src\Common\Impl\Internal\BaseOperator.cs" />
@@ -54,6 +55,12 @@
     <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessorAbstract.cs" />
     <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessor.cs" />
     <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessorFactory.cs" />
+    <Compile Include="src\MergeRequests\Impl\Internal\SingleMergeRequestAccessor.cs" />
+    <Compile Include="src\MergeRequests\Impl\Internal\MergeRequestCreator.cs" />
+    <Compile Include="src\MergeRequests\Impl\Internal\MergeRequestAccessor.cs" />
+    <Compile Include="src\MergeRequests\SingleMergeRequestAccessorItf.cs" />
+    <Compile Include="src\MergeRequests\MergeRequestCreatorItf.cs" />
+    <Compile Include="src\MergeRequests\MergeRequestAccessorItf.cs" />
     <Compile Include="src\Projects\Impl\Internal\ProjectAccessor.cs" />
     <Compile Include="src\Projects\Impl\Internal\ProjectAccessorOperator.cs" />
     <Compile Include="src\Projects\Impl\Internal\SingleProjectAccessor.cs" />
@@ -62,7 +69,6 @@
     <Compile Include="src\Common\Impl\Internal\SearchManager.cs" />
     <Compile Include="src\Common\Impl\Internal\OperatorException.cs" />
     <Compile Include="src\Discussions\DiscussionCacheItf.cs" />
-    <Compile Include="src\Discussions\DiscussionCreatorItf.cs" />
     <Compile Include="src\Discussions\DiscussionEditorItf.cs" />
     <Compile Include="src\Discussions\DiscussionLoaderItf.cs" />
     <Compile Include="src\Discussions\Impl\Internal\DiscussionCreator.cs" />
@@ -77,6 +83,7 @@
     <Compile Include="src\Repository\Impl\Internal\RepositoryAccessor.cs" />
     <Compile Include="src\Repository\RepositoryAccessorItf.cs" />
     <Compile Include="src\Session\Impl\Internal\CurrentUserLoader.cs" />
+    <Compile Include="src\MergeRequests\Impl\Internal\MergeRequestOperator.cs" />
     <Compile Include="src\Session\SessionException.cs" />
     <Compile Include="src\TimeTracking\TimeTrackerItf.cs" />
     <Compile Include="src\TimeTracking\TotalTimeLoaderItf.cs" />

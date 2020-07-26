@@ -220,6 +220,7 @@
          // buttonSubmit
          // 
          this.buttonSubmit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonSubmit.DialogResult = System.Windows.Forms.DialogResult.OK;
          this.buttonSubmit.Location = new System.Drawing.Point(12, 352);
          this.buttonSubmit.Name = "buttonSubmit";
          this.buttonSubmit.Size = new System.Drawing.Size(75, 23);
@@ -230,6 +231,7 @@
          // buttonCancel
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(505, 352);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
@@ -261,6 +263,7 @@
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(592, 387);
          this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);

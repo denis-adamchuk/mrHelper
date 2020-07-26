@@ -91,7 +91,8 @@ namespace mrHelper.App.Forms
             DiffCallHandler handler;
             try
             {
-               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, getProjectAccessor(), session);
+               // TODO Add getter for current user
+               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, getProjectAccessor(), _currentUser[getHostName()]);
             }
             catch (ArgumentException ex)
             {

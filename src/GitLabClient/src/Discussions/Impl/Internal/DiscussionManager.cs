@@ -130,11 +130,6 @@ namespace mrHelper.Client.Discussions
          return _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].Discussions : null;
       }
 
-      public DiscussionCreator GetDiscussionCreator(MergeRequestKey mrk)
-      {
-         return new DiscussionCreator(mrk, _operator, _currentUser);
-      }
-
       public DiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
       {
          return new DiscussionEditor(mrk, discussionId, _operator,
