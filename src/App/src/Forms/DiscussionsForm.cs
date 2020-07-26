@@ -14,6 +14,8 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Client.Session;
 using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
+using mrHelper.Client.Common;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -24,7 +26,7 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         ISession session, IGitCommandService git,
+         ISession session, IGitLabAccessor gitLabAccessor, IGitCommandService git,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -40,6 +42,7 @@ namespace mrHelper.App.Forms
          _colorScheme = colorScheme;
 
          _session = session;
+         _gitLabAccessor = gitLabAccessor;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
 
@@ -330,14 +333,15 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
-         foreach (var discussion in discussions)
+         foreach (Discussion discussion in discussions)
          {
             if (!SystemFilter.DoesMatchFilter(discussion))
             {
                continue;
             }
 
-            IDiscussionEditor editor = _session.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
+            IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
+               _gitLabAccessor, _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, editor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme,
@@ -513,6 +517,7 @@ namespace mrHelper.App.Forms
 
       private readonly User _currentUser;
       private readonly ISession _session;
+      private readonly IGitLabAccessor _gitLabAccessor;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 

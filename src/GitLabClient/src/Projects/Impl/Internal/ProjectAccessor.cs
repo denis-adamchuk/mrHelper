@@ -1,34 +1,49 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
+using mrHelper.Client.Common;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Client.Projects
 {
    internal class ProjectAccessor : IProjectAccessor
    {
-      internal ProjectAccessor(IHostProperties settings, string hostname)
+      internal ProjectAccessor(IHostProperties settings, string hostname,
+         ModificationNotifier modificationNotifier)
       {
          _settings = settings;
          _hostname = hostname;
+         _modificationNotifier = modificationNotifier;
       }
 
       public Task<IEnumerable<Project>> LoadProjects()
       {
          // TODO Project list changes very rarely and must be cached
-         _operator?.Dispose();
-         _operator = new ProjectAccessorOperator(_hostname, _settings);
-         return _operator.GetProjects();
+         ProjectOperator projectOperator = new ProjectOperator(_hostname, _settings);
+         return projectOperator.GetProjects();
+      }
+
+      public Task<Project> SearchProjectAsync(string projectname)
+      {
+         ProjectOperator projectOperator = new ProjectOperator(_hostname, _settings);
+         try
+         {
+            return projectOperator.SearchProjectAsync(projectname);
+         }
+         catch (OperatorException)
+         {
+            return null;
+         }
       }
 
       public ISingleProjectAccessor GetSingleProjectAccessor(string projectName)
       {
-         return new SingleProjectAccessor(new ProjectKey(_hostname, projectName), _settings);
+         return new SingleProjectAccessor(new ProjectKey(_hostname, projectName), _settings, _modificationNotifier);
       }
 
       private readonly IHostProperties _settings;
       private readonly string _hostname;
-      private ProjectAccessorOperator _operator;
+      private readonly ModificationNotifier _modificationNotifier;
    }
 }
 

@@ -16,6 +16,9 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
+using mrHelper.Client.MergeRequests;
+using mrHelper.Client.Projects;
+using mrHelper.Client.Common;
 
 namespace mrHelper.App.Forms
 {
@@ -139,10 +142,11 @@ namespace mrHelper.App.Forms
 
       private void onOpenCommand(string argumentsString)
       {
-         if (_gitlabClientManager?.SearchManager == null)
-         {
-            return;
-         }
+         // TODO Why was this check made?
+         //if (_gitlabClientManager?.SearchManager == null)
+         //{
+         //   return;
+         //}
 
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
@@ -226,9 +230,14 @@ namespace mrHelper.App.Forms
                "Cannot connect to {0} because it is not in the list of known hosts. ", mrk.ProjectKey.HostName), null);
          }
 
+         IGitLabAccessor gitLabAccessor = _gitlabClientManager.GitLabAccessor;
+         IGitLabInstanceAccessor gitlabInstanceAccessor = gitLabAccessor.GetInstanceAccessor(mrk.ProjectKey.HostName);
+         IProjectAccessor projectAccessor = gitlabInstanceAccessor.ProjectAccessor;
+         ISingleProjectAccessor singleProjectAccessor = projectAccessor.GetSingleProjectAccessor(mrk.ProjectKey.ProjectName);
+         IMergeRequestAccessor mergeRequestAccessor = singleProjectAccessor.MergeRequestAccessor;
+
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
-         MergeRequest mergeRequest = await _gitlabClientManager.SearchManager.SearchMergeRequestAsync(
-            mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId);
+         MergeRequest mergeRequest = await mergeRequestAccessor.SearchMergeRequestAsync(mrk.IId);
          if (mergeRequest == null)
          {
             throw new UrlConnectionException("Merge request does not exist. ", null);

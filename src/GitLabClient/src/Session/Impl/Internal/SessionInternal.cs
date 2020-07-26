@@ -34,9 +34,6 @@ namespace mrHelper.Client.Session
       public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>
          _timeTrackingManager?.GetTracker(mrk);
 
-      public IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId) =>
-         _discussionManager?.GetDiscussionEditor(mrk, discussionId);
-
       private MergeRequestManager _mergeRequestManager;
       private DiscussionManager _discussionManager;
       private TimeTrackingManager _timeTrackingManager;

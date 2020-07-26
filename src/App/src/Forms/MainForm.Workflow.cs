@@ -14,6 +14,8 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Client.MergeRequests;
 using System.Collections;
 using mrHelper.Common.Constants;
+using mrHelper.Client.Common;
+using mrHelper.Client.Projects;
 
 namespace mrHelper.App.Forms
 {
@@ -319,13 +321,17 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IGitLabAccessor gitLabAccessor = _gitlabClientManager.GitLabAccessor;
+         IGitLabInstanceAccessor gitlabInstanceAccessor = gitLabAccessor.GetInstanceAccessor(hostname);
+         IProjectAccessor projectAccessor = gitlabInstanceAccessor.ProjectAccessor;
+
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
             hostname, Program.Settings);
          List<Tuple<string, bool>> upgraded = new List<Tuple<string, bool>>();
          foreach (var project in projects)
          {
-            Project p = await _gitlabClientManager.SearchManager.SearchProjectAsync(hostname, project.Item1);
+            Project p = await projectAccessor.SearchProjectAsync(project.Item1);
             if (p != null)
             {
                if (!upgraded.Any(x => x.Item1 == p.Path_With_Namespace))
@@ -347,6 +353,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IGitLabAccessor gitLabAccessor = _gitlabClientManager.GitLabAccessor;
+         IGitLabInstanceAccessor gitlabInstanceAccessor = gitLabAccessor.GetInstanceAccessor(hostname);
+         IUserAccessor userAccessor = gitlabInstanceAccessor.UserAccessor;
+
          bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
@@ -360,8 +370,7 @@ namespace mrHelper.App.Forms
                {
                   adjustedKeyword = keyword.Substring(1);
                }
-               User user = await _gitlabClientManager.SearchManager.
-                  SearchUserByNameAsync(hostname, adjustedKeyword, true);
+               User user = await userAccessor.SearchUserByNameAsync(adjustedKeyword, true);
                if (user != null)
                {
                   if (!labels.Any(x => x.Item1 == user.Username))
@@ -373,7 +382,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         User currentUser = await _gitlabClientManager.SearchManager.GetCurrentUserAsync(hostname);
+         User currentUser = await userAccessor.GetCurrentUserAsync();
          if (currentUser != null)
          {
             if (!labels.Any(x => x.Item1 == currentUser.Username))

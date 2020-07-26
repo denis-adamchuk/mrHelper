@@ -11,10 +11,9 @@ namespace mrHelper.App.Forms.Helpers
 {
    public class EditUsersListViewCallback : IEditOrderedListViewCallback
    {
-      public EditUsersListViewCallback(string hostname, ISearchManager searchManager)
+      public EditUsersListViewCallback(IGitLabInstanceAccessor gitLabInstanceAccessor)
       {
-         _hostname = hostname;
-         _searchManager = searchManager;
+         _gitLabInstanceAccessor = gitLabInstanceAccessor;
       }
 
       public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
@@ -25,10 +24,10 @@ namespace mrHelper.App.Forms.Helpers
             username = item.Substring(1);
          }
 
-         User user = await _searchManager.SearchUserByNameAsync(_hostname, username, true);
+         User user = await _gitLabInstanceAccessor.UserAccessor.SearchUserByNameAsync(username, true);
          if (user == null)
          {
-            MessageBox.Show(String.Format("User \"{0}\" is not found at {1}", username, _hostname),
+            MessageBox.Show(String.Format("User \"{0}\" is not found at the selected host", username),
                "User will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
          }
@@ -43,8 +42,7 @@ namespace mrHelper.App.Forms.Helpers
          return user.Username;
       }
 
-      private string _hostname;
-      private readonly ISearchManager _searchManager;
+      private IGitLabInstanceAccessor _gitLabInstanceAccessor;
    }
 }
 

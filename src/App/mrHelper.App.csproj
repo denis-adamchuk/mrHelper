@@ -211,6 +211,7 @@
     <Compile Include="src\Helpers\GitLabSharp\PositionConverter.cs" />
     <Compile Include="src\Helpers\ContextProviders\VersionBasedContextProvider.cs" />
     <Compile Include="src\Helpers\ContextProviders\DiscussionBasedContextProvider.cs" />
+    <Compile Include="src\Helpers\GitLabSharp\Shortcuts.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\BaseGitHelper.cs" />
     <Compile Include="src\Helpers\DiffStatistic\DiscussionBasedDiffStatProvider.cs" />

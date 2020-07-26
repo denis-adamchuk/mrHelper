@@ -15,10 +15,11 @@ namespace mrHelper.Client.MergeRequests
       IMergeRequestCache
    {
       internal MergeRequestManager(GitLabClientContext clientContext, InternalCacheUpdater cacheUpdater,
-         string hostname, SessionContext context)
+         string hostname, SessionContext context, IModificationNotifier modificationNotifier)
       {
          _clientContext = clientContext;
          _cacheUpdater = cacheUpdater;
+         _modificationNotifier = modificationNotifier;
 
          if (context.UpdateRules.UpdateMergeRequests)
          {
@@ -114,6 +115,7 @@ namespace mrHelper.Client.MergeRequests
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly UpdateManager _updateManager;
       private readonly GitLabClientContext _clientContext;
+      private readonly IModificationNotifier _modificationNotifier;
    }
 }
 

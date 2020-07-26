@@ -3,6 +3,8 @@
    public interface IGitLabAccessor
    {
       IGitLabInstanceAccessor GetInstanceAccessor(string hostname);
+
+      IModificationNotifier ModificationNotifier { get; }
    }
 }
 

@@ -183,7 +183,8 @@ namespace mrHelper.App.Interprocess
             singleProjectAccessor.MergeRequestAccessor;
          ISingleMergeRequestAccessor singleMergeRequestAccessor =
             mergeRequestAccessor.GetSingleMergeRequestAccessor(snapshot.MergeRequestIId);
-         IDiscussionCreator creator = singleMergeRequestAccessor.GetDiscussionCreator(_currentUser);
+         IDiscussionAccessor discussionAccessor = singleMergeRequestAccessor.GetDiscussionAccessor();
+         IDiscussionCreator creator = discussionAccessor.GetDiscussionCreator(_currentUser);
 
          try
          {

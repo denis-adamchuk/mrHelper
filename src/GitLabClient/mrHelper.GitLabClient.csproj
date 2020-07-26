@@ -43,7 +43,11 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Discussions\Impl\Internal\SingleDiscussionAccessor.cs" />
+    <Compile Include="src\Discussions\SingleDiscussionAccessorItf.cs" />
     <Compile Include="src\Discussions\DiscussionCreatorItf.cs" />
+    <Compile Include="src\Discussions\DiscussionAccessorItf.cs" />
+    <Compile Include="src\Discussions\Impl\Internal\DiscussionAccessor.cs" />
     <Compile Include="src\GitLab\GitLabAccessorItf.cs" />
     <Compile Include="src\Common\Impl\Helpers.cs" />
     <Compile Include="src\Common\Impl\Internal\BaseOperator.cs" />
@@ -55,18 +59,23 @@
     <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessorAbstract.cs" />
     <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessor.cs" />
     <Compile Include="src\Common\Impl\Internal\MergeRequestSearchProcessorFactory.cs" />
+    <Compile Include="src\GitLab\Impl\Internal\ModificationNotifier.cs" />
+    <Compile Include="src\GitLab\Impl\Internal\UserAccessor.cs" />
+    <Compile Include="src\GitLab\Impl\Internal\UserOperator.cs" />
+    <Compile Include="src\GitLab\ModificationNotifierItf.cs" />
+    <Compile Include="src\GitLab\UserAccessorItf.cs" />
+    <Compile Include="src\MergeRequests\Impl\Internal\MergeRequestEditor.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\SingleMergeRequestAccessor.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\MergeRequestCreator.cs" />
     <Compile Include="src\MergeRequests\Impl\Internal\MergeRequestAccessor.cs" />
+    <Compile Include="src\MergeRequests\MergeRequestEditorItf.cs" />
     <Compile Include="src\MergeRequests\SingleMergeRequestAccessorItf.cs" />
     <Compile Include="src\MergeRequests\MergeRequestCreatorItf.cs" />
     <Compile Include="src\MergeRequests\MergeRequestAccessorItf.cs" />
     <Compile Include="src\Projects\Impl\Internal\ProjectAccessor.cs" />
-    <Compile Include="src\Projects\Impl\Internal\ProjectAccessorOperator.cs" />
+    <Compile Include="src\Projects\Impl\Internal\ProjectOperator.cs" />
     <Compile Include="src\Projects\Impl\Internal\SingleProjectAccessor.cs" />
     <Compile Include="src\Projects\ProjectAccessorItf.cs" />
-    <Compile Include="src\Common\SearchManagerItf.cs" />
-    <Compile Include="src\Common\Impl\Internal\SearchManager.cs" />
     <Compile Include="src\Common\Impl\Internal\OperatorException.cs" />
     <Compile Include="src\Discussions\DiscussionCacheItf.cs" />
     <Compile Include="src\Discussions\DiscussionEditorItf.cs" />

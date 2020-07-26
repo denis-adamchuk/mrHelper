@@ -491,12 +491,13 @@ namespace mrHelper.App.Forms
             }
 
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
-            GitLabClientManager.ConnectionCheckStatus status =
-               await _gitlabClientManager.VerifyConnection(hostname, form.AccessToken);
-            if (status != GitLabClientManager.ConnectionCheckStatus.OK)
+            ConnectionCheckStatus status =
+               await _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(hostname).
+                  VerifyConnection(form.AccessToken);
+            if (status != ConnectionCheckStatus.OK)
             {
                string message =
-                  status == GitLabClientManager.ConnectionCheckStatus.BadAccessToken
+                  status == ConnectionCheckStatus.BadAccessToken
                      ? "Bad access token"
                      : "Invalid hostname";
                MessageBox.Show(message, "Cannot connect to the host",
@@ -1179,9 +1180,10 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
+         IGitLabInstanceAccessor gitlabInstanceAccessor = _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(host);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
-            projects, new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager), true))
+            projects, new EditProjectsListViewCallback(gitlabInstanceAccessor), true))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1213,9 +1215,10 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(users != null);
 
+         IGitLabInstanceAccessor gitlabInstanceAccessor = _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(host);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
-            users, new EditUsersListViewCallback(host, _gitlabClientManager.SearchManager), false))
+            users, new EditUsersListViewCallback(gitlabInstanceAccessor), false))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {

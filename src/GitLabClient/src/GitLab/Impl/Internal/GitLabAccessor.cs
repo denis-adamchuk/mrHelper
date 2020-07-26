@@ -7,14 +7,18 @@ namespace mrHelper.Client.Common
       public GitLabAccessor(IHostProperties hostProperties)
       {
          _hostProperties = hostProperties;
+         _modificationNotifier = new ModificationNotifier();
       }
 
       public IGitLabInstanceAccessor GetInstanceAccessor(string hostname)
       {
-         return new GitLabInstanceAccessor(hostname, _hostProperties);
+         return new GitLabInstanceAccessor(hostname, _hostProperties, _modificationNotifier);
       }
 
+      public IModificationNotifier ModificationNotifier => _modificationNotifier;
+
       private readonly IHostProperties _hostProperties;
+      private readonly ModificationNotifier _modificationNotifier;
    }
 }
 

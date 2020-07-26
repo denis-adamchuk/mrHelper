@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
-using mrHelper.Common.Exceptions;
-using GitLabSharp.Accessors;
 using mrHelper.Client.Discussions;
-using GitLabSharp.Entities;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Client.MergeRequests
 {
@@ -17,7 +14,9 @@ namespace mrHelper.Client.MergeRequests
 
    public interface ISingleMergeRequestAccessor
    {
-      IDiscussionCreator GetDiscussionCreator(User user);
+      IMergeRequestEditor GetMergeRequestEditor();
+
+      IDiscussionAccessor GetDiscussionAccessor();
    }
 }
 

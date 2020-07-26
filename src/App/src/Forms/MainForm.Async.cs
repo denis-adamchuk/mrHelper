@@ -18,6 +18,7 @@ using mrHelper.Client.Discussions;
 using mrHelper.Client.Session;
 using mrHelper.Client.Projects;
 using mrHelper.Client.MergeRequests;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -90,8 +91,9 @@ namespace mrHelper.App.Forms
          try
          {
             IAsyncGitCommandService git = storage?.Git;
-            DiscussionsForm discussionsForm = new DiscussionsForm(session, git, currentUser, mrk, discussions, title,
-               author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
+
+            DiscussionsForm discussionsForm = new DiscussionsForm(session, _gitlabClientManager.GitLabAccessor, git,
+               currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
                if (storage != null && storage.Updater != null)
@@ -249,14 +251,8 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               // TODO Avoid replicating this code
-               ISingleProjectAccessor singleProjectAccessor =
-                  getProjectAccessor().GetSingleProjectAccessor(mrk.ProjectKey.ProjectName);
-               IMergeRequestAccessor mergeRequestAccessor =
-                  singleProjectAccessor.MergeRequestAccessor;
-               ISingleMergeRequestAccessor singleMergeRequestAccessor =
-                  mergeRequestAccessor.GetSingleMergeRequestAccessor(mrk.IId);
-               IDiscussionCreator creator = singleMergeRequestAccessor.GetDiscussionCreator(_currentUser[getHostName()]);
+               IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+                  _gitlabClientManager.GitLabAccessor, mrk, _currentUser[getHostName()]);
                if (creator == null)
                {
                   return;
@@ -293,15 +289,9 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               // TODO Avoid replicating this code
                ISession session = getSession(!isSearchMode());
-               ISingleProjectAccessor singleProjectAccessor =
-                  getProjectAccessor().GetSingleProjectAccessor(mrk.ProjectKey.ProjectName);
-               IMergeRequestAccessor mergeRequestAccessor =
-                  singleProjectAccessor.MergeRequestAccessor;
-               ISingleMergeRequestAccessor singleMergeRequestAccessor =
-                  mergeRequestAccessor.GetSingleMergeRequestAccessor(mrk.IId);
-               IDiscussionCreator creator = singleMergeRequestAccessor.GetDiscussionCreator(_currentUser[getHostName()]);
+               IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+                  _gitlabClientManager.GitLabAccessor, mrk, _currentUser[getHostName()]);
                if (creator == null)
                {
                   return;

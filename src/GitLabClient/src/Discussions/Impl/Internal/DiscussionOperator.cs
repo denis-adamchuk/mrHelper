@@ -84,7 +84,7 @@ namespace mrHelper.Client.Discussions
                         {
                            SingleProjectAccessor projectAccessor = gl.Projects.Get(mrk.ProjectKey.ProjectName);
                            SingleMergeRequestAccessor mrAccessor = projectAccessor.MergeRequests.Get(mrk.IId);
-                           SingleDiscussionAccessor accessor = mrAccessor.Discussions.Get(discussionId);
+                           GitLabSharp.Accessors.SingleDiscussionAccessor accessor = mrAccessor.Discussions.Get(discussionId);
                            await accessor.CreateNewNoteTaskAsync(new CreateNewNoteParameters(body));
                            await accessor.ResolveTaskAsync(new ResolveThreadParameters(resolve));
                            return true;

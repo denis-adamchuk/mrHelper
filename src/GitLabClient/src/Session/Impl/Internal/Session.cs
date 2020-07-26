@@ -12,9 +12,10 @@ namespace mrHelper.Client.Session
 {
    internal class Session : ISession
    {
-      internal Session(GitLabClientContext clientContext)
+      internal Session(GitLabClientContext clientContext, IModificationNotifier modificationNotifier)
       {
          _clientContext = clientContext;
+         _modificationNotifier = modificationNotifier;
       }
 
       public event Action Stopped;
@@ -77,9 +78,6 @@ namespace mrHelper.Client.Session
       public ITimeTracker GetTimeTracker(MergeRequestKey mrk) =>
          _internal?.GetTimeTracker(mrk);
 
-      public IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId) =>
-         _internal?.GetDiscussionEditor(mrk, discussionId);
-
       public IMergeRequestCache MergeRequestCache => _internal?.MergeRequestCache;
 
       public IDiscussionCache DiscussionCache => _internal?.DiscussionCache;
@@ -90,9 +88,9 @@ namespace mrHelper.Client.Session
          string hostname, User user, SessionContext context)
       {
          MergeRequestManager mergeRequestManager =
-            new MergeRequestManager(_clientContext, cacheUpdater, hostname, context);
+            new MergeRequestManager(_clientContext, cacheUpdater, hostname, context, _modificationNotifier);
          DiscussionManager discussionManager =
-            new DiscussionManager(_clientContext, hostname, user, mergeRequestManager, context);
+            new DiscussionManager(_clientContext, hostname, user, mergeRequestManager, context, _modificationNotifier);
          TimeTrackingManager timeTrackingManager =
             new TimeTrackingManager(_clientContext, hostname, user, discussionManager);
          return new SessionInternal(mergeRequestManager, discussionManager, timeTrackingManager);
@@ -101,6 +99,7 @@ namespace mrHelper.Client.Session
       private SessionOperator _operator;
       private SessionInternal _internal;
       private readonly GitLabClientContext _clientContext;
+      private readonly IModificationNotifier _modificationNotifier;
    }
 }
 

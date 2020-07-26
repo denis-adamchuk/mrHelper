@@ -8,6 +8,8 @@ namespace mrHelper.Client.Projects
    {
       Task<IEnumerable<Project>> LoadProjects();
 
+      Task<Project> SearchProjectAsync(string projectname);
+
       ISingleProjectAccessor GetSingleProjectAccessor(string projectName);
    }
 }

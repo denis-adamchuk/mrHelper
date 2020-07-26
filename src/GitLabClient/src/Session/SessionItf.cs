@@ -19,7 +19,6 @@ namespace mrHelper.Client.Session
       ITotalTimeCache TotalTimeCache { get; }
 
       ITimeTracker GetTimeTracker(MergeRequestKey mrk);
-      IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId);
 
       event Action Stopped;
       event Action<string, User> Started;

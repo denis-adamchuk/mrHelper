@@ -29,7 +29,8 @@ namespace mrHelper.Client.Discussions
       IDiscussionCacheInternal
    {
       internal DiscussionManager(GitLabClientContext clientContext,
-         string hostname, User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext)
+         string hostname, User user, IMergeRequestCache mergeRequestCache, SessionContext sessionContext,
+         IModificationNotifier modificationNotifier)
       {
          _operator = new DiscussionOperator(hostname, clientContext.HostProperties);
 
@@ -41,6 +42,7 @@ namespace mrHelper.Client.Discussions
          _currentUser = user;
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += OnMergeRequestEvent;
+         _modificationNotifier = modificationNotifier;
 
          if (sessionContext.UpdateRules.UpdateDiscussions)
          {
@@ -128,25 +130,6 @@ namespace mrHelper.Client.Discussions
 
          Debug.Assert(!_reconnect || !_cachedDiscussions.ContainsKey(mrk));
          return _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].Discussions : null;
-      }
-
-      public DiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
-      {
-         return new DiscussionEditor(mrk, discussionId, _operator,
-            () =>
-            {
-               // TODO It can be removed when GitLab issue is fixed, see commit message
-               if (!_cachedDiscussions.ContainsKey(mrk))
-               {
-                  return;
-               }
-
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Remove MR from cache after a Thread is (un)resolved: "
-                + "Host={0}, Project={1}, IId={2}",
-                  mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
-               _cachedDiscussions.Remove(mrk);
-            });
       }
 
       /// <summary>
@@ -669,6 +652,8 @@ namespace mrHelper.Client.Discussions
       /// Queue of updates scheduled in scheduleUpdates() method for asynchronous processing
       /// </summary>
       private readonly Queue<ScheduledUpdate> _scheduledUpdates = new Queue<ScheduledUpdate>();
+
+      private readonly IModificationNotifier _modificationNotifier;
    }
 }
 
