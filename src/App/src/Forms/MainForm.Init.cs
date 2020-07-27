@@ -265,6 +265,8 @@ namespace mrHelper.App.Forms
             System.Environment.GetEnvironmentVariable("PATH")));
          System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
          Trace.TraceInformation("Set GIT_TERMINAL_PROMPT=0");
+         Trace.TraceInformation(String.Format("TEMP variable: {0}",
+            System.Environment.GetEnvironmentVariable("TEMP")));
 
          IIntegratedDiffTool diffTool = new BC3Tool();
          DiffToolIntegration integration = new DiffToolIntegration();

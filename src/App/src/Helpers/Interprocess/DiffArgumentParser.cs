@@ -50,10 +50,8 @@ namespace mrHelper.App.Interprocess
       /// Creates LineMatchInfo structure.
       /// Throws ArgumentException.
       /// </summary>
-      public MatchInfo Parse()
+      public MatchInfo Parse(string tempFolder)
       {
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-
          if (!int.TryParse(_arguments[1], out int currentLineNumber))
          {
             throw new ArgumentException(

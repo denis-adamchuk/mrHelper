@@ -22,6 +22,7 @@ using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.Client.MergeRequests;
 using mrHelper.Client.Session;
 using mrHelper.Client.TimeTracking;
+using mrHelper.App.Interprocess;
 
 namespace mrHelper.App.Forms
 {
@@ -1976,6 +1977,16 @@ namespace mrHelper.App.Forms
                break;
          }
       }
+
+      private string getDiffTempFolder(Snapshot snapshot)
+      {
+         if (ConfigurationHelper.GetPreferredStorageType(Program.Settings) == LocalCommitStorageType.FileStorage)
+         {
+            return snapshot.TempFolder;
+         }
+         return Environment.GetEnvironmentVariable("TEMP");
+      }
+
    }
 }
 
