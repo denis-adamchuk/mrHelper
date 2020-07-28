@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using mrHelper.Common.Constants;
 using GitLabSharp.Entities;
-using mrHelper.Client.Common;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms.Helpers
 {
    public class EditUsersListViewCallback : IEditOrderedListViewCallback
    {
-      public EditUsersListViewCallback(IGitLabInstanceAccessor gitLabInstanceAccessor)
+      public EditUsersListViewCallback(RawDataAccessor rawDataAccessor)
       {
-         _gitLabInstanceAccessor = gitLabInstanceAccessor;
+         _rawDataAccessor = rawDataAccessor;
       }
 
       public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms.Helpers
             username = item.Substring(1);
          }
 
-         User user = await _gitLabInstanceAccessor.UserAccessor.SearchUserByNameAsync(username, true);
+         User user = await _rawDataAccessor.UserAccessor.SearchUserByNameAsync(username, true);
          if (user == null)
          {
             MessageBox.Show(String.Format("User \"{0}\" is not found at the selected host", username),
@@ -42,7 +42,7 @@ namespace mrHelper.App.Forms.Helpers
          return user.Username;
       }
 
-      private IGitLabInstanceAccessor _gitLabInstanceAccessor;
+      private readonly RawDataAccessor _rawDataAccessor;
    }
 }
 

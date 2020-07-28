@@ -3,16 +3,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using mrHelper.Client.Common;
 using GitLabSharp.Entities;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms.Helpers
 {
    public class EditProjectsListViewCallback : IEditOrderedListViewCallback
    {
-      public EditProjectsListViewCallback(IGitLabInstanceAccessor gitLabInstanceAccessor)
+      public EditProjectsListViewCallback(RawDataAccessor rawDataAccessor)
       {
-         _gitLabInstanceAccessor = gitLabInstanceAccessor;
+         _rawDataAccessor = rawDataAccessor;
       }
 
       public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
@@ -27,7 +27,7 @@ namespace mrHelper.App.Forms.Helpers
          int slashIndex = item.IndexOf('/');
          if (item.IndexOf(" ", 0, slashIndex) != -1)
          {
-            User user = await _gitLabInstanceAccessor.UserAccessor.SearchUserByNameAsync(
+            User user = await _rawDataAccessor.UserAccessor.SearchUserByNameAsync(
                item.Substring(0, slashIndex), false);
             if (user == null)
             {
@@ -39,7 +39,7 @@ namespace mrHelper.App.Forms.Helpers
             item = user.Username + item.Substring(slashIndex);
          }
 
-         Project project = await _gitLabInstanceAccessor.ProjectAccessor.SearchProjectAsync(item);
+         Project project = await _rawDataAccessor.ProjectAccessor.SearchProjectAsync(item);
          if (project == null)
          {
             MessageBox.Show(String.Format("There is no project {0} at the selected host", item),
@@ -57,7 +57,7 @@ namespace mrHelper.App.Forms.Helpers
          return project.Path_With_Namespace;
       }
 
-      private IGitLabInstanceAccessor _gitLabInstanceAccessor;
+      private readonly RawDataAccessor _rawDataAccessor;
    }
 }
 

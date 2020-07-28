@@ -1,5 +1,5 @@
-﻿using System;
-using mrHelper.Client.Types;
+﻿using mrHelper.GitLabClient;
+using System;
 
 namespace mrHelper.App.Helpers
 {
@@ -23,7 +23,7 @@ namespace mrHelper.App.Helpers
       private readonly int _deletions;
    }
 
-   internal interface IDiffStatisticProvider : IDisposable
+   internal interface IDiffStatisticProvider
    {
       event Action Update;
 

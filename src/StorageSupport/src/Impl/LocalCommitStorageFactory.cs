@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Projects;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -21,7 +21,7 @@ namespace mrHelper.StorageSupport
       /// Throws ArgumentException if passed ParentFolder does not exist and cannot be created
       /// </summary>
       public LocalCommitStorageFactory(ISynchronizeInvoke synchronizeInvoke,
-         IProjectAccessor projectAccessor, string parentFolder, int revisionsToKeep, int comparisonsToKeep)
+         ProjectAccessor projectAccessor, string parentFolder, int revisionsToKeep, int comparisonsToKeep)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -56,27 +56,35 @@ namespace mrHelper.StorageSupport
             return null;
          }
 
-         if (_storages.TryGetValue(key, out ILocalCommitStorage cachedStorage))
+         if (_fileStorages.TryGetValue(key, out FileStorage cachedFileStorage))
          {
-            return cachedStorage;
+            return cachedFileStorage;
+         }
+         else if (_gitRepositories.TryGetValue(key, out GitRepository cachedGitRepository))
+         {
+            return cachedGitRepository;
          }
 
-         ILocalCommitStorage storage;
+         ILocalCommitStorage result;
          try
          {
             if (type == LocalCommitStorageType.FileStorage)
             {
-               storage = new FileStorage(ParentFolder, key, _synchronizeInvoke,
+               FileStorage storage = new FileStorage(ParentFolder, key, _synchronizeInvoke,
                   _projectAccessor.GetSingleProjectAccessor(key.ProjectName).RepositoryAccessor,
-                  _revisionsToKeep, _comparisonsToKeep, () => _storages.Count);
+                  _revisionsToKeep, _comparisonsToKeep, () => _fileStorages.Count);
+               _fileStorages[key] = storage;
+               result = storage;
             }
             else
             {
                Debug.Assert(type == LocalCommitStorageType.FullGitRepository
                          || type == LocalCommitStorageType.ShallowGitRepository);
 
-               storage = new GitRepository(ParentFolder, key, _synchronizeInvoke, type,
+               GitRepository storage = new GitRepository(ParentFolder, key, _synchronizeInvoke, type,
                   (r) => GitRepositoryCloned?.Invoke(r));
+               _gitRepositories[key] = storage;
+               result = storage;
             }
          }
          catch (ArgumentException ex)
@@ -84,8 +92,7 @@ namespace mrHelper.StorageSupport
             ExceptionHandlers.Handle("Cannot create commit storage", ex);
             return null;
          }
-         _storages[key] = storage;
-         return storage;
+         return result;
       }
 
       public event Action<ILocalCommitStorage> GitRepositoryCloned;
@@ -94,18 +101,28 @@ namespace mrHelper.StorageSupport
       {
          Trace.TraceInformation(String.Format(
             "[LocalCommitStorageFactory ] Disposing a factory for parentFolder {0}", ParentFolder));
-         foreach (ILocalCommitStorage storage in _storages.Values)
+
+         foreach (FileStorage storage in _fileStorages.Values)
          {
             storage.Dispose();
          }
-         _storages.Clear();
+         _fileStorages.Clear();
+
+         foreach (GitRepository storage in _gitRepositories.Values)
+         {
+            storage.Dispose();
+         }
+         _fileStorages.Clear();
+
          _isDisposed = true;
       }
 
-      private readonly Dictionary<ProjectKey, ILocalCommitStorage> _storages =
-         new Dictionary<ProjectKey, ILocalCommitStorage>();
+      private readonly Dictionary<ProjectKey, GitRepository> _gitRepositories =
+         new Dictionary<ProjectKey, GitRepository>();
+      private readonly Dictionary<ProjectKey, FileStorage> _fileStorages =
+         new Dictionary<ProjectKey, FileStorage>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-      private readonly IProjectAccessor _projectAccessor;
+      private readonly ProjectAccessor _projectAccessor;
       private readonly int _revisionsToKeep;
       private readonly int _comparisonsToKeep;
 

@@ -18,7 +18,7 @@ namespace mrHelper.App.Interprocess
          Project = project;
          Refs = refs;
          TempFolder = tempFolder;
-         SessionName = sessionName;
+         DataCacheName = sessionName;
       }
 
       [JsonProperty]
@@ -40,7 +40,7 @@ namespace mrHelper.App.Interprocess
       public string TempFolder { get; protected set; }
 
       [JsonProperty]
-      public string SessionName { get; protected set; }
+      public string DataCacheName { get; protected set; }
 
       public override bool Equals(object obj)
       {
@@ -51,7 +51,7 @@ namespace mrHelper.App.Interprocess
                 Project == snapshot.Project &&
                 EqualityComparer<DiffRefs>.Default.Equals(Refs, snapshot.Refs) &&
                 TempFolder == snapshot.TempFolder &&
-                SessionName == snapshot.SessionName;
+                DataCacheName == snapshot.DataCacheName;
       }
 
       public override int GetHashCode()
@@ -63,7 +63,7 @@ namespace mrHelper.App.Interprocess
          hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Project);
          hashCode = hashCode * -1521134295 + EqualityComparer<DiffRefs>.Default.GetHashCode(Refs);
          hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TempFolder);
-         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(SessionName);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DataCacheName);
          return hashCode;
       }
    }

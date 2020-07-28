@@ -3,8 +3,8 @@ using System.Collections;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using mrHelper.Client.Types;
 using mrHelper.CommonControls.Controls;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Controls
 {
@@ -195,7 +195,7 @@ namespace mrHelper.App.Controls
       }
 
       private readonly ToolTip _toolTip = new ToolTip();
-      private System.Timers.Timer _toolTipTimer;
+      private readonly System.Timers.Timer _toolTipTimer;
       private Point _lastMouseLocation = new Point(-1, -1);
       private ListViewHitTestInfo _lastHistTestInfo;
 
@@ -206,7 +206,7 @@ namespace mrHelper.App.Controls
       // between Start() and Stop() (see OnItemSelectionChanged),
       // Enabled property is reset and a timer event is already queued so
       // it will trigger when no longer needed.
-      private System.Windows.Forms.Timer _delayedDeselectionTimer;
+      private readonly System.Windows.Forms.Timer _delayedDeselectionTimer;
    }
 }
 

@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
-using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
-using mrHelper.Client.Common;
-using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
@@ -87,8 +82,7 @@ namespace mrHelper.App.Forms
       {
          Interval = timeTrackingTimerInterval
       };
-
-      bool _startMinimized;
+      readonly bool _startMinimized;
       bool _forceMaximizeOnNextRestore;
       bool _applySplitterDistanceOnNextRestore;
       FormWindowState _prevWindowState;
@@ -99,10 +93,10 @@ namespace mrHelper.App.Forms
       private bool _userIsMovingSplitter2 = false;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
-      private bool _canSwitchTab = true;
+      private readonly bool _canSwitchTab = true;
       private readonly bool _runningAsUwp = false;
 
-      private ILocalCommitStorageFactory _storageFactory;
+      private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;
       private IDiffStatisticProvider _diffStatProvider;
       private PersistentStorage _persistentStorage;
@@ -117,14 +111,16 @@ namespace mrHelper.App.Forms
          new Dictionary<string, MergeRequestKey>();
       private ExpressionResolver _expressionResolver;
 
-      private ISession _liveSession;
-      private ISession _searchSession;
-      private ISession getSessionByName(string name) => name == "Live" ? _liveSession : _searchSession;
-      private string getSessionName(ISession session) => session == _liveSession ? "Live" : "Search";
+      private GitLabInstance _gitLabInstance;
+      private DataCache _liveDataCache;
+      private DataCache _searchDataCache;
+      private DataCache getDataCacheByName(string name) =>
+         name == "Live" ? _liveDataCache : _searchDataCache;
+      private string getDataCacheName(DataCache dataCache) =>
+         dataCache == _liveDataCache ? "Live" : "Search";
 
-      private ISession _timeTrackingSession;
+      private TabPage _timeTrackingTabPage;
       private ITimeTracker _timeTracker;
-      private GitLabClientManager _gitlabClientManager;
 
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;

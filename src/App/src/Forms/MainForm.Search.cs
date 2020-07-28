@@ -1,16 +1,12 @@
 using System;
-using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.MergeRequests;
-using System.Collections;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
@@ -18,14 +14,14 @@ namespace mrHelper.App.Forms
    {
       private bool startSearchWorkflowDefaultExceptionHandler(Exception ex)
       {
-         if (ex is SessionException || ex is UnknownHostException)
+         if (ex is DataCacheException || ex is UnknownHostException)
          {
-            if (!(ex is SessionStartCancelledException))
+            if (!(ex is DataCacheConnectionCancelledException))
             {
                disableAllSearchUIControls(true);
                ExceptionHandlers.Handle("Cannot perform merge request search", ex);
                string message = ex.Message;
-               if (ex is SessionException wx)
+               if (ex is DataCacheException wx)
                {
                   message = wx.UserMessage;
                }
@@ -73,7 +69,7 @@ namespace mrHelper.App.Forms
 
          onSingleSearchMergeRequestLoaded(fmk);
 
-         IMergeRequestCache cache = _searchSession.MergeRequestCache;
+         IMergeRequestCache cache = _searchDataCache.MergeRequestCache;
          if (cache != null)
          {
             MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
@@ -86,7 +82,7 @@ namespace mrHelper.App.Forms
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       /// <summary>
-      /// Connects Search Session to GitLab
+      /// Connects Search DataCache to GitLab
       /// </summary>
       /// <returns>false if operation was cancelled</returns>
       async private Task startSearchWorkflowAsync(string hostname, object query, int? maxResults)
@@ -112,17 +108,17 @@ namespace mrHelper.App.Forms
          SearchCriteria searchCriteria = new SearchCriteria(new object[] { query });
          onLoadAllSearchMergeRequests(searchCriteria, hostname);
 
-         SessionContext sessionContext = new SessionContext(
-            new SessionCallbacks(null, null),
-            new SessionUpdateRules(false, false),
+         DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
+            new DataCacheCallbacks(null, null),
+            new DataCacheUpdateRules(null, null),
             new SearchBasedContext(searchCriteria, maxResults, false));
 
-         await _searchSession.Start(hostname, sessionContext);
+         await _searchDataCache.Connect(_gitLabInstance, sessionContext);
 
-         foreach (ProjectKey projectKey in _searchSession.MergeRequestCache.GetProjects())
+         foreach (ProjectKey projectKey in _searchDataCache.MergeRequestCache.GetProjects())
          {
             onProjectSearchMergeRequestsLoaded(projectKey,
-               _searchSession.MergeRequestCache.GetMergeRequests(projectKey));
+               _searchDataCache.MergeRequestCache.GetMergeRequests(projectKey));
          }
 
          onAllSearchMergeRequestsLoaded();
@@ -172,7 +168,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk, _searchSession);
+         onSingleMergeRequestLoadedCommon(fmk, _searchDataCache);
       }
 
       private void onSearchComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,

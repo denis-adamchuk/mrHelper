@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using mrHelper.Client.Types;
-using mrHelper.Client.Discussions;
 using GitLabSharp.Entities;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers
 {

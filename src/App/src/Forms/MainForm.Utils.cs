@@ -11,22 +11,23 @@ using System.Drawing;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using static mrHelper.App.Helpers.ServiceManager;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.Types;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
 using static mrHelper.App.Controls.MergeRequestListView;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Session;
-using mrHelper.Client.TimeTracking;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
+      private User getCurrentUser()
+      {
+         return _currentUser.TryGetValue(getHostName(), out User value) ? value : null;
+      }
+
       private string getHostName()
       {
          return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
@@ -61,9 +62,9 @@ namespace mrHelper.App.Forms
          return null;
       }
 
-      private ISession getSession(bool live)
+      private DataCache getSession(bool live)
       {
-         return live ? _liveSession : _searchSession;
+         return live ? _liveDataCache : _searchDataCache;
       }
 
       /// <summary>
@@ -165,8 +166,10 @@ namespace mrHelper.App.Forms
 
       private void createListViewGroupForProject(ListView listView, ProjectKey projectKey, bool sortNeeded)
       {
-         ListViewGroup group = new ListViewGroup(projectKey.ProjectName, projectKey.ProjectName);
-         group.Tag = projectKey;
+         ListViewGroup group = new ListViewGroup(projectKey.ProjectName, projectKey.ProjectName)
+         {
+            Tag = projectKey
+         };
          if (!sortNeeded)
          {
             // user defines how to sort group here
@@ -444,7 +447,7 @@ namespace mrHelper.App.Forms
             && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value)
             &&  _mergeRequestsUpdatingByUserRequest.Count() < Constants.MaxMergeRequestStorageUpdatesInParallel;
          buttonDiscussions.Enabled = isEnabled;
-         updateDiffToolButtonState(isEnabled, mrk);
+         updateDiffToolButtonState(isEnabled);
       }
 
       private void onStorageUpdateStateChange()
@@ -655,13 +658,13 @@ namespace mrHelper.App.Forms
 
       private string getDiscussionCount(MergeRequestKey mrk)
       {
-         ISession session = getSession(true /* supported in Live only */);
-         if (session?.DiscussionCache == null)
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         if (dataCache?.DiscussionCache == null)
          {
             return "N/A";
          }
 
-         DiscussionCount dc = session.DiscussionCache.GetDiscussionCount(mrk);
+         DiscussionCount dc = dataCache.DiscussionCache.GetDiscussionCount(mrk);
          switch (dc.Status)
          {
             case DiscussionCount.EStatus.NotAvailable:
@@ -696,9 +699,9 @@ namespace mrHelper.App.Forms
          buttonNewDiscussion.Enabled = enabled;
       }
 
-      private void updateDiffToolButtonState(bool isEnabled, MergeRequestKey? mrk)
+      private void updateDiffToolButtonState(bool isEnabled)
       {
-         string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
+         string[] selected = revisionBrowser.GetSelectedSha(out _);
          switch (selected.Count())
          {
             case 1:
@@ -769,9 +772,16 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private IProjectAccessor getProjectAccessor()
+      private ProjectAccessor getProjectAccessor()
       {
-         return _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(getHostName()).ProjectAccessor;
+         if (_gitLabInstance == null)
+         {
+            Debug.Assert(false);
+            return null;
+         }
+
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(_gitLabInstance);
+         return rawDataAccessor.ProjectAccessor;
       }
 
       private ILocalCommitStorageFactory getCommitStorageFactory(bool showMessageBoxOnError)
@@ -885,8 +895,8 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         ISession session = getSession(true /* supported in Live only */);
-         DiscussionCount dc = session?.DiscussionCache?.GetDiscussionCount(
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         DiscussionCount dc = dataCache?.DiscussionCache?.GetDiscussionCount(
             new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
 
          if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
@@ -908,12 +918,12 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void cleanupReviewedRevisions(string hostname)
       {
-         if (_liveSession?.MergeRequestCache == null)
+         if (_liveDataCache?.MergeRequestCache == null)
          {
             return;
          }
 
-         IEnumerable<ProjectKey> projectKeys = _liveSession.MergeRequestCache.GetProjects();
+         IEnumerable<ProjectKey> projectKeys = _liveDataCache.MergeRequestCache.GetProjects();
 
          // gather all MR from projects that no longer in use
          IEnumerable<MergeRequestKey> toRemove1 = _reviewedRevisions.Keys
@@ -922,7 +932,7 @@ namespace mrHelper.App.Forms
          // gather all closed MR from existing projects
          IEnumerable<MergeRequestKey> toRemove2 = _reviewedRevisions.Keys
             .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
-               && !_liveSession.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
+               && !_liveDataCache.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
 
          // leave only MR from the passed project
          IEnumerable<MergeRequestKey> toRemove =
@@ -954,8 +964,8 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         ISession session = getSession(true /* supported in Live only */);
-         IMergeRequestCache mergeRequestCache = session?.MergeRequestCache;
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
          {
             return;
@@ -1037,8 +1047,10 @@ namespace mrHelper.App.Forms
       {
          ListViewGroup group = listView.Groups[fmk.ProjectKey.ProjectName];
          string[] subitems = Enumerable.Repeat(String.Empty, listView.Columns.Count).ToArray();
-         ListViewItem item = new ListViewItem(subitems, group);
-         item.Tag = fmk;
+         ListViewItem item = new ListViewItem(subitems, group)
+         {
+            Tag = fmk
+         };
          return item;
       }
 
@@ -1062,10 +1074,10 @@ namespace mrHelper.App.Forms
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             String.Format("{0}/browse/{1}", jiraServiceUrl, jiraTask) : String.Empty;
 
-         ISession session = item.ListView == listViewMergeRequests ? _liveSession : _searchSession;
+         DataCache dataCache = item.ListView == listViewMergeRequests ? _liveDataCache : _searchDataCache;
          string getTotalTimeText(MergeRequestKey key)
          {
-            ITotalTimeCache totalTimeCache = session?.TotalTimeCache;
+            ITotalTimeCache totalTimeCache = dataCache?.TotalTimeCache;
             if (totalTimeCache == null)
             {
                return String.Empty;
@@ -1128,7 +1140,7 @@ namespace mrHelper.App.Forms
          int getPriority(IEnumerable<string> labels)
          {
             Debug.Assert(labels.Any());
-            if (Client.Common.Helpers.IsUserMentioned(labels.First(), currentUser))
+            if (GitLabClient.Helpers.IsUserMentioned(labels.First(), currentUser))
             {
                return 0;
             }
@@ -1215,7 +1227,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void processUpdate(Client.Types.UserEvents.MergeRequestEvent e)
+      private void processUpdate(UserEvents.MergeRequestEvent e)
       {
          if (e.New || e.Commits)
          {
@@ -1837,10 +1849,10 @@ namespace mrHelper.App.Forms
             }
          }
 
-         ISession session = getSession(true /* supported in Live only */);
-         session?.MergeRequestCache?.RequestUpdate(mrk, intervals,
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
-         session?.DiscussionCache?.RequestUpdate(mrk, intervals,
+         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals,
             () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
       }
 
@@ -1870,7 +1882,7 @@ namespace mrHelper.App.Forms
          saveProperty(columnWidths);
       }
 
-      private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk, ISession session)
+      private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk, DataCache dataCache)
       {
          Debug.Assert(fmk.MergeRequest != null);
 
@@ -1879,7 +1891,7 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(
             true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
          updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
-            fmk.MergeRequest.Author, fmk.ProjectKey.HostName, session.TotalTimeCache);
+            fmk.MergeRequest.Author, fmk.ProjectKey.HostName, dataCache.TotalTimeCache);
          updateAbortGitCloneButtonState();
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
@@ -1950,28 +1962,25 @@ namespace mrHelper.App.Forms
          buttonReloadList.Enabled = true;
       }
 
-      private void getShaForDiffTool(out string baseSha, out string left, out string right,
+      private void getShaForDiffTool(out string left, out string right,
          out IEnumerable<string> included, out RevisionType? type)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out type);
          switch (selected.Count())
          {
             case 0:
-               baseSha = String.Empty;
                left = String.Empty;
                right = String.Empty;
                included = new List<string>();
                break;
 
             case 1:
-               baseSha = revisionBrowser.GetBaseCommitSha();
-               left = baseSha;
+               left = revisionBrowser.GetBaseCommitSha();
                right = selected[0];
                included = revisionBrowser.GetIncludedSha();
                break;
 
             case 2:
-               baseSha = revisionBrowser.GetBaseCommitSha();
                left = selected[0];
                right = selected[1];
                included = revisionBrowser.GetIncludedSha();
@@ -1979,7 +1988,6 @@ namespace mrHelper.App.Forms
 
             default:
                Debug.Assert(false);
-               baseSha = String.Empty;
                left = String.Empty;
                right = String.Empty;
                included = new List<string>();

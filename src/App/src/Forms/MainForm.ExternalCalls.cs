@@ -8,17 +8,13 @@ using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
-using mrHelper.Client.Discussions;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Projects;
-using mrHelper.Client.Common;
+using mrHelper.GitLabClient;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -46,7 +42,8 @@ namespace mrHelper.App.Forms
             DiffArguments = diffArguments;
          }
       }
-      Queue<DiffRequest> _requestedDiff = new Queue<DiffRequest>();
+
+      readonly Queue<DiffRequest> _requestedDiff = new Queue<DiffRequest>();
       private void enqueueDiffRequest(DiffRequest diffRequest)
       {
          _requestedDiff.Enqueue(diffRequest);
@@ -83,9 +80,10 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            ISession session = getSessionByName(snapshot.SessionName);
-            if (session == null)
+            DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
+            if (dataCache == null || _gitLabInstance == null || getCurrentUser() == null)
             {
+               // It is unexpected to get here when we are not connected to a host
                Debug.Assert(false);
                return;
             }
@@ -94,8 +92,7 @@ namespace mrHelper.App.Forms
             DiffCallHandler handler;
             try
             {
-               // TODO Add getter for current user
-               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, getProjectAccessor(), _currentUser[getHostName()]);
+               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, _gitLabInstance, getCurrentUser());
             }
             catch (ArgumentException ex)
             {
@@ -125,7 +122,7 @@ namespace mrHelper.App.Forms
 
             MergeRequestKey mrk = new MergeRequestKey(
                new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-            session.DiscussionCache?.RequestUpdate(mrk,
+            dataCache.DiscussionCache?.RequestUpdate(mrk,
                new int[]{ Constants.DiscussionCheckOnNewThreadFromDiffToolInterval }, null);
          }
          finally
@@ -142,12 +139,6 @@ namespace mrHelper.App.Forms
 
       private void onOpenCommand(string argumentsString)
       {
-         // TODO Why was this check made?
-         //if (_gitlabClientManager?.SearchManager == null)
-         //{
-         //   return;
-         //}
-
          string[] arguments = argumentsString.Split('|');
          string url = arguments[1];
 
@@ -155,7 +146,7 @@ namespace mrHelper.App.Forms
          enqueueUrlConnectionRequest(url, false);
       }
 
-      Queue<string> _requestedUrl = new Queue<string>();
+      readonly Queue<string> _requestedUrl = new Queue<string>();
       private void enqueueUrlConnectionRequest(string url, bool startup)
       {
          _requestedUrl.Enqueue(url);
@@ -193,7 +184,7 @@ namespace mrHelper.App.Forms
          }
          catch (UrlConnectionException ex)
          {
-            if (ex.InnerException is SessionStartCancelledException)
+            if (ex.InnerException is DataCacheConnectionCancelledException)
             {
                return true;
             }
@@ -230,14 +221,12 @@ namespace mrHelper.App.Forms
                "Cannot connect to {0} because it is not in the list of known hosts. ", mrk.ProjectKey.HostName), null);
          }
 
-         IGitLabAccessor gitLabAccessor = _gitlabClientManager.GitLabAccessor;
-         IGitLabInstanceAccessor gitlabInstanceAccessor = gitLabAccessor.GetInstanceAccessor(mrk.ProjectKey.HostName);
-         IProjectAccessor projectAccessor = gitlabInstanceAccessor.ProjectAccessor;
-         ISingleProjectAccessor singleProjectAccessor = projectAccessor.GetSingleProjectAccessor(mrk.ProjectKey.ProjectName);
-         IMergeRequestAccessor mergeRequestAccessor = singleProjectAccessor.MergeRequestAccessor;
-
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
-         MergeRequest mergeRequest = await mergeRequestAccessor.SearchMergeRequestAsync(mrk.IId);
+         // It is possible that we don't have _gitLabInstance so far (e.g. on application startup from URL)
+         GitLabInstance tempInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
+         MergeRequest mergeRequest = await Shortcuts
+            .GetMergeRequestAccessor(tempInstance, mrk.ProjectKey)
+            .SearchMergeRequestAsync(mrk.IId);
          if (mergeRequest == null)
          {
             throw new UrlConnectionException("Merge request does not exist. ", null);
@@ -255,14 +244,14 @@ namespace mrHelper.App.Forms
 
          if (!canOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url, !needReload))
          {
-            await openUrlAtSearchTabAsync(mrk, url);
+            await openUrlAtSearchTabAsync(mrk);
          }
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex)
       {
          string exceptionMessage = ex != null ? ex.Message : String.Empty;
-         if (ex is SessionException wfex)
+         if (ex is DataCacheException wfex)
          {
             exceptionMessage = wfex.UserMessage;
          }
@@ -287,13 +276,13 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url, bool updateIfNeeded)
       {
-         ISession session = getSession(true);
-         if (session?.MergeRequestCache == null)
+         DataCache dataCache = getSession(true);
+         if (dataCache?.MergeRequestCache == null)
          {
             throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
          }
 
-         if (!session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+         if (!dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
          {
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
@@ -301,7 +290,7 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
                await checkForUpdatesAsync();
-               if (getHostName() != mrk.ProjectKey.HostName || session.MergeRequestCache == null)
+               if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
                }
@@ -318,7 +307,7 @@ namespace mrHelper.App.Forms
          if (!selectMergeRequest(listViewMergeRequests, mrk, true) && listViewMergeRequests.Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
-            if (session.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
+            if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
             {
                // If it is cached, it is probably hidden by filters and user might want to un-hide it.
                if (!unhideFilteredMergeRequest(mrk))
@@ -348,7 +337,7 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk, string url)
+      async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
          tabControlMode.SelectedTab = tabPageSearch;
          await searchMergeRequestsAsync(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
@@ -469,7 +458,7 @@ namespace mrHelper.App.Forms
             ConfigurationHelper.GetProjectsForHost(projectKey.HostName, Program.Settings);
          IEnumerable<Tuple<string, bool>> enabled =
             projects.Where(x => projectKey.MatchProject(x.Item1));
-         return enabled.Any() ? enabled.First().Item2 : false;
+         return enabled.Any() && enabled.First().Item2;
       }
    }
 }

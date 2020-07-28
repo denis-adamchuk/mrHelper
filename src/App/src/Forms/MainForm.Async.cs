@@ -13,12 +13,8 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.Types;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.Session;
-using mrHelper.Client.Projects;
-using mrHelper.Client.MergeRequests;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
@@ -27,12 +23,13 @@ namespace mrHelper.App.Forms
       async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author)
       {
          Debug.Assert(getHostName() != String.Empty);
-         Debug.Assert(_currentUser.ContainsKey(getHostName()));
+         Debug.Assert(getCurrentUser() != null);
 
          // Store data before async/await
-         User currentUser = _currentUser[getHostName()];
-         ISession session = getSession(!isSearchMode());
-         if (session == null)
+         User currentUser = getCurrentUser();
+         DataCache dataCache = getSession(!isSearchMode());
+         GitLabInstance gitLabInstance = _gitLabInstance;
+         if (dataCache == null || gitLabInstance == null)
          {
             Debug.Assert(false);
             return;
@@ -41,21 +38,22 @@ namespace mrHelper.App.Forms
          if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            session.DiscussionCache.RequestUpdate(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
+            dataCache.DiscussionCache.RequestUpdate(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
          }
 
-         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(session, mrk);
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
          if (discussions == null || _exiting)
          {
             return;
          }
 
+         // TODO WTF Try host switch while prepare storage for discussions is running
          ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
          if (!await prepareStorageForDiscussionsForm(mrk, storage, discussions) || _exiting)
          {
             return;
          }
-         showDiscussionForm(session, storage, currentUser, mrk, discussions, title, author);
+         showDiscussionForm(gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -81,7 +79,7 @@ namespace mrHelper.App.Forms
          return await prepareCommitStorage(mrk, storage, contextProvider, false);
       }
 
-      private void showDiscussionForm(ISession session, ILocalCommitStorage storage,
+      private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
@@ -92,7 +90,7 @@ namespace mrHelper.App.Forms
          {
             IAsyncGitCommandService git = storage?.Git;
 
-            DiscussionsForm discussionsForm = new DiscussionsForm(session, _gitlabClientManager.GitLabAccessor, git,
+            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, git,
                currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
@@ -115,7 +113,7 @@ namespace mrHelper.App.Forms
                      "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
             },
-            () => session?.DiscussionCache?.RequestUpdate(mrk,
+            () => dataCache?.DiscussionCache?.RequestUpdate(mrk,
                new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
             form = discussionsForm;
          }
@@ -148,13 +146,12 @@ namespace mrHelper.App.Forms
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          // Keep data before async/await
-         ISession session = getSession(!isSearchMode());
-         getShaForDiffTool(out string baseSHA, out string leftSHA, out string rightSHA,
+         DataCache dataCache = getSession(!isSearchMode());
+         getShaForDiffTool(out string leftSHA, out string rightSHA,
             out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
-         if (session == null
+         if (dataCache == null
           || String.IsNullOrWhiteSpace(accessToken)
-          || String.IsNullOrWhiteSpace(baseSHA)
           || String.IsNullOrWhiteSpace(leftSHA)
           || String.IsNullOrWhiteSpace(rightSHA)
           || includedSHA == null
@@ -166,12 +163,12 @@ namespace mrHelper.App.Forms
          }
 
          ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
-         if (!await prepareStorageForDiffTool(mrk, storage, baseSHA, leftSHA, rightSHA) || _exiting)
+         if (!await prepareStorageForDiffTool(mrk, storage, leftSHA, rightSHA) || _exiting)
          {
             return;
          }
 
-         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, getSessionName(session));
+         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, getDataCacheName(dataCache));
 
          HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
          foreach (string sha in includedSHA)
@@ -223,7 +220,7 @@ namespace mrHelper.App.Forms
       }
 
       async private Task<bool> prepareStorageForDiffTool(MergeRequestKey mrk, ILocalCommitStorage storage,
-         string baseSHA, string leftSHA, string rightSHA)
+         string leftSHA, string rightSHA)
       {
          if (storage == null)
          {
@@ -251,16 +248,16 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                  _gitlabClientManager.GitLabAccessor, mrk, _currentUser[getHostName()]);
-               if (creator == null)
+               if (_gitLabInstance == null)
                {
+                  Debug.Assert(false);
                   return;
                }
 
                labelWorkflowStatus.Text = "Adding a comment...";
                try
                {
+                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(_gitLabInstance, mrk, getCurrentUser());
                   await creator.CreateNoteAsync(new CreateNewNoteParameters(form.Body));
                }
                catch (DiscussionCreatorException)
@@ -289,17 +286,17 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ISession session = getSession(!isSearchMode());
-               IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                  _gitlabClientManager.GitLabAccessor, mrk, _currentUser[getHostName()]);
-               if (creator == null)
+               DataCache dataCache = getSession(!isSearchMode());
+               if (dataCache == null || _gitLabInstance == null)
                {
+                  Debug.Assert(false);
                   return;
                }
 
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
                {
+                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(_gitLabInstance, mrk, getCurrentUser());
                   await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
                }
                catch (DiscussionCreatorException)
@@ -311,7 +308,7 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               session?.DiscussionCache?.RequestUpdate(
+               dataCache?.DiscussionCache?.RequestUpdate(
                   mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
             }
          }
@@ -342,18 +339,18 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(ISession session, MergeRequestKey mrk)
+      async private Task<IEnumerable<Discussion>> loadDiscussionsAsync(DataCache dataCache, MergeRequestKey mrk)
       {
-         if (session?.DiscussionCache == null)
+         if (dataCache?.DiscussionCache == null)
          {
             return null;
          }
 
          labelWorkflowStatus.Text = "Loading discussions...";
-         IEnumerable<Discussion> discussions = null;
+         IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await session.DiscussionCache.LoadDiscussions(mrk);
+            discussions = await dataCache.DiscussionCache.LoadDiscussions(mrk);
          }
          catch (DiscussionCacheException ex)
          {
@@ -373,9 +370,9 @@ namespace mrHelper.App.Forms
 
       private void requestCommitStorageUpdate(ProjectKey projectKey)
       {
-         ISession session = getSession(true /* supported in Live only */);
+         DataCache dataCache = getSession(true /* supported in Live only */);
 
-         IEnumerable<GitLabSharp.Entities.Version> versions = session?.MergeRequestCache?.GetVersions(projectKey);
+         IEnumerable<GitLabSharp.Entities.Version> versions = dataCache?.MergeRequestCache?.GetVersions(projectKey);
          if (versions != null)
          {
             VersionBasedContextProvider contextProvider = new VersionBasedContextProvider(versions);

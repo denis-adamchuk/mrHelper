@@ -2,7 +2,7 @@
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 
-namespace mrHelper.Client.Types
+namespace mrHelper.GitLabClient
 {
    public struct FullMergeRequestKey : IEquatable<FullMergeRequestKey>
    {

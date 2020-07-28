@@ -5,7 +5,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using System.Collections.Generic;
 
-namespace mrHelper.Client.Types
+namespace mrHelper.GitLabClient
 {
    public struct MergeRequestFilterState : IEquatable<MergeRequestFilterState>
    {

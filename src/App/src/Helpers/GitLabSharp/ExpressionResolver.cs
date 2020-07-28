@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.Client.Session;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers
 {
    public class ExpressionResolver : IDisposable
    {
-      public ExpressionResolver(ISession session)
+      public ExpressionResolver(DataCache dataCache)
       {
-         _session = session;
-         _session.Started += onSessionStarted;
+         _dataCache = dataCache;
+         _dataCache.Connected += onDataCacheConnected;
       }
 
       public void Dispose()
       {
-         _session.Started -= onSessionStarted;
+         _dataCache.Connected -= onDataCacheConnected;
       }
 
       public string Resolve(string expression)
@@ -35,15 +35,15 @@ namespace mrHelper.App.Helpers
          return value;
       }
 
-      private void onSessionStarted(string hostname, User user)
+      private void onDataCacheConnected(string hostname, User user)
       {
          _currentUser = user;
          _cached.Clear();
       }
 
       private User _currentUser;
-      private readonly ISession _session;
-      private Dictionary<string, string> _cached = new Dictionary<string, string>();
+      private readonly DataCache _dataCache;
+      private readonly Dictionary<string, string> _cached = new Dictionary<string, string>();
    }
 }
 

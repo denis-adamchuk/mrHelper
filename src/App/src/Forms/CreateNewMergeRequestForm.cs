@@ -7,15 +7,14 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.Client.Projects;
-using mrHelper.Client.Repository;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.src.Forms
 {
    internal partial class CreateNewMergeRequestForm : CustomFontForm
    {
       internal CreateNewMergeRequestForm(
-         IProjectAccessor projectAccessor,
+         ProjectAccessor projectAccessor,
          User currentUser,
          CreateNewMergeRequestState initialState)
       {
@@ -140,7 +139,7 @@ namespace mrHelper.App.src.Forms
 
          Branch preferredBranch = comboBox.Items.Cast<Branch>().FirstOrDefault(predicate);
          Branch defaultBranch = comboBox.Items.Cast<Branch>().FirstOrDefault(x => x.Name == DefaultBranchName);
-         Branch selectedBranch = preferredBranch != null ? preferredBranch : defaultBranch;
+         Branch selectedBranch = preferredBranch ?? defaultBranch;
          int selectedBranchIndex = comboBox.Items.IndexOf(selectedBranch);
          if (selectedBranchIndex != -1)
          {
@@ -183,10 +182,10 @@ namespace mrHelper.App.src.Forms
       }
 
       private readonly string DefaultBranchName = "master";
-      private readonly IProjectAccessor _projectAccessor;
+      private readonly ProjectAccessor _projectAccessor;
       private readonly User _currentUser;
       private readonly CreateNewMergeRequestState _initialState;
-      private IRepositoryAccessor _repositoryAccessor;
+      private RepositoryAccessor _repositoryAccessor;
    }
 }
 

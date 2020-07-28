@@ -5,32 +5,35 @@ using System.Windows.Forms;
 using GitLabSharp.Accessors;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Discussions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
-using mrHelper.Client.Session;
-using mrHelper.Client.Projects;
-using mrHelper.Client.MergeRequests;
 using GitLabSharp.Entities;
+using mrHelper.GitLabClient;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
       internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
-         IProjectAccessor projectAccessor, User currentUser)
+         GitLabInstance gitLabInstance, User currentUser)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
-         _projectAccessor = projectAccessor;
+         _gitLabInstance = gitLabInstance;
          _currentUser = currentUser;
       }
 
       async public Task HandleAsync(ICommitStorage gitRepository)
       {
+         if (_gitLabInstance == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          if (gitRepository != null)
          {
             await doHandleAsync(gitRepository.Git);
@@ -42,19 +45,21 @@ namespace mrHelper.App.Interprocess
             "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
             _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
 
-         ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
-
-         LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, _projectAccessor,
-            _snapshot.TempFolder, Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep);
-         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-         ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
-         if (tempRepository == null)
+         // TODO WTF Do we really need this case? It creates stuff in TEMP and never cleans it up
+         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(_gitLabInstance);
+         using (LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, projectAccessor,
+            _snapshot.TempFolder, Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep))
          {
-            Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
-            return;
+            ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
+            LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+            ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
+            if (tempRepository == null)
+            {
+               Trace.TraceError("[DiffCallHandler] Cannot create a temporary file storage");
+               return;
+            }
+            await doHandleAsync(tempRepository.Git);
          }
-         await doHandleAsync(tempRepository.Git);
-         factory.Dispose();
       }
 
       async public Task doHandleAsync(IGitCommandService git)
@@ -177,14 +182,8 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         ISingleProjectAccessor singleProjectAccessor =
-            _projectAccessor.GetSingleProjectAccessor(snapshot.Project);
-         IMergeRequestAccessor mergeRequestAccessor =
-            singleProjectAccessor.MergeRequestAccessor;
-         ISingleMergeRequestAccessor singleMergeRequestAccessor =
-            mergeRequestAccessor.GetSingleMergeRequestAccessor(snapshot.MergeRequestIId);
-         IDiscussionAccessor discussionAccessor = singleMergeRequestAccessor.GetDiscussionAccessor();
-         IDiscussionCreator creator = discussionAccessor.GetDiscussionCreator(_currentUser);
+         MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
+         IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(_gitLabInstance, mrk, _currentUser);
 
          try
          {
@@ -220,7 +219,7 @@ namespace mrHelper.App.Interprocess
 
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
-      private readonly IProjectAccessor _projectAccessor;
+      private readonly GitLabInstance _gitLabInstance;
       private readonly User _currentUser;
    }
 }

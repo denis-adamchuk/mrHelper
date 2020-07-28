@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace mrHelper.Client.Types
+namespace mrHelper.GitLabClient
 {
    public class SearchCriteria
    {

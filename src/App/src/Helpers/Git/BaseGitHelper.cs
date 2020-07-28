@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers

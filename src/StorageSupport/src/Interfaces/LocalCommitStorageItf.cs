@@ -1,8 +1,6 @@
-using System;
-
 namespace mrHelper.StorageSupport
 {
-   public interface ILocalCommitStorage : ICommitStorage, IDisposable
+   public interface ILocalCommitStorage : ICommitStorage
    {
       string Path { get; }
 

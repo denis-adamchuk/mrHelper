@@ -7,15 +7,12 @@ using System.Windows.Forms;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.MergeRequests;
 using System.Collections;
 using mrHelper.Common.Constants;
-using mrHelper.Client.Common;
-using mrHelper.Client.Projects;
+using mrHelper.GitLabClient;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -35,14 +32,14 @@ namespace mrHelper.App.Forms
    {
       private bool startWorkflowDefaultExceptionHandler(Exception ex)
       {
-         if (ex is SessionException || ex is UnknownHostException || ex is NoProjectsException)
+         if (ex is DataCacheException || ex is UnknownHostException || ex is NoProjectsException)
          {
-            if (!(ex is SessionStartCancelledException))
+            if (!(ex is DataCacheConnectionCancelledException))
             {
                disableAllUIControls(true);
                ExceptionHandlers.Handle("Cannot switch host", ex);
                string message = ex.Message;
-               if (ex is SessionException wx)
+               if (ex is DataCacheException wx)
                {
                   message = wx.UserMessage;
                }
@@ -91,7 +88,7 @@ namespace mrHelper.App.Forms
 
          onSingleMergeRequestLoaded(fmk);
 
-         IMergeRequestCache cache = _liveSession.MergeRequestCache;
+         IMergeRequestCache cache = _liveDataCache.MergeRequestCache;
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
          onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest, cache.GetCommits(mrk), cache.GetVersions(mrk));
@@ -100,12 +97,14 @@ namespace mrHelper.App.Forms
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       /// <summary>
-      /// Connects Live Session to GitLab
+      /// Connects Live DataCache to GitLab
       /// </summary>
       /// <param name="hostname"></param>
       /// <returns>false if operation was cancelled</returns>
       async private Task startWorkflowAsync(string hostname)
       {
+         _gitLabInstance = new GitLabInstance(hostname, Program.Settings);
+
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
          // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
          // we will miss them. It might be ok when host changes, but if this method used to "refresh"
@@ -118,7 +117,7 @@ namespace mrHelper.App.Forms
 
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
-         _searchSession.Stop();
+         _searchDataCache.Disconnect();
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
 
@@ -157,12 +156,12 @@ namespace mrHelper.App.Forms
 
          onLoadAllMergeRequests(enabledProjects, hostname);
 
-         SessionContext sessionContext = new SessionContext(
-            new SessionCallbacks(onForbiddenProject, onNotFoundProject),
-            new SessionUpdateRules(true, true),
+         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
+            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
+            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             new ProjectBasedContext(enabledProjects.ToArray()));
 
-         await _liveSession.Start(hostname, sessionContext);
+         await _liveDataCache.Connect(_gitLabInstance, connectionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
          cleanupReviewedRevisions(hostname);
@@ -172,14 +171,14 @@ namespace mrHelper.App.Forms
       {
          onLoadAllMergeRequests(hostname);
 
-         SessionContext sessionContext = new SessionContext(
-            new SessionCallbacks(onForbiddenProject, onNotFoundProject),
-            new SessionUpdateRules(true, true),
+         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
+            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
+            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             getCustomDataForUserBasedWorkflow());
 
-         await _liveSession.Start(hostname, sessionContext);
+         await _liveDataCache.Connect(_gitLabInstance, connectionContext);
 
-         onAllMergeRequestsLoaded(hostname, _liveSession.MergeRequestCache.GetProjects());
+         onAllMergeRequestsLoaded(hostname, _liveDataCache.MergeRequestCache.GetProjects());
          cleanupReviewedRevisions(hostname);
       }
 
@@ -266,7 +265,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk, _liveSession);
+         onSingleMergeRequestLoadedCommon(fmk, _liveDataCache);
       }
 
       private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
@@ -283,18 +282,18 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void liveSessionStopped()
+      private void liveDataCacheDisconnected()
       {
          closeAllFormsExceptMain();
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
-         unsubscribeFromLiveSessionInternalEvents();
+         unsubscribeFromLiveDataCacheInternalEvents();
       }
 
-      private void liveSessionStarted(string hostname, User user)
+      private void liveDataCacheConnected(string hostname, User user)
       {
-         subscribeToLiveSessionInternalEvents();
-         createGitHelpers(_liveSession, getCommitStorageFactory(false));
+         subscribeToLiveDataCacheInternalEvents();
+         createGitHelpers(_liveDataCache, getCommitStorageFactory(false));
 
          if (!_currentUser.ContainsKey(hostname))
          {
@@ -321,9 +320,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         IGitLabAccessor gitLabAccessor = _gitlabClientManager.GitLabAccessor;
-         IGitLabInstanceAccessor gitlabInstanceAccessor = gitLabAccessor.GetInstanceAccessor(hostname);
-         IProjectAccessor projectAccessor = gitlabInstanceAccessor.ProjectAccessor;
+         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(_gitLabInstance);
 
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
@@ -353,9 +350,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         IGitLabAccessor gitLabAccessor = _gitlabClientManager.GitLabAccessor;
-         IGitLabInstanceAccessor gitlabInstanceAccessor = gitLabAccessor.GetInstanceAccessor(hostname);
-         IUserAccessor userAccessor = gitlabInstanceAccessor.UserAccessor;
+         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(_gitLabInstance);
 
          bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";

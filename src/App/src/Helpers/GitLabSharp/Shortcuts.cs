@@ -1,48 +1,86 @@
 ﻿using GitLabSharp.Entities;
-using mrHelper.Client.Common;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Projects;
-using mrHelper.Client.Types;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers.GitLab
 {
+   // TODO WTF Add checks on gitLabInstance
    internal static class Shortcuts
    {
-      internal static IDiscussionCreator GetDiscussionCreator(IGitLabAccessor gitLabAccessor,
+      internal static ProjectAccessor GetProjectAccessor(GitLabInstance gitLabInstance)
+      {
+         throwOnNullInstance(gitLabInstance);
+         return new RawDataAccessor(gitLabInstance)
+            .ProjectAccessor;
+      }
+
+      internal static UserAccessor GetUserAccessor(GitLabInstance gitLabInstance)
+      {
+         throwOnNullInstance(gitLabInstance);
+         return new RawDataAccessor(gitLabInstance)
+            .UserAccessor;
+      }
+
+      internal static MergeRequestAccessor GetMergeRequestAccessor(GitLabInstance gitLabInstance,
+         ProjectKey projectKey)
+      {
+         throwOnNullInstance(gitLabInstance);
+         return new RawDataAccessor(gitLabInstance)
+            .ProjectAccessor
+            .GetSingleProjectAccessor(projectKey.ProjectName)
+            .MergeRequestAccessor;
+      }
+
+      internal static IMergeRequestCreator GetMergeRequestCreator(GitLabInstance gitLabInstance,
+         ProjectKey projectKey)
+      {
+         throwOnNullInstance(gitLabInstance);
+         return GetMergeRequestAccessor(gitLabInstance, projectKey)
+            .GetMergeRequestCreator();
+      }
+
+      internal static IMergeRequestEditor GetMergeRequestEditor(GitLabInstance gitLabInstance,
+         MergeRequestKey mrk)
+      {
+         throwOnNullInstance(gitLabInstance);
+         return GetMergeRequestAccessor(gitLabInstance, mrk.ProjectKey)
+            .GetSingleMergeRequestAccessor(mrk.IId)
+            .GetMergeRequestEditor();
+      }
+
+      internal static ITimeTracker GetTimeTracker(GitLabInstance gitLabInstance, MergeRequestKey mrk)
+      {
+         throwOnNullInstance(gitLabInstance);
+         return GetMergeRequestAccessor(gitLabInstance, mrk.ProjectKey)
+            .GetSingleMergeRequestAccessor(mrk.IId).GetTimeTracker();
+      }
+
+      internal static IDiscussionCreator GetDiscussionCreator(GitLabInstance gitLabInstance,
          MergeRequestKey mrk, User user)
       {
-         ISingleMergeRequestAccessor singleMergeRequestAccessor =
-            getMergeRequestAccessor(gitLabAccessor, mrk.ProjectKey).GetSingleMergeRequestAccessor(mrk.IId);
-         return singleMergeRequestAccessor.GetDiscussionAccessor().GetDiscussionCreator(user);
+         throwOnNullInstance(gitLabInstance);
+         return GetMergeRequestAccessor(gitLabInstance, mrk.ProjectKey)
+            .GetSingleMergeRequestAccessor(mrk.IId)
+            .GetDiscussionAccessor()
+            .GetDiscussionCreator(user);
       }
 
-      internal static IDiscussionEditor GetDiscussionEditor(IGitLabAccessor gitLabAccessor,
+      internal static SingleDiscussionAccessor GetSingleDiscussionAccessor(GitLabInstance gitLabInstance,
          MergeRequestKey mrk, string discussionId)
       {
-         ISingleMergeRequestAccessor singleMergeRequestAccessor =
-            getMergeRequestAccessor(gitLabAccessor, mrk.ProjectKey).GetSingleMergeRequestAccessor(mrk.IId);
-         IDiscussionAccessor discussionAccessor = singleMergeRequestAccessor.GetDiscussionAccessor();
-         return discussionAccessor.GetSingleDiscussionAccessor(discussionId).GetDiscussionEditor();
+         throwOnNullInstance(gitLabInstance);
+         return GetMergeRequestAccessor(gitLabInstance, mrk.ProjectKey)
+            .GetSingleMergeRequestAccessor(mrk.IId)
+            .GetDiscussionAccessor()
+            .GetSingleDiscussionAccessor(discussionId);
       }
 
-      internal static IMergeRequestCreator GetMergeRequestCreator(IGitLabAccessor gitLabAccessor,
-         ProjectKey projectKey)
+      private static void throwOnNullInstance(GitLabInstance gitLabInstance)
       {
-         return getMergeRequestAccessor(gitLabAccessor, projectKey).GetMergeRequestCreator();
-      }
-
-      private static IMergeRequestAccessor getMergeRequestAccessor(IGitLabAccessor gitLabAccessor,
-         ProjectKey projectKey)
-      {
-         IGitLabInstanceAccessor gitLabInstanceAccessor =
-            gitLabAccessor.GetInstanceAccessor(projectKey.HostName);
-         IProjectAccessor projectAccessor =
-            gitLabInstanceAccessor.ProjectAccessor;
-         ISingleProjectAccessor singleProjectAccessor =
-            projectAccessor.GetSingleProjectAccessor(projectKey.ProjectName);
-         return singleProjectAccessor.MergeRequestAccessor;
+         if (gitLabInstance == null)
+         {
+            throw new System.ArgumentException("gitLabInstance argument cannot be null");
+         }
       }
    }
 }

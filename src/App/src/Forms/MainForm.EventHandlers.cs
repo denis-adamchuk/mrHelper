@@ -8,10 +8,6 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Common;
-using mrHelper.Client.Session;
-using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -22,6 +18,8 @@ using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
 using Newtonsoft.Json.Linq;
 using mrHelper.App.src.Forms;
+using mrHelper.GitLabClient;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -159,16 +157,16 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
-         ISession session = getSession(!isSearchMode());
+         DataCache dataCache = getSession(!isSearchMode());
 
          if (isTrackingTime())
          {
             await onStopTimer(true);
-            onTimerStopped(session?.TotalTimeCache);
+            onTimerStopped(dataCache?.TotalTimeCache);
          }
          else
          {
-            onStartTimer(session);
+            onStartTimer(dataCache);
          }
       }
 
@@ -188,9 +186,12 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequest(null) != null);
          MergeRequest mr = getMergeRequest(null);
 
+         Debug.Assert(_gitLabInstance != null);
          Debug.Assert(!isSearchMode());
-         ISession session = getSession(true /* supported in Live only */);
-         TimeSpan? oldSpanOpt = session?.TotalTimeCache?.GetTotalTime(mrk).Amount;
+
+         IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(_gitLabInstance, mrk);
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
             return;
@@ -204,27 +205,29 @@ namespace mrHelper.App.Forms
                TimeSpan newSpan = form.TimeSpan;
                bool add = newSpan > oldSpan;
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
-               if (diff != TimeSpan.Zero && session?.TotalTimeCache != null)
+               if (diff == TimeSpan.Zero || dataCache?.TotalTimeCache == null)
                {
-                  try
-                  {
-                     await session.TotalTimeCache.AddSpan(add, diff, mrk);
-                  }
-                  catch (TimeTrackingException ex)
-                  {
-                     string message = "Cannot edit total tracked time";
-                     ExceptionHandlers.Handle(message, ex);
-                     MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                     return;
-                  }
-
-                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, session.TotalTimeCache);
-
-                  labelWorkflowStatus.Text = "Total spent time updated";
-
-                  Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
-                     mrk.IId, mrk.ProjectKey.ProjectName, diff.ToString()));
+                  return;
                }
+
+               try
+               {
+                  await editor.AddTrackedTime(diff, add);
+               }
+               catch (TimeTrackingException ex)
+               {
+                  string message = "Cannot edit total tracked time";
+                  ExceptionHandlers.Handle(message, ex);
+                  MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return;
+               }
+
+               updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, dataCache.TotalTimeCache);
+
+               labelWorkflowStatus.Text = "Total spent time updated";
+
+               Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
+                  mrk.IId, mrk.ProjectKey.ProjectName, diff.ToString()));
             }
          }
       }
@@ -491,9 +494,8 @@ namespace mrHelper.App.Forms
             }
 
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
-            ConnectionCheckStatus status =
-               await _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(hostname).
-                  VerifyConnection(form.AccessToken);
+            ConnectionChecker connectionChecker = new ConnectionChecker();
+            ConnectionCheckStatus status = await connectionChecker.CheckConnection(hostname, form.AccessToken);
             if (status != ConnectionCheckStatus.OK)
             {
                string message =
@@ -946,7 +948,7 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
       }
 
-      private void onStartTimer(ISession session)
+      private void onStartTimer(DataCache dataCache)
       {
          Debug.Assert(!isTrackingTime());
 
@@ -960,9 +962,10 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Start();
 
          // Reset and start stopwatch
+         Debug.Assert(_gitLabInstance != null);
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTrackingSession = session;
-         _timeTracker = session?.GetTimeTracker(getMergeRequestKey(null).Value);
+         _timeTrackingTabPage = tabControlMode.SelectedTab;
+         _timeTracker = Shortcuts.GetTimeTracker(_gitLabInstance, getMergeRequestKey(null).Value);
          _timeTracker?.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -985,7 +988,7 @@ namespace mrHelper.App.Forms
          // Reset member right now to not send tracked time again on re-entrance
          ITimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
-         _timeTrackingSession = null;
+         _timeTrackingTabPage = null;
 
          // Stop stopwatch and send tracked time
          if (send)
@@ -1052,14 +1055,14 @@ namespace mrHelper.App.Forms
 
       private void linkLabelTimeTrackingMergeRequest_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         if (_timeTracker == null || _timeTrackingSession == null)
+         if (_timeTracker == null || _timeTrackingTabPage == null)
          {
             return;
          }
 
-         if (_timeTrackingSession != getSession(!isSearchMode()))
+         if (_timeTrackingTabPage != tabControlMode.SelectedTab)
          {
-            tabControlMode.SelectedTab = isSearchMode() ? tabPageLive : tabPageSearch;
+            tabControlMode.SelectedTab = _timeTrackingTabPage;
          }
 
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
@@ -1180,10 +1183,9 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         IGitLabInstanceAccessor gitlabInstanceAccessor = _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(host);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
-            projects, new EditProjectsListViewCallback(gitlabInstanceAccessor), true))
+            projects, new EditProjectsListViewCallback(new RawDataAccessor(_gitLabInstance)), true))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1215,10 +1217,9 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(users != null);
 
-         IGitLabInstanceAccessor gitlabInstanceAccessor = _gitlabClientManager.GitLabAccessor.GetInstanceAccessor(host);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
-            users, new EditUsersListViewCallback(gitlabInstanceAccessor), false))
+            users, new EditUsersListViewCallback(new RawDataAccessor(_gitLabInstance)), false))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1384,7 +1385,9 @@ namespace mrHelper.App.Forms
 
       private void buttonCreateNew_Click(object sender, EventArgs e)
       {
-         CreateNewMergeRequestForm form = new CreateNewMergeRequestForm(getProjectAccessor());
+         if (!_currentUser.TryGetValue(getHostName(), out User user))
+         if (currentUser == null)
+         CreateNewMergeRequestForm form = new CreateNewMergeRequestForm(getProjectAccessor(), user, initialFormState);
          form.Show();
       }
    }

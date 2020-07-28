@@ -15,10 +15,10 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Discussions;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Controls
 {
@@ -26,7 +26,7 @@ namespace mrHelper.App.Controls
    {
       internal DiscussionBox(
          CustomFontForm parent,
-         IDiscussionEditor editor, IGitCommandService git,
+         SingleDiscussionAccessor accessor, IGitCommandService git,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
@@ -38,7 +38,8 @@ namespace mrHelper.App.Controls
 
          Discussion = discussion;
 
-         _editor = editor;
+         _accessor = accessor;
+         _editor = accessor.GetDiscussionEditor();
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
          _imagePath = StringUtils.GetHostWithPrefix(projectKey.HostName) + "/" + projectKey.ProjectName;
@@ -381,7 +382,7 @@ namespace mrHelper.App.Controls
                continue;
             }
 
-            Control textBox = createTextBox(note, discussionResolved, notes.First().Author);
+            Control textBox = createTextBox(note, discussionResolved);
             boxes.Add(textBox);
          }
          return boxes;
@@ -405,7 +406,7 @@ namespace mrHelper.App.Controls
          return prefix + body;
       }
 
-      private Control createTextBox(DiscussionNote note, bool discussionResolved, User firstNoteAuthor)
+      private Control createTextBox(DiscussionNote note, bool discussionResolved)
       {
          if (!isServiceDiscussionNote(note))
          {
@@ -1058,7 +1059,7 @@ namespace mrHelper.App.Controls
          // Load updated discussion
          try
          {
-            Discussion = discussion ?? await _editor.GetDiscussion();
+            Discussion = discussion ?? await _accessor.GetDiscussion();
          }
          catch (DiscussionEditorException ex)
          {
@@ -1139,6 +1140,7 @@ namespace mrHelper.App.Controls
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
+      private readonly SingleDiscussionAccessor _accessor;
       private readonly IDiscussionEditor _editor;
 
       private readonly ColorScheme _colorScheme;

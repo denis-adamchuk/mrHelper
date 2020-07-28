@@ -27,7 +27,7 @@ namespace mrHelper.App.Controls
          _onFontSelectionChanged(font);
       }
 
-      Action<string> _onFontSelectionChanged;
+      readonly Action<string> _onFontSelectionChanged;
    }
 }
 

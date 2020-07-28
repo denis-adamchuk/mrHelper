@@ -6,13 +6,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Version = GitLabSharp.Entities.Version;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Types;
-using mrHelper.Client.Discussions;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers
 {

@@ -8,7 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Repository;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -48,7 +48,7 @@ namespace mrHelper.StorageSupport
       internal FileStorageUpdater(
          ISynchronizeInvoke synchronizeInvoke,
          IFileStorage fileStorage,
-         IRepositoryAccessor repositoryAccessor,
+         RepositoryAccessor repositoryAccessor,
          Func<int> getStorageCount)
       {
          _synchronizeInvoke = synchronizeInvoke;
@@ -147,7 +147,7 @@ namespace mrHelper.StorageSupport
          }
 
          reportProgress(onProgressChange, "Starting to download files from GitLab...");
-         await processComparisonsAsync(isAwaitedUpdate, context, onProgressChange, comparisons);
+         await processComparisonsAsync(isAwaitedUpdate, onProgressChange, comparisons);
          reportProgress(onProgressChange, "Files downloaded");
       }
 
@@ -237,7 +237,7 @@ namespace mrHelper.StorageSupport
          return comparison;
       }
 
-      private async Task processComparisonsAsync(bool isAwaitedUpdate, CommitStorageUpdateContext context,
+      private async Task processComparisonsAsync(bool isAwaitedUpdate,
          Action<string> onProgressChange, IEnumerable<ComparisonInternal> comparisons)
       {
          List<FileInternal> allFiles = new List<FileInternal>();
@@ -407,7 +407,7 @@ namespace mrHelper.StorageSupport
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly IFileStorage _fileStorage;
-      private readonly IRepositoryAccessor _repositoryAccessor;
+      private readonly RepositoryAccessor _repositoryAccessor;
       private readonly Func<int> _getStorageCount;
 
       private bool _isDisposed;
