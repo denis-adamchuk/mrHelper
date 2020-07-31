@@ -57,7 +57,7 @@ namespace mrHelper.StorageSupport
 
       private string getComparisonCacheFilepath(string baseSha, string headSha)
       {
-         string comparisonCacheFileName = String.Format("{0}_{1}.json", baseSha, headSha);
+         string comparisonCacheFileName = String.Format("{0}_{1}_straight.json", baseSha, headSha);
          return Path.Combine(_path, comparisonCacheFileName);
       }
 

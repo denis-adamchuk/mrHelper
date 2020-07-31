@@ -64,7 +64,8 @@ namespace mrHelper.App.Helpers
             .Reverse()
             .FirstOrDefault(x => x.Individual_Note && x.Notes != null && x.Notes.Any()
               && x.Notes.First().Author.Username == Program.ServiceManager.GetServiceMessageUsername()
-              && x.Notes.First().Body.Contains("<summary>Code change summary</summary>"));
+              && (x.Notes.First().Body.Contains("<summary>Code change summary</summary>")
+               || x.Notes.First().Body.Contains("<summary><b>Code change summary</b></summary>")));
          if (discussion == null)
          {
             _statistic.Remove(mrk);

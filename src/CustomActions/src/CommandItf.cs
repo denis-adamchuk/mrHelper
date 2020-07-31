@@ -12,6 +12,8 @@ namespace mrHelper.CustomActions
 
       bool GetReload();
 
+      string GetHint();
+
       Task Run();
    }
 }

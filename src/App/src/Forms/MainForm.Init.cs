@@ -56,14 +56,15 @@ namespace mrHelper.App.Forms
             {
                Name = "customAction" + id,
                Location = new System.Drawing.Point { X = 0, Y = 19 },
-               Size = new System.Drawing.Size { Width = 96, Height = 32 },
-               MinimumSize = new System.Drawing.Size { Width = 96, Height = 0 },
+               Size = new System.Drawing.Size { Width = 72, Height = 32 },
+               MinimumSize = new System.Drawing.Size { Width = 72, Height = 0 },
                Text = name,
                UseVisualStyleBackColor = true,
                Enabled = false,
                TabStop = false,
                Tag = command.GetDependency()
             };
+            toolTip.SetToolTip(button, command.GetHint());
             button.Click += async (x, y) =>
             {
                MergeRequestKey? mergeRequestKey = getMergeRequestKey(null);

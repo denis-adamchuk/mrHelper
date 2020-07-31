@@ -457,7 +457,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(noteControl is HtmlPanel);
          HtmlPanel htmlPanel = noteControl as HtmlPanel;
          htmlPanel.BaseStylesheet = String.Format(
-            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: 6px; }}",
+            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: 20px; }}",
             Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
